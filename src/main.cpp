@@ -35,7 +35,6 @@
 
 #include "N2kDataToNMEA0183.h"
 #include "List.h"
-#include "index_html.h"
 #include "BoatData.h"
 
 
@@ -66,6 +65,9 @@ IPAddress CL_gateway(192, 168, 1, 1);
 IPAddress CL_subnet(255, 255, 255, 0);
 
 int wifiType = 0; // 0= Client 1= AP
+
+//counter
+int numCan=0;
 
 const uint16_t ServerPort = 2222; // Define the port, where server sends data. Use this e.g. on OpenCPN. Use 39150 for Navionis AIS
 
@@ -149,9 +151,12 @@ void debug_log(char* str) {
 #endif
 }
 
+//embedded files
+extern const char indexFile[] asm("_binary_web_index_html_start"); 
+
 void web_index()    // Wenn "http://<ip address>/" aufgerufen wurde
 {
-  webserver.send(200, "text/html", indexHTML);  //dann Index Webseite senden
+  webserver.send(200, "text/html", indexFile);  //dann Index Webseite senden
 }
 
 void js_reset()      // Wenn "http://<ip address>/gauge.min.js" aufgerufen wurde
@@ -160,6 +165,14 @@ void js_reset()      // Wenn "http://<ip address>/gauge.min.js" aufgerufen wurde
   ESP.restart();
 }
 
+
+void js_status(){
+  DynamicJsonDocument status(50);
+  status["numcan"]=numCan;
+  String buf;
+  serializeJson(status,buf);
+  webserver.send(200,F("application/json"),buf);
+}
 
 void handleNotFound()
 {
@@ -229,6 +242,7 @@ void setup() {
   // Start Web Server
   webserver.on("/", web_index);
   webserver.on("/api/reset", js_reset);
+   webserver.on("/api/status", js_status);
   webserver.onNotFound(handleNotFound);
 
   webserver.begin();
@@ -297,7 +311,7 @@ void SendBufToClients(const char *buf) {
 //NMEA 2000 message handler
 void HandleNMEA2000Msg(const tN2kMsg &N2kMsg) {
 
-
+  numCan++;
   if ( !SendSeaSmart ) return;
 
   char buf[MAX_NMEA2000_MESSAGE_SEASMART_SIZE];

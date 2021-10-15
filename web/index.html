@@ -1,5 +1,3 @@
-
-const char indexHTML[] PROGMEM = R"=====(
 <!DOCTYPE html>
 <html><head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -9,7 +7,21 @@ const char indexHTML[] PROGMEM = R"=====(
 <script type="text/javascript">
   function reset(){
     fetch('/api/reset');
+    alert("Board reset triggered, reconnect WLAN if necessary");
   }
+  function update(){
+    fetch('/api/status')
+      .then(function(resp){
+        return resp.json()
+      })
+      .then(function(jsonData){
+        for (let k in jsonData){
+          let el=document.getElementById(k);
+          if (el) el.textContent=jsonData[k];
+        }
+      })
+  }
+  window.setInterval(update,1000);
 </script>  
 <style type="text/css">
 #wrap
@@ -23,16 +35,27 @@ border-radius: 10px;
 padding:10px;       /*innen*/
 }
 
+span.label {
+    width: 10em;
+    display: inline-block;
+    opacity: 0.6;
+}
+.row {
+    margin: 0.5em;
+}
 
 </style>
 </head>
 <body>
 <div class="main">
 <h1>NMEA 2000 Gateway </h1>
+<div class="row">
+  <span class="label"># CAN messages</span>
+  <span class="value" id="numcan">---</span>
+</div>
 <button id="reset" onclick="reset();">Reset</button>
 </div>
 </body>
 </html>
-)=====" ;
 
 
