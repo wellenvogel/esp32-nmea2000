@@ -14,8 +14,15 @@
 
 // Version 1.3, 04.08.2020, AK-Homberger
 
+//board specific pins
+#ifdef BOARD_M5ATOM
+#define ESP32_CAN_TX_PIN GPIO_NUM_22
+#define ESP32_CAN_RX_PIN GPIO_NUM_19
+#else
 #define ESP32_CAN_TX_PIN GPIO_NUM_5  // Set CAN TX port to 5 (Caution!!! Pin 2 before)
 #define ESP32_CAN_RX_PIN GPIO_NUM_4  // Set CAN RX port to 4
+#endif
+
 
 #include <Arduino.h>
 #include <NMEA2000_CAN.h>  // This will automatically choose right CAN library and create suitable NMEA2000 object
@@ -30,6 +37,7 @@
 #include "List.h"
 #include "index_html.h"
 #include "BoatData.h"
+
 
 
 #define ENABLE_DEBUG_LOG 0 // Debug log, set to 1 to enable AIS forward on USB-Serial / 2 for ADC voltage to support calibration
@@ -141,14 +149,15 @@ void debug_log(char* str) {
 #endif
 }
 
-void Ereignis_Index()    // Wenn "http://<ip address>/" aufgerufen wurde
+void web_index()    // Wenn "http://<ip address>/" aufgerufen wurde
 {
   webserver.send(200, "text/html", indexHTML);  //dann Index Webseite senden
 }
 
-void Ereignis_js()      // Wenn "http://<ip address>/gauge.min.js" aufgerufen wurde
+void js_reset()      // Wenn "http://<ip address>/gauge.min.js" aufgerufen wurde
 {
-  webserver.send(200, "text/html", gauge);     // dann gauge.min.js senden
+  Serial.println("Reset Button");
+  ESP.restart();
 }
 
 
@@ -169,10 +178,10 @@ void setup() {
 
   // Init USB serial port
   Serial.begin(115200);
-
+  Serial.println("Starting...");
   // Init AIS serial port 2
-  Serial2.begin(baudrate, rs_config);
-  NMEA0183.Begin(&Serial2, 3, baudrate);
+  //Serial2.begin(baudrate, rs_config);
+  //NMEA0183.Begin(&Serial2, 3, baudrate);
 
   if (WLAN_CLIENT == 1) {
     Serial.println("Start WLAN Client");         // WiFi Mode Client
@@ -183,7 +192,7 @@ void setup() {
 
     while (WiFi.status() != WL_CONNECTED  && wifi_retry < 20) {         // Check connection, try 10 seconds
       wifi_retry++;
-      delay(500);
+      delay(5000);
       Serial.print(".");
     }
   }
@@ -218,8 +227,8 @@ void setup() {
 
   
   // Start Web Server
-  webserver.on("/", Ereignis_Index);
-  webserver.on("/gauge.min.js", Ereignis_js);
+  webserver.on("/", web_index);
+  webserver.on("/api/reset", js_reset);
   webserver.onNotFound(handleNotFound);
 
   webserver.begin();
@@ -485,7 +494,7 @@ void loop() {
       WiFi.mode(WIFI_OFF);
       WiFi.mode(WIFI_STA);
       WiFi.begin(CL_ssid, CL_password);
-      delay(100);
+      delay(1000);
     }
     if (wifi_retry >= 5) {
       Serial.println("\nReboot");                                  // Did not work -> restart ESP32
