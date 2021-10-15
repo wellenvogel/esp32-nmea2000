@@ -5,15 +5,17 @@ Based on the work of [Homberger](https://github.com/AK-Homberger/NMEA2000WifiGat
 
 Goal
 ----
-Have a simple ready-to-go ESP32 binary that can be flashed onto a [M5 Atom CAN](https://docs.m5stack.com/en/atom/atom_can), potentially extended by an [Atom Tail485](https://shop.m5stack.com/collections/atom-series/products/atom-tail485?variant=32169041559642) for NMEA0183 connection and power supply
+Have a simple ready-to-go ESP32 binary that can be flashed onto a [M5 Atom CAN](https://docs.m5stack.com/en/atom/atom_can), potentially extended by an [Atom Tail485](https://shop.m5stack.com/collections/atom-series/products/atom-tail485?variant=32169041559642) for NMEA0183 connection and power supply.
 
 Modes
 -----
-NMEA2000 -> Wifi (NMEA0183)
-NMEA0183 -> Wifi
-NMEA0183 -> NMEA2000
-Wifi (NMEA0183) -> NMEA2000
-....
+* NMEA2000 -> Wifi (NMEA0183)
+* NMEA2000 -> USB (NMEA0183)
+* NMEA0183 -> Wifi
+* NMEA0183 -> NMEA2000
+* Wifi (NMEA0183) -> NMEA2000
+* USB (NMEA0183) -> NMEA2000
+* ....
 
 Environment
 -----------
