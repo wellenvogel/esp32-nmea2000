@@ -37,6 +37,8 @@
 #include "List.h"
 #include "BoatData.h"
 
+#include "GWConfig.h"
+
 
 
 #define ENABLE_DEBUG_LOG 0 // Debug log, set to 1 to enable AIS forward on USB-Serial / 2 for ADC voltage to support calibration
@@ -49,6 +51,7 @@
 
 #define WLAN_CLIENT 0  // Set to 1 to enable client network. 0 to act as AP only
 
+ConfigHandler config;
 
 // Wifi cofiguration Client and Access Point
 const char *AP_ssid = "MyESP32";  // ESP32 as AP
@@ -177,12 +180,20 @@ void js_status(){
   webserver.send(200,F("application/json"),buf);
 }
 
+void js_config(){
+  webserver.send(200,F("application/json"),config.toJson());
+}
+
+void web_config(){
+}
+
 void handleNotFound()
 {
   webserver.send(404, "text/plain", "File Not Found\n\n");
 }
 
 
+ConfigItem *sendUsb=NULL;
 
 void setup() {
 
@@ -195,6 +206,9 @@ void setup() {
   // Init USB serial port
   Serial.begin(115200);
   Serial.println("Starting...");
+  config.loadConfig();
+  Serial.println(config.toString());
+  sendUsb=config.findConfig(config.sendUsb,true);
   // Init AIS serial port 2
   //Serial2.begin(baudrate, rs_config);
   //NMEA0183.Begin(&Serial2, 3, baudrate);
@@ -330,7 +344,7 @@ void SendNMEA0183Message(const tNMEA0183Msg &NMEA0183Msg) {
   char buf[MAX_NMEA0183_MESSAGE_SIZE];
   if ( !NMEA0183Msg.GetMessage(buf, MAX_NMEA0183_MESSAGE_SIZE) ) return;
   SendBufToClients(buf);
-  if (NMEA_TO_SERIAL){
+  if (sendUsb->asBoolean()){
     Serial.println(buf);
   }
 }
