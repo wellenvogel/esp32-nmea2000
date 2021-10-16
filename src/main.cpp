@@ -12,7 +12,7 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-// Version 1.3, 04.08.2020, AK-Homberger
+#define VERSION "0.0.2"
 
 //board specific pins
 #ifdef BOARD_M5ATOM
@@ -41,12 +41,14 @@
 
 #define ENABLE_DEBUG_LOG 0 // Debug log, set to 1 to enable AIS forward on USB-Serial / 2 for ADC voltage to support calibration
 #define UDP_Forwarding 0   // Set to 1 for forwarding AIS from serial2 to UDP brodcast
+#define NMEA_TO_SERIAL 1
 #define HighTempAlarm 12   // Alarm level for fridge temperature (higher)
 #define LowVoltageAlarm 11 // Alarm level for battery voltage (lower)
 
 #define ADC_Calibration_Value 34.3 // The real value depends on the true resistor values for the ADC input (100K / 27 K)
 
 #define WLAN_CLIENT 0  // Set to 1 to enable client network. 0 to act as AP only
+
 
 // Wifi cofiguration Client and Access Point
 const char *AP_ssid = "MyESP32";  // ESP32 as AP
@@ -99,7 +101,7 @@ WiFiServer json(90);
 using tWiFiClientPtr = std::shared_ptr<WiFiClient>;
 LinkedList<tWiFiClientPtr> clients;
 
-tN2kDataToNMEA0183 tN2kDataToNMEA0183(&NMEA2000, 0);
+tN2kDataToNMEA0183 nmea0183Converter(&NMEA2000, 0);
 
 // Set the information for other bus devices, which messages we support
 const unsigned long TransmitMessages[] PROGMEM = {127489L, // Engine dynamic
@@ -169,6 +171,7 @@ void js_reset()      // Wenn "http://<ip address>/gauge.min.js" aufgerufen wurde
 void js_status(){
   DynamicJsonDocument status(50);
   status["numcan"]=numCan;
+  status["version"]=VERSION;
   String buf;
   serializeJson(status,buf);
   webserver.send(200,F("application/json"),buf);
@@ -285,10 +288,10 @@ void setup() {
 
   NMEA2000.ExtendTransmitMessages(TransmitMessages);
   NMEA2000.ExtendReceiveMessages(ReceiveMessages);
-  NMEA2000.AttachMsgHandler(&tN2kDataToNMEA0183); // NMEA 2000 -> NMEA 0183 conversion
+  NMEA2000.AttachMsgHandler(&nmea0183Converter); // NMEA 2000 -> NMEA 0183 conversion
   NMEA2000.SetMsgHandler(HandleNMEA2000Msg); // Also send all NMEA2000 messages in SeaSmart format
 
-  tN2kDataToNMEA0183.SetSendNMEA0183MessageCallback(SendNMEA0183Message);
+  nmea0183Converter.SetSendNMEA0183MessageCallback(SendNMEA0183Message);
 
   NMEA2000.Open();
 
@@ -327,6 +330,9 @@ void SendNMEA0183Message(const tNMEA0183Msg &NMEA0183Msg) {
   char buf[MAX_NMEA0183_MESSAGE_SIZE];
   if ( !NMEA0183Msg.GetMessage(buf, MAX_NMEA0183_MESSAGE_SIZE) ) return;
   SendBufToClients(buf);
+  if (NMEA_TO_SERIAL){
+    Serial.println(buf);
+  }
 }
 
 
@@ -490,7 +496,7 @@ void loop() {
     Serial.printf("Address Change: New Address=%d\n", SourceAddress);
   }
 
-  tN2kDataToNMEA0183.Update(&BoatData);
+  nmea0183Converter.Update(&BoatData);
 
   // Dummy to empty input buffer to avoid board to stuck with e.g. NMEA Reader
   if ( Serial.available() ) {
