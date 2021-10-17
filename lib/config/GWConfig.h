@@ -9,6 +9,7 @@ class GwConfigInterface{
     virtual String asString() const=0;
     virtual const char * asCString() const =0;
     virtual bool asBoolean() const = 0;
+    virtual int asInt() const = 0;
 };
 class GwConfigItem: public GwConfigInterface{
     private:
@@ -32,6 +33,9 @@ class GwConfigItem: public GwConfigInterface{
         };
         virtual bool asBoolean() const{
             return strcasecmp(value.c_str(),"true") == 0;
+        }
+        virtual int asInt() const{
+            return (int)value.toInt();
         }
         String getName() const{
             return name;
@@ -59,6 +63,8 @@ class GwConfigHandler{
         const String wifiClient="wifiClient";
         const String wifiPass="wifiPass";
         const String wifiSSID="wifiSSID";
+        const String serverPort="serverPort";
+        const String maxClients="maxClients";
         GwConfigHandler(GwLog *logger);
         bool loadConfig();
         bool saveConfig();
@@ -67,20 +73,24 @@ class GwConfigHandler{
         bool reset(bool save);
         String toString() const;
         String toJson() const;
-        String getString(const String name);
-        bool getBool(const String name);
+        String getString(const String name) const;
+        bool getBool(const String name) const ;
+        int getInt(const String name) const;
         GwConfigItem * findConfig(const String name, bool dummy=false);
         GwConfigInterface * getConfigItem(const String name, bool dummy=false) const;
     private:
-    GwConfigItem* configs[5]={
+    GwConfigItem* configs[7]={
         new GwConfigItem(sendUsb,"true"),
         new GwConfigItem (receiveUsb,"false"),
         new GwConfigItem (wifiClient,"false"),
         new GwConfigItem (wifiSSID,""),
-        new GwConfigItem (wifiPass,"")
+        new GwConfigItem (wifiPass,""),
+        new GwConfigItem (serverPort,"2222"),
+        new GwConfigItem (maxClients, "10")
+
     };  
     int getNumConfig() const{
-        return 5;
+        return 7;
     }  
 };
 #endif

@@ -131,6 +131,10 @@ span#connected.ok{
   <span class="value" id="numcan">---</span>
 </div>
 <div class="row">
+  <span class="label"># TCP clients</span>
+  <span class="value" id="numClients">---</span>
+</div>
+<div class="row">
   <span class="label">wifi client connected</span>
   <span class="value" id="wifiConnected">---</span>
 </div>
@@ -146,6 +150,14 @@ span#connected.ok{
       <option value="true">On</option>
       <option value="false" selected="selected">Off</option>
     </select>
+  </div>
+  <div class="row">
+    <span class="label">TCP Port</span>
+    <input name="serverPort" type="number">
+  </div>
+  <div class="row">
+    <span class="label">maxTCPClients</span>
+    <input name="maxClients" type="number">
   </div>
   <div class="row">
     <span class="label">wifiClient</span>

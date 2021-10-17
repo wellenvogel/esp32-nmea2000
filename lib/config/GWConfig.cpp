@@ -97,13 +97,18 @@ bool GwConfigHandler::reset(bool save){
     if (!save) return true;
     return saveConfig();
 }
-String GwConfigHandler::getString(const String name){
-    GwConfigItem *i=findConfig(name);
+String GwConfigHandler::getString(const String name) const{
+    GwConfigInterface *i=getConfigItem(name,false);
     if (!i) return String();
     return i->asString();
 }
-bool GwConfigHandler::getBool(const String name){
-    GwConfigItem *i=findConfig(name);
+bool GwConfigHandler::getBool(const String name) const{
+    GwConfigInterface *i=getConfigItem(name,false);
     if (!i) return false;
     return i->asBoolean();
+}
+int GwConfigHandler::getInt(const String name) const{
+    GwConfigInterface *i=getConfigItem(name,false);
+    if (!i) return 0;
+    return i->asInt();
 }

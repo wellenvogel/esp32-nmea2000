@@ -12,16 +12,8 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#define VERSION "0.0.3"
-
-//board specific pins
-#ifdef BOARD_M5ATOM
-#define ESP32_CAN_TX_PIN GPIO_NUM_22
-#define ESP32_CAN_RX_PIN GPIO_NUM_19
-#else
-#define ESP32_CAN_TX_PIN GPIO_NUM_5  // Set CAN TX port to 5 (Caution!!! Pin 2 before)
-#define ESP32_CAN_RX_PIN GPIO_NUM_4  // Set CAN RX port to 4
-#endif
+#define VERSION "0.0.4"
+#include "GwHardware.h"
 
 #define LOG_SERIAL true
 
@@ -41,6 +33,7 @@
 #include "GwLog.h"
 #include "GWConfig.h"
 #include "GWWifi.h"
+#include "GwSocketServer.h"
 
 
 
@@ -55,6 +48,7 @@
 GwLog logger(LOG_SERIAL);
 GwConfigHandler config(&logger);
 GwWifi gwWifi(&config,&logger);
+GwSocketServer socketServer(&config,&logger);
 
 
 //counter
@@ -84,11 +78,8 @@ const size_t MaxClients = 10;
 bool SendNMEA0183Conversion = true; // Do we send NMEA2000 -> NMEA0183 conversion
 bool SendSeaSmart = false; // Do we send NMEA2000 messages in SeaSmart format
 
-WiFiServer server(ServerPort, MaxClients);
 WiFiServer json(90);
 
-using tWiFiClientPtr = std::shared_ptr<WiFiClient>;
-LinkedList<tWiFiClientPtr> clients;
 
 tN2kDataToNMEA0183 nmea0183Converter(&NMEA2000, 0);
 
@@ -167,6 +158,7 @@ void js_status(){
   status["version"]=VERSION;
   status["wifiConnected"]=gwWifi.clientConnected();
   status["clientIP"]=WiFi.localIP().toString();
+  status["numClients"]=socketServer.numClients();
   String buf;
   serializeJson(status,buf);
   webserver.send(200,F("application/json"),buf);
@@ -241,7 +233,7 @@ void setup() {
   gwWifi.setup();
 
   // Start TCP server
-  server.begin();
+  socketServer.begin();
 
   // Start JSON server
   json.begin();
@@ -308,14 +300,7 @@ void setup() {
 
 
 
-//*****************************************************************************
-void SendBufToClients(const char *buf) {
-  for (auto it = clients.begin() ; it != clients.end(); it++) {
-    if ( (*it) != NULL && (*it)->connected() ) {
-      (*it)->println(buf);
-    }
-  }
-}
+
 
 #define MAX_NMEA2000_MESSAGE_SEASMART_SIZE 500
 //*****************************************************************************
@@ -327,7 +312,7 @@ void HandleNMEA2000Msg(const tN2kMsg &N2kMsg) {
 
   char buf[MAX_NMEA2000_MESSAGE_SEASMART_SIZE];
   if ( N2kToSeasmart(N2kMsg, millis(), buf, MAX_NMEA2000_MESSAGE_SEASMART_SIZE) == 0 ) return;
-  SendBufToClients(buf);
+  socketServer.sendToClients(buf);
 }
 
 
@@ -337,7 +322,7 @@ void SendNMEA0183Message(const tNMEA0183Msg &NMEA0183Msg) {
 
   char buf[MAX_NMEA0183_MESSAGE_SIZE];
   if ( !NMEA0183Msg.GetMessage(buf, MAX_NMEA0183_MESSAGE_SIZE) ) return;
-  SendBufToClients(buf);
+  socketServer.sendToClients(buf);
   if (sendUsb->asBoolean()){
     Serial.println(buf);
   }
@@ -365,42 +350,6 @@ void SendN2kEngine() {
 
     SetN2kEngineDynamicParam(N2kMsg, 0, N2kDoubleNA, N2kDoubleNA, N2kDoubleNA, N2kDoubleNA, N2kDoubleNA, N2kDoubleNA, N2kDoubleNA, N2kDoubleNA, N2kInt8NA, N2kInt8NA, true);
     NMEA2000.SendMsg(N2kMsg);
-  }
-}
-
-
-//*****************************************************************************
-void AddClient(WiFiClient &client) {
-  Serial.println("New Client.");
-  clients.push_back(tWiFiClientPtr(new WiFiClient(client)));
-}
-
-//*****************************************************************************
-void StopClient(LinkedList<tWiFiClientPtr>::iterator &it) {
-  Serial.println("Client Disconnected.");
-  (*it)->stop();
-  it = clients.erase(it);
-}
-
-//*****************************************************************************
-void CheckConnections() {
-  WiFiClient client = server.available();   // listen for incoming clients
-
-  if ( client ) AddClient(client);
-
-  for (auto it = clients.begin(); it != clients.end(); it++) {
-    if ( (*it) != NULL ) {
-      if ( !(*it)->connected() ) {
-        StopClient(it);
-      } else {
-        if ( (*it)->available() ) {
-          char c = (*it)->read();
-          if ( c == 0x03 ) StopClient(it); // Close connection by ctrl-c
-        }
-      }
-    } else {
-      it = clients.erase(it); // Should have been erased by StopClient
-    }
   }
 }
 
@@ -492,7 +441,7 @@ void loop() {
   }
 
   SendN2kEngine();
-  CheckConnections();
+  socketServer.loop();
   NMEA2000.ParseMessages();
 
   int SourceAddress = NMEA2000.GetN2kSource();
