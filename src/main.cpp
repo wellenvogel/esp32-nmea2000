@@ -23,6 +23,7 @@
 #define ESP32_CAN_RX_PIN GPIO_NUM_4  // Set CAN RX port to 4
 #endif
 
+#define LOG_SERIAL true
 
 #include <Arduino.h>
 #include <NMEA2000_CAN.h>  // This will automatically choose right CAN library and create suitable NMEA2000 object
@@ -37,7 +38,10 @@
 #include "List.h"
 #include "BoatData.h"
 
+#include "GwLog.h"
 #include "GWConfig.h"
+#include "GWWifi.h"
+
 
 
 
@@ -47,29 +51,11 @@
 #define HighTempAlarm 12   // Alarm level for fridge temperature (higher)
 #define LowVoltageAlarm 11 // Alarm level for battery voltage (lower)
 
-#define ADC_Calibration_Value 34.3 // The real value depends on the true resistor values for the ADC input (100K / 27 K)
 
-#define WLAN_CLIENT 0  // Set to 1 to enable client network. 0 to act as AP only
+GwLog logger(LOG_SERIAL);
+GwConfigHandler config(&logger);
+GwWifi gwWifi(&config,&logger);
 
-ConfigHandler config;
-
-// Wifi cofiguration Client and Access Point
-const char *AP_ssid = "MyESP32";  // ESP32 as AP
-const char *CL_ssid = "MyWLAN";   // ESP32 as client in network
-
-const char *AP_password = "appassw";   // AP password
-const char *CL_password = "clientpw";  // Client password
-
-// Put IP address details here
-IPAddress AP_local_ip(192, 168, 15, 1);  // Static address for AP
-IPAddress AP_gateway(192, 168, 15, 1);
-IPAddress AP_subnet(255, 255, 255, 0);
-
-IPAddress CL_local_ip(192, 168, 1, 10);  // Static address for Client Network. Please adjust to your AP IP and DHCP range!
-IPAddress CL_gateway(192, 168, 1, 1);
-IPAddress CL_subnet(255, 255, 255, 0);
-
-int wifiType = 0; // 0= Client 1= AP
 
 //counter
 int numCan=0;
@@ -175,6 +161,8 @@ void js_status(){
   DynamicJsonDocument status(50);
   status["numcan"]=numCan;
   status["version"]=VERSION;
+  status["wifiConnected"]=gwWifi.clientConnected();
+  status["clientIP"]=WiFi.localIP().toString();
   String buf;
   serializeJson(status,buf);
   webserver.send(200,F("application/json"),buf);
@@ -184,7 +172,7 @@ void js_config(){
   webserver.send(200,F("application/json"),config.toJson());
 }
 
-void web_config(){
+void web_setConfig(){
 }
 
 void handleNotFound()
@@ -193,14 +181,14 @@ void handleNotFound()
 }
 
 
-ConfigItem *sendUsb=NULL;
+GwConfigInterface *sendUsb=NULL;
 
 void setup() {
 
   uint8_t chipid[6];
   uint32_t id = 0;
   int i = 0;
-  int wifi_retry = 0;
+
 
 
   // Init USB serial port
@@ -208,47 +196,10 @@ void setup() {
   Serial.println("Starting...");
   config.loadConfig();
   Serial.println(config.toString());
-  sendUsb=config.findConfig(config.sendUsb,true);
-  // Init AIS serial port 2
-  //Serial2.begin(baudrate, rs_config);
-  //NMEA0183.Begin(&Serial2, 3, baudrate);
+  sendUsb=config.getConfigItem(config.sendUsb,true);
+  
+  gwWifi.setup();
 
-  if (WLAN_CLIENT == 1) {
-    Serial.println("Start WLAN Client");         // WiFi Mode Client
-
-    WiFi.config(CL_local_ip, CL_gateway, CL_subnet, CL_gateway);
-    delay(100);
-    WiFi.begin(CL_ssid, CL_password);
-
-    while (WiFi.status() != WL_CONNECTED  && wifi_retry < 20) {         // Check connection, try 10 seconds
-      wifi_retry++;
-      delay(5000);
-      Serial.print(".");
-    }
-  }
-
-  if (WiFi.status() != WL_CONNECTED) {   // No client connection start AP
-    // Init wifi connection
-    Serial.println("Start WLAN AP");         // WiFi Mode AP
-    WiFi.mode(WIFI_AP);
-    WiFi.softAP(AP_ssid, AP_password);
-    delay(100);
-    WiFi.softAPConfig(AP_local_ip, AP_gateway, AP_subnet);
-    IPAddress IP = WiFi.softAPIP();
-    Serial.println("");
-    Serial.print("AP IP address: ");
-    Serial.println(IP);
-    wifiType = 1;
-
-  } else {  // Wifi Client connection was sucessfull
-
-    Serial.println("");
-    Serial.println("WiFi client connected");
-    Serial.println("IP client address: ");
-    Serial.println(WiFi.localIP());
-  }
-
- 
   // Start TCP server
   server.begin();
 
@@ -477,6 +428,7 @@ void loop() {
   int wifi_retry;
 
   webserver.handleClient();
+  gwWifi.loop();
   handle_json();
 
   if (NMEA0183.GetMessage(NMEA0183Msg)) {  // Get AIS NMEA sentences from serial2
@@ -517,22 +469,4 @@ void loop() {
     Serial.read();
   }
 
-
-
-  if (wifiType == 0) {                                          // Check connection if working as client
-    wifi_retry = 0;
-    while (WiFi.status() != WL_CONNECTED && wifi_retry < 5 ) {  // Connection lost, 5 tries to reconnect
-      wifi_retry++;
-      Serial.println("WiFi not connected. Try to reconnect");
-      WiFi.disconnect();
-      WiFi.mode(WIFI_OFF);
-      WiFi.mode(WIFI_STA);
-      WiFi.begin(CL_ssid, CL_password);
-      delay(1000);
-    }
-    if (wifi_retry >= 5) {
-      Serial.println("\nReboot");                                  // Did not work -> restart ESP32
-      ESP.restart();
-    }
-  }
 }

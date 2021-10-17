@@ -2,27 +2,37 @@
 #define _GWCONFIG_H
 #include <Arduino.h>
 #include <Preferences.h>
+#include "GwLog.h"
 
-class ConfigItem{
+class GwConfigInterface{
+    public:
+    virtual String asString() const=0;
+    virtual const char * asCString() const =0;
+    virtual bool asBoolean() const = 0;
+};
+class GwConfigItem: public GwConfigInterface{
     private:
         String name;
         String initialValue;
         String value;
     public:
-        ConfigItem(const String &name, const String initialValue){
+        GwConfigItem(const String &name, const String initialValue){
             this->name=name;
             this->initialValue=initialValue;
             this->value=initialValue;
         }
-        ConfigItem(const String &name, bool initalValue):
-            ConfigItem(name,initalValue?String("true"):String("false")){};
-        String asString() const{
+        GwConfigItem(const String &name, bool initalValue):
+            GwConfigItem(name,initalValue?String("true"):String("false")){};
+        virtual String asString() const{
             return value;
         }
+        virtual const char * asCString() const{
+            return value.c_str();
+        };
         virtual void fromString(const String v){
             value=v;
         };
-        bool asBoolean() const{
+        virtual bool asBoolean() const{
             return strcasecmp(value.c_str(),"true") == 0;
         }
         String getName() const{
@@ -40,9 +50,10 @@ class ConfigItem{
 };
 
 
-class ConfigHandler{
+class GwConfigHandler{
     private:
         Preferences prefs;
+        GwLog *logger;
     public:
         public:
         const String sendUsb="sendUsb";
@@ -50,7 +61,7 @@ class ConfigHandler{
         const String wifiClient="wifiClient";
         const String wifiPass="wifiPass";
         const String wifiSSID="wifiSSID";
-        ConfigHandler();
+        GwConfigHandler(GwLog *logger);
         bool loadConfig();
         bool saveConfig();
         bool updateValue(const char *name, const char * value);
@@ -59,17 +70,18 @@ class ConfigHandler{
         String toJson() const;
         String getString(const String name);
         bool getBool(const String name);
-        ConfigItem * findConfig(const String name, bool dummy=false);
+        GwConfigItem * findConfig(const String name, bool dummy=false);
+        GwConfigInterface * getConfigItem(const String name, bool dummy=false) const;
     private:
-    ConfigItem* configs[5]={
-        new ConfigItem(sendUsb,true),
-        new ConfigItem (receiveUsb,false),
-        new ConfigItem (wifiClient,false),
-        new ConfigItem (wifiSSID,""),
-        new ConfigItem (wifiPass,"")
+    GwConfigItem* configs[5]={
+        new GwConfigItem(sendUsb,true),
+        new GwConfigItem (receiveUsb,false),
+        new GwConfigItem (wifiClient,false),
+        new GwConfigItem (wifiSSID,""),
+        new GwConfigItem (wifiPass,"")
     };  
     int getNumConfig() const{
-        return sizeof(configs)/sizeof(ConfigItem*);
+        return sizeof(configs)/sizeof(GwConfigItem*);
     }  
 };
 #endif
