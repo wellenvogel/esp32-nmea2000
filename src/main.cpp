@@ -207,6 +207,8 @@ void web_setConfig(){
 void web_resetConfig(){
   config.reset(true);
   logger.logString("reset config, restart");
+  webserver.send(200,F("application/json"),JSON_OK);
+  delay(100);
   ESP.restart();
 }
 

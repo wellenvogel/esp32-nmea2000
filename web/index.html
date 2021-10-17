@@ -5,31 +5,40 @@
 <title>NMEA 2000 Gateway</title>
 
 <script type="text/javascript">
-  function reset(){
-    fetch('/api/reset');
+  let lastUpdate=(new Date()).getTime();
+  function alertRestart(){
     alert("Board reset triggered, reconnect WLAN if necessary");
   }
+  function getJson(url){
+    return fetch(url)
+      .then(function(r){return r.json()});
+  }
+  function reset(){
+    fetch('/api/reset');
+    alertRestart();
+  }
   function update(){
-    fetch('/api/status')
-      .then(function(resp){
-        return resp.json()
-      })
+    let now=(new Date()).getTime();
+    let ce=document.getElementById('connected');
+    if (ce){
+      if ((lastUpdate+3000) > now){
+        ce.classList.add('ok');
+      }
+      else{
+        ce.classList.remove('ok');
+      }
+    }
+    getJson('/api/status')
       .then(function(jsonData){
         for (let k in jsonData){
           let el=document.getElementById(k);
           if (el) el.textContent=jsonData[k];
         }
+        lastUpdate=(new Date()).getTime();
       })
   }
   function resetForm(ev){
-    if (ev){
-      ev.preventDefault();
-      ev.stopPropagation();
-    }
-    fetch("/api/config")
-      .then(function(resp){
-        return resp.json();
-      })
+    getJson("/api/config")
       .then(function(jsonData){
         for (let k in jsonData){
           let el=document.querySelector("[name='"+k+"']");
@@ -40,28 +49,68 @@
         }
       });
   }
+  function changeConfig(){
+    let url="/api/setConfig?";
+    let values=document.querySelectorAll('.configForm select , .configForm input');
+    for (let i=0;i<values.length;i++){
+      let v=values[i];
+      url+=v.getAttribute('name')+"="+encodeURIComponent(v.value)+"&";
+    }
+    getJson(url)
+      .then(function(status){
+        if(status.status == 'OK'){
+          alertRestart();
+        }
+        else{
+          alert("unable to set config: "+status.status);
+        }
+      })
+  }
+  function factoryReset(){
+    getJson("/api/resetConfig")
+      .then(function(status){
+        alertRestart(); 
+      })
+  }
   window.setInterval(update,1000);
-  resetForm();
+  window.addEventListener('load',function(){
+  let buttons=document.querySelectorAll('button');
+    for (let i=0;i<buttons.length;i++){
+      let be=buttons[i];
+      be.onclick=window[be.id]; //assume a function with the button id
+    }
+    resetForm();
+  });
 </script>  
 <style type="text/css">
-#wrap
-{
-text-align: center; 
-vertical-align: middle; 
-max-width: 900px; 
-margin:0 auto;
-background:#dcd;
-border-radius: 10px;
-padding:10px;       /*innen*/
+.configForm {
+    margin-top: 1em;
+    margin-bottom: 1em;
+    padding-top: 0.5em;
+    padding-bottom: 0.5em;
+    border: 1px solid grey;
+    max-width: 40em;
 }
-
 span.label {
     width: 10em;
     display: inline-block;
     opacity: 0.6;
 }
+span#connected {
+    display: inline-block;
+    background-color: red;
+    width: 1em;
+    height: 1em;
+    border-radius: 50%;
+}
+span#connected.ok{
+  background-color: #13ac13;
+}
 .row {
     margin: 0.5em;
+}
+.buttons {
+    padding-left: 1em;
 }
 
 </style>
@@ -72,6 +121,10 @@ span.label {
 <div class="row">
   <span class="label">VERSION</span>
   <span class="value" id="version">---</span>
+</div>
+<div class="row">
+  <span class="label">connected</span>
+  <span class="value" id="connected"></span>
 </div>
 <div class="row">
   <span class="label"># CAN messages</span>
@@ -85,7 +138,15 @@ span.label {
   <span class="label">wifi client IP</span>
   <span class="value" id="clientIP">---</span>
 </div>
-<form action="/api/setConfig">
+<button id="reset" >Reset</button>
+<div class="configForm">
+  <div class="row">
+    <span class="label">NMEAtoUSB</span>
+    <select name="sendUsb">
+      <option value="true">On</option>
+      <option value="false" selected="selected">Off</option>
+    </select>
+  </div>
   <div class="row">
     <span class="label">wifiClient</span>
     <select name="wifiClient">
@@ -101,10 +162,13 @@ span.label {
     <span class="label">wifiClientSSID</span>
     <input name="wifiSSID" type="text">
   </div>
-  <button onClick="resetForm()">Reset</button>
-  <button type="submit">Save&Restart</button>
-</form>
-<button id="reset" onclick="reset();">Reset</button>
+  <div class="buttons">
+    <button id="resetForm">ReloadConfig</button>
+    <button id="changeConfig">Save&Restart</button>
+    <button id="factoryReset">FactoryReset</button>
+  </div>
+</div>
+
 </div>
 </body>
 </html>

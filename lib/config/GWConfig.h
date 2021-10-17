@@ -21,8 +21,6 @@ class GwConfigItem: public GwConfigInterface{
             this->initialValue=initialValue;
             this->value=initialValue;
         }
-        GwConfigItem(const String &name, bool initalValue):
-            GwConfigItem(name,initalValue?String("true"):String("false")){};
         virtual String asString() const{
             return value;
         }
