@@ -142,6 +142,7 @@ void debug_log(char* str) {
 #endif
 }
 
+#define JSON_OK "{\"status\":\"OK\"}"
 //embedded files
 extern const char indexFile[] asm("_binary_web_index_html_start"); 
 
@@ -158,7 +159,7 @@ void js_reset()      // Wenn "http://<ip address>/gauge.min.js" aufgerufen wurde
 
 
 void js_status(){
-  DynamicJsonDocument status(50);
+  StaticJsonDocument<256> status;
   status["numcan"]=numCan;
   status["version"]=VERSION;
   status["wifiConnected"]=gwWifi.clientConnected();
@@ -173,11 +174,45 @@ void js_config(){
 }
 
 void web_setConfig(){
+  bool ok=true;
+  String error;
+  for (int i=0;i<webserver.args();i++){
+    String v=webserver.arg(i);
+    String n=webserver.argName(i);
+    bool rt=config.updateValue(n,v);
+    if (! rt){
+      logger.logString("ERR: unable to update %s to %s",n.c_str(),v.c_str());
+      ok=false;
+      error+=n;
+      error+="=";
+      error+=v;
+      error+=",";
+    }
+  }
+  if (ok){
+    webserver.send(200,F("application/json"),JSON_OK);
+    logger.logString("update config and restart");
+    config.saveConfig();
+    delay(100);
+    ESP.restart();
+  }
+  else{
+    DynamicJsonDocument rt(100);
+    rt["status"]=error;
+    String buf;
+    serializeJson(rt,buf);
+    webserver.send(200,F("application/json"),buf);
+  }
+}
+void web_resetConfig(){
+  config.reset(true);
+  logger.logString("reset config, restart");
+  ESP.restart();
 }
 
 void handleNotFound()
 {
-  webserver.send(404, "text/plain", "File Not Found\n\n");
+  webserver.send(404, F("text/plain"), "File Not Found\n\n");
 }
 
 
@@ -210,7 +245,10 @@ void setup() {
   // Start Web Server
   webserver.on("/", web_index);
   webserver.on("/api/reset", js_reset);
-   webserver.on("/api/status", js_status);
+  webserver.on("/api/status", js_status);
+  webserver.on("/api/config",js_config);
+  webserver.on("/api/setConfig",web_setConfig);
+  webserver.on("/api/resetConfig",web_resetConfig);
   webserver.onNotFound(handleNotFound);
 
   webserver.begin();
