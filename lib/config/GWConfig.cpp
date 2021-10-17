@@ -31,11 +31,12 @@ String GwConfigHandler::toString() const{
 
 String GwConfigHandler::toJson() const{
     String rt;
-    DynamicJsonDocument jdoc(50);
+    DynamicJsonDocument jdoc(300);
     for (int i=0;i<getNumConfig();i++){
-        jdoc[configs[i]->getName()]=configs[i]->asString();
+        jdoc[configs[i]->getName()]=configs[i]->asCString();
     }
     serializeJson(jdoc,rt);
+    logger->logString("configJson: %s",rt.c_str());
     return rt;
 }
 GwConfigItem * GwConfigHandler::findConfig(const String name, bool dummy){
@@ -61,6 +62,7 @@ bool GwConfigHandler::loadConfig(){
     prefs.begin(PREF_NAME,true);
     for (int i=0;i<getNumConfig();i++){
         String v=prefs.getString(configs[i]->getName().c_str(),configs[i]->getDefault());
+        configs[i]->fromString(v);
     }
     prefs.end();
     return true;
@@ -68,6 +70,7 @@ bool GwConfigHandler::loadConfig(){
 bool GwConfigHandler::saveConfig(){
     prefs.begin(PREF_NAME,false);
     for (int i=0;i<getNumConfig();i++){
+        logger->logString("saving %s=%s",configs[i]->getName().c_str(),configs[i]->asCString());
         prefs.putString(configs[i]->getName().c_str(),configs[i]->asString());
     }
     prefs.end();
@@ -78,6 +81,12 @@ bool GwConfigHandler::updateValue(const char *name, const char * value){
     GwConfigItem *i=findConfig(name);
     if (i == NULL) return false;
     logger->logString("update config %s=>%s",name,value);
+    i->fromString(value);
+}
+bool GwConfigHandler::updateValue(String name, String value){
+    GwConfigItem *i=findConfig(name);
+    if (i == NULL) return false;
+    logger->logString("update config %s=>%s",name.c_str(),value.c_str());
     i->fromString(value);
 }
 bool GwConfigHandler::reset(bool save){

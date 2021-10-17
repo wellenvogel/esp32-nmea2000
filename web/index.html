@@ -21,7 +21,27 @@
         }
       })
   }
+  function resetForm(ev){
+    if (ev){
+      ev.preventDefault();
+      ev.stopPropagation();
+    }
+    fetch("/api/config")
+      .then(function(resp){
+        return resp.json();
+      })
+      .then(function(jsonData){
+        for (let k in jsonData){
+          let el=document.querySelector("[name='"+k+"']");
+          if (el){
+            let v=jsonData[k];
+            el.value=v;
+          }
+        }
+      });
+  }
   window.setInterval(update,1000);
+  resetForm();
 </script>  
 <style type="text/css">
 #wrap
@@ -65,6 +85,25 @@ span.label {
   <span class="label">wifi client IP</span>
   <span class="value" id="clientIP">---</span>
 </div>
+<form action="/api/setConfig">
+  <div class="row">
+    <span class="label">wifiClient</span>
+    <select name="wifiClient">
+      <option value="true">On</option>
+      <option value="false" selected="selected">Off</option>
+    </select>
+  </div>
+  <div class="row">
+    <span class="label">wifiClientPass</span>
+    <input name="wifiPass" type="text">
+  </div>
+  <div class="row">
+    <span class="label">wifiClientSSID</span>
+    <input name="wifiSSID" type="text">
+  </div>
+  <button onClick="resetForm()">Reset</button>
+  <button type="submit">Save&Restart</button>
+</form>
 <button id="reset" onclick="reset();">Reset</button>
 </div>
 </body>

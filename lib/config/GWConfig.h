@@ -65,6 +65,7 @@ class GwConfigHandler{
         bool loadConfig();
         bool saveConfig();
         bool updateValue(const char *name, const char * value);
+        bool updateValue(String name, String value);
         bool reset(bool save);
         String toString() const;
         String toJson() const;
@@ -74,14 +75,14 @@ class GwConfigHandler{
         GwConfigInterface * getConfigItem(const String name, bool dummy=false) const;
     private:
     GwConfigItem* configs[5]={
-        new GwConfigItem(sendUsb,true),
-        new GwConfigItem (receiveUsb,false),
-        new GwConfigItem (wifiClient,false),
+        new GwConfigItem(sendUsb,"true"),
+        new GwConfigItem (receiveUsb,"false"),
+        new GwConfigItem (wifiClient,"false"),
         new GwConfigItem (wifiSSID,""),
         new GwConfigItem (wifiPass,"")
     };  
     int getNumConfig() const{
-        return sizeof(configs)/sizeof(GwConfigItem*);
+        return 5;
     }  
 };
 #endif

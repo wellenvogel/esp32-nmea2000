@@ -17,7 +17,7 @@ void GwWifi::setup(){
     IPAddress AP_local_ip(192, 168, 15, 1);  // Static address for AP
     IPAddress AP_gateway(192, 168, 15, 1);
     IPAddress AP_subnet(255, 255, 255, 0);
-    WiFi.mode(WIFI_AP_STA); //enable both AP and client
+    WiFi.mode(WIFI_MODE_APSTA); //enable both AP and client
     WiFi.softAP(AP_ssid,AP_password);
     delay(100);
     WiFi.softAPConfig(AP_local_ip, AP_gateway, AP_subnet);
