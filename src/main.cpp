@@ -12,7 +12,7 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#define VERSION "0.0.2"
+#define VERSION "0.0.3"
 
 //board specific pins
 #ifdef BOARD_M5ATOM
@@ -144,11 +144,14 @@ void debug_log(char* str) {
 
 #define JSON_OK "{\"status\":\"OK\"}"
 //embedded files
-extern const char indexFile[] asm("_binary_web_index_html_start"); 
+extern const uint8_t indexFile[] asm("_binary_web_index_html_gz_start"); 
+extern const uint8_t indexFileEnd[] asm("_binary_web_index_html_gz_end"); 
+extern const uint8_t indexFileLen[] asm("_binary_web_index_html_gz_size");
 
 void web_index()    // Wenn "http://<ip address>/" aufgerufen wurde
 {
-  webserver.send(200, "text/html", indexFile);  //dann Index Webseite senden
+  webserver.sendHeader(F("Content-Encoding"), F("gzip"));
+  webserver.send_P(200, "text/html", (const char *)indexFile,(int)indexFileLen);  //dann Index Webseite senden
 }
 
 void js_reset()      // Wenn "http://<ip address>/gauge.min.js" aufgerufen wurde
@@ -462,11 +465,10 @@ void handle_json() {
 }
 
 
-
+long lastLog=millis();
 void loop() {
   unsigned int size;
   int wifi_retry;
-
   webserver.handleClient();
   gwWifi.loop();
   handle_json();
