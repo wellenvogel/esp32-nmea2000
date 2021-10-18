@@ -33,24 +33,30 @@ static void updateDouble(GwBoatItem<double> *item,double value){
   if (value == N2kDoubleNA) return;
   item->update(value);
 }
+static double formatCourse(double cv){
+  return cv * radToDeg;
+}
+static double formatKnots(double cv){
+  return cv* 3600.0/1852.0;
+}
 
 N2kDataToNMEA0183::N2kDataToNMEA0183(GwLog * logger, GwBoatData *boatData, tNMEA2000 *NMEA2000, tNMEA0183 *NMEA0183) : tNMEA2000::tMsgHandler(0,NMEA2000){
     SendNMEA0183MessageCallback=0;
     pNMEA0183=NMEA0183;
-    Variation=N2kDoubleNA;  COG=N2kDoubleNA; SOG=N2kDoubleNA;
+    Variation=N2kDoubleNA;
     SecondsSinceMidnight=N2kDoubleNA; DaysSince1970=N2kUInt16NA;
     LastPosSend=0;
     lastLoopTime=0;
     NextRMCSend=millis()+RMCPeriod;
-    LastHeadingTime=0;
-    LastCOGSOGTime=0;
     LastWindTime=0;
     this->logger=logger;
     this->boatData=boatData;
-    heading=GwBoatItem<double>::findOrCreate(boatData,F("Heading"),true,2000);
+    heading=GwBoatItem<double>::findOrCreate(boatData,F("Heading"),true,2000,&formatCourse);
     latitude=GwBoatItem<double>::findOrCreate(boatData,F("Latitude"),true,4000);
     longitude=GwBoatItem<double>::findOrCreate(boatData,F("Longitude"),true,4000);
     altitude=GwBoatItem<double>::findOrCreate(boatData,F("Altitude"),true,4000);
+    cog=GwBoatItem<double>::findOrCreate(boatData,F("COG"),true,2000,&formatCourse);
+    sog=GwBoatItem<double>::findOrCreate(boatData,F("SOG"),true,2000,&formatKnots);
   }
 
 //*****************************************************************************
@@ -76,10 +82,6 @@ void N2kDataToNMEA0183::loop() {
   if ( now < (lastLoopTime + 100)) return;
   lastLoopTime=now;
   SendRMC();
-  if ( (LastCOGSOGTime + 2000) < now ) {
-    COG = N2kDoubleNA;
-    SOG = N2kDoubleNA;
-  }
   if ( ( LastWindTime + 2000) < now ) {
     AWS = N2kDoubleNA;
     AWA = N2kDoubleNA;
@@ -201,9 +203,11 @@ void N2kDataToNMEA0183::HandleCOGSOG(const tN2kMsg &N2kMsg) {
   unsigned char SID;
   tN2kHeadingReference HeadingReference;
   tNMEA0183Msg NMEA0183Msg;
-
+  double COG;
+  double SOG;
   if ( ParseN2kCOGSOGRapid(N2kMsg, SID, HeadingReference, COG, SOG) ) {
-    LastCOGSOGTime = millis();
+    cog->update(COG);
+    sog->update(SOG);
     double MCOG = ( !N2kIsNA(COG) && !N2kIsNA(Variation) ? COG - Variation : NMEA0183DoubleNA );
     if ( HeadingReference == N2khr_magnetic ) {
       MCOG = COG;
@@ -264,7 +268,7 @@ void N2kDataToNMEA0183::HandleWind(const tN2kMsg &N2kMsg) {
 
     if ( NMEA0183SetMWV(NMEA0183Msg, WindAngle*radToDeg, NMEA0183Reference , WindSpeed)) SendMessage(NMEA0183Msg);
 
-    if (WindReference == N2kWind_Apparent && SOG != N2kDoubleNA) { // Lets calculate and send TWS/TWA if SOG is available
+    if (WindReference == N2kWind_Apparent && sog->isValid(millis())) { // Lets calculate and send TWS/TWA if SOG is available
       
       AWD=WindAngle*radToDeg + heading->getData()*radToDeg;
       if (AWD>360) AWD=AWD-360;
@@ -273,8 +277,8 @@ void N2kDataToNMEA0183::HandleWind(const tN2kMsg &N2kMsg) {
       x = WindSpeed * cos(WindAngle);
       y = WindSpeed * sin(WindAngle);
 
-      TWA = atan2(y, -SOG + x);
-      TWS = sqrt(( y*y) + ((-SOG+x)*(-SOG+x)));
+      TWA = atan2(y, -sog->getData() + x);
+      TWS = sqrt(( y*y) + ((- sog->getData()+x)*(-sog->getData()+x)));
 
       if (TWS > MaxTws) MaxTws=TWS;
 
@@ -308,7 +312,7 @@ void N2kDataToNMEA0183::HandleWind(const tN2kMsg &N2kMsg) {
     long now=millis();
     if ( NextRMCSend <= millis() && latitude->isValid(now) ) {
       tNMEA0183Msg NMEA0183Msg;
-      if ( NMEA0183SetRMC(NMEA0183Msg, SecondsSinceMidnight, latitude->getData(), longitude->getData(), COG, SOG, DaysSince1970, Variation) ) {
+      if ( NMEA0183SetRMC(NMEA0183Msg, SecondsSinceMidnight, latitude->getData(), longitude->getData(), cog->getData(), sog->getData(), DaysSince1970, Variation) ) {
         SendMessage(NMEA0183Msg);
       }
       SetNextRMCSend();

@@ -43,30 +43,36 @@ class GwBoatData{
     friend class GwBoatItemBase;    
 };
 template<class T> class GwBoatItem : public GwBoatItemBase{
+    public:
+        typedef T (*Formatter)(T);
     private:
         T data;
+        Formatter fmt;
     public:
-        GwBoatItem(long invalidTime=INVALID_TIME): GwBoatItemBase(invalidTime){}
+        GwBoatItem(long invalidTime=INVALID_TIME,Formatter fmt=NULL): GwBoatItemBase(invalidTime){
+            this->fmt=fmt;
+        }
         virtual ~GwBoatItem(){}
         void update(T nv){
             data=nv;
             uls();
         }
-        T getData(){
-            return data;
+        T getData(bool useFormatter=false){
+            if (! useFormatter || fmt == NULL) return data;
+            return (*fmt)(data);
         }
         virtual void toJsonDoc(DynamicJsonDocument *doc,String name){
-            (*doc)[name]=data;
+            (*doc)[name]=getData(true);
         }
         static GwBoatItem<T> *findOrCreate(GwBoatData *handler, String name,bool doCreate=true, 
-            long invalidTime=GwBoatItemBase::INVALID_TIME){
+            long invalidTime=GwBoatItemBase::INVALID_TIME, Formatter fmt=NULL){
             GwBoatItemMap *values=handler->getValues();    
             GwBoatItemMap::iterator it;
             if ((it=values->find(name)) != values->end()){
                 return (GwBoatItem<T> *)it->second;
             }
             if (! doCreate) return NULL;
-            GwBoatItem<T> *ni=new GwBoatItem<T>(invalidTime);
+            GwBoatItem<T> *ni=new GwBoatItem<T>(invalidTime,fmt);
             (*values)[name]=ni;
             return ni; 
         }

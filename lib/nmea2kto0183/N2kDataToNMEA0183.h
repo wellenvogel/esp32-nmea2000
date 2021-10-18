@@ -41,8 +41,8 @@ protected:
   GwBoatItem<double> * altitude;
   double Variation;
   GwBoatItem<double> *heading;
-  double COG;
-  double SOG;
+  GwBoatItem<double> *cog;
+  GwBoatItem<double> *sog;
   double STW;
   
   double TWS;
@@ -65,9 +65,7 @@ protected:
 
   uint16_t DaysSince1970;
   double SecondsSinceMidnight;
-    
-  unsigned long LastHeadingTime;
-  unsigned long LastCOGSOGTime;
+  
   unsigned long LastPosSend;
   unsigned long LastWindTime;
   unsigned long NextRMCSend;
