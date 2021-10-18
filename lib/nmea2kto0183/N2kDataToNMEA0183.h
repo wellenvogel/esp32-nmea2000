@@ -36,11 +36,11 @@ public:
     
 protected:
   static const unsigned long RMCPeriod=500;
-  double Latitude;
-  double Longitude;
-  double Altitude;
+  GwBoatItem<double> *latitude;
+  GwBoatItem<double> *longitude;
+  GwBoatItem<double> * altitude;
   double Variation;
-  double Heading;
+  GwBoatItem<double> *heading;
   double COG;
   double SOG;
   double STW;
@@ -68,7 +68,6 @@ protected:
     
   unsigned long LastHeadingTime;
   unsigned long LastCOGSOGTime;
-  unsigned long LastPositionTime;
   unsigned long LastPosSend;
   unsigned long LastWindTime;
   unsigned long NextRMCSend;
@@ -99,22 +98,7 @@ protected:
   void SendMessage(const tNMEA0183Msg &NMEA0183Msg);
 
 public:
-  N2kDataToNMEA0183(GwLog * logger, GwBoatData *boatData, tNMEA2000 *NMEA2000, tNMEA0183 *NMEA0183) : tNMEA2000::tMsgHandler(0,NMEA2000) {
-    SendNMEA0183MessageCallback=0;
-    pNMEA0183=NMEA0183;
-    Latitude=N2kDoubleNA; Longitude=N2kDoubleNA; Altitude=N2kDoubleNA;
-    Variation=N2kDoubleNA; Heading=N2kDoubleNA; COG=N2kDoubleNA; SOG=N2kDoubleNA;
-    SecondsSinceMidnight=N2kDoubleNA; DaysSince1970=N2kUInt16NA;
-    LastPosSend=0;
-    lastLoopTime=0;
-    NextRMCSend=millis()+RMCPeriod;
-    LastHeadingTime=0;
-    LastCOGSOGTime=0;
-    LastPositionTime=0;
-    LastWindTime=0;
-    this->logger=logger;
-    this->boatData=boatData;
-  }
+  N2kDataToNMEA0183(GwLog * logger, GwBoatData *boatData, tNMEA2000 *NMEA2000, tNMEA0183 *NMEA0183) ;
   void HandleMsg(const tN2kMsg &N2kMsg);
   void SetSendNMEA0183MessageCallback(tSendNMEA0183MessageCallback _SendNMEA0183MessageCallback) {
     SendNMEA0183MessageCallback=_SendNMEA0183MessageCallback;

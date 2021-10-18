@@ -6,62 +6,70 @@
 #include <Arduino.h>
 #include <map>
 #define GW_BOAT_VALUE_LEN 32
-class GwBoatItem{
-    private:
-        char value[GW_BOAT_VALUE_LEN];
+class GwBoatItemBase{
+    public:
+        static const long INVALID_TIME=60000;
+        typedef std::map<String,GwBoatItemBase*> GwBoatItemMap;
+    protected:
         long lastSet;
+        long invalidTime=INVALID_TIME;
         void uls(){
             lastSet=millis();
         }
     public:
-        const char * getValue() const{return value;}
         long getLastSet() const {return lastSet;}
-        bool isValid(long minTime) const {return lastSet > minTime;}
-        GwBoatItem(){
-            value[0]=0;
+        bool isValid(long now) const {
+            return (lastSet + invalidTime) >= now;
+        }
+        GwBoatItemBase(long invalidTime=INVALID_TIME){
             lastSet=-1;
+            this->invalidTime=invalidTime;
         }
-        void update(String nv){
-            strncpy(value,nv.c_str(),GW_BOAT_VALUE_LEN-1);
-            uls();
-        }
-        void update(const char * nv){
-            strncpy(value,nv,GW_BOAT_VALUE_LEN-1);
-        }
-        void update(long nv){
-            ltoa(nv,value,10);
-            uls();
-        }
-        void update(bool nv){
-            if (nv) strcpy_P(value,PSTR("true"));
-            else strcpy_P(value,PSTR("false"));
-            uls();
-        }
-        void update(double nv){
-            dtostrf(nv,3,7,value);
-            uls();
-        }
+        virtual ~GwBoatItemBase(){}
         void invalidate(){
             lastSet=0;
         }
-
+        virtual void toJsonDoc(DynamicJsonDocument *doc,String name)=0;
 };
 class GwBoatData{
-    typedef std::map<String,GwBoatItem*> GwBoatItemMap;
     private:
-        const long maxAge=60000; //max age for valid data in ms
         GwLog *logger;
-        GwBoatItemMap values;
-        GwBoatItem *find(String name, bool doCreate=true);
+        GwBoatItemBase::GwBoatItemMap values;
     public:
         GwBoatData(GwLog *logger);
-        ~GwBoatData();    
-        void update(String name,const char *value);
-        void update(String name, String value);
-        void update(String name, long value);
-        void update(String name, bool value);
-        void update(String name, double value);
+        ~GwBoatData();
+        GwBoatItemBase::GwBoatItemMap * getValues();    
         String toJson() const;
-
+    friend class GwBoatItemBase;    
 };
+template<class T> class GwBoatItem : public GwBoatItemBase{
+    private:
+        T data;
+    public:
+        GwBoatItem(long invalidTime=INVALID_TIME): GwBoatItemBase(invalidTime){}
+        virtual ~GwBoatItem(){}
+        void update(T nv){
+            data=nv;
+            uls();
+        }
+        T getData(){
+            return data;
+        }
+        virtual void toJsonDoc(DynamicJsonDocument *doc,String name){
+            (*doc)[name]=data;
+        }
+        static GwBoatItem<T> *findOrCreate(GwBoatData *handler, String name,bool doCreate=true, 
+            long invalidTime=GwBoatItemBase::INVALID_TIME){
+            GwBoatItemMap *values=handler->getValues();    
+            GwBoatItemMap::iterator it;
+            if ((it=values->find(name)) != values->end()){
+                return (GwBoatItem<T> *)it->second;
+            }
+            if (! doCreate) return NULL;
+            GwBoatItem<T> *ni=new GwBoatItem<T>(invalidTime);
+            (*values)[name]=ni;
+            return ni; 
+        }
+};
+
 #endif
