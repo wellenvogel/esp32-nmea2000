@@ -36,11 +36,6 @@
 #include "GwBoatData.h"
 
 
-
-
-#define UDP_Forwarding 0   // Set to 1 for forwarding AIS from serial2 to UDP brodcast
-
-
 GwLog logger(LOG_SERIAL);
 GwConfigHandler config(&logger);
 GwWifi gwWifi(&config,&logger);
@@ -51,24 +46,11 @@ GwBoatData boatData(&logger);
 //counter
 int numCan=0;
 
-const uint16_t ServerPort = 2222; // Define the port, where server sends data. Use this e.g. on OpenCPN. Use 39150 for Navionis AIS
-
-// UPD broadcast for Navionics, OpenCPN, etc.
-const char * udpAddress = "192.168.15.255"; // UDP broadcast address. Should be the network of the ESP32 AP (please check!)
-const int udpPort = 2000; // port 2000 lets think Navionics it is an DY WLN10 device
-
-// Create UDP instance
-WiFiUDP udp;
 
 int NodeAddress;  // To store last Node Address
 
 Preferences preferences;             // Nonvolatile storage on ESP32 - To store LastDeviceAddress
 
-int alarmstate = false; // Alarm state (low voltage/temperature)
-int acknowledge = false; // Acknowledge for alarm, button pressed
-
-
-const size_t MaxClients = 10;
 bool SendNMEA0183Conversion = true; // Do we send NMEA2000 -> NMEA0183 conversion
 bool SendSeaSmart = false; // Do we send NMEA2000 messages in SeaSmart format
 
@@ -315,55 +297,10 @@ void SendNMEA0183Message(const tNMEA0183Msg &NMEA0183Msg) {
   }
 }
 
-
-bool IsTimeToUpdate(unsigned long NextUpdate) {
-  return (NextUpdate < millis());
-}
-unsigned long InitNextUpdate(unsigned long Period, unsigned long Offset = 0) {
-  return millis() + Period + Offset;
-}
-
-void SetNextUpdate(unsigned long &NextUpdate, unsigned long Period) {
-  while ( NextUpdate < millis() ) NextUpdate += Period;
-}
-
-
-void SendN2kEngine() {
-  static unsigned long SlowDataUpdated = InitNextUpdate(SlowDataUpdatePeriod, MiscSendOffset);
-  tN2kMsg N2kMsg;
-
-  if ( IsTimeToUpdate(SlowDataUpdated) ) {
-    SetNextUpdate(SlowDataUpdated, SlowDataUpdatePeriod);
-
-    SetN2kEngineDynamicParam(N2kMsg, 0, N2kDoubleNA, N2kDoubleNA, N2kDoubleNA, N2kDoubleNA, N2kDoubleNA, N2kDoubleNA, N2kDoubleNA, N2kDoubleNA, N2kInt8NA, N2kInt8NA, true);
-    NMEA2000.SendMsg(N2kMsg);
-  }
-}
-
-long lastLog=millis();
 void loop() {
-  unsigned int size;
-  int wifi_retry;
   webserver.handleClient();
   gwWifi.loop();
 
-  if (NMEA0183.GetMessage(NMEA0183Msg)) {  // Get AIS NMEA sentences from serial2
-
-    SendNMEA0183Message(NMEA0183Msg);      // Send to TCP clients
-
-    NMEA0183Msg.GetMessage(buff, MAX_NMEA0183_MESSAGE_SIZE); // send to buffer
-
-
-
-#if UDP_Forwarding == 1
-    size = strlen(buff);
-    udp.beginPacket(udpAddress, udpPort);  // Send to UDP
-    udp.write((byte*)buff, size);
-    udp.endPacket();
-#endif
-  }
-
-  SendN2kEngine();
   socketServer.loop();
   NMEA2000.ParseMessages();
 
