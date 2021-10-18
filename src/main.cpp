@@ -28,27 +28,24 @@
 
 #include "N2kDataToNMEA0183.h"
 
-#include "BoatData.h"
 
 #include "GwLog.h"
 #include "GWConfig.h"
 #include "GWWifi.h"
 #include "GwSocketServer.h"
+#include "GwBoatData.h"
 
 
 
 
-#define ENABLE_DEBUG_LOG 0 // Debug log, set to 1 to enable AIS forward on USB-Serial / 2 for ADC voltage to support calibration
 #define UDP_Forwarding 0   // Set to 1 for forwarding AIS from serial2 to UDP brodcast
-#define NMEA_TO_SERIAL 1
-#define HighTempAlarm 12   // Alarm level for fridge temperature (higher)
-#define LowVoltageAlarm 11 // Alarm level for battery voltage (lower)
 
 
 GwLog logger(LOG_SERIAL);
 GwConfigHandler config(&logger);
 GwWifi gwWifi(&config,&logger);
 GwSocketServer socketServer(&config,&logger);
+GwBoatData boatData(&logger);
 
 
 //counter
@@ -63,9 +60,6 @@ const int udpPort = 2000; // port 2000 lets think Navionics it is an DY WLN10 de
 // Create UDP instance
 WiFiUDP udp;
 
-// Struct to update BoatData. See BoatData.h for content
-tBoatData BoatData;
-
 int NodeAddress;  // To store last Node Address
 
 Preferences preferences;             // Nonvolatile storage on ESP32 - To store LastDeviceAddress
@@ -78,10 +72,7 @@ const size_t MaxClients = 10;
 bool SendNMEA0183Conversion = true; // Do we send NMEA2000 -> NMEA0183 conversion
 bool SendSeaSmart = false; // Do we send NMEA2000 messages in SeaSmart format
 
-WiFiServer json(90);
-
-
-tN2kDataToNMEA0183 nmea0183Converter(&NMEA2000, 0);
+N2kDataToNMEA0183 nmea0183Converter(&logger, &boatData,&NMEA2000, 0);
 
 // Set the information for other bus devices, which messages we support
 const unsigned long TransmitMessages[] PROGMEM = {127489L, // Engine dynamic
@@ -127,11 +118,6 @@ tNMEA0183Msg NMEA0183Msg;
 tNMEA0183 NMEA0183;
 
 
-void debug_log(char* str) {
-#if ENABLE_DEBUG_LOG == 1
-  Serial.println(str);
-#endif
-}
 
 #define JSON_OK "{\"status\":\"OK\"}"
 //embedded files
@@ -166,6 +152,10 @@ void js_status(){
 
 void js_config(){
   webserver.send(200,F("application/json"),config.toJson());
+}
+
+void js_boatData(){
+  webserver.send(200,F("application/json"),boatData.toJson());
 }
 
 void web_setConfig(){
@@ -235,10 +225,6 @@ void setup() {
   // Start TCP server
   socketServer.begin();
 
-  // Start JSON server
-  json.begin();
-
-  
   // Start Web Server
   webserver.on("/", web_index);
   webserver.on("/api/reset", js_reset);
@@ -246,6 +232,7 @@ void setup() {
   webserver.on("/api/config",js_config);
   webserver.on("/api/setConfig",web_setConfig);
   webserver.on("/api/resetConfig",web_resetConfig);
+  webserver.on("/api/boatData",js_boatData);
   webserver.onNotFound(handleNotFound);
 
   webserver.begin();
@@ -353,74 +340,12 @@ void SendN2kEngine() {
   }
 }
 
-
-
-
-void handle_json() {
-
-  WiFiClient client = json.available();
-
-  // Do we have a client?
-  if (!client) return;
-
-  // Serial.println(F("New client"));
-
-  // Read the request (we ignore the content in this example)
-  while (client.available()) client.read();
-
-  // Allocate JsonBuffer
-  // Use arduinojson.org/assistant to compute the capacity.
-  StaticJsonDocument<800> root;
-
-  root["Latitude"] = BoatData.Latitude;
-  root["Longitude"] = BoatData.Longitude;
-  root["Heading"] = BoatData.Heading;
-  root["COG"] = BoatData.COG;
-  root["SOG"] = BoatData.SOG;
-  root["STW"] = BoatData.STW;
-  root["AWS"] = BoatData.AWS;
-  root["TWS"] = BoatData.TWS;
-  root["MaxAws"] = BoatData.MaxAws;
-  root["MaxTws"] = BoatData.MaxTws;
-  root["AWA"] = BoatData.AWA;
-  root["TWA"] = BoatData.TWA;
-  root["TWD"] = BoatData.TWD;
-  root["TripLog"] = BoatData.TripLog;
-  root["Log"] = BoatData.Log;
-  root["RudderPosition"] = BoatData.RudderPosition;
-  root["WaterTemperature"] = BoatData.WaterTemperature;
-  root["WaterDepth"] = BoatData.WaterDepth;
-  root["Variation"] = BoatData.Variation;
-  root["Altitude"] = BoatData.Altitude;
-  root["GPSTime"] = BoatData.GPSTime;
-  root["DaysSince1970"] = BoatData.DaysSince1970;
-  
-
-  //Serial.print(F("Sending: "));
-  //serializeJson(root, Serial);
-  //Serial.println();
-
-  // Write response headers
-  client.println("HTTP/1.0 200 OK");
-  client.println("Content-Type: application/json");
-  client.println("Connection: close");
-  client.println();
-
-  // Write JSON document
-  serializeJsonPretty(root, client);
-
-  // Disconnect
-  client.stop();
-}
-
-
 long lastLog=millis();
 void loop() {
   unsigned int size;
   int wifi_retry;
   webserver.handleClient();
   gwWifi.loop();
-  handle_json();
 
   if (NMEA0183.GetMessage(NMEA0183Msg)) {  // Get AIS NMEA sentences from serial2
 
@@ -428,9 +353,7 @@ void loop() {
 
     NMEA0183Msg.GetMessage(buff, MAX_NMEA0183_MESSAGE_SIZE); // send to buffer
 
-#if ENABLE_DEBUG_LOG == 1
-    Serial.println(buff);
-#endif
+
 
 #if UDP_Forwarding == 1
     size = strlen(buff);
@@ -453,7 +376,7 @@ void loop() {
     Serial.printf("Address Change: New Address=%d\n", SourceAddress);
   }
 
-  nmea0183Converter.Update(&BoatData);
+  nmea0183Converter.loop();
 
   // Dummy to empty input buffer to avoid board to stuck with e.g. NMEA Reader
   if ( Serial.available() ) {

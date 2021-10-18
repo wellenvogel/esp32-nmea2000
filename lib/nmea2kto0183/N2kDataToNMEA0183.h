@@ -24,12 +24,15 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <NMEA0183.h>
 #include <NMEA2000.h>
 
-#include "BoatData.h"
+
+#include <GwLog.h>
+#include <GwBoatData.h>
 
 //------------------------------------------------------------------------------
-class tN2kDataToNMEA0183 : public tNMEA2000::tMsgHandler {
+class N2kDataToNMEA0183 : public tNMEA2000::tMsgHandler {
 public:
   using tSendNMEA0183MessageCallback=void (*)(const tNMEA0183Msg &NMEA0183Msg);
+
     
 protected:
   static const unsigned long RMCPeriod=500;
@@ -69,6 +72,10 @@ protected:
   unsigned long LastPosSend;
   unsigned long LastWindTime;
   unsigned long NextRMCSend;
+  unsigned long lastLoopTime;
+
+  GwLog *logger;
+  GwBoatData *boatData;
 
   tNMEA0183 *pNMEA0183;
   tSendNMEA0183MessageCallback SendNMEA0183MessageCallback;
@@ -92,22 +99,25 @@ protected:
   void SendMessage(const tNMEA0183Msg &NMEA0183Msg);
 
 public:
-  tN2kDataToNMEA0183(tNMEA2000 *_pNMEA2000, tNMEA0183 *_pNMEA0183) : tNMEA2000::tMsgHandler(0,_pNMEA2000) {
+  N2kDataToNMEA0183(GwLog * logger, GwBoatData *boatData, tNMEA2000 *NMEA2000, tNMEA0183 *NMEA0183) : tNMEA2000::tMsgHandler(0,NMEA2000) {
     SendNMEA0183MessageCallback=0;
-    pNMEA0183=_pNMEA0183;
+    pNMEA0183=NMEA0183;
     Latitude=N2kDoubleNA; Longitude=N2kDoubleNA; Altitude=N2kDoubleNA;
     Variation=N2kDoubleNA; Heading=N2kDoubleNA; COG=N2kDoubleNA; SOG=N2kDoubleNA;
     SecondsSinceMidnight=N2kDoubleNA; DaysSince1970=N2kUInt16NA;
     LastPosSend=0;
+    lastLoopTime=0;
     NextRMCSend=millis()+RMCPeriod;
     LastHeadingTime=0;
     LastCOGSOGTime=0;
     LastPositionTime=0;
     LastWindTime=0;
+    this->logger=logger;
+    this->boatData=boatData;
   }
   void HandleMsg(const tN2kMsg &N2kMsg);
   void SetSendNMEA0183MessageCallback(tSendNMEA0183MessageCallback _SendNMEA0183MessageCallback) {
     SendNMEA0183MessageCallback=_SendNMEA0183MessageCallback;
   }
-  long Update(tBoatData *BoatData);
+  void loop();
 };

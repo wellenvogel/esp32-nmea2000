@@ -26,12 +26,11 @@
 #include <math.h>
 
 #include "N2kDataToNMEA0183.h"
-#include "BoatData.h"
 
 const double radToDeg = 180.0 / M_PI;
 
 //*****************************************************************************
-void tN2kDataToNMEA0183::HandleMsg(const tN2kMsg &N2kMsg) {
+void N2kDataToNMEA0183::HandleMsg(const tN2kMsg &N2kMsg) {
   switch (N2kMsg.PGN) {
     case 127250UL: HandleHeading(N2kMsg);
     case 127258UL: HandleVariation(N2kMsg);
@@ -48,18 +47,21 @@ void tN2kDataToNMEA0183::HandleMsg(const tN2kMsg &N2kMsg) {
 }
 
 //*****************************************************************************
-long tN2kDataToNMEA0183::Update(tBoatData *BoatData) {
+void N2kDataToNMEA0183::loop() {
+  unsigned long now=millis();
+  if ( now < (lastLoopTime + 100)) return;
+  lastLoopTime=now;
   SendRMC();
-  if ( LastHeadingTime + 2000 < millis() ) Heading = N2kDoubleNA;
-  if ( LastCOGSOGTime + 2000 < millis() ) {
+  if ( (LastHeadingTime + 2000) < now ) Heading = N2kDoubleNA;
+  if ( (LastCOGSOGTime + 2000) < now ) {
     COG = N2kDoubleNA;
     SOG = N2kDoubleNA;
   }
-  if ( LastPositionTime + 4000 < millis() ) {
+  if ( (LastPositionTime + 4000) < now ) {
     Latitude = N2kDoubleNA;
     Longitude = N2kDoubleNA;
   }
-  if ( LastWindTime + 2000 < millis() ) {
+  if ( ( LastWindTime + 2000) < now ) {
     AWS = N2kDoubleNA;
     AWA = N2kDoubleNA;
     TWS = N2kDoubleNA;
@@ -67,45 +69,39 @@ long tN2kDataToNMEA0183::Update(tBoatData *BoatData) {
     TWD = N2kDoubleNA;    
   }
 
-  BoatData->Latitude=Latitude;
-  BoatData->Longitude=Longitude;
-  BoatData->Altitude=Altitude;
-  BoatData->Heading=Heading * radToDeg;
-  BoatData->COG=COG * radToDeg;
-  BoatData->SOG=SOG * 3600.0/1852.0;
-  BoatData->STW=STW * 3600.0/1852.0;
-  BoatData->AWS=AWS * 3600.0/1852.0;
-  BoatData->TWS=TWS * 3600.0/1852.0;
-  BoatData->MaxAws=MaxAws * 3600.0/1852.0;;
-  BoatData->MaxTws=MaxTws * 3600.0/1852.0;;
-  BoatData->AWA=AWA * radToDeg;
-  BoatData->TWA=TWA * radToDeg;
-  BoatData->TWD=TWD * radToDeg;
-  BoatData->TripLog=TripLog / 1825.0;
-  BoatData->Log=Log / 1825.0;
-  BoatData->RudderPosition=RudderPosition * radToDeg;
-  BoatData->WaterTemperature=KelvinToC(WaterTemperature) ;
-  BoatData->WaterDepth=WaterDepth;
-  BoatData->Variation=Variation *radToDeg;
-  BoatData->GPSTime=SecondsSinceMidnight;
-  BoatData->DaysSince1970=DaysSince1970;
+  boatData->update(F("Latitude"),Latitude);
+  boatData->update(F("Longitude"),Longitude);
+  boatData->update(F("Altitude"),Altitude);
+  boatData->update(F("Heading"),Heading * radToDeg);
+  boatData->update(F("COG"),COG * radToDeg);
+  boatData->update(F("SOG"),SOG * 3600.0/1852.0);
+  boatData->update(F("STW"),STW * 3600.0/1852.0);
+  boatData->update(F("AWS"),AWS * 3600.0/1852.0);
+  boatData->update(F("TWS"),TWS * 3600.0/1852.0);
+  boatData->update(F("MaxAws"),MaxAws * 3600.0/1852.0);
+  boatData->update(F("MaxTws"),MaxTws * 3600.0/1852.0);
+  boatData->update(F("AWA"),AWA * radToDeg);
+  boatData->update(F("TWA"),TWA * radToDeg);
+  boatData->update(F("TWD"),TWD * radToDeg);
+  boatData->update(F("TripLog"),TripLog / 1825.0);
+  boatData->update(F("Log"),Log / 1825.0);
+  boatData->update(F("RudderPosition"),RudderPosition * radToDeg);
+  boatData->update(F("WaterTemperature"),KelvinToC(WaterTemperature)) ;
+  boatData->update(F("WaterDepth"),WaterDepth);
+  boatData->update(F("Variation"),Variation *radToDeg);
+  boatData->update(F("GPSTime"),SecondsSinceMidnight);
+  boatData->update(F("DaysSince1970"),(long)DaysSince1970);
     
-  
-if (SecondsSinceMidnight!=N2kDoubleNA && DaysSince1970!=N2kUInt16NA){
-   return((DaysSince1970*3600*24)+SecondsSinceMidnight); // Needed for SD Filename and time
-  } else {
-   return(0); // Needed for SD Filename and time 
-  }
 }
 
 //*****************************************************************************
-void tN2kDataToNMEA0183::SendMessage(const tNMEA0183Msg &NMEA0183Msg) {
+void N2kDataToNMEA0183::SendMessage(const tNMEA0183Msg &NMEA0183Msg) {
   if ( pNMEA0183 != 0 ) pNMEA0183->SendMessage(NMEA0183Msg);
   if ( SendNMEA0183MessageCallback != 0 ) SendNMEA0183MessageCallback(NMEA0183Msg);
 }
 
 //*****************************************************************************
-void tN2kDataToNMEA0183::HandleHeading(const tN2kMsg &N2kMsg) {
+void N2kDataToNMEA0183::HandleHeading(const tN2kMsg &N2kMsg) {
   unsigned char SID;
   tN2kHeadingReference ref;
   double _Deviation = 0;
@@ -125,7 +121,7 @@ void tN2kDataToNMEA0183::HandleHeading(const tN2kMsg &N2kMsg) {
 }
 
 //*****************************************************************************
-void tN2kDataToNMEA0183::HandleVariation(const tN2kMsg &N2kMsg) {
+void N2kDataToNMEA0183::HandleVariation(const tN2kMsg &N2kMsg) {
   unsigned char SID;
   tN2kMagneticVariation Source;
   uint16_t DaysSince1970;
@@ -134,7 +130,7 @@ void tN2kDataToNMEA0183::HandleVariation(const tN2kMsg &N2kMsg) {
 }
 
 //*****************************************************************************
-void tN2kDataToNMEA0183::HandleBoatSpeed(const tN2kMsg &N2kMsg) {
+void N2kDataToNMEA0183::HandleBoatSpeed(const tN2kMsg &N2kMsg) {
   unsigned char SID;
   double WaterReferenced;
   double GroundReferenced;
@@ -151,7 +147,7 @@ void tN2kDataToNMEA0183::HandleBoatSpeed(const tN2kMsg &N2kMsg) {
 }
 
 //*****************************************************************************
-void tN2kDataToNMEA0183::HandleDepth(const tN2kMsg &N2kMsg) {
+void N2kDataToNMEA0183::HandleDepth(const tN2kMsg &N2kMsg) {
   unsigned char SID;
   double DepthBelowTransducer;
   double Offset;
@@ -172,7 +168,7 @@ void tN2kDataToNMEA0183::HandleDepth(const tN2kMsg &N2kMsg) {
 }
 
 //*****************************************************************************
-void tN2kDataToNMEA0183::HandlePosition(const tN2kMsg &N2kMsg) {
+void N2kDataToNMEA0183::HandlePosition(const tN2kMsg &N2kMsg) {
 
   if ( ParseN2kPGN129025(N2kMsg, Latitude, Longitude) ) {
     LastPositionTime = millis();
@@ -180,7 +176,7 @@ void tN2kDataToNMEA0183::HandlePosition(const tN2kMsg &N2kMsg) {
 }
 
 //*****************************************************************************
-void tN2kDataToNMEA0183::HandleCOGSOG(const tN2kMsg &N2kMsg) {
+void N2kDataToNMEA0183::HandleCOGSOG(const tN2kMsg &N2kMsg) {
   unsigned char SID;
   tN2kHeadingReference HeadingReference;
   tNMEA0183Msg NMEA0183Msg;
@@ -199,7 +195,7 @@ void tN2kDataToNMEA0183::HandleCOGSOG(const tN2kMsg &N2kMsg) {
 }
 
 //*****************************************************************************
-void tN2kDataToNMEA0183::HandleGNSS(const tN2kMsg &N2kMsg) {
+void N2kDataToNMEA0183::HandleGNSS(const tN2kMsg &N2kMsg) {
   unsigned char SID;
   tN2kGNSStype GNSStype;
   tN2kGNSSmethod GNSSmethod;
@@ -220,7 +216,7 @@ void tN2kDataToNMEA0183::HandleGNSS(const tN2kMsg &N2kMsg) {
 }
 
 //*****************************************************************************
-void tN2kDataToNMEA0183::HandleWind(const tN2kMsg &N2kMsg) {
+void N2kDataToNMEA0183::HandleWind(const tN2kMsg &N2kMsg) {
   unsigned char SID;
   tN2kWindReference WindReference;
   tNMEA0183WindReference NMEA0183Reference = NMEA0183Wind_True;
@@ -283,7 +279,7 @@ void tN2kDataToNMEA0183::HandleWind(const tN2kMsg &N2kMsg) {
   }
 }
   //*****************************************************************************
-  void tN2kDataToNMEA0183::SendRMC() {
+  void N2kDataToNMEA0183::SendRMC() {
     if ( NextRMCSend <= millis() && !N2kIsNA(Latitude) ) {
       tNMEA0183Msg NMEA0183Msg;
       if ( NMEA0183SetRMC(NMEA0183Msg, SecondsSinceMidnight, Latitude, Longitude, COG, SOG, DaysSince1970, Variation) ) {
@@ -295,7 +291,7 @@ void tN2kDataToNMEA0183::HandleWind(const tN2kMsg &N2kMsg) {
 
 
   //*****************************************************************************
-  void tN2kDataToNMEA0183::HandleLog(const tN2kMsg & N2kMsg) {
+  void N2kDataToNMEA0183::HandleLog(const tN2kMsg & N2kMsg) {
   uint16_t DaysSince1970;
   double SecondsSinceMidnight;
 
@@ -314,7 +310,7 @@ void tN2kDataToNMEA0183::HandleWind(const tN2kMsg &N2kMsg) {
   }
 
   //*****************************************************************************
-  void tN2kDataToNMEA0183::HandleRudder(const tN2kMsg & N2kMsg) {
+  void N2kDataToNMEA0183::HandleRudder(const tN2kMsg & N2kMsg) {
 
     unsigned char Instance;
     tN2kRudderDirectionOrder RudderDirectionOrder;
@@ -337,7 +333,7 @@ void tN2kDataToNMEA0183::HandleWind(const tN2kMsg &N2kMsg) {
   }
 
 //*****************************************************************************
-  void tN2kDataToNMEA0183::HandleWaterTemp(const tN2kMsg & N2kMsg) {
+  void N2kDataToNMEA0183::HandleWaterTemp(const tN2kMsg & N2kMsg) {
 
     unsigned char SID;
     double OutsideAmbientAirTemperature;
