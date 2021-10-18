@@ -58,13 +58,15 @@ class GwConfigHandler{
         GwLog *logger;
     public:
         public:
-        const String sendUsb="sendUsb";
-        const String receiveUsb="receiveUsb";
-        const String wifiClient="wifiClient";
-        const String wifiPass="wifiPass";
-        const String wifiSSID="wifiSSID";
-        const String serverPort="serverPort";
-        const String maxClients="maxClients";
+        const String sendUsb=F("sendUsb");
+        const String receiveUsb=F("receiveUsb");
+        const String wifiClient=F("wifiClient");
+        const String wifiPass=F("wifiPass");
+        const String wifiSSID=F("wifiSSID");
+        const String serverPort=F("serverPort");
+        const String maxClients=F("maxClients");
+        const String sendTCP=F("sendTCP");
+        const String sendSeasmart=F("sendSeasmart");
         GwConfigHandler(GwLog *logger);
         bool loadConfig();
         bool saveConfig();
@@ -79,18 +81,19 @@ class GwConfigHandler{
         GwConfigItem * findConfig(const String name, bool dummy=false);
         GwConfigInterface * getConfigItem(const String name, bool dummy=false) const;
     private:
-    GwConfigItem* configs[7]={
+    GwConfigItem* configs[9]={
         new GwConfigItem(sendUsb,"true"),
         new GwConfigItem (receiveUsb,"false"),
         new GwConfigItem (wifiClient,"false"),
         new GwConfigItem (wifiSSID,""),
         new GwConfigItem (wifiPass,""),
         new GwConfigItem (serverPort,"2222"),
-        new GwConfigItem (maxClients, "10")
-
+        new GwConfigItem (maxClients, "10"),
+        new GwConfigItem (sendTCP,"true"),
+        new GwConfigItem (sendSeasmart,"false")
     };  
     int getNumConfig() const{
-        return 7;
+        return 9;
     }  
 };
 #endif

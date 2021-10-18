@@ -12,7 +12,7 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#define VERSION "0.0.4"
+#define VERSION "0.0.5"
 #include "GwHardware.h"
 
 #define LOG_SERIAL true
@@ -81,11 +81,6 @@ void SendNMEA0183Message(const tNMEA0183Msg &NMEA0183Msg);
 
 WebServer webserver(80);
 
-#define MiscSendOffset 120
-#define SlowDataUpdatePeriod 1000  // Time between CAN Messages sent
-
-
-
 // Serial port 2 config (GPIO 16)
 const int baudrate = 38400;
 const int rs_config = SERIAL_8N1;
@@ -95,8 +90,7 @@ const int rs_config = SERIAL_8N1;
 #define MAX_NMEA0183_MESSAGE_SIZE 150 // For AIS
 char buff[MAX_NMEA0183_MESSAGE_SIZE];
 
-// NMEA message for AIS receiving and multiplexing
-tNMEA0183Msg NMEA0183Msg;
+
 tNMEA0183 NMEA0183;
 
 
@@ -186,21 +180,21 @@ void handleNotFound()
 
 
 GwConfigInterface *sendUsb=NULL;
+GwConfigInterface *sendTCP=NULL;
+GwConfigInterface *sendSeasmart=NULL;
 
 void setup() {
 
   uint8_t chipid[6];
   uint32_t id = 0;
-  int i = 0;
-
-
-
   // Init USB serial port
   Serial.begin(115200);
   Serial.println("Starting...");
   config.loadConfig();
   Serial.println(config.toString());
   sendUsb=config.getConfigItem(config.sendUsb,true);
+  sendTCP=config.getConfigItem(config.sendTCP,true);
+  sendSeasmart=config.getConfigItem(config.sendSeasmart,true);
   
   gwWifi.setup();
 
@@ -227,7 +221,7 @@ void setup() {
   NMEA2000.SetN2kCANSendFrameBufSize(250);
 
   esp_efuse_read_mac(chipid);
-  for (i = 0; i < 6; i++) id += (chipid[i] << (7 * i));
+  for (int i = 0; i < 6; i++) id += (chipid[i] << (7 * i));
 
   // Set product information
   NMEA2000.SetProductInformation("1", // Manufacturer's Model serial code
@@ -277,7 +271,7 @@ void setup() {
 void HandleNMEA2000Msg(const tN2kMsg &N2kMsg) {
 
   numCan++;
-  if ( !SendSeaSmart ) return;
+  if ( !sendSeasmart->asBoolean() ) return;
 
   char buf[MAX_NMEA2000_MESSAGE_SEASMART_SIZE];
   if ( N2kToSeasmart(N2kMsg, millis(), buf, MAX_NMEA2000_MESSAGE_SEASMART_SIZE) == 0 ) return;
@@ -287,11 +281,13 @@ void HandleNMEA2000Msg(const tN2kMsg &N2kMsg) {
 
 //*****************************************************************************
 void SendNMEA0183Message(const tNMEA0183Msg &NMEA0183Msg) {
-  if ( !SendNMEA0183Conversion ) return;
+  if ( ! sendTCP->asBoolean() && ! sendUsb->asBoolean() ) return;
 
   char buf[MAX_NMEA0183_MESSAGE_SIZE];
   if ( !NMEA0183Msg.GetMessage(buf, MAX_NMEA0183_MESSAGE_SIZE) ) return;
-  socketServer.sendToClients(buf);
+  if (sendTCP->asBoolean()){
+    socketServer.sendToClients(buf);
+  }
   if (sendUsb->asBoolean()){
     Serial.println(buf);
   }
