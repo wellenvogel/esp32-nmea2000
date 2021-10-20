@@ -1,0 +1,25 @@
+name: CI
+
+on: [push]
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-20.04]
+    
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v2
+        with: 
+          submodules: "recursive"
+      - name: Install deps
+        run: |
+          #apt-get install -y python3-pip
+          python3 -m pip install --upgrade pip
+          pip install -U platformio
+      - name: Build
+        run: |
+          pio run -e m5stack-atom
+         
