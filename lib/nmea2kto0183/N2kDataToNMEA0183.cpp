@@ -70,28 +70,28 @@ N2kDataToNMEA0183::N2kDataToNMEA0183(GwLog * logger, GwBoatData *boatData, tNMEA
   
     this->logger=logger;
     this->boatData=boatData;
-    heading=boatData->getDoubleItem(F("Heading"),true,2000,&formatCourse);
+    heading=boatData->getDoubleItem(F("Heading"),true,4000,&formatCourse);
     latitude=boatData->getDoubleItem(F("Latitude"),true,4000);
     longitude=boatData->getDoubleItem(F("Longitude"),true,4000);
     altitude=boatData->getDoubleItem(F("Altitude"),true,4000);
-    cog=boatData->getDoubleItem(F("COG"),true,2000,&formatCourse);
-    sog=boatData->getDoubleItem(F("SOG"),true,2000,&formatKnots);
-    stw=boatData->getDoubleItem(F("STW"),true,2000,&formatKnots);
-    variation=boatData->getDoubleItem(F("Variation"),true,2000,&formatCourse);
-    tws=boatData->getDoubleItem(F("TWS"),true,2000,&formatKnots);
-    twd=boatData->getDoubleItem(F("TWD"),true,2000,&formatCourse);
-    aws=boatData->getDoubleItem(F("AWS"),true,2000,&formatKnots);
-    awa=boatData->getDoubleItem(F("AWA"),true,2000,&formatWind);
-    awd=boatData->getDoubleItem(F("AWD"),true,2000,&formatCourse);
+    cog=boatData->getDoubleItem(F("COG"),true,4000,&formatCourse);
+    sog=boatData->getDoubleItem(F("SOG"),true,4000,&formatKnots);
+    stw=boatData->getDoubleItem(F("STW"),true,4000,&formatKnots);
+    variation=boatData->getDoubleItem(F("Variation"),true,4000,&formatCourse);
+    tws=boatData->getDoubleItem(F("TWS"),true,4000,&formatKnots);
+    twd=boatData->getDoubleItem(F("TWD"),true,4000,&formatCourse);
+    aws=boatData->getDoubleItem(F("AWS"),true,4000,&formatKnots);
+    awa=boatData->getDoubleItem(F("AWA"),true,4000,&formatWind);
+    awd=boatData->getDoubleItem(F("AWD"),true,4000,&formatCourse);
     maxAws=boatData->getDoubleItem(F("MaxAws"),true,0,&formatKnots);
     maxTws=boatData->getDoubleItem(F("MaxTws"),true,0,&formatKnots);
-    rudderPosition=boatData->getDoubleItem(F("RudderPosition"),true,2000,&formatCourse);
-    waterTemperature=boatData->getDoubleItem(F("WaterTemperature"),true,2000,&KelvinToC);
-    waterDepth=boatData->getDoubleItem(F("WaterDepth"),true,2000);
+    rudderPosition=boatData->getDoubleItem(F("RudderPosition"),true,4000,&formatCourse);
+    waterTemperature=boatData->getDoubleItem(F("WaterTemperature"),true,4000,&KelvinToC);
+    waterDepth=boatData->getDoubleItem(F("WaterDepth"),true,4000);
     log=boatData->getUint32Item(F("Log"),true,0,mtr2nm);
     tripLog=boatData->getUint32Item(F("TripLog"),true,0,mtr2nm);
-    daysSince1970=boatData->getUint32Item(F("DaysSince1970"),true,2000);
-    secondsSinceMidnight=boatData->getDoubleItem(F("SecondsSinceMidnight"),true,2000);
+    daysSince1970=boatData->getUint32Item(F("DaysSince1970"),true,4000);
+    secondsSinceMidnight=boatData->getDoubleItem(F("SecondsSinceMidnight"),true,4000);
   }
 
 //*****************************************************************************
