@@ -23,7 +23,3 @@ String GwBoatData::toJson() const {
     serializeJson(json,buf);
     return buf;
 }
-
-GwBoatItemBase::GwBoatItemMap * GwBoatData::getValues(){
-    return &values;
-}

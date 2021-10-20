@@ -31,17 +31,7 @@ class GwBoatItemBase{
         }
         virtual void toJsonDoc(DynamicJsonDocument *doc,String name)=0;
 };
-class GwBoatData{
-    private:
-        GwLog *logger;
-        GwBoatItemBase::GwBoatItemMap values;
-    public:
-        GwBoatData(GwLog *logger);
-        ~GwBoatData();
-        GwBoatItemBase::GwBoatItemMap * getValues();    
-        String toJson() const;
-    friend class GwBoatItemBase;    
-};
+class GwBoatData;
 template<class T> class GwBoatItem : public GwBoatItemBase{
     public:
         typedef T (*Formatter)(T);
@@ -64,9 +54,9 @@ template<class T> class GwBoatItem : public GwBoatItemBase{
         virtual void toJsonDoc(DynamicJsonDocument *doc,String name){
             (*doc)[name]=getData(true);
         }
-        static GwBoatItem<T> *findOrCreate(GwBoatData *handler, String name,bool doCreate=true, 
+        private:
+        static GwBoatItem<T> *findOrCreate(GwBoatItemMap *values, String name,bool doCreate=true, 
             long invalidTime=GwBoatItemBase::INVALID_TIME, Formatter fmt=NULL){
-            GwBoatItemMap *values=handler->getValues();    
             GwBoatItemMap::iterator it;
             if ((it=values->find(name)) != values->end()){
                 return (GwBoatItem<T> *)it->second;
@@ -76,6 +66,26 @@ template<class T> class GwBoatItem : public GwBoatItemBase{
             (*values)[name]=ni;
             return ni; 
         }
+        friend class GwBoatData;
 };
+
+#define GWBOATDATA_IMPL_ITEM(type,name) GwBoatItem<type> *get##name##Item(String iname,bool doCreate=true, \
+                long invalidTime=GwBoatItemBase::INVALID_TIME, GwBoatItem<type>::Formatter fmt=NULL){ \
+                return GwBoatItem<type>::findOrCreate(&values,iname, doCreate, \
+                invalidTime,fmt);\
+            }
+
+class GwBoatData{
+    private:
+        GwLog *logger;
+        GwBoatItemBase::GwBoatItemMap values;
+    public:
+        GwBoatData(GwLog *logger);
+        ~GwBoatData();
+        String toJson() const;
+        GWBOATDATA_IMPL_ITEM(double,Double)
+        GWBOATDATA_IMPL_ITEM(long,Long)    
+};
+
 
 #endif

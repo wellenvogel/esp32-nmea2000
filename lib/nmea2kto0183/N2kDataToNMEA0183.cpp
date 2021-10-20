@@ -51,12 +51,12 @@ N2kDataToNMEA0183::N2kDataToNMEA0183(GwLog * logger, GwBoatData *boatData, tNMEA
     LastWindTime=0;
     this->logger=logger;
     this->boatData=boatData;
-    heading=GwBoatItem<double>::findOrCreate(boatData,F("Heading"),true,2000,&formatCourse);
-    latitude=GwBoatItem<double>::findOrCreate(boatData,F("Latitude"),true,4000);
-    longitude=GwBoatItem<double>::findOrCreate(boatData,F("Longitude"),true,4000);
-    altitude=GwBoatItem<double>::findOrCreate(boatData,F("Altitude"),true,4000);
-    cog=GwBoatItem<double>::findOrCreate(boatData,F("COG"),true,2000,&formatCourse);
-    sog=GwBoatItem<double>::findOrCreate(boatData,F("SOG"),true,2000,&formatKnots);
+    heading=boatData->getDoubleItem(F("Heading"),true,2000,&formatCourse);
+    latitude=boatData->getDoubleItem(F("Latitude"),true,4000);
+    longitude=boatData->getDoubleItem(F("Longitude"),true,4000);
+    altitude=boatData->getDoubleItem(F("Altitude"),true,4000);
+    cog=boatData->getDoubleItem(F("COG"),true,2000,&formatCourse);
+    sog=boatData->getDoubleItem(F("SOG"),true,2000,&formatKnots);
   }
 
 //*****************************************************************************
