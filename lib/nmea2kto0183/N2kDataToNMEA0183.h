@@ -39,35 +39,33 @@ protected:
   GwBoatItem<double> *latitude;
   GwBoatItem<double> *longitude;
   GwBoatItem<double> * altitude;
-  double Variation;
+  GwBoatItem<double> *variation;
   GwBoatItem<double> *heading;
   GwBoatItem<double> *cog;
   GwBoatItem<double> *sog;
-  double STW;
+  GwBoatItem<double> *stw;
   
-  double TWS;
-  double TWA; 
-  double TWD;
+  GwBoatItem<double> *tws;
+  GwBoatItem<double> *twd;
   
-  double AWS;
-  double AWA;
-  double AWD;
+  GwBoatItem<double> *aws;
+  GwBoatItem<double> *awa;
+  GwBoatItem<double> *awd;
+  
+  GwBoatItem<double> *maxAws;
+  GwBoatItem<double> *maxTws;
+  
+  GwBoatItem<double> *rudderPosition;
+  GwBoatItem<double> *waterTemperature;
+  GwBoatItem<double> *waterDepth;
 
-  double MaxAws;
-  double MaxTws;
+  GwBoatItem<uint32_t> *tripLog;
+  GwBoatItem<uint32_t> *log;
+  GwBoatItem<uint32_t> *daysSince1970;
+  GwBoatItem<double> *secondsSinceMidnight;
 
-  double RudderPosition;
-  double WaterTemperature;
-  double WaterDepth;
-    
-  uint32_t TripLog;
-  uint32_t Log;
-
-  uint16_t DaysSince1970;
-  double SecondsSinceMidnight;
   
   unsigned long LastPosSend;
-  unsigned long LastWindTime;
   unsigned long NextRMCSend;
   unsigned long lastLoopTime;
 

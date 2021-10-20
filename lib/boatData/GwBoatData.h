@@ -8,21 +8,24 @@
 #define GW_BOAT_VALUE_LEN 32
 class GwBoatItemBase{
     public:
-        static const long INVALID_TIME=60000;
+        static const unsigned long INVALID_TIME=60000;
         typedef std::map<String,GwBoatItemBase*> GwBoatItemMap;
     protected:
-        long lastSet;
-        long invalidTime=INVALID_TIME;
+        unsigned long lastSet=0;
+        unsigned long invalidTime=INVALID_TIME;
         void uls(){
             lastSet=millis();
         }
     public:
-        long getLastSet() const {return lastSet;}
-        bool isValid(long now) const {
+        unsigned long getLastSet() const {return lastSet;}
+        bool isValid(unsigned long now=0) const {
+            if (lastSet == 0) return false;
+            if (invalidTime == 0) return true;
+            if (now == 0) now=millis();
             return (lastSet + invalidTime) >= now;
         }
-        GwBoatItemBase(long invalidTime=INVALID_TIME){
-            lastSet=-1;
+        GwBoatItemBase(unsigned long invalidTime=INVALID_TIME){
+            lastSet=0;
             this->invalidTime=invalidTime;
         }
         virtual ~GwBoatItemBase(){}
@@ -39,7 +42,8 @@ template<class T> class GwBoatItem : public GwBoatItemBase{
         T data;
         Formatter fmt;
     public:
-        GwBoatItem(long invalidTime=INVALID_TIME,Formatter fmt=NULL): GwBoatItemBase(invalidTime){
+        GwBoatItem(unsigned long invalidTime=INVALID_TIME,Formatter fmt=NULL):
+            GwBoatItemBase(invalidTime){
             this->fmt=fmt;
         }
         virtual ~GwBoatItem(){}
@@ -50,6 +54,10 @@ template<class T> class GwBoatItem : public GwBoatItemBase{
         T getData(bool useFormatter=false){
             if (! useFormatter || fmt == NULL) return data;
             return (*fmt)(data);
+        }
+        T getDataWithDefault(T defaultv){
+            if (! isValid(millis())) return defaultv;
+            return data;
         }
         virtual void toJsonDoc(DynamicJsonDocument *doc,String name){
             (*doc)[name]=getData(true);
@@ -69,6 +77,10 @@ template<class T> class GwBoatItem : public GwBoatItemBase{
         friend class GwBoatData;
 };
 
+/**
+ * implement a get for a particular type of boatData
+ * will create a method get##name##Item that returns a GwBoatItem<type>
+ * */
 #define GWBOATDATA_IMPL_ITEM(type,name) GwBoatItem<type> *get##name##Item(String iname,bool doCreate=true, \
                 long invalidTime=GwBoatItemBase::INVALID_TIME, GwBoatItem<type>::Formatter fmt=NULL){ \
                 return GwBoatItem<type>::findOrCreate(&values,iname, doCreate, \
@@ -84,7 +96,8 @@ class GwBoatData{
         ~GwBoatData();
         String toJson() const;
         GWBOATDATA_IMPL_ITEM(double,Double)
-        GWBOATDATA_IMPL_ITEM(long,Long)    
+        GWBOATDATA_IMPL_ITEM(long,Long)
+        GWBOATDATA_IMPL_ITEM(uint32_t,Uint32)     
 };
 
 

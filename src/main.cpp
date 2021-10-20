@@ -210,7 +210,6 @@ void setup() {
   webserver.on("/api/resetConfig",web_resetConfig);
   webserver.on("/api/boatData",js_boatData);
   webserver.onNotFound(handleNotFound);
-
   webserver.begin();
   Serial.println("HTTP server started");
 
@@ -308,7 +307,6 @@ void loop() {
     preferences.end();
     Serial.printf("Address Change: New Address=%d\n", SourceAddress);
   }
-
   nmea0183Converter.loop();
 
   // Dummy to empty input buffer to avoid board to stuck with e.g. NMEA Reader
