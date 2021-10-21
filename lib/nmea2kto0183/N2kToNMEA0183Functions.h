@@ -90,27 +90,54 @@ private:
     unsigned long LastPosSend;
     unsigned long NextRMCSend;
     unsigned long lastLoopTime;
-
-    std::map<long,N2KConverter> converters;
+    class ConverterEntry{
+        public:
+            unsigned long count=0;
+            N2KConverter converter;
+            ConverterEntry(N2KConverter cv=NULL){converter=cv;}
+    };
+    typedef std::map<long,ConverterEntry> ConverterMap;
+    ConverterMap converters;
 
     /**
      *  register a n2k message converter
      *  each of the converter functions must be registered in the constructor 
      **/
     void registerConverter(long pgn,N2KConverter converter){
-        converters[pgn]=converter;
+        ConverterEntry e(converter);
+        converters[pgn]=e;
     }
     virtual const unsigned long * handledPgns(){
         logger->logString("CONV: # %d handled PGNS",(int)converters.size());
         unsigned long *rt=new unsigned long[converters.size()+1];
         int idx=0;
-        for (std::map<long,N2KConverter>::iterator it=converters.begin();
+        for (ConverterMap::iterator it=converters.begin();
         it != converters.end();it++){
             rt[idx]=it->first;
             idx++;
         }
         rt[idx]=0;
         return rt;
+    }
+    virtual void HandleMsg(const tN2kMsg &N2kMsg)
+    {
+        ConverterMap::iterator it;
+        it = converters.find(N2kMsg.PGN);
+        if (it != converters.end()){
+            //logger->logString("CONV: handle PGN %ld",N2kMsg.PGN);
+            (it->second).count++;
+            //call to member function - see e.g. https://isocpp.org/wiki/faq/pointers-to-members
+            ((*this).*((it->second).converter))(N2kMsg);
+            return;
+        }
+    }
+    virtual void toJson(JsonDocument &json){
+        for (ConverterMap::iterator it=converters.begin();it != converters.end();it++){
+            json["cnv"][String(it->first)]=it->second.count;
+        }
+    }
+    virtual int numPgns(){
+        return converters.size();
     }
     void SetNextRMCSend() { NextRMCSend = millis() + RMCPeriod; }
 
@@ -488,7 +515,7 @@ public:
         //and register it here
         //with this approach we easily have a list of all handled
         //pgns
-        registerConverter(127250UL,&N2kToNMEA0183Functions::HandleMsg);
+        registerConverter(127250UL,&N2kToNMEA0183Functions::HandleHeading);
         registerConverter(127258UL,&N2kToNMEA0183Functions::HandleVariation);
         registerConverter(128259UL,&N2kToNMEA0183Functions::HandleBoatSpeed);
         registerConverter(128267UL,&N2kToNMEA0183Functions::HandleDepth);
@@ -508,17 +535,6 @@ public:
             return;
         lastLoopTime = now;
         SendRMC();
-    }
-    virtual void HandleMsg(const tN2kMsg &N2kMsg)
-    {
-        std::map<long,N2KConverter>::iterator it;
-        it = converters.find(N2kMsg.PGN);
-        if (it != converters.end()){
-            //logger->logString("CONV: handle PGN %ld",N2kMsg.PGN);
-            //call to member function - see e.g. https://isocpp.org/wiki/faq/pointers-to-members
-            ((*this).*(it->second))(N2kMsg);
-            return;
-        }
     }
 };
 #endif

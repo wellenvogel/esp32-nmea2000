@@ -57,5 +57,7 @@ public:
   virtual void loop();
   virtual ~N2kDataToNMEA0183(){}
   virtual const unsigned long* handledPgns()=0;
+  virtual int numPgns()=0;
+  virtual void toJson(JsonDocument &json)=0;
 };
 #endif

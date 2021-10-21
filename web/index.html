@@ -31,8 +31,13 @@
     getJson('/api/status')
       .then(function(jsonData){
         for (let k in jsonData){
-          let el=document.getElementById(k);
-          if (el) el.textContent=jsonData[k];
+          if (k == 'cnv'){
+            updateCanDetails(jsonData[k]);
+          }
+          else{
+            let el=document.getElementById(k);
+            if (el) el.textContent=jsonData[k];
+          }
         }
         lastUpdate=(new Date()).getTime();
       })
@@ -72,6 +77,36 @@
         alertRestart(); 
       })
   }
+  function showCanDetails(on){
+    let el=document.getElementById('canDetails');
+    if (!el) return;
+    if (on) el.classList.add('visible');
+    else(el.classList).remove('visible');
+  }
+  function updateCanDetails(details){
+    let frame=document.getElementById('canDetails');
+    if (! frame) return;
+    for (let k in details){
+      let el=frame.querySelector("[data-id=\""+k+"\"] ");
+      if (!el){
+        el=document.createElement('div');
+        el.classList.add('row');
+        let cv=document.createElement('span');
+        cv.classList.add('label');
+        cv.textContent="PGN"+k;
+        el.appendChild(cv);
+        cv=document.createElement('span');
+        cv.classList.add('value');
+        cv.setAttribute('data-id',k);
+        cv.textContent=details[k];
+        el.appendChild(cv);
+        frame.appendChild(el);
+      }
+      else{
+        el.textContent=details[k];
+      }
+    }
+  }
   window.setInterval(update,1000);
   window.addEventListener('load',function(){
   let buttons=document.querySelectorAll('button');
@@ -79,6 +114,10 @@
       let be=buttons[i];
       be.onclick=window[be.id]; //assume a function with the button id
     }
+    let cd=document.getElementById("showCanDetails");
+    cd.addEventListener('change',function(ev){
+      showCanDetails(ev.target.checked);
+    });
     resetForm();
   });
 </script>  
@@ -112,6 +151,12 @@ span#connected.ok{
 .buttons {
     padding-left: 1em;
 }
+#canDetails{
+  display:none;
+}
+#canDetails.visible{
+  display: block;
+}
 
 </style>
 </head>
@@ -127,8 +172,16 @@ span#connected.ok{
   <span class="value" id="connected"></span>
 </div>
 <div class="row">
-  <span class="label"># CAN messages</span>
+  <span class="label"># NMEA2000 messages</span>
   <span class="value" id="numcan">---</span>
+</div>
+<div class="row">
+  <span class="label">NMEA2000 details</span>
+  <input type="checkbox" id="showCanDetails"></span>
+</div>
+
+<div class="row" id="canDetails">
+
 </div>
 <div class="row">
   <span class="label"># TCP clients</span>

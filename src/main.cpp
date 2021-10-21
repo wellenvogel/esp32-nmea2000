@@ -12,7 +12,7 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#define VERSION "0.0.5"
+#define VERSION "0.0.7"
 #include "GwHardware.h"
 
 #define LOG_SERIAL true
@@ -101,12 +101,14 @@ void js_reset()      // Wenn "http://<ip address>/gauge.min.js" aufgerufen wurde
 
 
 void js_status(){
-  StaticJsonDocument<256> status;
+  int numPgns=nmea0183Converter->numPgns();
+  DynamicJsonDocument status(256*numPgns*30);
   status["numcan"]=numCan;
   status["version"]=VERSION;
   status["wifiConnected"]=gwWifi.clientConnected();
   status["clientIP"]=WiFi.localIP().toString();
   status["numClients"]=socketServer.numClients();
+  nmea0183Converter->toJson(status);
   String buf;
   serializeJson(status,buf);
   webserver.send(200,F("application/json"),buf);
