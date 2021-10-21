@@ -11,6 +11,7 @@
 #include <math.h>
 #include "N2kDataToNMEA0183.h"
 #include <map>
+#include "NMEA0183AISMessages.h"
 class N2kToNMEA0183Functions : public N2kDataToNMEA0183
 {
     typedef void (N2kToNMEA0183Functions::*N2KConverter)(const tN2kMsg &N2kMsg);
