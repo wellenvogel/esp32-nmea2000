@@ -82,12 +82,14 @@ bool GwConfigHandler::updateValue(const char *name, const char * value){
     if (i == NULL) return false;
     logger->logString("update config %s=>%s",name,value);
     i->fromString(value);
+    return true;
 }
 bool GwConfigHandler::updateValue(String name, String value){
     GwConfigItem *i=findConfig(name);
     if (i == NULL) return false;
     logger->logString("update config %s=>%s",name.c_str(),value.c_str());
     i->fromString(value);
+    return true;
 }
 bool GwConfigHandler::reset(bool save){
     logger->logString("reset config");

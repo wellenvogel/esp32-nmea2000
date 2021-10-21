@@ -20,7 +20,8 @@ HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTIO
 CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
 OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
-
+#ifndef _N2KDATATONMEA0183_H
+#define _N2KDATATONMEA0183_H
 #include <NMEA0183.h>
 #include <NMEA2000.h>
 
@@ -29,75 +30,31 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <GwBoatData.h>
 
 //------------------------------------------------------------------------------
-class N2kDataToNMEA0183 : public tNMEA2000::tMsgHandler {
+class N2kDataToNMEA0183 : public tNMEA2000::tMsgHandler
+{
 public:
-  using tSendNMEA0183MessageCallback=void (*)(const tNMEA0183Msg &NMEA0183Msg);
+  using tSendNMEA0183MessageCallback = void (*)(const tNMEA0183Msg &NMEA0183Msg);
 
-    
 protected:
-  static const unsigned long RMCPeriod=500;
-  GwBoatItem<double> *latitude;
-  GwBoatItem<double> *longitude;
-  GwBoatItem<double> * altitude;
-  GwBoatItem<double> *variation;
-  GwBoatItem<double> *heading;
-  GwBoatItem<double> *cog;
-  GwBoatItem<double> *sog;
-  GwBoatItem<double> *stw;
-  
-  GwBoatItem<double> *tws;
-  GwBoatItem<double> *twd;
-  
-  GwBoatItem<double> *aws;
-  GwBoatItem<double> *awa;
-  GwBoatItem<double> *awd;
-  
-  GwBoatItem<double> *maxAws;
-  GwBoatItem<double> *maxTws;
-  
-  GwBoatItem<double> *rudderPosition;
-  GwBoatItem<double> *waterTemperature;
-  GwBoatItem<double> *waterDepth;
-
-  GwBoatItem<uint32_t> *tripLog;
-  GwBoatItem<uint32_t> *log;
-  GwBoatItem<uint32_t> *daysSince1970;
-  GwBoatItem<double> *secondsSinceMidnight;
-
-  
-  unsigned long LastPosSend;
-  unsigned long NextRMCSend;
-  unsigned long lastLoopTime;
-
   GwLog *logger;
   GwBoatData *boatData;
 
   tNMEA0183 *pNMEA0183;
   tSendNMEA0183MessageCallback SendNMEA0183MessageCallback;
 
-protected:
-  void HandleHeading(const tN2kMsg &N2kMsg); // 127250
-  void HandleVariation(const tN2kMsg &N2kMsg); // 127258
-  void HandleBoatSpeed(const tN2kMsg &N2kMsg); // 128259
-  void HandleDepth(const tN2kMsg &N2kMsg); // 128267
-  void HandlePosition(const tN2kMsg &N2kMsg); // 129025
-  void HandleCOGSOG(const tN2kMsg &N2kMsg); // 129026
-  void HandleGNSS(const tN2kMsg &N2kMsg); // 129029
-  void HandleWind(const tN2kMsg &N2kMsg); // 130306
-  void HandleLog(const tN2kMsg &N2kMsg); // 128275
-  void HandleRudder(const tN2kMsg &N2kMsg); // 127245
-  void HandleWaterTemp(const tN2kMsg &N2kMsg); // 130310
 
-  
-  void SetNextRMCSend() { NextRMCSend=millis()+RMCPeriod; }
-  void SendRMC();
   void SendMessage(const tNMEA0183Msg &NMEA0183Msg);
 
+  N2kDataToNMEA0183(GwLog *logger, GwBoatData *boatData, tNMEA2000 *NMEA2000, tNMEA0183 *NMEA0183);
+
 public:
-  N2kDataToNMEA0183(GwLog * logger, GwBoatData *boatData, tNMEA2000 *NMEA2000, tNMEA0183 *NMEA0183) ;
-  void HandleMsg(const tN2kMsg &N2kMsg);
-  void SetSendNMEA0183MessageCallback(tSendNMEA0183MessageCallback _SendNMEA0183MessageCallback) {
-    SendNMEA0183MessageCallback=_SendNMEA0183MessageCallback;
+  static N2kDataToNMEA0183* create(GwLog *logger, GwBoatData *boatData, tNMEA2000 *NMEA2000, tNMEA0183 *NMEA0183);
+  virtual void HandleMsg(const tN2kMsg &N2kMsg) = 0;
+  void SetSendNMEA0183MessageCallback(tSendNMEA0183MessageCallback _SendNMEA0183MessageCallback)
+  {
+    SendNMEA0183MessageCallback = _SendNMEA0183MessageCallback;
   }
-  void loop();
+  virtual void loop();
+  virtual ~N2kDataToNMEA0183(){}
 };
+#endif

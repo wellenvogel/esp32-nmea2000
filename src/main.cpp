@@ -54,7 +54,7 @@ Preferences preferences;             // Nonvolatile storage on ESP32 - To store 
 bool SendNMEA0183Conversion = true; // Do we send NMEA2000 -> NMEA0183 conversion
 bool SendSeaSmart = false; // Do we send NMEA2000 messages in SeaSmart format
 
-N2kDataToNMEA0183 nmea0183Converter(&logger, &boatData,&NMEA2000, 0);
+N2kDataToNMEA0183 *nmea0183Converter=N2kDataToNMEA0183::create(&logger, &boatData,&NMEA2000, 0);
 
 // Set the information for other bus devices, which messages we support
 const unsigned long TransmitMessages[] PROGMEM = {127489L, // Engine dynamic
@@ -250,10 +250,10 @@ void setup() {
 
   NMEA2000.ExtendTransmitMessages(TransmitMessages);
   NMEA2000.ExtendReceiveMessages(ReceiveMessages);
-  NMEA2000.AttachMsgHandler(&nmea0183Converter); // NMEA 2000 -> NMEA 0183 conversion
+  NMEA2000.AttachMsgHandler(nmea0183Converter); // NMEA 2000 -> NMEA 0183 conversion
   NMEA2000.SetMsgHandler(HandleNMEA2000Msg); // Also send all NMEA2000 messages in SeaSmart format
 
-  nmea0183Converter.SetSendNMEA0183MessageCallback(SendNMEA0183Message);
+  nmea0183Converter->SetSendNMEA0183MessageCallback(SendNMEA0183Message);
 
   NMEA2000.Open();
 
@@ -307,7 +307,7 @@ void loop() {
     preferences.end();
     Serial.printf("Address Change: New Address=%d\n", SourceAddress);
   }
-  nmea0183Converter.loop();
+  nmea0183Converter->loop();
 
   // Dummy to empty input buffer to avoid board to stuck with e.g. NMEA Reader
   if ( Serial.available() ) {
