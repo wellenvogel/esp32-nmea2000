@@ -10,8 +10,10 @@
 #include <NMEA0183Messages.h>
 #include <math.h>
 #include "N2kDataToNMEA0183.h"
+#include <map>
 class N2kToNMEA0183Functions : public N2kDataToNMEA0183
 {
+    typedef void (N2kToNMEA0183Functions::*N2KConverter)(const tN2kMsg &N2kMsg);
 private:
     static const unsigned long RMCPeriod = 500;
     static void setMax(GwBoatItem<double> *maxItem, GwBoatItem<double> *item)
@@ -88,6 +90,28 @@ private:
     unsigned long LastPosSend;
     unsigned long NextRMCSend;
     unsigned long lastLoopTime;
+
+    std::map<long,N2KConverter> converters;
+
+    /**
+     *  register a n2k message converter
+     *  each of the converter functions must be registered in the constructor 
+     **/
+    void registerConverter(long pgn,N2KConverter converter){
+        converters[pgn]=converter;
+    }
+    virtual const unsigned long * handledPgns(){
+        logger->logString("CONV: # %d handled PGNS",(int)converters.size());
+        unsigned long *rt=new unsigned long[converters.size()+1];
+        int idx=0;
+        for (std::map<long,N2KConverter>::iterator it=converters.begin();
+        it != converters.end();it++){
+            rt[idx]=it->first;
+            idx++;
+        }
+        rt[idx]=0;
+        return rt;
+    }
     void SetNextRMCSend() { NextRMCSend = millis() + RMCPeriod; }
 
     //*************** the converters ***********************
@@ -458,6 +482,23 @@ public:
         tripLog = boatData->getUint32Item(F("TripLog"), true, 0, mtr2nm);
         daysSince1970 = boatData->getUint32Item(F("DaysSince1970"), true, 4000);
         secondsSinceMidnight = boatData->getDoubleItem(F("SecondsSinceMidnight"), true, 4000);
+
+        //register all converter functions
+        //for each vonverter you should have a member with the N2KMsg as parameter
+        //and register it here
+        //with this approach we easily have a list of all handled
+        //pgns
+        registerConverter(127250UL,&N2kToNMEA0183Functions::HandleMsg);
+        registerConverter(127258UL,&N2kToNMEA0183Functions::HandleVariation);
+        registerConverter(128259UL,&N2kToNMEA0183Functions::HandleBoatSpeed);
+        registerConverter(128267UL,&N2kToNMEA0183Functions::HandleDepth);
+        registerConverter(129025UL,&N2kToNMEA0183Functions::HandlePosition);
+        registerConverter(129026UL,&N2kToNMEA0183Functions::HandleCOGSOG);
+        registerConverter(129029UL,&N2kToNMEA0183Functions::HandleGNSS);
+        registerConverter(130306UL,&N2kToNMEA0183Functions::HandleWind);
+        registerConverter(128275UL,&N2kToNMEA0183Functions::HandleLog);
+        registerConverter(127245UL,&N2kToNMEA0183Functions::HandleRudder);
+        registerConverter(130310UL,&N2kToNMEA0183Functions::HandleWaterTemp);
     }
     virtual void loop()
     {
@@ -470,33 +511,14 @@ public:
     }
     virtual void HandleMsg(const tN2kMsg &N2kMsg)
     {
-        switch (N2kMsg.PGN)
-        {
-        case 127250UL:
-            HandleHeading(N2kMsg);
-        case 127258UL:
-            HandleVariation(N2kMsg);
-        case 128259UL:
-            HandleBoatSpeed(N2kMsg);
-        case 128267UL:
-            HandleDepth(N2kMsg);
-        case 129025UL:
-            HandlePosition(N2kMsg);
-        case 129026UL:
-            HandleCOGSOG(N2kMsg);
-        case 129029UL:
-            HandleGNSS(N2kMsg);
-        case 130306UL:
-            HandleWind(N2kMsg);
-        case 128275UL:
-            HandleLog(N2kMsg);
-        case 127245UL:
-            HandleRudder(N2kMsg);
-        case 130310UL:
-            HandleWaterTemp(N2kMsg);
+        std::map<long,N2KConverter>::iterator it;
+        it = converters.find(N2kMsg.PGN);
+        if (it != converters.end()){
+            //logger->logString("CONV: handle PGN %ld",N2kMsg.PGN);
+            //call to member function - see e.g. https://isocpp.org/wiki/faq/pointers-to-members
+            ((*this).*(it->second))(N2kMsg);
+            return;
         }
     }
-
-private:
 };
 #endif

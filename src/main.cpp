@@ -59,21 +59,7 @@ N2kDataToNMEA0183 *nmea0183Converter=N2kDataToNMEA0183::create(&logger, &boatDat
 // Set the information for other bus devices, which messages we support
 const unsigned long TransmitMessages[] PROGMEM = {127489L, // Engine dynamic
                                                   0
-                                                 };
-const unsigned long ReceiveMessages[] PROGMEM = {/*126992L,*/ // System time
-      127250L, // Heading
-      127258L, // Magnetic variation
-      128259UL,// Boat speed
-      128267UL,// Depth
-      129025UL,// Position
-      129026L, // COG and SOG
-      129029L, // GNSS
-      130306L, // Wind
-      128275UL,// Log
-      127245UL,// Rudder
-      0
-    };
-
+};
 // Forward declarations
 void HandleNMEA2000Msg(const tN2kMsg &N2kMsg);
 void SendNMEA0183Message(const tNMEA0183Msg &NMEA0183Msg);
@@ -249,7 +235,7 @@ void setup() {
   NMEA2000.SetMode(tNMEA2000::N2km_ListenAndNode, NodeAddress);
 
   NMEA2000.ExtendTransmitMessages(TransmitMessages);
-  NMEA2000.ExtendReceiveMessages(ReceiveMessages);
+  NMEA2000.ExtendReceiveMessages(nmea0183Converter->handledPgns());
   NMEA2000.AttachMsgHandler(nmea0183Converter); // NMEA 2000 -> NMEA 0183 conversion
   NMEA2000.SetMsgHandler(HandleNMEA2000Msg); // Also send all NMEA2000 messages in SeaSmart format
 

@@ -56,5 +56,6 @@ public:
   }
   virtual void loop();
   virtual ~N2kDataToNMEA0183(){}
+  virtual const unsigned long* handledPgns()=0;
 };
 #endif
