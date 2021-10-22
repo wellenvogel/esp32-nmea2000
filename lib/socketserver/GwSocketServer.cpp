@@ -1,4 +1,5 @@
 #include "GwSocketServer.h"
+#include <ESPmDNS.h>
 
 GwSocketServer::GwSocketServer(const GwConfigHandler *config,GwLog *logger){
     this->config=config;
@@ -9,6 +10,7 @@ void GwSocketServer::begin(){
     server->begin();
     logger->logString("Socket server created, port=%d",
         config->getInt(config->serverPort));
+    MDNS.addService("_nmea-0183","_tcp",config->getInt(config->serverPort));    
 
 }
 void GwSocketServer::loop()

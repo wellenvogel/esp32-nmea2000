@@ -25,6 +25,7 @@
 #include <WebServer.h>
 #include <Preferences.h>
 #include <ArduinoJson.h>
+#include <ESPmDNS.h>
 
 #include "N2kDataToNMEA0183.h"
 
@@ -191,7 +192,7 @@ void setup() {
   sendTCP=config.getConfigItem(config.sendTCP,true);
   sendSeasmart=config.getConfigItem(config.sendSeasmart,true);
   systemName=config.getConfigItem(config.systemName,true);
-  
+  MDNS.begin(config.getConfigItem(config.systemName)->asCString());
   gwWifi.setup();
 
   // Start TCP server
@@ -208,6 +209,8 @@ void setup() {
   webserver.onNotFound(handleNotFound);
   webserver.begin();
   Serial.println("HTTP server started");
+
+  MDNS.addService("_http","_tcp",80);
 
   // Reserve enough buffer for sending all messages. This does not work on small memory devices like Uno or Mega
 
