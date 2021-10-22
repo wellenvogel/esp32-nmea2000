@@ -102,7 +102,7 @@ void js_reset()      // Wenn "http://<ip address>/gauge.min.js" aufgerufen wurde
 
 void js_status(){
   int numPgns=nmea0183Converter->numPgns();
-  DynamicJsonDocument status(256*numPgns*30);
+  DynamicJsonDocument status(256+numPgns*50);
   status["numcan"]=numCan;
   status["version"]=VERSION;
   status["wifiConnected"]=gwWifi.clientConnected();
