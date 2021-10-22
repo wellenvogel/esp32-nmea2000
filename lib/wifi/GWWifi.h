@@ -11,11 +11,15 @@ class GwWifi{
         const GwConfigInterface *wifiPass;
         bool connectInternal();
         long lastConnectStart=0;
+        unsigned long lastApAccess=0;
+        unsigned long apShutdownTime=0;
+        bool apActive=false;
     public:
         GwWifi(const GwConfigHandler *config,GwLog *log);
         void setup();
         void loop();
         bool clientConnected();
         bool connectClient();
+        String apIP();
 };
 #endif

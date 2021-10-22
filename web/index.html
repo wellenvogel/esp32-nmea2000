@@ -172,6 +172,10 @@ span#connected.ok{
   <span class="value" id="connected"></span>
 </div>
 <div class="row">
+  <span class="label">Access Point IP</span>
+  <span class="value" id="apIp">---</span>
+</div>
+<div class="row">
   <span class="label"># NMEA2000 messages</span>
   <span class="value" id="numcan">---</span>
 </div>
@@ -198,10 +202,32 @@ span#connected.ok{
 <button id="reset" >Reset</button>
 <div class="configForm">
   <div class="row">
+    <span class="label">system name</span>
+    <input name="systemName" type="text">
+  </div>
+  <div class="row">
     <span class="label">NMEAtoUSB</span>
     <select name="sendUsb">
       <option value="true">On</option>
       <option value="false" selected="selected">Off</option>
+    </select>
+  </div>
+  <!--"1200","2400","4800","9600","14400","19200","28800","38400","57600","115200","230400","460800"-->
+  <div class="row">
+    <span class="label">USB baud rate</span>
+    <select name="usbBaud">
+      <option value="1200">1200</option>
+      <option value="2400">2400</option>
+      <option value="4800">4800</option>
+      <option value="9600">9600</option>
+      <option value="14400">14400</option>
+      <option value="19200">19200</option>
+      <option value="28800">28800</option>
+      <option value="38400">38400</option>
+      <option value="57600">57600</option>
+      <option value="115200">115200</option>
+      <option value="230400">230400</option>
+      <option value="460800">460800</option>
     </select>
   </div>
   <div class="row">
@@ -225,6 +251,10 @@ span#connected.ok{
       <option value="true">On</option>
       <option value="false" selected="selected">Off</option>
     </select>
+  </div>
+  <div class="row">
+    <span class="label">shutdown AP after (min)</span>
+    <input name="stopApTime" type="number">
   </div>
   <div class="row">
     <span class="label">wifiClient</span>

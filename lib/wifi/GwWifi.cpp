@@ -1,8 +1,6 @@
 #include "GWWifi.h"
 
-
-const char *AP_ssid = "ESP32NMEA2K";  // ESP32 as AP
-const char *AP_password = "esp32nmea2k"; //too short - so no pass
+const char *AP_password = "esp32nmea2k"; 
 
 GwWifi::GwWifi(const GwConfigHandler *config,GwLog *log){
     this->config=config;
@@ -18,13 +16,20 @@ void GwWifi::setup(){
     IPAddress AP_gateway(192, 168, 15, 1);
     IPAddress AP_subnet(255, 255, 255, 0);
     WiFi.mode(WIFI_MODE_APSTA); //enable both AP and client
-    WiFi.softAP(AP_ssid,AP_password);
+    const char *ssid=config->getConfigItem(config->systemName)->asCString();
+    WiFi.softAP(ssid,AP_password);
     delay(100);
     WiFi.softAPConfig(AP_local_ip, AP_gateway, AP_subnet);
     logger->logString("WifiAP created: ssid=%s,adress=%s",
-        AP_ssid,
+        ssid,
         WiFi.softAPIP().toString().c_str()
         );
+    apActive=true;   
+    lastApAccess=millis();
+    apShutdownTime=config->getConfigItem(config->stopApTime)->asInt() * 60;
+    if (apShutdownTime < 120 && apShutdownTime != 0) apShutdownTime=120; //min 2 minutes
+    logger->logString("GWWIFI: AP auto shutdown %s (%ds)",apShutdownTime> 0?"enabled":"disabled",apShutdownTime);
+    apShutdownTime=apShutdownTime*1000; //ms   
     connectInternal();    
 }
 bool GwWifi::connectInternal(){
@@ -46,6 +51,16 @@ void GwWifi::loop(){
             connectInternal();
         }
     }
+    if (apShutdownTime != 0 && apActive){
+        if (WiFi.softAPgetStationNum()){
+            lastApAccess=millis();
+        }
+        if ((lastApAccess + apShutdownTime) < millis()){
+            logger->logString("GWWIFI: shutdown AP");
+            WiFi.softAPdisconnect(true);
+            apActive=false;
+        }
+    }
 }
 bool GwWifi::clientConnected(){
     return WiFi.status() == WL_CONNECTED;
@@ -53,4 +68,9 @@ bool GwWifi::clientConnected(){
 bool GwWifi::connectClient(){
     WiFi.disconnect();
     return connectInternal();
+}
+
+String GwWifi::apIP(){
+    if (! apActive) return String();
+    return WiFi.softAPIP().toString();
 }

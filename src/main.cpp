@@ -108,6 +108,7 @@ void js_status(){
   status["wifiConnected"]=gwWifi.clientConnected();
   status["clientIP"]=WiFi.localIP().toString();
   status["numClients"]=socketServer.numClients();
+  status["apIp"]=gwWifi.apIP();
   nmea0183Converter->toJson(status);
   String buf;
   serializeJson(status,buf);
@@ -170,19 +171,26 @@ void handleNotFound()
 GwConfigInterface *sendUsb=NULL;
 GwConfigInterface *sendTCP=NULL;
 GwConfigInterface *sendSeasmart=NULL;
+GwConfigInterface *systemName=NULL;
 
 void setup() {
 
   uint8_t chipid[6];
   uint32_t id = 0;
-  // Init USB serial port
-  Serial.begin(115200);
-  Serial.println("Starting...");
   config.loadConfig();
+  // Init USB serial port
+  GwConfigInterface *usbBaud=config.getConfigItem(config.usbBaud,false);
+  int baud=115200;
+  if (usbBaud){
+    baud=usbBaud->asInt();
+  }
+  Serial.begin(baud);
+  Serial.println("Starting...");
   Serial.println(config.toString());
   sendUsb=config.getConfigItem(config.sendUsb,true);
   sendTCP=config.getConfigItem(config.sendTCP,true);
   sendSeasmart=config.getConfigItem(config.sendSeasmart,true);
+  systemName=config.getConfigItem(config.systemName,true);
   
   gwWifi.setup();
 
@@ -213,9 +221,9 @@ void setup() {
   // Set product information
   NMEA2000.SetProductInformation("1", // Manufacturer's Model serial code
                                  100, // Manufacturer's product code
-                                 "NMEA 2000 WiFi Gateway",  // Manufacturer's Model ID
-                                 "1.0.2.25 (2019-07-07)",  // Manufacturer's Software version code
-                                 "1.0.2.0 (2019-07-07)" // Manufacturer's Model version
+                                 systemName->asCString(),  // Manufacturer's Model ID
+                                 VERSION,  // Manufacturer's Software version code
+                                 VERSION // Manufacturer's Model version
                                 );
   // Set device information
   NMEA2000.SetDeviceInformation(id, // Unique number. Use e.g. Serial number. Id is generated from MAC-Address

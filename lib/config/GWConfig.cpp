@@ -31,7 +31,7 @@ String GwConfigHandler::toString() const{
 
 String GwConfigHandler::toJson() const{
     String rt;
-    DynamicJsonDocument jdoc(300);
+    DynamicJsonDocument jdoc(400);
     for (int i=0;i<getNumConfig();i++){
         jdoc[configs[i]->getName()]=configs[i]->asCString();
     }
@@ -58,7 +58,6 @@ GwConfigHandler::GwConfigHandler(GwLog *logger){
     this->logger=logger;
 }
 bool GwConfigHandler::loadConfig(){
-    logger->logString("config load");
     prefs.begin(PREF_NAME,true);
     for (int i=0;i<getNumConfig();i++){
         String v=prefs.getString(configs[i]->getName().c_str(),configs[i]->getDefault());
