@@ -7,11 +7,13 @@
 #include <WiFi.h>
 
 using wiFiClientPtr = std::shared_ptr<WiFiClient>;
+class GwClient;
+using gwClientPtr = std::shared_ptr<GwClient>;
 class GwSocketServer{
     private:
         const GwConfigHandler *config;
         GwLog *logger;
-        std::list<wiFiClientPtr> clients;
+        std::list<gwClientPtr> clients;
         WiFiServer *server=NULL;
     public:
         GwSocketServer(const GwConfigHandler *config,GwLog *logger);
