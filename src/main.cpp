@@ -37,7 +37,8 @@
 #include "GwBoatData.h"
 
 
-GwLog logger(LOG_SERIAL);
+
+GwLog logger(LOG_SERIAL,GwLog::DEBUG);
 GwConfigHandler config(&logger);
 GwWifi gwWifi(&config,&logger);
 GwSocketServer socketServer(&config,&logger);
