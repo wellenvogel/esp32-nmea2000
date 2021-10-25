@@ -12,7 +12,7 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#define VERSION "0.0.7"
+#define VERSION "0.1.0"
 #include "GwHardware.h"
 
 #define LOG_SERIAL true
@@ -22,10 +22,11 @@
 #include <Seasmart.h>
 #include <N2kMessages.h>
 #include <WiFi.h>
-#include <WebServer.h>
+#include <ESPAsyncWebServer.h>
 #include <Preferences.h>
 #include <ArduinoJson.h>
 #include <ESPmDNS.h>
+#include <map>
 
 #include "N2kDataToNMEA0183.h"
 
@@ -35,7 +36,9 @@
 #include "GWWifi.h"
 #include "GwSocketServer.h"
 #include "GwBoatData.h"
+#include "GwMessage.h"
 
+typedef std::map<String,String> StringMap;
 
 
 GwLog logger(LOG_SERIAL,GwLog::DEBUG);
@@ -66,8 +69,7 @@ const unsigned long TransmitMessages[] PROGMEM = {127489L, // Engine dynamic
 void HandleNMEA2000Msg(const tN2kMsg &N2kMsg);
 void SendNMEA0183Message(const tNMEA0183Msg &NMEA0183Msg);
 
-
-WebServer webserver(80);
+AsyncWebServer webserver(80);
 
 // Serial port 2 config (GPIO 16)
 const int baudrate = 38400;
@@ -81,7 +83,50 @@ char buff[MAX_NMEA0183_MESSAGE_SIZE];
 
 tNMEA0183 NMEA0183;
 
-
+QueueHandle_t queue=xQueueCreate(10,sizeof(Message *));
+void handleAsyncWebRequest(AsyncWebServerRequest *request, RequestMessage *msg, String contentType)
+{
+  msg->ref(); //for the queue
+  if (!xQueueSend(queue, &msg, 0))
+  {
+    Serial.println("unable to enqueue");
+    msg->unref(); //queue
+    msg->unref(); //our
+    request->send(500, "text/plain", "queue full");
+    return;
+  }
+  logger.logDebug(GwLog::DEBUG + 1, "wait queue");
+  if (msg->wait(500))
+  {
+    logger.logDebug(GwLog::DEBUG + 1, "request ok");
+    request->send(200, contentType, msg->getResult());
+    msg->unref();
+    return;
+  }
+  logger.logDebug(GwLog::DEBUG + 1, "switching to async");
+  //msg is handed over to async handling
+  bool finished = false;
+  AsyncWebServerResponse *r = request->beginChunkedResponse(
+      contentType, [msg, finished](uint8_t *ptr, size_t len, size_t len2) -> size_t
+      {
+        logger.logDebug(GwLog::DEBUG + 1, "try read");
+        if (msg->isHandled() || msg->wait(1))
+        {
+          int rt = msg->consume(ptr, len);
+          logger.logDebug(GwLog::DEBUG + 1, "async response available, return %d\n", rt);
+          return rt;
+        }
+        else
+          return RESPONSE_TRY_AGAIN;
+      },
+      NULL);
+  request->onDisconnect([msg](void)
+                        {
+                          logger.logDebug(GwLog::DEBUG + 1, "onDisconnect");
+                          msg->unref();
+                        });
+  request->send(r);
+}
 
 #define JSON_OK "{\"status\":\"OK\"}"
 //embedded files
@@ -89,20 +134,8 @@ extern const uint8_t indexFile[] asm("_binary_web_index_html_gz_start");
 extern const uint8_t indexFileEnd[] asm("_binary_web_index_html_gz_end"); 
 extern const uint8_t indexFileLen[] asm("_binary_web_index_html_gz_size");
 
-void web_index()    // Wenn "http://<ip address>/" aufgerufen wurde
-{
-  webserver.sendHeader(F("Content-Encoding"), F("gzip"));
-  webserver.send_P(200, "text/html", (const char *)indexFile,(int)indexFileLen);  //dann Index Webseite senden
-}
 
-void js_reset()      // Wenn "http://<ip address>/gauge.min.js" aufgerufen wurde
-{
-  Serial.println("Reset Button");
-  ESP.restart();
-}
-
-
-void js_status(){
+String js_status(){
   int numPgns=nmea0183Converter->numPgns();
   DynamicJsonDocument status(256+numPgns*50);
   status["numcan"]=numCan;
@@ -114,61 +147,12 @@ void js_status(){
   nmea0183Converter->toJson(status);
   String buf;
   serializeJson(status,buf);
-  webserver.send(200,F("application/json"),buf);
+  return buf;
 }
 
-void js_config(){
-  webserver.send(200,F("application/json"),config.toJson());
+void notFound(AsyncWebServerRequest *request) {
+    request->send(404, "text/plain", "Not found");
 }
-
-void js_boatData(){
-  webserver.send(200,F("application/json"),boatData.toJson());
-}
-
-void web_setConfig(){
-  bool ok=true;
-  String error;
-  for (int i=0;i<webserver.args();i++){
-    String v=webserver.arg(i);
-    String n=webserver.argName(i);
-    bool rt=config.updateValue(n,v);
-    if (! rt){
-      logger.logString("ERR: unable to update %s to %s",n.c_str(),v.c_str());
-      ok=false;
-      error+=n;
-      error+="=";
-      error+=v;
-      error+=",";
-    }
-  }
-  if (ok){
-    webserver.send(200,F("application/json"),JSON_OK);
-    logger.logString("update config and restart");
-    config.saveConfig();
-    delay(100);
-    ESP.restart();
-  }
-  else{
-    DynamicJsonDocument rt(100);
-    rt["status"]=error;
-    String buf;
-    serializeJson(rt,buf);
-    webserver.send(200,F("application/json"),buf);
-  }
-}
-void web_resetConfig(){
-  config.reset(true);
-  logger.logString("reset config, restart");
-  webserver.send(200,F("application/json"),JSON_OK);
-  delay(100);
-  ESP.restart();
-}
-
-void handleNotFound()
-{
-  webserver.send(404, F("text/plain"), "File Not Found\n\n");
-}
-
 
 GwConfigInterface *sendUsb=NULL;
 GwConfigInterface *sendTCP=NULL;
@@ -200,14 +184,111 @@ void setup() {
   socketServer.begin();
 
   // Start Web Server
-  webserver.on("/", web_index);
-  webserver.on("/api/reset", js_reset);
-  webserver.on("/api/status", js_status);
-  webserver.on("/api/config",js_config);
-  webserver.on("/api/setConfig",web_setConfig);
-  webserver.on("/api/resetConfig",web_resetConfig);
-  webserver.on("/api/boatData",js_boatData);
-  webserver.onNotFound(handleNotFound);
+  webserver.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
+      AsyncWebServerResponse *response=request->beginResponse_P(200,"text/html",(const uint8_t *)indexFile,(int)indexFileLen);
+      response->addHeader(F("Content-Encoding"), F("gzip"));
+      request->send(response);
+  });
+  webserver.on("/api/reset", HTTP_GET,[](AsyncWebServerRequest *request){
+    logger.logDebug(GwLog::LOG,"Reset Button");
+    ESP.restart();
+  });
+  class StatusRequest : public RequestMessage{
+    public:
+      StatusRequest(): RequestMessage(){};
+    protected:
+      virtual void processRequest(){
+          result=js_status();
+      }
+  };
+  webserver.on("/api/status",HTTP_GET,[](AsyncWebServerRequest *request){
+    StatusRequest *msg=new StatusRequest();
+    handleAsyncWebRequest(request,msg,F("application/json"));
+  });
+  class ConfigRequest : public RequestMessage{
+    public:
+      ConfigRequest(): RequestMessage(){};
+    protected:
+      virtual void processRequest(){
+          result=config.toJson();
+      }
+  };
+  webserver.on("/api/config",HTTP_GET,[](AsyncWebServerRequest *request){
+    RequestMessage *msg=new ConfigRequest();
+    handleAsyncWebRequest(request,msg,F("application/json")); 
+  });
+
+  class SetConfigRequest : public RequestMessage{
+    public:
+      SetConfigRequest(): RequestMessage(){};
+      StringMap args;
+    protected:
+      virtual void processRequest(){
+        bool ok=true;
+        String error;
+        for (StringMap::iterator it=args.begin();it != args.end();it++){
+          bool rt=config.updateValue(it->first,it->second);
+          if (! rt){
+            logger.logString("ERR: unable to update %s to %s",it->first.c_str(),it->second.c_str());
+            ok=false;
+            error+=it->first;
+            error+="=";
+            error+=it->second;
+            error+=",";
+          }
+        }
+        if (ok){
+          result=JSON_OK;
+          logger.logString("update config and restart");
+          config.saveConfig();
+          delay(100);
+          ESP.restart();
+        }
+        else{
+          DynamicJsonDocument rt(100);
+          rt["status"]=error;
+          serializeJson(rt,result);
+        }   
+      }
+  };
+  webserver.on("/api/setConfig",HTTP_GET,[](AsyncWebServerRequest *request){
+    StringMap args;
+    for (int i=0;i<request->args();i++){
+      args[request->argName(i)]=request->arg(i);
+    }
+    SetConfigRequest *msg=new SetConfigRequest();
+    msg->args=args;
+    handleAsyncWebRequest(request,msg,F("application/json")); 
+  });
+  class ResetConfigRequest : public RequestMessage{
+    public:
+      ResetConfigRequest(): RequestMessage(){};
+    protected:
+      virtual void processRequest(){
+        config.reset(true);
+        logger.logString("reset config, restart");
+        result=JSON_OK;
+        delay(100);
+        ESP.restart();
+      }
+  };
+  webserver.on("/api/resetConfig",HTTP_GET,[](AsyncWebServerRequest *request){
+    RequestMessage *msg=new ResetConfigRequest();
+    handleAsyncWebRequest(request,msg,F("application/json"));   
+  });
+  class BoatDataRequest : public RequestMessage{
+    public:
+      BoatDataRequest(): RequestMessage(){};
+    protected:
+      virtual void processRequest(){
+          result=boatData.toJson();
+      }
+  };
+  webserver.on("/api/boatData",HTTP_GET,[](AsyncWebServerRequest *request){
+    RequestMessage *msg=new BoatDataRequest();
+    handleAsyncWebRequest(request,msg,F("application/json"));   
+  });
+  webserver.onNotFound(notFound);
   webserver.begin();
   Serial.println("HTTP server started");
 
@@ -293,7 +374,6 @@ void SendNMEA0183Message(const tNMEA0183Msg &NMEA0183Msg) {
 }
 
 void loop() {
-  webserver.handleClient();
   gwWifi.loop();
 
   socketServer.loop();
@@ -308,6 +388,14 @@ void loop() {
     Serial.printf("Address Change: New Address=%d\n", SourceAddress);
   }
   nmea0183Converter->loop();
+
+  //handle messages from the async web server
+  Message *msg=NULL;
+  if (xQueueReceive(queue,&msg,0)){
+    logger.logDebug(GwLog::DEBUG+1,"main message");
+    msg->process();
+    msg->unref();
+  }
 
   // Dummy to empty input buffer to avoid board to stuck with e.g. NMEA Reader
   if ( Serial.available() ) {
