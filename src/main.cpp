@@ -15,8 +15,6 @@
 #define VERSION "0.1.0"
 #include "GwHardware.h"
 
-#define LOG_SERIAL true
-
 #include <Arduino.h>
 #include <NMEA2000_CAN.h>  // This will automatically choose right CAN library and create suitable NMEA2000 object
 #include <Seasmart.h>
@@ -37,11 +35,12 @@
 #include "GwSocketServer.h"
 #include "GwBoatData.h"
 #include "GwMessage.h"
+#include "GwSerial.h"
 
 typedef std::map<String,String> StringMap;
 
 
-GwLog logger(LOG_SERIAL,GwLog::DEBUG);
+GwLog logger(GwLog::DEBUG,NULL);
 GwConfigHandler config(&logger);
 GwWifi gwWifi(&config,&logger);
 GwSocketServer socketServer(&config,&logger);
@@ -159,6 +158,15 @@ GwConfigInterface *sendTCP=NULL;
 GwConfigInterface *sendSeasmart=NULL;
 GwConfigInterface *systemName=NULL;
 
+GwSerial usbSerial(&logger, UART_NUM_0);
+class GwSerialLog : public GwLogWriter{
+  public:
+    virtual ~GwSerialLog(){}
+    virtual void write(const char *data){
+      usbSerial.enqueue((const uint8_t*)data,strlen(data)); //ignore any errors
+    }
+
+};
 void setup() {
 
   uint8_t chipid[6];
@@ -170,9 +178,20 @@ void setup() {
   if (usbBaud){
     baud=usbBaud->asInt();
   }
-  Serial.begin(baud);
-  Serial.println("Starting...");
-  Serial.println(config.toString());
+  int st=usbSerial.setup(baud,3,1); //TODO: PIN defines
+  if (st < 0){
+    //falling back to old style serial for logging
+    Serial.begin(baud);
+    Serial.printf("fallback serial enabled, error was %d\n",st);
+    logger.prefix="FALLBACK:";
+  }
+  else{
+    GwSerialLog *writer=new GwSerialLog();
+    logger.prefix="GWSERIAL:";
+    logger.setWriter(writer);
+    logger.logDebug(GwLog::LOG,"created GwSerial for USB port");
+  }  
+  logger.logDebug(GwLog::LOG,"config: %s", config.toString().c_str());
   sendUsb=config.getConfigItem(config.sendUsb,true);
   sendTCP=config.getConfigItem(config.sendTCP,true);
   sendSeasmart=config.getConfigItem(config.sendSeasmart,true);
@@ -290,7 +309,7 @@ void setup() {
   });
   webserver.onNotFound(notFound);
   webserver.begin();
-  Serial.println("HTTP server started");
+  logger.logDebug(GwLog::LOG,"HTTP server started");
 
   MDNS.addService("_http","_tcp",80);
 
@@ -325,7 +344,7 @@ void setup() {
   NodeAddress = preferences.getInt("LastNodeAddress", 32);  // Read stored last NodeAddress, default 32
   preferences.end();
 
-  Serial.printf("NodeAddress=%d\n", NodeAddress);
+  logger.logDebug(GwLog::LOG,"NodeAddress=%d\n", NodeAddress);
 
   NMEA2000.SetMode(tNMEA2000::N2km_ListenAndNode, NodeAddress);
 
@@ -369,7 +388,14 @@ void SendNMEA0183Message(const tNMEA0183Msg &NMEA0183Msg) {
     socketServer.sendToClients(buf);
   }
   if (sendUsb->asBoolean()){
-    Serial.println(buf);
+    int len=strlen(buf);
+    if (len >= (MAX_NMEA0183_MESSAGE_SIZE -2)) return;
+    buf[len]=0x0d;
+    len++;
+    buf[len]=0x0a;
+    len++;
+    buf[len]=0;
+    usbSerial.enqueue((const uint8_t*)buf,len);
   }
 }
 
@@ -396,10 +422,9 @@ void loop() {
     msg->process();
     msg->unref();
   }
-
-  // Dummy to empty input buffer to avoid board to stuck with e.g. NMEA Reader
-  if ( Serial.available() ) {
-    Serial.read();
+  if (usbSerial.write() == GwBuffer::ERROR){
+    logger.logDebug(GwLog::DEBUG,"overflow in USB serial");
   }
+  usbSerial.read();
 
 }
