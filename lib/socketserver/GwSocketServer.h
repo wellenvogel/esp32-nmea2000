@@ -2,7 +2,6 @@
 #define _GWSOCKETSERVER_H
 #include "GWConfig.h"
 #include "GwLog.h"
-#include <list>
 #include <memory>
 #include <WiFi.h>
 
@@ -13,10 +12,12 @@ class GwSocketServer{
     private:
         const GwConfigHandler *config;
         GwLog *logger;
-        std::list<gwClientPtr> clients;
+        gwClientPtr *clients;
         WiFiServer *server=NULL;
+        int maxClients;
     public:
         GwSocketServer(const GwConfigHandler *config,GwLog *logger);
+        ~GwSocketServer();
         void begin();
         void loop();
         void sendToClients(const char *buf);
