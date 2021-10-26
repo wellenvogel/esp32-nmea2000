@@ -6,6 +6,7 @@
 
 class GwBufferWriter{
     public:
+        int id=0; //can be set be users
         virtual int write(const uint8_t *buffer,size_t len)=0;
         virtual ~GwBufferWriter(){};
 };
@@ -24,7 +25,9 @@ class GwBuffer{
             AGAIN
         } WriteStatus;
     private:
-        uint8_t buffer[BUFFER_SIZE];
+        size_t bufferSize;
+        bool rotate;
+        uint8_t *buffer;
         uint8_t *writePointer=buffer;
         uint8_t *readPointer=buffer;
         size_t offset(uint8_t* ptr){
@@ -32,8 +35,13 @@ class GwBuffer{
         }
         GwLog *logger;
         void lp(const char *fkt,int p=0);
+        /**
+         * find the first occurance of x in the buffer, -1 if not found
+         */
+        int findChar(char x);
     public:
-        GwBuffer(GwLog *logger);
+        GwBuffer(GwLog *logger,size_t bufferSize,bool rotate=true);
+        ~GwBuffer();
         void reset();
         size_t freeSpace();
         size_t usedSpace();
@@ -42,7 +50,9 @@ class GwBuffer{
          * write some data to the buffer writer
          * return an error if the buffer writer returned < 0
          */
-        WriteStatus fetchData(GwBufferWriter *writer, bool errorIf0 = true);
+        WriteStatus fetchData(GwBufferWriter *writer, int maxLen=-1,bool errorIf0 = true);
+
+        WriteStatus fetchMessage(GwBufferWriter *writer,char delimiter,bool emptyIfFull=true);
 };
 
 #endif

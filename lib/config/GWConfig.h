@@ -66,6 +66,7 @@ class GwConfigHandler{
         const String serverPort=F("serverPort");
         const String maxClients=F("maxClients");
         const String sendTCP=F("sendTCP");
+        const String readTCP=F("receiveTCP");
         const String sendSeasmart=F("sendSeasmart");
         const String usbBaud=F("usbBaud");
         const String systemName=F("systemName");
@@ -84,7 +85,7 @@ class GwConfigHandler{
         GwConfigItem * findConfig(const String name, bool dummy=false);
         GwConfigInterface * getConfigItem(const String name, bool dummy=false) const;
     private:
-    GwConfigItem* configs[12]={
+    GwConfigItem* configs[13]={
         new GwConfigItem(sendUsb,"true"),
         new GwConfigItem (receiveUsb,"false"),
         new GwConfigItem (wifiClient,"false"),
@@ -93,13 +94,14 @@ class GwConfigHandler{
         new GwConfigItem (serverPort,"2222"),
         new GwConfigItem (maxClients, "10"),
         new GwConfigItem (sendTCP,"true"),
+        new GwConfigItem (readTCP,"true"),
         new GwConfigItem (sendSeasmart,"false"),
         new GwConfigItem (usbBaud,"115200"),
         new GwConfigItem (systemName,"ESP32NMEA2K"),
         new GwConfigItem (stopApTime,"0")
     };  
     int getNumConfig() const{
-        return 12;
+        return 13;
     }  
 };
 #endif

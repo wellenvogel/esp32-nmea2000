@@ -2,6 +2,7 @@
 #define _GWSOCKETSERVER_H
 #include "GWConfig.h"
 #include "GwLog.h"
+#include "GwBuffer.h"
 #include <memory>
 #include <WiFi.h>
 
@@ -14,13 +15,16 @@ class GwSocketServer{
         GwLog *logger;
         gwClientPtr *clients;
         WiFiServer *server=NULL;
+        bool allowReceive;
         int maxClients;
+        int minId;
     public:
-        GwSocketServer(const GwConfigHandler *config,GwLog *logger);
+        GwSocketServer(const GwConfigHandler *config,GwLog *logger,int minId);
         ~GwSocketServer();
         void begin();
         void loop();
-        void sendToClients(const char *buf);
+        void sendToClients(const char *buf,int sourceId);
         int numClients();
+        bool readMessages(GwBufferWriter *writer);
 };
 #endif

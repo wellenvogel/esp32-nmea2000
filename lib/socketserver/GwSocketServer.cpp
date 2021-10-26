@@ -3,6 +3,8 @@
 #include <lwip/sockets.h>
 #include "GwBuffer.h"
 
+#define WRITE_BUFFER_SIZE 1600
+#define READ_BUFFER_SIZE 200
 class Writer : public GwBufferWriter{
     public:
     wiFiClientPtr client;
@@ -48,17 +50,23 @@ class Writer : public GwBufferWriter{
 class GwClient{
     public:
         wiFiClientPtr client;
-        GwBuffer *buffer;
-        GwLog *logger;
         int overflows;
         String remoteIp;
     private:
         Writer *writer=NULL;
+        bool allowRead;
+        GwBuffer *buffer=NULL;
+        GwBuffer *readBuffer=NULL;
+        GwLog *logger;
     public:        
-        GwClient(wiFiClientPtr client,GwLog *logger){
+        GwClient(wiFiClientPtr client,GwLog *logger, bool allowRead=false){
             this->client=client;
             this->logger=logger;
-            buffer=new GwBuffer(logger);
+            this->allowRead=allowRead;
+            buffer=new GwBuffer(logger,WRITE_BUFFER_SIZE);
+            if (allowRead){
+                readBuffer=new GwBuffer(logger,READ_BUFFER_SIZE);
+            }
             overflows=0;
             if (client != NULL){
                 writer=new Writer(client);
@@ -68,6 +76,7 @@ class GwClient{
         void setClient(wiFiClientPtr client){
             this->client=client;
             buffer->reset();
+            if (readBuffer) readBuffer->reset();
             overflows=0;
             if (writer) delete writer;
             writer=NULL;
@@ -84,6 +93,8 @@ class GwClient{
         }
         ~GwClient(){
             delete writer;
+            delete buffer;
+            if (readBuffer) delete readBuffer;
         }
         bool enqueue(uint8_t *data, size_t len){
             if (len == 0) return true;
@@ -113,16 +124,49 @@ class GwClient{
             }    
             return rt;
         }
+        bool read(){
+            size_t maxLen=allowRead?readBuffer->freeSpace():100;
+            if (!maxLen) {
+                return false;
+            }
+            char buffer[maxLen];
+            int res = recv(client->fd(), (void*) buffer, maxLen, MSG_DONTWAIT);
+            if (res == 0){
+                LOG_DEBUG(GwLog::LOG,"client shutdown (recv 0) on %s",remoteIp.c_str());
+                client->stop();
+                return false;
+            }
+            if (res < 0){
+                if (errno != EAGAIN){
+                    LOG_DEBUG(GwLog::LOG,"client read error %d on %s",errno,remoteIp.c_str());
+                    client->stop();
+                    return false;
+                }
+                return false;
+            }
+            if (! allowRead) return true;
+            size_t stored=readBuffer->addData((uint8_t*)buffer,res);
+            if (stored != res){
+                LOG_DEBUG(GwLog::LOG,"internal read error buffer overflow on %s",remoteIp.c_str());
+            }
+            return true;
+        }
+        bool messagesFromBuffer(GwBufferWriter *writer){
+            if (! allowRead) return false;
+            return readBuffer->fetchMessage(writer,'\n',true) == GwBuffer::OK;
+        }
 };
 
 
-GwSocketServer::GwSocketServer(const GwConfigHandler *config,GwLog *logger){
+GwSocketServer::GwSocketServer(const GwConfigHandler *config,GwLog *logger,int minId){
     this->config=config;
     this->logger=logger;
+    this->minId=minId;
     maxClients=config->getInt(config->maxClients);
+    allowReceive=config->getBool(config->readTCP);
     clients=new gwClientPtr[maxClients];
     for (int i=0;i<maxClients;i++){
-        clients[i]=gwClientPtr(new GwClient(wiFiClientPtr(NULL),logger));
+        clients[i]=gwClientPtr(new GwClient(wiFiClientPtr(NULL),logger,allowReceive));
     }
 }
 void GwSocketServer::begin(){
@@ -186,15 +230,22 @@ void GwSocketServer::loop()
         }
         else
         {
-            while (client->client->available())
-            {
-                char c = client->client->read();
-                //TODO: read data
-            }
+            client->read();
         }
     }
 }
-void GwSocketServer::sendToClients(const char *buf){
+
+bool GwSocketServer::readMessages(GwBufferWriter *writer){
+    if (! allowReceive) return false;
+    bool hasMessages=false;
+    for (int i = 0; i < maxClients; i++){
+        writer->id=minId+i;
+        if (!clients[i]->hasClient()) continue;
+        if (clients[i]->messagesFromBuffer(writer)) hasMessages=true;
+    }
+    return hasMessages;
+}
+void GwSocketServer::sendToClients(const char *buf,int source){
     int len=strlen(buf);
     char buffer[len+2];
     memcpy(buffer,buf,len);
@@ -202,8 +253,10 @@ void GwSocketServer::sendToClients(const char *buf){
     len++;
     buffer[len]=0x0a;
     len++;
+    int sourceIndex=source-minId;
     for (int i = 0; i < maxClients; i++)
     {
+        if (i == sourceIndex)continue; //never send out to the source we received from
         gwClientPtr client = clients[i];
         if (! client->hasClient()) continue;
         if ( client->client->connected() ) {

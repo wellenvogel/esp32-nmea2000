@@ -17,7 +17,7 @@ GwSerial::GwSerial(GwLog *logger, uart_port_t num)
 {
     this->logger = logger;
     this->num = num;
-    this->buffer = new GwBuffer(logger);
+    this->buffer = new GwBuffer(logger,1600);
     this->writer = new SerialWriter(num);
 }
 GwSerial::~GwSerial()

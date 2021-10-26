@@ -7,6 +7,7 @@ class SerialWriter;
 class GwSerial{
     private:
         GwBuffer *buffer;
+        GwBuffer *readBuffer;
         GwLog *logger; 
         SerialWriter *writer;
         uart_port_t num;

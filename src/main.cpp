@@ -37,13 +37,20 @@
 #include "GwMessage.h"
 #include "GwSerial.h"
 
+
+//NMEA message channels
+#define N2K_CHANNEL_ID 0
+#define USB_CHANNEL_ID 1
+#define SERIAL1_CHANNEL_ID 2
+#define MIN_TCP_CHANNEL_ID 3
+
 typedef std::map<String,String> StringMap;
 
 
 GwLog logger(GwLog::DEBUG,NULL);
 GwConfigHandler config(&logger);
 GwWifi gwWifi(&config,&logger);
-GwSocketServer socketServer(&config,&logger);
+GwSocketServer socketServer(&config,&logger,MIN_TCP_CHANNEL_ID);
 GwBoatData boatData(&logger);
 
 
@@ -374,7 +381,7 @@ void HandleNMEA2000Msg(const tN2kMsg &N2kMsg) {
 
   char buf[MAX_NMEA2000_MESSAGE_SEASMART_SIZE];
   if ( N2kToSeasmart(N2kMsg, millis(), buf, MAX_NMEA2000_MESSAGE_SEASMART_SIZE) == 0 ) return;
-  socketServer.sendToClients(buf);
+  socketServer.sendToClients(buf,N2K_CHANNEL_ID);
 }
 
 
@@ -385,7 +392,7 @@ void SendNMEA0183Message(const tNMEA0183Msg &NMEA0183Msg) {
   char buf[MAX_NMEA0183_MESSAGE_SIZE];
   if ( !NMEA0183Msg.GetMessage(buf, MAX_NMEA0183_MESSAGE_SIZE) ) return;
   if (sendTCP->asBoolean()){
-    socketServer.sendToClients(buf);
+    socketServer.sendToClients(buf,N2K_CHANNEL_ID);
   }
   if (sendUsb->asBoolean()){
     int len=strlen(buf);
@@ -399,10 +406,23 @@ void SendNMEA0183Message(const tNMEA0183Msg &NMEA0183Msg) {
   }
 }
 
+class NMEAMessageReceiver : public GwBufferWriter{
+  public:
+    virtual int write(const uint8_t *buffer,size_t len){
+      char nbuf[len+1];
+      memcpy(nbuf,buffer,len);
+      nbuf[len]=0;
+      logger.logDebug(GwLog::DEBUG,"NMEA[%d]: %s",id,nbuf);
+      return len;
+    }
+};
 void loop() {
   gwWifi.loop();
 
-  socketServer.loop();
+  socketServer.loop();  
+  if (usbSerial.write() == GwBuffer::ERROR){
+    logger.logDebug(GwLog::DEBUG,"overflow in USB serial");
+  }
   NMEA2000.ParseMessages();
 
   int SourceAddress = NMEA2000.GetN2kSource();
@@ -411,7 +431,7 @@ void loop() {
     preferences.begin("nvs", false);
     preferences.putInt("LastNodeAddress", SourceAddress);
     preferences.end();
-    Serial.printf("Address Change: New Address=%d\n", SourceAddress);
+    logger.logDebug(GwLog::LOG,"Address Change: New Address=%d\n", SourceAddress);
   }
   nmea0183Converter->loop();
 
@@ -422,9 +442,10 @@ void loop() {
     msg->process();
     msg->unref();
   }
-  if (usbSerial.write() == GwBuffer::ERROR){
-    logger.logDebug(GwLog::DEBUG,"overflow in USB serial");
-  }
+  NMEAMessageReceiver receiver;
+  socketServer.readMessages(&receiver);
+  //read channels
+
   usbSerial.read();
 
 }
