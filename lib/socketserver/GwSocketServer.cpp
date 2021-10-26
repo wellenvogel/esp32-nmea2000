@@ -65,7 +65,7 @@ class GwClient{
             this->allowRead=allowRead;
             buffer=new GwBuffer(logger,WRITE_BUFFER_SIZE);
             if (allowRead){
-                readBuffer=new GwBuffer(logger,READ_BUFFER_SIZE);
+                readBuffer=new GwBuffer(logger,READ_BUFFER_SIZE,false);
             }
             overflows=0;
             if (client != NULL){
@@ -147,7 +147,7 @@ class GwClient{
             if (! allowRead) return true;
             size_t stored=readBuffer->addData((uint8_t*)buffer,res);
             if (stored != res){
-                LOG_DEBUG(GwLog::LOG,"internal read error buffer overflow on %s",remoteIp.c_str());
+                LOG_DEBUG(GwLog::LOG,"internal read error buffer overflow (w=%d,c=%d) on %s",res,(int)stored,remoteIp.c_str());
             }
             return true;
         }

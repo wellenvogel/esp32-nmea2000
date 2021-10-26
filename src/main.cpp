@@ -186,6 +186,7 @@ void setup() {
     baud=usbBaud->asInt();
   }
   int st=usbSerial.setup(baud,3,1); //TODO: PIN defines
+  //int st=-1;
   if (st < 0){
     //falling back to old style serial for logging
     Serial.begin(baud);
@@ -421,7 +422,7 @@ void loop() {
 
   socketServer.loop();  
   if (usbSerial.write() == GwBuffer::ERROR){
-    logger.logDebug(GwLog::DEBUG,"overflow in USB serial");
+    //logger.logDebug(GwLog::DEBUG,"overflow in USB serial");
   }
   NMEA2000.ParseMessages();
 

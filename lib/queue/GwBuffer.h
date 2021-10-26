@@ -28,8 +28,8 @@ class GwBuffer{
         size_t bufferSize;
         bool rotate;
         uint8_t *buffer;
-        uint8_t *writePointer=buffer;
-        uint8_t *readPointer=buffer;
+        uint8_t *writePointer;
+        uint8_t *readPointer;
         size_t offset(uint8_t* ptr){
             return (size_t)(ptr-buffer);
         }

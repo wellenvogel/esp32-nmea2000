@@ -12,6 +12,8 @@ GwBuffer::GwBuffer(GwLog *logger,size_t bufferSize, bool rotate)
     this->rotate=rotate;
     this->bufferSize=bufferSize;
     this->buffer=new uint8_t[bufferSize];
+    writePointer = buffer;
+    readPointer = buffer;
 }
 GwBuffer::~GwBuffer(){
     delete buffer;
@@ -42,7 +44,7 @@ size_t GwBuffer::usedSpace()
         return 0;
     if (readPointer < writePointer)
         return writePointer - readPointer;
-    return bufferSize - offset(readPointer) - 1 + offset(writePointer);
+    return bufferSize - offset(readPointer)  + offset(writePointer);
 }
 size_t GwBuffer::addData(const uint8_t *data, size_t len)
 {
@@ -54,15 +56,11 @@ size_t GwBuffer::addData(const uint8_t *data, size_t len)
         //we only fill in a message if it fit's completely
         return 0;
     size_t written = 0;
-    bool canRotate=rotate && offset(readPointer) > 0;
     if (writePointer >= readPointer)
     {
         written = bufferSize - offset(writePointer) - 1;
-        if (written > 0 && ! canRotate){
-            //if we cannot rotate we are not allowed to write to the last byte
-            //as otherwise we would not be able to distinguish between full and empty
-            written--;
-        }
+        bool canRotate=rotate && offset(readPointer) > 0;
+        if (canRotate) written++; //we can also fill the last byte
         if (written > len)
             written = len;
         if (written)
@@ -71,7 +69,7 @@ size_t GwBuffer::addData(const uint8_t *data, size_t len)
             len -= written;
             data += written;
             writePointer += written;
-            if (offset(writePointer) >= (bufferSize - 1) && canRotate)
+            if (offset(writePointer) > (bufferSize - 1))
                 writePointer = buffer;
         }
         lp("addData1", written);
@@ -79,10 +77,11 @@ size_t GwBuffer::addData(const uint8_t *data, size_t len)
         {
             return written;
         }
+        if (! rotate) return written;
     }
-    if (! canRotate) return written;
     //now we have the write pointer before the read pointer
     int maxLen=readPointer-writePointer-1;
+    if (maxLen <= 0) return written;
     if (len < maxLen) maxLen=len;
     memcpy(writePointer, data, maxLen);
     writePointer += maxLen;
@@ -124,7 +123,7 @@ GwBuffer::WriteStatus GwBuffer::fetchData(GwBufferWriter *writer, int maxLen,boo
             return (errorIf0 ? ERROR : AGAIN);
         }
         readPointer += rt;
-        if (offset(readPointer) >= (bufferSize - 1))
+        if (offset(readPointer) > (bufferSize - 1))
             readPointer = buffer;
         if (rt < plen)
             return AGAIN;
@@ -155,7 +154,7 @@ GwBuffer::WriteStatus GwBuffer::fetchData(GwBufferWriter *writer, int maxLen,boo
         return ERROR;
     }
     readPointer += rt;
-    if (offset(readPointer) >= (bufferSize - 1))
+    if (offset(readPointer) > (bufferSize - 1))
         readPointer = buffer;
     lp("fetchData3");
     written += rt;
@@ -165,6 +164,7 @@ GwBuffer::WriteStatus GwBuffer::fetchData(GwBufferWriter *writer, int maxLen,boo
 }
 
 int GwBuffer::findChar(char x){
+    lp("findChar",x);
     int offset=0;
     uint8_t *p;
     for (p=readPointer; p != writePointer && p < (buffer+bufferSize);p++){
@@ -187,11 +187,28 @@ GwBuffer::WriteStatus GwBuffer::fetchMessage(GwBufferWriter *writer,char delimit
     int pos=findChar(delimiter);
     if (pos < 0) {
         if (!freeSpace() && emptyIfFull){
-            LOG_DEBUG(GwLog::LOG,"line to long, reset");
+            LOG_DEBUG(GwLog::LOG,"line to long, reset, buffer=%p",buffer);
             reset();
             return ERROR;
         }
         return AGAIN;
+    }
+    if (! rotate){
+        //in a non rotating buffer we discard the found message 
+        //and copy the remain to the start
+        int len=pos+1;
+        int wr=writer->write(readPointer,len);
+        //in any case discard the data now
+        int remain=usedSpace()-len;
+        if (remain > 0){
+            memcpy(buffer,readPointer+len,remain);
+            readPointer=buffer;
+            writePointer=buffer+remain;
+        }
+        else{
+            reset();
+        }
+        return (wr == len)?OK:ERROR;
     }
     return fetchData(writer,pos+1,true);
 }
