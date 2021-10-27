@@ -408,13 +408,27 @@ void SendNMEA0183Message(const tNMEA0183Msg &NMEA0183Msg) {
 }
 
 class NMEAMessageReceiver : public GwBufferWriter{
+  uint8_t buffer[GwBuffer::RX_BUFFER_SIZE+1];
+  uint8_t *writePointer=buffer;
   public:
     virtual int write(const uint8_t *buffer,size_t len){
-      char nbuf[len+1];
-      memcpy(nbuf,buffer,len);
-      nbuf[len]=0;
-      logger.logDebug(GwLog::DEBUG,"NMEA[%d]: %s",id,nbuf);
-      return len;
+      size_t toWrite=GwBuffer::RX_BUFFER_SIZE-(writePointer-buffer);
+      if (toWrite > len) toWrite=len;
+      memcpy(writePointer,buffer,toWrite);
+      writePointer+=toWrite;
+      *writePointer=0;
+      return toWrite;
+    }
+    virtual void done(){
+      if (writePointer == buffer) return;
+      logger.logDebug(GwLog::DEBUG,"NMEA-IN[%d]: %s",id,(const char *)buffer);
+      uint8_t *p;
+      for (p=writePointer-1;p>=buffer;p--){
+        if (*p <= 0x20) *p=0;
+      }
+      for (p=buffer; *p != 0 && p < writePointer && *p <= 0x20;p++){}
+      logger.logDebug(GwLog::DEBUG,"NMEA[%d]: %s",id,(const char *)p);
+      writePointer=buffer;
     }
 };
 void loop() {

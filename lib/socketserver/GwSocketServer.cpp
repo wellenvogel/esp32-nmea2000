@@ -3,8 +3,6 @@
 #include <lwip/sockets.h>
 #include "GwBuffer.h"
 
-#define WRITE_BUFFER_SIZE 1600
-#define READ_BUFFER_SIZE 200
 class Writer : public GwBufferWriter{
     public:
     wiFiClientPtr client;
@@ -63,9 +61,9 @@ class GwClient{
             this->client=client;
             this->logger=logger;
             this->allowRead=allowRead;
-            buffer=new GwBuffer(logger,WRITE_BUFFER_SIZE);
+            buffer=new GwBuffer(logger,GwBuffer::TX_BUFFER_SIZE);
             if (allowRead){
-                readBuffer=new GwBuffer(logger,READ_BUFFER_SIZE,false);
+                readBuffer=new GwBuffer(logger,GwBuffer::RX_BUFFER_SIZE);
             }
             overflows=0;
             if (client != NULL){
