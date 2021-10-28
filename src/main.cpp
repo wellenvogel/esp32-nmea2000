@@ -12,7 +12,7 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#define VERSION "0.1.1"
+#define VERSION "0.1.2"
 #include "GwHardware.h"
 
 #include <Arduino.h>
@@ -154,6 +154,7 @@ class EmbeddedFile {
   const EmbeddedFile fileName##_##fileExt##_Config(#fileName "." #fileExt,(const uint8_t*)fileName##_##fileExt##_File,(int)fileName##_##fileExt##_FileLen);
 
 EMBED_GZ_FILE(index,html)
+EMBED_GZ_FILE(config,json)
 
 void sendEmbeddedFile(String name,String contentType,AsyncWebServerRequest *request){
     std::map<String,EmbeddedFile*>::iterator it=embeddedFiles.find(name);

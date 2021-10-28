@@ -1,0 +1,99 @@
+[
+    {
+        "name": "systemName",
+        "label": "system name",
+        "type": "string",
+        "default": "ESP32NMEA2K",
+        "check": "checkSystemName",
+        "description": "system name, used for the access point and for services"
+    },
+    {
+        "name": "usbBaud",
+        "label": "USB baud rate",
+        "type": "list",
+        "default": "115200",
+        "description": "baud rate for the USB port",
+        "list": [1200,2400,4800,9600,14400,19200,28800,38400,57600,115200,230400,460800]
+    },
+    {
+        "name": "sendUsb",
+        "label": "NMEA to USB",
+        "type": "boolean",
+        "default": "true",
+        "description": "send out NMEA data on the USB port"
+    },
+    {
+        "name": "receiveUsb",
+        "label": "NMEA from USB",
+        "type": "boolean",
+        "default": "true",
+        "description": "receive NMEA data on the USB port"
+    },
+    {
+        "name": "serverPort",
+        "label": "TCP port",
+        "type": "number",
+        "default": "2222",
+        "description": "the TCP port we listen on"
+    },
+    {
+        "name": "maxClients",
+        "label": "max. TCP clients",
+        "type": "number",
+        "default": "10",
+        "check":"checkMaxClients",
+        "description": "the number of clients we allow to connect to us"
+    },
+    {
+        "name": "sendTCP",
+        "label": "NMEA to TCP",
+        "type": "boolean",
+        "default": "true",
+        "description": "send out NMEA data to connected TCP clients"
+    },
+    {
+        "name": "readTCP",
+        "label": "NMEA from TCP",
+        "type": "boolean",
+        "default": "true",
+        "description": "receive NMEA data from connected TCP clients"
+    },
+    {
+        "name": "sendSeasmart",
+        "label": "Seasmart to TCP",
+        "type": "boolean",
+        "default": "false",
+        "description": "send NMEA2000 as seasmart to connected TCP clients"
+    },
+    {
+        "name": "wifiClient",
+        "label": "wifi client",
+        "type": "boolean",
+        "default": "false",
+        "description": "connect to an external WIFI network"
+    },
+    {
+        "name": "wifiPass",
+        "label": "wifi client password",
+        "type": "password",
+        "default": "",
+        "description": "the password for an external WIFI network"
+    },
+    {
+        "name": "wifiSSID",
+        "label": "wifi client SSID",
+        "type": "string",
+        "default": "",
+        "check": "checkSSID",
+        "description": "the SSID for an external WIFI network"
+    },
+    {
+        "name": "stopApTime",
+        "type": "number",
+        "default": "0",
+        "check": "checkStopApTime",
+        "description": "stop the access point after that many minutes if not used"
+    }
+    
+
+]
