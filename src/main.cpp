@@ -12,7 +12,7 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#define VERSION "0.1.0"
+#define VERSION "0.1.1"
 #include "GwHardware.h"
 
 #include <Arduino.h>
@@ -135,11 +135,38 @@ void handleAsyncWebRequest(AsyncWebServerRequest *request, RequestMessage *msg, 
 }
 
 #define JSON_OK "{\"status\":\"OK\"}"
-//embedded files
-extern const uint8_t indexFile[] asm("_binary_web_index_html_gz_start"); 
-extern const uint8_t indexFileEnd[] asm("_binary_web_index_html_gz_end"); 
-extern const uint8_t indexFileLen[] asm("_binary_web_index_html_gz_size");
 
+class EmbeddedFile;
+static std::map<String,EmbeddedFile*> embeddedFiles;
+class EmbeddedFile {
+  public:
+    const uint8_t *start;
+    int len;
+    EmbeddedFile(String name,const uint8_t *start,int len){
+      this->start=start;
+      this->len=len;
+      embeddedFiles[name]=this;
+    }
+} ;
+#define EMBED_GZ_FILE(fileName, fileExt) \
+  extern const uint8_t  fileName##_##fileExt##_File[] asm("_binary_generated_" #fileName "_" #fileExt "_gz_start"); \
+  extern const uint8_t  fileName##_##fileExt##_FileLen[] asm("_binary_generated_" #fileName "_" #fileExt "_gz_size"); \
+  const EmbeddedFile fileName##_##fileExt##_Config(#fileName "." #fileExt,(const uint8_t*)fileName##_##fileExt##_File,(int)fileName##_##fileExt##_FileLen);
+
+EMBED_GZ_FILE(index,html)
+
+void sendEmbeddedFile(String name,String contentType,AsyncWebServerRequest *request){
+    std::map<String,EmbeddedFile*>::iterator it=embeddedFiles.find(name);
+    if (it != embeddedFiles.end()){
+      EmbeddedFile* found=it->second;
+      AsyncWebServerResponse *response=request->beginResponse_P(200,contentType,found->start,found->len);
+      response->addHeader(F("Content-Encoding"), F("gzip"));
+      request->send(response);
+    }
+    else{
+      request->send(404, "text/plain", "Not found");
+    }  
+  }
 
 String js_status(){
   int numPgns=nmea0183Converter->numPgns();
@@ -221,9 +248,10 @@ void setup() {
 
   // Start Web Server
   webserver.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
-      AsyncWebServerResponse *response=request->beginResponse_P(200,"text/html",(const uint8_t *)indexFile,(int)indexFileLen);
-      response->addHeader(F("Content-Encoding"), F("gzip"));
-      request->send(response);
+      sendEmbeddedFile("index.html","text/html",request);
+  });
+  webserver.on("/config.json", HTTP_GET, [](AsyncWebServerRequest *request){
+      sendEmbeddedFile("config.json","application/json",request);
   });
   webserver.on("/api/reset", HTTP_GET,[](AsyncWebServerRequest *request){
     logger.logDebug(GwLog::LOG,"Reset Button");
