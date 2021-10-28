@@ -31,10 +31,11 @@
 
 
 
-N2kDataToNMEA0183::N2kDataToNMEA0183(GwLog * logger, GwBoatData *boatData, tNMEA2000 *NMEA2000, tNMEA0183 *NMEA0183) : tNMEA2000::tMsgHandler(0,NMEA2000){
+N2kDataToNMEA0183::N2kDataToNMEA0183(GwLog * logger, GwBoatData *boatData, tNMEA2000 *NMEA2000, tNMEA0183 *NMEA0183, int id) 
+: tNMEA2000::tMsgHandler(0,NMEA2000){
     SendNMEA0183MessageCallback=0;
     pNMEA0183=NMEA0183;
-    
+    sourceId=id;   
   }
 
 
@@ -46,10 +47,11 @@ void N2kDataToNMEA0183::loop() {
 //*****************************************************************************
 void N2kDataToNMEA0183::SendMessage(const tNMEA0183Msg &NMEA0183Msg) {
   if ( pNMEA0183 != 0 ) pNMEA0183->SendMessage(NMEA0183Msg);
-  if ( SendNMEA0183MessageCallback != 0 ) SendNMEA0183MessageCallback(NMEA0183Msg);
+  if ( SendNMEA0183MessageCallback != 0 ) SendNMEA0183MessageCallback(NMEA0183Msg, sourceId);
 }
 
-N2kDataToNMEA0183* N2kDataToNMEA0183::create(GwLog *logger, GwBoatData *boatData, tNMEA2000 *NMEA2000, tNMEA0183 *NMEA0183){
-  return new N2kToNMEA0183Functions(logger,boatData,NMEA2000,NMEA0183);
+N2kDataToNMEA0183* N2kDataToNMEA0183::create(GwLog *logger, GwBoatData *boatData, tNMEA2000 *NMEA2000, 
+    tNMEA0183 *NMEA0183, int sourceId){
+  return new N2kToNMEA0183Functions(logger,boatData,NMEA2000,NMEA0183, sourceId);
 }
 //*****************************************************************************

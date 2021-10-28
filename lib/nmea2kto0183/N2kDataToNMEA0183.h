@@ -33,22 +33,19 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 class N2kDataToNMEA0183 : public tNMEA2000::tMsgHandler
 {
 public:
-  using tSendNMEA0183MessageCallback = void (*)(const tNMEA0183Msg &NMEA0183Msg);
+  using tSendNMEA0183MessageCallback = void (*)(const tNMEA0183Msg &NMEA0183Msg, int id);
 
 protected:
   GwLog *logger;
   GwBoatData *boatData;
-
   tNMEA0183 *pNMEA0183;
+  int sourceId;
   tSendNMEA0183MessageCallback SendNMEA0183MessageCallback;
-
-
   void SendMessage(const tNMEA0183Msg &NMEA0183Msg);
-
-  N2kDataToNMEA0183(GwLog *logger, GwBoatData *boatData, tNMEA2000 *NMEA2000, tNMEA0183 *NMEA0183);
+  N2kDataToNMEA0183(GwLog *logger, GwBoatData *boatData, tNMEA2000 *NMEA2000, tNMEA0183 *NMEA0183, int sourceId);
 
 public:
-  static N2kDataToNMEA0183* create(GwLog *logger, GwBoatData *boatData, tNMEA2000 *NMEA2000, tNMEA0183 *NMEA0183);
+  static N2kDataToNMEA0183* create(GwLog *logger, GwBoatData *boatData, tNMEA2000 *NMEA2000, tNMEA0183 *NMEA0183, int sourceId);
   virtual void HandleMsg(const tN2kMsg &N2kMsg) = 0;
   void SetSendNMEA0183MessageCallback(tSendNMEA0183MessageCallback _SendNMEA0183MessageCallback)
   {
