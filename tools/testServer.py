@@ -16,15 +16,19 @@ class RequestHandler(http.server.SimpleHTTPRequestHandler):
             apiurl=self.server.proxyUrl
             url=apiurl+p.replace("/api","")
             print("proxy to %s"%url)
-            with urllib.request.urlopen(url) as response:
-                self.send_response(http.HTTPStatus.OK)
-                self.send_header("Content-type", response.getheader("Content-type"))
+            try:
+                with urllib.request.urlopen(url,timeout=10) as response:
+                    self.send_response(http.HTTPStatus.OK)
+                    self.send_header("Content-type", response.getheader("Content-type"))
                 
-                self.end_headers()
-                shutil.copyfileobj(response,self.wfile)
+                    self.end_headers()
+                    shutil.copyfileobj(response,self.wfile)
                 return None
-            self.send_error(http.HTTPStatus.NOT_FOUND, "api not found")
-            return None
+                self.send_error(http.HTTPStatus.NOT_FOUND, "api not found")
+                return None
+            except Exception as e:
+                self.send_error(http.HTTPStatus.INTERNAL_SERVER_ERROR, "api error %s"%str(e))
+                return None
         super().do_GET()        
     def translate_path(self, path):
         """Translate a /-separated PATH to the local filename syntax.
