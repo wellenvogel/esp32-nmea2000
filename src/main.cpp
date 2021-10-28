@@ -174,6 +174,15 @@ class GwSerialLog : public GwLogWriter{
     }
 
 };
+
+void delayedRestart(){
+  xTaskCreate([](void *p){
+    delay(500);
+    ESP.restart();
+    vTaskDelete(NULL);
+  },"reset",1000,NULL,0,NULL);
+}
+
 void setup() {
 
   uint8_t chipid[6];
@@ -218,7 +227,7 @@ void setup() {
   });
   webserver.on("/api/reset", HTTP_GET,[](AsyncWebServerRequest *request){
     logger.logDebug(GwLog::LOG,"Reset Button");
-    ESP.restart();
+    delayedRestart();
   });
   class StatusRequest : public RequestMessage{
     public:
@@ -268,8 +277,7 @@ void setup() {
           result=JSON_OK;
           logger.logString("update config and restart");
           config.saveConfig();
-          delay(100);
-          ESP.restart();
+          delayedRestart();
         }
         else{
           DynamicJsonDocument rt(100);
@@ -295,8 +303,7 @@ void setup() {
         config.reset(true);
         logger.logString("reset config, restart");
         result=JSON_OK;
-        delay(100);
-        ESP.restart();
+        delayedRestart();
       }
   };
   webserver.on("/api/resetConfig",HTTP_GET,[](AsyncWebServerRequest *request){
