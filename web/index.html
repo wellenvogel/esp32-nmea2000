@@ -5,6 +5,7 @@
 <title>NMEA 2000 Gateway</title>
 
 <script type="text/javascript">
+  let self=this;
   let lastUpdate=(new Date()).getTime();
   function alertRestart(){
     alert("Board reset triggered, reconnect WLAN if necessary");
@@ -50,15 +51,39 @@
           if (el){
             let v=jsonData[k];
             el.value=v;
+            el.setAttribute('data-loaded',v);
+            checkChange(el);
           }
         }
       });
+  }
+  function checkMaxClients(v){
+      let parsed=parseInt(v);
+      if (isNaN(parsed)) return "not a valid number";
+      if (parsed < 0) return "must be >= 0";
+      if (parsed > 10) return "max is 10";
+  }
+  function checkSystemName(v){
+    //2...32 characters for ssid
+    let allowed=v.replace(/[^a-zA-Z0-9]*/g,'');
+    if (allowed != v) return "contains invalid characters, only a-z, A-Z, 0-9";
+    if (v.length < 2 || v.length > 32) return "invalid length (2...32)";
   }
   function changeConfig(){
     let url="/api/setConfig?";
     let values=document.querySelectorAll('.configForm select , .configForm input');
     for (let i=0;i<values.length;i++){
       let v=values[i];
+      let check=v.getAttribute('data-check');
+      if (check){
+        if (typeof(self[check]) === 'function'){
+          let res=self[check](v.value);
+          if (res){
+            alert("invalid config for "+v.getAttribute('name')+"("+v.value+"):\n"+res);
+            return;
+          }
+        }
+      }
       url+=v.getAttribute('name')+"="+encodeURIComponent(v.value)+"&";
     }
     getJson(url)
@@ -107,6 +132,17 @@
       }
     }
   }
+  function checkChange(el) {
+      let loaded = el.getAttribute('data-loaded');
+      if (loaded !== undefined) {
+        if (loaded != el.value) {
+          el.classList.add('changed');
+        }
+        else {
+          el.classList.remove("changed");
+        }
+      }
+    }
   function createInput(configItem){
     let el;
     if (configItem.type === 'boolean' || configItem.type === 'list'){
@@ -162,8 +198,23 @@
           row.appendChild(labelEl);
           let valueEl=createInput(item);
           if (!valueEl) return;
+          valueEl.setAttribute('data-default',item.default);
+          valueEl.addEventListener('change',function(ev){
+            let el=ev.target;
+            checkChange(el);
+          })
+          if (item.check) valueEl.setAttribute('data-check',item.check);
           row.appendChild(valueEl);
           let bt=document.createElement('button');
+          bt.classList.add('defaultButton');
+          bt.setAttribute('data-default',item.default);
+          bt.addEventListener('click',function(ev){
+            valueEl.value=valueEl.getAttribute('data-default');
+            checkChange(valueEl);
+          })
+          bt.textContent="X";
+          row.appendChild(bt);
+          bt=document.createElement('button');
           bt.classList.add('infoButton');
           bt.addEventListener('click',function(ev){
             alert(item.description);
@@ -198,6 +249,9 @@
     padding-bottom: 0.5em;
     border: 1px solid grey;
     max-width: 40em;
+}
+.changed {
+    color: green
 }
 span.label {
     width: 10em;
