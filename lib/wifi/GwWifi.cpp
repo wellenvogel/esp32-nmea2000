@@ -41,7 +41,7 @@ bool GwWifi::connectInternal(){
     }
     return false;
 }
-#define RETRY_MILLIS 5000
+#define RETRY_MILLIS 10000
 void GwWifi::loop(){
     if (wifiClient->asBoolean() && ! clientConnected()){
         long now=millis();

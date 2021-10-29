@@ -13,17 +13,24 @@ class SerialWriter : public GwBufferWriter{
 
 
 };
-GwSerial::GwSerial(GwLog *logger, uart_port_t num)
+GwSerial::GwSerial(GwLog *logger, uart_port_t num, int id,bool allowRead)
 {
+    this->id=id;
     this->logger = logger;
     this->num = num;
-    this->buffer = new GwBuffer(logger,1600);
+    this->buffer = new GwBuffer(logger,GwBuffer::TX_BUFFER_SIZE);
     this->writer = new SerialWriter(num);
+    this->allowRead=allowRead;
+    if (allowRead){
+        this->readBuffer=new GwBuffer(logger, GwBuffer::RX_BUFFER_SIZE);
+    }
+
 }
 GwSerial::~GwSerial()
 {
     delete buffer;
     delete writer;
+    if (readBuffer) delete readBuffer;
 }
 int GwSerial::setup(int baud, int rxpin, int txpin)
 {
@@ -54,13 +61,32 @@ int GwSerial::setup(int baud, int rxpin, int txpin)
 bool GwSerial::isInitialized() { return initialized; }
 size_t GwSerial::enqueue(const uint8_t *data, size_t len)
 {
+    if (! isInitialized()) return 0;
     return buffer->addData(data, len);
 }
 GwBuffer::WriteStatus GwSerial::write(){
+    if (! isInitialized()) return GwBuffer::ERROR;
     return buffer->fetchData(writer,false);
 }
-const char *GwSerial::read(){
+void GwSerial::sendToClients(const char *buf,int sourceId){
+    if ( sourceId == id) return;
+    size_t len=strlen(buf);
+    size_t enqueued=enqueue((const uint8_t*)buf,len);
+    if (enqueued != len){
+        LOG_DEBUG(GwLog::DEBUG,"GwSerial overflow on channel %d",id);
+        overflows++;
+    }
+}
+void GwSerial::loop(bool handleRead){
+    write();
+    if (! handleRead) return;
     char buffer[10];
-    uart_read_bytes(num,(uint8_t *)(&buffer),10,0);
-    return NULL;   
+    int rt=uart_read_bytes(num,(uint8_t *)(&buffer),10,0);
+    if (allowRead & rt > 0){
+        readBuffer->addData((uint8_t *)(&buffer),rt,true);
+    }
+}
+bool GwSerial::readMessages(GwBufferWriter *writer){
+    if (! allowRead) return false;
+    return readBuffer->fetchMessage(writer,'\n',true) == GwBuffer::OK;
 }

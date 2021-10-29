@@ -22,7 +22,7 @@ class GwSocketServer{
         GwSocketServer(const GwConfigHandler *config,GwLog *logger,int minId);
         ~GwSocketServer();
         void begin();
-        void loop();
+        void loop(bool handleRead=true);
         void sendToClients(const char *buf,int sourceId);
         int numClients();
         bool readMessages(GwBufferWriter *writer);

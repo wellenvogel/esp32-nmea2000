@@ -6,10 +6,9 @@ void GwBuffer::lp(const char *fkt, int p)
               fkt, buffer, offset(writePointer), offset(readPointer), usedSpace(), freeSpace(), p);
 }
 
-GwBuffer::GwBuffer(GwLog *logger,size_t bufferSize, bool rotate)
+GwBuffer::GwBuffer(GwLog *logger,size_t bufferSize)
 {
     this->logger = logger;
-    this->rotate=rotate;
     this->bufferSize=bufferSize;
     this->buffer=new uint8_t[bufferSize];
     writePointer = buffer;
@@ -26,67 +25,45 @@ void GwBuffer::reset()
 }
 size_t GwBuffer::freeSpace()
 {
-    if (! rotate){
-        return bufferSize-offset(writePointer)-1;
+    if (readPointer <= writePointer){
+        return readPointer+bufferSize-writePointer-1;
     }
-    if (readPointer < writePointer)
-    {
-        size_t rt = bufferSize - offset(writePointer) - 1 + offset(readPointer);
-        return rt;
-    }
-    if (readPointer == writePointer)
-        return bufferSize - 1;
     return readPointer - writePointer - 1;
 }
 size_t GwBuffer::usedSpace()
 {
-    if (readPointer == writePointer)
-        return 0;
-    if (readPointer < writePointer)
+    if (readPointer <= writePointer)
         return writePointer - readPointer;
-    return bufferSize - offset(readPointer)  + offset(writePointer);
+    return writePointer+bufferSize-readPointer;
 }
-size_t GwBuffer::addData(const uint8_t *data, size_t len)
+size_t GwBuffer::addData(const uint8_t *data, size_t len, bool addPartial)
 {
     lp("addDataE", len);
     if (len == 0)
         return 0;
-    if (freeSpace() < len && rotate)
-        //in rotating mode (send buffer)
-        //we only fill in a message if it fit's completely
+    if (freeSpace() < len && !addPartial)
         return 0;
-    size_t written = 0;
-    if (writePointer >= readPointer)
-    {
-        written = bufferSize - offset(writePointer) - 1;
-        bool canRotate=rotate && offset(readPointer) > 0;
-        if (canRotate) written++; //we can also fill the last byte
-        if (written > len)
-            written = len;
-        if (written)
-        {
-            memcpy(writePointer, data, written);
-            len -= written;
-            data += written;
-            writePointer += written;
-            if (offset(writePointer) > (bufferSize - 1))
-                writePointer = buffer;
+    size_t written = 0;    
+    for (int i=0;i<2;i++){
+        size_t currentFree=freeSpace();    
+        size_t toWrite=len-written;
+        if (toWrite > currentFree) toWrite=currentFree;
+        if (toWrite > (bufferSize - offset(writePointer))) {
+            toWrite=bufferSize - offset(writePointer);
         }
-        lp("addData1", written);
-        if (len <= 0)
-        {
-            return written;
+        if (toWrite != 0){
+            memcpy(writePointer, data, toWrite);
+            written+=toWrite;
+            data += toWrite;
+            writePointer += toWrite;
+            if (offset(writePointer) >= bufferSize){
+                writePointer -= bufferSize;
+            }
         }
-        if (! rotate) return written;
+        lp("addData1", toWrite);
     }
-    //now we have the write pointer before the read pointer
-    int maxLen=readPointer-writePointer-1;
-    if (maxLen <= 0) return written;
-    if (len < maxLen) maxLen=len;
-    memcpy(writePointer, data, maxLen);
-    writePointer += maxLen;
-    lp("addData2", maxLen);
-    return maxLen + written;
+    lp("addData2", written);
+    return written;
 }
 /**
          * write some data to the buffer writer
@@ -94,92 +71,66 @@ size_t GwBuffer::addData(const uint8_t *data, size_t len)
          */
 GwBuffer::WriteStatus GwBuffer::fetchData(GwBufferWriter *writer, int maxLen,bool errorIf0 )
 {
-    lp("fetchDataE");
+    lp("fetchDataE",maxLen);
     size_t len = usedSpace();
     if (maxLen > 0 && len > maxLen) len=maxLen;
-    if (len == 0)
+    if (len == 0){
+        lp("fetchData0",maxLen);
+        writer->done();
         return OK;
+    }
     size_t written = 0;
-    size_t plen = len;
-    if (writePointer < readPointer)
-    {
-        //we need to write from readPointer till end and then till writePointer-1
-        plen = bufferSize - offset(readPointer) - 1;
-        int rt = writer->write(readPointer, plen);
-        lp("fetchData1", rt);
-        if (rt < 0)
-        {
-            LOG_DEBUG(GwLog::DEBUG + 1, "buffer: write returns error %d", rt);
-            return ERROR;
+    for (int i=0;i<2;i++){
+        size_t currentUsed=usedSpace();    
+        size_t toWrite=len-written;
+        if (toWrite > currentUsed) toWrite=currentUsed;
+        if (toWrite > (bufferSize - offset(readPointer))) {
+            toWrite=bufferSize - offset(readPointer);
         }
-        if (rt > plen)
+        lp("fetchData1", toWrite);
+        if (toWrite > 0)
         {
-            LOG_DEBUG(GwLog::DEBUG + 1, "buffer: write too many bytes(1) %d", rt);
-            return ERROR;
+            int rt = writer->write(readPointer, toWrite);
+            lp("fetchData2", rt);
+            if (rt < 0)
+            {
+                LOG_DEBUG(GwLog::DEBUG + 1, "buffer: write returns error %d", rt);
+                writer->done();
+                return ERROR;
+            }
+            if (rt > toWrite)
+            {
+                LOG_DEBUG(GwLog::DEBUG + 1, "buffer: write too many bytes(1) %d", rt);
+                writer->done();
+                return ERROR;
+            }
+            readPointer += rt;
+            if (offset(readPointer) >= bufferSize)
+                readPointer -= bufferSize;
+            written += rt;
+            if (rt == 0) break; //no need to try again
         }
-        if (rt == 0)
-        {
-            LOG_DEBUG(GwLog::DEBUG + 1, "buffer: write returns 0 (1)");
-            return (errorIf0 ? ERROR : AGAIN);
-        }
-        readPointer += rt;
-        if (offset(readPointer) > (bufferSize - 1))
-            readPointer = buffer;
-        if (rt < plen)
-            return AGAIN;
-        if (plen >= len)
-            return OK;
-        len -= rt;
-        written += rt;
-        //next part - readPointer should be at buffer now
     }
-    plen = writePointer - readPointer;
-    if (plen == 0)
-        return OK;
-    int rt = writer->write(readPointer, plen);
-    lp("fetchData2", rt);
-    if (rt < 0)
-    {
-        LOG_DEBUG(GwLog::DEBUG + 1, "buffer: write returns error %d", rt);
-        return ERROR;
-    }
-    if (rt == 0)
-    {
-        LOG_DEBUG(GwLog::DEBUG + 1, "buffer: write returns 0 (1)");
+    writer->done();
+    if (written == 0){
         return (errorIf0 ? ERROR : AGAIN);
     }
-    if (rt > plen)
-    {
-        LOG_DEBUG(GwLog::DEBUG + 1, "buffer: write too many bytes(2)");
-        return ERROR;
-    }
-    readPointer += rt;
-    if (offset(readPointer) > (bufferSize - 1))
-        readPointer = buffer;
-    lp("fetchData3");
-    written += rt;
-    if (written < len)
-        return AGAIN;
-    return OK;
+    return (written == len)?OK:AGAIN;
 }
 
 int GwBuffer::findChar(char x){
     lp("findChar",x);
-    int offset=0;
+    int of=0;
     uint8_t *p;
-    for (p=readPointer; p != writePointer && p < (buffer+bufferSize);p++){
-        if (*p == x) return offset;
-        offset++;
-    }
-    if (p >= (buffer+bufferSize)){
-        //we reached the end of the buffer without "hitting" the write pointer
-        //so we can start from the beginning if rotating...
-        if (! rotate) return -1;
-        for (p=buffer;p < writePointer && p < (buffer+bufferSize);p++){
-            if (*p == x) return offset;
-            offset++;
+    for (p=readPointer; of < usedSpace();p++){
+        if (offset(p) >= bufferSize) p -=bufferSize;
+        if (*p == x) {
+            lp("findChar1",of);
+            return of;
         }
+        of++;
     }
+    lp("findChar2");
     return -1;
 }
 
@@ -192,23 +143,6 @@ GwBuffer::WriteStatus GwBuffer::fetchMessage(GwBufferWriter *writer,char delimit
             return ERROR;
         }
         return AGAIN;
-    }
-    if (! rotate){
-        //in a non rotating buffer we discard the found message 
-        //and copy the remain to the start
-        int len=pos+1;
-        int wr=writer->write(readPointer,len);
-        //in any case discard the data now
-        int remain=usedSpace()-len;
-        if (remain > 0){
-            memcpy(buffer,readPointer+len,remain);
-            readPointer=buffer;
-            writePointer=buffer+remain;
-        }
-        else{
-            reset();
-        }
-        return (wr == len)?OK:ERROR;
     }
     return fetchData(writer,pos+1,true);
 }

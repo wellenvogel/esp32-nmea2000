@@ -3,8 +3,6 @@
 #include <lwip/sockets.h>
 #include "GwBuffer.h"
 
-#define WRITE_BUFFER_SIZE 1600
-#define READ_BUFFER_SIZE 200
 class Writer : public GwBufferWriter{
     public:
     wiFiClientPtr client;
@@ -63,9 +61,9 @@ class GwClient{
             this->client=client;
             this->logger=logger;
             this->allowRead=allowRead;
-            buffer=new GwBuffer(logger,WRITE_BUFFER_SIZE);
+            buffer=new GwBuffer(logger,GwBuffer::TX_BUFFER_SIZE);
             if (allowRead){
-                readBuffer=new GwBuffer(logger,READ_BUFFER_SIZE,false);
+                readBuffer=new GwBuffer(logger,GwBuffer::RX_BUFFER_SIZE);
             }
             overflows=0;
             if (client != NULL){
@@ -177,7 +175,7 @@ void GwSocketServer::begin(){
     MDNS.addService("_nmea-0183","_tcp",config->getInt(config->serverPort));    
 
 }
-void GwSocketServer::loop()
+void GwSocketServer::loop(bool handleRead)
 {
     WiFiClient client = server->available(); // listen for incoming clients
 
@@ -230,7 +228,7 @@ void GwSocketServer::loop()
         }
         else
         {
-            client->read();
+            if (handleRead) client->read();
         }
     }
 }
@@ -247,12 +245,6 @@ bool GwSocketServer::readMessages(GwBufferWriter *writer){
 }
 void GwSocketServer::sendToClients(const char *buf,int source){
     int len=strlen(buf);
-    char buffer[len+2];
-    memcpy(buffer,buf,len);
-    buffer[len]=0x0d;
-    len++;
-    buffer[len]=0x0a;
-    len++;
     int sourceIndex=source-minId;
     for (int i = 0; i < maxClients; i++)
     {
@@ -260,7 +252,7 @@ void GwSocketServer::sendToClients(const char *buf,int source){
         gwClientPtr client = clients[i];
         if (! client->hasClient()) continue;
         if ( client->client->connected() ) {
-        bool rt=client->enqueue((uint8_t*)buffer,len);
+        bool rt=client->enqueue((uint8_t*)buf,len);
         if (!rt){
             LOG_DEBUG(GwLog::DEBUG,"overflow in send to %s",client->remoteIp.c_str());    
         }

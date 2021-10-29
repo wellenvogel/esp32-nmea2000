@@ -5,6 +5,7 @@
 <title>NMEA 2000 Gateway</title>
 
 <script type="text/javascript">
+  let self=this;
   let lastUpdate=(new Date()).getTime();
   function alertRestart(){
     alert("Board reset triggered, reconnect WLAN if necessary");
@@ -50,15 +51,39 @@
           if (el){
             let v=jsonData[k];
             el.value=v;
+            el.setAttribute('data-loaded',v);
+            checkChange(el);
           }
         }
       });
+  }
+  function checkMaxClients(v){
+      let parsed=parseInt(v);
+      if (isNaN(parsed)) return "not a valid number";
+      if (parsed < 0) return "must be >= 0";
+      if (parsed > 10) return "max is 10";
+  }
+  function checkSystemName(v){
+    //2...32 characters for ssid
+    let allowed=v.replace(/[^a-zA-Z0-9]*/g,'');
+    if (allowed != v) return "contains invalid characters, only a-z, A-Z, 0-9";
+    if (v.length < 2 || v.length > 32) return "invalid length (2...32)";
   }
   function changeConfig(){
     let url="/api/setConfig?";
     let values=document.querySelectorAll('.configForm select , .configForm input');
     for (let i=0;i<values.length;i++){
       let v=values[i];
+      let check=v.getAttribute('data-check');
+      if (check){
+        if (typeof(self[check]) === 'function'){
+          let res=self[check](v.value);
+          if (res){
+            alert("invalid config for "+v.getAttribute('name')+"("+v.value+"):\n"+res);
+            return;
+          }
+        }
+      }
       url+=v.getAttribute('name')+"="+encodeURIComponent(v.value)+"&";
     }
     getJson(url)
@@ -107,6 +132,101 @@
       }
     }
   }
+  function checkChange(el) {
+      let loaded = el.getAttribute('data-loaded');
+      if (loaded !== undefined) {
+        if (loaded != el.value) {
+          el.classList.add('changed');
+        }
+        else {
+          el.classList.remove("changed");
+        }
+      }
+    }
+  function createInput(configItem){
+    let el;
+    if (configItem.type === 'boolean' || configItem.type === 'list'){
+      el=document.createElement('select')
+      el.setAttribute('name',configItem.name)
+      let slist=[];
+      if (configItem.list){
+        configItem.list.forEach(function(v){
+          slist.push({l:v,v:v});
+        })
+      }
+      else{
+        slist.push({l:'on',v:'true'})
+        slist.push({l:'off',v:'false'})
+      }
+      slist.forEach(function(sitem){
+        let sitemEl=document.createElement('option');
+        sitemEl.setAttribute('value',sitem.v);
+        sitemEl.textContent=sitem.l;
+        el.appendChild(sitemEl);
+      })
+      return el;
+    }
+    el=document.createElement('input');
+    el.setAttribute('name',configItem.name)
+    if (configItem.type === 'password'){
+      el.setAttribute('type','password');
+    }
+    else if (configItem.type === 'number'){
+      el.setAttribute('type','number');
+    }
+    else{
+      el.setAttribute('type','text');
+    }
+    return el;
+  }
+  let configDefinitions;
+  function loadConfigDefinitions(){
+    getJson("config.json")
+      .then(function(defs){
+        let frame=document.querySelector('.configFormRows');
+        if (! frame) throw Error("no config form");
+        frame.innerHTML='';
+        configDefinitions=defs;
+        defs.forEach(function(item){
+          if (! item.type) return;
+          let row=document.createElement('div');
+          row.classList.add('row');
+          let label=item.label || item.name;
+          let labelEl=document.createElement('span');
+          labelEl.classList.add('label');
+          labelEl.textContent=label;
+          row.appendChild(labelEl);
+          let valueEl=createInput(item);
+          if (!valueEl) return;
+          valueEl.setAttribute('data-default',item.default);
+          valueEl.addEventListener('change',function(ev){
+            let el=ev.target;
+            checkChange(el);
+          })
+          if (item.check) valueEl.setAttribute('data-check',item.check);
+          row.appendChild(valueEl);
+          let bt=document.createElement('button');
+          bt.classList.add('defaultButton');
+          bt.setAttribute('data-default',item.default);
+          bt.addEventListener('click',function(ev){
+            valueEl.value=valueEl.getAttribute('data-default');
+            checkChange(valueEl);
+          })
+          bt.textContent="X";
+          row.appendChild(bt);
+          bt=document.createElement('button');
+          bt.classList.add('infoButton');
+          bt.addEventListener('click',function(ev){
+            alert(item.description);
+          });
+          bt.textContent="?";
+          row.appendChild(bt);
+          frame.appendChild(row);
+        })
+        resetForm();
+      })
+      .catch(function(err){alert("unable to load config: "+err)})
+  }
   window.setInterval(update,1000);
   window.addEventListener('load',function(){
   let buttons=document.querySelectorAll('button');
@@ -118,7 +238,7 @@
     cd.addEventListener('change',function(ev){
       showCanDetails(ev.target.checked);
     });
-    resetForm();
+    loadConfigDefinitions();
   });
 </script>  
 <style type="text/css">
@@ -129,6 +249,9 @@
     padding-bottom: 0.5em;
     border: 1px solid grey;
     max-width: 40em;
+}
+.changed {
+    color: green
 }
 span.label {
     width: 10em;
@@ -150,6 +273,10 @@ span#connected.ok{
 }
 .buttons {
     padding-left: 1em;
+}
+button.infoButton {
+    margin-left: 1em;
+    vertical-align: bottom;
 }
 #canDetails{
   display:none;
@@ -201,75 +328,8 @@ span#connected.ok{
 </div>
 <button id="reset" >Reset</button>
 <div class="configForm">
-  <div class="row">
-    <span class="label">system name</span>
-    <input name="systemName" type="text">
-  </div>
-  <div class="row">
-    <span class="label">NMEAtoUSB</span>
-    <select name="sendUsb">
-      <option value="true">On</option>
-      <option value="false" selected="selected">Off</option>
-    </select>
-  </div>
-  <!--"1200","2400","4800","9600","14400","19200","28800","38400","57600","115200","230400","460800"-->
-  <div class="row">
-    <span class="label">USB baud rate</span>
-    <select name="usbBaud">
-      <option value="1200">1200</option>
-      <option value="2400">2400</option>
-      <option value="4800">4800</option>
-      <option value="9600">9600</option>
-      <option value="14400">14400</option>
-      <option value="19200">19200</option>
-      <option value="28800">28800</option>
-      <option value="38400">38400</option>
-      <option value="57600">57600</option>
-      <option value="115200">115200</option>
-      <option value="230400">230400</option>
-      <option value="460800">460800</option>
-    </select>
-  </div>
-  <div class="row">
-    <span class="label">TCP Port</span>
-    <input name="serverPort" type="number">
-  </div>
-  <div class="row">
-    <span class="label">maxTCPClients</span>
-    <input name="maxClients" type="number">
-  </div>
-  <div class="row">
-    <span class="label">NMEAtoTCP</span>
-    <select name="sendTCP">
-      <option value="true">On</option>
-      <option value="false" selected="selected">Off</option>
-    </select>
-  </div>
-  <div class="row">
-    <span class="label">SeasmartToTCP</span>
-    <select name="sendSeasmart">
-      <option value="true">On</option>
-      <option value="false" selected="selected">Off</option>
-    </select>
-  </div>
-  <div class="row">
-    <span class="label">shutdown AP after (min)</span>
-    <input name="stopApTime" type="number">
-  </div>
-  <div class="row">
-    <span class="label">wifiClient</span>
-    <select name="wifiClient">
-      <option value="true">On</option>
-      <option value="false" selected="selected">Off</option>
-    </select>
-  </div>
-  <div class="row">
-    <span class="label">wifiClientPass</span>
-    <input name="wifiPass" type="text">
-  </div>
-  <div class="row">
-    <span class="label">wifiClientSSID</span>
-    <input name="wifiSSID" type="text">
+  <div class="configFormRows">
+
   </div>
   <div class="buttons">
     <button id="resetForm">ReloadConfig</button>

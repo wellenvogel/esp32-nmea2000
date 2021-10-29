@@ -54,7 +54,7 @@ GwConfigInterface * GwConfigHandler::getConfigItem(const String name, bool dummy
     return &dummyConfig;
 }
 #define PREF_NAME "gwprefs"
-GwConfigHandler::GwConfigHandler(GwLog *logger){
+GwConfigHandler::GwConfigHandler(GwLog *logger): GwConfigDefinitions(){
     this->logger=logger;
 }
 bool GwConfigHandler::loadConfig(){

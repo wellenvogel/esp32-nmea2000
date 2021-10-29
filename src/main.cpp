@@ -12,7 +12,7 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#define VERSION "0.1.0"
+#define VERSION "0.1.2"
 #include "GwHardware.h"
 
 #include <Arduino.h>
@@ -65,7 +65,7 @@ Preferences preferences;             // Nonvolatile storage on ESP32 - To store 
 bool SendNMEA0183Conversion = true; // Do we send NMEA2000 -> NMEA0183 conversion
 bool SendSeaSmart = false; // Do we send NMEA2000 messages in SeaSmart format
 
-N2kDataToNMEA0183 *nmea0183Converter=N2kDataToNMEA0183::create(&logger, &boatData,&NMEA2000, 0);
+N2kDataToNMEA0183 *nmea0183Converter=N2kDataToNMEA0183::create(&logger, &boatData,&NMEA2000, 0, N2K_CHANNEL_ID);
 
 // Set the information for other bus devices, which messages we support
 const unsigned long TransmitMessages[] PROGMEM = {127489L, // Engine dynamic
@@ -73,7 +73,7 @@ const unsigned long TransmitMessages[] PROGMEM = {127489L, // Engine dynamic
 };
 // Forward declarations
 void HandleNMEA2000Msg(const tN2kMsg &N2kMsg);
-void SendNMEA0183Message(const tNMEA0183Msg &NMEA0183Msg);
+void SendNMEA0183Message(const tNMEA0183Msg &NMEA0183Msg,int id);
 
 AsyncWebServer webserver(80);
 
@@ -135,11 +135,39 @@ void handleAsyncWebRequest(AsyncWebServerRequest *request, RequestMessage *msg, 
 }
 
 #define JSON_OK "{\"status\":\"OK\"}"
-//embedded files
-extern const uint8_t indexFile[] asm("_binary_web_index_html_gz_start"); 
-extern const uint8_t indexFileEnd[] asm("_binary_web_index_html_gz_end"); 
-extern const uint8_t indexFileLen[] asm("_binary_web_index_html_gz_size");
 
+class EmbeddedFile;
+static std::map<String,EmbeddedFile*> embeddedFiles;
+class EmbeddedFile {
+  public:
+    const uint8_t *start;
+    int len;
+    EmbeddedFile(String name,const uint8_t *start,int len){
+      this->start=start;
+      this->len=len;
+      embeddedFiles[name]=this;
+    }
+} ;
+#define EMBED_GZ_FILE(fileName, fileExt) \
+  extern const uint8_t  fileName##_##fileExt##_File[] asm("_binary_generated_" #fileName "_" #fileExt "_gz_start"); \
+  extern const uint8_t  fileName##_##fileExt##_FileLen[] asm("_binary_generated_" #fileName "_" #fileExt "_gz_size"); \
+  const EmbeddedFile fileName##_##fileExt##_Config(#fileName "." #fileExt,(const uint8_t*)fileName##_##fileExt##_File,(int)fileName##_##fileExt##_FileLen);
+
+EMBED_GZ_FILE(index,html)
+EMBED_GZ_FILE(config,json)
+
+void sendEmbeddedFile(String name,String contentType,AsyncWebServerRequest *request){
+    std::map<String,EmbeddedFile*>::iterator it=embeddedFiles.find(name);
+    if (it != embeddedFiles.end()){
+      EmbeddedFile* found=it->second;
+      AsyncWebServerResponse *response=request->beginResponse_P(200,contentType,found->start,found->len);
+      response->addHeader(F("Content-Encoding"), F("gzip"));
+      request->send(response);
+    }
+    else{
+      request->send(404, "text/plain", "Not found");
+    }  
+  }
 
 String js_status(){
   int numPgns=nmea0183Converter->numPgns();
@@ -165,15 +193,24 @@ GwConfigInterface *sendTCP=NULL;
 GwConfigInterface *sendSeasmart=NULL;
 GwConfigInterface *systemName=NULL;
 
-GwSerial usbSerial(&logger, UART_NUM_0);
+GwSerial usbSerial(&logger, UART_NUM_0, USB_CHANNEL_ID);
 class GwSerialLog : public GwLogWriter{
   public:
     virtual ~GwSerialLog(){}
     virtual void write(const char *data){
-      usbSerial.enqueue((const uint8_t*)data,strlen(data)); //ignore any errors
+      usbSerial.sendToClients(data,-1); //ignore any errors
     }
 
 };
+
+void delayedRestart(){
+  xTaskCreate([](void *p){
+    delay(500);
+    ESP.restart();
+    vTaskDelete(NULL);
+  },"reset",1000,NULL,0,NULL);
+}
+
 void setup() {
 
   uint8_t chipid[6];
@@ -212,13 +249,14 @@ void setup() {
 
   // Start Web Server
   webserver.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
-      AsyncWebServerResponse *response=request->beginResponse_P(200,"text/html",(const uint8_t *)indexFile,(int)indexFileLen);
-      response->addHeader(F("Content-Encoding"), F("gzip"));
-      request->send(response);
+      sendEmbeddedFile("index.html","text/html",request);
+  });
+  webserver.on("/config.json", HTTP_GET, [](AsyncWebServerRequest *request){
+      sendEmbeddedFile("config.json","application/json",request);
   });
   webserver.on("/api/reset", HTTP_GET,[](AsyncWebServerRequest *request){
     logger.logDebug(GwLog::LOG,"Reset Button");
-    ESP.restart();
+    delayedRestart();
   });
   class StatusRequest : public RequestMessage{
     public:
@@ -268,8 +306,7 @@ void setup() {
           result=JSON_OK;
           logger.logString("update config and restart");
           config.saveConfig();
-          delay(100);
-          ESP.restart();
+          delayedRestart();
         }
         else{
           DynamicJsonDocument rt(100);
@@ -295,8 +332,7 @@ void setup() {
         config.reset(true);
         logger.logString("reset config, restart");
         result=JSON_OK;
-        delay(100);
-        ESP.restart();
+        delayedRestart();
       }
   };
   webserver.on("/api/resetConfig",HTTP_GET,[](AsyncWebServerRequest *request){
@@ -385,45 +421,82 @@ void HandleNMEA2000Msg(const tN2kMsg &N2kMsg) {
   socketServer.sendToClients(buf,N2K_CHANNEL_ID);
 }
 
-
-//*****************************************************************************
-void SendNMEA0183Message(const tNMEA0183Msg &NMEA0183Msg) {
-  if ( ! sendTCP->asBoolean() && ! sendUsb->asBoolean() ) return;
-
-  char buf[MAX_NMEA0183_MESSAGE_SIZE];
-  if ( !NMEA0183Msg.GetMessage(buf, MAX_NMEA0183_MESSAGE_SIZE) ) return;
+void sendBufferToChannels(const char * buffer, int sourceId){
   if (sendTCP->asBoolean()){
-    socketServer.sendToClients(buf,N2K_CHANNEL_ID);
+    socketServer.sendToClients(buffer,sourceId);
   }
   if (sendUsb->asBoolean()){
-    int len=strlen(buf);
-    if (len >= (MAX_NMEA0183_MESSAGE_SIZE -2)) return;
-    buf[len]=0x0d;
-    len++;
-    buf[len]=0x0a;
-    len++;
-    buf[len]=0;
-    usbSerial.enqueue((const uint8_t*)buf,len);
+    usbSerial.sendToClients(buffer,sourceId);
   }
 }
 
+//*****************************************************************************
+void SendNMEA0183Message(const tNMEA0183Msg &NMEA0183Msg, int sourceId) {
+  if ( ! sendTCP->asBoolean() && ! sendUsb->asBoolean() ) return;
+
+  char buf[MAX_NMEA0183_MESSAGE_SIZE+3];
+  if ( !NMEA0183Msg.GetMessage(buf, MAX_NMEA0183_MESSAGE_SIZE) ) return;
+  size_t len=strlen(buf);
+  buf[len]=0x0d;
+  buf[len+1]=0x0a;
+  buf[len+2]=0;
+  sendBufferToChannels(buf,sourceId);
+}
+
+void handleReceivedNmeaMessage(const char *buf, int sourceId){
+  //TODO - for now only send out again
+  //add the conversion to N2K here
+  sendBufferToChannels(buf,sourceId);
+}
+
+void handleSendAndRead(bool handleRead){
+  socketServer.loop(handleRead);  
+  usbSerial.loop(handleRead);
+}
 class NMEAMessageReceiver : public GwBufferWriter{
+  uint8_t buffer[GwBuffer::RX_BUFFER_SIZE+4];
+  uint8_t *writePointer=buffer;
   public:
     virtual int write(const uint8_t *buffer,size_t len){
-      char nbuf[len+1];
-      memcpy(nbuf,buffer,len);
-      nbuf[len]=0;
-      logger.logDebug(GwLog::DEBUG,"NMEA[%d]: %s",id,nbuf);
-      return len;
+      size_t toWrite=GwBuffer::RX_BUFFER_SIZE-(writePointer-buffer);
+      if (toWrite > len) toWrite=len;
+      memcpy(writePointer,buffer,toWrite);
+      writePointer+=toWrite;
+      *writePointer=0;
+      return toWrite;
+    }
+    virtual void done(){
+      if (writePointer == buffer) return;
+      uint8_t *p;
+      for (p=writePointer-1;p>=buffer && *p <= 0x20;p--){
+        *p=0;
+      }
+      if (p > buffer){
+        p++;
+        *p=0x0d;
+        p++;
+        *p=0x0a;
+        p++;
+        *p=0;
+      }
+      for (p=buffer; *p != 0 && p < writePointer && *p <= 0x20;p++){}
+      //very simple NMEA check
+      if (*p != '!' && *p != '$'){
+        logger.logDebug(GwLog::DEBUG,"unknown line [%d] - ignore: %s",id,(const char *)p);  
+      }
+      else{
+        logger.logDebug(GwLog::DEBUG,"NMEA[%d]: %s",id,(const char *)p);
+        handleReceivedNmeaMessage((const char *)p,id);
+        //trigger sending to empty buffers
+        handleSendAndRead(false);
+      }
+      writePointer=buffer;
     }
 };
 void loop() {
   gwWifi.loop();
 
-  socketServer.loop();  
-  if (usbSerial.write() == GwBuffer::ERROR){
-    //logger.logDebug(GwLog::DEBUG,"overflow in USB serial");
-  }
+  handleSendAndRead(true);
   NMEA2000.ParseMessages();
 
   int SourceAddress = NMEA2000.GetN2kSource();
@@ -447,6 +520,6 @@ void loop() {
   socketServer.readMessages(&receiver);
   //read channels
 
-  usbSerial.read();
+  usbSerial.readMessages(&receiver);
 
 }
