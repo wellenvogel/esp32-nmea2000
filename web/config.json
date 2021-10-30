@@ -30,6 +30,13 @@
         "description": "receive NMEA data on the USB port"
     },
     {
+        "name": "usbToN2k",
+        "label": "USB to NMEA2000",
+        "type": "boolean",
+        "default": "true",
+        "description": "convert NMEA0183 from the USB port to NMEA2000"
+    },
+    {
         "name": "serverPort",
         "label": "TCP port",
         "type": "number",
@@ -53,10 +60,17 @@
     },
     {
         "name": "readTCP",
-        "label": "NMEA from TCP",
+        "label": "TCP to NMEA2000",
         "type": "boolean",
         "default": "true",
         "description": "receive NMEA data from connected TCP clients"
+    },
+    {
+        "name": "tcpToN2k",
+        "label": "NMEA from TCP",
+        "type": "boolean",
+        "default": "true",
+        "description": "convert NMEA0183 from TCP clients to NMEA2000"
     },
     {
         "name": "sendSeasmart",

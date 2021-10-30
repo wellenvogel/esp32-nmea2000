@@ -41,6 +41,7 @@ const unsigned long HEAP_REPORT_TIME=2000; //set to 0 to disable heap reporting
 #include "GwMessage.h"
 #include "GwSerial.h"
 #include "GwWebServer.h"
+#include "NMEA0183DataToN2K.h"
 
 
 //NMEA message channels
@@ -70,11 +71,8 @@ int NodeAddress;  // To store last Node Address
 
 Preferences preferences;             // Nonvolatile storage on ESP32 - To store LastDeviceAddress
 N2kDataToNMEA0183 *nmea0183Converter=NULL;
+NMEA0183DataToN2K *toN2KConverter=NULL;
 
-// Set the information for other bus devices, which messages we support
-const unsigned long TransmitMessages[] PROGMEM = {127489L, // Engine dynamic
-                                                  0
-};
 
 void SendNMEA0183Message(const tNMEA0183Msg &NMEA0183Msg,int id);
 
@@ -86,6 +84,8 @@ GwConfigInterface *sendUsb=NULL;
 GwConfigInterface *sendTCP=NULL;
 GwConfigInterface *sendSeasmart=NULL;
 GwConfigInterface *systemName=NULL;
+GwConfigInterface *n2kFromUSB=NULL;
+GwConfigInterface *n2kFromTCP=NULL;
 
 GwSerial usbSerial(NULL, UART_NUM_0, USB_CHANNEL_ID);
 class GwSerialLog : public GwLogWriter{
@@ -254,6 +254,8 @@ void setup() {
   sendTCP=config.getConfigItem(config.sendTCP,true);
   sendSeasmart=config.getConfigItem(config.sendSeasmart,true);
   systemName=config.getConfigItem(config.systemName,true);
+  n2kFromTCP=config.getConfigItem(config.tcpToN2k,true);
+  n2kFromUSB=config.getConfigItem(config.usbToN2k,true);
   MDNS.begin(config.getConfigItem(config.systemName)->asCString());
   gwWifi.setup();
 
@@ -288,6 +290,11 @@ void setup() {
   
   nmea0183Converter= N2kDataToNMEA0183::create(&logger, &boatData,&NMEA2000, 
     SendNMEA0183Message, N2K_CHANNEL_ID);
+
+  toN2KConverter= NMEA0183DataToN2K::create(&logger,&boatData,[](const tN2kMsg &msg)->bool{
+    logger.logDebug(GwLog::DEBUG+1,"send N2K");
+    return true;
+  });  
   
   NMEA2000.SetN2kCANMsgBufSize(8);
   NMEA2000.SetN2kCANReceiveFrameBufSize(250);
@@ -321,8 +328,8 @@ void setup() {
   logger.logDebug(GwLog::LOG,"NodeAddress=%d\n", NodeAddress);
 
   NMEA2000.SetMode(tNMEA2000::N2km_ListenAndNode, NodeAddress);
-
-  NMEA2000.ExtendTransmitMessages(TransmitMessages);
+  // Set the information for other bus devices, which messages we support
+  NMEA2000.ExtendTransmitMessages(toN2KConverter->handledPgns());
   NMEA2000.ExtendReceiveMessages(nmea0183Converter->handledPgns());
   NMEA2000.SetMsgHandler([](const tN2kMsg &n2kMsg){
     numCan++;
@@ -367,8 +374,10 @@ void SendNMEA0183Message(const tNMEA0183Msg &NMEA0183Msg, int sourceId) {
 }
 
 void handleReceivedNmeaMessage(const char *buf, int sourceId){
-  //TODO - for now only send out again
-  //add the conversion to N2K here
+  if ((sourceId == USB_CHANNEL_ID && n2kFromUSB->asBoolean())||
+      (sourceId >= MIN_TCP_CHANNEL_ID && n2kFromTCP->asBoolean())
+    )
+    toN2KConverter->parseAndSend(buf,sourceId);
   sendBufferToChannels(buf,sourceId);
 }
 
