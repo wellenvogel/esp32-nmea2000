@@ -29,6 +29,8 @@ class Message{
     }
     virtual ~Message(){
       GW_MESSAGE_DEBUG("~Message %p\n",this);
+      vSemaphoreDelete(locker);
+      vSemaphoreDelete(notifier);
     }
     void unref(){
       GW_MESSAGE_DEBUG("Message::unref %p\n",this);
@@ -81,9 +83,9 @@ class RequestMessage : public Message{
   protected:
     virtual void processRequest()=0;  
     virtual void processImpl(){
-      GW_MESSAGE_DEBUG("RequestMessage processImpl(1)");
+      GW_MESSAGE_DEBUG("RequestMessage processImpl(1) %p\n",this);
       processRequest();
-      GW_MESSAGE_DEBUG("RequestMessage processImpl(2)");
+      GW_MESSAGE_DEBUG("RequestMessage processImpl(2) %p\n",this);
       len=strlen(result.c_str());
       consumed=0;
       handled=true;
@@ -92,6 +94,7 @@ class RequestMessage : public Message{
     RequestMessage():Message(){
     }
     virtual ~RequestMessage(){
+      GW_MESSAGE_DEBUG("~RequestMessage %p\n",this)
     }
     String getResult(){return result;}
     int getLen(){return len;}

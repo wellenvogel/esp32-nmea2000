@@ -12,7 +12,10 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#define VERSION "0.1.2"
+#define VERSION "0.2.0"
+//#define GW_MESSAGE_DEBUG_ENABLED
+//#define FALLBACK_SERIAL
+const unsigned long HEAP_REPORT_TIME=2000; //set to 0 to disable heap reporting
 #include "GwHardware.h"
 
 #include <Arduino.h>
@@ -223,8 +226,11 @@ void setup() {
   if (usbBaud){
     baud=usbBaud->asInt();
   }
-  int st=usbSerial.setup(baud,3,1); //TODO: PIN defines
-  //int st=-1;
+#ifdef FALLBACK_SERIAL
+  int st=-1;
+#else
+  int st=usbSerial.setup(baud,3,1); //TODO: PIN defines  
+#endif  
   if (st < 0){
     //falling back to old style serial for logging
     Serial.begin(baud);
@@ -497,11 +503,10 @@ class NMEAMessageReceiver : public GwBufferWriter{
 };
 NMEAMessageReceiver receiver;
 unsigned long lastHeapReport=0;
-const unsigned long HEAP_REPORT_TIME=2000;
 void loop() {
   gwWifi.loop();
   unsigned long now=millis();
-  if (now > (lastHeapReport+HEAP_REPORT_TIME)){
+  if (HEAP_REPORT_TIME > 0 && now > (lastHeapReport+HEAP_REPORT_TIME)){
     lastHeapReport=now;
     if (logger.isActive(GwLog::DEBUG)){
       logger.logDebug(GwLog::DEBUG,"Heap free=%ld, minFree=%ld",
@@ -526,7 +531,7 @@ void loop() {
   //handle messages from the async web server
   Message *msg=NULL;
   if (xQueueReceive(queue,&msg,0)){
-    logger.logDebug(GwLog::DEBUG,"main message");
+    logger.logDebug(GwLog::DEBUG+1,"main message");
     msg->process();
     msg->unref();
   }

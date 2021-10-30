@@ -245,9 +245,7 @@ bool  SetAISClassBMessage24(tNMEA0183AISMsg &NMEA0183AISMsg, uint8_t MessageID, 
   uint8_t i;
   for ( i = 0; i < vships.size(); i++) {
     if ( vships[i]->_userID == UserID ) {
-      Serial.print("UserID gefunden: "); Serial.print(UserID);
       ShipName = const_cast<char*>( vships[i]->_shipName.c_str() );
-      Serial.print(" / "); Serial.println( ShipName);
     }
   }
   if ( i > MAX_SHIP_IN_VECTOR ) {
