@@ -36,7 +36,7 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <vector>
 #include <string>
 
-#define MAX_SHIP_IN_VECTOR 5
+#define MAX_SHIP_IN_VECTOR 200
 class ship {
 public:
     uint32_t _userID;

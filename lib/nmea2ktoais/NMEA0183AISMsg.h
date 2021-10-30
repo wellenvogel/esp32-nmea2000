@@ -49,7 +49,6 @@ typedef std::bitset<BITSET_LENGTH> AISBitSet;
 class tNMEA0183AISMsg : public tNMEA0183Msg {
 
   protected:  // AIS-NMEA
-    AISBitSet bset;
     static const char *EmptyAISField;  // 6bits 0      not used yet.....
     static const char *AsciChar;
 
