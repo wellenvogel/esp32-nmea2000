@@ -898,7 +898,7 @@ public:
         registerConverter(128275UL, &N2kToNMEA0183Functions::HandleLog);
         registerConverter(127245UL, &N2kToNMEA0183Functions::HandleRudder);
         registerConverter(130310UL, &N2kToNMEA0183Functions::HandleWaterTemp);
-#define HANDLE_AIS 1        
+#define HANDLE_AIS         
 #ifdef HANDLE_AIS
         registerConverter(129038UL, &N2kToNMEA0183Functions::HandleAISClassAPosReport);  // AIS Class A Position Report, Message Type 1
         registerConverter(129039UL, &N2kToNMEA0183Functions::HandleAISClassBMessage18);  // AIS Class B Position Report, Message Type 18

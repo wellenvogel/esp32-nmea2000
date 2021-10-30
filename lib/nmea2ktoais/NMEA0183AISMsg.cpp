@@ -68,15 +68,13 @@ bool tNMEA0183AISMsg::AddIntToPayloadBin(int32_t ival, uint16_t countBits) {
 
   if ( (iAddPldBin + countBits ) >= AIS_BIN_MAX_LEN ) return false; // Is there room for any data
 
-  bset = ival;
+  AISBitSet bset(ival);
 
   PayloadBin[iAddPldBin]=0;
   uint16_t iAdd=iAddPldBin;
 
-  char buf[1];
   for(int i = countBits-1; i >= 0 ; i--) {
-    sprintf(buf, "%d", (int) bset[i]);
-    PayloadBin[iAdd] = buf[0];
+    PayloadBin[iAdd] = bset[i]?'1':'0';
     iAdd++;
   }
 
@@ -233,7 +231,7 @@ const char *tNMEA0183AISMsg::GetPayloadType5_Part1() {
   uint16_t lenbin = strlen( PayloadBin);
   if ( lenbin != 424 ) return nullptr;
 
-  char *to = (char*) malloc(337);
+  char to[337];
   strncpy(to, PayloadBin, 336);    // First Part is always 336 Length
   to[336]=0;
 
@@ -250,7 +248,7 @@ const char *tNMEA0183AISMsg::GetPayloadType5_Part2() {
   if ( lenbin != 424 ) return nullptr;
 
   lenbin = 88;        // Second Part is always 424 - 336 + 2 padding Zeros in Length
-  char *to = (char*) malloc(91);
+  char to[91];
   strncpy(to, PayloadBin + 336, lenbin);
   to[88]='0'; to[89]='0'; to[90]=0;
 
@@ -266,7 +264,7 @@ const char *tNMEA0183AISMsg::GetPayloadType24_PartA() {
   uint16_t lenbin = strlen( PayloadBin);
   if ( lenbin != 296 ) return nullptr;    // too short for Part A
 
-  char *to = (char*) malloc(169);    // Part A has Length 168
+  char to[169];    // Part A has Length 168
   *to = '\0';
   for (int i=0; i<168; i++){
     to[i] = PayloadBin[i];
@@ -284,7 +282,7 @@ const char *tNMEA0183AISMsg::GetPayloadType24_PartA() {
 const char *tNMEA0183AISMsg::GetPayloadType24_PartB() {
   uint16_t lenbin = strlen( PayloadBin);
   if ( lenbin != 296 ) return nullptr;    // too short for Part B
-  char *to = (char*) malloc(169);    // Part B has Length 168
+  char to[169];    // Part B has Length 168
   *to = '\0';
   for (int i=0; i<39; i++){
     to[i] = PayloadBin[i];
