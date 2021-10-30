@@ -42,15 +42,11 @@ protected:
   int sourceId;
   tSendNMEA0183MessageCallback SendNMEA0183MessageCallback;
   void SendMessage(const tNMEA0183Msg &NMEA0183Msg);
-  N2kDataToNMEA0183(GwLog *logger, GwBoatData *boatData, tNMEA2000 *NMEA2000, tNMEA0183 *NMEA0183, int sourceId);
+  N2kDataToNMEA0183(GwLog *logger, GwBoatData *boatData, tNMEA2000 *NMEA2000, tSendNMEA0183MessageCallback callback, int sourceId);
 
 public:
-  static N2kDataToNMEA0183* create(GwLog *logger, GwBoatData *boatData, tNMEA2000 *NMEA2000, tNMEA0183 *NMEA0183, int sourceId);
+  static N2kDataToNMEA0183* create(GwLog *logger, GwBoatData *boatData, tNMEA2000 *NMEA2000, tSendNMEA0183MessageCallback callback, int sourceId);
   virtual void HandleMsg(const tN2kMsg &N2kMsg) = 0;
-  void SetSendNMEA0183MessageCallback(tSendNMEA0183MessageCallback _SendNMEA0183MessageCallback)
-  {
-    SendNMEA0183MessageCallback = _SendNMEA0183MessageCallback;
-  }
   virtual void loop();
   virtual ~N2kDataToNMEA0183(){}
   virtual unsigned long* handledPgns()=0;

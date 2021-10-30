@@ -850,8 +850,8 @@ private:
     }
 
 public:
-    N2kToNMEA0183Functions(GwLog *logger, GwBoatData *boatData, tNMEA2000 *NMEA2000, tNMEA0183 *NMEA0183, int sourceId) 
-    : N2kDataToNMEA0183(logger, boatData, NMEA2000, NMEA0183,sourceId)
+    N2kToNMEA0183Functions(GwLog *logger, GwBoatData *boatData, tNMEA2000 *NMEA2000, tSendNMEA0183MessageCallback callback, int sourceId) 
+    : N2kDataToNMEA0183(logger, boatData, NMEA2000, callback,sourceId)
     {
         LastPosSend = 0;
         lastLoopTime = 0;

@@ -31,10 +31,11 @@
 
 
 
-N2kDataToNMEA0183::N2kDataToNMEA0183(GwLog * logger, GwBoatData *boatData, tNMEA2000 *NMEA2000, tNMEA0183 *NMEA0183, int id) 
+N2kDataToNMEA0183::N2kDataToNMEA0183(GwLog * logger, GwBoatData *boatData, tNMEA2000 *NMEA2000, 
+  tSendNMEA0183MessageCallback callback, int id) 
 : tNMEA2000::tMsgHandler(0,NMEA2000){
     SendNMEA0183MessageCallback=0;
-    pNMEA0183=NMEA0183;
+    this->SendNMEA0183MessageCallback=callback;
     sourceId=id;   
   }
 
@@ -51,8 +52,8 @@ void N2kDataToNMEA0183::SendMessage(const tNMEA0183Msg &NMEA0183Msg) {
 }
 
 N2kDataToNMEA0183* N2kDataToNMEA0183::create(GwLog *logger, GwBoatData *boatData, tNMEA2000 *NMEA2000, 
-    tNMEA0183 *NMEA0183, int sourceId){
+    tSendNMEA0183MessageCallback callback, int sourceId){
   LOG_DEBUG(GwLog::LOG,"creating N2kToNMEA0183");    
-  return new N2kToNMEA0183Functions(logger,boatData,NMEA2000,NMEA0183, sourceId);
+  return new N2kToNMEA0183Functions(logger,boatData,NMEA2000,callback, sourceId);
 }
 //*****************************************************************************

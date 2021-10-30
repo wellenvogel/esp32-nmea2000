@@ -49,6 +49,9 @@ const unsigned long HEAP_REPORT_TIME=2000; //set to 0 to disable heap reporting
 #define SERIAL1_CHANNEL_ID 2
 #define MIN_TCP_CHANNEL_ID 3
 
+#define MAX_NMEA2000_MESSAGE_SEASMART_SIZE 500
+#define MAX_NMEA0183_MESSAGE_SIZE 150 // For AIS
+
 typedef std::map<String,String> StringMap;
 
 
@@ -66,40 +69,19 @@ int numCan=0;
 int NodeAddress;  // To store last Node Address
 
 Preferences preferences;             // Nonvolatile storage on ESP32 - To store LastDeviceAddress
-
-bool SendNMEA0183Conversion = true; // Do we send NMEA2000 -> NMEA0183 conversion
-bool SendSeaSmart = false; // Do we send NMEA2000 messages in SeaSmart format
-
 N2kDataToNMEA0183 *nmea0183Converter=NULL;
 
 // Set the information for other bus devices, which messages we support
 const unsigned long TransmitMessages[] PROGMEM = {127489L, // Engine dynamic
                                                   0
 };
-// Forward declarations
-void HandleNMEA2000Msg(const tN2kMsg &N2kMsg);
+
 void SendNMEA0183Message(const tNMEA0183Msg &NMEA0183Msg,int id);
 
 GwRequestQueue mainQueue(&logger,20);
 GwWebServer webserver(&logger,&mainQueue,80);
 
-// Serial port 2 config (GPIO 16)
-const int baudrate = 38400;
-const int rs_config = SERIAL_8N1;
-
-// Buffer config
-
-#define MAX_NMEA0183_MESSAGE_SIZE 150 // For AIS
-char buff[MAX_NMEA0183_MESSAGE_SIZE];
-
-
-tNMEA0183 NMEA0183;
-
-
-
-
-
-
+//configs that we need in main
 GwConfigInterface *sendUsb=NULL;
 GwConfigInterface *sendTCP=NULL;
 GwConfigInterface *sendSeasmart=NULL;
@@ -125,7 +107,7 @@ void delayedRestart(){
 
 #define JSON_OK "{\"status\":\"OK\"}"
 
-//register the requests at the webserver that should
+//WebServer requests that should
 //be processed inside the main loop
 //this prevents us from the need to sync all the accesses
 class ResetRequest : public GwRequestMessage
@@ -304,9 +286,9 @@ void setup() {
 
   webserver.begin();
   
-  nmea0183Converter= N2kDataToNMEA0183::create(&logger, &boatData,&NMEA2000, 0, N2K_CHANNEL_ID);
-  // Reserve enough buffer for sending all messages. This does not work on small memory devices like Uno or Mega
-
+  nmea0183Converter= N2kDataToNMEA0183::create(&logger, &boatData,&NMEA2000, 
+    SendNMEA0183Message, N2K_CHANNEL_ID);
+  
   NMEA2000.SetN2kCANMsgBufSize(8);
   NMEA2000.SetN2kCANReceiveFrameBufSize(250);
   NMEA2000.SetN2kCANSendFrameBufSize(250);
@@ -342,11 +324,15 @@ void setup() {
 
   NMEA2000.ExtendTransmitMessages(TransmitMessages);
   NMEA2000.ExtendReceiveMessages(nmea0183Converter->handledPgns());
-  NMEA2000.AttachMsgHandler(nmea0183Converter); // NMEA 2000 -> NMEA 0183 conversion
-  NMEA2000.SetMsgHandler(HandleNMEA2000Msg); // Also send all NMEA2000 messages in SeaSmart format
-
-  nmea0183Converter->SetSendNMEA0183MessageCallback(SendNMEA0183Message);
-
+  NMEA2000.SetMsgHandler([](const tN2kMsg &n2kMsg){
+    numCan++;
+    if ( sendSeasmart->asBoolean() ) {
+      char buf[MAX_NMEA2000_MESSAGE_SEASMART_SIZE];
+      if ( N2kToSeasmart(n2kMsg, millis(), buf, MAX_NMEA2000_MESSAGE_SEASMART_SIZE) == 0 ) return;
+      socketServer.sendToClients(buf,N2K_CHANNEL_ID);
+    }
+    nmea0183Converter->HandleMsg(n2kMsg);
+  }); 
   NMEA2000.Open();
 
 }  
@@ -356,18 +342,7 @@ void setup() {
 
 
 
-#define MAX_NMEA2000_MESSAGE_SEASMART_SIZE 500
-//*****************************************************************************
-//NMEA 2000 message handler
-void HandleNMEA2000Msg(const tN2kMsg &N2kMsg) {
 
-  numCan++;
-  if ( !sendSeasmart->asBoolean() ) return;
-
-  char buf[MAX_NMEA2000_MESSAGE_SEASMART_SIZE];
-  if ( N2kToSeasmart(N2kMsg, millis(), buf, MAX_NMEA2000_MESSAGE_SEASMART_SIZE) == 0 ) return;
-  socketServer.sendToClients(buf,N2K_CHANNEL_ID);
-}
 
 void sendBufferToChannels(const char * buffer, int sourceId){
   if (sendTCP->asBoolean()){
