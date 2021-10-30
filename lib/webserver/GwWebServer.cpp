@@ -36,9 +36,9 @@ void sendEmbeddedFile(String name,String contentType,AsyncWebServerRequest *requ
   }
 
 
-GwWebServer::GwWebServer(GwLog* logger,int port){
+GwWebServer::GwWebServer(GwLog* logger,GwRequestQueue *queue,int port){
     server=new AsyncWebServer(port);
-    queue=xQueueCreate(10,sizeof(Message *));
+    this->queue=queue;
     this->logger=logger;
 }
 void GwWebServer::begin(){
@@ -61,32 +61,28 @@ GwWebServer::~GwWebServer(){
     delete server;
     vQueueDelete(queue);
 }
-void GwWebServer::handleAsyncWebRequest(AsyncWebServerRequest *request, RequestMessage *msg)
+void GwWebServer::handleAsyncWebRequest(AsyncWebServerRequest *request, GwRequestMessage *msg)
 {
-  msg->ref(); //for the queue
-  if (!xQueueSend(queue, &msg, 0))
+  GwRequestQueue::MessageSendStatus st=queue->sendAndWait(msg,500);      
+  if (st == GwRequestQueue::MSG_ERR)
   {
-    Serial.println("unable to enqueue");
-    msg->unref(); //queue
     msg->unref(); //our
     request->send(500, "text/plain", "queue full");
     return;
   }
-  LOG_DEBUG(GwLog::DEBUG + 1, "wait queue");
-  if (msg->wait(500))
+  if (st == GwRequestQueue::MSG_OK)
   {
-    LOG_DEBUG(GwLog::DEBUG + 1, "request ok");
     request->send(200, msg->getContentType(), msg->getResult());
     msg->unref();
     return;
   }
-  LOG_DEBUG(GwLog::DEBUG + 1, "switching to async");
+  LOG_DEBUG(GwLog::DEBUG + 1, "switching to async for %s",msg->getName().c_str());
   //msg is handed over to async handling
   bool finished = false;
   AsyncWebServerResponse *r = request->beginChunkedResponse(
       msg->getContentType(), [this,msg, finished](uint8_t *ptr, size_t len, size_t len2) -> size_t
       {
-        LOG_DEBUG(GwLog::DEBUG + 1, "try read");
+        LOG_DEBUG(GwLog::DEBUG + 1, "try read for %s",msg->getName().c_str());
         if (msg->isHandled() || msg->wait(1))
         {
           int rt = msg->consume(ptr, len);
@@ -106,7 +102,7 @@ void GwWebServer::handleAsyncWebRequest(AsyncWebServerRequest *request, RequestM
 }
 bool GwWebServer::registerMainHandler(const char *url,RequestCreator creator){
     server->on(url,HTTP_GET, [this,creator,url](AsyncWebServerRequest *request){
-        RequestMessage *msg=(*creator)(request);
+        GwRequestMessage *msg=(*creator)(request);
         if (!msg){
             LOG_DEBUG(GwLog::DEBUG,"creator returns NULL for %s",url);
             request->send(404, "text/plain", "Not found");
@@ -115,14 +111,4 @@ bool GwWebServer::registerMainHandler(const char *url,RequestCreator creator){
         handleAsyncWebRequest(request,msg);
     });
 }
-//to be called from the main loop
-void GwWebServer::fetchMainRequest()
-{
-    Message *msg = NULL;
-    if (xQueueReceive(queue, &msg, 0))
-    {
-        LOG_DEBUG(GwLog::DEBUG + 1, "main message");
-        msg->process();
-        msg->unref();
-    }
-}
+

@@ -6,15 +6,14 @@
 class GwWebServer{
     private:
         AsyncWebServer *server;
-        QueueHandle_t queue;
+        GwRequestQueue *queue;
         GwLog *logger;
     public:
-        typedef RequestMessage *(RequestCreator)(AsyncWebServerRequest *request);
-        GwWebServer(GwLog *logger, int port);
+        typedef GwRequestMessage *(RequestCreator)(AsyncWebServerRequest *request);
+        GwWebServer(GwLog *logger, GwRequestQueue *queue,int port);
         ~GwWebServer();
         void begin();
         bool registerMainHandler(const char *url,RequestCreator creator);
-        void fetchMainRequest(); //to be called from main loop
-        void handleAsyncWebRequest(AsyncWebServerRequest *request, RequestMessage *msg);
+        void handleAsyncWebRequest(AsyncWebServerRequest *request, GwRequestMessage *msg);
 };
 #endif

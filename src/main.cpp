@@ -80,7 +80,8 @@ const unsigned long TransmitMessages[] PROGMEM = {127489L, // Engine dynamic
 void HandleNMEA2000Msg(const tN2kMsg &N2kMsg);
 void SendNMEA0183Message(const tNMEA0183Msg &NMEA0183Msg,int id);
 
-GwWebServer webserver(&logger,80);
+GwRequestQueue mainQueue(&logger,20);
+GwWebServer webserver(&logger,&mainQueue,80);
 
 // Serial port 2 config (GPIO 16)
 const int baudrate = 38400;
@@ -127,10 +128,10 @@ void delayedRestart(){
 //register the requests at the webserver that should
 //be processed inside the main loop
 //this prevents us from the need to sync all the accesses
-class ResetRequest : public RequestMessage
+class ResetRequest : public GwRequestMessage
 {
 public:
-  ResetRequest() : RequestMessage(F("application/json")){};
+  ResetRequest() : GwRequestMessage(F("application/json"),F("reset")){};
 
 protected:
   virtual void processRequest()
@@ -141,10 +142,10 @@ protected:
   }
 };
 
-class StatusRequest : public RequestMessage
+class StatusRequest : public GwRequestMessage
 {
 public:
-  StatusRequest() : RequestMessage(F("application/json")){};
+  StatusRequest() : GwRequestMessage(F("application/json"),F("status")){};
 
 protected:
   virtual void processRequest()
@@ -161,10 +162,10 @@ protected:
     serializeJson(status, result);
   }
 };
-class ConfigRequest : public RequestMessage
+class ConfigRequest : public GwRequestMessage
 {
 public:
-  ConfigRequest() : RequestMessage(F("application/json")){};
+  ConfigRequest() : GwRequestMessage(F("application/json"),F("config")){};
 
 protected:
   virtual void processRequest()
@@ -173,10 +174,10 @@ protected:
   }
 };
 
-class SetConfigRequest : public RequestMessage
+class SetConfigRequest : public GwRequestMessage
 {
 public:
-  SetConfigRequest() : RequestMessage(F("application/json")){};
+  SetConfigRequest() : GwRequestMessage(F("application/json"),F("setConfig")){};
   StringMap args;
 
 protected:
@@ -212,10 +213,10 @@ protected:
     }
   }
 };
-class ResetConfigRequest : public RequestMessage
+class ResetConfigRequest : public GwRequestMessage
 {
 public:
-  ResetConfigRequest() : RequestMessage(F("application/json")){};
+  ResetConfigRequest() : GwRequestMessage(F("application/json"),F("resetConfig")){};
 
 protected:
   virtual void processRequest()
@@ -226,10 +227,10 @@ protected:
     delayedRestart();
   }
 };
-class BoatDataRequest : public RequestMessage
+class BoatDataRequest : public GwRequestMessage
 {
 public:
-  BoatDataRequest() : RequestMessage(F("application/json")){};
+  BoatDataRequest() : GwRequestMessage(F("application/json"),F("boatData")){};
 
 protected:
   virtual void processRequest()
@@ -277,15 +278,15 @@ void setup() {
   // Start TCP server
   socketServer.begin();
 
-  webserver.registerMainHandler("/api/reset", [](AsyncWebServerRequest *request)->RequestMessage *{
+  webserver.registerMainHandler("/api/reset", [](AsyncWebServerRequest *request)->GwRequestMessage *{
     return new ResetRequest();
   });
-  webserver.registerMainHandler("/api/status", [](AsyncWebServerRequest *request)->RequestMessage *
+  webserver.registerMainHandler("/api/status", [](AsyncWebServerRequest *request)->GwRequestMessage *
                               { return new StatusRequest(); });
-  webserver.registerMainHandler("/api/config", [](AsyncWebServerRequest *request)->RequestMessage *
+  webserver.registerMainHandler("/api/config", [](AsyncWebServerRequest *request)->GwRequestMessage *
                               { return new ConfigRequest(); });
   webserver.registerMainHandler("/api/setConfig",
-                              [](AsyncWebServerRequest *request)->RequestMessage *
+                              [](AsyncWebServerRequest *request)->GwRequestMessage *
                               {
                                 StringMap args;
                                 for (int i = 0; i < request->args(); i++)
@@ -296,9 +297,9 @@ void setup() {
                                 msg->args = args;
                                 return msg;
                               });
-  webserver.registerMainHandler("/api/resetConfig", [](AsyncWebServerRequest *request)->RequestMessage *
+  webserver.registerMainHandler("/api/resetConfig", [](AsyncWebServerRequest *request)->GwRequestMessage *
                               { return new ResetConfigRequest(); });
-  webserver.registerMainHandler("/api/boatData", [](AsyncWebServerRequest *request)->RequestMessage *
+  webserver.registerMainHandler("/api/boatData", [](AsyncWebServerRequest *request)->GwRequestMessage *
                               { return new BoatDataRequest(); });
 
   webserver.begin();
@@ -467,10 +468,14 @@ void loop() {
   }
   nmea0183Converter->loop();
 
-  webserver.fetchMainRequest();
-
   //read channels
   socketServer.readMessages(&receiver);
   usbSerial.readMessages(&receiver);
 
+  //handle message requests
+  GwMessage *msg=mainQueue.fetchMessage(0);
+  if (msg){
+    msg->process();
+    msg->unref();
+  }
 }

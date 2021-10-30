@@ -2,6 +2,7 @@
 #define _GWMESSAGE_H
 #include <Arduino.h>
 #include <ESPAsyncWebServer.h>
+#include "GwLog.h"
 #include "esp_task_wdt.h"
 
 #ifdef GW_MESSAGE_DEBUG_ENABLED
@@ -13,67 +14,28 @@
 /**
  * a message class intended to be send from one task to another
  */
-class Message{
+class GwMessage{
   private:
     SemaphoreHandle_t locker;
     SemaphoreHandle_t notifier;
     int refcount=0;
+    String name;
   protected:
     virtual void processImpl()=0;
   public:
-    Message(){
-      locker=xSemaphoreCreateMutex();
-      notifier=xSemaphoreCreateCounting(1,0);
-      refcount=1;
-      GW_MESSAGE_DEBUG("Message: %p\n",this);
-    }
-    virtual ~Message(){
-      GW_MESSAGE_DEBUG("~Message %p\n",this);
-      vSemaphoreDelete(locker);
-      vSemaphoreDelete(notifier);
-    }
-    void unref(){
-      GW_MESSAGE_DEBUG("Message::unref %p\n",this);
-      bool mustDelete=false;
-      xSemaphoreTake(locker,portMAX_DELAY);
-      if (refcount > 0){
-        refcount--;
-        if (refcount == 0) mustDelete=true;
-      }
-      xSemaphoreGive(locker);
-      if (mustDelete){
-        delete this;
-      }
-    }
-    void ref(){
-      xSemaphoreTake(locker,portMAX_DELAY);
-      refcount++;
-      xSemaphoreGive(locker);
-    }
-    int wait(int maxWaitMillis){
-      static const int maxWait=1000;
-      int maxRetries=maxWaitMillis/maxWait;
-      int lastWait=maxWaitMillis - maxWait*maxRetries;
-      for (int retries=maxRetries;retries>0;retries--){
-        if (xSemaphoreTake(notifier,pdMS_TO_TICKS(maxWait))) return true;
-        esp_task_wdt_reset();
-      }
-      if (lastWait){
-        return xSemaphoreTake(notifier,pdMS_TO_TICKS(maxWait));
-      }
-      return false;
-    }
-    void process(){
-      GW_MESSAGE_DEBUG("Message::process %p\n",this);
-      processImpl();
-      xSemaphoreGive(notifier);
-    }  
+    GwMessage(String name=F("unknown"));
+    virtual ~GwMessage();
+    void unref();
+    void ref();
+    int wait(int maxWaitMillis);
+    void process();
+    String getName();  
 };
 
 /**
  * a class to executa an async web request that returns a string
  */
-class RequestMessage : public Message{
+class GwRequestMessage : public GwMessage{
   protected:
     String result;
     String contentType;
@@ -83,37 +45,36 @@ class RequestMessage : public Message{
     bool handled=false;
   protected:
     virtual void processRequest()=0;  
-    virtual void processImpl(){
-      GW_MESSAGE_DEBUG("RequestMessage processImpl(1) %p\n",this);
-      processRequest();
-      GW_MESSAGE_DEBUG("RequestMessage processImpl(2) %p\n",this);
-      len=strlen(result.c_str());
-      consumed=0;
-      handled=true;
-    }
+    virtual void processImpl();
   public:
-    RequestMessage(String contentType):Message(){
-      this->contentType=contentType;
-    }
-    virtual ~RequestMessage(){
-      GW_MESSAGE_DEBUG("~RequestMessage %p\n",this)
-    }
+    GwRequestMessage(String contentType,String name=F("web"));
+    virtual ~GwRequestMessage();
     String getResult(){return result;}
     int getLen(){return len;}
-    int consume(uint8_t *destination,int maxLen){
-      if (!handled) return RESPONSE_TRY_AGAIN;
-      if (consumed >= len) return 0;
-      int cplen=maxLen;
-      if (cplen > (len-consumed)) cplen=len-consumed;
-      memcpy(destination,result.c_str()+consumed,cplen);
-      consumed+=cplen;
-      return cplen; 
-    }
+    int consume(uint8_t *destination,int maxLen);
     bool isHandled(){return handled;}
     String getContentType(){
       return contentType;
     }
 
+};
+
+class GwRequestQueue{
+  private:
+    QueueHandle_t theQueue;
+    GwLog *logger;
+  public:
+    typedef enum{
+      MSG_OK,
+      MSG_ERR,
+      MSG_TIMEOUT
+    } MessageSendStatus;
+    GwRequestQueue(GwLog *logger,int len);  
+    ~GwRequestQueue();
+    //both send methods will increment the ref count when enqueing
+    MessageSendStatus sendAndForget(GwMessage *msg);
+    MessageSendStatus sendAndWait(GwMessage *msg,unsigned long waitMillis);
+    GwMessage* fetchMessage(unsigned long waitMillis);
 };
 
 #endif
