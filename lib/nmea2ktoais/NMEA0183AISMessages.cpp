@@ -58,7 +58,6 @@ static bool AddRepeat(tNMEA0183AISMsg &NMEA0183AISMsg, uint8_t Repeat);
 static bool AddUserID(tNMEA0183AISMsg &NMEA0183AISMsg, uint32_t UserID);
 static bool AddIMONumber(tNMEA0183AISMsg &NMEA0183AISMsg, uint32_t &IMONumber);
 static bool AddText(tNMEA0183AISMsg &NMEA0183AISMsg, char *FieldVal, uint8_t length);
-static bool AddVesselType(tNMEA0183AISMsg &NMEA0183AISMsg, uint8_t VesselType);
 static bool AddDimensions(tNMEA0183AISMsg &NMEA0183AISMsg, double Length, double Beam, double PosRefStbd, double PosRefBow);
 static bool AddNavStatus(tNMEA0183AISMsg &NMEA0183AISMsg, uint8_t &NavStatus);
 static bool AddROT(tNMEA0183AISMsg &NMEA0183AISMsg, double &rot);

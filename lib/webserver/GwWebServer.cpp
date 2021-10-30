@@ -110,5 +110,6 @@ bool GwWebServer::registerMainHandler(const char *url,RequestCreator creator){
         }
         handleAsyncWebRequest(request,msg);
     });
+    return true;
 }
 

@@ -84,7 +84,7 @@ void GwSerial::loop(bool handleRead){
     if (! handleRead) return;
     char buffer[10];
     int rt=uart_read_bytes(num,(uint8_t *)(&buffer),10,0);
-    if (allowRead & rt > 0){
+    if (allowRead && rt > 0){
         readBuffer->addData((uint8_t *)(&buffer),rt,true);
     }
 }
