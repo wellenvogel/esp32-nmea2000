@@ -8,6 +8,7 @@ void GwBuffer::lp(const char *fkt, int p)
 
 GwBuffer::GwBuffer(GwLog *logger,size_t bufferSize)
 {
+    LOG_DEBUG(GwLog::DEBUG,"creating new buffer %p of size %d",this,(int)bufferSize);
     this->logger = logger;
     this->bufferSize=bufferSize;
     this->buffer=new uint8_t[bufferSize];

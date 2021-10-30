@@ -36,7 +36,7 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <vector>
 #include <string>
 
-#define MAX_SHIP_IN_VECTOR 200
+#define MAX_SHIP_IN_VECTOR 5
 class ship {
 public:
     uint32_t _userID;
@@ -45,7 +45,6 @@ public:
     ship(uint32_t UserID, std::string ShipName) :  _userID(UserID), _shipName(ShipName) {}
 };
 
-extern std::vector<ship *> vships;
 
 // Types 1, 2 and 3: Position Report Class A or B
 bool SetAISClassABMessage1(tNMEA0183AISMsg &NMEA0183AISMsg, uint8_t MessageType, uint8_t Repeat,
@@ -78,6 +77,7 @@ bool  SetAISClassBMessage24(tNMEA0183AISMsg &NMEA0183AISMsg, uint8_t MessageID, 
                           uint32_t UserID, uint8_t VesselType, char *VendorID, char *Callsign,
                            double Length, double Beam, double PosRefStbd,  double PosRefBow, uint32_t MothershipID );
 
+int numShips();
 inline int32_t aRoundToInt(double x) {
   return x >= 0
       ? (int32_t) floor(x + 0.5)

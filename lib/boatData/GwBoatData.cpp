@@ -1,7 +1,7 @@
 #include "GwBoatData.h"
 
 GwBoatData::GwBoatData(GwLog *logger){
-    
+    this->logger=logger;
 }
 GwBoatData::~GwBoatData(){
     GwBoatItemBase::GwBoatItemMap::iterator it;

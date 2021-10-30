@@ -24,6 +24,6 @@ class GwLog{
         void logDebug(int level, const char *fmt,...);
         int isActive(int level){return level <= logLevel;};
 };
-#define LOG_DEBUG(level,...){ if (logger->isActive(level)) logger->logDebug(level,__VA_ARGS__);}
+#define LOG_DEBUG(level,...){ if (logger != NULL && logger->isActive(level)) logger->logDebug(level,__VA_ARGS__);}
 
 #endif

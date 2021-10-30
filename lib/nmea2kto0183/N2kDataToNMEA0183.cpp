@@ -52,6 +52,7 @@ void N2kDataToNMEA0183::SendMessage(const tNMEA0183Msg &NMEA0183Msg) {
 
 N2kDataToNMEA0183* N2kDataToNMEA0183::create(GwLog *logger, GwBoatData *boatData, tNMEA2000 *NMEA2000, 
     tNMEA0183 *NMEA0183, int sourceId){
+  LOG_DEBUG(GwLog::LOG,"creating N2kToNMEA0183");    
   return new N2kToNMEA0183Functions(logger,boatData,NMEA2000,NMEA0183, sourceId);
 }
 //*****************************************************************************

@@ -51,6 +51,7 @@ const char Prefix='!';
 
 std::vector<ship *> vships;
 
+int numShips(){return vships.size();}
 // ************************  Helper for AIS  ***********************************
 static bool AddMessageType(tNMEA0183AISMsg &NMEA0183AISMsg, uint8_t MessageType);
 static bool AddRepeat(tNMEA0183AISMsg &NMEA0183AISMsg, uint8_t Repeat);
@@ -250,7 +251,9 @@ bool  SetAISClassBMessage24(tNMEA0183AISMsg &NMEA0183AISMsg, uint8_t MessageID, 
     }
   }
   if ( i > MAX_SHIP_IN_VECTOR ) {
-    vships.erase(vships.begin());
+    std::vector<ship *>::iterator it=vships.begin();
+    delete *it;
+    vships.erase(it);
   }
 
   // AIS Type 24 Message

@@ -15,6 +15,7 @@ class SerialWriter : public GwBufferWriter{
 };
 GwSerial::GwSerial(GwLog *logger, uart_port_t num, int id,bool allowRead)
 {
+    LOG_DEBUG(GwLog::DEBUG,"creating GwSerial %p port %d",this,(int)num);
     this->id=id;
     this->logger = logger;
     this->num = num;
@@ -79,6 +80,7 @@ void GwSerial::sendToClients(const char *buf,int sourceId){
 }
 void GwSerial::loop(bool handleRead){
     write();
+    if (! isInitialized()) return;
     if (! handleRead) return;
     char buffer[10];
     int rt=uart_read_bytes(num,(uint8_t *)(&buffer),10,0);
@@ -87,6 +89,7 @@ void GwSerial::loop(bool handleRead){
     }
 }
 bool GwSerial::readMessages(GwBufferWriter *writer){
+    if (! isInitialized()) return false;
     if (! allowRead) return false;
     return readBuffer->fetchMessage(writer,'\n',true) == GwBuffer::OK;
 }

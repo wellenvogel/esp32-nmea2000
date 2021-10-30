@@ -112,7 +112,7 @@ private:
         ConverterEntry e(converter);
         converters[pgn] = e;
     }
-    virtual const unsigned long *handledPgns()
+    virtual unsigned long *handledPgns()
     {
         logger->logString("CONV: # %d handled PGNS", (int)converters.size());
         unsigned long *rt = new unsigned long[converters.size() + 1];
@@ -145,6 +145,7 @@ private:
         {
             json["cnv"][String(it->first)] = it->second.count;
         }
+        json["aisTargets"]=numShips();
     }
     virtual int numPgns()
     {
@@ -897,11 +898,14 @@ public:
         registerConverter(128275UL, &N2kToNMEA0183Functions::HandleLog);
         registerConverter(127245UL, &N2kToNMEA0183Functions::HandleRudder);
         registerConverter(130310UL, &N2kToNMEA0183Functions::HandleWaterTemp);
+#define HANDLE_AIS 1        
+#ifdef HANDLE_AIS
         registerConverter(129038UL, &N2kToNMEA0183Functions::HandleAISClassAPosReport);  // AIS Class A Position Report, Message Type 1
         registerConverter(129039UL, &N2kToNMEA0183Functions::HandleAISClassBMessage18);  // AIS Class B Position Report, Message Type 18
         registerConverter(129794UL, &N2kToNMEA0183Functions::HandleAISClassAMessage5);   // AIS Class A Ship Static and Voyage related data, Message Type 5
         registerConverter(129809UL, &N2kToNMEA0183Functions::HandleAISClassBMessage24A); // AIS Class B "CS" Static Data Report, Part A
         registerConverter(129810UL, &N2kToNMEA0183Functions::HandleAISClassBMessage24B); // AIS Class B "CS" Static Data Report, Part B
+#endif       
 
     }
     virtual void loop()

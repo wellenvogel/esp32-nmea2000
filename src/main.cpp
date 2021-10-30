@@ -25,6 +25,7 @@
 #include <ArduinoJson.h>
 #include <ESPmDNS.h>
 #include <map>
+#include "esp_heap_caps.h"
 
 #include "N2kDataToNMEA0183.h"
 
@@ -65,7 +66,7 @@ Preferences preferences;             // Nonvolatile storage on ESP32 - To store 
 bool SendNMEA0183Conversion = true; // Do we send NMEA2000 -> NMEA0183 conversion
 bool SendSeaSmart = false; // Do we send NMEA2000 messages in SeaSmart format
 
-N2kDataToNMEA0183 *nmea0183Converter=N2kDataToNMEA0183::create(&logger, &boatData,&NMEA2000, 0, N2K_CHANNEL_ID);
+N2kDataToNMEA0183 *nmea0183Converter=NULL;
 
 // Set the information for other bus devices, which messages we support
 const unsigned long TransmitMessages[] PROGMEM = {127489L, // Engine dynamic
@@ -193,7 +194,7 @@ GwConfigInterface *sendTCP=NULL;
 GwConfigInterface *sendSeasmart=NULL;
 GwConfigInterface *systemName=NULL;
 
-GwSerial usbSerial(&logger, UART_NUM_0, USB_CHANNEL_ID);
+GwSerial usbSerial(NULL, UART_NUM_0, USB_CHANNEL_ID);
 class GwSerialLog : public GwLogWriter{
   public:
     virtual ~GwSerialLog(){}
@@ -357,6 +358,7 @@ void setup() {
 
   MDNS.addService("_http","_tcp",80);
 
+  nmea0183Converter= N2kDataToNMEA0183::create(&logger, &boatData,&NMEA2000, 0, N2K_CHANNEL_ID);
   // Reserve enough buffer for sending all messages. This does not work on small memory devices like Uno or Mega
 
   NMEA2000.SetN2kCANMsgBufSize(8);
@@ -493,9 +495,21 @@ class NMEAMessageReceiver : public GwBufferWriter{
       writePointer=buffer;
     }
 };
+NMEAMessageReceiver receiver;
+unsigned long lastHeapReport=0;
+const unsigned long HEAP_REPORT_TIME=2000;
 void loop() {
   gwWifi.loop();
-
+  unsigned long now=millis();
+  if (now > (lastHeapReport+HEAP_REPORT_TIME)){
+    lastHeapReport=now;
+    if (logger.isActive(GwLog::DEBUG)){
+      logger.logDebug(GwLog::DEBUG,"Heap free=%ld, minFree=%ld",
+          (long)xPortGetFreeHeapSize(),
+          (long)xPortGetMinimumEverFreeHeapSize()
+      );
+    }
+  }
   handleSendAndRead(true);
   NMEA2000.ParseMessages();
 
@@ -512,11 +526,10 @@ void loop() {
   //handle messages from the async web server
   Message *msg=NULL;
   if (xQueueReceive(queue,&msg,0)){
-    logger.logDebug(GwLog::DEBUG+1,"main message");
+    logger.logDebug(GwLog::DEBUG,"main message");
     msg->process();
     msg->unref();
   }
-  NMEAMessageReceiver receiver;
   socketServer.readMessages(&receiver);
   //read channels
 

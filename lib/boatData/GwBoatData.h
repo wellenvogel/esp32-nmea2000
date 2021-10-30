@@ -63,13 +63,14 @@ template<class T> class GwBoatItem : public GwBoatItemBase{
             (*doc)[name]=getData(true);
         }
         private:
-        static GwBoatItem<T> *findOrCreate(GwBoatItemMap *values, String name,bool doCreate=true, 
+        static GwBoatItem<T> *findOrCreate(GwLog *logger,GwBoatItemMap *values, String name,bool doCreate=true, 
             long invalidTime=GwBoatItemBase::INVALID_TIME, Formatter fmt=NULL){
             GwBoatItemMap::iterator it;
             if ((it=values->find(name)) != values->end()){
                 return (GwBoatItem<T> *)it->second;
             }
             if (! doCreate) return NULL;
+            LOG_DEBUG(GwLog::DEBUG,"creating boat data item %s",name.c_str());
             GwBoatItem<T> *ni=new GwBoatItem<T>(invalidTime,fmt);
             (*values)[name]=ni;
             return ni; 
@@ -83,7 +84,7 @@ template<class T> class GwBoatItem : public GwBoatItemBase{
  * */
 #define GWBOATDATA_IMPL_ITEM(type,name) GwBoatItem<type> *get##name##Item(String iname,bool doCreate=true, \
                 long invalidTime=GwBoatItemBase::INVALID_TIME, GwBoatItem<type>::Formatter fmt=NULL){ \
-                return GwBoatItem<type>::findOrCreate(&values,iname, doCreate, \
+                return GwBoatItem<type>::findOrCreate(logger,&values,iname, doCreate, \
                 invalidTime,fmt);\
             }
 

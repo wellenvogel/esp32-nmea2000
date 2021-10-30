@@ -13,7 +13,7 @@ class GwSocketServer{
     private:
         const GwConfigHandler *config;
         GwLog *logger;
-        gwClientPtr *clients;
+        gwClientPtr *clients=NULL;
         WiFiServer *server=NULL;
         bool allowReceive;
         int maxClients;

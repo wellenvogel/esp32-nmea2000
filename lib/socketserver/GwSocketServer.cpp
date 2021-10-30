@@ -68,6 +68,7 @@ class GwClient{
             overflows=0;
             if (client != NULL){
                 writer=new Writer(client);
+                LOG_DEBUG(GwLog::DEBUG,"creating SocketWriter %p",writer);
                 remoteIp=client->remoteIP().toString();
             }
         }
@@ -76,10 +77,14 @@ class GwClient{
             buffer->reset();
             if (readBuffer) readBuffer->reset();
             overflows=0;
-            if (writer) delete writer;
+            if (writer) {
+                LOG_DEBUG(GwLog::DEBUG,"deleting SocketWriter %p",writer);
+                delete writer;
+            }
             writer=NULL;
             if (client){
                 writer=new Writer(client);
+                LOG_DEBUG(GwLog::DEBUG,"creating SocketWriter %p",writer);
                 remoteIp=client->remoteIP().toString();
             }
             else{
@@ -162,12 +167,12 @@ GwSocketServer::GwSocketServer(const GwConfigHandler *config,GwLog *logger,int m
     this->minId=minId;
     maxClients=config->getInt(config->maxClients);
     allowReceive=config->getBool(config->readTCP);
+}
+void GwSocketServer::begin(){
     clients=new gwClientPtr[maxClients];
     for (int i=0;i<maxClients;i++){
         clients[i]=gwClientPtr(new GwClient(wiFiClientPtr(NULL),logger,allowReceive));
     }
-}
-void GwSocketServer::begin(){
     server=new WiFiServer(config->getInt(config->serverPort),maxClients);
     server->begin();
     logger->logString("Socket server created, port=%d",
@@ -177,6 +182,7 @@ void GwSocketServer::begin(){
 }
 void GwSocketServer::loop(bool handleRead)
 {
+    if (! clients) return;
     WiFiClient client = server->available(); // listen for incoming clients
 
     if (client)
@@ -234,7 +240,7 @@ void GwSocketServer::loop(bool handleRead)
 }
 
 bool GwSocketServer::readMessages(GwBufferWriter *writer){
-    if (! allowReceive) return false;
+    if (! allowReceive || ! clients) return false;
     bool hasMessages=false;
     for (int i = 0; i < maxClients; i++){
         writer->id=minId+i;
@@ -244,6 +250,7 @@ bool GwSocketServer::readMessages(GwBufferWriter *writer){
     return hasMessages;
 }
 void GwSocketServer::sendToClients(const char *buf,int source){
+    if (! clients) return;
     int len=strlen(buf);
     int sourceIndex=source-minId;
     for (int i = 0; i < maxClients; i++)
@@ -262,6 +269,7 @@ void GwSocketServer::sendToClients(const char *buf,int source){
 }
 
 int GwSocketServer::numClients(){
+    if (! clients) return 0;
     int num=0;
     for (int i = 0; i < maxClients; i++){
         if (clients[i]->hasClient()) num++;
