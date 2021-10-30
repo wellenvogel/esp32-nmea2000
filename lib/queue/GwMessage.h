@@ -76,6 +76,7 @@ class Message{
 class RequestMessage : public Message{
   protected:
     String result;
+    String contentType;
   private:  
     int len=0;
     int consumed=0;
@@ -91,7 +92,8 @@ class RequestMessage : public Message{
       handled=true;
     }
   public:
-    RequestMessage():Message(){
+    RequestMessage(String contentType):Message(){
+      this->contentType=contentType;
     }
     virtual ~RequestMessage(){
       GW_MESSAGE_DEBUG("~RequestMessage %p\n",this)
@@ -108,6 +110,9 @@ class RequestMessage : public Message{
       return cplen; 
     }
     bool isHandled(){return handled;}
+    String getContentType(){
+      return contentType;
+    }
 
 };
 

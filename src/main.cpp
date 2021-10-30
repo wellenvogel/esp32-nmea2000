@@ -12,7 +12,7 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#define VERSION "0.2.0"
+#define VERSION "0.2.1"
 //#define GW_MESSAGE_DEBUG_ENABLED
 //#define FALLBACK_SERIAL
 const unsigned long HEAP_REPORT_TIME=2000; //set to 0 to disable heap reporting
@@ -40,6 +40,7 @@ const unsigned long HEAP_REPORT_TIME=2000; //set to 0 to disable heap reporting
 #include "GwBoatData.h"
 #include "GwMessage.h"
 #include "GwSerial.h"
+#include "GwWebServer.h"
 
 
 //NMEA message channels
@@ -79,7 +80,7 @@ const unsigned long TransmitMessages[] PROGMEM = {127489L, // Engine dynamic
 void HandleNMEA2000Msg(const tN2kMsg &N2kMsg);
 void SendNMEA0183Message(const tNMEA0183Msg &NMEA0183Msg,int id);
 
-AsyncWebServer webserver(80);
+GwWebServer webserver(&logger,80);
 
 // Serial port 2 config (GPIO 16)
 const int baudrate = 38400;
@@ -93,104 +94,10 @@ char buff[MAX_NMEA0183_MESSAGE_SIZE];
 
 tNMEA0183 NMEA0183;
 
-QueueHandle_t queue=xQueueCreate(10,sizeof(Message *));
-void handleAsyncWebRequest(AsyncWebServerRequest *request, RequestMessage *msg, String contentType)
-{
-  msg->ref(); //for the queue
-  if (!xQueueSend(queue, &msg, 0))
-  {
-    Serial.println("unable to enqueue");
-    msg->unref(); //queue
-    msg->unref(); //our
-    request->send(500, "text/plain", "queue full");
-    return;
-  }
-  logger.logDebug(GwLog::DEBUG + 1, "wait queue");
-  if (msg->wait(500))
-  {
-    logger.logDebug(GwLog::DEBUG + 1, "request ok");
-    request->send(200, contentType, msg->getResult());
-    msg->unref();
-    return;
-  }
-  logger.logDebug(GwLog::DEBUG + 1, "switching to async");
-  //msg is handed over to async handling
-  bool finished = false;
-  AsyncWebServerResponse *r = request->beginChunkedResponse(
-      contentType, [msg, finished](uint8_t *ptr, size_t len, size_t len2) -> size_t
-      {
-        logger.logDebug(GwLog::DEBUG + 1, "try read");
-        if (msg->isHandled() || msg->wait(1))
-        {
-          int rt = msg->consume(ptr, len);
-          logger.logDebug(GwLog::DEBUG + 1, "async response available, return %d\n", rt);
-          return rt;
-        }
-        else
-          return RESPONSE_TRY_AGAIN;
-      },
-      NULL);
-  request->onDisconnect([msg](void)
-                        {
-                          logger.logDebug(GwLog::DEBUG + 1, "onDisconnect");
-                          msg->unref();
-                        });
-  request->send(r);
-}
 
-#define JSON_OK "{\"status\":\"OK\"}"
 
-class EmbeddedFile;
-static std::map<String,EmbeddedFile*> embeddedFiles;
-class EmbeddedFile {
-  public:
-    const uint8_t *start;
-    int len;
-    EmbeddedFile(String name,const uint8_t *start,int len){
-      this->start=start;
-      this->len=len;
-      embeddedFiles[name]=this;
-    }
-} ;
-#define EMBED_GZ_FILE(fileName, fileExt) \
-  extern const uint8_t  fileName##_##fileExt##_File[] asm("_binary_generated_" #fileName "_" #fileExt "_gz_start"); \
-  extern const uint8_t  fileName##_##fileExt##_FileLen[] asm("_binary_generated_" #fileName "_" #fileExt "_gz_size"); \
-  const EmbeddedFile fileName##_##fileExt##_Config(#fileName "." #fileExt,(const uint8_t*)fileName##_##fileExt##_File,(int)fileName##_##fileExt##_FileLen);
 
-EMBED_GZ_FILE(index,html)
-EMBED_GZ_FILE(config,json)
 
-void sendEmbeddedFile(String name,String contentType,AsyncWebServerRequest *request){
-    std::map<String,EmbeddedFile*>::iterator it=embeddedFiles.find(name);
-    if (it != embeddedFiles.end()){
-      EmbeddedFile* found=it->second;
-      AsyncWebServerResponse *response=request->beginResponse_P(200,contentType,found->start,found->len);
-      response->addHeader(F("Content-Encoding"), F("gzip"));
-      request->send(response);
-    }
-    else{
-      request->send(404, "text/plain", "Not found");
-    }  
-  }
-
-String js_status(){
-  int numPgns=nmea0183Converter->numPgns();
-  DynamicJsonDocument status(256+numPgns*50);
-  status["numcan"]=numCan;
-  status["version"]=VERSION;
-  status["wifiConnected"]=gwWifi.clientConnected();
-  status["clientIP"]=WiFi.localIP().toString();
-  status["numClients"]=socketServer.numClients();
-  status["apIp"]=gwWifi.apIP();
-  nmea0183Converter->toJson(status);
-  String buf;
-  serializeJson(status,buf);
-  return buf;
-}
-
-void notFound(AsyncWebServerRequest *request) {
-    request->send(404, "text/plain", "Not found");
-}
 
 GwConfigInterface *sendUsb=NULL;
 GwConfigInterface *sendTCP=NULL;
@@ -214,6 +121,122 @@ void delayedRestart(){
     vTaskDelete(NULL);
   },"reset",1000,NULL,0,NULL);
 }
+
+#define JSON_OK "{\"status\":\"OK\"}"
+
+//register the requests at the webserver that should
+//be processed inside the main loop
+//this prevents us from the need to sync all the accesses
+class ResetRequest : public RequestMessage
+{
+public:
+  ResetRequest() : RequestMessage(F("application/json")){};
+
+protected:
+  virtual void processRequest()
+  {
+    logger.logDebug(GwLog::LOG, "Reset Button");
+    result = JSON_OK;
+    delayedRestart();
+  }
+};
+
+class StatusRequest : public RequestMessage
+{
+public:
+  StatusRequest() : RequestMessage(F("application/json")){};
+
+protected:
+  virtual void processRequest()
+  {
+    int numPgns = nmea0183Converter->numPgns();
+    DynamicJsonDocument status(256 + numPgns * 50);
+    status["numcan"] = numCan;
+    status["version"] = VERSION;
+    status["wifiConnected"] = gwWifi.clientConnected();
+    status["clientIP"] = WiFi.localIP().toString();
+    status["numClients"] = socketServer.numClients();
+    status["apIp"] = gwWifi.apIP();
+    nmea0183Converter->toJson(status);
+    serializeJson(status, result);
+  }
+};
+class ConfigRequest : public RequestMessage
+{
+public:
+  ConfigRequest() : RequestMessage(F("application/json")){};
+
+protected:
+  virtual void processRequest()
+  {
+    result = config.toJson();
+  }
+};
+
+class SetConfigRequest : public RequestMessage
+{
+public:
+  SetConfigRequest() : RequestMessage(F("application/json")){};
+  StringMap args;
+
+protected:
+  virtual void processRequest()
+  {
+    bool ok = true;
+    String error;
+    for (StringMap::iterator it = args.begin(); it != args.end(); it++)
+    {
+      bool rt = config.updateValue(it->first, it->second);
+      if (!rt)
+      {
+        logger.logString("ERR: unable to update %s to %s", it->first.c_str(), it->second.c_str());
+        ok = false;
+        error += it->first;
+        error += "=";
+        error += it->second;
+        error += ",";
+      }
+    }
+    if (ok)
+    {
+      result = JSON_OK;
+      logger.logString("update config and restart");
+      config.saveConfig();
+      delayedRestart();
+    }
+    else
+    {
+      DynamicJsonDocument rt(100);
+      rt["status"] = error;
+      serializeJson(rt, result);
+    }
+  }
+};
+class ResetConfigRequest : public RequestMessage
+{
+public:
+  ResetConfigRequest() : RequestMessage(F("application/json")){};
+
+protected:
+  virtual void processRequest()
+  {
+    config.reset(true);
+    logger.logString("reset config, restart");
+    result = JSON_OK;
+    delayedRestart();
+  }
+};
+class BoatDataRequest : public RequestMessage
+{
+public:
+  BoatDataRequest() : RequestMessage(F("application/json")){};
+
+protected:
+  virtual void processRequest()
+  {
+    result = boatData.toJson();
+  }
+};
 
 void setup() {
 
@@ -254,116 +277,32 @@ void setup() {
   // Start TCP server
   socketServer.begin();
 
-  // Start Web Server
-  webserver.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
-      sendEmbeddedFile("index.html","text/html",request);
+  webserver.registerMainHandler("/api/reset", [](AsyncWebServerRequest *request)->RequestMessage *{
+    return new ResetRequest();
   });
-  webserver.on("/config.json", HTTP_GET, [](AsyncWebServerRequest *request){
-      sendEmbeddedFile("config.json","application/json",request);
-  });
-  webserver.on("/api/reset", HTTP_GET,[](AsyncWebServerRequest *request){
-    logger.logDebug(GwLog::LOG,"Reset Button");
-    delayedRestart();
-  });
-  class StatusRequest : public RequestMessage{
-    public:
-      StatusRequest(): RequestMessage(){};
-    protected:
-      virtual void processRequest(){
-          result=js_status();
-      }
-  };
-  webserver.on("/api/status",HTTP_GET,[](AsyncWebServerRequest *request){
-    StatusRequest *msg=new StatusRequest();
-    handleAsyncWebRequest(request,msg,F("application/json"));
-  });
-  class ConfigRequest : public RequestMessage{
-    public:
-      ConfigRequest(): RequestMessage(){};
-    protected:
-      virtual void processRequest(){
-          result=config.toJson();
-      }
-  };
-  webserver.on("/api/config",HTTP_GET,[](AsyncWebServerRequest *request){
-    RequestMessage *msg=new ConfigRequest();
-    handleAsyncWebRequest(request,msg,F("application/json")); 
-  });
+  webserver.registerMainHandler("/api/status", [](AsyncWebServerRequest *request)->RequestMessage *
+                              { return new StatusRequest(); });
+  webserver.registerMainHandler("/api/config", [](AsyncWebServerRequest *request)->RequestMessage *
+                              { return new ConfigRequest(); });
+  webserver.registerMainHandler("/api/setConfig",
+                              [](AsyncWebServerRequest *request)->RequestMessage *
+                              {
+                                StringMap args;
+                                for (int i = 0; i < request->args(); i++)
+                                {
+                                  args[request->argName(i)] = request->arg(i);
+                                }
+                                SetConfigRequest *msg = new SetConfigRequest();
+                                msg->args = args;
+                                return msg;
+                              });
+  webserver.registerMainHandler("/api/resetConfig", [](AsyncWebServerRequest *request)->RequestMessage *
+                              { return new ResetConfigRequest(); });
+  webserver.registerMainHandler("/api/boatData", [](AsyncWebServerRequest *request)->RequestMessage *
+                              { return new BoatDataRequest(); });
 
-  class SetConfigRequest : public RequestMessage{
-    public:
-      SetConfigRequest(): RequestMessage(){};
-      StringMap args;
-    protected:
-      virtual void processRequest(){
-        bool ok=true;
-        String error;
-        for (StringMap::iterator it=args.begin();it != args.end();it++){
-          bool rt=config.updateValue(it->first,it->second);
-          if (! rt){
-            logger.logString("ERR: unable to update %s to %s",it->first.c_str(),it->second.c_str());
-            ok=false;
-            error+=it->first;
-            error+="=";
-            error+=it->second;
-            error+=",";
-          }
-        }
-        if (ok){
-          result=JSON_OK;
-          logger.logString("update config and restart");
-          config.saveConfig();
-          delayedRestart();
-        }
-        else{
-          DynamicJsonDocument rt(100);
-          rt["status"]=error;
-          serializeJson(rt,result);
-        }   
-      }
-  };
-  webserver.on("/api/setConfig",HTTP_GET,[](AsyncWebServerRequest *request){
-    StringMap args;
-    for (int i=0;i<request->args();i++){
-      args[request->argName(i)]=request->arg(i);
-    }
-    SetConfigRequest *msg=new SetConfigRequest();
-    msg->args=args;
-    handleAsyncWebRequest(request,msg,F("application/json")); 
-  });
-  class ResetConfigRequest : public RequestMessage{
-    public:
-      ResetConfigRequest(): RequestMessage(){};
-    protected:
-      virtual void processRequest(){
-        config.reset(true);
-        logger.logString("reset config, restart");
-        result=JSON_OK;
-        delayedRestart();
-      }
-  };
-  webserver.on("/api/resetConfig",HTTP_GET,[](AsyncWebServerRequest *request){
-    RequestMessage *msg=new ResetConfigRequest();
-    handleAsyncWebRequest(request,msg,F("application/json"));   
-  });
-  class BoatDataRequest : public RequestMessage{
-    public:
-      BoatDataRequest(): RequestMessage(){};
-    protected:
-      virtual void processRequest(){
-          result=boatData.toJson();
-      }
-  };
-  webserver.on("/api/boatData",HTTP_GET,[](AsyncWebServerRequest *request){
-    RequestMessage *msg=new BoatDataRequest();
-    handleAsyncWebRequest(request,msg,F("application/json"));   
-  });
-  webserver.onNotFound(notFound);
   webserver.begin();
-  logger.logDebug(GwLog::LOG,"HTTP server started");
-
-  MDNS.addService("_http","_tcp",80);
-
+  
   nmea0183Converter= N2kDataToNMEA0183::create(&logger, &boatData,&NMEA2000, 0, N2K_CHANNEL_ID);
   // Reserve enough buffer for sending all messages. This does not work on small memory devices like Uno or Mega
 
@@ -528,16 +467,10 @@ void loop() {
   }
   nmea0183Converter->loop();
 
-  //handle messages from the async web server
-  Message *msg=NULL;
-  if (xQueueReceive(queue,&msg,0)){
-    logger.logDebug(GwLog::DEBUG+1,"main message");
-    msg->process();
-    msg->unref();
-  }
-  socketServer.readMessages(&receiver);
-  //read channels
+  webserver.fetchMainRequest();
 
+  //read channels
+  socketServer.readMessages(&receiver);
   usbSerial.readMessages(&receiver);
 
 }
