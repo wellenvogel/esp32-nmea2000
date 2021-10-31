@@ -2,6 +2,7 @@
 #define _NMEA0183CONVERTERLIST_H
 
 #include "WString.h"
+#include "ArduinoJson.h"
 #include <map>
 
 template <class T, class Msg>
@@ -168,6 +169,12 @@ public:
 
     int numConverters(){
         return converters.size();
+    }
+    void toJson(String prefix, JsonDocument &json){
+        for (auto it = converters.begin(); it != converters.end(); it++)
+        {
+            json[prefix][String(it->first)] = it->second.count;
+        }
     }
 };
 #endif

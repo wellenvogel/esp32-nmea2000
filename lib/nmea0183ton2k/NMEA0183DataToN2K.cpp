@@ -1,6 +1,6 @@
 #include "NMEA0183DataToN2K.h"
 #include "NMEA0183Messages.h"
-#include "NMEA0183ConverterList.h"
+#include "ConverterList.h"
 NMEA0183DataToN2K::NMEA0183DataToN2K(GwLog *logger, GwBoatData *boatData,N2kSender callback)
 {
     this->sender = callback;

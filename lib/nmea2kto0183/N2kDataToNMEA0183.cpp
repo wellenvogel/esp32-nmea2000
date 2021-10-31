@@ -27,6 +27,7 @@
 
 #include "N2kDataToNMEA0183.h"
 #include "NMEA0183AISMessages.h"
+#include "ConverterList.h"
 
 
 
@@ -60,9 +61,9 @@ void N2kDataToNMEA0183::SendMessage(const tNMEA0183Msg &NMEA0183Msg) {
 
 class N2kToNMEA0183Functions : public N2kDataToNMEA0183
 {
-    typedef void (N2kToNMEA0183Functions::*N2KConverter)(const tN2kMsg &N2kMsg);
 
 private:
+    ConverterList<N2kToNMEA0183Functions,tN2kMsg> converters;
     static const unsigned long RMCPeriod = 500;
     static void setMax(GwBoatItem<double> *maxItem, GwBoatItem<double> *item)
     {
@@ -138,62 +139,27 @@ private:
     unsigned long LastPosSend;
     unsigned long NextRMCSend;
     unsigned long lastLoopTime;
-    class ConverterEntry
-    {
-    public:
-        unsigned long count = 0;
-        N2KConverter converter;
-        ConverterEntry(N2KConverter cv = NULL) { converter = cv; }
-    };
-    typedef std::map<long, ConverterEntry> ConverterMap;
-    ConverterMap converters;
-
-    /**
-     *  register a n2k message converter
-     *  each of the converter functions must be registered in the constructor 
-     **/
-    void registerConverter(long pgn, N2KConverter converter)
-    {
-        ConverterEntry e(converter);
-        converters[pgn] = e;
-    }
+    
     virtual unsigned long *handledPgns()
     {
-        logger->logString("CONV: # %d handled PGNS", (int)converters.size());
-        unsigned long *rt = new unsigned long[converters.size() + 1];
-        int idx = 0;
-        for (ConverterMap::iterator it = converters.begin();
-             it != converters.end(); it++)
-        {
-            rt[idx] = it->first;
-            idx++;
-        }
-        rt[idx] = 0;
-        return rt;
+        logger->logString("CONV: # %d handled PGNS", converters.numConverters());
+        return converters.handledPgns();
     }
     virtual void HandleMsg(const tN2kMsg &N2kMsg)
     {
-        ConverterMap::iterator it;
-        it = converters.find(N2kMsg.PGN);
-        if (it != converters.end())
-        {
-            //logger->logString("CONV: handle PGN %ld",N2kMsg.PGN);
-            (it->second).count++;
-            //call to member function - see e.g. https://isocpp.org/wiki/faq/pointers-to-members
-            ((*this).*((it->second).converter))(N2kMsg);
-            return;
+        String key=String(N2kMsg.PGN);
+        bool rt=converters.handleMessage(key,N2kMsg,this);
+        if (! rt){
+          LOG_DEBUG(GwLog::DEBUG+1,"no handler for %ld",N2kMsg.PGN);
         }
     }
     virtual void toJson(JsonDocument &json)
     {
-        for (ConverterMap::iterator it = converters.begin(); it != converters.end(); it++)
-        {
-            json["cnv"][String(it->first)] = it->second.count;
-        }
+        converters.toJson(String(F("cnv")),json);
     }
     virtual int numPgns()
     {
-        return converters.size();
+        return converters.numConverters();
     }
     void SetNextRMCSend() { NextRMCSend = millis() + RMCPeriod; }
 
@@ -893,7 +859,61 @@ private:
         return;
     }
 
-public:
+    void createBoatData()
+    {
+      heading = boatData->getDoubleItem(F("Heading"), true, 4000, &formatCourse);
+      latitude = boatData->getDoubleItem(F("Latitude"), true, 4000);
+      longitude = boatData->getDoubleItem(F("Longitude"), true, 4000);
+      altitude = boatData->getDoubleItem(F("Altitude"), true, 4000);
+      cog = boatData->getDoubleItem(F("COG"), true, 4000, &formatCourse);
+      sog = boatData->getDoubleItem(F("SOG"), true, 4000, &formatKnots);
+      stw = boatData->getDoubleItem(F("STW"), true, 4000, &formatKnots);
+      variation = boatData->getDoubleItem(F("Variation"), true, 4000, &formatCourse);
+      tws = boatData->getDoubleItem(F("TWS"), true, 4000, &formatKnots);
+      twd = boatData->getDoubleItem(F("TWD"), true, 4000, &formatCourse);
+      aws = boatData->getDoubleItem(F("AWS"), true, 4000, &formatKnots);
+      awa = boatData->getDoubleItem(F("AWA"), true, 4000, &formatWind);
+      awd = boatData->getDoubleItem(F("AWD"), true, 4000, &formatCourse);
+      maxAws = boatData->getDoubleItem(F("MaxAws"), true, 0, &formatKnots);
+      maxTws = boatData->getDoubleItem(F("MaxTws"), true, 0, &formatKnots);
+      rudderPosition = boatData->getDoubleItem(F("RudderPosition"), true, 4000, &formatCourse);
+      waterTemperature = boatData->getDoubleItem(F("WaterTemperature"), true, 4000, &KelvinToC);
+      waterDepth = boatData->getDoubleItem(F("WaterDepth"), true, 4000);
+      log = boatData->getUint32Item(F("Log"), true, 0, mtr2nm);
+      tripLog = boatData->getUint32Item(F("TripLog"), true, 0, mtr2nm);
+      daysSince1970 = boatData->getUint32Item(F("DaysSince1970"), true, 4000);
+      secondsSinceMidnight = boatData->getDoubleItem(F("SecondsSinceMidnight"), true, 4000);
+    }
+
+    void registerConverters()
+    {
+      //register all converter functions
+      //for each vonverter you should have a member with the N2KMsg as parameter
+      //and register it here
+      //with this approach we easily have a list of all handled
+      //pgns
+      converters.registerConverter(127250UL, &N2kToNMEA0183Functions::HandleHeading);
+      converters.registerConverter(127258UL, &N2kToNMEA0183Functions::HandleVariation);
+      converters.registerConverter(128259UL, &N2kToNMEA0183Functions::HandleBoatSpeed);
+      converters.registerConverter(128267UL, &N2kToNMEA0183Functions::HandleDepth);
+      converters.registerConverter(129025UL, &N2kToNMEA0183Functions::HandlePosition);
+      converters.registerConverter(129026UL, &N2kToNMEA0183Functions::HandleCOGSOG);
+      converters.registerConverter(129029UL, &N2kToNMEA0183Functions::HandleGNSS);
+      converters.registerConverter(130306UL, &N2kToNMEA0183Functions::HandleWind);
+      converters.registerConverter(128275UL, &N2kToNMEA0183Functions::HandleLog);
+      converters.registerConverter(127245UL, &N2kToNMEA0183Functions::HandleRudder);
+      converters.registerConverter(130310UL, &N2kToNMEA0183Functions::HandleWaterTemp);
+#define HANDLE_AIS
+#ifdef HANDLE_AIS
+      converters.registerConverter(129038UL, &N2kToNMEA0183Functions::HandleAISClassAPosReport);  // AIS Class A Position Report, Message Type 1
+      converters.registerConverter(129039UL, &N2kToNMEA0183Functions::HandleAISClassBMessage18);  // AIS Class B Position Report, Message Type 18
+      converters.registerConverter(129794UL, &N2kToNMEA0183Functions::HandleAISClassAMessage5);   // AIS Class A Ship Static and Voyage related data, Message Type 5
+      converters.registerConverter(129809UL, &N2kToNMEA0183Functions::HandleAISClassBMessage24A); // AIS Class B "CS" Static Data Report, Part A
+      converters.registerConverter(129810UL, &N2kToNMEA0183Functions::HandleAISClassBMessage24B); // AIS Class B "CS" Static Data Report, Part B
+#endif
+    }
+
+  public:
     N2kToNMEA0183Functions(GwLog *logger, GwBoatData *boatData, tNMEA2000 *NMEA2000, tSendNMEA0183MessageCallback callback, int sourceId) 
     : N2kDataToNMEA0183(logger, boatData, NMEA2000, callback,sourceId)
     {
@@ -903,54 +923,8 @@ public:
 
         this->logger = logger;
         this->boatData = boatData;
-        heading = boatData->getDoubleItem(F("Heading"), true, 4000, &formatCourse);
-        latitude = boatData->getDoubleItem(F("Latitude"), true, 4000);
-        longitude = boatData->getDoubleItem(F("Longitude"), true, 4000);
-        altitude = boatData->getDoubleItem(F("Altitude"), true, 4000);
-        cog = boatData->getDoubleItem(F("COG"), true, 4000, &formatCourse);
-        sog = boatData->getDoubleItem(F("SOG"), true, 4000, &formatKnots);
-        stw = boatData->getDoubleItem(F("STW"), true, 4000, &formatKnots);
-        variation = boatData->getDoubleItem(F("Variation"), true, 4000, &formatCourse);
-        tws = boatData->getDoubleItem(F("TWS"), true, 4000, &formatKnots);
-        twd = boatData->getDoubleItem(F("TWD"), true, 4000, &formatCourse);
-        aws = boatData->getDoubleItem(F("AWS"), true, 4000, &formatKnots);
-        awa = boatData->getDoubleItem(F("AWA"), true, 4000, &formatWind);
-        awd = boatData->getDoubleItem(F("AWD"), true, 4000, &formatCourse);
-        maxAws = boatData->getDoubleItem(F("MaxAws"), true, 0, &formatKnots);
-        maxTws = boatData->getDoubleItem(F("MaxTws"), true, 0, &formatKnots);
-        rudderPosition = boatData->getDoubleItem(F("RudderPosition"), true, 4000, &formatCourse);
-        waterTemperature = boatData->getDoubleItem(F("WaterTemperature"), true, 4000, &KelvinToC);
-        waterDepth = boatData->getDoubleItem(F("WaterDepth"), true, 4000);
-        log = boatData->getUint32Item(F("Log"), true, 0, mtr2nm);
-        tripLog = boatData->getUint32Item(F("TripLog"), true, 0, mtr2nm);
-        daysSince1970 = boatData->getUint32Item(F("DaysSince1970"), true, 4000);
-        secondsSinceMidnight = boatData->getDoubleItem(F("SecondsSinceMidnight"), true, 4000);
-
-        //register all converter functions
-        //for each vonverter you should have a member with the N2KMsg as parameter
-        //and register it here
-        //with this approach we easily have a list of all handled
-        //pgns
-        registerConverter(127250UL, &N2kToNMEA0183Functions::HandleHeading);
-        registerConverter(127258UL, &N2kToNMEA0183Functions::HandleVariation);
-        registerConverter(128259UL, &N2kToNMEA0183Functions::HandleBoatSpeed);
-        registerConverter(128267UL, &N2kToNMEA0183Functions::HandleDepth);
-        registerConverter(129025UL, &N2kToNMEA0183Functions::HandlePosition);
-        registerConverter(129026UL, &N2kToNMEA0183Functions::HandleCOGSOG);
-        registerConverter(129029UL, &N2kToNMEA0183Functions::HandleGNSS);
-        registerConverter(130306UL, &N2kToNMEA0183Functions::HandleWind);
-        registerConverter(128275UL, &N2kToNMEA0183Functions::HandleLog);
-        registerConverter(127245UL, &N2kToNMEA0183Functions::HandleRudder);
-        registerConverter(130310UL, &N2kToNMEA0183Functions::HandleWaterTemp);
-#define HANDLE_AIS         
-#ifdef HANDLE_AIS
-        registerConverter(129038UL, &N2kToNMEA0183Functions::HandleAISClassAPosReport);  // AIS Class A Position Report, Message Type 1
-        registerConverter(129039UL, &N2kToNMEA0183Functions::HandleAISClassBMessage18);  // AIS Class B Position Report, Message Type 18
-        registerConverter(129794UL, &N2kToNMEA0183Functions::HandleAISClassAMessage5);   // AIS Class A Ship Static and Voyage related data, Message Type 5
-        registerConverter(129809UL, &N2kToNMEA0183Functions::HandleAISClassBMessage24A); // AIS Class B "CS" Static Data Report, Part A
-        registerConverter(129810UL, &N2kToNMEA0183Functions::HandleAISClassBMessage24B); // AIS Class B "CS" Static Data Report, Part B
-#endif       
-
+        createBoatData();
+        registerConverters();
     }
     virtual void loop()
     {
