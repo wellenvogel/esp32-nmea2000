@@ -46,6 +46,11 @@ template<class T> class GwBoatItem : public GwBoatItemBase{
             GwBoatItemBase(invalidTime){
             this->fmt=fmt;
         }
+        GwBoatItem(GwBoatItemMap *map,String name,unsigned long invalidTime=INVALID_TIME,Formatter fmt=NULL):
+            GwBoatItemBase(invalidTime){
+            this->fmt=fmt;
+            (*map)[name]=this;
+        }
         virtual ~GwBoatItem(){}
         void update(T nv){
             data=nv;
@@ -62,43 +67,73 @@ template<class T> class GwBoatItem : public GwBoatItemBase{
         virtual void toJsonDoc(DynamicJsonDocument *doc,String name){
             (*doc)[name]=getData(true);
         }
-        private:
-        static GwBoatItem<T> *findOrCreate(GwLog *logger,GwBoatItemMap *values, String name,bool doCreate=true, 
-            long invalidTime=GwBoatItemBase::INVALID_TIME, Formatter fmt=NULL){
-            GwBoatItemMap::iterator it;
-            if ((it=values->find(name)) != values->end()){
-                return (GwBoatItem<T> *)it->second;
-            }
-            if (! doCreate) return NULL;
-            LOG_DEBUG(GwLog::DEBUG,"creating boat data item %s",name.c_str());
-            GwBoatItem<T> *ni=new GwBoatItem<T>(invalidTime,fmt);
-            (*values)[name]=ni;
-            return ni; 
-        }
-        friend class GwBoatData;
 };
 
-/**
- * implement a get for a particular type of boatData
- * will create a method get##name##Item that returns a GwBoatItem<type>
- * */
-#define GWBOATDATA_IMPL_ITEM(type,name) GwBoatItem<type> *get##name##Item(String iname,bool doCreate=true, \
-                long invalidTime=GwBoatItemBase::INVALID_TIME, GwBoatItem<type>::Formatter fmt=NULL){ \
-                return GwBoatItem<type>::findOrCreate(logger,&values,iname, doCreate, \
-                invalidTime,fmt);\
-            }
+static double formatCourse(double cv)
+    {
+        double rt = cv * 180.0 / M_PI;
+        if (rt > 360)
+            rt -= 360;
+        if (rt < 0)
+            rt += 360;
+        return rt;
+    }
+    static double formatWind(double cv)
+    {
+        double rt = formatCourse(cv);
+        if (rt > 180)
+            rt = 180 - rt;
+        return rt;
+    }
+    static double formatKnots(double cv)
+    {
+        return cv * 3600.0 / 1852.0;
+    }
 
+    static uint32_t mtr2nm(uint32_t m)
+    {
+        return m / 1852;
+    }
+
+    static double kelvinToC(double v){
+        return v-273.15;
+    }
+
+
+#define GWBOATDATA(type,name,time,fmt)  \
+    GwBoatItem<type> *name=new GwBoatItem<type>(&values,F(#name),time,fmt) ;
 class GwBoatData{
     private:
         GwLog *logger;
         GwBoatItemBase::GwBoatItemMap values;
     public:
+
+    GWBOATDATA(double,COG,4000,&formatCourse)
+    GWBOATDATA(double,TWD,4000,&formatCourse)
+    GWBOATDATA(double,AWD,4000,&formatCourse)
+    GWBOATDATA(double,SOG,4000,&formatKnots)
+    GWBOATDATA(double,STW,4000,&formatKnots)
+    GWBOATDATA(double,TWS,4000,&formatKnots)
+    GWBOATDATA(double,AWS,4000,&formatKnots)
+    GWBOATDATA(double,MaxTws,4000,&formatKnots)
+    GWBOATDATA(double,MaxAws,4000,&formatKnots)
+    GWBOATDATA(double,AWA,4000,&formatWind)
+    GWBOATDATA(double,Heading,4000,&formatCourse)
+    GWBOATDATA(double,Variation,4000,&formatCourse)
+    GWBOATDATA(double,RudderPosition,4000,&formatCourse)
+    GWBOATDATA(double,Latitude,4000,NULL)
+    GWBOATDATA(double,Longitude,4000,NULL)
+    GWBOATDATA(double,Altitude,4000,NULL)
+    GWBOATDATA(double,WaterDepth,4000,NULL)
+    GWBOATDATA(double,SecondsSinceMidnight,4000,NULL)
+    GWBOATDATA(double,WaterTemperature,4000,&kelvinToC)
+    GWBOATDATA(uint32_t,Log,0,&mtr2nm)
+    GWBOATDATA(uint32_t,TripLog,0,&mtr2nm)
+    GWBOATDATA(uint32_t,DaysSince1970,4000,NULL)
+    public:
         GwBoatData(GwLog *logger);
         ~GwBoatData();
         String toJson() const;
-        GWBOATDATA_IMPL_ITEM(double,Double)
-        GWBOATDATA_IMPL_ITEM(long,Long)
-        GWBOATDATA_IMPL_ITEM(uint32_t,Uint32)     
 };
 
 

@@ -83,59 +83,7 @@ private:
             return;
         item->update(value);
     }
-    static double formatCourse(double cv)
-    {
-        double rt = cv * 180.0 / M_PI;
-        if (rt > 360)
-            rt -= 360;
-        if (rt < 0)
-            rt += 360;
-        return rt;
-    }
-    static double formatWind(double cv)
-    {
-        double rt = formatCourse(cv);
-        if (rt > 180)
-            rt = 180 - rt;
-        return rt;
-    }
-    static double formatKnots(double cv)
-    {
-        return cv * 3600.0 / 1852.0;
-    }
-
-    static uint32_t mtr2nm(uint32_t m)
-    {
-        return m / 1852;
-    }
-    GwBoatItem<double> *latitude;
-    GwBoatItem<double> *longitude;
-    GwBoatItem<double> *altitude;
-    GwBoatItem<double> *variation;
-    GwBoatItem<double> *heading;
-    GwBoatItem<double> *cog;
-    GwBoatItem<double> *sog;
-    GwBoatItem<double> *stw;
-
-    GwBoatItem<double> *tws;
-    GwBoatItem<double> *twd;
-
-    GwBoatItem<double> *aws;
-    GwBoatItem<double> *awa;
-    GwBoatItem<double> *awd;
-
-    GwBoatItem<double> *maxAws;
-    GwBoatItem<double> *maxTws;
-
-    GwBoatItem<double> *rudderPosition;
-    GwBoatItem<double> *waterTemperature;
-    GwBoatItem<double> *waterDepth;
-
-    GwBoatItem<uint32_t> *tripLog;
-    GwBoatItem<uint32_t> *log;
-    GwBoatItem<uint32_t> *daysSince1970;
-    GwBoatItem<double> *secondsSinceMidnight;
-
+    
     unsigned long LastPosSend;
     unsigned long NextRMCSend;
     unsigned long lastLoopTime;
@@ -176,12 +124,12 @@ private:
         {
             if (ref == N2khr_magnetic)
             {
-                updateDouble(variation, Variation); // Update Variation
-                if (!N2kIsNA(Heading) && variation->isValid(millis()))
-                    Heading -= variation->getData();
+                updateDouble(boatData->Variation, Variation); // Update Variation
+                if (!N2kIsNA(Heading) && boatData->Variation->isValid(millis()))
+                    Heading -= boatData->Variation->getData();
             }
-            updateDouble(heading, Heading);
-            if (NMEA0183SetHDG(NMEA0183Msg, heading->getDataWithDefault(NMEA0183DoubleNA), _Deviation, variation->getDataWithDefault(NMEA0183DoubleNA)))
+            updateDouble(boatData->Heading, Heading);
+            if (NMEA0183SetHDG(NMEA0183Msg, boatData->Heading->getDataWithDefault(NMEA0183DoubleNA), _Deviation, boatData->Variation->getDataWithDefault(NMEA0183DoubleNA)))
             {
                 SendMessage(NMEA0183Msg);
             }
@@ -196,9 +144,9 @@ private:
         uint16_t DaysSince1970;
         double Variation;
         ParseN2kMagneticVariation(N2kMsg, SID, Source, DaysSince1970, Variation);
-        updateDouble(variation, Variation);
+        updateDouble(boatData->Variation, Variation);
         if (DaysSince1970 != N2kUInt16NA && DaysSince1970 != 0)
-            daysSince1970->update(DaysSince1970);
+            boatData->DaysSince1970->update(DaysSince1970);
     }
 
     //*****************************************************************************
@@ -212,10 +160,10 @@ private:
         if (ParseN2kBoatSpeed(N2kMsg, SID, WaterReferenced, GroundReferenced, SWRT))
         {
             tNMEA0183Msg NMEA0183Msg;
-            updateDouble(stw, WaterReferenced);
+            updateDouble(boatData->STW, WaterReferenced);
             unsigned long now = millis();
-            double MagneticHeading = (heading->isValid(now) && variation->isValid(now)) ? heading->getData() + variation->getData() : NMEA0183DoubleNA;
-            if (NMEA0183SetVHW(NMEA0183Msg, heading->getData(), MagneticHeading, WaterReferenced))
+            double MagneticHeading = (boatData->Heading->isValid(now) && boatData->Variation->isValid(now)) ? boatData->Heading->getData() + boatData->Variation->getData() : NMEA0183DoubleNA;
+            if (NMEA0183SetVHW(NMEA0183Msg, boatData->Heading->getData(), MagneticHeading, WaterReferenced))
             {
                 SendMessage(NMEA0183Msg);
             }
@@ -234,7 +182,7 @@ private:
         {
 
             WaterDepth = DepthBelowTransducer + Offset;
-            updateDouble(waterDepth, WaterDepth);
+            updateDouble(boatData->WaterDepth, WaterDepth);
             tNMEA0183Msg NMEA0183Msg;
             if (NMEA0183SetDPT(NMEA0183Msg, DepthBelowTransducer, Offset))
             {
@@ -254,8 +202,8 @@ private:
         double Longitude;
         if (ParseN2kPGN129025(N2kMsg, Latitude, Longitude))
         {
-            updateDouble(latitude, Latitude);
-            updateDouble(longitude, Longitude);
+            updateDouble(boatData->Latitude, Latitude);
+            updateDouble(boatData->Longitude, Longitude);
         }
     }
 
@@ -269,16 +217,16 @@ private:
         double SOG;
         if (ParseN2kCOGSOGRapid(N2kMsg, SID, HeadingReference, COG, SOG))
         {
-            updateDouble(cog, COG);
-            updateDouble(sog, SOG);
-            double MCOG = (!N2kIsNA(COG) && variation->isValid()) ? COG - variation->getData() : NMEA0183DoubleNA;
+            updateDouble(boatData->COG, COG);
+            updateDouble(boatData->SOG, SOG);
+            double MCOG = (!N2kIsNA(COG) && boatData->Variation->isValid()) ? COG - boatData->Variation->getData() : NMEA0183DoubleNA;
             if (HeadingReference == N2khr_magnetic)
             {
                 MCOG = COG;
-                if (variation->isValid())
+                if (boatData->Variation->isValid())
                 {
-                    COG -= variation->getData();
-                    updateDouble(cog, COG);
+                    COG -= boatData->Variation->getData();
+                    updateDouble(boatData->COG, COG);
                 }
             }
             if (NMEA0183SetVTG(NMEA0183Msg, COG, MCOG, SOG))
@@ -311,12 +259,12 @@ private:
                          nSatellites, HDOP, PDOP, GeoidalSeparation,
                          nReferenceStations, ReferenceStationType, ReferenceSationID, AgeOfCorrection))
         {
-            updateDouble(latitude, Latitude);
-            updateDouble(longitude, Longitude);
-            updateDouble(altitude, Altitude);
-            updateDouble(secondsSinceMidnight, SecondsSinceMidnight);
+            updateDouble(boatData->Latitude, Latitude);
+            updateDouble(boatData->Longitude, Longitude);
+            updateDouble(boatData->Altitude, Altitude);
+            updateDouble(boatData->SecondsSinceMidnight, SecondsSinceMidnight);
             if (DaysSince1970 != N2kUInt16NA && DaysSince1970 != 0)
-                daysSince1970->update(DaysSince1970);
+                boatData->DaysSince1970->update(DaysSince1970);
         }
     }
 
@@ -337,37 +285,37 @@ private:
             if (WindReference == N2kWind_Apparent)
             {
                 NMEA0183Reference = NMEA0183Wind_Apparent;
-                updateDouble(awa, WindAngle);
-                updateDouble(aws, WindSpeed);
-                setMax(maxAws, aws);
+                updateDouble(boatData->AWA, WindAngle);
+                updateDouble(boatData->AWS, WindSpeed);
+                setMax(boatData->MaxAws, boatData->AWS);
             }
 
             if (NMEA0183SetMWV(NMEA0183Msg, formatCourse(WindAngle), NMEA0183Reference, WindSpeed))
                 SendMessage(NMEA0183Msg);
 
-            if (WindReference == N2kWind_Apparent && sog->isValid())
+            if (WindReference == N2kWind_Apparent && boatData->SOG->isValid())
             { // Lets calculate and send TWS/TWA if SOG is available
 
                 x = WindSpeed * cos(WindAngle);
                 y = WindSpeed * sin(WindAngle);
 
-                updateDouble(twd, atan2(y, -sog->getData() + x));
-                updateDouble(tws, sqrt((y * y) + ((-sog->getData() + x) * (-sog->getData() + x))));
+                updateDouble(boatData->TWD, atan2(y, -boatData->SOG->getData() + x));
+                updateDouble(boatData->TWS, sqrt((y * y) + ((-boatData->SOG->getData() + x) * (-boatData->SOG->getData() + x))));
 
-                setMax(maxTws, tws);
+                setMax(boatData->MaxTws, boatData->TWS);
 
                 NMEA0183Reference = NMEA0183Wind_True;
                 if (NMEA0183SetMWV(NMEA0183Msg,
-                                   formatCourse(twd->getData()),
+                                   formatCourse(boatData->TWD->getData()),
                                    NMEA0183Reference,
-                                   tws->getDataWithDefault(NMEA0183DoubleNA)))
+                                   boatData->TWS->getDataWithDefault(NMEA0183DoubleNA)))
                     SendMessage(NMEA0183Msg);
-                double magnetic = twd->getData();
-                if (variation->isValid())
-                    magnetic -= variation->getData();
+                double magnetic = boatData->TWD->getData();
+                if (boatData->Variation->isValid())
+                    magnetic -= boatData->Variation->getData();
                 if (!NMEA0183Msg.Init("MWD", "GP"))
                     return;
-                if (!NMEA0183Msg.AddDoubleField(formatCourse(twd->getData())))
+                if (!NMEA0183Msg.AddDoubleField(formatCourse(boatData->TWD->getData())))
                     return;
                 if (!NMEA0183Msg.AddStrField("T"))
                     return;
@@ -375,11 +323,11 @@ private:
                     return;
                 if (!NMEA0183Msg.AddStrField("M"))
                     return;
-                if (!NMEA0183Msg.AddDoubleField(tws->getData() / 0.514444))
+                if (!NMEA0183Msg.AddDoubleField(boatData->TWS->getData() / 0.514444))
                     return;
                 if (!NMEA0183Msg.AddStrField("N"))
                     return;
-                if (!NMEA0183Msg.AddDoubleField(tws->getData()))
+                if (!NMEA0183Msg.AddDoubleField(boatData->TWS->getData()))
                     return;
                 if (!NMEA0183Msg.AddStrField("M"))
                     return;
@@ -392,18 +340,18 @@ private:
     void SendRMC()
     {
         long now = millis();
-        if (NextRMCSend <= millis() && latitude->isValid(now))
+        if (NextRMCSend <= millis() && boatData->Latitude->isValid(now))
         {
             tNMEA0183Msg NMEA0183Msg;
             if (NMEA0183SetRMC(NMEA0183Msg,
 
-                               secondsSinceMidnight->getDataWithDefault(NMEA0183DoubleNA),
-                               latitude->getDataWithDefault(NMEA0183DoubleNA),
-                               longitude->getDataWithDefault(NMEA0183DoubleNA),
-                               cog->getDataWithDefault(NMEA0183DoubleNA),
-                               sog->getDataWithDefault(NMEA0183DoubleNA),
-                               daysSince1970->getDataWithDefault(NMEA0183UInt32NA),
-                               variation->getDataWithDefault(NMEA0183DoubleNA)))
+                               boatData->SecondsSinceMidnight->getDataWithDefault(NMEA0183DoubleNA),
+                               boatData->Latitude->getDataWithDefault(NMEA0183DoubleNA),
+                               boatData->Longitude->getDataWithDefault(NMEA0183DoubleNA),
+                               boatData->COG->getDataWithDefault(NMEA0183DoubleNA),
+                               boatData->SOG->getDataWithDefault(NMEA0183DoubleNA),
+                               boatData->DaysSince1970->getDataWithDefault(NMEA0183UInt32NA),
+                               boatData->Variation->getDataWithDefault(NMEA0183DoubleNA)))
             {
                 SendMessage(NMEA0183Msg);
             }
@@ -420,11 +368,11 @@ private:
         if (ParseN2kDistanceLog(N2kMsg, DaysSince1970, SecondsSinceMidnight, Log, TripLog))
         {
             if (Log != N2kUInt32NA)
-                log->update(Log);
+                boatData->Log->update(Log);
             if (TripLog != N2kUInt32NA)
-                tripLog->update(TripLog);
+                boatData->TripLog->update(TripLog);
             if (DaysSince1970 != N2kUInt16NA && DaysSince1970 != 0)
-                daysSince1970->update(DaysSince1970);
+                boatData->DaysSince1970->update(DaysSince1970);
             tNMEA0183Msg NMEA0183Msg;
 
             if (!NMEA0183Msg.Init("VLW", "GP"))
@@ -454,7 +402,7 @@ private:
         if (ParseN2kRudder(N2kMsg, RudderPosition, Instance, RudderDirectionOrder, AngleOrder))
         {
 
-            updateDouble(rudderPosition, RudderPosition);
+            updateDouble(boatData->RudderPosition, RudderPosition);
             if (Instance != 0)
                 return;
 
@@ -486,7 +434,7 @@ private:
         if (ParseN2kPGN130310(N2kMsg, SID, WaterTemperature, OutsideAmbientAirTemperature, AtmosphericPressure))
         {
 
-            updateDouble(waterTemperature, WaterTemperature);
+            updateDouble(boatData->WaterTemperature, WaterTemperature);
             tNMEA0183Msg NMEA0183Msg;
 
             if (!NMEA0183Msg.Init("MTW", "GP"))
@@ -859,31 +807,6 @@ private:
         return;
     }
 
-    void createBoatData()
-    {
-      heading = boatData->getDoubleItem(F("Heading"), true, 4000, &formatCourse);
-      latitude = boatData->getDoubleItem(F("Latitude"), true, 4000);
-      longitude = boatData->getDoubleItem(F("Longitude"), true, 4000);
-      altitude = boatData->getDoubleItem(F("Altitude"), true, 4000);
-      cog = boatData->getDoubleItem(F("COG"), true, 4000, &formatCourse);
-      sog = boatData->getDoubleItem(F("SOG"), true, 4000, &formatKnots);
-      stw = boatData->getDoubleItem(F("STW"), true, 4000, &formatKnots);
-      variation = boatData->getDoubleItem(F("Variation"), true, 4000, &formatCourse);
-      tws = boatData->getDoubleItem(F("TWS"), true, 4000, &formatKnots);
-      twd = boatData->getDoubleItem(F("TWD"), true, 4000, &formatCourse);
-      aws = boatData->getDoubleItem(F("AWS"), true, 4000, &formatKnots);
-      awa = boatData->getDoubleItem(F("AWA"), true, 4000, &formatWind);
-      awd = boatData->getDoubleItem(F("AWD"), true, 4000, &formatCourse);
-      maxAws = boatData->getDoubleItem(F("MaxAws"), true, 0, &formatKnots);
-      maxTws = boatData->getDoubleItem(F("MaxTws"), true, 0, &formatKnots);
-      rudderPosition = boatData->getDoubleItem(F("RudderPosition"), true, 4000, &formatCourse);
-      waterTemperature = boatData->getDoubleItem(F("WaterTemperature"), true, 4000, &KelvinToC);
-      waterDepth = boatData->getDoubleItem(F("WaterDepth"), true, 4000);
-      log = boatData->getUint32Item(F("Log"), true, 0, mtr2nm);
-      tripLog = boatData->getUint32Item(F("TripLog"), true, 0, mtr2nm);
-      daysSince1970 = boatData->getUint32Item(F("DaysSince1970"), true, 4000);
-      secondsSinceMidnight = boatData->getDoubleItem(F("SecondsSinceMidnight"), true, 4000);
-    }
 
     void registerConverters()
     {
@@ -923,7 +846,6 @@ private:
 
         this->logger = logger;
         this->boatData = boatData;
-        createBoatData();
         registerConverters();
     }
     virtual void loop()
