@@ -4,15 +4,16 @@
 #include "GwLog.h"
 #include <ArduinoJson.h>
 #include <Arduino.h>
-#include <map>
+#include <vector>
 #define GW_BOAT_VALUE_LEN 32
 class GwBoatItemBase{
     public:
         static const unsigned long INVALID_TIME=60000;
-        typedef std::map<String,GwBoatItemBase*> GwBoatItemMap;
+        typedef std::vector<GwBoatItemBase*> GwBoatItemMap;
     protected:
         unsigned long lastSet=0;
         unsigned long invalidTime=INVALID_TIME;
+        String name;
         void uls(){
             lastSet=millis();
         }
@@ -24,15 +25,17 @@ class GwBoatItemBase{
             if (now == 0) now=millis();
             return (lastSet + invalidTime) >= now;
         }
-        GwBoatItemBase(unsigned long invalidTime=INVALID_TIME){
+        GwBoatItemBase(String name,unsigned long invalidTime=INVALID_TIME){
             lastSet=0;
             this->invalidTime=invalidTime;
+            this->name=name;
         }
         virtual ~GwBoatItemBase(){}
         void invalidate(){
             lastSet=0;
         }
-        virtual void toJsonDoc(DynamicJsonDocument *doc,String name)=0;
+        virtual void toJsonDoc(JsonDocument *doc, unsigned long minTime)=0;
+        virtual size_t getJsonSize(){return JSON_OBJECT_SIZE(4);}
 };
 class GwBoatData;
 template<class T> class GwBoatItem : public GwBoatItemBase{
@@ -41,19 +44,20 @@ template<class T> class GwBoatItem : public GwBoatItemBase{
     private:
         T data;
         Formatter fmt;
+        int lastUpdateSource;
     public:
-        GwBoatItem(unsigned long invalidTime=INVALID_TIME,Formatter fmt=NULL):
-            GwBoatItemBase(invalidTime){
+        GwBoatItem(String name,unsigned long invalidTime=INVALID_TIME,Formatter fmt=NULL,GwBoatItemMap *map=NULL):
+            GwBoatItemBase(name,invalidTime){
             this->fmt=fmt;
-        }
-        GwBoatItem(GwBoatItemMap *map,String name,unsigned long invalidTime=INVALID_TIME,Formatter fmt=NULL):
-            GwBoatItemBase(invalidTime){
-            this->fmt=fmt;
-            (*map)[name]=this;
+            if (map){
+                map->push_back(this);
+            }
+            lastUpdateSource=-1;
         }
         virtual ~GwBoatItem(){}
-        void update(T nv){
+        void update(T nv, int source=-1){
             data=nv;
+            lastUpdateSource=source;
             uls();
         }
         T getData(bool useFormatter=false){
@@ -64,8 +68,12 @@ template<class T> class GwBoatItem : public GwBoatItemBase{
             if (! isValid(millis())) return defaultv;
             return data;
         }
-        virtual void toJsonDoc(DynamicJsonDocument *doc,String name){
-            (*doc)[name]=getData(true);
+        virtual void toJsonDoc(JsonDocument *doc, unsigned long minTime){
+            JsonObject o=doc->createNestedObject(name);
+            o[F("value")]=getData(true);
+            o[F("update")]=minTime-lastSet;
+            o[F("source")]=lastUpdateSource;
+            o[F("valid")]=isValid(minTime);
         }
 };
 
@@ -101,7 +109,7 @@ static double formatCourse(double cv)
 
 
 #define GWBOATDATA(type,name,time,fmt)  \
-    GwBoatItem<type> *name=new GwBoatItem<type>(&values,F(#name),time,fmt) ;
+    GwBoatItem<type> *name=new GwBoatItem<type>(F(#name),time,fmt,&values) ;
 class GwBoatData{
     private:
         GwLog *logger;

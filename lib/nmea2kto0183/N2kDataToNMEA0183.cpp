@@ -65,23 +65,23 @@ class N2kToNMEA0183Functions : public N2kDataToNMEA0183
 private:
     ConverterList<N2kToNMEA0183Functions,tN2kMsg> converters;
     static const unsigned long RMCPeriod = 500;
-    static void setMax(GwBoatItem<double> *maxItem, GwBoatItem<double> *item)
+    void setMax(GwBoatItem<double> *maxItem, GwBoatItem<double> *item)
     {
         unsigned long now = millis();
         if (!item->isValid(now))
             return;
         if (item->getData() > maxItem->getData() || !maxItem->isValid(now))
         {
-            maxItem->update(item->getData());
+            maxItem->update(item->getData(),sourceId);
         }
     }
-    static void updateDouble(GwBoatItem<double> *item, double value)
+    void updateDouble(GwBoatItem<double> *item, double value)
     {
         if (value == N2kDoubleNA)
             return;
         if (!item)
             return;
-        item->update(value);
+        item->update(value,sourceId);
     }
     
     unsigned long LastPosSend;
@@ -146,7 +146,7 @@ private:
         ParseN2kMagneticVariation(N2kMsg, SID, Source, DaysSince1970, Variation);
         updateDouble(boatData->Variation, Variation);
         if (DaysSince1970 != N2kUInt16NA && DaysSince1970 != 0)
-            boatData->DaysSince1970->update(DaysSince1970);
+            boatData->DaysSince1970->update(DaysSince1970,sourceId);
     }
 
     //*****************************************************************************
@@ -264,7 +264,7 @@ private:
             updateDouble(boatData->Altitude, Altitude);
             updateDouble(boatData->SecondsSinceMidnight, SecondsSinceMidnight);
             if (DaysSince1970 != N2kUInt16NA && DaysSince1970 != 0)
-                boatData->DaysSince1970->update(DaysSince1970);
+                boatData->DaysSince1970->update(DaysSince1970,sourceId);
         }
     }
 
@@ -368,11 +368,11 @@ private:
         if (ParseN2kDistanceLog(N2kMsg, DaysSince1970, SecondsSinceMidnight, Log, TripLog))
         {
             if (Log != N2kUInt32NA)
-                boatData->Log->update(Log);
+                boatData->Log->update(Log,sourceId);
             if (TripLog != N2kUInt32NA)
-                boatData->TripLog->update(TripLog);
+                boatData->TripLog->update(TripLog,sourceId);
             if (DaysSince1970 != N2kUInt16NA && DaysSince1970 != 0)
-                boatData->DaysSince1970->update(DaysSince1970);
+                boatData->DaysSince1970->update(DaysSince1970,sourceId);
             tNMEA0183Msg NMEA0183Msg;
 
             if (!NMEA0183Msg.Init("VLW", "GP"))

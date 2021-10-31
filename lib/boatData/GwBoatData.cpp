@@ -6,18 +6,22 @@ GwBoatData::GwBoatData(GwLog *logger){
 GwBoatData::~GwBoatData(){
     GwBoatItemBase::GwBoatItemMap::iterator it;
     for (it=values.begin() ; it != values.end();it++){
-        delete it->second;
+        delete *it;
     }
 }
 
 String GwBoatData::toJson() const {
-    long minTime=millis();
-    DynamicJsonDocument json(800);
+    unsigned long minTime=millis();
     GwBoatItemBase::GwBoatItemMap::const_iterator it;
+    size_t count=0;
+    size_t elementSizes=0;
     for (it=values.begin() ; it != values.end();it++){
-        if (it->second->isValid(minTime)){
-            it->second->toJsonDoc(&json,it->first);
-        }
+        count++;
+        elementSizes+=(*it)->getJsonSize();
+    }
+    DynamicJsonDocument json(JSON_OBJECT_SIZE(count)+elementSizes);
+    for (it=values.begin() ; it != values.end();it++){
+        (*it)->toJsonDoc(&json,minTime);
     }
     String buf;
     serializeJson(json,buf);
