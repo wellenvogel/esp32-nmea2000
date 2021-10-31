@@ -38,7 +38,6 @@ public:
 protected:
   GwLog *logger;
   GwBoatData *boatData;
-  tNMEA0183 *pNMEA0183;
   int sourceId;
   tSendNMEA0183MessageCallback SendNMEA0183MessageCallback;
   void SendMessage(const tNMEA0183Msg &NMEA0183Msg);

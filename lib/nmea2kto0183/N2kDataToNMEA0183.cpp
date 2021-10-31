@@ -48,7 +48,6 @@ void N2kDataToNMEA0183::loop() {
 
 //*****************************************************************************
 void N2kDataToNMEA0183::SendMessage(const tNMEA0183Msg &NMEA0183Msg) {
-  if ( pNMEA0183 != 0 ) pNMEA0183->SendMessage(NMEA0183Msg);
   if ( SendNMEA0183MessageCallback != 0 ) SendNMEA0183MessageCallback(NMEA0183Msg, sourceId);
 }
 
@@ -340,7 +339,10 @@ private:
     void SendRMC()
     {
         long now = millis();
-        if (NextRMCSend <= millis() && boatData->Latitude->isValid(now))
+        if (NextRMCSend <= millis() && 
+          boatData->Latitude->isValid(now) && 
+          boatData->Latitude->getLastSource() == sourceId
+          )
         {
             tNMEA0183Msg NMEA0183Msg;
             if (NMEA0183SetRMC(NMEA0183Msg,

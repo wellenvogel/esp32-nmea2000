@@ -12,7 +12,8 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#define VERSION "0.2.1"
+#define VERSION "0.3.1"
+
 //#define GW_MESSAGE_DEBUG_ENABLED
 //#define FALLBACK_SERIAL
 const unsigned long HEAP_REPORT_TIME=2000; //set to 0 to disable heap reporting
@@ -292,7 +293,8 @@ void setup() {
     SendNMEA0183Message, N2K_CHANNEL_ID);
 
   toN2KConverter= NMEA0183DataToN2K::create(&logger,&boatData,[](const tN2kMsg &msg)->bool{
-    logger.logDebug(GwLog::DEBUG+1,"send N2K");
+    logger.logDebug(GwLog::DEBUG+2,"send N2K %ld",msg.PGN);
+    NMEA2000.SendMsg(msg);
     return true;
   });  
   
@@ -328,6 +330,7 @@ void setup() {
   logger.logDebug(GwLog::LOG,"NodeAddress=%d\n", NodeAddress);
 
   NMEA2000.SetMode(tNMEA2000::N2km_ListenAndNode, NodeAddress);
+  NMEA2000.SetForwardOwnMessages(false);
   // Set the information for other bus devices, which messages we support
   NMEA2000.ExtendTransmitMessages(toN2KConverter->handledPgns());
   NMEA2000.ExtendReceiveMessages(nmea0183Converter->handledPgns());
@@ -363,9 +366,10 @@ void sendBufferToChannels(const char * buffer, int sourceId){
 //*****************************************************************************
 void SendNMEA0183Message(const tNMEA0183Msg &NMEA0183Msg, int sourceId) {
   if ( ! sendTCP->asBoolean() && ! sendUsb->asBoolean() ) return;
-
+  logger.logDebug(GwLog::DEBUG+2,"SendNMEA0183(1)");
   char buf[MAX_NMEA0183_MESSAGE_SIZE+3];
   if ( !NMEA0183Msg.GetMessage(buf, MAX_NMEA0183_MESSAGE_SIZE) ) return;
+  logger.logDebug(GwLog::DEBUG+2,"SendNMEA0183: %s",buf);
   size_t len=strlen(buf);
   buf[len]=0x0d;
   buf[len+1]=0x0a;

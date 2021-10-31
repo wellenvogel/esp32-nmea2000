@@ -27,53 +27,19 @@ private:
             pgn = NULL;
             converter = NULL;
         }
-        ConverterEntry(unsigned long pgn, LConverter cv)
+        ConverterEntry(int num,unsigned long *pgn, LConverter cv)
         {
             lconverter = cv;
-            this->pgn = new unsigned long[1];
-            this->pgn[0] = pgn;
+            numPgn=num;
+            this->pgn = pgn;
         }
-        ConverterEntry(unsigned long pgn, Converter cv = NULL)
+        ConverterEntry(int num,unsigned long *pgn, Converter cv)
         {
             converter = cv;
-            numPgn = 1;
-            this->pgn = new unsigned long[1];
-            this->pgn[0] = pgn;
+            numPgn=num;
+            this->pgn = pgn;
         }
-        ConverterEntry(unsigned long pgn1, unsigned long pgn2, Converter cv = NULL)
-        {
-            converter = cv;
-            numPgn = 2;
-            this->pgn = new unsigned long[2];
-            this->pgn[0] = pgn1;
-            this->pgn[1] = pgn2;
-        }
-        ConverterEntry(unsigned long pgn1, unsigned long pgn2, LConverter cv = NULL)
-        {
-            lconverter = cv;
-            numPgn = 2;
-            this->pgn = new unsigned long[2];
-            this->pgn[0] = pgn1;
-            this->pgn[1] = pgn2;
-        }
-        ConverterEntry(unsigned long pgn1, unsigned long pgn2, unsigned long pgn3, Converter cv = NULL)
-        {
-            converter = cv;
-            numPgn = 3;
-            this->pgn = new unsigned long[3];
-            this->pgn[0] = pgn1;
-            this->pgn[1] = pgn2;
-            this->pgn[2] = pgn3;
-        }
-        ConverterEntry(unsigned long pgn1, unsigned long pgn2, unsigned long pgn3, LConverter cv = NULL)
-        {
-            lconverter = cv;
-            numPgn = 3;
-            this->pgn = new unsigned long[3];
-            this->pgn[0] = pgn1;
-            this->pgn[1] = pgn2;
-            this->pgn[2] = pgn3;
-        }
+        
     };
     typedef std::map<String, ConverterEntry> ConverterMap;
     ConverterMap converters;
@@ -85,32 +51,62 @@ public:
         **/
     void registerConverter(unsigned long pgn, Converter converter)
     {
-        ConverterEntry e(pgn, converter);
+        unsigned long *lpgn=new unsigned long[1]{pgn};
+        ConverterEntry e(1,lpgn, converter);
         converters[String(pgn)] = e;
     }
     void registerConverter(unsigned long pgn, LConverter converter)
     {
-        ConverterEntry e(pgn, converter);
+        unsigned long *lpgn=new unsigned long[1]{pgn};
+        ConverterEntry e(1,lpgn, converter);
         converters[String(pgn)] = e;
     }
     void registerConverter(unsigned long pgn, String sentence, Converter converter)
     {
-        ConverterEntry e(pgn, converter);
+        unsigned long *lpgn=new unsigned long[1]{pgn};
+        ConverterEntry e(1,lpgn, converter);
         converters[sentence] = e;
     }
     void registerConverter(unsigned long pgn, String sentence, LConverter converter)
     {
-        ConverterEntry e(pgn, converter);
+        unsigned long *lpgn=new unsigned long[1]{pgn};
+        ConverterEntry e(1,lpgn, converter);
         converters[sentence] = e;
     }
     void registerConverter(unsigned long pgn, unsigned long pgn2, String sentence, Converter converter)
     {
-        ConverterEntry e(pgn, pgn2, converter);
+        unsigned long *lpgn=new unsigned long[2]{pgn,pgn2};
+        ConverterEntry e(2, lpgn, converter);
         converters[sentence] = e;
     }
     void registerConverter(unsigned long pgn, unsigned long pgn2, String sentence, LConverter converter)
     {
-        ConverterEntry e(pgn, pgn2, converter);
+        unsigned long *lpgn=new unsigned long[2]{pgn,pgn2};
+        ConverterEntry e(2, lpgn, converter);
+        converters[sentence] = e;
+    }
+    void registerConverter(unsigned long pgn, unsigned long pgn2, unsigned long pgn3,String sentence, Converter converter)
+    {
+        unsigned long *lpgn=new unsigned long[3]{pgn,pgn2,pgn3};
+        ConverterEntry e(3, lpgn,converter);
+        converters[sentence] = e;
+    }
+    void registerConverter(unsigned long pgn, unsigned long pgn2, unsigned long pgn3,String sentence, LConverter converter)
+    {
+        unsigned long *lpgn=new unsigned long[3]{pgn,pgn2,pgn3};
+        ConverterEntry e(3, lpgn,converter);
+        converters[sentence] = e;
+    }
+    void registerConverter(unsigned long pgn, unsigned long pgn2, unsigned long pgn3,unsigned long pgn4,String sentence, Converter converter)
+    {
+        unsigned long *lpgn=new unsigned long[4]{pgn,pgn2,pgn3,pgn4};
+        ConverterEntry e(4, lpgn,converter);
+        converters[sentence] = e;
+    }
+    void registerConverter(unsigned long pgn, unsigned long pgn2, unsigned long pgn3,unsigned long pgn4,String sentence, LConverter converter)
+    {
+        unsigned long *lpgn=new unsigned long[4]{pgn,pgn2,pgn3,pgn4};
+        ConverterEntry e(4, lpgn,converter);
         converters[sentence] = e;
     }
 
@@ -139,13 +135,13 @@ public:
 
     virtual unsigned long *handledPgns()
     {
-        //for now max 3 pgns per converter
-        unsigned long *rt = new unsigned long[converters.size() * 3 + 1];
+        //for now max 4 pgns per converter
+        unsigned long *rt = new unsigned long[converters.size() * 4 + 1];
         int idx = 0;
         for (auto it = converters.begin();
              it != converters.end(); it++)
         {
-            for (int i = 0; i < it->second.numPgn && i < 3; i++)
+            for (int i = 0; i < it->second.numPgn && i < 4; i++)
             {
                 bool found = false;
                 for (int e = 0; e < idx; e++)

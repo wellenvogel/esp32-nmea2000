@@ -36,6 +36,7 @@ class GwBoatItemBase{
         }
         virtual void toJsonDoc(JsonDocument *doc, unsigned long minTime)=0;
         virtual size_t getJsonSize(){return JSON_OBJECT_SIZE(4);}
+        virtual int getLastSource()=0;
 };
 class GwBoatData;
 template<class T> class GwBoatItem : public GwBoatItemBase{
@@ -75,6 +76,7 @@ template<class T> class GwBoatItem : public GwBoatItemBase{
             o[F("source")]=lastUpdateSource;
             o[F("valid")]=isValid(minTime);
         }
+        virtual int getLastSource(){return lastUpdateSource;}
 };
 
 static double formatCourse(double cv)
