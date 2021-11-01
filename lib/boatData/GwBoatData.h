@@ -115,6 +115,10 @@ static double formatCourse(double cv)
     {
         return m / 1852;
     }
+    static double mtr2nm(double m)
+    {
+        return m / 1852;
+    }
 
     static double kelvinToC(double v){
         return v-273.15;
@@ -148,6 +152,11 @@ class GwBoatData{
     GWBOATDATA(double,WaterDepth,4000,NULL)
     GWBOATDATA(double,SecondsSinceMidnight,4000,NULL)
     GWBOATDATA(double,WaterTemperature,4000,&kelvinToC)
+    GWBOATDATA(double,XTE,4000,NULL)
+    GWBOATDATA(double,DTW,4000,&mtr2nm)
+    GWBOATDATA(double,BTW,4000,&formatCourse)
+    GWBOATDATA(double,WPLatitude,4000,NULL)
+    GWBOATDATA(double,WPLongitude,4000,NULL)
     GWBOATDATA(uint32_t,Log,0,&mtr2nm)
     GWBOATDATA(uint32_t,TripLog,0,&mtr2nm)
     GWBOATDATA(uint32_t,DaysSince1970,4000,NULL)
