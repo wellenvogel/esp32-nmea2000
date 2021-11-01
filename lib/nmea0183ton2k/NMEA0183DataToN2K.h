@@ -15,6 +15,7 @@ class NMEA0183DataToN2K{
         NMEA0183DataToN2K(GwLog *logger,GwBoatData *boatData,N2kSender callback);
         virtual bool parseAndSend(const char *buffer, int sourceId);
         virtual unsigned long *handledPgns()=0;
+        virtual int numConverters()=0;
         static NMEA0183DataToN2K* create(GwLog *logger,GwBoatData *boatData,N2kSender callback);
 };
 #endif

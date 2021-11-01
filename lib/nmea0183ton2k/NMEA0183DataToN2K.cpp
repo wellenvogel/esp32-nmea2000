@@ -3,6 +3,7 @@
 #include "N2kMessages.h"
 #include "ConverterList.h"
 #include <map>
+#include <strings.h>
 NMEA0183DataToN2K::NMEA0183DataToN2K(GwLog *logger, GwBoatData *boatData,N2kSender callback)
 {
     this->sender = callback;
@@ -16,11 +17,29 @@ bool NMEA0183DataToN2K::parseAndSend(const char *buffer, int sourceId) {
     return false;
 }
 
-class SNMEA0183Msg {
+class SNMEA0183Msg : public tNMEA0183Msg{
         public:
             int sourceId;
             const char *line;
-            tNMEA0183Msg msg;
+            bool isAis=false;
+            SNMEA0183Msg(const char *line, int sourceId){
+                this->sourceId=sourceId;
+                this->line=line;
+                int len=strlen(line);
+                if (len >6){
+                    if (strncasecmp(line,"!AIVDM",6) == 0
+                        ||
+                        strncasecmp(line,"!AIVDO",6) == 0
+                    ) isAis=true;
+                }
+            }
+            String getKey(){
+                if (!isAis) return MessageCode();
+                char buf[6];
+                strncpy(buf,line+1,5);
+                return String(buf);
+            }
+
     };
 class NMEA0183DataToN2KFunctions : public NMEA0183DataToN2K
 {
@@ -74,7 +93,7 @@ private:
         unsigned long DaysSince1970=0;
         time_t DateTime;
         char status;
-        if (!NMEA0183ParseRMC_nc(msg.msg, SecondsSinceMidnight, status, Latitude, Longitude, COG, SOG, DaysSince1970, Variation, &DateTime))
+        if (!NMEA0183ParseRMC_nc(msg, SecondsSinceMidnight, status, Latitude, Longitude, COG, SOG, DaysSince1970, Variation, &DateTime))
         {
             logger->logDebug(GwLog::DEBUG, "failed to parse RMC %s", msg.line);
             return;
@@ -120,15 +139,15 @@ public:
     virtual bool parseAndSend(const char *buffer, int sourceId)
     {
         LOG_DEBUG(GwLog::DEBUG + 1, "NMEA0183DataToN2K[%d] parsing %s", sourceId, buffer)
-        SNMEA0183Msg msg;
-        msg.sourceId=sourceId;
-        msg.line=buffer;
-        if (!msg.msg.SetMessage(buffer))
-        {
-            LOG_DEBUG(GwLog::DEBUG, "NMEA0183DataToN2K[%d] invalid message %s", sourceId, buffer)
-            return false;
+        SNMEA0183Msg msg(buffer,sourceId);
+        if (! msg.isAis){
+            if (!msg.SetMessage(buffer))
+            {
+                LOG_DEBUG(GwLog::DEBUG, "NMEA0183DataToN2K[%d] invalid message %s", sourceId, buffer)
+                return false;
+            }
         }
-        String code = msg.msg.MessageCode();
+        String code = msg.getKey();
         bool rt = converters.handleMessage(code, msg, this);
         if (!rt)
         {
@@ -143,6 +162,10 @@ public:
     virtual unsigned long *handledPgns()
     {
         return converters.handledPgns();
+    }
+
+    virtual int numConverters(){
+        return converters.numConverters();
     }
 
     NMEA0183DataToN2KFunctions(GwLog *logger, GwBoatData *boatData, N2kSender callback)
