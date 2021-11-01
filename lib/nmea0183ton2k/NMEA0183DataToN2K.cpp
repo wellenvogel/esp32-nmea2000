@@ -66,15 +66,13 @@ private:
     }
     bool updateDouble(GwBoatItem<double> *target,double v, int sourceId){
         if (v != NMEA0183DoubleNA){
-            target->update(v,sourceId);
-            return true;
+            return target->update(v,sourceId);
         }
         return false;
     }
     bool updateUint32(GwBoatItem<uint32_t> *target,uint32_t v, int sourceId){
         if (v != NMEA0183UInt32NA){
-            target->update(v,sourceId);
-            return true;
+            return target->update(v,sourceId);
         }
         return v;
     }

@@ -14,8 +14,9 @@ class GwBoatItemBase{
         unsigned long lastSet=0;
         unsigned long invalidTime=INVALID_TIME;
         String name;
-        void uls(){
-            lastSet=millis();
+        void uls(unsigned long ts=0){
+            if (ts) lastSet=ts;
+            else lastSet=millis();
         }
     public:
         unsigned long getLastSet() const {return lastSet;}
@@ -35,7 +36,7 @@ class GwBoatItemBase{
             lastSet=0;
         }
         virtual void toJsonDoc(JsonDocument *doc, unsigned long minTime)=0;
-        virtual size_t getJsonSize(){return JSON_OBJECT_SIZE(4);}
+        virtual size_t getJsonSize(){return JSON_OBJECT_SIZE(5);}
         virtual int getLastSource()=0;
 };
 class GwBoatData;
@@ -56,10 +57,20 @@ template<class T> class GwBoatItem : public GwBoatItemBase{
             lastUpdateSource=-1;
         }
         virtual ~GwBoatItem(){}
-        void update(T nv, int source=-1){
+        bool update(T nv, int source=-1){
+            unsigned long now=millis();
+            if (isValid(now)){
+                //priority handling
+                //sources with lower ids will win
+                //and we will not overwrite their value
+                if (lastUpdateSource < source){
+                    return false;
+                }
+            }
             data=nv;
             lastUpdateSource=source;
-            uls();
+            uls(now);
+            return true;
         }
         T getData(bool useFormatter=false){
             if (! useFormatter || fmt == NULL) return data;

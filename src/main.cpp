@@ -467,6 +467,7 @@ void loop() {
 
   //read channels
   socketServer.readMessages(&receiver);
+  receiver.id=USB_CHANNEL_ID;
   usbSerial.readMessages(&receiver);
 
   //handle message requests
