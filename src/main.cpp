@@ -327,12 +327,21 @@ void setup() {
   NodeAddress = preferences.getInt("LastNodeAddress", 32);  // Read stored last NodeAddress, default 32
   preferences.end();
 
-  logger.logDebug(GwLog::LOG,"NodeAddress=%d\n", NodeAddress);
-
+  logger.logDebug(GwLog::LOG,"NodeAddress=%d", NodeAddress);
+  usbSerial.flush();
   NMEA2000.SetMode(tNMEA2000::N2km_ListenAndNode, NodeAddress);
   NMEA2000.SetForwardOwnMessages(false);
   // Set the information for other bus devices, which messages we support
-  NMEA2000.ExtendTransmitMessages(toN2KConverter->handledPgns());
+  unsigned long *pgns=toN2KConverter->handledPgns();
+  if (logger.isActive(GwLog::DEBUG)){
+    unsigned long *op=pgns;
+    while (*op != 0){
+      logger.logDebug(GwLog::DEBUG,"add transmit pgn %ld",(long)(*op));
+      usbSerial.flush();
+      op++;
+    }
+  }
+  NMEA2000.ExtendTransmitMessages(pgns);
   NMEA2000.ExtendReceiveMessages(nmea0183Converter->handledPgns());
   NMEA2000.SetMsgHandler([](const tN2kMsg &n2kMsg){
     numCan++;
