@@ -67,7 +67,7 @@ size_t GwSerial::enqueue(const uint8_t *data, size_t len)
 }
 GwBuffer::WriteStatus GwSerial::write(){
     if (! isInitialized()) return GwBuffer::ERROR;
-    return buffer->fetchData(writer,false);
+    return buffer->fetchData(writer,-1,false);
 }
 void GwSerial::sendToClients(const char *buf,int sourceId){
     if ( sourceId == id) return;
@@ -92,4 +92,11 @@ bool GwSerial::readMessages(GwBufferWriter *writer){
     if (! isInitialized()) return false;
     if (! allowRead) return false;
     return readBuffer->fetchMessage(writer,'\n',true) == GwBuffer::OK;
+}
+
+void GwSerial::flush(){
+   if (! isInitialized()) return; 
+   while (buffer->fetchData(writer,-1,false) == GwBuffer::AGAIN){
+       vTaskDelay(1);
+   }
 }

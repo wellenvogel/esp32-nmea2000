@@ -26,5 +26,6 @@ class GwSerial{
         void sendToClients(const char *buf,int sourceId);
         void loop(bool handleRead=true);
         bool readMessages(GwBufferWriter *writer);
+        void flush();
 };
 #endif
