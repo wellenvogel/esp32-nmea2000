@@ -14,8 +14,8 @@
 
 #define VERSION "0.3.1"
 
-//#define GW_MESSAGE_DEBUG_ENABLED
-//#define FALLBACK_SERIAL
+// #define GW_MESSAGE_DEBUG_ENABLED
+// #define FALLBACK_SERIAL
 const unsigned long HEAP_REPORT_TIME=2000; //set to 0 to disable heap reporting
 #include "GwHardware.h"
 

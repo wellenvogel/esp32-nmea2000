@@ -38,6 +38,7 @@ class SNMEA0183Msg : public tNMEA0183Msg{
                 if (!isAis) return MessageCode();
                 char buf[6];
                 strncpy(buf,line+1,5);
+                buf[5]=0;
                 return String(buf);
             }
 
@@ -233,7 +234,7 @@ private:
         converters.registerConverter(
             126992UL,129025UL,129026UL,127258UL, 
             String(F("RMC")),  &NMEA0183DataToN2KFunctions::convertRMC);
-        unsigned long aispgns[7]{129810UL,129809UL,129040UL,129039UL,129802UL,129794UL,129038UL};
+        unsigned long *aispgns=new unsigned long[7]{129810UL,129809UL,129040UL,129039UL,129802UL,129794UL,129038UL};
         converters.registerConverter(7,&aispgns[0],
             String(F("AIVDM")),&NMEA0183DataToN2KFunctions::convertAIVDX);
         converters.registerConverter(7,&aispgns[0],
@@ -256,7 +257,7 @@ public:
         bool rt = converters.handleMessage(code, msg, this);
         if (!rt)
         {
-            LOG_DEBUG(GwLog::DEBUG, "NMEA0183DataToN2K[%d] no handler for %s", sourceId, buffer);
+            LOG_DEBUG(GwLog::DEBUG, "NMEA0183DataToN2K[%d] no handler for (%s) %s", sourceId, code.c_str(), buffer);
         }
         else{
             LOG_DEBUG(GwLog::DEBUG+1, "NMEA0183DataToN2K[%d] handler done ", sourceId);
@@ -276,7 +277,7 @@ public:
     NMEA0183DataToN2KFunctions(GwLog *logger, GwBoatData *boatData, N2kSender callback)
         : NMEA0183DataToN2K(logger, boatData, callback)
     {
-        aisDecoder= new MyAisDecoder(this->sender);
+        aisDecoder= new MyAisDecoder(logger,this->sender);
         registerConverters();
         LOG_DEBUG(GwLog::LOG, "NMEA0183DataToN2KFunctions: registered %d converters", converters.numConverters());
     }

@@ -234,7 +234,8 @@ namespace AIS
             Decode next sentence (starts reading from input buffer with the specified offset; returns the number of bytes processed, or 0 when no more messages can be decoded).
             Has to be called until it returns 0, to ensure that any buffered multi-line strings are backed up properly.
          */
-        size_t decodeMsg(const char *_pNmeaBuffer, size_t _uBufferSize, size_t _uOffset, const SentenceParser &_parser);
+        size_t decodeMsg(const char *_pNmeaBuffer, size_t _uBufferSize, size_t _uOffset, 
+            const SentenceParser &_parser, bool treatAsComplete=false);
         
         /// returns the total number of messages processed
         uint64_t getTotalMessageCount() const {return m_uTotalMessages;}

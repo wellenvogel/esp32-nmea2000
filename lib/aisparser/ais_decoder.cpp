@@ -842,11 +842,18 @@ bool AisDecoder::checkTalkerId(const StringRef &_strTalkerId)
   Decode next sentence (starts reading from input buffer with the specified offset; returns the number of bytes processed, or 0 when no more messages can be decoded).
   Has to be called until it returns 0, to ensure that any buffered multi-line strings are backed up properly.
 */
-size_t AisDecoder::decodeMsg(const char *_pNmeaBuffer, size_t _uBufferSize, size_t _uOffset, const SentenceParser &_parser)
+size_t AisDecoder::decodeMsg(const char *_pNmeaBuffer, size_t _uBufferSize, size_t _uOffset, 
+  const SentenceParser &_parser, bool treatAsComplete)
 {
   // process and decode AIS strings
   StringRef strLine;
-  size_t n = getLine(strLine, _pNmeaBuffer, _uBufferSize, _uOffset);
+  size_t n = 0;
+  if (treatAsComplete){
+    strLine=StringRef(_pNmeaBuffer+_uOffset,_uBufferSize);
+  } 
+  else{
+    n=getLine(strLine, _pNmeaBuffer, _uBufferSize, _uOffset);
+  }
   if (strLine.size() > 2)      // ignore empty lines
   {
     // clear user data
