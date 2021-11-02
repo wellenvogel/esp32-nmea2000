@@ -103,6 +103,10 @@
       })
   }
   function factoryReset(){
+    if (! confirm("Really delete all configuration?\n"+
+       "This will reset all your Wifi settings and disconnect you.")){
+         return;
+       }
     getJson("/api/resetConfig")
       .then(function(status){
         alertRestart(); 
