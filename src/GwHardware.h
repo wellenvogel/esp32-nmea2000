@@ -13,10 +13,16 @@
 */
 #ifndef _GWHARDWARE_H
 #define _GWHARDWARE_H
+
+//SERIAL_MODE can be: UNI (RX or TX only), BI (both), RX, TX
 //board specific pins
 #ifdef BOARD_M5ATOM
 #define ESP32_CAN_TX_PIN GPIO_NUM_22
 #define ESP32_CAN_RX_PIN GPIO_NUM_19
+//if using tail485
+#define GWSERIAL_TX 26
+#define GWSERIAL_RX 32
+#define GWSERIAL_MODE "UNI"
 #elif BOARD_M5ATOM_CANUNIT
 #define ESP32_CAN_TX_PIN GPIO_NUM_26
 #define ESP32_CAN_RX_PIN GPIO_NUM_32
@@ -26,6 +32,8 @@
 #else
 #define ESP32_CAN_TX_PIN GPIO_NUM_5  // Set CAN TX port to 5 (Caution!!! Pin 2 before)
 #define ESP32_CAN_RX_PIN GPIO_NUM_4  // Set CAN RX port to 4
+#define GWSERIAL_RX GPIO_NUM_16
+#define GWSERIAL_MODE "RX"
 #endif
 
 #endif

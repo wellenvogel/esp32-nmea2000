@@ -21,9 +21,9 @@ class GwConfigHandler: public GwConfigDefinitions{
         bool reset(bool save);
         String toString() const;
         String toJson() const;
-        String getString(const String name) const;
-        bool getBool(const String name) const ;
-        int getInt(const String name) const;
+        String getString(const String name,const String defaultv="") const;
+        bool getBool(const String name,bool defaultv=false) const ;
+        int getInt(const String name,int defaultv=0) const;
         GwConfigItem * findConfig(const String name, bool dummy=false);
         GwConfigInterface * getConfigItem(const String name, bool dummy=false) const;
     private:

@@ -37,6 +37,48 @@
         "description": "convert NMEA0183 from the USB port to NMEA2000"
     },
     {
+        "name": "serialDirection",
+        "label": "serial direction",
+        "type": "list",
+        "default": "receive",
+        "list": ["send","receive","off"],
+        "description": "use the serial port to send or receive data",
+        "capabilities":{"serialmode":["UNI"]}
+    },
+    {
+        "name": "serialBaud",
+        "label": "serial baud rate",
+        "type": "list",
+        "default": "115200",
+        "description": "baud rate for the serial port",
+        "list": [1200,2400,4800,9600,14400,19200,28800,38400,57600,115200,230400,460800],
+        "capabilities":{"serialmode":["RX","TX","UNI","BI"]}
+    },
+    {
+        "name": "sendSerial",
+        "label": "NMEA to Serial",
+        "type": "boolean",
+        "default": "true",
+        "description": "send out NMEA data on the serial port",
+        "capabilities":{"serialmode":["TX","BI"]}
+    },
+    {
+        "name": "receiveSerial",
+        "label": "NMEA from Serial",
+        "type": "boolean",
+        "default": "true",
+        "description": "receive NMEA data on the serial port",
+        "capabilities":{"serialmode":["RX","BI"]}
+    },
+    {
+        "name": "serialToN2k",
+        "label": "serial to NMEA2000",
+        "type": "boolean",
+        "default": "true",
+        "description": "convert NMEA0183 from the serial port to NMEA2000",
+        "capabilities":{"serialmode":["RX","BI","UNI"]}
+    },
+    {
         "name": "serverPort",
         "label": "TCP port",
         "type": "number",
@@ -60,14 +102,14 @@
     },
     {
         "name": "readTCP",
-        "label": "TCP to NMEA2000",
+        "label": "NMEA from TCP",
         "type": "boolean",
         "default": "true",
         "description": "receive NMEA data from connected TCP clients"
     },
     {
         "name": "tcpToN2k",
-        "label": "NMEA from TCP",
+        "label": "TCP to NMEA2000",
         "type": "boolean",
         "default": "true",
         "description": "convert NMEA0183 from TCP clients to NMEA2000"

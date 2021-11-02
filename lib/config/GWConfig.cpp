@@ -31,8 +31,9 @@ String GwConfigHandler::toString() const{
 
 String GwConfigHandler::toJson() const{
     String rt;
-    DynamicJsonDocument jdoc(400);
-    for (int i=0;i<getNumConfig();i++){
+    int num=getNumConfig();
+    DynamicJsonDocument jdoc(JSON_OBJECT_SIZE(num*2));
+    for (int i=0;i<num;i++){
         jdoc[configs[i]->getName()]=configs[i]->asCString();
     }
     serializeJson(jdoc,rt);
@@ -98,18 +99,18 @@ bool GwConfigHandler::reset(bool save){
     if (!save) return true;
     return saveConfig();
 }
-String GwConfigHandler::getString(const String name) const{
+String GwConfigHandler::getString(const String name, String defaultv) const{
     GwConfigInterface *i=getConfigItem(name,false);
-    if (!i) return String();
+    if (!i) return defaultv;
     return i->asString();
 }
-bool GwConfigHandler::getBool(const String name) const{
+bool GwConfigHandler::getBool(const String name, bool defaultv) const{
     GwConfigInterface *i=getConfigItem(name,false);
-    if (!i) return false;
+    if (!i) return defaultv;
     return i->asBoolean();
 }
-int GwConfigHandler::getInt(const String name) const{
+int GwConfigHandler::getInt(const String name,int defaultv) const{
     GwConfigInterface *i=getConfigItem(name,false);
-    if (!i) return 0;
+    if (!i) return defaultv;
     return i->asInt();
 }

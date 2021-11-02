@@ -7,7 +7,9 @@
 <script type="text/javascript">
   let self=this;
   let lastUpdate=(new Date()).getTime();
+  let reloadConfig=false;
   function alertRestart(){
+    reloadConfig=true;
     alert("Board reset triggered, reconnect WLAN if necessary");
   }
   function getJson(url){
@@ -41,6 +43,10 @@
           }
         }
         lastUpdate=(new Date()).getTime();
+        if (reloadConfig){
+          reloadConfig=false;
+          resetForm();
+        }
       })
   }
   function resetForm(ev){
@@ -180,53 +186,67 @@
     return el;
   }
   let configDefinitions;
-  function loadConfigDefinitions(){
-    getJson("config.json")
-      .then(function(defs){
-        let frame=document.querySelector('.configFormRows');
-        if (! frame) throw Error("no config form");
-        frame.innerHTML='';
-        configDefinitions=defs;
-        defs.forEach(function(item){
-          if (! item.type) return;
-          let row=document.createElement('div');
-          row.classList.add('row');
-          let label=item.label || item.name;
-          let labelEl=document.createElement('span');
-          labelEl.classList.add('label');
-          labelEl.textContent=label;
-          row.appendChild(labelEl);
-          let valueEl=createInput(item);
-          if (!valueEl) return;
-          valueEl.setAttribute('data-default',item.default);
-          valueEl.addEventListener('change',function(ev){
-            let el=ev.target;
-            checkChange(el);
-          })
-          if (item.check) valueEl.setAttribute('data-check',item.check);
-          row.appendChild(valueEl);
-          let bt=document.createElement('button');
-          bt.classList.add('defaultButton');
-          bt.setAttribute('data-default',item.default);
-          bt.addEventListener('click',function(ev){
-            valueEl.value=valueEl.getAttribute('data-default');
-            checkChange(valueEl);
-          })
-          bt.textContent="X";
-          row.appendChild(bt);
-          bt=document.createElement('button');
-          bt.classList.add('infoButton');
-          bt.addEventListener('click',function(ev){
-            alert(item.description);
-          });
-          bt.textContent="?";
-          row.appendChild(bt);
-          frame.appendChild(row);
+  function loadConfigDefinitions() {
+      getJson("api/capabilities")
+        .then(function (capabilities) {
+          getJson("config.json")
+            .then(function (defs) {
+              let frame = document.querySelector('.configFormRows');
+              if (!frame) throw Error("no config form");
+              frame.innerHTML = '';
+              configDefinitions = defs;
+              defs.forEach(function (item) {
+                if (!item.type) return;
+                if (item.capabilities !== undefined){
+                  for (let capability in item.capabilities){
+                    let values=item.capabilities[capability];
+                    if ( !capabilities[capability]) return;
+                    let found =false;
+                    values.forEach(function(v){
+                      if (capabilities[capability] == v) found=true;
+                    });
+                    if (! found) return;
+                  }
+                }
+                let row = document.createElement('div');
+                row.classList.add('row');
+                let label = item.label || item.name;
+                let labelEl = document.createElement('span');
+                labelEl.classList.add('label');
+                labelEl.textContent = label;
+                row.appendChild(labelEl);
+                let valueEl = createInput(item);
+                if (!valueEl) return;
+                valueEl.setAttribute('data-default', item.default);
+                valueEl.addEventListener('change', function (ev) {
+                  let el = ev.target;
+                  checkChange(el);
+                })
+                if (item.check) valueEl.setAttribute('data-check', item.check);
+                row.appendChild(valueEl);
+                let bt = document.createElement('button');
+                bt.classList.add('defaultButton');
+                bt.setAttribute('data-default', item.default);
+                bt.addEventListener('click', function (ev) {
+                  valueEl.value = valueEl.getAttribute('data-default');
+                  checkChange(valueEl);
+                })
+                bt.textContent = "X";
+                row.appendChild(bt);
+                bt = document.createElement('button');
+                bt.classList.add('infoButton');
+                bt.addEventListener('click', function (ev) {
+                  alert(item.description);
+                });
+                bt.textContent = "?";
+                row.appendChild(bt);
+                frame.appendChild(row);
+              })
+              resetForm();
+            })
         })
-        resetForm();
-      })
-      .catch(function(err){alert("unable to load config: "+err)})
-  }
+        .catch(function (err) { alert("unable to load config: " + err) })
+    }
   window.setInterval(update,1000);
   window.addEventListener('load',function(){
   let buttons=document.querySelectorAll('button');

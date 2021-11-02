@@ -12,7 +12,7 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#define VERSION "0.3.1"
+#define VERSION "0.4.0"
 
 // #define GW_MESSAGE_DEBUG_ENABLED
 // #define FALLBACK_SERIAL
@@ -81,19 +81,26 @@ GwRequestQueue mainQueue(&logger,20);
 GwWebServer webserver(&logger,&mainQueue,80);
 
 //configs that we need in main
-GwConfigInterface *sendUsb=NULL;
-GwConfigInterface *sendTCP=NULL;
-GwConfigInterface *sendSeasmart=NULL;
-GwConfigInterface *systemName=NULL;
-GwConfigInterface *n2kFromUSB=NULL;
-GwConfigInterface *n2kFromTCP=NULL;
 
-GwSerial usbSerial(NULL, UART_NUM_0, USB_CHANNEL_ID);
+GwConfigInterface *sendUsb=config.getConfigItem(config.sendUsb,true);
+GwConfigInterface *sendTCP=config.getConfigItem(config.sendTCP,true);
+GwConfigInterface *sendSeasmart=config.getConfigItem(config.sendSeasmart,true);
+GwConfigInterface *systemName=config.getConfigItem(config.systemName,true);
+GwConfigInterface *n2kFromTCP=config.getConfigItem(config.tcpToN2k,true);
+GwConfigInterface *n2kFromUSB=config.getConfigItem(config.usbToN2k,true);
+GwConfigInterface *receiveSerial=config.getConfigItem(config.receiveSerial,true);
+GwConfigInterface *sendSerial=config.getConfigItem(config.sendSerial,true);
+GwConfigInterface *n2kFromSerial=config.getConfigItem(config.serialToN2k,true);
+
+GwSerial *usbSerial = new GwSerial(NULL, UART_NUM_0, USB_CHANNEL_ID);
+GwSerial *serial1=NULL;
+
+
 class GwSerialLog : public GwLogWriter{
   public:
     virtual ~GwSerialLog(){}
     virtual void write(const char *data){
-      usbSerial.sendToClients(data,-1); //ignore any errors
+      usbSerial->sendToClients(data,-1); //ignore any errors
     }
 
 };
@@ -144,6 +151,22 @@ protected:
     nmea0183Converter->toJson(status);
     serializeJson(status, result);
   }
+};
+
+class CapabilitiesRequest : public GwRequestMessage{
+  public:
+    CapabilitiesRequest() : GwRequestMessage(F("application/json"),F("capabilities")){};
+  protected:
+    virtual void processRequest(){
+      DynamicJsonDocument json(JSON_OBJECT_SIZE(2));
+      #ifdef GWSERIAL_MODE
+      String serial(F(GWSERIAL_MODE));
+      #else
+      String serial(F("NONE"));
+      #endif
+      json["serialmode"]=serial;
+      serializeJson(json,result);
+    }  
 };
 class ConfigRequest : public GwRequestMessage
 {
@@ -236,7 +259,7 @@ void setup() {
 #ifdef FALLBACK_SERIAL
   int st=-1;
 #else
-  int st=usbSerial.setup(baud,3,1); //TODO: PIN defines  
+  int st=usbSerial->setup(baud,3,1); //TODO: PIN defines  
 #endif  
   if (st < 0){
     //falling back to old style serial for logging
@@ -251,20 +274,47 @@ void setup() {
     logger.logDebug(GwLog::LOG,"created GwSerial for USB port");
   }  
   logger.logDebug(GwLog::LOG,"config: %s", config.toString().c_str());
-  sendUsb=config.getConfigItem(config.sendUsb,true);
-  sendTCP=config.getConfigItem(config.sendTCP,true);
-  sendSeasmart=config.getConfigItem(config.sendSeasmart,true);
-  systemName=config.getConfigItem(config.systemName,true);
-  n2kFromTCP=config.getConfigItem(config.tcpToN2k,true);
-  n2kFromUSB=config.getConfigItem(config.usbToN2k,true);
+  #ifdef GWSERIAL_MODE
+  int serialrx=UART_PIN_NO_CHANGE;
+  int serialtx=UART_PIN_NO_CHANGE;
+  #ifdef GWSERIAL_TX
+  serialtx=GWSERIAL_TX;
+  #endif
+  #ifdef GWSERIAL_RX
+  serialrx=GWSERIAL_RX;
+  #endif
+  String serialDirection=config.getString(config.serialDirection);
+  //we only consider the direction if mode is UNI
+  String serialMode(F(GWSERIAL_MODE));
+  if (serialMode != String("UNI")){
+    serialDirection=String("");
+  }
+  if (serialDirection == "receive" || serialDirection == "off") serialtx=UART_PIN_NO_CHANGE;
+  if (serialDirection == "send" || serialDirection == "off") serialrx=UART_PIN_NO_CHANGE;
+  logger.logDebug(GwLog::DEBUG,"serial set up: mode=%s,direction=%s,rx=%d,tx=%d",
+    serialMode.c_str(),serialDirection.c_str(),serialrx,serialtx
+  );
+  if (serialtx != UART_PIN_NO_CHANGE || serialrx != UART_PIN_NO_CHANGE){
+    logger.logDebug(GwLog::LOG,"creating serial interface rx=%d, tx=%d",serialrx,serialtx);
+    serial1=new GwSerial(&logger,UART_NUM_1,SERIAL1_CHANNEL_ID,true);
+  }
+  if (serial1){
+    serial1->setup(config.getInt(config.serialBaud,115200),serialrx,serialtx);
+  }
+  #endif
+  
   MDNS.begin(config.getConfigItem(config.systemName)->asCString());
   gwWifi.setup();
 
   // Start TCP server
   socketServer.begin();
+  usbSerial->flush();
 
   webserver.registerMainHandler("/api/reset", [](AsyncWebServerRequest *request)->GwRequestMessage *{
     return new ResetRequest();
+  });
+  webserver.registerMainHandler("/api/capabilities", [](AsyncWebServerRequest *request)->GwRequestMessage *{
+    return new CapabilitiesRequest();
   });
   webserver.registerMainHandler("/api/status", [](AsyncWebServerRequest *request)->GwRequestMessage *
                               { return new StatusRequest(); });
@@ -328,7 +378,7 @@ void setup() {
   preferences.end();
 
   logger.logDebug(GwLog::LOG,"NodeAddress=%d", NodeAddress);
-  usbSerial.flush();
+  usbSerial->flush();
   NMEA2000.SetMode(tNMEA2000::N2km_ListenAndNode, NodeAddress);
   NMEA2000.SetForwardOwnMessages(false);
   // Set the information for other bus devices, which messages we support
@@ -337,7 +387,7 @@ void setup() {
     unsigned long *op=pgns;
     while (*op != 0){
       logger.logDebug(GwLog::DEBUG,"add transmit pgn %ld",(long)(*op));
-      usbSerial.flush();
+      usbSerial->flush();
       op++;
     }
   }
@@ -368,7 +418,10 @@ void sendBufferToChannels(const char * buffer, int sourceId){
     socketServer.sendToClients(buffer,sourceId);
   }
   if (sendUsb->asBoolean()){
-    usbSerial.sendToClients(buffer,sourceId);
+    usbSerial->sendToClients(buffer,sourceId);
+  }
+  if (sendSerial->asBoolean() && serial1){
+    serial1->sendToClients(buffer,sourceId);
   }
 }
 
@@ -388,7 +441,8 @@ void SendNMEA0183Message(const tNMEA0183Msg &NMEA0183Msg, int sourceId) {
 
 void handleReceivedNmeaMessage(const char *buf, int sourceId){
   if ((sourceId == USB_CHANNEL_ID && n2kFromUSB->asBoolean())||
-      (sourceId >= MIN_TCP_CHANNEL_ID && n2kFromTCP->asBoolean())
+      (sourceId >= MIN_TCP_CHANNEL_ID && n2kFromTCP->asBoolean())||
+      (sourceId == SERIAL1_CHANNEL_ID && n2kFromSerial)
     )
     toN2KConverter->parseAndSend(buf,sourceId);
   sendBufferToChannels(buf,sourceId);
@@ -396,7 +450,8 @@ void handleReceivedNmeaMessage(const char *buf, int sourceId){
 
 void handleSendAndRead(bool handleRead){
   socketServer.loop(handleRead);  
-  usbSerial.loop(handleRead);
+  usbSerial->loop(handleRead);
+  if (serial1) serial1->loop(handleRead);
 }
 class NMEAMessageReceiver : public GwBufferWriter{
   uint8_t buffer[GwBuffer::RX_BUFFER_SIZE+4];
@@ -468,7 +523,9 @@ void loop() {
   //read channels
   socketServer.readMessages(&receiver);
   receiver.id=USB_CHANNEL_ID;
-  usbSerial.readMessages(&receiver);
+  usbSerial->readMessages(&receiver);
+  receiver.id=SERIAL1_CHANNEL_ID;
+  if (serial1) serial1->readMessages(&receiver);
 
   //handle message requests
   GwMessage *msg=mainQueue.fetchMessage(0);
