@@ -57,11 +57,11 @@ private:
                 this->lastUsed=ts;
             }
     };
-    std::map<String,WaypointNumber> waypointMap;
-    unsigned long waypointId=0;
     const size_t MAXWAYPOINTS=100;
+    std::map<String,WaypointNumber> waypointMap;
+    uint8_t waypointId=1;
     
-    unsigned long getWaypointId(const char *name){
+    uint8_t getWaypointId(const char *name){
         String wpName(name);
         auto it=waypointMap.find(wpName);
         if (it != waypointMap.end()){
@@ -70,6 +70,7 @@ private:
         }
         unsigned long now=millis();
         auto oldestIt=waypointMap.begin();
+        uint8_t newNumber=0;
         if (waypointMap.size() > MAXWAYPOINTS){
             LOG_DEBUG(GwLog::DEBUG+1,"removing oldest from waypoint map");
             for (it=waypointMap.begin();it!=waypointMap.end();it++){
@@ -77,10 +78,14 @@ private:
                     oldestIt=it;
                 }
             }
+            newNumber=oldestIt->second.id;
             waypointMap.erase(oldestIt);
         }
-        waypointId++;
-        WaypointNumber newWp(waypointId,now);
+        else{
+            waypointId++;
+            newNumber=waypointId;
+        }
+        WaypointNumber newWp(newNumber,now);
         waypointMap[wpName]=newWp;
         return newWp.id;
     }
@@ -115,6 +120,8 @@ private:
     uint32_t getUint32(GwBoatItem<uint32_t> *src){
         return src->getDataWithDefault(N2kUInt32NA);
     }
+    #define UD(item) updateDouble(boatData->item, item, msg.sourceId)
+    #define UI(item) updateUint32(boatData->item, item, msg.sourceId)
     void convertRMB(const SNMEA0183Msg &msg)
     {
         LOG_DEBUG(GwLog::DEBUG + 1, "convert RMB");
@@ -149,6 +156,8 @@ private:
             SetN2kXTE(n2kMsg,1,mode,false,rmb.xte);
             send(n2kMsg);
         }
+        uint8_t destinationId=getWaypointId(rmb.destID);
+        uint8_t sourceId=getWaypointId(rmb.originID);
         if (boatData->DTW->update(rmb.dtw,msg.sourceId)
             && boatData->BTW->update(rmb.btw,msg.sourceId)
             && boatData->WPLatitude->update(rmb.latitude,msg.sourceId)
@@ -162,17 +171,18 @@ private:
                 N2kUInt16NA,
                 N2kDoubleNA,
                 rmb.btw,
-                getWaypointId(rmb.originID),
-                getWaypointId(rmb.destID),
+                sourceId,
+                destinationId,
                 rmb.latitude,
                 rmb.longitude,
                 rmb.vmg
             );
             send(n2kMsg);
-        }
+            SetN2kPGN129285(n2kMsg,sourceId,1,1,true,true,"default");
+            AppendN2kPGN129285(n2kMsg,destinationId,rmb.destID,rmb.latitude,rmb.longitude);
+            send(n2kMsg);
+            }
     }
-    #define UD(item) updateDouble(boatData->item, item, msg.sourceId)
-    #define UI(item) updateUint32(boatData->item, item, msg.sourceId)
     void convertRMC(const SNMEA0183Msg &msg)
     {
         double SecondsSinceMidnight=0, Latitude=0, Longitude=0, COG=0, SOG=0, Variation=0;
