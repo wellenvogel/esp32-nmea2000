@@ -4,6 +4,7 @@
 #include "ConverterList.h"
 #include <map>
 #include <strings.h>
+#include "NMEA0183AIStoNMEA2000.h"
 NMEA0183DataToN2K::NMEA0183DataToN2K(GwLog *logger, GwBoatData *boatData,N2kSender callback)
 {
     this->sender = callback;
@@ -44,7 +45,7 @@ class SNMEA0183Msg : public tNMEA0183Msg{
 class NMEA0183DataToN2KFunctions : public NMEA0183DataToN2K
 {
 private:   
-    double dummy = 0;
+    MyAisDecoder *aisDecoder=NULL;
     ConverterList<NMEA0183DataToN2KFunctions, SNMEA0183Msg> converters;
     std::map<unsigned long,unsigned long> lastSends;
     class WaypointNumber{
@@ -220,7 +221,9 @@ private:
         }
 
     }
-
+    void convertAIVDX(const SNMEA0183Msg &msg){
+        aisDecoder->handleMessage(msg.line);
+    }
 //shortcut for lambda converters
 #define CVL [](const SNMEA0183Msg &msg, NMEA0183DataToN2KFunctions *p) -> void
     void registerConverters()
@@ -230,6 +233,11 @@ private:
         converters.registerConverter(
             126992UL,129025UL,129026UL,127258UL, 
             String(F("RMC")),  &NMEA0183DataToN2KFunctions::convertRMC);
+        unsigned long aispgns[7]{129810UL,129809UL,129040UL,129039UL,129802UL,129794UL,129038UL};
+        converters.registerConverter(7,&aispgns[0],
+            String(F("AIVDM")),&NMEA0183DataToN2KFunctions::convertAIVDX);
+        converters.registerConverter(7,&aispgns[0],
+            String(F("AIVDO")),&NMEA0183DataToN2KFunctions::convertAIVDX);    
     }
 
 public:
@@ -268,6 +276,7 @@ public:
     NMEA0183DataToN2KFunctions(GwLog *logger, GwBoatData *boatData, N2kSender callback)
         : NMEA0183DataToN2K(logger, boatData, callback)
     {
+        aisDecoder= new MyAisDecoder(this->sender);
         registerConverters();
         LOG_DEBUG(GwLog::LOG, "NMEA0183DataToN2KFunctions: registered %d converters", converters.numConverters());
     }

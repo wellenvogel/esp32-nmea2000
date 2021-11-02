@@ -73,6 +73,16 @@ public:
         ConverterEntry e(1,lpgn, converter);
         converters[sentence] = e;
     }
+    void registerConverter(int num,unsigned long *lpgn, String sentence, Converter converter)
+    {
+        ConverterEntry e(num,lpgn, converter);
+        converters[sentence] = e;
+    }
+    void registerConverter(int num,unsigned long *lpgn, String sentence, LConverter converter)
+    {
+        ConverterEntry e(num,lpgn, converter);
+        converters[sentence] = e;
+    }
     void registerConverter(unsigned long pgn, unsigned long pgn2, String sentence, Converter converter)
     {
         unsigned long *lpgn=new unsigned long[2]{pgn,pgn2};
