@@ -92,7 +92,7 @@ GwConfigInterface *receiveSerial=config.getConfigItem(config.receiveSerial,true)
 GwConfigInterface *sendSerial=config.getConfigItem(config.sendSerial,true);
 GwConfigInterface *n2kFromSerial=config.getConfigItem(config.serialToN2k,true);
 
-GwSerial *usbSerial = new GwSerial(NULL, UART_NUM_0, USB_CHANNEL_ID);
+GwSerial *usbSerial = new GwSerial(NULL, 0, USB_CHANNEL_ID);
 GwSerial *serial1=NULL;
 
 
@@ -275,8 +275,8 @@ void setup() {
   }  
   logger.logDebug(GwLog::LOG,"config: %s", config.toString().c_str());
   #ifdef GWSERIAL_MODE
-  int serialrx=UART_PIN_NO_CHANGE;
-  int serialtx=UART_PIN_NO_CHANGE;
+  int serialrx=-1;
+  int serialtx=-1;
   #ifdef GWSERIAL_TX
   serialtx=GWSERIAL_TX;
   #endif
@@ -289,17 +289,18 @@ void setup() {
   if (serialMode != String("UNI")){
     serialDirection=String("");
   }
-  if (serialDirection == "receive" || serialDirection == "off") serialtx=UART_PIN_NO_CHANGE;
-  if (serialDirection == "send" || serialDirection == "off") serialrx=UART_PIN_NO_CHANGE;
+  //if (serialDirection == "receive" || serialDirection == "off") serialtx=UART_PIN_NO_CHANGE;
+  //if (serialDirection == "send" || serialDirection == "off") serialrx=UART_PIN_NO_CHANGE;
   logger.logDebug(GwLog::DEBUG,"serial set up: mode=%s,direction=%s,rx=%d,tx=%d",
     serialMode.c_str(),serialDirection.c_str(),serialrx,serialtx
   );
-  if (serialtx != UART_PIN_NO_CHANGE || serialrx != UART_PIN_NO_CHANGE){
+  if (serialtx != -1 || serialrx != -1){
     logger.logDebug(GwLog::LOG,"creating serial interface rx=%d, tx=%d",serialrx,serialtx);
-    serial1=new GwSerial(&logger,UART_NUM_1,SERIAL1_CHANNEL_ID,true);
+    serial1=new GwSerial(&logger,1,SERIAL1_CHANNEL_ID,true);
   }
   if (serial1){
-    serial1->setup(config.getInt(config.serialBaud,115200),serialrx,serialtx);
+    int rt=serial1->setup(config.getInt(config.serialBaud,115200),serialrx,serialtx);
+    logger.logDebug(GwLog::LOG,"starting serial returns %d",rt);
   }
   #endif
   
@@ -442,7 +443,7 @@ void SendNMEA0183Message(const tNMEA0183Msg &NMEA0183Msg, int sourceId) {
 void handleReceivedNmeaMessage(const char *buf, int sourceId){
   if ((sourceId == USB_CHANNEL_ID && n2kFromUSB->asBoolean())||
       (sourceId >= MIN_TCP_CHANNEL_ID && n2kFromTCP->asBoolean())||
-      (sourceId == SERIAL1_CHANNEL_ID && n2kFromSerial)
+      (sourceId == SERIAL1_CHANNEL_ID && n2kFromSerial->asBoolean())
     )
     toN2KConverter->parseAndSend(buf,sourceId);
   sendBufferToChannels(buf,sourceId);

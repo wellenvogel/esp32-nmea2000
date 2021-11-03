@@ -1,6 +1,6 @@
 #ifndef _GWSERIAL_H
 #define _GWSERIAL_H
-#include "driver/uart.h"
+#include "HardwareSerial.h"
 #include "GwLog.h"
 #include "GwBuffer.h"
 class SerialWriter;
@@ -10,16 +10,17 @@ class GwSerial{
         GwBuffer *readBuffer=NULL;
         GwLog *logger; 
         SerialWriter *writer;
-        uart_port_t num;
+        int num;
         bool initialized=false;
         bool allowRead=true;
         GwBuffer::WriteStatus write();
         int id=-1;
         int overflows=0;
         size_t enqueue(const uint8_t *data, size_t len);
+        HardwareSerial *serial;
     public:
         static const int bufferSize=200;
-        GwSerial(GwLog *logger,uart_port_t num,int id,bool allowRead=true);
+        GwSerial(GwLog *logger,int num,int id,bool allowRead=true);
         ~GwSerial();
         int setup(int baud,int rxpin,int txpin);
         bool isInitialized();

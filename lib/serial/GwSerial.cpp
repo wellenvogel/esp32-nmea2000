@@ -1,30 +1,34 @@
 #include "GwSerial.h"
 class SerialWriter : public GwBufferWriter{
     private:
-        uart_port_t num;
+        HardwareSerial *serial;
     public:
-        SerialWriter(uart_port_t num){
-            this->num=num;
+        SerialWriter(HardwareSerial *serial){
+            this->serial=serial;
         }
         virtual ~SerialWriter(){}
         virtual int write(const uint8_t *buffer,size_t len){
-            return uart_tx_chars(num,(const char *)buffer,len);
+            size_t numWrite=serial->availableForWrite();
+            if (numWrite < len) len=numWrite;
+            if (!len) return 0;
+            return serial->write(buffer,len);
         }
 
 
 };
-GwSerial::GwSerial(GwLog *logger, uart_port_t num, int id,bool allowRead)
+GwSerial::GwSerial(GwLog *logger, int num, int id,bool allowRead)
 {
     LOG_DEBUG(GwLog::DEBUG,"creating GwSerial %p port %d",this,(int)num);
     this->id=id;
     this->logger = logger;
     this->num = num;
     this->buffer = new GwBuffer(logger,GwBuffer::TX_BUFFER_SIZE);
-    this->writer = new SerialWriter(num);
     this->allowRead=allowRead;
     if (allowRead){
         this->readBuffer=new GwBuffer(logger, GwBuffer::RX_BUFFER_SIZE);
     }
+    this->serial=new HardwareSerial(num);
+    this->writer = new SerialWriter(serial);
 
 }
 GwSerial::~GwSerial()
@@ -32,32 +36,14 @@ GwSerial::~GwSerial()
     delete buffer;
     delete writer;
     if (readBuffer) delete readBuffer;
+    delete serial;
 }
 int GwSerial::setup(int baud, int rxpin, int txpin)
 {
-    uart_config_t config = {
-        .baud_rate = baud,
-        .data_bits = UART_DATA_8_BITS,
-        .parity = UART_PARITY_DISABLE,
-        .stop_bits = UART_STOP_BITS_1,
-        .flow_ctrl = UART_HW_FLOWCTRL_DISABLE,
-    };
-    if (uart_driver_install(num, bufferSize, 0, 0, NULL, 0) != ESP_OK)
-    {
-        return -1;
-    }
-    // Configure UART parameters
-    if (uart_param_config(num, &config) != ESP_OK)
-    {
-        return -2;
-    }
-    if (uart_set_pin(num, txpin, rxpin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE) != ESP_OK)
-    {
-        return -3;
-    }
+    serial->begin(baud,SERIAL_8N1,rxpin,txpin);
     buffer->reset();
     initialized = true;
-    return true;
+    return 0;
 }
 bool GwSerial::isInitialized() { return initialized; }
 size_t GwSerial::enqueue(const uint8_t *data, size_t len)
@@ -83,9 +69,13 @@ void GwSerial::loop(bool handleRead){
     if (! isInitialized()) return;
     if (! handleRead) return;
     char buffer[10];
-    int rt=uart_read_bytes(num,(uint8_t *)(&buffer),10,0);
+    size_t available=serial->available();
+    if (! available) return;
+    if (available > 10) available=10;
+    int rt=serial->readBytes(buffer,available);
     if (allowRead && rt > 0){
-        readBuffer->addData((uint8_t *)(&buffer),rt,true);
+        size_t wr=readBuffer->addData((uint8_t *)(&buffer),rt,true);
+        LOG_DEBUG(GwLog::DEBUG+2,"GwSerial read %d bytes, to buffer %d bytes",rt,wr);
     }
 }
 bool GwSerial::readMessages(GwBufferWriter *writer){
