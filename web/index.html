@@ -142,6 +142,16 @@
       }
     }
   }
+  function showOverlay(text){
+    let el=document.getElementById('overlayContent');
+    el.textContent=text;
+    let container=document.getElementById('overlayContainer');
+    container.classList.remove('hidden');
+  }
+  function hideOverlay(){
+    let container=document.getElementById('overlayContainer');
+    container.classList.add('hidden');
+  }
   function checkChange(el) {
       let loaded = el.getAttribute('data-loaded');
       if (loaded !== undefined) {
@@ -240,7 +250,7 @@
                 bt = document.createElement('button');
                 bt.classList.add('infoButton');
                 bt.addEventListener('click', function (ev) {
-                  alert(item.description);
+                  showOverlay(item.description);
                 });
                 bt.textContent = "?";
                 row.appendChild(bt);
@@ -309,6 +319,34 @@ button.infoButton {
   display: block;
 }
 
+.overlayContainer {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: #80808070;
+    display: flex;
+}
+.overlayContainer.hidden{
+  display: none;
+}
+div#overlay {
+    margin: auto;
+    background-color: white;
+    padding: 0.5em;
+}
+div#overlayContent {
+    padding: 0.5em;
+    white-space: pre;
+}
+.overlayButtons {
+    border-top: 1px solid grey;
+    padding-top: 0.5em;
+    display: flex;
+    flex-direction: row;
+    justify-content: end;
+}
 </style>
 </head>
 <body>
@@ -362,6 +400,16 @@ button.infoButton {
   </div>
 </div>
 
+</div>
+<div class="overlayContainer hidden" id="overlayContainer">
+  <div id="overlay">
+    <div id="overlayContent">
+      AHA
+    </div>
+    <div class="overlayButtons">
+      <button id="hideOverlay">Close</button>
+    </div>
+  </div>
 </div>
 </body>
 </html>

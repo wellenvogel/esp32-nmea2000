@@ -92,6 +92,22 @@ GwConfigInterface *n2kFromUSB=config.getConfigItem(config.usbToN2k,true);
 GwConfigInterface *receiveSerial=config.getConfigItem(config.receiveSerial,true);
 GwConfigInterface *sendSerial=config.getConfigItem(config.sendSerial,true);
 GwConfigInterface *n2kFromSerial=config.getConfigItem(config.serialToN2k,true);
+GwNmeaFilter usbReadFilter(config.getConfigItem(config.usbReadFilter,true));
+GwNmeaFilter usbWriteFilter(config.getConfigItem(config.usbWriteFilter,true));
+GwNmeaFilter serialReadFilter(config.getConfigItem(config.serialReadFilter,true));
+GwNmeaFilter serialWriteFilter(config.getConfigItem(config.serialWriteFilter,true));
+GwNmeaFilter tcpReadFilter(config.getConfigItem(config.tcpReadFilter,true));
+GwNmeaFilter tcpWriteFilter(config.getConfigItem(config.tcpWriteFilter,true));
+
+bool checkFilter(const char *buffer,int channelId,bool read){
+  GwNmeaFilter *filter=NULL;
+  if (channelId == USB_CHANNEL_ID) filter=read?&usbReadFilter:&usbWriteFilter;
+  else if (channelId == SERIAL1_CHANNEL_ID) filter=read?&serialReadFilter:&serialWriteFilter;
+  else if (channelId >= MIN_TCP_CHANNEL_ID) filter=read?&tcpReadFilter:&tcpWriteFilter;
+  if (!filter) return true;
+  if (filter->canPass(buffer)) return true;
+  logger.logDebug(GwLog::DEBUG,"%s filter for channel %d dropped %s",(read?"read":"write"),channelId,buffer);
+}
 
 bool serCanWrite=true;
 bool serCanRead=true;
@@ -424,13 +440,13 @@ void setup() {
 
 
 void sendBufferToChannels(const char * buffer, int sourceId){
-  if (sendTCP->asBoolean()){
+  if (sendTCP->asBoolean() && checkFilter(buffer,MIN_TCP_CHANNEL_ID,false)){
     socketServer.sendToClients(buffer,sourceId);
   }
-  if (sendUsb->asBoolean()){
+  if (sendUsb->asBoolean() && checkFilter(buffer,USB_CHANNEL_ID,false)){
     usbSerial->sendToClients(buffer,sourceId);
   }
-  if (serial1 && serCanWrite){
+  if (serial1 && serCanWrite && checkFilter(buffer,SERIAL1_CHANNEL_ID,false)){
     serial1->sendToClients(buffer,sourceId);
   }
 }
@@ -450,6 +466,7 @@ void SendNMEA0183Message(const tNMEA0183Msg &NMEA0183Msg, int sourceId) {
 }
 
 void handleReceivedNmeaMessage(const char *buf, int sourceId){
+  if (! checkFilter(buf,sourceId,true)) return;
   if ((sourceId == USB_CHANNEL_ID && n2kFromUSB->asBoolean())||
       (sourceId >= MIN_TCP_CHANNEL_ID && n2kFromTCP->asBoolean())||
       (sourceId == SERIAL1_CHANNEL_ID && n2kFromSerial->asBoolean())

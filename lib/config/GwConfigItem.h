@@ -1,6 +1,7 @@
 #ifndef _GWCONFIGITEM_H
 #define _GWCONFIGITEM_H
 #include "WString.h"
+#include <vector>
 class GwConfigInterface{
     public:
     virtual String asString() const=0;
@@ -46,6 +47,21 @@ class GwConfigItem: public GwConfigInterface{
         String getDefault() const {
             return initialValue;
         }
+};
+
+class GwNmeaFilter{
+    private:
+        GwConfigInterface *config=NULL;
+        bool isReady=false;
+        std::vector<String> whitelist;
+        std::vector<String> blacklist;
+        void parseFilter();
+    public:
+        GwNmeaFilter(GwConfigInterface *config){
+            this->config=config;
+            isReady=false;
+        }
+        bool canPass(const char *buffer);    
 };
 
 

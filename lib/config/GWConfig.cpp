@@ -1,5 +1,6 @@
 #include "GWConfig.h"
 #include <ArduinoJson.h>
+#include <string.h>
 
 #define B(v) (v?"true":"false")
 
@@ -113,4 +114,57 @@ int GwConfigHandler::getInt(const String name,int defaultv) const{
     GwConfigInterface *i=getConfigItem(name,false);
     if (!i) return defaultv;
     return i->asInt();
+}
+
+void GwNmeaFilter::parseFilter(){
+    if (isReady) return;
+    int found=0;
+    int last=0;
+    String data=config->asString();
+    while ((found = data.indexOf(',',last)) >= 0){
+        String tok=data.substring(last,found);
+        if (tok != ""){
+            if (tok.startsWith("^")) blacklist.push_back(tok);
+            else whitelist.push_back(tok);
+        }
+        last=found+1;
+    }
+    if (last < data.length()){
+        String tok=data.substring(last);
+        if (tok != "" && tok != "^" ){
+            if (tok.startsWith("^")) blacklist.push_back(tok.substring(1));
+            else whitelist.push_back(tok);
+        }
+
+    }
+    isReady=true;    
+}
+
+bool GwNmeaFilter::canPass(const char *buffer){
+    size_t len=strlen(buffer);
+    if (len < 5) return false; //invalid NMEA
+    if (!isReady) parseFilter();
+    bool hasWhitelist=false;
+    for (auto it=blacklist.begin();it != blacklist.end();it++){
+        if (buffer[0] == '$'){
+            if ((strncmp(buffer,(*it).c_str(),1) == 0) &&
+                (strncmp(buffer+3,(*it).c_str()+1,it->length()-1) == 0)
+                ) return false;
+        }
+        else{
+            if (strncmp(buffer,(*it).c_str(),it->length()) == 0) return false;
+        }
+    }
+    for (auto it=whitelist.begin();it != whitelist.end();it++){
+        hasWhitelist=true;
+        if (buffer[0] == '$'){
+            if ((strncmp(buffer,(*it).c_str(),1) == 0) &&
+                (strncmp(buffer+3,(*it).c_str()+1,it->length()-1) == 0)
+                ) return true;
+        }
+        else{
+            if (strncmp(buffer,(*it).c_str(),it->length()) == 0) return true;
+        }
+    }
+    return !hasWhitelist;
 }

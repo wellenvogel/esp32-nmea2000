@@ -37,6 +37,20 @@
         "description": "convert NMEA0183 from the USB port to NMEA2000"
     },
     {
+        "name": "usbReadFilter",
+        "label": "USB read Filter",
+        "type": "filter",
+        "default": "",
+        "description": "filter for NMEA0183 data when reading from USB\nempty to let all data pass\nexamples:\n!                      \t: all AIS\n$RMB,$APB \t: only NMEA RMB and APB\n^!                \t: no AIS but other NMEA"
+    },
+    {
+        "name": "usbWriteFilter",
+        "label": "USB write Filter",
+        "type": "filter",
+        "default": "",
+        "description": "filter for NMEA0183 data when writing to USB\nempty to let all data pass\nexamples:\n!                      \t: all AIS\n$RMB,$APB \t: only NMEA RMB and APB\n^!                \t: no AIS but other NMEA"
+    },
+    {
         "name": "serialDirection",
         "label": "serial direction",
         "type": "list",
@@ -79,6 +93,22 @@
         "capabilities":{"serialmode":["RX","BI","UNI"]}
     },
     {
+        "name": "serialReadFilter",
+        "label": "serial read Filter",
+        "type": "filter",
+        "default": "",
+        "description": "filter for NMEA0183 data when reading from serial\nempty to let all data pass\nexamples:\n!                      \t: all AIS\n$RMB,$APB \t: only NMEA RMB and APB\n^!                \t: no AIS but other NMEA",
+        "capabilities":{"serialmode":["RX","BI","UNI"]}
+    },
+    {
+        "name": "serialWriteFilter",
+        "label": "serial write Filter",
+        "type": "filter",
+        "default": "",
+        "description": "filter for NMEA0183 data when writing to serial\nempty to let all data pass\nexamples:\n!                      \t: all AIS\n$RMB,$APB \t: only NMEA RMB and APB\n^!                \t: no AIS but other NMEA",
+        "capabilities":{"serialmode":["TX","BI","UNI"]}
+    },
+    {
         "name": "serverPort",
         "label": "TCP port",
         "type": "number",
@@ -113,6 +143,20 @@
         "type": "boolean",
         "default": "true",
         "description": "convert NMEA0183 from TCP clients to NMEA2000"
+    },
+    {
+        "name": "tcpReadFilter",
+        "label": "TCP read Filter",
+        "type": "filter",
+        "default": "",
+        "description": "filter for NMEA0183 data when reading from TCP\nempty to let all data pass\nexamples:\n!                      \t: all AIS\n$RMB,$APB \t: only NMEA RMB and APB\n^!                \t: no AIS but other NMEA"
+    },
+    {
+        "name": "tcpWriteFilter",
+        "label": "TCP write Filter",
+        "type": "filter",
+        "default": "",
+        "description": "filter for NMEA0183 data when writing to TCP\nempty to let all data pass\nexamples:\n!                      \t: all AIS\n$RMB,$APB \t: only NMEA RMB and APB\n^!                \t: no AIS but other NMEA"
     },
     {
         "name": "sendSeasmart",
