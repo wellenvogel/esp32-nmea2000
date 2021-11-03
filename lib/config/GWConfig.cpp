@@ -116,26 +116,44 @@ int GwConfigHandler::getInt(const String name,int defaultv) const{
     return i->asInt();
 }
 
+void GwNmeaFilter::handleToken(String token, int index){
+    switch(index){
+        case 0:
+            ais=token.toInt() != 0;
+            break;
+        case 1:
+            blacklist=token.toInt() != 0;
+            break;
+        case 2:
+            int found=0;
+            int last=0;
+            while ((found = token.indexOf(',',last)) >= 0){
+                filter.push_back(token.substring(last,found));   
+                last=found+1;
+            }
+            if (last < token.length()){
+                filter.push_back(token.substring(last));   
+            }
+            break;
+    }    
+}
 void GwNmeaFilter::parseFilter(){
+    // "0:1:RMB,RMC"
+    // 0: AIS off, 1:whitelist, list of sentences
     if (isReady) return;
     int found=0;
     int last=0;
+    int index=0;
     String data=config->asString();
-    while ((found = data.indexOf(',',last)) >= 0){
+    while ((found = data.indexOf(':',last)) >= 0){
         String tok=data.substring(last,found);
-        if (tok != ""){
-            if (tok.startsWith("^")) blacklist.push_back(tok);
-            else whitelist.push_back(tok);
-        }
+        handleToken(tok,index);
         last=found+1;
+        index++;
     }
     if (last < data.length()){
         String tok=data.substring(last);
-        if (tok != "" && tok != "^" ){
-            if (tok.startsWith("^")) blacklist.push_back(tok.substring(1));
-            else whitelist.push_back(tok);
-        }
-
+        handleToken(tok,index);
     }
     isReady=true;    
 }
@@ -144,27 +162,24 @@ bool GwNmeaFilter::canPass(const char *buffer){
     size_t len=strlen(buffer);
     if (len < 5) return false; //invalid NMEA
     if (!isReady) parseFilter();
-    bool hasWhitelist=false;
-    for (auto it=blacklist.begin();it != blacklist.end();it++){
-        if (buffer[0] == '$'){
-            if ((strncmp(buffer,(*it).c_str(),1) == 0) &&
-                (strncmp(buffer+3,(*it).c_str()+1,it->length()-1) == 0)
-                ) return false;
-        }
-        else{
-            if (strncmp(buffer,(*it).c_str(),it->length()) == 0) return false;
-        }
+    if (buffer[0] == '!') return ais;
+    char sentence[4];
+    strncpy(sentence,buffer+3,3);
+    sentence[3]=0;
+    for (auto it=filter.begin();it != filter.end();it++){
+        if (strncmp(sentence,(*it).c_str(),3) == 0) return !blacklist;
     }
-    for (auto it=whitelist.begin();it != whitelist.end();it++){
-        hasWhitelist=true;
-        if (buffer[0] == '$'){
-            if ((strncmp(buffer,(*it).c_str(),1) == 0) &&
-                (strncmp(buffer+3,(*it).c_str()+1,it->length()-1) == 0)
-                ) return true;
-        }
-        else{
-            if (strncmp(buffer,(*it).c_str(),it->length()) == 0) return true;
-        }
+    //if we have a whitelist we return false
+    //if nothing matches
+    return blacklist; 
+}
+String GwNmeaFilter::toString(){
+    parseFilter();
+    String rt("NMEAFilter: ");
+    rt+="ais: "+String(ais);
+    rt+=", bl:"+String(blacklist);
+    for (auto it=filter.begin();it != filter.end();it++){
+        rt+=","+*it;
     }
-    return !hasWhitelist;
+    return rt;
 }

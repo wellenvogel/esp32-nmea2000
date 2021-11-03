@@ -41,14 +41,14 @@
         "label": "USB read Filter",
         "type": "filter",
         "default": "",
-        "description": "filter for NMEA0183 data when reading from USB\nempty to let all data pass\nexamples:\n!                      \t: all AIS\n$RMB,$APB \t: only NMEA RMB and APB\n^!                \t: no AIS but other NMEA"
+        "description": "filter for NMEA0183 data when reading from USB\nselect aison|aisoff, set a whitelist or a blacklist with NMEA sentences like RMC,RMB"
     },
     {
         "name": "usbWriteFilter",
         "label": "USB write Filter",
         "type": "filter",
         "default": "",
-        "description": "filter for NMEA0183 data when writing to USB\nempty to let all data pass\nexamples:\n!                      \t: all AIS\n$RMB,$APB \t: only NMEA RMB and APB\n^!                \t: no AIS but other NMEA"
+        "description": "filter for NMEA0183 data when writing to USB\nselect aison|aisoff, set a whitelist or a blacklist with NMEA sentences like RMC,RMB"
     },
     {
         "name": "serialDirection",
@@ -97,7 +97,7 @@
         "label": "serial read Filter",
         "type": "filter",
         "default": "",
-        "description": "filter for NMEA0183 data when reading from serial\nempty to let all data pass\nexamples:\n!                      \t: all AIS\n$RMB,$APB \t: only NMEA RMB and APB\n^!                \t: no AIS but other NMEA",
+        "description": "filter for NMEA0183 data when reading from serial\nselect aison|aisoff, set a whitelist or a blacklist with NMEA sentences like RMC,RMB",
         "capabilities":{"serialmode":["RX","BI","UNI"]}
     },
     {
@@ -105,7 +105,7 @@
         "label": "serial write Filter",
         "type": "filter",
         "default": "",
-        "description": "filter for NMEA0183 data when writing to serial\nempty to let all data pass\nexamples:\n!                      \t: all AIS\n$RMB,$APB \t: only NMEA RMB and APB\n^!                \t: no AIS but other NMEA",
+        "description": "filter for NMEA0183 data when writing to serial\nselect aison|aisoff, set a whitelist or a blacklist with NMEA sentences like RMC,RMB",
         "capabilities":{"serialmode":["TX","BI","UNI"]}
     },
     {
@@ -149,14 +149,14 @@
         "label": "TCP read Filter",
         "type": "filter",
         "default": "",
-        "description": "filter for NMEA0183 data when reading from TCP\nempty to let all data pass\nexamples:\n!                      \t: all AIS\n$RMB,$APB \t: only NMEA RMB and APB\n^!                \t: no AIS but other NMEA"
+        "description": "filter for NMEA0183 data when reading from TCP\nselect aison|aisoff, set a whitelist or a blacklist with NMEA sentences like RMC,RMB"
     },
     {
         "name": "tcpWriteFilter",
         "label": "TCP write Filter",
         "type": "filter",
         "default": "",
-        "description": "filter for NMEA0183 data when writing to TCP\nempty to let all data pass\nexamples:\n!                      \t: all AIS\n$RMB,$APB \t: only NMEA RMB and APB\n^!                \t: no AIS but other NMEA"
+        "description": "filter for NMEA0183 data when writing to TCP\nselect aison|aisoff, set a whitelist or a blacklist with NMEA sentences like RMC,RMB"
     },
     {
         "name": "sendSeasmart",

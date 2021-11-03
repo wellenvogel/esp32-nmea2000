@@ -336,6 +336,9 @@ void setup() {
   socketServer.begin();
   usbSerial->flush();
 
+  logger.logDebug(GwLog::LOG,"usbRead: %s", usbReadFilter.toString().c_str());
+  usbSerial->flush();
+
   webserver.registerMainHandler("/api/reset", [](AsyncWebServerRequest *request)->GwRequestMessage *{
     return new ResetRequest();
   });

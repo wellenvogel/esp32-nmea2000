@@ -53,15 +53,18 @@ class GwNmeaFilter{
     private:
         GwConfigInterface *config=NULL;
         bool isReady=false;
-        std::vector<String> whitelist;
-        std::vector<String> blacklist;
+        bool ais=true;
+        bool blacklist=true;
+        std::vector<String> filter;
+        void handleToken(String token, int index);
         void parseFilter();
     public:
         GwNmeaFilter(GwConfigInterface *config){
             this->config=config;
             isReady=false;
         }
-        bool canPass(const char *buffer);    
+        bool canPass(const char *buffer);
+        String toString();    
 };
 
 
