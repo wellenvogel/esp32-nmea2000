@@ -82,6 +82,7 @@ GwWebServer webserver(&logger,&mainQueue,80);
 
 //configs that we need in main
 
+
 GwConfigInterface *sendUsb=config.getConfigItem(config.sendUsb,true);
 GwConfigInterface *sendTCP=config.getConfigItem(config.sendTCP,true);
 GwConfigInterface *sendSeasmart=config.getConfigItem(config.sendSeasmart,true);
@@ -91,6 +92,9 @@ GwConfigInterface *n2kFromUSB=config.getConfigItem(config.usbToN2k,true);
 GwConfigInterface *receiveSerial=config.getConfigItem(config.receiveSerial,true);
 GwConfigInterface *sendSerial=config.getConfigItem(config.sendSerial,true);
 GwConfigInterface *n2kFromSerial=config.getConfigItem(config.serialToN2k,true);
+
+bool serCanWrite=true;
+bool serCanRead=true;
 
 GwSerial *usbSerial = new GwSerial(NULL, 0, USB_CHANNEL_ID);
 GwSerial *serial1=NULL;
@@ -283,20 +287,25 @@ void setup() {
   #ifdef GWSERIAL_RX
   serialrx=GWSERIAL_RX;
   #endif
+  //the mode is a compile time preselection from hardware.h
+  String serialMode(F(GWSERIAL_MODE));
+  //the serial direction is from the config (only valid for mode UNI)
   String serialDirection=config.getString(config.serialDirection);
   //we only consider the direction if mode is UNI
-  String serialMode(F(GWSERIAL_MODE));
   if (serialMode != String("UNI")){
     serialDirection=String("");
+    //if mode is UNI it depends on the selection
+    serCanRead=receiveSerial->asBoolean();
+    serCanWrite=sendSerial->asBoolean();
   }
-  //if (serialDirection == "receive" || serialDirection == "off") serialtx=UART_PIN_NO_CHANGE;
-  //if (serialDirection == "send" || serialDirection == "off") serialrx=UART_PIN_NO_CHANGE;
+  if (serialDirection == "receive" || serialDirection == "off" || serialMode == "RX") serCanWrite=false;
+  if (serialDirection == "send" || serialDirection == "off" || serialMode == "TX") serCanRead=false;
   logger.logDebug(GwLog::DEBUG,"serial set up: mode=%s,direction=%s,rx=%d,tx=%d",
     serialMode.c_str(),serialDirection.c_str(),serialrx,serialtx
   );
   if (serialtx != -1 || serialrx != -1){
     logger.logDebug(GwLog::LOG,"creating serial interface rx=%d, tx=%d",serialrx,serialtx);
-    serial1=new GwSerial(&logger,1,SERIAL1_CHANNEL_ID,true);
+    serial1=new GwSerial(&logger,1,SERIAL1_CHANNEL_ID,serCanRead);
   }
   if (serial1){
     int rt=serial1->setup(config.getInt(config.serialBaud,115200),serialrx,serialtx);
@@ -421,7 +430,7 @@ void sendBufferToChannels(const char * buffer, int sourceId){
   if (sendUsb->asBoolean()){
     usbSerial->sendToClients(buffer,sourceId);
   }
-  if (sendSerial->asBoolean() && serial1){
+  if (serial1 && serCanWrite){
     serial1->sendToClients(buffer,sourceId);
   }
 }
@@ -526,7 +535,7 @@ void loop() {
   receiver.id=USB_CHANNEL_ID;
   usbSerial->readMessages(&receiver);
   receiver.id=SERIAL1_CHANNEL_ID;
-  if (serial1) serial1->readMessages(&receiver);
+  if (serial1 && serCanRead ) serial1->readMessages(&receiver);
 
   //handle message requests
   GwMessage *msg=mainQueue.fetchMessage(0);
