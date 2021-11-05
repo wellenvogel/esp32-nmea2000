@@ -107,6 +107,7 @@ bool checkFilter(const char *buffer,int channelId,bool read){
   if (!filter) return true;
   if (filter->canPass(buffer)) return true;
   logger.logDebug(GwLog::DEBUG,"%s filter for channel %d dropped %s",(read?"read":"write"),channelId,buffer);
+  return false;
 }
 
 bool serCanWrite=true;
