@@ -146,8 +146,10 @@ class GwBoatData{
     GWBOATDATA(double,MaxTws,4000,&formatKnots)
     GWBOATDATA(double,MaxAws,4000,&formatKnots)
     GWBOATDATA(double,AWA,4000,&formatWind)
-    GWBOATDATA(double,Heading,4000,&formatCourse)
+    GWBOATDATA(double,Heading,4000,&formatCourse) //true
+    GWBOATDATA(double,MagneticHeading,4000,&formatCourse)
     GWBOATDATA(double,Variation,4000,&formatCourse)
+    GWBOATDATA(double,Deviation,4000,&formatCourse)
     GWBOATDATA(double,RudderPosition,4000,&formatCourse)
     GWBOATDATA(double,Latitude,4000,NULL)
     GWBOATDATA(double,Longitude,4000,NULL)

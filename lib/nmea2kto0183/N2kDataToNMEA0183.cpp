@@ -122,20 +122,58 @@ private:
         double Variation;
         tNMEA0183Msg NMEA0183Msg;
         double Heading;
+        //if we have heading and variation we send HDG (mag.) and HDT
+        //if we have no variation we send either HDM or HDT
         if (ParseN2kHeading(N2kMsg, SID, Heading, _Deviation, Variation, ref))
         {
-            if (ref == N2khr_magnetic)
-            {
-                updateDouble(boatData->Variation, Variation); // Update Variation
-                if (!N2kIsNA(Heading) && boatData->Variation->isValid(millis()))
-                    Heading -= boatData->Variation->getData();
+            updateDouble(boatData->Variation,Variation);
+            updateDouble(boatData->Deviation,_Deviation);
+            if (N2kIsNA(Variation)){
+                //maybe we still have a valid variation
+                Variation=boatData->Variation->getDataWithDefault(N2kDoubleNA);
             }
-            updateDouble(boatData->Heading, Heading);
-            if (NMEA0183SetHDG(NMEA0183Msg, boatData->Heading->getDataWithDefault(NMEA0183DoubleNA), _Deviation, boatData->Variation->getDataWithDefault(NMEA0183DoubleNA)))
-            {
-                SendMessage(NMEA0183Msg);
+            if (N2kIsNA(Variation)){
+                //no variation
+                if (ref == N2khr_magnetic){
+                    updateDouble(boatData->MagneticHeading,Heading);
+                    if (NMEA0183SetHDM(NMEA0183Msg,Heading)){
+                        SendMessage(NMEA0183Msg);
+                    }    
+                }
+                if (ref == N2khr_true){
+                    updateDouble(boatData->Heading,Heading);
+                    if (NMEA0183SetHDT(NMEA0183Msg,Heading)){
+                        SendMessage(NMEA0183Msg);
+                    }
+                }
             }
+            else{
+                double MagneticHeading=N2kDoubleNA;
+                if (ref == N2khr_magnetic){
+                    MagneticHeading=Heading;
+                    Heading+=Variation;
+                }
+                if (ref == N2khr_true){
+                    MagneticHeading=Heading-Variation;
+                }
+                updateDouble(boatData->MagneticHeading,MagneticHeading);
+                updateDouble(boatData->Heading,Heading);
+                if (!N2kIsNA(MagneticHeading)){
+                    if (NMEA0183SetHDG(NMEA0183Msg, MagneticHeading,_Deviation, 
+                        Variation))
+                    {
+                        SendMessage(NMEA0183Msg);
+                    }
+                }
+                if (!N2kIsNA(Heading)){
+                    if (NMEA0183SetHDT(NMEA0183Msg, Heading))
+                    {
+                        SendMessage(NMEA0183Msg);
+                    }
+                }
+            }   
         }
+
     }
 
     //*****************************************************************************

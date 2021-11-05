@@ -345,6 +345,66 @@ private:
         }
     }
 
+    void convertHDM(const SNMEA0183Msg &msg){
+        double MagneticHeading=NMEA0183DoubleNA;
+        if (!NMEA0183ParseHDM_nc(msg, MagneticHeading))
+        {
+            logger->logDebug(GwLog::DEBUG, "failed to parse HDM %s", msg.line);
+            return;
+        }
+        if (! UD(MagneticHeading)) return;
+        tN2kMsg n2kMsg;
+        SetN2kMagneticHeading(n2kMsg,1,MagneticHeading,
+            boatData->Variation->getDataWithDefault(N2kDoubleNA),
+            boatData->Deviation->getDataWithDefault(N2kDoubleNA)
+        );
+        send(n2kMsg);    
+    }
+    
+    void convertHDT(const SNMEA0183Msg &msg){
+        double Heading=NMEA0183DoubleNA;
+        if (!NMEA0183ParseHDT_nc(msg, Heading))
+        {
+            logger->logDebug(GwLog::DEBUG, "failed to parse HDT %s", msg.line);
+            return;
+        }
+        if (! UD(Heading)) return;
+        tN2kMsg n2kMsg;
+        SetN2kTrueHeading(n2kMsg,1,Heading);
+        send(n2kMsg);    
+    }
+    void convertHDG(const SNMEA0183Msg &msg){
+        double MagneticHeading=NMEA0183DoubleNA;
+        double Variation=NMEA0183DoubleNA;
+        double Deviation=NMEA0183DoubleNA;
+        if (msg.FieldCount() < 5)
+        {
+            logger->logDebug(GwLog::DEBUG, "failed to parse HDG %s", msg.line);
+            return;
+        }
+        if (msg.FieldLen(0)>0){
+            MagneticHeading=formatDegToRad(atof(msg.Field(0)));
+        }
+        else{
+            return;
+        }
+        if (msg.FieldLen(1)>0){
+            Deviation=formatDegToRad(atof(msg.Field(1)));
+            if (msg.Field(2)[0] == 'W') Deviation=-Deviation;
+        }
+        if (msg.FieldLen(3)>0){
+            Variation=formatDegToRad(atof(msg.Field(3)));
+            if (msg.Field(4)[0] == 'W') Variation=-Variation;
+        }
+
+        if (! UD(MagneticHeading)) return;
+        UD(Variation);
+        UD(Deviation);
+        tN2kMsg n2kMsg;
+        SetN2kMagneticHeading(n2kMsg,1,MagneticHeading,Deviation,Variation);
+        send(n2kMsg);    
+    }
+
 //shortcut for lambda converters
 #define CVL [](const SNMEA0183Msg &msg, NMEA0183DataToN2KFunctions *p) -> void
     void registerConverters()
@@ -362,7 +422,16 @@ private:
             String(F("MWD")),&NMEA0183DataToN2KFunctions::convertMWD);     
         converters.registerConverter(
             130306UL,
-            String(F("VWR")),&NMEA0183DataToN2KFunctions::convertVWR);        
+            String(F("VWR")),&NMEA0183DataToN2KFunctions::convertVWR); 
+        converters.registerConverter(
+            127250UL,
+            String(F("HDM")),&NMEA0183DataToN2KFunctions::convertHDM); 
+        converters.registerConverter(
+            127250UL,
+            String(F("HDT")),&NMEA0183DataToN2KFunctions::convertHDT);
+        converters.registerConverter(
+            127250UL,
+            String(F("HDG")),&NMEA0183DataToN2KFunctions::convertHDG);                      
         unsigned long *aispgns=new unsigned long[7]{129810UL,129809UL,129040UL,129039UL,129802UL,129794UL,129038UL};
         converters.registerConverter(7,&aispgns[0],
             String(F("AIVDM")),&NMEA0183DataToN2KFunctions::convertAIVDX);
