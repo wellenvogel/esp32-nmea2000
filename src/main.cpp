@@ -12,7 +12,7 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#define VERSION "0.5.1"
+#define VERSION "0.5.2"
 
 // #define GW_MESSAGE_DEBUG_ENABLED
 // #define FALLBACK_SERIAL
@@ -189,6 +189,21 @@ class CapabilitiesRequest : public GwRequestMessage{
       serializeJson(json,result);
     }  
 };
+class ConverterInfoRequest : public GwRequestMessage{
+  public:
+    ConverterInfoRequest() : GwRequestMessage(F("application/json"),F("converterInfo")){};
+  protected:
+    virtual void processRequest(){
+      DynamicJsonDocument json(512);
+      String keys=toN2KConverter->handledKeys();
+      logger.logDebug(GwLog::DEBUG,"handled nmea0183: %s",keys.c_str());
+      json["nmea0183"]=keys;
+      keys=nmea0183Converter->handledKeys();
+      logger.logDebug(GwLog::DEBUG,"handled nmea2000: %s",keys.c_str());
+      json["nmea2000"]=keys;
+      serializeJson(json,result);
+    }  
+};
 class ConfigRequest : public GwRequestMessage
 {
 public:
@@ -345,6 +360,9 @@ void setup() {
   });
   webserver.registerMainHandler("/api/capabilities", [](AsyncWebServerRequest *request)->GwRequestMessage *{
     return new CapabilitiesRequest();
+  });
+  webserver.registerMainHandler("/api/converterInfo", [](AsyncWebServerRequest *request)->GwRequestMessage *{
+    return new ConverterInfoRequest();
   });
   webserver.registerMainHandler("/api/status", [](AsyncWebServerRequest *request)->GwRequestMessage *
                               { return new StatusRequest(); });

@@ -51,5 +51,6 @@ public:
   virtual unsigned long* handledPgns()=0;
   virtual int numPgns()=0;
   virtual void toJson(JsonDocument &json)=0;
+  virtual String handledKeys()=0;
 };
 #endif

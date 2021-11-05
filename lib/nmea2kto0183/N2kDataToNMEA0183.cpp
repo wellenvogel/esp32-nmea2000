@@ -92,6 +92,9 @@ private:
         logger->logString("CONV: # %d handled PGNS", converters.numConverters());
         return converters.handledPgns();
     }
+    virtual String handledKeys(){
+        return converters.handledKeys();
+    }
     virtual void HandleMsg(const tN2kMsg &N2kMsg)
     {
         String key=String(N2kMsg.PGN);

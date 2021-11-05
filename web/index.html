@@ -146,9 +146,16 @@
       }
     }
   }
-  function showOverlay(text){
+  function showOverlay(text,isHtml){
     let el=document.getElementById('overlayContent');
-    el.textContent=text;
+    if (isHtml){
+      el.innerHTML=text;
+      el.classList.remove("text");
+    }
+    else{
+      el.textContent=text;
+      el.classList.add("text");
+    }
     let container=document.getElementById('overlayContainer');
     container.classList.remove('hidden');
   }
@@ -282,7 +289,10 @@
                 labelEl.classList.add('label');
                 labelEl.textContent = label;
                 row.appendChild(labelEl);
-                let valueEl = createInput(item,row);
+                let valueFrame=document.createElement("div");
+                valueFrame.classList.add("value");
+                row.appendChild(valueFrame);
+                let valueEl = createInput(item,valueFrame);
                 if (!valueEl) return;
                 valueEl.setAttribute('data-default', item.default);
                 valueEl.addEventListener('change', function (ev) {
@@ -290,6 +300,9 @@
                   checkChange(el,row);
                 })
                 if (item.check) valueEl.setAttribute('data-check', item.check);
+                let btContainer=document.createElement("div");
+                btContainer.classList.add("buttonContainer");
+                row.appendChild(btContainer);
                 let bt = document.createElement('button');
                 bt.classList.add('defaultButton');
                 bt.setAttribute('data-default', item.default);
@@ -299,14 +312,14 @@
                   valueEl.dispatchEvent(changeEvent);
                 })
                 bt.textContent = "X";
-                row.appendChild(bt);
+                btContainer.appendChild(bt);
                 bt = document.createElement('button');
                 bt.classList.add('infoButton');
                 bt.addEventListener('click', function (ev) {
                   showOverlay(item.description);
                 });
                 bt.textContent = "?";
-                row.appendChild(bt);
+                btContainer.appendChild(bt);
                 frame.appendChild(row);
               })
               resetForm();
@@ -314,6 +327,18 @@
         })
         .catch(function (err) { alert("unable to load config: " + err) })
     }
+  function converterInfo(){
+    getJson("api/converterInfo").then(function(json){
+      let text="<h3>Converted entities</h3>";
+      text+="<p><b>NMEA0183 to NMEA2000:</b><br/>";
+      text+="   "+(json.nmea0183||"").replace(/,/g,", ");
+      text+="</p>";
+      text+="<p><b>NMEA2000 to NMEA0183:</b><br/>";
+      text+="   "+(json.nmea2000||"").replace(/,/g,", ");
+      text+="</p>";
+      showOverlay(text,true);
+    });
+  }  
   window.setInterval(update,1000);
   window.addEventListener('load',function(){
   let buttons=document.querySelectorAll('button');
@@ -348,6 +373,11 @@ span.label {
     display: inline-block;
     opacity: 0.6;
 }
+.value {
+    width: 19em;
+    display: flex;
+    flex-direction: row;
+}
 span#connected {
     display: inline-block;
     background-color: red;
@@ -360,6 +390,9 @@ span#connected.ok{
 }
 .row {
     margin: 0.5em;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
 }
 .filter {
     display: inline-block;
@@ -394,10 +427,14 @@ div#overlay {
     margin: auto;
     background-color: white;
     padding: 0.5em;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 div#overlayContent {
     padding: 0.5em;
-    white-space: pre;
+}
+div#overlayContent.text{
+  white-space: pre;
 }
 .overlayButtons {
     border-top: 1px solid grey;
@@ -414,6 +451,7 @@ div#overlayContent {
 <div class="row">
   <span class="label">VERSION</span>
   <span class="value" id="version">---</span>
+  <button class="infoButton" id="converterInfo">?</button> 
 </div>
 <div class="row">
   <span class="label">connected</span>

@@ -402,6 +402,9 @@ public:
     virtual int numConverters(){
         return converters.numConverters();
     }
+    virtual String handledKeys(){
+        return converters.handledKeys();
+    }
 
     NMEA0183DataToN2KFunctions(GwLog *logger, GwBoatData *boatData, N2kSender callback)
         : NMEA0183DataToN2K(logger, boatData, callback)
