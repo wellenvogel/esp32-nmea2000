@@ -8,6 +8,14 @@
         "description": "system name, used for the access point and for services"
     },
     {
+        "name":"talkerId",
+        "label":"NMEA0183 ID",
+        "type":"list",
+        "default":"GP",
+        "list":["AB","AD","AG","AP","AI","AN","AR","AS","AT","AX","BI","BN","CA","CD","CR","CS","CT","CV","CX","DF","DU","DP","EC","EI","EP","ER","FD","FE","FR","FS","GA","GB","GI","GL","GN","GP","GQ","HC","HE","HF","HN","HD","HS","II","IN","JA","JB","JC","JD","JE","JF","JG","JH","LC","NL","NV","RA","RB","RC","RI","SA","SC","SD","SG","SN","SS","TC","TI","UP","VD","VM","VW","VA","VS","VT","VR","WD","WI","WL","YX","ZA","ZC","ZQ","ZV"],
+        "description":"the talkerId used in generated NMEA0183 records"
+    },
+    {
         "name": "usbBaud",
         "label": "USB baud rate",
         "type": "list",

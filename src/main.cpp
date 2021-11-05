@@ -12,7 +12,7 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#define VERSION "0.5.2"
+#define VERSION "0.5.4"
 
 // #define GW_MESSAGE_DEBUG_ENABLED
 // #define FALLBACK_SERIAL
@@ -388,7 +388,7 @@ void setup() {
   webserver.begin();
   
   nmea0183Converter= N2kDataToNMEA0183::create(&logger, &boatData,&NMEA2000, 
-    SendNMEA0183Message, N2K_CHANNEL_ID);
+    SendNMEA0183Message, N2K_CHANNEL_ID,config.getString(config.talkerId,String("GP")));
 
   toN2KConverter= NMEA0183DataToN2K::create(&logger,&boatData,[](const tN2kMsg &msg)->bool{
     logger.logDebug(GwLog::DEBUG+2,"send N2K %ld",msg.PGN);

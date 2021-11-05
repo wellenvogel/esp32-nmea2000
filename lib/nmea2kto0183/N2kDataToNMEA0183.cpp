@@ -33,10 +33,12 @@
 
 
 N2kDataToNMEA0183::N2kDataToNMEA0183(GwLog * logger, GwBoatData *boatData, tNMEA2000 *NMEA2000, 
-  tSendNMEA0183MessageCallback callback, int id) 
+  tSendNMEA0183MessageCallback callback, int id,String talkerId) 
 : tNMEA2000::tMsgHandler(0,NMEA2000){
     SendNMEA0183MessageCallback=0;
     this->SendNMEA0183MessageCallback=callback;
+    strncpy(this->talkerId,talkerId.c_str(),2);
+    talkerId[2]=0;
     sourceId=id;   
   }
 
@@ -136,13 +138,13 @@ private:
                 //no variation
                 if (ref == N2khr_magnetic){
                     updateDouble(boatData->MagneticHeading,Heading);
-                    if (NMEA0183SetHDM(NMEA0183Msg,Heading)){
+                    if (NMEA0183SetHDM(NMEA0183Msg,Heading,talkerId)){
                         SendMessage(NMEA0183Msg);
                     }    
                 }
                 if (ref == N2khr_true){
                     updateDouble(boatData->Heading,Heading);
-                    if (NMEA0183SetHDT(NMEA0183Msg,Heading)){
+                    if (NMEA0183SetHDT(NMEA0183Msg,Heading,talkerId)){
                         SendMessage(NMEA0183Msg);
                     }
                 }
@@ -160,13 +162,13 @@ private:
                 updateDouble(boatData->Heading,Heading);
                 if (!N2kIsNA(MagneticHeading)){
                     if (NMEA0183SetHDG(NMEA0183Msg, MagneticHeading,_Deviation, 
-                        Variation))
+                        Variation,talkerId))
                     {
                         SendMessage(NMEA0183Msg);
                     }
                 }
                 if (!N2kIsNA(Heading)){
-                    if (NMEA0183SetHDT(NMEA0183Msg, Heading))
+                    if (NMEA0183SetHDT(NMEA0183Msg, Heading,talkerId))
                     {
                         SendMessage(NMEA0183Msg);
                     }
@@ -203,7 +205,7 @@ private:
             updateDouble(boatData->STW, WaterReferenced);
             unsigned long now = millis();
             double MagneticHeading = (boatData->Heading->isValid(now) && boatData->Variation->isValid(now)) ? boatData->Heading->getData() + boatData->Variation->getData() : NMEA0183DoubleNA;
-            if (NMEA0183SetVHW(NMEA0183Msg, boatData->Heading->getData(), MagneticHeading, WaterReferenced))
+            if (NMEA0183SetVHW(NMEA0183Msg, boatData->Heading->getData(), MagneticHeading, WaterReferenced,talkerId))
             {
                 SendMessage(NMEA0183Msg);
             }
@@ -224,11 +226,11 @@ private:
             WaterDepth = DepthBelowTransducer + Offset;
             updateDouble(boatData->WaterDepth, WaterDepth);
             tNMEA0183Msg NMEA0183Msg;
-            if (NMEA0183SetDPT(NMEA0183Msg, DepthBelowTransducer, Offset))
+            if (NMEA0183SetDPT(NMEA0183Msg, DepthBelowTransducer, Offset,talkerId))
             {
                 SendMessage(NMEA0183Msg);
             }
-            if (NMEA0183SetDBx(NMEA0183Msg, DepthBelowTransducer, Offset))
+            if (NMEA0183SetDBx(NMEA0183Msg, DepthBelowTransducer, Offset,talkerId))
             {
                 SendMessage(NMEA0183Msg);
             }
@@ -269,7 +271,7 @@ private:
                     updateDouble(boatData->COG, COG);
                 }
             }
-            if (NMEA0183SetVTG(NMEA0183Msg, COG, MCOG, SOG))
+            if (NMEA0183SetVTG(NMEA0183Msg, COG, MCOG, SOG,talkerId))
             {
                 SendMessage(NMEA0183Msg);
             }
@@ -354,12 +356,12 @@ private:
                 if (NMEA0183SetMWV(NMEA0183Msg,
                                    formatCourse(boatData->TWD->getData()),
                                    NMEA0183Reference,
-                                   boatData->TWS->getDataWithDefault(NMEA0183DoubleNA)))
+                                   boatData->TWS->getDataWithDefault(NMEA0183DoubleNA),talkerId))
                     SendMessage(NMEA0183Msg);
                 double magnetic = boatData->TWD->getData();
                 if (boatData->Variation->isValid())
                     magnetic -= boatData->Variation->getData();
-                if (!NMEA0183Msg.Init("MWD", "GP"))
+                if (!NMEA0183Msg.Init("MWD", talkerId))
                     return;
                 if (!NMEA0183Msg.AddDoubleField(formatCourse(boatData->TWD->getData())))
                     return;
@@ -400,7 +402,8 @@ private:
                                boatData->COG->getDataWithDefault(NMEA0183DoubleNA),
                                boatData->SOG->getDataWithDefault(NMEA0183DoubleNA),
                                boatData->DaysSince1970->getDataWithDefault(NMEA0183UInt32NA),
-                               boatData->Variation->getDataWithDefault(NMEA0183DoubleNA)))
+                               boatData->Variation->getDataWithDefault(NMEA0183DoubleNA),
+                               talkerId))
             {
                 SendMessage(NMEA0183Msg);
             }
@@ -424,7 +427,7 @@ private:
                 boatData->DaysSince1970->update(DaysSince1970,sourceId);
             tNMEA0183Msg NMEA0183Msg;
 
-            if (!NMEA0183Msg.Init("VLW", "GP"))
+            if (!NMEA0183Msg.Init("VLW", talkerId))
                 return;
             if (!NMEA0183Msg.AddDoubleField(Log / 1852.0))
                 return;
@@ -457,7 +460,7 @@ private:
 
             tNMEA0183Msg NMEA0183Msg;
 
-            if (!NMEA0183Msg.Init("RSA", "GP"))
+            if (!NMEA0183Msg.Init("RSA", talkerId))
                 return;
             if (!NMEA0183Msg.AddDoubleField(formatCourse(RudderPosition)))
                 return;
@@ -486,7 +489,7 @@ private:
             updateDouble(boatData->WaterTemperature, WaterTemperature);
             tNMEA0183Msg NMEA0183Msg;
 
-            if (!NMEA0183Msg.Init("MTW", "GP"))
+            if (!NMEA0183Msg.Init("MTW", talkerId))
                 return;
             if (!NMEA0183Msg.AddDoubleField(KelvinToC(WaterTemperature)))
                 return;
@@ -886,8 +889,10 @@ private:
     }
 
   public:
-    N2kToNMEA0183Functions(GwLog *logger, GwBoatData *boatData, tNMEA2000 *NMEA2000, tSendNMEA0183MessageCallback callback, int sourceId) 
-    : N2kDataToNMEA0183(logger, boatData, NMEA2000, callback,sourceId)
+    N2kToNMEA0183Functions(GwLog *logger, GwBoatData *boatData, 
+        tNMEA2000 *NMEA2000, tSendNMEA0183MessageCallback callback, int sourceId,
+        String talkerId) 
+    : N2kDataToNMEA0183(logger, boatData, NMEA2000, callback,sourceId,talkerId)
     {
         LastPosSend = 0;
         lastLoopTime = 0;
@@ -910,8 +915,8 @@ private:
 
 
 N2kDataToNMEA0183* N2kDataToNMEA0183::create(GwLog *logger, GwBoatData *boatData, tNMEA2000 *NMEA2000, 
-    tSendNMEA0183MessageCallback callback, int sourceId){
+    tSendNMEA0183MessageCallback callback, int sourceId,String talkerId){
   LOG_DEBUG(GwLog::LOG,"creating N2kToNMEA0183");    
-  return new N2kToNMEA0183Functions(logger,boatData,NMEA2000,callback, sourceId);
+  return new N2kToNMEA0183Functions(logger,boatData,NMEA2000,callback, sourceId,talkerId);
 }
 //*****************************************************************************
