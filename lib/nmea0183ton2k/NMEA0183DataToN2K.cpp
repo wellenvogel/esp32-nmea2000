@@ -225,6 +225,38 @@ private:
     void convertAIVDX(const SNMEA0183Msg &msg){
         aisDecoder->handleMessage(msg.line);
     }
+    void convertMWV(const SNMEA0183Msg &msg){
+        double WindAngle,WindSpeed;
+        tNMEA0183WindReference Reference;
+
+        if (!NMEA0183ParseMWV_nc(msg, WindAngle, Reference,WindSpeed))
+        {
+            logger->logDebug(GwLog::DEBUG, "failed to parse MWV %s", msg.line);
+            return;
+        }
+        tN2kMsg n2kMsg;
+        tN2kWindReference n2kRef;
+        bool shouldSend=false;
+        WindAngle=formatDegToRad(WindAngle);
+        switch(Reference){
+            case NMEA0183Wind_Apparent:
+                n2kRef=N2kWind_Apparent;
+                shouldSend=updateDouble(boatData->AWA,WindAngle,msg.sourceId) && 
+                    updateDouble(boatData->AWS,WindSpeed,msg.sourceId);
+                break;
+            case NMEA0183Wind_True:
+                n2kRef=N2kWind_True_North;
+                shouldSend=updateDouble(boatData->TWD,WindAngle,msg.sourceId) && 
+                    updateDouble(boatData->TWS,WindSpeed,msg.sourceId);
+                break;      
+            default:
+                LOG_DEBUG(GwLog::DEBUG,"unknown wind reference %d in %s",(int)Reference,msg.line);
+        }
+        if (shouldSend){
+            SetN2kWindSpeed(n2kMsg,1,WindSpeed,WindAngle,n2kRef);  
+            send(n2kMsg);  
+        }
+    }
 //shortcut for lambda converters
 #define CVL [](const SNMEA0183Msg &msg, NMEA0183DataToN2KFunctions *p) -> void
     void registerConverters()
@@ -234,6 +266,9 @@ private:
         converters.registerConverter(
             126992UL,129025UL,129026UL,127258UL, 
             String(F("RMC")),  &NMEA0183DataToN2KFunctions::convertRMC);
+        converters.registerConverter(
+            130306UL,
+            String(F("MWV")),&NMEA0183DataToN2KFunctions::convertMWV);    
         unsigned long *aispgns=new unsigned long[7]{129810UL,129809UL,129040UL,129039UL,129802UL,129794UL,129038UL};
         converters.registerConverter(7,&aispgns[0],
             String(F("AIVDM")),&NMEA0183DataToN2KFunctions::convertAIVDX);

@@ -91,39 +91,42 @@ template<class T> class GwBoatItem : public GwBoatItemBase{
 };
 
 static double formatCourse(double cv)
-    {
-        double rt = cv * 180.0 / M_PI;
-        if (rt > 360)
-            rt -= 360;
-        if (rt < 0)
-            rt += 360;
-        return rt;
-    }
-    static double formatWind(double cv)
-    {
-        double rt = formatCourse(cv);
-        if (rt > 180)
-            rt = 180 - rt;
-        return rt;
-    }
-    static double formatKnots(double cv)
-    {
-        return cv * 3600.0 / 1852.0;
-    }
+{
+    double rt = cv * 180.0 / M_PI;
+    if (rt > 360)
+        rt -= 360;
+    if (rt < 0)
+        rt += 360;
+    return rt;
+}
+static double formatDegToRad(double deg){
+    return deg/180.0 * M_PI;
+}
+static double formatWind(double cv)
+{
+    double rt = formatCourse(cv);
+    if (rt > 180)
+        rt = 180 - rt;
+    return rt;
+}
+static double formatKnots(double cv)
+{
+    return cv * 3600.0 / 1852.0;
+}
 
-    static uint32_t mtr2nm(uint32_t m)
-    {
-        return m / 1852;
-    }
-    static double mtr2nm(double m)
-    {
-        return m / 1852;
-    }
+static uint32_t mtr2nm(uint32_t m)
+{
+    return m / 1852;
+}
+static double mtr2nm(double m)
+{
+    return m / 1852;
+}
 
-    static double kelvinToC(double v){
-        return v-273.15;
-    }
-
+static double kelvinToC(double v)
+{
+    return v - 273.15;
+}
 
 #define GWBOATDATA(type,name,time,fmt)  \
     GwBoatItem<type> *name=new GwBoatItem<type>(F(#name),time,fmt,&values) ;

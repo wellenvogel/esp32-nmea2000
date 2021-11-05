@@ -288,6 +288,12 @@ private:
                 updateDouble(boatData->AWS, WindSpeed);
                 setMax(boatData->MaxAws, boatData->AWS);
             }
+            if (WindReference == N2kWind_True_North)
+            {
+                NMEA0183Reference = NMEA0183Wind_True;
+                updateDouble(boatData->TWD, WindAngle);
+                updateDouble(boatData->TWS, WindSpeed);
+            }
 
             if (NMEA0183SetMWV(NMEA0183Msg, formatCourse(WindAngle), NMEA0183Reference, WindSpeed))
                 SendMessage(NMEA0183Msg);
