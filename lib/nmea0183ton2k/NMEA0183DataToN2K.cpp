@@ -100,7 +100,7 @@ private:
             sender(msg);
             return true;
         }
-        if ((it->second + minDiff) < now){
+        if ((it->second + minDiff) <= now){
             lastSends[pgn]=now;
             sender(msg);
             return true;
@@ -257,6 +257,94 @@ private:
             send(n2kMsg);  
         }
     }
+    void convertVWR(const SNMEA0183Msg &msg)
+    {
+        double WindAngle = NMEA0183DoubleNA, WindSpeed = NMEA0183DoubleNA;
+        if (msg.FieldCount() < 8 || msg.FieldLen(0) < 1)
+        {
+            logger->logDebug(GwLog::DEBUG, "failed to parse VWR %s", msg.line);
+            return;
+        }
+        WindAngle = atof(msg.Field(0));
+        char direction = msg.Field(1)[0];
+        if (direction == 'L' && WindAngle < 180)
+            WindAngle = 360 - WindAngle;
+        WindAngle = formatDegToRad(WindAngle);
+        if (msg.FieldLen(2) > 0 && msg.Field(3)[0] == 'N')
+        {
+            WindSpeed = atof(msg.Field(2)) * knToms;
+        }
+        else if (msg.FieldLen(4) > 0 && msg.Field(5)[0] == 'M')
+        {
+            WindSpeed = atof(msg.Field(4));
+        }
+        else if (msg.FieldLen(6) > 0 && msg.Field(7)[0] == 'K')
+        {
+            WindSpeed = atof(msg.Field(6)) * 1000.0 / 3600.0;
+        }
+        if (WindSpeed == NMEA0183DoubleNA)
+        {
+            logger->logDebug(GwLog::DEBUG, "no wind speed in VWR %s", msg.line);
+            return;
+        }
+        tN2kMsg n2kMsg;
+        bool shouldSend = false;
+        shouldSend = updateDouble(boatData->AWA, WindAngle, msg.sourceId) &&
+                     updateDouble(boatData->AWS, WindSpeed, msg.sourceId);
+        if (shouldSend)
+        {
+            SetN2kWindSpeed(n2kMsg, 1, WindSpeed, WindAngle, N2kWind_Apparent);
+            send(n2kMsg);
+        }
+    }
+
+    void convertMWD(const SNMEA0183Msg &msg)
+    {
+        double WindAngle = NMEA0183DoubleNA, WindAngleMagnetic=NMEA0183DoubleNA,
+            WindSpeed = NMEA0183DoubleNA;
+        if (msg.FieldCount() < 8 )
+        {
+            logger->logDebug(GwLog::DEBUG, "failed to parse MWD %s", msg.line);
+            return;
+        }
+        if (msg.FieldLen(0) > 0 && msg.Field(1)[0] == 'T')
+        {
+            WindAngle = formatDegToRad(atof(msg.Field(0)));
+        }
+        if (msg.FieldLen(2) > 0 && msg.Field(3)[0] == 'M')
+        {
+            WindAngleMagnetic = formatDegToRad(atof(msg.Field(2)));
+        }
+        if (msg.FieldLen(4) > 0 && msg.Field(5)[0] == 'N')
+        {
+            WindSpeed = atof(msg.Field(4)) * knToms;
+        }
+        else if (msg.FieldLen(6) > 0 && msg.Field(7)[0] == 'M')
+        {
+            WindSpeed = atof(msg.Field(6));
+        }
+        if (WindSpeed == NMEA0183DoubleNA)
+        {
+            logger->logDebug(GwLog::DEBUG, "no wind speed in MWD %s", msg.line);
+            return;
+        }
+        tN2kMsg n2kMsg;
+        bool shouldSend = false;
+        if (WindAngle != NMEA0183DoubleNA){
+            shouldSend = updateDouble(boatData->TWD, WindAngle, msg.sourceId) &&
+                         updateDouble(boatData->TWS, WindSpeed, msg.sourceId);
+        }
+        if (shouldSend)
+        {
+            SetN2kWindSpeed(n2kMsg, 1, WindSpeed, WindAngle, N2kWind_True_North);
+            send(n2kMsg);
+        }
+        if (WindAngleMagnetic != NMEA0183DoubleNA && shouldSend){
+            SetN2kWindSpeed(n2kMsg, 1, WindSpeed, WindAngleMagnetic, N2kWind_Magnetic);
+            send(n2kMsg,0); //force sending
+        }
+    }
+
 //shortcut for lambda converters
 #define CVL [](const SNMEA0183Msg &msg, NMEA0183DataToN2KFunctions *p) -> void
     void registerConverters()
@@ -268,7 +356,13 @@ private:
             String(F("RMC")),  &NMEA0183DataToN2KFunctions::convertRMC);
         converters.registerConverter(
             130306UL,
-            String(F("MWV")),&NMEA0183DataToN2KFunctions::convertMWV);    
+            String(F("MWV")),&NMEA0183DataToN2KFunctions::convertMWV); 
+        converters.registerConverter(
+            130306UL,
+            String(F("MWD")),&NMEA0183DataToN2KFunctions::convertMWD);     
+        converters.registerConverter(
+            130306UL,
+            String(F("VWR")),&NMEA0183DataToN2KFunctions::convertVWR);        
         unsigned long *aispgns=new unsigned long[7]{129810UL,129809UL,129040UL,129039UL,129802UL,129794UL,129038UL};
         converters.registerConverter(7,&aispgns[0],
             String(F("AIVDM")),&NMEA0183DataToN2KFunctions::convertAIVDX);
@@ -316,7 +410,7 @@ public:
         registerConverters();
         LOG_DEBUG(GwLog::LOG, "NMEA0183DataToN2KFunctions: registered %d converters", converters.numConverters());
     }
-};
+    };
 
 NMEA0183DataToN2K* NMEA0183DataToN2K::create(GwLog *logger,GwBoatData *boatData,N2kSender callback){
     return new NMEA0183DataToN2KFunctions(logger, boatData,callback);
