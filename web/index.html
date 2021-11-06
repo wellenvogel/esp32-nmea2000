@@ -380,8 +380,51 @@
     }
     el.classList.add('active');
     activeTab.classList.remove('hidden');
+  }
+  function createDashboardItem(name,def,parent){
+    let frame=addEl('div','dash',parent);
+    let title=addEl('span','dashTitle',frame,name);
+    let value=addEl('span','dashValue',frame);
+    value.setAttribute('id','data_'+name);
+    return value;
+  }
+  function createDashboard(){
+    let frame=document.getElementById('dashboardPage');
+    if (! frame) return;
+    getJson("api/boatData").then(function(json){
+      frame.innerHTML='';
+      for (let n in json){
+        createDashboardItem(n,json[n],frame);
+      }
+      updateDashboard(json);
+    });
+  }
+  function updateDashboard(data){
+    for (let n in data){
+      let de=document.getElementById('data_'+n);
+      if (de){
+        if (data[n].valid){
+          let v=parseFloat(data[n].value);
+          if (! isNaN(v)){
+            v=v.toFixed(3)
+            de.textContent=v;
+          }
+          else{
+            de.textContent=data[n].value;
+          }
+        }
+        else de.textContent="---";
+      }
+    }
   }  
   window.setInterval(update,1000);
+  window.setInterval(function(){
+    let dp=document.getElementById('dashboardPage');
+    if (dp.classList.contains('hidden')) return;
+    getJson('api/boatData').then(function(data){
+      updateDashboard(data);
+    });
+  },1000);
   window.addEventListener('load',function(){
   let buttons=document.querySelectorAll('button');
     for (let i=0;i<buttons.length;i++){
@@ -399,6 +442,7 @@
       });
     }
     loadConfigDefinitions();
+    createDashboard();
   });
 </script>  
 <style type="text/css">
@@ -553,7 +597,30 @@ h1{
   opacity: 1;
 }
 
-
+.dash {
+    width: 6em;
+    height: 4em;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid grey;
+    overflow: hidden;
+    margin: 0;
+    box-sizing: border-box;
+    font-size: 1.2em;
+}
+div#dashboardPage {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+.dashTitle {
+    font-size: 0.8em;
+    background-color: lightgray;
+}
+.dashValue{
+  font-size: 1.8em;
+  text-align: center;
+}
 </style>
 </head>
 <body>
@@ -566,6 +633,7 @@ h1{
 <div id="tabs">
   <div class="tab active" data-page="statusPage">Status</div>
   <div class="tab" data-page="configPage">Config</div>
+  <div class="tab" data-page="dashboardPage">Data</div>
 </div>
 <div id="statusPage" class="tabPage">
 <div class="row">
@@ -613,6 +681,9 @@ h1{
     <button id="changeConfig">Save&Restart</button>
     <button id="factoryReset">FactoryReset</button>
   </div>
+</div>
+<div class="tabPage hidden" id="dashboardPage">
+
 </div>
 
 </div>
