@@ -12,6 +12,7 @@ class GwLog{
         char buffer[100];
         int logLevel=1;
         GwLogWriter *writer;
+        SemaphoreHandle_t locker;
     public:
         static const int LOG=1;
         static const int ERROR=0;
@@ -19,6 +20,7 @@ class GwLog{
         static const int TRACE=2;
         String prefix="LOG:";
         GwLog(int level=LOG, GwLogWriter *writer=NULL);
+        ~GwLog();
         void setWriter(GwLogWriter *writer);
         void logString(const char *fmt,...);
         void logDebug(int level, const char *fmt,...);
