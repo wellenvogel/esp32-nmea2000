@@ -62,7 +62,12 @@ typedef std::map<String,String> StringMap;
 
 GwLog logger(GwLog::DEBUG,NULL);
 GwConfigHandler config(&logger);
-GwWifi gwWifi(&config,&logger);
+#ifdef GWBUTTON_PIN
+bool fixedApPass=false;
+#else
+bool fixedApPass=true;
+#endif
+GwWifi gwWifi(&config,&logger,fixedApPass);
 GwSocketServer socketServer(&config,&logger,MIN_TCP_CHANNEL_ID);
 GwBoatData boatData(&logger);
 
@@ -223,13 +228,16 @@ class CapabilitiesRequest : public GwRequestMessage{
     CapabilitiesRequest() : GwRequestMessage(F("application/json"),F("capabilities")){};
   protected:
     virtual void processRequest(){
-      DynamicJsonDocument json(JSON_OBJECT_SIZE(2));
+      DynamicJsonDocument json(JSON_OBJECT_SIZE(6));
       #ifdef GWSERIAL_MODE
       String serial(F(GWSERIAL_MODE));
       #else
       String serial(F("NONE"));
       #endif
       json["serialmode"]=serial;
+      #ifdef GWBUTTON_PIN
+      json["hardwareReset"]="true";
+      #endif
       serializeJson(json,result);
     }  
 };

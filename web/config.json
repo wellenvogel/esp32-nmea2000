@@ -26,6 +26,15 @@
         "category":"system"
     },
     {
+        "name": "apPassword",
+        "type": "password",
+        "default": "esp32nmea2k",
+        "check": "checkApPass",
+        "description": "set the password for the Wifi access point",
+        "category":"system",
+        "capabilities":{"hardwareReset":["true"]}
+    },
+    {
         "name": "usbBaud",
         "label": "USB baud rate",
         "type": "list",

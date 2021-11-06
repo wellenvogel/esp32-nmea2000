@@ -2,12 +2,13 @@
 
 const char *AP_password = "esp32nmea2k"; 
 
-GwWifi::GwWifi(const GwConfigHandler *config,GwLog *log){
+GwWifi::GwWifi(const GwConfigHandler *config,GwLog *log, bool fixedApPass){
     this->config=config;
     this->logger=log;
     wifiClient=config->getConfigItem(config->wifiClient,true);
     wifiSSID=config->getConfigItem(config->wifiSSID,true);
     wifiPass=config->getConfigItem(config->wifiPass,true);
+    this->fixedApPass=fixedApPass;
 }
 void GwWifi::setup(){
     logger->logString("Wifi setup");
@@ -17,7 +18,12 @@ void GwWifi::setup(){
     IPAddress AP_subnet(255, 255, 255, 0);
     WiFi.mode(WIFI_MODE_APSTA); //enable both AP and client
     const char *ssid=config->getConfigItem(config->systemName)->asCString();
-    WiFi.softAP(ssid,AP_password);
+    if (fixedApPass){
+        WiFi.softAP(ssid,AP_password);
+    }
+    else{
+        WiFi.softAP(ssid,config->getConfigItem(config->apPassword)->asCString());
+    }
     delay(100);
     WiFi.softAPConfig(AP_local_ip, AP_gateway, AP_subnet);
     logger->logString("WifiAP created: ssid=%s,adress=%s",

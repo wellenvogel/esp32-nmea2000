@@ -83,6 +83,12 @@
     if (allowed != v) return "contains invalid characters, only a-z, A-Z, 0-9";
     if (v.length < 2 || v.length > 32) return "invalid length (2...32)";
   }
+  function checkApPass(v){
+    //min 8 characters
+    if (v.length < 8){
+      return "password must be at least 8 characters";
+    }
+  }
   function changeConfig(){
     let url="/api/setConfig?";
     let values=document.querySelectorAll('.configForm select , .configForm input');
@@ -96,7 +102,9 @@
         if (typeof(self[check]) === 'function'){
           let res=self[check](v.value);
           if (res){
-            alert("invalid config for "+v.getAttribute('name')+"("+v.value+"):\n"+res);
+            let value=v.value;
+            if (v.type === 'password') value="******";
+            alert("invalid config for "+v.getAttribute('name')+"("+value+"):\n"+res);
             return;
           }
         }
@@ -254,8 +262,18 @@
     }
     el=document.createElement('input');
     el.setAttribute('name',configItem.name)
+    frame.appendChild(el);
     if (configItem.type === 'password'){
       el.setAttribute('type','password');
+      let vis=addEl('span','icon-eye',frame);
+      vis.addEventListener('click',function(v){
+        if (vis.classList.toggle('active')){
+          el.setAttribute('type','text');
+        }
+        else{
+          el.setAttribute('type','password');
+        }
+      });
     }
     else if (configItem.type === 'number'){
       el.setAttribute('type','number');
@@ -263,7 +281,6 @@
     else{
       el.setAttribute('type','text');
     }
-    frame.appendChild(el);
     return el;
   }
   let configDefinitions;
@@ -488,7 +505,7 @@ div#overlayContent {
     padding: 0.5em;
 }
 div#overlayContent.text{
-  white-space: pre;
+  white-space: pre-line;
 }
 .overlayButtons {
     border-top: 1px solid grey;
@@ -525,6 +542,17 @@ button#reset{
 h1{
   margin-bottom: 0;
 }
+.icon-eye{
+  background-image: url("data:image/svg+xml;utf-8,<svg width='24' height='24' xmlns='http://www.w3.org/2000/svg' xmlns:svg='http://www.w3.org/2000/svg'> <g class='layer'> <title>Layer 1</title> <path d='m0,0l24,0l0,24l-24,0l0,-24z' fill='none' id='svg_1'/> <path d='m12,6c3.79,0 7.17,2.13 8.82,5.5c-1.65,3.37 -5.03,5.5 -8.82,5.5s-7.17,-2.13 -8.82,-5.5c1.65,-3.37 5.03,-5.5 8.82,-5.5m0,-2c-5,0 -9.27,3.11 -11,7.5c1.73,4.39 6,7.5 11,7.5s9.27,-3.11 11,-7.5c-1.73,-4.39 -6,-7.5 -11,-7.5zm0,5c1.38,0 2.5,1.12 2.5,2.5s-1.12,2.5 -2.5,2.5s-2.5,-1.12 -2.5,-2.5s1.12,-2.5 2.5,-2.5m0,-2c-2.48,0 -4.5,2.02 -4.5,4.5s2.02,4.5 4.5,4.5s4.5,-2.02 4.5,-4.5s-2.02,-4.5 -4.5,-4.5z' id='svg_2'/> </g> </svg>");
+  height: 1.5em;
+  width: 1.5em;
+  margin-left: 0.5em;
+  opacity: 0.3;
+}
+.icon-eye.active{
+  opacity: 1;
+}
+
 
 </style>
 </head>
