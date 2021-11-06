@@ -12,7 +12,7 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#define VERSION "0.5.6"
+#define VERSION "0.5.8"
 
 // #define GW_MESSAGE_DEBUG_ENABLED
 // #define FALLBACK_SERIAL
@@ -45,6 +45,7 @@ const unsigned long HEAP_REPORT_TIME=2000; //set to 0 to disable heap reporting
 #include "NMEA0183DataToN2K.h"
 #include "GwApi.h"
 #include "GwButtons.h"
+#include "GwLeds.h"
 
 
 //NMEA message channels
@@ -495,6 +496,8 @@ void setup() {
   }); 
   NMEA2000.Open();
   startAddOnTask(handleButtons,100);
+  setLedMode(LED_GREEN);
+  startAddOnTask(handleLeds,101);
 
 }  
 //*****************************************************************************

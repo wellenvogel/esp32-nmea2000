@@ -1,6 +1,7 @@
 #include "GwButtons.h"
 #include "GwHardware.h"
 #include "GwApi.h"
+#include "GwLeds.h"
 
 class FactoryResetRequest: public GwMessage{
     private:
@@ -50,6 +51,7 @@ void handleButtons(void *param){
     const unsigned long OFF_TIME=20;
     const unsigned long REPORT_TIME=1000;
     const unsigned long HARD_REST_TIME=10000;
+    GwLedMode ledMode=LED_OFF;
     while(true){
         delay(10);
         int current=digitalRead(GWBUTTON_PIN);
@@ -58,6 +60,10 @@ void handleButtons(void *param){
             if (lastPressed != 0 && (lastPressed+OFF_TIME) < now){
                 lastPressed=0; //finally off
                 firstPressed=0;
+                if (ledMode != LED_OFF){
+                    setLedMode(LED_GREEN); //TODO: better "go back"
+                    ledMode=LED_OFF;
+                }
                 LOG_DEBUG(GwLog::LOG,"Button press stopped");
             }
             continue;
@@ -71,6 +77,17 @@ void handleButtons(void *param){
         if (lastReport != 0 && (lastReport + REPORT_TIME) < now ){
             LOG_DEBUG(GwLog::LOG,"Button active for %ld",(now-firstPressed));
             lastReport=now;
+        }
+        GwLedMode nextMode=ledMode;
+        if (now > (firstPressed+HARD_REST_TIME/2)){
+            nextMode=LED_BLUE;
+        }
+        if (now > (firstPressed+HARD_REST_TIME*0.9)){
+            nextMode=LED_RED;
+        }
+        if (ledMode != nextMode){
+            setLedMode(nextMode);
+            ledMode=nextMode;
         }
         if (now > (firstPressed+HARD_REST_TIME)){
             LOG_DEBUG(GwLog::ERROR,"Factory reset by button");
