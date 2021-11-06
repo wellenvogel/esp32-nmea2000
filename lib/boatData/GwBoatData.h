@@ -36,7 +36,7 @@ class GwBoatItemBase{
             lastSet=0;
         }
         virtual void toJsonDoc(JsonDocument *doc, unsigned long minTime)=0;
-        virtual size_t getJsonSize(){return JSON_OBJECT_SIZE(5);}
+        virtual size_t getJsonSize(){return JSON_OBJECT_SIZE(15);}
         virtual int getLastSource()=0;
 };
 class GwBoatData;
@@ -47,10 +47,12 @@ template<class T> class GwBoatItem : public GwBoatItemBase{
         T data;
         Formatter fmt;
         int lastUpdateSource;
+        String formatInfo;
     public:
-        GwBoatItem(String name,unsigned long invalidTime=INVALID_TIME,Formatter fmt=NULL,GwBoatItemMap *map=NULL):
+        GwBoatItem(String name,String formatInfo,unsigned long invalidTime=INVALID_TIME,Formatter fmt=NULL,GwBoatItemMap *map=NULL):
             GwBoatItemBase(name,invalidTime){
             this->fmt=fmt;
+            this->formatInfo=formatInfo;
             if (map){
                 map->push_back(this);
             }
@@ -86,6 +88,7 @@ template<class T> class GwBoatItem : public GwBoatItemBase{
             o[F("update")]=minTime-lastSet;
             o[F("source")]=lastUpdateSource;
             o[F("valid")]=isValid(minTime);
+            o[F("format")]=formatInfo;
         }
         virtual int getLastSource(){return lastUpdateSource;}
 };
@@ -129,7 +132,7 @@ static double kelvinToC(double v)
 }
 
 #define GWBOATDATA(type,name,time,fmt)  \
-    GwBoatItem<type> *name=new GwBoatItem<type>(F(#name),time,fmt,&values) ;
+    GwBoatItem<type> *name=new GwBoatItem<type>(F(#name),F(#fmt),time,fmt,&values) ;
 class GwBoatData{
     private:
         GwLog *logger;
@@ -143,8 +146,8 @@ class GwBoatData{
     GWBOATDATA(double,STW,4000,&formatKnots)
     GWBOATDATA(double,TWS,4000,&formatKnots)
     GWBOATDATA(double,AWS,4000,&formatKnots)
-    GWBOATDATA(double,MaxTws,4000,&formatKnots)
-    GWBOATDATA(double,MaxAws,4000,&formatKnots)
+    GWBOATDATA(double,MaxTws,0,&formatKnots)
+    GWBOATDATA(double,MaxAws,0,&formatKnots)
     GWBOATDATA(double,AWA,4000,&formatWind)
     GWBOATDATA(double,Heading,4000,&formatCourse) //true
     GWBOATDATA(double,MagneticHeading,4000,&formatCourse)

@@ -399,24 +399,42 @@
       updateDashboard(json);
     });
   }
+  let valueFormatters={
+    formatCourse: function(v){let x=parseFloat(v); return x.toFixed(0);},
+    formatKnots: function(v){let x=parseFloat(v); return x.toFixed(2);},
+    formatWind: function(v){let x=parseFloat(v); return x.toFixed(0);},
+    mtr2nm:  function(v){let x=parseFloat(v); return x.toFixed(2);},
+    kelvinToC:  function(v){let x=parseFloat(v); return x.toFixed(0);},
+  }  
   function updateDashboard(data){
     for (let n in data){
       let de=document.getElementById('data_'+n);
       if (de){
         if (data[n].valid){
-          let v=parseFloat(data[n].value);
-          if (! isNaN(v)){
-            v=v.toFixed(3)
-            de.textContent=v;
+          let formatter;
+          if (data[n].format && data[n].format != "NULL"){
+            let key=data[n].format.replace(/^\&/,'');
+            formatter=valueFormatters[key];
           }
-          else{
-            de.textContent=data[n].value;
+          if (formatter){
+            de.textContent=formatter(data[n].value);
+          }
+          else {
+            let v = parseFloat(data[n].value);
+            if (!isNaN(v)) {
+              v = v.toFixed(3)
+              de.textContent = v;
+            }
+            else {
+              de.textContent = data[n].value;
+            }
           }
         }
         else de.textContent="---";
       }
     }
-  }  
+  }
+  
   window.setInterval(update,1000);
   window.setInterval(function(){
     let dp=document.getElementById('dashboardPage');
