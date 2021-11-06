@@ -29,11 +29,15 @@
 #elif BOARD_M5STICK_CANUNIT
 #define ESP32_CAN_TX_PIN GPIO_NUM_32
 #define ESP32_CAN_RX_PIN GPIO_NUM_33
-#else
-#define ESP32_CAN_TX_PIN GPIO_NUM_5  // Set CAN TX port to 5 (Caution!!! Pin 2 before)
-#define ESP32_CAN_RX_PIN GPIO_NUM_4  // Set CAN RX port to 4
-#define GWSERIAL_RX GPIO_NUM_16
+#elif BOARD_HOMBERGER
+#define ESP32_CAN_TX_PIN GPIO_NUM_5
+#define ESP32_CAN_RX_PIN GPIO_NUM_4
+//serial input only
+#define GWSERIAL_RX 16
 #define GWSERIAL_MODE "RX"
+
+#else
+
 #endif
 
 #endif
