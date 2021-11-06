@@ -405,6 +405,8 @@
     formatWind: function(v){let x=parseFloat(v); return x.toFixed(0);},
     mtr2nm:  function(v){let x=parseFloat(v); return x.toFixed(2);},
     kelvinToC:  function(v){let x=parseFloat(v); return x.toFixed(0);},
+    formatFixed0:  function(v){let x=parseFloat(v); return x.toFixed(0);},
+    formatDepth:  function(v){let x=parseFloat(v); return x.toFixed(1);},
   }  
   function updateDashboard(data){
     for (let n in data){

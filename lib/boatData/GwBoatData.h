@@ -92,44 +92,18 @@ template<class T> class GwBoatItem : public GwBoatItemBase{
         }
         virtual int getLastSource(){return lastUpdateSource;}
 };
-
-static double formatCourse(double cv)
-{
-    double rt = cv * 180.0 / M_PI;
-    if (rt > 360)
-        rt -= 360;
-    if (rt < 0)
-        rt += 360;
-    return rt;
-}
-static double formatDegToRad(double deg){
-    return deg/180.0 * M_PI;
-}
-static double formatWind(double cv)
-{
-    double rt = formatCourse(cv);
-    if (rt > 180)
-        rt = 180 - rt;
-    return rt;
-}
-static double formatKnots(double cv)
-{
-    return cv * 3600.0 / 1852.0;
-}
-
-static uint32_t mtr2nm(uint32_t m)
-{
-    return m / 1852;
-}
-static double mtr2nm(double m)
-{
-    return m / 1852;
-}
-
-static double kelvinToC(double v)
-{
-    return v - 273.15;
-}
+double formatCourse(double cv);
+double formatDegToRad(double deg);
+double formatWind(double cv);
+double formatKnots(double cv);
+uint32_t mtr2nm(uint32_t m);
+double mtr2nm(double m);
+double kelvinToC(double v);
+double formatLatitude(double v);
+double formatLongitude(double v);
+double formatFixed0(double v);
+uint32_t formatFixed0(uint32_t v);
+double formatDepth(double v);
 
 #define GWBOATDATA(type,name,time,fmt)  \
     GwBoatItem<type> *name=new GwBoatItem<type>(F(#name),F(#fmt),time,fmt,&values) ;
@@ -154,20 +128,20 @@ class GwBoatData{
     GWBOATDATA(double,Variation,4000,&formatCourse)
     GWBOATDATA(double,Deviation,4000,&formatCourse)
     GWBOATDATA(double,RudderPosition,4000,&formatCourse)
-    GWBOATDATA(double,Latitude,4000,NULL)
-    GWBOATDATA(double,Longitude,4000,NULL)
-    GWBOATDATA(double,Altitude,4000,NULL)
-    GWBOATDATA(double,WaterDepth,4000,NULL)
-    GWBOATDATA(double,SecondsSinceMidnight,4000,NULL)
+    GWBOATDATA(double,Latitude,4000,&formatLatitude)
+    GWBOATDATA(double,Longitude,4000,&formatLongitude)
+    GWBOATDATA(double,Altitude,4000,&formatFixed0)
+    GWBOATDATA(double,WaterDepth,4000,&formatDepth)
+    GWBOATDATA(double,SecondsSinceMidnight,4000,&formatFixed0)
     GWBOATDATA(double,WaterTemperature,4000,&kelvinToC)
-    GWBOATDATA(double,XTE,4000,NULL)
+    GWBOATDATA(double,XTE,4000,&formatFixed0)
     GWBOATDATA(double,DTW,4000,&mtr2nm)
     GWBOATDATA(double,BTW,4000,&formatCourse)
-    GWBOATDATA(double,WPLatitude,4000,NULL)
-    GWBOATDATA(double,WPLongitude,4000,NULL)
+    GWBOATDATA(double,WPLatitude,4000,&formatLatitude)
+    GWBOATDATA(double,WPLongitude,4000,&formatLongitude)
     GWBOATDATA(uint32_t,Log,0,&mtr2nm)
     GWBOATDATA(uint32_t,TripLog,0,&mtr2nm)
-    GWBOATDATA(uint32_t,DaysSince1970,4000,NULL)
+    GWBOATDATA(uint32_t,DaysSince1970,4000,&formatFixed0)
     public:
         GwBoatData(GwLog *logger);
         ~GwBoatData();
