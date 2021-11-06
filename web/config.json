@@ -5,7 +5,8 @@
         "type": "string",
         "default": "ESP32NMEA2K",
         "check": "checkSystemName",
-        "description": "system name, used for the access point and for services"
+        "description": "system name, used for the access point and for services",
+        "category":"system"
     },
     {
         "name":"talkerId",
@@ -13,7 +14,16 @@
         "type":"list",
         "default":"GP",
         "list":["AB","AD","AG","AP","AI","AN","AR","AS","AT","AX","BI","BN","CA","CD","CR","CS","CT","CV","CX","DF","DU","DP","EC","EI","EP","ER","FD","FE","FR","FS","GA","GB","GI","GL","GN","GP","GQ","HC","HE","HF","HN","HD","HS","II","IN","JA","JB","JC","JD","JE","JF","JG","JH","LC","NL","NV","RA","RB","RC","RI","SA","SC","SD","SG","SN","SS","TC","TI","UP","VD","VM","VW","VA","VS","VT","VR","WD","WI","WL","YX","ZA","ZC","ZQ","ZV"],
-        "description":"the talkerId used in generated NMEA0183 records"
+        "description":"the talkerId used in generated NMEA0183 records",
+        "category":"system"
+    },
+    {
+        "name": "stopApTime",
+        "type": "number",
+        "default": "0",
+        "check": "checkStopApTime",
+        "description": "stop the access point after that many minutes if not used",
+        "category":"system"
     },
     {
         "name": "usbBaud",
@@ -21,42 +31,48 @@
         "type": "list",
         "default": "115200",
         "description": "baud rate for the USB port",
-        "list": [1200,2400,4800,9600,14400,19200,28800,38400,57600,115200,230400,460800]
+        "list": [1200,2400,4800,9600,14400,19200,28800,38400,57600,115200,230400,460800],
+        "category":"usb port"
     },
     {
         "name": "sendUsb",
         "label": "NMEA to USB",
         "type": "boolean",
         "default": "true",
-        "description": "send out NMEA data on the USB port"
+        "description": "send out NMEA data on the USB port",
+        "category":"usb port"
     },
     {
         "name": "receiveUsb",
         "label": "NMEA from USB",
         "type": "boolean",
         "default": "true",
-        "description": "receive NMEA data on the USB port"
+        "description": "receive NMEA data on the USB port",
+        "category":"usb port"
     },
     {
         "name": "usbToN2k",
         "label": "USB to NMEA2000",
         "type": "boolean",
         "default": "true",
-        "description": "convert NMEA0183 from the USB port to NMEA2000"
+        "description": "convert NMEA0183 from the USB port to NMEA2000",
+        "category":"usb port"
     },
     {
         "name": "usbReadFilter",
         "label": "USB read Filter",
         "type": "filter",
         "default": "",
-        "description": "filter for NMEA0183 data when reading from USB\nselect aison|aisoff, set a whitelist or a blacklist with NMEA sentences like RMC,RMB"
+        "description": "filter for NMEA0183 data when reading from USB\nselect aison|aisoff, set a whitelist or a blacklist with NMEA sentences like RMC,RMB",
+        "category":"usb port"
     },
     {
         "name": "usbWriteFilter",
         "label": "USB write Filter",
         "type": "filter",
         "default": "",
-        "description": "filter for NMEA0183 data when writing to USB\nselect aison|aisoff, set a whitelist or a blacklist with NMEA sentences like RMC,RMB"
+        "description": "filter for NMEA0183 data when writing to USB\nselect aison|aisoff, set a whitelist or a blacklist with NMEA sentences like RMC,RMB",
+        "category":"usb port"
     },
     {
         "name": "serialDirection",
@@ -65,7 +81,8 @@
         "default": "receive",
         "list": ["send","receive","off"],
         "description": "use the serial port to send or receive data",
-        "capabilities":{"serialmode":["UNI"]}
+        "capabilities":{"serialmode":["UNI"]},
+        "category":"serial port"
     },
     {
         "name": "serialBaud",
@@ -74,7 +91,8 @@
         "default": "115200",
         "description": "baud rate for the serial port",
         "list": [1200,2400,4800,9600,14400,19200,28800,38400,57600,115200,230400,460800],
-        "capabilities":{"serialmode":["RX","TX","UNI","BI"]}
+        "capabilities":{"serialmode":["RX","TX","UNI","BI"]},
+        "category":"serial port"
     },
     {
         "name": "sendSerial",
@@ -82,7 +100,8 @@
         "type": "boolean",
         "default": "true",
         "description": "send out NMEA data on the serial port",
-        "capabilities":{"serialmode":["TX","BI"]}
+        "capabilities":{"serialmode":["TX","BI"]},
+        "category":"serial port"
     },
     {
         "name": "receiveSerial",
@@ -90,7 +109,8 @@
         "type": "boolean",
         "default": "true",
         "description": "receive NMEA data on the serial port",
-        "capabilities":{"serialmode":["RX","BI"]}
+        "capabilities":{"serialmode":["RX","BI"]},
+        "category":"serial port"
     },
     {
         "name": "serialToN2k",
@@ -98,7 +118,8 @@
         "type": "boolean",
         "default": "true",
         "description": "convert NMEA0183 from the serial port to NMEA2000",
-        "capabilities":{"serialmode":["RX","BI","UNI"]}
+        "capabilities":{"serialmode":["RX","BI","UNI"]},
+        "category":"serial port"
     },
     {
         "name": "serialReadFilter",
@@ -106,7 +127,8 @@
         "type": "filter",
         "default": "",
         "description": "filter for NMEA0183 data when reading from serial\nselect aison|aisoff, set a whitelist or a blacklist with NMEA sentences like RMC,RMB",
-        "capabilities":{"serialmode":["RX","BI","UNI"]}
+        "capabilities":{"serialmode":["RX","BI","UNI"]},
+        "category":"serial port"
     },
     {
         "name": "serialWriteFilter",
@@ -114,14 +136,16 @@
         "type": "filter",
         "default": "",
         "description": "filter for NMEA0183 data when writing to serial\nselect aison|aisoff, set a whitelist or a blacklist with NMEA sentences like RMC,RMB",
-        "capabilities":{"serialmode":["TX","BI","UNI"]}
+        "capabilities":{"serialmode":["TX","BI","UNI"]},
+        "category":"serial port"
     },
     {
         "name": "serverPort",
         "label": "TCP port",
         "type": "number",
         "default": "2222",
-        "description": "the TCP port we listen on"
+        "description": "the TCP port we listen on",
+        "category":"TCP port"
     },
     {
         "name": "maxClients",
@@ -129,63 +153,72 @@
         "type": "number",
         "default": "10",
         "check":"checkMaxClients",
-        "description": "the number of clients we allow to connect to us"
+        "description": "the number of clients we allow to connect to us",
+        "category":"TCP port"
     },
     {
         "name": "sendTCP",
         "label": "NMEA to TCP",
         "type": "boolean",
         "default": "true",
-        "description": "send out NMEA data to connected TCP clients"
+        "description": "send out NMEA data to connected TCP clients",
+        "category":"TCP port"
     },
     {
         "name": "readTCP",
         "label": "NMEA from TCP",
         "type": "boolean",
         "default": "true",
-        "description": "receive NMEA data from connected TCP clients"
+        "description": "receive NMEA data from connected TCP clients",
+        "category":"TCP port"
     },
     {
         "name": "tcpToN2k",
         "label": "TCP to NMEA2000",
         "type": "boolean",
         "default": "true",
-        "description": "convert NMEA0183 from TCP clients to NMEA2000"
+        "description": "convert NMEA0183 from TCP clients to NMEA2000",
+        "category":"TCP port"
     },
     {
         "name": "tcpReadFilter",
         "label": "TCP read Filter",
         "type": "filter",
         "default": "",
-        "description": "filter for NMEA0183 data when reading from TCP\nselect aison|aisoff, set a whitelist or a blacklist with NMEA sentences like RMC,RMB"
+        "description": "filter for NMEA0183 data when reading from TCP\nselect aison|aisoff, set a whitelist or a blacklist with NMEA sentences like RMC,RMB",
+        "category":"TCP port"
     },
     {
         "name": "tcpWriteFilter",
         "label": "TCP write Filter",
         "type": "filter",
         "default": "",
-        "description": "filter for NMEA0183 data when writing to TCP\nselect aison|aisoff, set a whitelist or a blacklist with NMEA sentences like RMC,RMB"
+        "description": "filter for NMEA0183 data when writing to TCP\nselect aison|aisoff, set a whitelist or a blacklist with NMEA sentences like RMC,RMB",
+        "category":"TCP port"
     },
     {
         "name": "sendSeasmart",
         "label": "Seasmart to TCP",
         "type": "boolean",
         "default": "false",
-        "description": "send NMEA2000 as seasmart to connected TCP clients"
+        "description": "send NMEA2000 as seasmart to connected TCP clients",
+        "category":"TCP port"
     },
     {
         "name": "wifiClient",
         "label": "wifi client",
         "type": "boolean",
         "default": "false",
-        "description": "connect to an external WIFI network"
+        "description": "connect to an external WIFI network",
+        "category":"wifi client"
     },
     {
         "name": "wifiPass",
         "label": "wifi client password",
         "type": "password",
         "default": "",
-        "description": "the password for an external WIFI network"
+        "description": "the password for an external WIFI network",
+        "category":"wifi client"
     },
     {
         "name": "wifiSSID",
@@ -193,14 +226,8 @@
         "type": "string",
         "default": "",
         "check": "checkSSID",
-        "description": "the SSID for an external WIFI network"
-    },
-    {
-        "name": "stopApTime",
-        "type": "number",
-        "default": "0",
-        "check": "checkStopApTime",
-        "description": "stop the access point after that many minutes if not used"
+        "description": "the SSID for an external WIFI network",
+        "category":"wifi client"
     }
     
 

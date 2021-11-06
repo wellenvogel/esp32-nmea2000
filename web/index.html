@@ -8,6 +8,13 @@
   let self=this;
   let lastUpdate=(new Date()).getTime();
   let reloadConfig=false;
+  function addEl(type,clazz,parent,text){
+    let el=document.createElement(type);
+    el.classList.add(clazz);
+    if (text) el.textContent=text;
+    if (parent)parent.appendChild(el);
+    return el;
+  }
   function alertRestart(){
     reloadConfig=true;
     alert("Board reset triggered, reconnect WLAN if necessary");
@@ -265,12 +272,29 @@
         .then(function (capabilities) {
           getJson("config.json")
             .then(function (defs) {
+              let category;
+              let categoryEl;
               let frame = document.querySelector('.configFormRows');
               if (!frame) throw Error("no config form");
               frame.innerHTML = '';
               configDefinitions = defs;
               defs.forEach(function (item) {
                 if (!item.type) return;
+                if (item.category != category || ! categoryEl){
+                  let categoryFrame=addEl('div','category',frame);
+                  let categoryTitle=addEl('div','title',categoryFrame);
+                  let categoryButton=addEl('button','categoryButton',categoryTitle,'v');
+                  addEl('span','label',categoryTitle,item.category);
+                  categoryEl=addEl('div','content',categoryFrame);
+                  categoryEl.classList.add('hidden');
+                  let currentEl=categoryEl;
+                  categoryTitle.addEventListener('click',function(ev){
+                    let rs=currentEl.classList.toggle('hidden');
+                    if (rs) categoryButton.textContent="v";
+                    else categoryButton.textContent="^";
+                  })
+                  category=item.category;
+                }
                 if (item.capabilities !== undefined){
                   for (let capability in item.capabilities){
                     let values=item.capabilities[capability];
@@ -282,16 +306,10 @@
                     if (! found) return;
                   }
                 }
-                let row = document.createElement('div');
-                row.classList.add('row');
+                let row = addEl('div','row',categoryEl);
                 let label = item.label || item.name;
-                let labelEl = document.createElement('span');
-                labelEl.classList.add('label');
-                labelEl.textContent = label;
-                row.appendChild(labelEl);
-                let valueFrame=document.createElement("div");
-                valueFrame.classList.add("value");
-                row.appendChild(valueFrame);
+                addEl('span','label',row,label);
+                let valueFrame=addEl('div','value',row);
                 let valueEl = createInput(item,valueFrame);
                 if (!valueEl) return;
                 valueEl.setAttribute('data-default', item.default);
@@ -300,27 +318,18 @@
                   checkChange(el,row);
                 })
                 if (item.check) valueEl.setAttribute('data-check', item.check);
-                let btContainer=document.createElement("div");
-                btContainer.classList.add("buttonContainer");
-                row.appendChild(btContainer);
-                let bt = document.createElement('button');
-                bt.classList.add('defaultButton');
+                let btContainer=addEl('div','buttonContainer',row);
+                let bt = addEl('button','defaultButton',btContainer,'X');
                 bt.setAttribute('data-default', item.default);
                 bt.addEventListener('click', function (ev) {
                   valueEl.value = valueEl.getAttribute('data-default');
                   let changeEvent=new Event('change');
                   valueEl.dispatchEvent(changeEvent);
                 })
-                bt.textContent = "X";
-                btContainer.appendChild(bt);
-                bt = document.createElement('button');
-                bt.classList.add('infoButton');
+                bt = addEl('button','infoButton',btContainer,'?');
                 bt.addEventListener('click', function (ev) {
                   showOverlay(item.description);
                 });
-                bt.textContent = "?";
-                btContainer.appendChild(bt);
-                frame.appendChild(row);
               })
               resetForm();
             })
@@ -338,6 +347,22 @@
       text+="</p>";
       showOverlay(text,true);
     });
+  }
+  function handleTab(el){
+    let activeName=el.getAttribute('data-page');
+    if (! activeName) return;
+    let activeTab=document.getElementById(activeName);
+    if (!activeTab) return;
+    let all=document.querySelectorAll('.tabPage');
+    for (let i=0;i<all.length;i++){
+      all[i].classList.add('hidden');
+    }
+    let tabs=document.querySelectorAll('.tab');
+    for (let i=0;i<all.length;i++){
+      tabs[i].classList.remove('active');
+    }
+    el.classList.add('active');
+    activeTab.classList.remove('hidden');
   }  
   window.setInterval(update,1000);
   window.addEventListener('load',function(){
@@ -350,17 +375,31 @@
     cd.addEventListener('change',function(ev){
       showCanDetails(ev.target.checked);
     });
+    let tabs=document.querySelectorAll('.tab');
+    for (let i=0;i<tabs.length;i++){
+      tabs[i].addEventListener('click',function(ev){
+        handleTab(ev.target);
+      });
+    }
     loadConfigDefinitions();
   });
 </script>  
 <style type="text/css">
 .configForm {
-    margin-top: 1em;
-    margin-bottom: 1em;
-    padding-top: 0.5em;
     padding-bottom: 0.5em;
-    border: 1px solid grey;
-    max-width: 40em;
+}
+.configForm .buttons {
+    margin-top: 0.5em;
+}
+.configForm .content>div:nth-child(even) {
+    background-color: rgb(211 211 211 / 43%);
+}
+#statusPage .even {
+    background-color: rgb(211 211 211 / 43%);
+}
+.category .title .label {
+    opacity: 1;
+    margin-left: 1em;
 }
 .changed input{
     color: green
@@ -373,11 +412,13 @@ span.label {
     display: inline-block;
     opacity: 0.6;
 }
-.value {
-    width: 19em;
+.configForm .value {
+    width: 21em;
     display: flex;
     flex-direction: row;
+    margin-bottom: 0.2em;
 }
+
 span#connected {
     display: inline-block;
     background-color: red;
@@ -389,10 +430,15 @@ span#connected.ok{
   background-color: #13ac13;
 }
 .row {
-    margin: 0.5em;
+    padding: 0.5em;
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
+}
+input,select {
+    border: 1px solid #808080a1;
+    font-size: 0.9em;
+    padding: 0.2em;
 }
 .filter {
     display: inline-block;
@@ -403,6 +449,16 @@ span#connected.ok{
 button.infoButton {
     margin-left: 1em;
     vertical-align: bottom;
+}
+.category .title {
+    padding-left: 0.5em;
+    background-color: lightgray;
+    padding-top: 0.3em;
+    padding-bottom: 0.5em;
+    border-bottom: 1px solid darkgray;
+}
+.hidden{
+  display: none !important;
 }
 #canDetails{
   display:none;
@@ -420,9 +476,7 @@ button.infoButton {
     background-color: #80808070;
     display: flex;
 }
-.overlayContainer.hidden{
-  display: none;
-}
+
 div#overlay {
     margin: auto;
     background-color: white;
@@ -443,21 +497,56 @@ div#overlayContent.text{
     flex-direction: row;
     justify-content: end;
 }
+#tabs {
+    display: flex;
+    border-bottom: 1px solid grey;
+    margin-bottom: 0.5em;
+}
+#tabs .tab {
+    background-color: lightgray;
+    padding: 0.5em;
+    border-left: 1px;
+    border-right: 1px;
+    border-top: 1px;
+    border-bottom: 1px;
+    border-color: grey;
+    border-style: solid;
+    opacity: 0.6;
+}
+#tabs .tab.active{
+  opacity: 1;
+}
+.buttons button{
+  padding: 0.5em;
+}
+button#reset{
+  padding: 0.5em;
+}
+h1{
+  margin-bottom: 0;
+}
+
 </style>
 </head>
 <body>
 <div class="main">
 <h1>NMEA 2000 Gateway </h1>
 <div class="row">
+  <span class="label">connected</span>
+  <span class="value" id="connected"></span>
+</div>
+<div id="tabs">
+  <div class="tab active" data-page="statusPage">Status</div>
+  <div class="tab" data-page="configPage">Config</div>
+</div>
+<div id="statusPage" class="tabPage">
+<div class="row">
   <span class="label">VERSION</span>
   <span class="value" id="version">---</span>
   <button class="infoButton" id="converterInfo">?</button> 
 </div>
-<div class="row">
-  <span class="label">connected</span>
-  <span class="value" id="connected"></span>
-</div>
-<div class="row">
+
+<div class="row even">
   <span class="label">Access Point IP</span>
   <span class="value" id="apIp">---</span>
 </div>
@@ -465,19 +554,19 @@ div#overlayContent.text{
   <span class="label"># NMEA2000 messages</span>
   <span class="value" id="numcan">---</span>
 </div>
-<div class="row">
+<div class="row even">
   <span class="label">NMEA2000 details</span>
   <input type="checkbox" id="showCanDetails"></span>
 </div>
 
-<div class="row" id="canDetails">
+<div class="row even" id="canDetails">
 
 </div>
 <div class="row">
   <span class="label"># TCP clients</span>
   <span class="value" id="numClients">---</span>
 </div>
-<div class="row">
+<div class="row even">
   <span class="label">wifi client connected</span>
   <span class="value" id="wifiConnected">---</span>
 </div>
@@ -486,7 +575,8 @@ div#overlayContent.text{
   <span class="value" id="clientIP">---</span>
 </div>
 <button id="reset" >Reset</button>
-<div class="configForm">
+</div>
+<div class="configForm tabPage hidden" id="configPage" >
   <div class="configFormRows">
 
   </div>
