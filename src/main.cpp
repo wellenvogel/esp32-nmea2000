@@ -12,7 +12,7 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#define VERSION "0.5.4"
+#define VERSION "0.5.6"
 
 // #define GW_MESSAGE_DEBUG_ENABLED
 // #define FALLBACK_SERIAL
@@ -43,6 +43,8 @@ const unsigned long HEAP_REPORT_TIME=2000; //set to 0 to disable heap reporting
 #include "GwSerial.h"
 #include "GwWebServer.h"
 #include "NMEA0183DataToN2K.h"
+#include "GwApi.h"
+#include "GwButtons.h"
 
 
 //NMEA message channels
@@ -126,12 +128,53 @@ class GwSerialLog : public GwLogWriter{
 
 };
 
+class ApiImpl : public GwApi
+{
+private:
+  int sourceId = -1;
+
+public:
+  ApiImpl(int sourceId)
+  {
+    this->sourceId = sourceId;
+  }
+  virtual GwRequestQueue *getQueue()
+  {
+    return &mainQueue;
+  }
+  virtual void sendN2kMessage(const tN2kMsg &msg)
+  {
+    NMEA2000.SendMsg(msg);
+  }
+  virtual void sendNMEA0183Message(const tNMEA0183Msg &msg, int sourceId)
+  {
+    SendNMEA0183Message(msg, sourceId);
+  }
+  virtual int getSourceId()
+  {
+    return sourceId;
+  };
+  virtual GwConfigHandler *getConfig()
+  {
+    return &config;
+  }
+  virtual GwLog* getLogger(){
+    return &logger;
+  }
+};
+
 void delayedRestart(){
   xTaskCreate([](void *p){
     delay(500);
     ESP.restart();
     vTaskDelete(NULL);
   },"reset",1000,NULL,0,NULL);
+}
+
+
+void startAddOnTask(TaskFunction_t task,int sourceId){
+  ApiImpl* api=new ApiImpl(sourceId);
+  xTaskCreate(task,"user",1000,api,3,NULL);
 }
 
 #define JSON_OK "{\"status\":\"OK\"}"
@@ -451,6 +494,7 @@ void setup() {
     nmea0183Converter->HandleMsg(n2kMsg);
   }); 
   NMEA2000.Open();
+  startAddOnTask(handleButtons,100);
 
 }  
 //*****************************************************************************

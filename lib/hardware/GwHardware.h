@@ -36,6 +36,11 @@
 #define GWSERIAL_RX 16
 #define GWSERIAL_MODE "RX"
 
+#define GWBUTTON_PIN GPIO_NUM_0
+#define GWBUTTON_ACTIVE LOW
+//if GWBUTTON_PULLUPDOWN we enable a pulup/pulldown
+#define GWBUTTON_PULLUPDOWN 
+
 #else
 
 #endif
