@@ -38,7 +38,7 @@ N2kDataToNMEA0183::N2kDataToNMEA0183(GwLog * logger, GwBoatData *boatData, tNMEA
     SendNMEA0183MessageCallback=0;
     this->SendNMEA0183MessageCallback=callback;
     strncpy(this->talkerId,talkerId.c_str(),2);
-    talkerId[2]=0;
+    this->talkerId[2]=0;
     sourceId=id;   
   }
 
@@ -338,7 +338,7 @@ private:
                 updateDouble(boatData->TWS, WindSpeed);
             }
 
-            if (NMEA0183SetMWV(NMEA0183Msg, formatCourse(WindAngle), NMEA0183Reference, WindSpeed))
+            if (NMEA0183SetMWV(NMEA0183Msg, formatCourse(WindAngle), NMEA0183Reference, WindSpeed,talkerId))
                 SendMessage(NMEA0183Msg);
 
             if (WindReference == N2kWind_Apparent && boatData->SOG->isValid())
