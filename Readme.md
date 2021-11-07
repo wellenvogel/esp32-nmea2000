@@ -31,7 +31,7 @@ Should be possible to use [M5Burner](https://docs.m5stack.com/en/download) to fl
 
 Pre Build Binaries
 ------------------
-In the [release section](releases) you can find a couple of pre-build binaries that can easily be flashed on your ESP32 board using [ESPTool](https://github.com/espressif/esptool).
+In the [release section](https://github.com/wellenvogel/esp32-nmea2000/releases) you can find a couple of pre-build binaries that can easily be flashed on your ESP32 board using [ESPTool](https://github.com/espressif/esptool).
 The flash command must be (example for m5stack-atom):
 
 ```
