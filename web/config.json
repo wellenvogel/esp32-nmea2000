@@ -152,7 +152,7 @@
         "name": "serverPort",
         "label": "TCP port",
         "type": "number",
-        "default": "2222",
+        "default": "10110",
         "description": "the TCP port we listen on",
         "category":"TCP port"
     },
