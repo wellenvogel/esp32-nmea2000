@@ -42,17 +42,18 @@ template<class T> class GwCounter{
         }
         int getJsonSize(){
             return JSON_OBJECT_SIZE(4)+JSON_OBJECT_SIZE(okCounter.size()+1)+
-                JSON_OBJECT_SIZE(failCounter.size()+1);
+                JSON_OBJECT_SIZE(failCounter.size()+1)+
+                okCounter.size()*5+failCounter.size()*5;
         }
         void toJson(JsonDocument &json){
             JsonObject jo=json.createNestedObject(name);
-            jo["sumOk"]=globalOk;
-            jo["sumFail"]=globalFail;
-            JsonObject jok=jo.createNestedObject("ok");
+            jo[F("sumOk")]=globalOk;
+            jo[F("sumFail")]=globalFail;
+            JsonObject jok=jo.createNestedObject(F("ok"));
             for (auto it=okCounter.begin();it!=okCounter.end();it++){
                 jok[String(it->first)]=it->second;
             }
-            JsonObject jfail=jo.createNestedObject("fail");
+            JsonObject jfail=jo.createNestedObject(F("fail"));
             for (auto it=failCounter.begin();it!=failCounter.end();it++){
                 jfail[String(it->first)]=it->second;
             }

@@ -86,7 +86,7 @@ GwRequestQueue mainQueue(&logger,20);
 GwWebServer webserver(&logger,&mainQueue,80);
 
 GwCounter<unsigned long> countNMEA2KIn("count2Kin");
-GwCounter<unsigned long> countNMEA2KOut("count2kout");
+GwCounter<unsigned long> countNMEA2KOut("count2Kout");
 
 GwCounter<String> countUSBIn("countUSBin");
 GwCounter<String> countUSBOut("countUSBout");
@@ -595,8 +595,8 @@ void SendNMEA0183Message(const tNMEA0183Msg &NMEA0183Msg, int sourceId) {
 }
 
 void handleReceivedNmeaMessage(const char *buf, int sourceId){
-  updateNMEACounter(sourceId,buf,true);
   if (! checkFilter(buf,sourceId,true)) return;
+  updateNMEACounter(sourceId,buf,true);
   if ((sourceId == USB_CHANNEL_ID && n2kFromUSB->asBoolean())||
       (sourceId >= MIN_TCP_CHANNEL_ID && n2kFromTCP->asBoolean())||
       (sourceId == SERIAL1_CHANNEL_ID && n2kFromSerial->asBoolean())

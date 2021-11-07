@@ -13,8 +13,9 @@ function addEl(type, clazz, parent, text) {
     if (parent) parent.appendChild(el);
     return el;
 }
-function forEl(query, callback) {
-    let all = document.querySelectorAll(query);
+function forEl(query, callback,base) {
+    if (! base) base=document;
+    let all = base.querySelectorAll(query);
     for (let i = 0; i < all.length; i++) {
         callback(all[i]);
     }
@@ -145,6 +146,28 @@ function factoryReset() {
             alertRestart();
         })
 }
+function createCounterDisplay(parent,label,key,isEven){
+    let clazz="row icon-row counter-row";
+    if (isEven) clazz+=" even";
+    let row=addEl('div',clazz,parent);
+    let icon=addEl('span','icon icon-more',row);
+    addEl('span','label',row,label);
+    let value=addEl('span','value',row,'---');
+    value.setAttribute('id',key+".sumOk");
+    let display=addEl('div',clazz+" msgDetails hidden",parent);
+    display.setAttribute('id',key+".ok");
+    row.addEventListener('click',function(ev){
+        let rs=display.classList.toggle('hidden');
+        if (rs){
+            icon.classList.add('icon-more');
+            icon.classList.remove('icon-less');
+        }
+        else{
+            icon.classList.remove('icon-more');
+            icon.classList.add('icon-less');
+        }
+    });
+}
 
 function updateMsgDetails(key, details) {
     forEl('.msgDetails', function (frame) {
@@ -161,7 +184,23 @@ function updateMsgDetails(key, details) {
                 el.textContent = details[k];
             }
         }
+        forEl('.value',function(el){
+            let k=el.getAttribute('data-id');
+            if (k && ! details[k]){
+                el.parentElement.remove();
+            }
+        },frame);
     });
+}
+let counters={
+    count2Kin: 'NMEA2000 in',
+    count2Kout: 'NMEA2000 out',
+    countTCPin: 'TCP in',
+    countTCPout: 'TCP out',
+    countUSBin: 'USB in',
+    countUSBout: 'USB out',
+    countSerialIn: 'Serial in',
+    countSerialOut: 'Serial out'
 }
 function showOverlay(text, isHtml) {
     let el = document.getElementById('overlayContent');
@@ -477,4 +516,12 @@ window.addEventListener('load', function () {
     }
     loadConfigDefinitions();
     createDashboard();
+    let statusPage=document.getElementById('statusPageContent');
+    if (statusPage){
+        let even=false;
+        for (let c in counters){
+            createCounterDisplay(statusPage,counters[c],c,even);
+            even=!even;
+        }
+    }
 });

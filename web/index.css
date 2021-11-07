@@ -13,6 +13,16 @@ body{
   #statusPage .even {
       background-color: rgb(211 211 211 / 43%);
   }
+  #statusPageContent {
+    margin-bottom: 0.5em;
+  }
+  .counter-row .value{
+      text-align: right;
+      width: 6em;
+  }
+  .icon-row .label{
+      width: 8.7em;
+  }
   .category .title .label {
       opacity: 1;
       margin-left: 1em;
@@ -50,6 +60,7 @@ body{
       display: flex;
       flex-direction: row;
       flex-wrap: wrap;
+      align-items: center;
   }
   input,select {
       border: 1px solid #808080a1;

@@ -20,109 +20,27 @@
   <div class="tab" data-page="dashboardPage">Data</div>
 </div>
 <div id="statusPage" class="tabPage">
-<div class="row">
-  <span class="label">VERSION</span>
-  <span class="value" id="version">---</span>
-  <button class="infoButton" id="converterInfo">?</button> 
-</div>
+  <div id="statusPageContent">
+    <div class="row">
+      <span class="label">VERSION</span>
+      <span class="value" id="version">---</span>
+      <button class="infoButton" id="converterInfo">?</button>
+    </div>
 
-<div class="row even">
-  <span class="label">Access Point IP</span>
-  <span class="value" id="apIp">---</span>
-</div>
-<div class="row ">
-  <span class="label">wifi client connected</span>
-  <span class="value" id="wifiConnected">---</span>
-</div>
-<div class="row even">
-  <span class="label">wifi client IP</span>
-  <span class="value" id="clientIP">---</span>
-</div>
-<div class="row">
-  <span class="label"># NMEA2000 in</span>
-  <span class="value" id="count2Kin.sumOk">---</span>
-</div>
-<div class="row even">
-  <span class="label">NMEA2000 in details</span>
-  <input type="checkbox" class="showMsgDetails" data-key="count2Kin.ok"></span>
-</div>
-<div class="row even msgDetails hidden" id="count2Kin.ok" >
-</div>
-<div class="row">
-  <span class="label"># NMEA2000 out</span>
-  <span class="value" id="count2Kout.sumOk">---</span>
-</div>
-<div class="row even">
-  <span class="label">NMEA2000 out details</span>
-  <input type="checkbox" class="showMsgDetails" data-key="count2Kout.ok"></span>
-</div>
-<div class="row even msgDetails hidden" id="count2Kout.ok" >
-</div>
-<div class="row">
-  <span class="label"># TCP clients</span>
-  <span class="value" id="numClients">---</span>
-</div>
-<div class="row even">
-  <span class="label"># TCP in</span>
-  <span class="value" id="countTCPin.sumOk">---</span>
-</div>
-<div class="row ">
-  <span class="label">TCP in details</span>
-  <input type="checkbox" class="showMsgDetails" data-key="countTCPin.ok"></span>
-</div>
-<div class="row msgDetails hidden" id="countTCPin.ok" >
-</div>
-<div class="row even">
-  <span class="label"># TCP out</span>
-  <span class="value" id="countTCPout.sumOk">---</span>
-</div>
-<div class="row ">
-  <span class="label">TCP out details</span>
-  <input type="checkbox" class="showMsgDetails" data-key="countTCPout.ok"></span>
-</div>
-<div class="row msgDetails hidden" id="countTCPout.ok" >
-</div>
-<div class="row even">
-  <span class="label"># USB in</span>
-  <span class="value" id="countUSBin.sumOk">---</span>
-</div>
-<div class="row ">
-  <span class="label">USB in details</span>
-  <input type="checkbox" class="showMsgDetails" data-key="countUSBin.ok"></span>
-</div>
-<div class="row msgDetails hidden" id="countUSBin.ok" >
-</div>
-<div class="row even">
-  <span class="label"># USB out</span>
-  <span class="value" id="countUSBout.sumOk">---</span>
-</div>
-<div class="row ">
-  <span class="label">USB out details</span>
-  <input type="checkbox" class="showMsgDetails" data-key="countUSBout.ok"></span>
-</div>
-<div class="row msgDetails hidden" id="countUSBout.ok" >
-</div>
-<div class="row even">
-  <span class="label"># Serial in</span>
-  <span class="value" id="countSerialin.sumOk">---</span>
-</div>
-<div class="row ">
-  <span class="label">Serial in details</span>
-  <input type="checkbox" class="showMsgDetails" data-key="countSerialin.ok"></span>
-</div>
-<div class="row msgDetails hidden" id="countSerialin.ok" >
-</div>
-<div class="row even">
-  <span class="label"># Serial out</span>
-  <span class="value" id="countSerialout.sumOk">---</span>
-</div>
-<div class="row ">
-  <span class="label">Serial out details</span>
-  <input type="checkbox" class="showMsgDetails" data-key="countSerialout.ok"></span>
-</div>
-<div class="row msgDetails hidden" id="countSerialout.ok" >
-</div>
-<button id="reset" >Reset</button>
+    <div class="row even">
+      <span class="label">Access Point IP</span>
+      <span class="value" id="apIp">---</span>
+    </div>
+    <div class="row ">
+      <span class="label">wifi client connected</span>
+      <span class="value" id="wifiConnected">---</span>
+    </div>
+    <div class="row even">
+      <span class="label">wifi client IP</span>
+      <span class="value" id="clientIP">---</span>
+    </div>
+  </div>
+  <button id="reset">Reset</button>
 </div>
 <div class="configForm tabPage hidden" id="configPage" >
   <div class="configFormRows">
