@@ -34,7 +34,7 @@ jobs:
           python3 -m pip install --upgrade pip
           pip install -U platformio
       # Runs a single command using the runners shell
-      - name: build package
+      - name: build binaries
         env: 
           VERSION: ${{ steps.version.outputs.version}}
           PLATFORMIO_BUILD_FLAGS: "-DGWRELEASEVERSION=${{ steps.version.outputs.version}}"
@@ -53,12 +53,11 @@ jobs:
           prerelease: false
       - name: Upload Release Asset
         id: upload-release-asset 
-        uses: actions/upload-release-asset@v1
+        uses: svenstaro/upload-release-action@2.2.1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PKG_NAME: m5stack-atom
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
-          asset_path: ./pio/build/${{ env.PKG_NAME }}/${{ env.PKG_NAME }}-all.bin
-          asset_name: ${{ env.PKG_NAME }}-all.bin
-          asset_content_type: application/octet-stream
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ github.ref }}
+          file: ./.pio/build/*/*-all.bin
+          file_glob: true
