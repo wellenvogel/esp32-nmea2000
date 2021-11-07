@@ -38,7 +38,7 @@ jobs:
         env: 
           VERSION: ${{ steps.version.outputs.version}}
           PLATFORMIO_BUILD_FLAGS: "-DGWRELEASEVERSION=${{ steps.version.outputs.version}}"
-        run: pio run -e m5stack-atom
+        run: pio run
 
 
       - name: Create Release
