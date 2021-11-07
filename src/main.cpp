@@ -12,7 +12,17 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#define VERSION "0.6.4"
+#define GWSTR(x) #x
+#ifdef GWRELEASEVERSION
+#define VERSION GWSTR(GWRELEASEVERSION)
+#define LOGLEVEL GwLog::ERROR
+#elif GWDEVVERSION
+#define VERSION GWSTR(GWDEVVERSION)
+#define LOGLEVEL GwLog::DEBUG
+#else
+#define VERSION "0.7.0"
+#define LOGLEVEL GwLog::DEBUG
+#endif
 
 // #define GW_MESSAGE_DEBUG_ENABLED
 // #define FALLBACK_SERIAL
@@ -61,7 +71,7 @@ const unsigned long HEAP_REPORT_TIME=2000; //set to 0 to disable heap reporting
 typedef std::map<String,String> StringMap;
 
 
-GwLog logger(GwLog::DEBUG,NULL);
+GwLog logger(LOGLEVEL,NULL);
 GwConfigHandler config(&logger);
 #ifdef GWBUTTON_PIN
 bool fixedApPass=false;

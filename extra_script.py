@@ -5,6 +5,8 @@ import os
 import sys
 import inspect
 import json
+from datetime import datetime
+Import("env")
 GEN_DIR='generated'
 CFG_FILE='web/config.json'
 FILES=['web/index.html',CFG_FILE,'web/index.js','web/index.css']
@@ -80,4 +82,6 @@ if not checkDir():
 for f in FILES:
     print("compressing %s"%f)
     compressFile(f)
-generateCfg()    
+generateCfg()
+version=datetime.now().strftime("%Y%m%d-%H%M")
+env.Append(CPPDEFINES=[('GWDEVVERSION',version)])

@@ -1,0 +1,64 @@
+# This is a basic workflow to help you get started with Actions
+
+name: createRelease
+
+# Controls when the action will run. 
+on:
+  # Triggers the workflow on push or pull request events but only for the master branch
+  push:
+    branches: [ release ]
+  
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  release:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+
+      #set version
+      - name: set version
+        id: version
+        run: echo "::set-output name=version::$(date +'%Y%m%d')"
+      - name: Install deps
+        run: |
+          #apt-get update
+          #apt-get install -y python3-pip nodejs
+          python3 -m pip install --upgrade pip
+          pip install -U platformio
+      # Runs a single command using the runners shell
+      - name: build package
+        env: 
+          VERSION: ${{ steps.version.outputs.version}}
+          PLATFORMIO_BUILD_FLAGS: "-DGWRELEASEVERSION=${{ steps.version.outputs.version}}"
+        run: pio run
+
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.version.outputs.version}}
+          release_name: ${{ steps.version.outputs.version }}
+          draft: false
+          prerelease: false
+      - name: Upload Release Asset
+        id: upload-release-asset 
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PKG_NAME: m5stack-atom
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+          asset_path: ./pio/build/${{ env.PKG_NAME }}/${{ env.PKG_NAME }}-all.bin
+          asset_name: ${{ env.PKG_NAME }}-all.bin
+          asset_content_type: application/octet-stream
