@@ -12,7 +12,7 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#define VERSION "0.6.1"
+#define VERSION "0.6.4"
 
 // #define GW_MESSAGE_DEBUG_ENABLED
 // #define FALLBACK_SERIAL
