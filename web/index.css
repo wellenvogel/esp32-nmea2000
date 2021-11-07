@@ -1,0 +1,190 @@
+body{
+    font-family: Arial, Helvetica, sans-serif;
+  }
+  .configForm {
+      padding-bottom: 0.5em;
+  }
+  .configForm .buttons {
+      margin-top: 0.5em;
+  }
+  .configForm .content>div:nth-child(even) {
+      background-color: rgb(211 211 211 / 43%);
+  }
+  #statusPage .even {
+      background-color: rgb(211 211 211 / 43%);
+  }
+  .category .title .label {
+      opacity: 1;
+      margin-left: 1em;
+  }
+  .changed input{
+      color: green
+  }
+  .changed select{
+      color: green
+  }
+  span.label {
+      width: 10em;
+      display: inline-block;
+      opacity: 0.6;
+  }
+  .configForm .value {
+      width: 21em;
+      display: flex;
+      flex-direction: row;
+      margin-bottom: 0.2em;
+  }
+  
+  span#connected {
+      display: inline-block;
+      background-color: red;
+      width: 1em;
+      height: 1em;
+      border-radius: 50%;
+  }
+  span#connected.ok{
+    background-color: #13ac13;
+  }
+  .row {
+      padding: 0.5em;
+      display: flex;
+      flex-direction: row;
+      flex-wrap: wrap;
+  }
+  input,select {
+      border: 1px solid #808080a1;
+      font-size: 0.9em;
+      padding: 0.2em;
+  }
+  .filter {
+      display: inline-block;
+  }
+  .buttons {
+      padding-left: 1em;
+  }
+  button.infoButton {
+      margin-left: 1em;
+      vertical-align: bottom;
+  }
+  .category .title {
+      padding-left: 0.5em;
+      background-color: lightgray;
+      padding-top: 0.3em;
+      padding-bottom: 0.5em;
+      border-bottom: 1px solid darkgray;
+      display: flex;
+      align-items: center;
+  }
+  .hidden{
+    display: none !important;
+  }
+  .msgDetails .value {
+      width: 5em;
+      text-align: right;
+  }
+  .msgDetails .label {
+      width: 5em;
+  }
+  .overlayContainer {
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background-color: #80808070;
+      display: flex;
+  }
+  
+  div#overlay {
+      margin: auto;
+      background-color: white;
+      padding: 0.5em;
+      max-width: 100%;
+      box-sizing: border-box;
+  }
+  div#overlayContent {
+      padding: 0.5em;
+  }
+  div#overlayContent.text{
+    white-space: pre-line;
+  }
+  .overlayButtons {
+      border-top: 1px solid grey;
+      padding-top: 0.5em;
+      display: flex;
+      flex-direction: row;
+      justify-content: end;
+  }
+  #tabs {
+      display: flex;
+      border-bottom: 1px solid grey;
+      margin-bottom: 0.5em;
+  }
+  #tabs .tab {
+      background-color: lightgray;
+      padding: 0.5em;
+      border-left: 1px;
+      border-right: 1px;
+      border-top: 1px;
+      border-bottom: 1px;
+      border-color: grey;
+      border-style: solid;
+      opacity: 0.6;
+  }
+  #tabs .tab.active{
+    opacity: 1;
+  }
+  .buttons button{
+    padding: 0.5em;
+  }
+  button#reset{
+    padding: 0.5em;
+  }
+  h1{
+    margin-bottom: 0;
+  }
+  .icon-eye{
+    background-image: url("data:image/svg+xml;utf-8,<svg width='24' height='24' xmlns='http://www.w3.org/2000/svg' xmlns:svg='http://www.w3.org/2000/svg'> <g class='layer'> <title>Layer 1</title> <path d='m0,0l24,0l0,24l-24,0l0,-24z' fill='none' id='svg_1'/> <path d='m12,6c3.79,0 7.17,2.13 8.82,5.5c-1.65,3.37 -5.03,5.5 -8.82,5.5s-7.17,-2.13 -8.82,-5.5c1.65,-3.37 5.03,-5.5 8.82,-5.5m0,-2c-5,0 -9.27,3.11 -11,7.5c1.73,4.39 6,7.5 11,7.5s9.27,-3.11 11,-7.5c-1.73,-4.39 -6,-7.5 -11,-7.5zm0,5c1.38,0 2.5,1.12 2.5,2.5s-1.12,2.5 -2.5,2.5s-2.5,-1.12 -2.5,-2.5s1.12,-2.5 2.5,-2.5m0,-2c-2.48,0 -4.5,2.02 -4.5,4.5s2.02,4.5 4.5,4.5s4.5,-2.02 4.5,-4.5s-2.02,-4.5 -4.5,-4.5z' id='svg_2'/> </g> </svg>");
+    margin-left: 0.5em;
+    opacity: 0.3;
+  }
+  .icon{
+    height: 1.5em;
+    width: 1.5em;
+    display: inline-block;
+  }
+  .icon-more{
+      background-image: url("data:image/svg+xml;utf-8,<svg width='24' height='24' xmlns='http://www.w3.org/2000/svg' xmlns:svg='http://www.w3.org/2000/svg'> <g class='layer'> <title>Layer 1</title> <path d='m24,24l-24,0l0,-24l24,0l0,24z' fill='none' id='svg_1' opacity='0.87'/> <path d='m16.59,8.59l-4.59,4.58l-4.59,-4.58l-1.41,1.41l6,6l6,-6l-1.41,-1.41z' id='svg_2'/> </g> </svg>");
+  }
+  .icon-less{
+    background-image: url("data:image/svg+xml;utf-8,<svg width='24' height='24' xmlns='http://www.w3.org/2000/svg' xmlns:svg='http://www.w3.org/2000/svg'> <g class='layer'> <title>Layer 1</title> <path d='m0,0l24,0l0,24l-24,0l0,-24z' fill='none' id='svg_1'/> <path d='m12,8l-6,6l1.41,1.41l4.59,-4.58l4.59,4.58l1.41,-1.41l-6,-6z' id='svg_2'/> </g> </svg>");
+  }
+  .icon-eye.active{
+    opacity: 1;
+  }
+  
+  .dash {
+      width: 6em;
+      height: 4em;
+      display: flex;
+      flex-direction: column;
+      border: 1px solid grey;
+      overflow: hidden;
+      margin: 0;
+      box-sizing: border-box;
+      font-size: 1.2em;
+  }
+  div#dashboardPage {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+  }
+  .dashTitle {
+      font-size: 0.8em;
+      background-color: lightgray;
+  }
+  .dashValue{
+    font-size: 1.6em;
+    text-align: center;
+  }
+  

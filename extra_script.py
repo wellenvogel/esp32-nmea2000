@@ -7,7 +7,7 @@ import inspect
 import json
 GEN_DIR='generated'
 CFG_FILE='web/config.json'
-FILES=['web/index.html',CFG_FILE]
+FILES=['web/index.html',CFG_FILE,'web/index.js','web/index.css']
 CFG_INCLUDE='GwConfigDefinitions.h'
 
 def basePath():

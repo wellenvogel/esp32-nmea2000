@@ -8,19 +8,23 @@ class EmbeddedFile {
   public:
     const uint8_t *start;
     int len;
-    EmbeddedFile(String name,const uint8_t *start,int len){
+    String contentType;
+    EmbeddedFile(String name,String contentType, const uint8_t *start,int len){
       this->start=start;
       this->len=len;
+      this->contentType=contentType;
       embeddedFiles[name]=this;
     }
 } ;
-#define EMBED_GZ_FILE(fileName, fileExt) \
+#define EMBED_GZ_FILE(fileName, fileExt, contentType) \
   extern const uint8_t  fileName##_##fileExt##_File[] asm("_binary_generated_" #fileName "_" #fileExt "_gz_start"); \
   extern const uint8_t  fileName##_##fileExt##_FileLen[] asm("_binary_generated_" #fileName "_" #fileExt "_gz_size"); \
-  const EmbeddedFile fileName##_##fileExt##_Config(#fileName "." #fileExt,(const uint8_t*)fileName##_##fileExt##_File,(int)fileName##_##fileExt##_FileLen);
+  const EmbeddedFile fileName##_##fileExt##_Config(#fileName "." #fileExt,contentType,(const uint8_t*)fileName##_##fileExt##_File,(int)fileName##_##fileExt##_FileLen);
 
-EMBED_GZ_FILE(index,html)
-EMBED_GZ_FILE(config,json)
+EMBED_GZ_FILE(index,html,"text/html")
+EMBED_GZ_FILE(config,json,"application/json")
+EMBED_GZ_FILE(index,js,"text/javascript")
+EMBED_GZ_FILE(index,css,"text/css")
 
 void sendEmbeddedFile(String name,String contentType,AsyncWebServerRequest *request){
     std::map<String,EmbeddedFile*>::iterator it=embeddedFiles.find(name);
@@ -48,9 +52,13 @@ void GwWebServer::begin(){
     server->on("/", HTTP_GET, [](AsyncWebServerRequest *request){
       sendEmbeddedFile("index.html","text/html",request);
     });
-    server->on("/config.json", HTTP_GET, [](AsyncWebServerRequest *request){
-      sendEmbeddedFile("config.json","application/json",request);
+    for (auto it=embeddedFiles.begin();it != embeddedFiles.end();it++){
+      String uri=String("/")+it->first;
+      server->on(uri.c_str(), HTTP_GET, [it](AsyncWebServerRequest *request){
+      sendEmbeddedFile(it->first,it->second->contentType,request);
     });
+    }
+    
     server->begin();
     LOG_DEBUG(GwLog::LOG,"HTTP server started");
     MDNS.addService("_http","_tcp",80);
