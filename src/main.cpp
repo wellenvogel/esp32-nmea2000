@@ -46,6 +46,7 @@ const unsigned long HEAP_REPORT_TIME=2000; //set to 0 to disable heap reporting
 #include "GwApi.h"
 #include "GwButtons.h"
 #include "GwLeds.h"
+#include "GwCounter.h"
 
 
 //NMEA message channels
@@ -72,10 +73,6 @@ GwSocketServer socketServer(&config,&logger,MIN_TCP_CHANNEL_ID);
 GwBoatData boatData(&logger);
 
 
-//counter
-int numCan=0;
-
-
 int NodeAddress;  // To store last Node Address
 
 Preferences preferences;             // Nonvolatile storage on ESP32 - To store LastDeviceAddress
@@ -87,6 +84,41 @@ void SendNMEA0183Message(const tNMEA0183Msg &NMEA0183Msg,int id);
 
 GwRequestQueue mainQueue(&logger,20);
 GwWebServer webserver(&logger,&mainQueue,80);
+
+GwCounter<unsigned long> countNMEA2KIn("count2Kin");
+GwCounter<unsigned long> countNMEA2KOut("count2kout");
+
+GwCounter<String> countUSBIn("countUSBin");
+GwCounter<String> countUSBOut("countUSBout");
+GwCounter<String> countTCPIn("countTCPin");
+GwCounter<String> countTCPOut("countTCPout");
+GwCounter<String> countSerialIn("countSerialIn");
+GwCounter<String> countSerialOut("countSerialOut");
+
+void updateNMEACounter(int id,const char *msg,bool incoming,bool fail=false){
+  //we rely on the msg being long enough
+  char key[6];
+  if (msg[0] == '$') {
+    strncpy(key,&msg[3],3);
+    key[3]=0;
+  }
+  else if(msg[0] == '!'){
+    strncpy(key,&msg[1],5);
+    key[5]=0;
+  }
+  else return;
+  GwCounter<String> *counter=NULL;
+  if (id == USB_CHANNEL_ID) counter=incoming?&countUSBIn:&countUSBOut;
+  if (id == SERIAL1_CHANNEL_ID) counter=incoming?&countSerialIn:&countSerialOut;
+  if (id >= MIN_TCP_CHANNEL_ID) counter=incoming?&countTCPIn:&countTCPOut;
+  if (! counter) return;
+  if (fail){
+    counter->addFail(key);
+  }
+  else{
+    counter->add(key);
+  }
+}
 
 //configs that we need in main
 
@@ -211,14 +243,30 @@ protected:
   virtual void processRequest()
   {
     int numPgns = nmea0183Converter->numPgns();
-    DynamicJsonDocument status(256 + numPgns * 50);
-    status["numcan"] = numCan;
+    DynamicJsonDocument status(256 + 
+      countNMEA2KIn.getJsonSize()+
+      countNMEA2KOut.getJsonSize() +
+      countUSBIn.getJsonSize()+
+      countUSBOut.getJsonSize()+
+      countSerialIn.getJsonSize()+
+      countSerialOut.getJsonSize()+
+      countTCPIn.getJsonSize()+
+      countTCPOut.getJsonSize()
+      );
     status["version"] = VERSION;
     status["wifiConnected"] = gwWifi.clientConnected();
     status["clientIP"] = WiFi.localIP().toString();
     status["numClients"] = socketServer.numClients();
     status["apIp"] = gwWifi.apIP();
-    nmea0183Converter->toJson(status);
+    //nmea0183Converter->toJson(status);
+    countNMEA2KIn.toJson(status);
+    countNMEA2KOut.toJson(status);
+    countUSBIn.toJson(status);
+    countUSBOut.toJson(status);
+    countSerialIn.toJson(status);
+    countSerialOut.toJson(status);
+    countTCPIn.toJson(status);
+    countTCPOut.toJson(status);
     serializeJson(status, result);
   }
 };
@@ -444,6 +492,7 @@ void setup() {
 
   toN2KConverter= NMEA0183DataToN2K::create(&logger,&boatData,[](const tN2kMsg &msg)->bool{
     logger.logDebug(GwLog::DEBUG+2,"send N2K %ld",msg.PGN);
+    countNMEA2KOut.add(msg.PGN);
     NMEA2000.SendMsg(msg);
     return true;
   });  
@@ -494,7 +543,7 @@ void setup() {
   NMEA2000.ExtendTransmitMessages(pgns);
   NMEA2000.ExtendReceiveMessages(nmea0183Converter->handledPgns());
   NMEA2000.SetMsgHandler([](const tN2kMsg &n2kMsg){
-    numCan++;
+    countNMEA2KIn.add(n2kMsg.PGN);
     if ( sendSeasmart->asBoolean() ) {
       char buf[MAX_NMEA2000_MESSAGE_SEASMART_SIZE];
       if ( N2kToSeasmart(n2kMsg, millis(), buf, MAX_NMEA2000_MESSAGE_SEASMART_SIZE) == 0 ) return;
@@ -519,12 +568,15 @@ void setup() {
 void sendBufferToChannels(const char * buffer, int sourceId){
   if (sendTCP->asBoolean() && checkFilter(buffer,MIN_TCP_CHANNEL_ID,false)){
     socketServer.sendToClients(buffer,sourceId);
+    updateNMEACounter(MIN_TCP_CHANNEL_ID,buffer,false);
   }
   if (sendUsb->asBoolean() && checkFilter(buffer,USB_CHANNEL_ID,false)){
     usbSerial->sendToClients(buffer,sourceId);
+    updateNMEACounter(USB_CHANNEL_ID,buffer,false);
   }
   if (serial1 && serCanWrite && checkFilter(buffer,SERIAL1_CHANNEL_ID,false)){
     serial1->sendToClients(buffer,sourceId);
+    updateNMEACounter(SERIAL1_CHANNEL_ID,buffer,false);
   }
 }
 
@@ -543,6 +595,7 @@ void SendNMEA0183Message(const tNMEA0183Msg &NMEA0183Msg, int sourceId) {
 }
 
 void handleReceivedNmeaMessage(const char *buf, int sourceId){
+  updateNMEACounter(sourceId,buf,true);
   if (! checkFilter(buf,sourceId,true)) return;
   if ((sourceId == USB_CHANNEL_ID && n2kFromUSB->asBoolean())||
       (sourceId >= MIN_TCP_CHANNEL_ID && n2kFromTCP->asBoolean())||
