@@ -36,7 +36,8 @@
 #define GWLED_PIN  GPIO_NUM_27
 //brightness 0...255
 #define GWLED_BRIGHTNESS 64
-#elif BOARD_M5ATOM_CANUNIT
+#endif
+#ifdef BOARD_M5ATOM_CANUNIT
 #define ESP32_CAN_TX_PIN GPIO_NUM_26
 #define ESP32_CAN_RX_PIN GPIO_NUM_32
 #define GWBUTTON_PIN GPIO_NUM_39
@@ -52,10 +53,12 @@
 #define GWLED_PIN  GPIO_NUM_27
 //brightness 0...255
 #define GWLED_BRIGHTNESS 64
-#elif BOARD_M5STICK_CANUNIT
+#endif
+#ifdef BOARD_M5STICK_CANUNIT
 #define ESP32_CAN_TX_PIN GPIO_NUM_32
 #define ESP32_CAN_RX_PIN GPIO_NUM_33
-#elif BOARD_HOMBERGER
+#endif
+#ifdef BOARD_HOMBERGER
 #define ESP32_CAN_TX_PIN GPIO_NUM_5
 #define ESP32_CAN_RX_PIN GPIO_NUM_4
 //serial input only
@@ -66,9 +69,6 @@
 #define GWBUTTON_ACTIVE LOW
 //if GWBUTTON_PULLUPDOWN we enable a pulup/pulldown
 #define GWBUTTON_PULLUPDOWN 
-
-#else
-
 #endif
 
 #endif
