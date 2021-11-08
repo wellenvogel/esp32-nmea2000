@@ -518,7 +518,7 @@ window.addEventListener('load', function () {
     createDashboard();
     let statusPage=document.getElementById('statusPageContent');
     if (statusPage){
-        let even=false;
+        let even=true;
         for (let c in counters){
             createCounterDisplay(statusPage,counters[c],c,even);
             even=!even;
