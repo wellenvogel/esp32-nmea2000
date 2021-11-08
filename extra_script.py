@@ -83,5 +83,5 @@ for f in FILES:
     print("compressing %s"%f)
     compressFile(f)
 generateCfg()
-version=datetime.now().strftime("%Y%m%d-%H%M")
+version="dev"+datetime.now().strftime("%Y%m%d")
 env.Append(CPPDEFINES=[('GWDEVVERSION',version)])
