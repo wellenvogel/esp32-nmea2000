@@ -447,13 +447,50 @@ function createDashboard() {
     });
 }
 let valueFormatters = {
-    formatCourse: function (v) { let x = parseFloat(v); return x.toFixed(0); },
-    formatKnots: function (v) { let x = parseFloat(v); return x.toFixed(2); },
-    formatWind: function (v) { let x = parseFloat(v); return x.toFixed(0); },
-    mtr2nm: function (v) { let x = parseFloat(v); return x.toFixed(2); },
-    kelvinToC: function (v) { let x = parseFloat(v); return x.toFixed(0); },
-    formatFixed0: function (v) { let x = parseFloat(v); return x.toFixed(0); },
-    formatDepth: function (v) { let x = parseFloat(v); return x.toFixed(1); },
+    formatCourse: function (v) { 
+        let x = parseFloat(v); 
+        let rt=x*180.0 / Math.PI;
+        if (rt > 360) rt -= 360;
+        if (rt < 0) rt += 360;
+        return rt.toFixed(0); 
+    },
+    formatKnots: function (v) { 
+        let x = parseFloat(v); 
+        x=x *3600.0/1852.0;
+        return x.toFixed(2); 
+    },
+    formatWind: function (v) { 
+        let x = parseFloat(v); 
+        x=x*180.0 / Math.PI;
+        if (x > 180) x=180-x; 
+        return x.toFixed(0); 
+    },
+    mtr2nm: function (v) { 
+        let x = parseFloat(v); 
+        x=x/1852.0;
+        return x.toFixed(2); 
+    },
+    kelvinToC: function (v) { 
+        let x = parseFloat(v); 
+        x=x-273.15;
+        return x.toFixed(0); 
+    },
+    formatFixed0: function (v) { 
+        let x = parseFloat(v); 
+        return x.toFixed(0); 
+    },
+    formatDepth: function (v) { 
+        let x = parseFloat(v); 
+        return x.toFixed(1); 
+    },
+    formatLatitude: function(v){
+        let x = parseFloat(v); 
+        return x.toFixed(4);
+    },
+    formatLongitued: function(v){
+        let x = parseFloat(v); 
+        return x.toFixed(4);
+    },
 }
 function updateDashboard(data) {
     for (let n in data) {

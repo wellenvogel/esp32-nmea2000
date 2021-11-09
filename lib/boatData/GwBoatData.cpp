@@ -61,22 +61,3 @@ double mtr2nm(double m)
     return m / 1852;
 }
 
-double kelvinToC(double v)
-{
-    return v - 273.15;
-}
-double formatLatitude(double v){
-    return v;
-}
-double formatLongitude(double v){
-    return v;
-}
-double formatFixed0(double v){
-    return v;
-}
-double formatDepth(double v){
-    return v;
-}
-uint32_t formatFixed0(uint32_t v){
-    return v;
-}
