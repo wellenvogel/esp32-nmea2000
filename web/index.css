@@ -197,5 +197,18 @@ body{
   .dashValue{
     font-size: 1.6em;
     text-align: center;
+    flex: 1;
   }
+  .footer {
+    display: flex;
+    flex-direction: row;
+    padding: 0.1em;
+    background-color: lightgray;
+    font-size: 0.7em;
+    }
+  .footer .unit{
+  }
+  .footer .source{
+    flex: 1;
+  }  
   

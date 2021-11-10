@@ -428,11 +428,89 @@ function handleTab(el) {
     el.classList.add('active');
     activeTab.classList.remove('hidden');
 }
+let valueFormatters = {
+    formatCourse: {
+        f: function (v) {
+            let x = parseFloat(v);
+            let rt = x * 180.0 / Math.PI;
+            if (rt > 360) rt -= 360;
+            if (rt < 0) rt += 360;
+            return rt.toFixed(0);
+        },
+        u: '°'
+    },
+    formatKnots: {
+        f: function (v) {
+            let x = parseFloat(v);
+            x = x * 3600.0 / 1852.0;
+            return x.toFixed(2);
+        },
+        u: 'kn'
+    },
+    formatWind: {
+        f: function (v) {
+            let x = parseFloat(v);
+            x = x * 180.0 / Math.PI;
+            if (x > 180) x = 180 - x;
+            return x.toFixed(0);
+        },
+        u: '°'
+    },
+    mtr2nm: {
+        f: function (v) {
+            let x = parseFloat(v);
+            x = x / 1852.0;
+            return x.toFixed(2);
+        },
+        u: 'nm'
+    },
+    kelvinToC: {
+        f: function (v) {
+            let x = parseFloat(v);
+            x = x - 273.15;
+            return x.toFixed(0);
+        },
+        u: '°'
+    },
+    formatFixed0: {
+        f: function (v) {
+            let x = parseFloat(v);
+            return x.toFixed(0);
+        },
+        u: ''
+    },
+    formatDepth: {
+        f: function (v) {
+            let x = parseFloat(v);
+            return x.toFixed(1);
+        },
+        u: 'm'
+    },
+    formatLatitude: {
+        f: function (v) {
+            let x = parseFloat(v);
+            return x.toFixed(4);
+        },
+        u: '°'
+    },
+    formatLongitude: {
+        f: function (v) {
+            let x = parseFloat(v);
+            return x.toFixed(4);
+        },
+        u: ''
+    },
+}
 function createDashboardItem(name, def, parent) {
     let frame = addEl('div', 'dash', parent);
     let title = addEl('span', 'dashTitle', frame, name);
     let value = addEl('span', 'dashValue', frame);
     value.setAttribute('id', 'data_' + name);
+    let fmt=valueFormatters[def.format];
+    let footer = addEl('div','footer',frame);
+    let src= addEl('span','source',footer);
+    src.setAttribute('id','source_'+name);
+    addEl('span','unit',footer,fmt?fmt.u:'');
     return value;
 }
 function createDashboard() {
@@ -446,51 +524,12 @@ function createDashboard() {
         updateDashboard(json);
     });
 }
-let valueFormatters = {
-    formatCourse: function (v) { 
-        let x = parseFloat(v); 
-        let rt=x*180.0 / Math.PI;
-        if (rt > 360) rt -= 360;
-        if (rt < 0) rt += 360;
-        return rt.toFixed(0); 
-    },
-    formatKnots: function (v) { 
-        let x = parseFloat(v); 
-        x=x *3600.0/1852.0;
-        return x.toFixed(2); 
-    },
-    formatWind: function (v) { 
-        let x = parseFloat(v); 
-        x=x*180.0 / Math.PI;
-        if (x > 180) x=180-x; 
-        return x.toFixed(0); 
-    },
-    mtr2nm: function (v) { 
-        let x = parseFloat(v); 
-        x=x/1852.0;
-        return x.toFixed(2); 
-    },
-    kelvinToC: function (v) { 
-        let x = parseFloat(v); 
-        x=x-273.15;
-        return x.toFixed(0); 
-    },
-    formatFixed0: function (v) { 
-        let x = parseFloat(v); 
-        return x.toFixed(0); 
-    },
-    formatDepth: function (v) { 
-        let x = parseFloat(v); 
-        return x.toFixed(1); 
-    },
-    formatLatitude: function(v){
-        let x = parseFloat(v); 
-        return x.toFixed(4);
-    },
-    formatLongitued: function(v){
-        let x = parseFloat(v); 
-        return x.toFixed(4);
-    },
+function sourceName(v){
+    if (v == 0) return "N2K";
+    if (v == 1) return "USB";
+    if (v == 2) return "SER";
+    if (v >= 3) return "TCP";
+    return "---";
 }
 function updateDashboard(data) {
     for (let n in data) {
@@ -503,7 +542,7 @@ function updateDashboard(data) {
                     formatter = valueFormatters[key];
                 }
                 if (formatter) {
-                    de.textContent = formatter(data[n].value);
+                    de.textContent = formatter.f(data[n].value);
                 }
                 else {
                     let v = parseFloat(data[n].value);
@@ -517,6 +556,10 @@ function updateDashboard(data) {
                 }
             }
             else de.textContent = "---";
+        }
+        let src=document.getElementById('source_'+n);
+        if (src){
+            src.textContent=sourceName(data[n].source);
         }
     }
 }

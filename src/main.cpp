@@ -147,8 +147,8 @@ GwConfigInterface *sendSerial=config.getConfigItem(config.sendSerial,true);
 GwConfigInterface *n2kFromSerial=config.getConfigItem(config.serialToN2k,true);
 GwNmeaFilter usbReadFilter(config.getConfigItem(config.usbReadFilter,true));
 GwNmeaFilter usbWriteFilter(config.getConfigItem(config.usbWriteFilter,true));
-GwNmeaFilter serialReadFilter(config.getConfigItem(config.serialReadFilter,true));
-GwNmeaFilter serialWriteFilter(config.getConfigItem(config.serialWriteFilter,true));
+GwNmeaFilter serialReadFilter(config.getConfigItem(config.serialReadF,true));
+GwNmeaFilter serialWriteFilter(config.getConfigItem(config.serialWriteF,true));
 GwNmeaFilter tcpReadFilter(config.getConfigItem(config.tcpReadFilter,true));
 GwNmeaFilter tcpWriteFilter(config.getConfigItem(config.tcpWriteFilter,true));
 
@@ -358,6 +358,7 @@ protected:
       result = JSON_OK;
       logger.logString("update config and restart");
       config.saveConfig();
+      delay(500);
       delayedRestart();
     }
     else

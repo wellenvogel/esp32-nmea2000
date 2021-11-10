@@ -131,7 +131,7 @@
         "category":"serial port"
     },
     {
-        "name": "serialReadFilter",
+        "name": "serialReadF",
         "label": "serial read Filter",
         "type": "filter",
         "default": "",
@@ -140,7 +140,7 @@
         "category":"serial port"
     },
     {
-        "name": "serialWriteFilter",
+        "name": "serialWriteF",
         "label": "serial write Filter",
         "type": "filter",
         "default": "",

@@ -52,31 +52,44 @@ def generateCfg():
     if isCurrent(infile,outfile):
         return
     print("creating %s"%CFG_INCLUDE)
+    oh=None
     with open(CFG_FILE,'rb') as ch:
         config=json.load(ch)
-        with open(outfile,'w') as oh:
-            oh.write("//generated from %s\n"%CFG_FILE)
-            oh.write('#include "GwConfigItem.h"\n')
-            l=len(config)
-            oh.write('class GwConfigDefinitions{\n')
-            oh.write('  public:\n')
-            oh.write('  int getNumConfig() const{return %d;}\n'%(l))
-            for item in config:
-                n=item.get('name')
-                if n is None:
-                    continue
-                oh.write('  const String %s=F("%s");\n'%(n,n))
-            oh.write('  protected:\n')    
-            oh.write('  GwConfigItem *configs[%d]={\n'%(l))
-            first=True
-            for item in config:
-                if not first:
-                    oh.write(',\n')
-                first=False    
-                oh.write("    new GwConfigItem(%s,\"%s\")"%(item.get('name'),item.get('default')))
-            oh.write('};\n')  
-            oh.write('};\n')
-            oh.close()  
+        try:
+            with open(outfile,'w') as oh:
+                oh.write("//generated from %s\n"%CFG_FILE)
+                oh.write('#include "GwConfigItem.h"\n')
+                l=len(config)
+                oh.write('class GwConfigDefinitions{\n')
+                oh.write('  public:\n')
+                oh.write('  int getNumConfig() const{return %d;}\n'%(l))
+                for item in config:
+                    n=item.get('name')
+                    if n is None:
+                        continue
+                    if len(n) > 15:
+                        raise Exception("%s: config names must be max 15 caracters"%n)
+                    oh.write('  const String %s=F("%s");\n'%(n,n))
+                oh.write('  protected:\n')    
+                oh.write('  GwConfigItem *configs[%d]={\n'%(l))
+                first=True
+                for item in config:
+                    if not first:
+                        oh.write(',\n')
+                    first=False    
+                    oh.write("    new GwConfigItem(%s,\"%s\")"%(item.get('name'),item.get('default')))
+                oh.write('};\n')  
+                oh.write('};\n')
+                oh.close()  
+        except Exception as e:
+            if oh is not None:
+                try:
+                    oh.close()
+                except:
+                    pass
+            os.unlink(outfile)
+            raise        
+
 if not checkDir():
     sys.exit(1)
 for f in FILES:
