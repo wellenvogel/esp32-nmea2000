@@ -358,7 +358,6 @@ protected:
       result = JSON_OK;
       logger.logString("update config and restart");
       config.saveConfig();
-      delay(500);
       delayedRestart();
     }
     else
