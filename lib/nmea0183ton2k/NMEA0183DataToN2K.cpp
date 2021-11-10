@@ -520,6 +520,37 @@ private:
         }
           
     }
+    void convertVHW(const SNMEA0183Msg &msg){
+        double TrueHeading=NMEA0183DoubleNA;
+        double MagneticHeading=NMEA0183DoubleNA;
+        double STW=NMEA0183DoubleNA;
+        if (! NMEA0183ParseVHW_nc(msg,TrueHeading,MagneticHeading,STW)){
+            logger->logDebug(GwLog::DEBUG, "failed to parse VHW %s", msg.line);
+            return;
+        }
+        if (! updateDouble(boatData->STW,STW,msg.sourceId)) return;
+        if (! updateDouble(boatData->Heading,TrueHeading,msg.sourceId)) return;
+        if (MagneticHeading == NMEA0183DoubleNA) MagneticHeading=N2kDoubleNA;
+        tN2kMsg n2kMsg;
+        SetN2kBoatSpeed(n2kMsg,1,STW);
+        send(n2kMsg);
+
+    }
+    void convertVTG(const SNMEA0183Msg &msg){
+        double COG=NMEA0183DoubleNA;
+        double SOG=NMEA0183DoubleNA;
+        double MCOG=NMEA0183DoubleNA;
+        if (! NMEA0183ParseVTG_nc(msg,COG,MCOG,SOG)){
+            logger->logDebug(GwLog::DEBUG, "failed to parse VTG %s", msg.line);
+            return;   
+        }
+        if (! UD(COG)) return;
+        if (! UD(SOG)) return;
+        tN2kMsg n2kMsg;
+        //TODO: maybe use MCOG if no COG?
+        SetN2kCOGSOGRapid(n2kMsg,1,N2khr_true,COG,SOG);
+        send(n2kMsg);
+    }
 
 //shortcut for lambda converters
 #define CVL [](const SNMEA0183Msg &msg, NMEA0183DataToN2KFunctions *p) -> void
@@ -562,7 +593,13 @@ private:
             String(F("DBT")), &NMEA0183DataToN2KFunctions::convertDBT);
         converters.registerConverter(
             127245UL,
-            String(F("RSA")), &NMEA0183DataToN2KFunctions::convertRSA);    
+            String(F("RSA")), &NMEA0183DataToN2KFunctions::convertRSA); 
+        converters.registerConverter(
+            128259UL,
+            String(F("VHW")), &NMEA0183DataToN2KFunctions::convertVHW);
+        converters.registerConverter(
+            129026UL,
+            String(F("VTG")), &NMEA0183DataToN2KFunctions::convertVTG);      
         unsigned long *aispgns=new unsigned long[7]{129810UL,129809UL,129040UL,129039UL,129802UL,129794UL,129038UL};
         converters.registerConverter(7,&aispgns[0],
             String(F("AIVDM")),&NMEA0183DataToN2KFunctions::convertAIVDX);
