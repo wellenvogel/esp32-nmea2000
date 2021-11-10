@@ -503,6 +503,24 @@ private:
         return convertDBKx(msg,DBT);
     }
 
+    void convertRSA(const SNMEA0183Msg &msg){
+        double RudderPosition=NMEA0183DoubleNA;
+        if (msg.FieldCount() < 4)
+        {
+            logger->logDebug(GwLog::DEBUG, "failed to parse RSA %s", msg.line);
+            return;
+        }
+        if (msg.FieldLen(0)>0){
+            if (msg.Field(1)[0] != 'A') return;
+            RudderPosition=degToRad*atof(msg.Field(0));
+            tN2kMsg n2kMsg;
+            if (! UD(RudderPosition)) return;
+            SetN2kRudder(n2kMsg,RudderPosition);
+            send(n2kMsg);
+        }
+          
+    }
+
 //shortcut for lambda converters
 #define CVL [](const SNMEA0183Msg &msg, NMEA0183DataToN2KFunctions *p) -> void
     void registerConverters()
@@ -542,6 +560,9 @@ private:
         converters.registerConverter(
             128267UL,
             String(F("DBT")), &NMEA0183DataToN2KFunctions::convertDBT);
+        converters.registerConverter(
+            127245UL,
+            String(F("RSA")), &NMEA0183DataToN2KFunctions::convertRSA);    
         unsigned long *aispgns=new unsigned long[7]{129810UL,129809UL,129040UL,129039UL,129802UL,129794UL,129038UL};
         converters.registerConverter(7,&aispgns[0],
             String(F("AIVDM")),&NMEA0183DataToN2KFunctions::convertAIVDX);
