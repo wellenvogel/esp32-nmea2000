@@ -428,6 +428,44 @@ function handleTab(el) {
     el.classList.add('active');
     activeTab.classList.remove('hidden');
 }
+/**
+ *
+ * @param {number} coordinate
+ * @param axis
+ * @returns {string}
+ */
+ function formatLonLatsDecimal(coordinate,axis){
+    coordinate = (coordinate+540)%360 - 180; // normalize for sphere being round
+
+    let abscoordinate = Math.abs(coordinate);
+    let coordinatedegrees = Math.floor(abscoordinate);
+
+    let coordinateminutes = (abscoordinate - coordinatedegrees)/(1/60);
+    let numdecimal=2;
+    //correctly handle the toFixed(x) - will do math rounding
+    if (coordinateminutes.toFixed(numdecimal) == 60){
+        coordinatedegrees+=1;
+        coordinateminutes=0;
+    }
+    if( coordinatedegrees < 10 ) {
+        coordinatedegrees = "0" + coordinatedegrees;
+    }
+    if (coordinatedegrees < 100 && axis == 'lon'){
+        coordinatedegrees = "0" + coordinatedegrees;
+    }
+    let str = coordinatedegrees + "\u00B0";
+
+    if( coordinateminutes < 10 ) {
+        str +="0";
+    }
+    str += coordinateminutes.toFixed(numdecimal) + "'";
+    if (axis == "lon") {
+        str += coordinate < 0 ? "W" :"E";
+    } else {
+        str += coordinate < 0 ? "S" :"N";
+    }
+    return str;
+};
 let valueFormatters = {
     formatCourse: {
         f: function (v) {
@@ -489,14 +527,16 @@ let valueFormatters = {
     formatLatitude: {
         f: function (v) {
             let x = parseFloat(v);
-            return x.toFixed(4);
+            if (isNaN(x)) return '-----';
+            return formatLonLatsDecimal(x,'lat');
         },
         u: '°'
     },
     formatLongitude: {
         f: function (v) {
             let x = parseFloat(v);
-            return x.toFixed(4);
+            if (isNaN(x)) return '-----';
+            return formatLonLatsDecimal(x,'lon');
         },
         u: ''
     },
@@ -507,6 +547,7 @@ function createDashboardItem(name, def, parent) {
     let value = addEl('span', 'dashValue', frame);
     value.setAttribute('id', 'data_' + name);
     let fmt=valueFormatters[def.format];
+    if (def.format) value.classList.add(def.format);
     let footer = addEl('div','footer',frame);
     let src= addEl('span','source',footer);
     src.setAttribute('id','source_'+name);

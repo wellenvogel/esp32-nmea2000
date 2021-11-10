@@ -184,6 +184,7 @@ body{
       margin: 0;
       box-sizing: border-box;
       font-size: 1.2em;
+      justify-content: space-between;
   }
   div#dashboardPage {
       display: flex;
@@ -197,8 +198,13 @@ body{
   .dashValue{
     font-size: 1.6em;
     text-align: center;
-    flex: 1;
   }
+  .dashValue.formatLatitude {
+    font-size: 1.1em;
+    }
+  .dashValue.formatLongitude {
+        font-size: 1.1em;
+    }  
   .footer {
     display: flex;
     flex-direction: row;
