@@ -5,6 +5,10 @@
 #include <map>
 #include <strings.h>
 #include "NMEA0183AIStoNMEA2000.h"
+
+static const double mToFathoms=0.546806649;
+static const double mToFeet=3.2808398950131;
+
 NMEA0183DataToN2K::NMEA0183DataToN2K(GwLog *logger, GwBoatData *boatData,N2kSender callback)
 {
     this->sender = callback;
@@ -405,6 +409,100 @@ private:
         send(n2kMsg);    
     }
 
+    void convertDPT(const SNMEA0183Msg &msg){
+        double DepthBelowTransducer=NMEA0183DoubleNA;
+        double Offset=NMEA0183DoubleNA;
+        if (msg.FieldCount() < 2)
+        {
+            logger->logDebug(GwLog::DEBUG, "failed to parse DPT %s", msg.line);
+            return;
+        }
+        if (msg.FieldLen(0)>0){
+            DepthBelowTransducer=atof(msg.Field(0));
+        }
+        else{
+            return;
+        }
+        if (msg.FieldLen(1)>0){
+            Offset=atof(msg.Field(1));
+        }
+        //offset == 0? SK does not allow this
+        if (Offset != NMEA0183DoubleNA && Offset>=0 ){
+            if (! boatData->WaterDepth->update(DepthBelowTransducer+Offset)) return;
+        }
+        if (Offset == NMEA0183DoubleNA) Offset=N2kDoubleNA;
+        if (! boatData->DepthTransducer->update(DepthBelowTransducer)) return;
+        tN2kMsg n2kMsg;
+        SetN2kWaterDepth(n2kMsg,1,DepthBelowTransducer,Offset);
+        send(n2kMsg);
+    }
+    typedef enum {
+        DBS,
+        DBK,
+        DBT
+    } DepthType;
+    void convertDBKx(const SNMEA0183Msg &msg,DepthType dt){
+        double Depth=NMEA0183DoubleNA;
+        if (msg.FieldCount() < 6)
+        {
+            logger->logDebug(GwLog::DEBUG, "failed to parse DBK/DBS %s", msg.line);
+            return;
+        }
+        for (int i=0;i< 3;i++){
+            if (msg.FieldLen(0)>0){
+                Depth=atof(msg.Field(0));
+                char dt=msg.Field(i+1)[0];
+                switch(dt){
+                    case 'f':
+                        Depth=Depth/mToFeet;
+                        break;
+                    case 'M':
+                        break;
+                    case 'F':
+                        Depth=Depth/mToFathoms;
+                        break;
+                    default:
+                        //unknown type, try next
+                        continue;            
+                }
+                if (dt == DBT){
+                    if (! boatData->DepthTransducer->update(Depth,msg.sourceId)) return;
+                    tN2kMsg n2kMsg;
+                    SetN2kWaterDepth(n2kMsg,1,Depth,N2kDoubleNA); 
+                    send(n2kMsg);
+                    return;   
+                }
+                //we can only send if we have a valid depth beloww tranducer
+                //to compute the offset
+                if (! boatData->DepthTransducer->isValid()) return;
+                double offset=Depth-boatData->DepthTransducer->getData();
+                if (offset >= 0 && dt == DBT){
+                    logger->logDebug(GwLog::DEBUG, "strange DBK - more depth then transducer %s", msg.line);    
+                    return;
+                }
+                if (offset < 0 && dt == DBS){
+                    logger->logDebug(GwLog::DEBUG, "strange DBS - less depth then transducer %s", msg.line);    
+                    return;
+                }
+                if (dt == DBS){
+                    if (! boatData->WaterDepth->update(Depth,msg.sourceId)) return;
+                }
+                tN2kMsg n2kMsg;
+                SetN2kWaterDepth(n2kMsg,1,Depth,offset);
+                send(n2kMsg);
+            }            
+        }        
+    }
+    void convertDBK(const SNMEA0183Msg &msg){
+        return convertDBKx(msg,DBK);
+    }
+    void convertDBS(const SNMEA0183Msg &msg){
+        return convertDBKx(msg,DBS);
+    }
+    void convertDBT(const SNMEA0183Msg &msg){
+        return convertDBKx(msg,DBT);
+    }
+
 //shortcut for lambda converters
 #define CVL [](const SNMEA0183Msg &msg, NMEA0183DataToN2KFunctions *p) -> void
     void registerConverters()
@@ -431,7 +529,19 @@ private:
             String(F("HDT")),&NMEA0183DataToN2KFunctions::convertHDT);
         converters.registerConverter(
             127250UL,
-            String(F("HDG")),&NMEA0183DataToN2KFunctions::convertHDG);                      
+            String(F("HDG")),&NMEA0183DataToN2KFunctions::convertHDG);
+        converters.registerConverter(
+            128267UL,
+            String(F("DPT")), &NMEA0183DataToN2KFunctions::convertDPT);
+        converters.registerConverter(
+            128267UL,
+            String(F("DBK")), &NMEA0183DataToN2KFunctions::convertDBK);    
+        converters.registerConverter(
+            128267UL,
+            String(F("DBS")), &NMEA0183DataToN2KFunctions::convertDBS);
+        converters.registerConverter(
+            128267UL,
+            String(F("DBT")), &NMEA0183DataToN2KFunctions::convertDBT);
         unsigned long *aispgns=new unsigned long[7]{129810UL,129809UL,129040UL,129039UL,129802UL,129794UL,129038UL};
         converters.registerConverter(7,&aispgns[0],
             String(F("AIVDM")),&NMEA0183DataToN2KFunctions::convertAIVDX);

@@ -225,6 +225,7 @@ private:
 
             WaterDepth = DepthBelowTransducer + Offset;
             updateDouble(boatData->WaterDepth, WaterDepth);
+            updateDouble(boatData->DepthTransducer,DepthBelowTransducer);
             tNMEA0183Msg NMEA0183Msg;
             if (NMEA0183SetDPT(NMEA0183Msg, DepthBelowTransducer, Offset,talkerId))
             {

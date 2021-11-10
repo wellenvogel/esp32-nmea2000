@@ -133,6 +133,7 @@ class GwBoatData{
     GWBOATDATA(double,Longitude,4000,formatLongitude)
     GWBOATDATA(double,Altitude,4000,formatFixed0)
     GWBOATDATA(double,WaterDepth,4000,formatDepth)
+    GWBOATDATA(double,DepthTransducer,4000,formatDepth)
     GWBOATDATA(double,SecondsSinceMidnight,4000,formatFixed0)
     GWBOATDATA(double,WaterTemperature,4000,kelvinToC)
     GWBOATDATA(double,XTE,4000,formatFixed0)
