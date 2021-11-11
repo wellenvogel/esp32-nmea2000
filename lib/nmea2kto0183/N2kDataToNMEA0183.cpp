@@ -104,6 +104,9 @@ private:
         if (! rt){
           LOG_DEBUG(GwLog::DEBUG+1,"no handler for %ld",N2kMsg.PGN);
         }
+        else{
+            //LOG_DEBUG(GwLog::DEBUG+1,"handled %ld",N2kMsg.PGN);
+        }
     }
     virtual void toJson(JsonDocument &json)
     {
@@ -860,6 +863,60 @@ private:
         return;
     }
 
+    void HandleSystemTime(const tN2kMsg &msg){
+        unsigned char sid=-1;
+        uint16_t DaysSince1970=N2kUInt16NA;
+        double SecondsSinceMidnight=N2kDoubleNA;
+        tN2kTimeSource TimeSource;
+
+        if (! ParseN2kSystemTime(msg,sid,DaysSince1970,SecondsSinceMidnight,TimeSource)){
+            LOG_DEBUG(GwLog::DEBUG,"unable to parse PGN %d",msg.PGN);
+            return;
+        }
+        updateDouble(boatData->SecondsSinceMidnight,SecondsSinceMidnight);
+        if (DaysSince1970 != N2kUInt16NA) boatData->DaysSince1970->update(DaysSince1970,sourceId);
+        if (boatData->DaysSince1970->isValid() && boatData->SecondsSinceMidnight->isValid()){
+            tNMEA0183Msg nmeaMsg;
+            nmeaMsg.Init("ZDA",talkerId);
+            char utc[7];
+            double seconds=boatData->SecondsSinceMidnight->getData();
+            int hours=floor(seconds/3600.0);
+            int minutes=floor(seconds/60) - hours *60;
+            int sec=floor(seconds)-60*minutes-3600*hours;
+            snprintf(utc,7,"%02d%02d%02d",hours,minutes,sec);
+            nmeaMsg.AddStrField(utc);
+            tmElements_t timeParts;
+            tNMEA0183Msg::breakTime(tNMEA0183Msg::daysToTime_t(boatData->DaysSince1970->getData()),timeParts);
+            nmeaMsg.AddUInt32Field(tNMEA0183Msg::GetDay(timeParts));
+            nmeaMsg.AddUInt32Field(tNMEA0183Msg::GetMonth(timeParts));
+            nmeaMsg.AddUInt32Field(tNMEA0183Msg::GetYear(timeParts));
+            if (boatData->Timezone->isValid()){
+                int hours=boatData->Timezone->getData()/60;
+                int minutes=boatData->Timezone->getData() - 60 *hours;
+                nmeaMsg.AddDoubleField(hours,1,"%02.0f");
+                nmeaMsg.AddDoubleField(minutes,1,"%02.0f");
+            }
+            else{
+                nmeaMsg.AddEmptyField();
+                nmeaMsg.AddEmptyField();
+            }
+            SendMessage(nmeaMsg);
+        }
+    }
+
+    void HandleTimeOffset(const tN2kMsg &msg){
+        uint16_t DaysSince1970 =N2kUInt16NA;
+        double SecondsSinceMidnight=N2kDoubleNA;
+        int16_t LocalOffset=N2kInt16NA;
+        if (!ParseN2kLocalOffset(msg,DaysSince1970,SecondsSinceMidnight,LocalOffset)){
+            LOG_DEBUG(GwLog::DEBUG,"unable to parse PGN %d",msg.PGN);
+            return;
+        }
+        updateDouble(boatData->SecondsSinceMidnight,SecondsSinceMidnight);
+        if (DaysSince1970 != N2kUInt16NA) boatData->DaysSince1970->update(DaysSince1970,sourceId);
+        if (LocalOffset != N2kInt16NA) boatData->Timezone->update(LocalOffset,sourceId);
+    }
+
 
     void registerConverters()
     {
@@ -879,6 +936,8 @@ private:
       converters.registerConverter(128275UL, &N2kToNMEA0183Functions::HandleLog);
       converters.registerConverter(127245UL, &N2kToNMEA0183Functions::HandleRudder);
       converters.registerConverter(130310UL, &N2kToNMEA0183Functions::HandleWaterTemp);
+      converters.registerConverter(126992UL, &N2kToNMEA0183Functions::HandleSystemTime);
+      converters.registerConverter(129033UL, &N2kToNMEA0183Functions::HandleTimeOffset);
 #define HANDLE_AIS
 #ifdef HANDLE_AIS
       converters.registerConverter(129038UL, &N2kToNMEA0183Functions::HandleAISClassAPosReport);  // AIS Class A Position Report, Message Type 1

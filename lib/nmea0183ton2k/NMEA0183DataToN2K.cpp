@@ -133,7 +133,7 @@ private:
         LOG_DEBUG(GwLog::DEBUG + 1, "convert RMB");
         tRMB rmb;
         if (! NMEA0183ParseRMB_nc(msg,rmb)){
-            logger->logDebug(GwLog::DEBUG, "failed to parse RMC %s", msg.line);
+            LOG_DEBUG(GwLog::DEBUG, "failed to parse RMC %s", msg.line);
             return;   
         }
         tN2kMsg n2kMsg;
@@ -197,7 +197,7 @@ private:
         char status;
         if (!NMEA0183ParseRMC_nc(msg, SecondsSinceMidnight, status, Latitude, Longitude, COG, SOG, DaysSince1970, Variation, &DateTime))
         {
-            logger->logDebug(GwLog::DEBUG, "failed to parse RMC %s", msg.line);
+            LOG_DEBUG(GwLog::DEBUG, "failed to parse RMC %s", msg.line);
             return;
         }
         tN2kMsg n2kMsg;
@@ -235,7 +235,7 @@ private:
 
         if (!NMEA0183ParseMWV_nc(msg, WindAngle, Reference,WindSpeed))
         {
-            logger->logDebug(GwLog::DEBUG, "failed to parse MWV %s", msg.line);
+            LOG_DEBUG(GwLog::DEBUG, "failed to parse MWV %s", msg.line);
             return;
         }
         tN2kMsg n2kMsg;
@@ -266,7 +266,7 @@ private:
         double WindAngle = NMEA0183DoubleNA, WindSpeed = NMEA0183DoubleNA;
         if (msg.FieldCount() < 8 || msg.FieldLen(0) < 1)
         {
-            logger->logDebug(GwLog::DEBUG, "failed to parse VWR %s", msg.line);
+            LOG_DEBUG(GwLog::DEBUG, "failed to parse VWR %s", msg.line);
             return;
         }
         WindAngle = atof(msg.Field(0));
@@ -308,7 +308,7 @@ private:
             WindSpeed = NMEA0183DoubleNA;
         if (msg.FieldCount() < 8 )
         {
-            logger->logDebug(GwLog::DEBUG, "failed to parse MWD %s", msg.line);
+            LOG_DEBUG(GwLog::DEBUG, "failed to parse MWD %s", msg.line);
             return;
         }
         if (msg.FieldLen(0) > 0 && msg.Field(1)[0] == 'T')
@@ -353,7 +353,7 @@ private:
         double MagneticHeading=NMEA0183DoubleNA;
         if (!NMEA0183ParseHDM_nc(msg, MagneticHeading))
         {
-            logger->logDebug(GwLog::DEBUG, "failed to parse HDM %s", msg.line);
+            LOG_DEBUG(GwLog::DEBUG, "failed to parse HDM %s", msg.line);
             return;
         }
         if (! UD(MagneticHeading)) return;
@@ -369,7 +369,7 @@ private:
         double Heading=NMEA0183DoubleNA;
         if (!NMEA0183ParseHDT_nc(msg, Heading))
         {
-            logger->logDebug(GwLog::DEBUG, "failed to parse HDT %s", msg.line);
+            LOG_DEBUG(GwLog::DEBUG, "failed to parse HDT %s", msg.line);
             return;
         }
         if (! UD(Heading)) return;
@@ -383,7 +383,7 @@ private:
         double Deviation=NMEA0183DoubleNA;
         if (msg.FieldCount() < 5)
         {
-            logger->logDebug(GwLog::DEBUG, "failed to parse HDG %s", msg.line);
+            LOG_DEBUG(GwLog::DEBUG, "failed to parse HDG %s", msg.line);
             return;
         }
         if (msg.FieldLen(0)>0){
@@ -414,7 +414,7 @@ private:
         double Offset=NMEA0183DoubleNA;
         if (msg.FieldCount() < 2)
         {
-            logger->logDebug(GwLog::DEBUG, "failed to parse DPT %s", msg.line);
+            LOG_DEBUG(GwLog::DEBUG, "failed to parse DPT %s", msg.line);
             return;
         }
         if (msg.FieldLen(0)>0){
@@ -445,7 +445,7 @@ private:
         double Depth=NMEA0183DoubleNA;
         if (msg.FieldCount() < 6)
         {
-            logger->logDebug(GwLog::DEBUG, "failed to parse DBK/DBS %s", msg.line);
+            LOG_DEBUG(GwLog::DEBUG, "failed to parse DBK/DBS %s", msg.line);
             return;
         }
         for (int i=0;i< 3;i++){
@@ -507,7 +507,7 @@ private:
         double RudderPosition=NMEA0183DoubleNA;
         if (msg.FieldCount() < 4)
         {
-            logger->logDebug(GwLog::DEBUG, "failed to parse RSA %s", msg.line);
+            LOG_DEBUG(GwLog::DEBUG, "failed to parse RSA %s", msg.line);
             return;
         }
         if (msg.FieldLen(0)>0){
@@ -525,7 +525,7 @@ private:
         double MagneticHeading=NMEA0183DoubleNA;
         double STW=NMEA0183DoubleNA;
         if (! NMEA0183ParseVHW_nc(msg,TrueHeading,MagneticHeading,STW)){
-            logger->logDebug(GwLog::DEBUG, "failed to parse VHW %s", msg.line);
+            LOG_DEBUG(GwLog::DEBUG, "failed to parse VHW %s", msg.line);
             return;
         }
         if (! updateDouble(boatData->STW,STW,msg.sourceId)) return;
@@ -541,7 +541,7 @@ private:
         double SOG=NMEA0183DoubleNA;
         double MCOG=NMEA0183DoubleNA;
         if (! NMEA0183ParseVTG_nc(msg,COG,MCOG,SOG)){
-            logger->logDebug(GwLog::DEBUG, "failed to parse VTG %s", msg.line);
+            LOG_DEBUG(GwLog::DEBUG, "failed to parse VTG %s", msg.line);
             return;   
         }
         if (! UD(COG)) return;
@@ -549,6 +549,33 @@ private:
         tN2kMsg n2kMsg;
         //TODO: maybe use MCOG if no COG?
         SetN2kCOGSOGRapid(n2kMsg,1,N2khr_true,COG,SOG);
+        send(n2kMsg);
+    }
+    void convertZDA(const SNMEA0183Msg &msg){
+        time_t DateTime;
+        long Timezone;
+        if (! NMEA0183ParseZDA(msg,DateTime,Timezone)){
+            LOG_DEBUG(GwLog::DEBUG, "failed to parse ZDA %s", msg.line);
+            return;   
+        }
+        uint32_t DaysSince1970=tNMEA0183Msg::elapsedDaysSince1970(DateTime);
+        tmElements_t parts;
+        tNMEA0183Msg::breakTime(DateTime,parts);
+        double SecondsSinceMidnight=parts.tm_sec+60*parts.tm_min+3600*parts.tm_hour;
+        if (! boatData->DaysSince1970->update(DaysSince1970,msg.sourceId)) return;
+        if (! boatData->SecondsSinceMidnight->update(SecondsSinceMidnight,msg.sourceId)) return;
+        bool timezoneValid=false;
+        if (msg.FieldLen(4) > 0 && msg.FieldLen(5)>0){
+            Timezone=Timezone/60; //N2K has offset in minutes
+            if (! boatData->Timezone->update(Timezone,msg.sourceId)) return;
+            timezoneValid=true;
+        }
+        tN2kMsg n2kMsg;
+        if (timezoneValid){
+            SetN2kLocalOffset(n2kMsg,DaysSince1970,SecondsSinceMidnight,Timezone);
+            send(n2kMsg);
+        }
+        SetN2kSystemTime(n2kMsg,1,DaysSince1970,SecondsSinceMidnight);
         send(n2kMsg);
     }
 
@@ -599,7 +626,10 @@ private:
             String(F("VHW")), &NMEA0183DataToN2KFunctions::convertVHW);
         converters.registerConverter(
             129026UL,
-            String(F("VTG")), &NMEA0183DataToN2KFunctions::convertVTG);      
+            String(F("VTG")), &NMEA0183DataToN2KFunctions::convertVTG);
+        converters.registerConverter(
+            129033UL,126992UL,
+            String(F("ZDA")), &NMEA0183DataToN2KFunctions::convertZDA);            
         unsigned long *aispgns=new unsigned long[7]{129810UL,129809UL,129040UL,129039UL,129802UL,129794UL,129038UL};
         converters.registerConverter(7,&aispgns[0],
             String(F("AIVDM")),&NMEA0183DataToN2KFunctions::convertAIVDX);

@@ -144,6 +144,7 @@ class GwBoatData{
     GWBOATDATA(uint32_t,Log,0,mtr2nm)
     GWBOATDATA(uint32_t,TripLog,0,mtr2nm)
     GWBOATDATA(uint32_t,DaysSince1970,4000,formatFixed0)
+    GWBOATDATA(int16_t,Timezone,8000,formatFixed0)
     public:
         GwBoatData(GwLog *logger);
         ~GwBoatData();
