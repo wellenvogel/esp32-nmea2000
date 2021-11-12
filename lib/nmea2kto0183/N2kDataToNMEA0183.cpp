@@ -309,8 +309,18 @@ private:
             updateDouble(boatData->Longitude, Longitude);
             updateDouble(boatData->Altitude, Altitude);
             updateDouble(boatData->SecondsSinceMidnight, SecondsSinceMidnight);
+            updateDouble(boatData->HDOP,HDOP);
+            updateDouble(boatData->PDOP,PDOP);
             if (DaysSince1970 != N2kUInt16NA && DaysSince1970 != 0)
                 boatData->DaysSince1970->update(DaysSince1970,sourceId);
+            int quality=0;
+            if ((int)GNSSmethod <= 5) quality=(int)GNSSmethod;
+            tNMEA0183AISMsg nmeaMsg;
+            if (NMEA0183SetGGA(nmeaMsg,SecondsSinceMidnight,Latitude,Longitude,
+                quality,nSatellites,HDOP,Altitude,GeoidalSeparation,AgeOfCorrection,
+                ReferenceSationID,talkerId)){
+                SendMessage(nmeaMsg);
+            }    
         }
     }
 

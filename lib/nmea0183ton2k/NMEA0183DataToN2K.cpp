@@ -578,6 +578,40 @@ private:
         SetN2kSystemTime(n2kMsg,1,DaysSince1970,SecondsSinceMidnight);
         send(n2kMsg);
     }
+    void convertGGA(const SNMEA0183Msg &msg){
+        double GPSTime=NMEA0183DoubleNA;
+        double Latitude=NMEA0183DoubleNA;
+        double Longitude=NMEA0183DoubleNA;
+        int GPSQualityIndicator=NMEA0183Int32NA;
+        int SatelliteCount=NMEA0183Int32NA;
+        double HDOP=NMEA0183DoubleNA; 
+        double Altitude=NMEA0183DoubleNA;
+        double GeoidalSeparation=NMEA0183DoubleNA;
+        double DGPSAge=NMEA0183DoubleNA;
+        int DGPSReferenceStationID=NMEA0183Int32NA;
+        if (! NMEA0183ParseGGA_nc(msg,GPSTime, Latitude,Longitude,
+                      GPSQualityIndicator, SatelliteCount, HDOP, Altitude,GeoidalSeparation,
+                      DGPSAge, DGPSReferenceStationID)){
+            LOG_DEBUG(GwLog::DEBUG, "failed to parse GGA %s", msg.line);
+            return;   
+        }
+        if (! updateDouble(boatData->SecondsSinceMidnight,GPSTime,msg.sourceId)) return;
+        if (! updateDouble(boatData->Latitude,Latitude,msg.sourceId)) return;        
+        if (! updateDouble(boatData->Longitude,Longitude,msg.sourceId)) return;    
+        if (! updateDouble(boatData->Altitude,Altitude,msg.sourceId)) return;
+        if (! updateDouble(boatData->HDOP,HDOP,msg.sourceId)) return;    
+        if (! boatData->DaysSince1970->isValid()) return;
+        tN2kMsg n2kMsg;
+        tN2kGNSSmethod method=N2kGNSSm_noGNSS;
+        if (GPSQualityIndicator <=5 ) method= (tN2kGNSSmethod)GPSQualityIndicator;
+        SetN2kGNSS(n2kMsg,1, boatData->DaysSince1970->getData(),
+             GPSTime, Latitude, Longitude, Altitude,
+                     N2kGNSSt_GPS, method,
+                     SatelliteCount, HDOP, boatData->PDOP->getDataWithDefault(N2kDoubleNA), 0,
+                     0, N2kGNSSt_GPS, DGPSReferenceStationID,
+                     DGPSAge);
+        send(n2kMsg);             
+    }
 
 //shortcut for lambda converters
 #define CVL [](const SNMEA0183Msg &msg, NMEA0183DataToN2KFunctions *p) -> void
@@ -629,7 +663,10 @@ private:
             String(F("VTG")), &NMEA0183DataToN2KFunctions::convertVTG);
         converters.registerConverter(
             129033UL,126992UL,
-            String(F("ZDA")), &NMEA0183DataToN2KFunctions::convertZDA);            
+            String(F("ZDA")), &NMEA0183DataToN2KFunctions::convertZDA);
+        converters.registerConverter(
+            129029UL,
+            String(F("GGA")), &NMEA0183DataToN2KFunctions::convertGGA);                
         unsigned long *aispgns=new unsigned long[7]{129810UL,129809UL,129040UL,129039UL,129802UL,129794UL,129038UL};
         converters.registerConverter(7,&aispgns[0],
             String(F("AIVDM")),&NMEA0183DataToN2KFunctions::convertAIVDX);

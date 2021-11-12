@@ -20,6 +20,7 @@ class GwBoatItemBase{
         GWSC(formatDepth);
         GWSC(kelvinToC);
         GWSC(mtr2nm);
+        GWSC(formatDop);
         typedef std::vector<GwBoatItemBase*> GwBoatItemMap;
     protected:
         unsigned long lastSet=0;
@@ -128,6 +129,8 @@ class GwBoatData{
     GWBOATDATA(double,MagneticHeading,4000,formatCourse)
     GWBOATDATA(double,Variation,4000,formatCourse)
     GWBOATDATA(double,Deviation,4000,formatCourse)
+    GWBOATDATA(double,HDOP,4000,formatDop)
+    GWBOATDATA(double,PDOP,4000,formatDop)
     GWBOATDATA(double,RudderPosition,4000,formatCourse)
     GWBOATDATA(double,Latitude,4000,formatLatitude)
     GWBOATDATA(double,Longitude,4000,formatLongitude)
