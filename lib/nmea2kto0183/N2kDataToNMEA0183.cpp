@@ -323,6 +323,37 @@ private:
             }    
         }
     }
+    void HandleDop(const tN2kMsg &msg){
+        double HDOP=N2kDoubleNA;
+        double VDOP=N2kDoubleNA;
+        double TDOP;
+        tN2kGNSSDOPmode DesiredMode; 
+        tN2kGNSSDOPmode ActualMode;
+        unsigned char SID;
+        if (ParseN2kGNSSDOPData(msg,SID, DesiredMode, ActualMode,
+                         HDOP, VDOP, TDOP)){
+            updateDouble(boatData->HDOP,HDOP);
+            updateDouble(boatData->VDOP,VDOP);
+        }
+    }
+    void HandleSats(const tN2kMsg &msg){
+        unsigned char SID;
+        tN2kRangeResidualMode Mode;
+        uint8_t NumberOfSVs;
+        tSatelliteInfo info;
+        if (ParseN2kPGNSatellitesInView(msg,SID,Mode,NumberOfSVs)){
+            for (int i=0;i<NumberOfSVs;i++){
+                if (ParseN2kPGNSatellitesInView(msg,i,info)){
+                    GwSatInfo satInfo;
+                    satInfo.PRN=info.PRN;
+                    satInfo.Elevation=info.Elevation;
+                    satInfo.Azimut=info.Azimuth;
+                    satInfo.SNR=info.SNR;
+                    if (! boatData->SatInfo->update(satInfo,sourceId)) return;
+                }
+            }
+        }
+    }
 
     //*****************************************************************************
     void HandleWind(const tN2kMsg &N2kMsg)
@@ -948,6 +979,8 @@ private:
       converters.registerConverter(130310UL, &N2kToNMEA0183Functions::HandleWaterTemp);
       converters.registerConverter(126992UL, &N2kToNMEA0183Functions::HandleSystemTime);
       converters.registerConverter(129033UL, &N2kToNMEA0183Functions::HandleTimeOffset);
+      converters.registerConverter(129539UL, &N2kToNMEA0183Functions::HandleDop);
+      converters.registerConverter(129540UL, &N2kToNMEA0183Functions::HandleSats);
 #define HANDLE_AIS
 #ifdef HANDLE_AIS
       converters.registerConverter(129038UL, &N2kToNMEA0183Functions::HandleAISClassAPosReport);  // AIS Class A Position Report, Message Type 1

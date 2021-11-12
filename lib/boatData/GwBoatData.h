@@ -55,7 +55,7 @@ class GwBoatItemBase{
 };
 class GwBoatData;
 template<class T> class GwBoatItem : public GwBoatItemBase{
-    private:
+    protected:
         T data;
         int lastUpdateSource;
     public:
@@ -106,9 +106,80 @@ double formatKnots(double cv);
 uint32_t mtr2nm(uint32_t m);
 double mtr2nm(double m);
 
+class GwSatInfo{
+    public:
+        unsigned char PRN;
+        uint32_t Elevation;
+        uint32_t Azimut;
+        uint32_t SNR;
+        unsigned long timestamp;
+};
+class GwSatInfoList{
+    public:
+        static const unsigned long lifeTime=32000;
+        std::vector<GwSatInfo> sats;
+        void houseKeeping(unsigned long ts=0){
+            if (ts == 0) ts=millis();
+            sats.erase(std::remove_if(
+                sats.begin(),
+                sats.end(),
+                [ts,this](const GwSatInfo &info){
+                    return (info.timestamp + lifeTime) < ts;
+                    }
+            ),sats.end());   
+        }
+        void update(GwSatInfo entry){
+            unsigned long now=millis();
+            entry.timestamp=now;
+            for (auto it=sats.begin();it!=sats.end();it++){
+                if (it->PRN == entry.PRN){
+                    *it=entry;
+                    houseKeeping();
+                    return;
+                }
+            }
+            houseKeeping();
+            sats.push_back(entry);
+        }
+        int getNumSats() const{
+            return sats.size();
+        }
+        GwSatInfo *getAt(int idx){
+            if (idx > 0 && idx < sats.size()) return &sats.at(idx);
+            return NULL;
+        }
+};
+
+bool convertToJson(const GwSatInfoList &si,JsonVariant &variant);
+class GwBoatDataSatList : public GwBoatItem<GwSatInfoList>
+{
+public:
+    GwBoatDataSatList(String name, String formatInfo, unsigned long invalidTime = INVALID_TIME, GwBoatItemMap *map = NULL) : GwBoatItem<GwSatInfoList>(name, formatInfo, invalidTime, map) {}
+    bool update(GwSatInfo info, int source)
+    {
+        unsigned long now = millis();
+        if (isValid(now))
+        {
+            //priority handling
+            //sources with lower ids will win
+            //and we will not overwrite their value
+            if (lastUpdateSource < source)
+            {
+                return false;
+            }
+        }
+        lastUpdateSource = source;
+        uls(now);
+        data.update(info);
+        return true;
+    }
+
+};
 
 #define GWBOATDATA(type,name,time,fmt)  \
     GwBoatItem<type> *name=new GwBoatItem<type>(F(#name),GwBoatItemBase::fmt,time,&values) ;
+#define GWSPECBOATDATA(clazz,name,time,fmt)  \
+    clazz *name=new clazz(F(#name),GwBoatItemBase::fmt,time,&values) ;
 class GwBoatData{
     private:
         GwLog *logger;
@@ -131,6 +202,7 @@ class GwBoatData{
     GWBOATDATA(double,Deviation,4000,formatCourse)
     GWBOATDATA(double,HDOP,4000,formatDop)
     GWBOATDATA(double,PDOP,4000,formatDop)
+    GWBOATDATA(double,VDOP,4000,formatDop)
     GWBOATDATA(double,RudderPosition,4000,formatCourse)
     GWBOATDATA(double,Latitude,4000,formatLatitude)
     GWBOATDATA(double,Longitude,4000,formatLongitude)
@@ -148,6 +220,7 @@ class GwBoatData{
     GWBOATDATA(uint32_t,TripLog,0,mtr2nm)
     GWBOATDATA(uint32_t,DaysSince1970,4000,formatFixed0)
     GWBOATDATA(int16_t,Timezone,8000,formatFixed0)
+    GWSPECBOATDATA(GwBoatDataSatList,SatInfo,GwSatInfoList::lifeTime,formatFixed0);
     public:
         GwBoatData(GwLog *logger);
         ~GwBoatData();

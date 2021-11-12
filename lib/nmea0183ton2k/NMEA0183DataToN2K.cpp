@@ -612,6 +612,32 @@ private:
                      DGPSAge);
         send(n2kMsg);             
     }
+    void convertGSA(const SNMEA0183Msg &msg){
+        if (msg.FieldCount() < 17)
+        {
+            LOG_DEBUG(GwLog::DEBUG, "failed to parse GSA %s", msg.line);
+            return;
+        }
+        int fixMode=atoi(msg.Field(1));
+
+        tN2kMsg n2kMsg;
+        tN2kGNSSDOPmode mode=N2kGNSSdm_Unavailable;
+        if (fixMode >= 0 && fixMode <=3) mode=(tN2kGNSSDOPmode)fixMode;
+        tN2kGNSSDOPmode rmode=mode;
+        if (msg.Field(0)[0] == 'A') rmode=N2kGNSSdm_Auto;
+        double HDOP=N2kDoubleNA;
+        double VDOP=N2kDoubleNA;
+        if (msg.FieldLen(15)> 0){
+            HDOP=atof(msg.Field(15));
+            if (!updateDouble(boatData->HDOP,HDOP,msg.sourceId)) return;
+        }
+        if (msg.FieldLen(16)> 0){
+            VDOP=atof(msg.Field(16));
+            if (!updateDouble(boatData->VDOP,VDOP,msg.sourceId)) return;
+        }
+        SetN2kGNSSDOPData(n2kMsg,1,rmode,mode,HDOP,VDOP,N2kDoubleNA);
+        send(n2kMsg);
+    }
 
 //shortcut for lambda converters
 #define CVL [](const SNMEA0183Msg &msg, NMEA0183DataToN2KFunctions *p) -> void
@@ -666,7 +692,10 @@ private:
             String(F("ZDA")), &NMEA0183DataToN2KFunctions::convertZDA);
         converters.registerConverter(
             129029UL,
-            String(F("GGA")), &NMEA0183DataToN2KFunctions::convertGGA);                
+            String(F("GGA")), &NMEA0183DataToN2KFunctions::convertGGA); 
+        converters.registerConverter(
+            129539UL,
+            String(F("GSA")), &NMEA0183DataToN2KFunctions::convertGSA);      
         unsigned long *aispgns=new unsigned long[7]{129810UL,129809UL,129040UL,129039UL,129802UL,129794UL,129038UL};
         converters.registerConverter(7,&aispgns[0],
             String(F("AIVDM")),&NMEA0183DataToN2KFunctions::convertAIVDX);

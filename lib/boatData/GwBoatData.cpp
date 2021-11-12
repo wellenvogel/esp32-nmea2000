@@ -61,3 +61,6 @@ double mtr2nm(double m)
     return m / 1852;
 }
 
+bool convertToJson(const GwSatInfoList &si,JsonVariant &variant){
+    return variant.set(si.getNumSats());
+}
