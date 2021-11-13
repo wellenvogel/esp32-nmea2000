@@ -631,6 +631,11 @@ private:
         if (msg.Field(0)[0] == 'A') rmode=N2kGNSSdm_Auto;
         double HDOP=N2kDoubleNA;
         double VDOP=N2kDoubleNA;
+        double PDOP=N2kDoubleNA;
+        if (msg.FieldLen(14)> 0){
+            PDOP=atof(msg.Field(14));
+            if (!updateDouble(boatData->PDOP,PDOP,msg.sourceId)) return;
+        }
         if (msg.FieldLen(15)> 0){
             HDOP=atof(msg.Field(15));
             if (!updateDouble(boatData->HDOP,HDOP,msg.sourceId)) return;
@@ -641,6 +646,57 @@ private:
         }
         SetN2kGNSSDOPData(n2kMsg,1,rmode,mode,HDOP,VDOP,N2kDoubleNA);
         send(n2kMsg);
+    }
+    void convertGSV(const SNMEA0183Msg &msg){
+        if (msg.FieldCount() < 7){
+            LOG_DEBUG(GwLog::DEBUG,"unable to parse GSV %s",msg.line);
+            return;
+        }
+        uint32_t total=atoi(msg.Field(0));
+        if (total < 1 || total > 9) {
+            LOG_DEBUG(GwLog::DEBUG,"GSV invalid total %u %s",total,msg.line);
+            return;
+        }
+        uint32_t current=atoi(msg.Field(1));
+        if (current < 1 || current > total) {
+            LOG_DEBUG(GwLog::DEBUG,"GSV invalid current %u %s",current,msg.line);
+            return;
+        }
+        for (int idx=2;idx < msg.FieldCount();idx+=4){
+            if (msg.FieldLen(idx) < 1 ||
+                msg.FieldLen(idx+1) < 1 ||
+                msg.FieldLen(idx+2) < 1 ||
+                msg.FieldLen(idx+3) < 1
+            ) continue;
+            GwSatInfo info;
+            info.PRN=atoi(msg.Field(idx));
+            info.Elevation=atoi(msg.Field(idx+1));
+            info.Azimut=atoi(msg.Field(idx+2));
+            info.SNR=atoi(msg.Field(idx+3));
+            if (!boatData->SatInfo->update(info,msg.sourceId)) return;
+        }
+        int numSat=boatData->SatInfo->getNumSats();
+        if (current == total && numSat > 0){
+            tN2kMsg n2kMsg;
+            SetN2kGNSSSatellitesInView(n2kMsg,1);
+            bool hasInfos=false;
+            for (int i=0;i<numSat;i++){
+                tSatelliteInfo satInfo;
+                GwSatInfo *gwInfo=boatData->SatInfo->getAt(i);
+                if (gwInfo){
+                    hasInfos=true;
+                    satInfo.PRN=gwInfo->PRN;
+                    satInfo.SNR=gwInfo->SNR;
+                    satInfo.Elevation=DegToRad(gwInfo->Elevation);
+                    satInfo.Azimuth=DegToRad(gwInfo->Azimut);
+                    AppendSatelliteInfo(n2kMsg,satInfo);
+                }
+            }
+            if (hasInfos){
+                send(n2kMsg);
+            }
+
+        }
     }
 
 //shortcut for lambda converters
@@ -699,7 +755,10 @@ private:
             String(F("GGA")), &NMEA0183DataToN2KFunctions::convertGGA); 
         converters.registerConverter(
             129539UL,
-            String(F("GSA")), &NMEA0183DataToN2KFunctions::convertGSA);      
+            String(F("GSA")), &NMEA0183DataToN2KFunctions::convertGSA); 
+        converters.registerConverter(
+            129540UL,
+            String(F("GSV")), &NMEA0183DataToN2KFunctions::convertGSV);          
         unsigned long *aispgns=new unsigned long[7]{129810UL,129809UL,129040UL,129039UL,129802UL,129794UL,129038UL};
         converters.registerConverter(7,&aispgns[0],
             String(F("AIVDM")),&NMEA0183DataToN2KFunctions::convertAIVDX);

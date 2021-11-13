@@ -159,7 +159,7 @@ class GwSatInfoList{
             return sats.size();
         }
         GwSatInfo *getAt(int idx){
-            if (idx > 0 && idx < sats.size()) return &sats.at(idx);
+            if (idx >= 0 && idx < sats.size()) return &sats.at(idx);
             return NULL;
         }
 };
@@ -190,6 +190,14 @@ public:
     virtual void toJsonDoc(JsonDocument *doc, unsigned long minTime){
             data.houseKeeping();
             GwBoatItem<GwSatInfoList>::toJsonDoc(doc,minTime);
+    }
+    GwSatInfo *getAt(int idx){
+        if (! isValid()) return NULL;
+        return data.getAt(idx);
+    }
+    int getNumSats(){
+        if (! isValid()) return 0;
+        return data.getNumSats();
     }
 
 };

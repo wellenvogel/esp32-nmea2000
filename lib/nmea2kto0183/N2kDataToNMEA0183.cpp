@@ -278,6 +278,32 @@ private:
             }
         }
     }
+    void sendGSA(bool autoMode, int fixMode)
+    {
+        if (boatData->SatInfo->isValid())
+        {
+            tNMEA0183Msg nmeaMsg;
+            nmeaMsg.Init("GSA", talkerId);
+            nmeaMsg.AddStrField(autoMode ? "A" : "M");
+            if (fixMode < 1)
+                fixMode = 1;
+            if (fixMode > 3)
+                fixMode = 1;
+            nmeaMsg.AddUInt32Field(fixMode);
+            for (int i = 0; i < 12; i++)
+            {
+                GwSatInfo *info = boatData->SatInfo->getAt(i);
+                if (info)
+                    nmeaMsg.AddUInt32Field(info->PRN);
+                else
+                    nmeaMsg.AddEmptyField();
+            }
+            nmeaMsg.AddDoubleField(boatData->PDOP->getDataWithDefault(NMEA0183DoubleNA));
+            nmeaMsg.AddDoubleField(boatData->HDOP->getDataWithDefault(NMEA0183DoubleNA));
+            nmeaMsg.AddDoubleField(boatData->VDOP->getDataWithDefault(NMEA0183DoubleNA));
+            SendMessage(nmeaMsg);
+        }
+    }
 
     //*****************************************************************************
     void HandleGNSS(const tN2kMsg &N2kMsg)
@@ -331,6 +357,7 @@ private:
                          HDOP, VDOP, TDOP)){
             updateDouble(boatData->HDOP,HDOP);
             updateDouble(boatData->VDOP,VDOP);
+            sendGSA(DesiredMode==N2kGNSSdm_Auto,(int)ActualMode);
         }
     }
     void HandleSats(const tN2kMsg &msg){
@@ -343,10 +370,46 @@ private:
                 if (ParseN2kPGNSatellitesInView(msg,i,info)){
                     GwSatInfo satInfo;
                     satInfo.PRN=info.PRN;
-                    satInfo.Elevation=info.Elevation;
-                    satInfo.Azimut=info.Azimuth;
+                    satInfo.Elevation=RadToDeg(info.Elevation);
+                    satInfo.Azimut=RadToDeg(info.Azimuth);
                     satInfo.SNR=info.SNR;
                     if (! boatData->SatInfo->update(satInfo,sourceId)) return;
+                }
+            }
+            NumberOfSVs=boatData->SatInfo->getNumSats();
+            if (NumberOfSVs > 0){
+                LOG_DEBUG(GwLog::DEBUG+1,"send GSV for %d sats",NumberOfSVs);
+                tNMEA0183Msg nmeaMsg;
+                int numGSV=NumberOfSVs/4;
+                if (numGSV*4 < NumberOfSVs) numGSV++;
+                if (numGSV > 9) numGSV=9;
+                for (int i=0;i<numGSV ;i++){
+                    int idx=i*4;
+                    GwSatInfo *i0=boatData->SatInfo->getAt(idx);
+                    GwSatInfo *i1=boatData->SatInfo->getAt(idx+1);
+                    GwSatInfo *i2=boatData->SatInfo->getAt(idx+2);
+                    GwSatInfo *i3=boatData->SatInfo->getAt(idx+3);
+                    if (NMEA0183SetGSV(nmeaMsg,numGSV,i+1,NumberOfSVs,
+                        i0?i0->PRN:NMEA0183UInt32NA,
+                        i0?i0->Elevation:NMEA0183UInt32NA,
+                        i0?i0->Azimut:NMEA0183UInt32NA,
+                        i0?i0->SNR:NMEA0183UInt32NA,
+                        i1?i1->PRN:NMEA0183UInt32NA,
+                        i1?i1->Elevation:NMEA0183UInt32NA,
+                        i1?i1->Azimut:NMEA0183UInt32NA,
+                        i1?i1->SNR:NMEA0183UInt32NA,
+                        i2?i2->PRN:NMEA0183UInt32NA,
+                        i2?i2->Elevation:NMEA0183UInt32NA,
+                        i2?i2->Azimut:NMEA0183UInt32NA,
+                        i2?i2->SNR:NMEA0183UInt32NA,
+                        i3?i3->PRN:NMEA0183UInt32NA,
+                        i3?i3->Elevation:NMEA0183UInt32NA,
+                        i3?i3->Azimut:NMEA0183UInt32NA,
+                        i3?i3->SNR:NMEA0183UInt32NA,
+                        talkerId
+                    )){
+                        SendMessage(nmeaMsg);
+                    }
                 }
             }
         }
