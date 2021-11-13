@@ -699,6 +699,21 @@ private:
         }
     }
 
+    void convertGLL(const SNMEA0183Msg &msg){
+        tGLL GLL;
+        if (! NMEA0183ParseGLL_nc(msg,GLL)){
+            LOG_DEBUG(GwLog::DEBUG,"unable to parse GLL %s",msg.line);
+            return;
+        }
+        if (GLL.status != 'A') return;
+        if (! updateDouble(boatData->Latitude,GLL.latitude,msg.sourceId)) return;
+        if (! updateDouble(boatData->Longitude,GLL.longitude,msg.sourceId)) return;
+        if (! updateDouble(boatData->SecondsSinceMidnight,GLL.GPSTime,msg.sourceId)) return;
+        tN2kMsg n2kMsg;
+        SetN2kLatLonRapid(n2kMsg,GLL.latitude,GLL.longitude);
+        send(n2kMsg);
+    }
+
 //shortcut for lambda converters
 #define CVL [](const SNMEA0183Msg &msg, NMEA0183DataToN2KFunctions *p) -> void
     void registerConverters()
@@ -758,7 +773,10 @@ private:
             String(F("GSA")), &NMEA0183DataToN2KFunctions::convertGSA); 
         converters.registerConverter(
             129540UL,
-            String(F("GSV")), &NMEA0183DataToN2KFunctions::convertGSV);          
+            String(F("GSV")), &NMEA0183DataToN2KFunctions::convertGSV);
+        converters.registerConverter(
+            129025UL,
+            String(F("GLL")), &NMEA0183DataToN2KFunctions::convertGLL);              
         unsigned long *aispgns=new unsigned long[7]{129810UL,129809UL,129040UL,129039UL,129802UL,129794UL,129038UL};
         converters.registerConverter(7,&aispgns[0],
             String(F("AIVDM")),&NMEA0183DataToN2KFunctions::convertAIVDX);
