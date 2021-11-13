@@ -46,23 +46,24 @@ int GwSerial::setup(int baud, int rxpin, int txpin)
     return 0;
 }
 bool GwSerial::isInitialized() { return initialized; }
-size_t GwSerial::enqueue(const uint8_t *data, size_t len)
+size_t GwSerial::enqueue(const uint8_t *data, size_t len, bool partial)
 {
     if (! isInitialized()) return 0;
-    return buffer->addData(data, len);
+    return buffer->addData(data, len,partial);
 }
 GwBuffer::WriteStatus GwSerial::write(){
     if (! isInitialized()) return GwBuffer::ERROR;
     return buffer->fetchData(writer,-1,false);
 }
-void GwSerial::sendToClients(const char *buf,int sourceId){
-    if ( sourceId == id) return;
+size_t GwSerial::sendToClients(const char *buf,int sourceId,bool partial){
+    if ( sourceId == id) return 0;
     size_t len=strlen(buf);
-    size_t enqueued=enqueue((const uint8_t*)buf,len);
-    if (enqueued != len){
+    size_t enqueued=enqueue((const uint8_t*)buf,len,partial);
+    if (enqueued != len && ! partial){
         LOG_DEBUG(GwLog::DEBUG,"GwSerial overflow on channel %d",id);
         overflows++;
     }
+    return enqueued;
 }
 void GwSerial::loop(bool handleRead){
     write();

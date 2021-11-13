@@ -34,7 +34,11 @@ void GwLog::logDebug(int level,const char *fmt,...){
     va_start(args,fmt);
     xSemaphoreTake(locker, portMAX_DELAY);
     vsnprintf(buffer,99,fmt,args);
-    if (! writer) return;
+    buffer[99]=0;
+    if (! writer) {
+        xSemaphoreGive(locker);
+        return;
+    }
     writer->write(prefix.c_str());
     writer->write(buffer);
     writer->write("\n");
@@ -44,5 +48,15 @@ void GwLog::setWriter(GwLogWriter *writer){
     xSemaphoreTake(locker, portMAX_DELAY);
     if (this->writer) delete this->writer;
     this->writer=writer;
+    xSemaphoreGive(locker);
+}
+
+void GwLog::flush(){
+    xSemaphoreTake(locker, portMAX_DELAY);
+    if (! this->writer) {
+        xSemaphoreGive(locker);
+        return;
+    }
+    this->writer->flush();
     xSemaphoreGive(locker);
 }

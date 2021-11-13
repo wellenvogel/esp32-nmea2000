@@ -171,10 +171,31 @@ GwSerial *serial1=NULL;
 
 
 class GwSerialLog : public GwLogWriter{
+  static const size_t bufferSize=4096;
+  char *logBuffer=NULL;
+  int wp=0;
   public:
+    GwSerialLog(){
+      logBuffer=new char[bufferSize];
+      wp=0;
+    }
     virtual ~GwSerialLog(){}
     virtual void write(const char *data){
-      usbSerial->sendToClients(data,-1); //ignore any errors
+      int len=strlen(data);
+      if ((wp+len) >= (bufferSize-1)) return;
+      strncpy(logBuffer+wp,data,len);
+      wp+=len;
+      logBuffer[wp]=0;
+    }
+    virtual void flush(){
+      size_t handled=0;
+      while (handled < wp){
+        usbSerial->flush();
+        size_t rt=usbSerial->sendToClients(logBuffer+handled,-1,true);
+        handled+=rt;
+        }
+      wp=0;
+      logBuffer[0]=0;
     }
 
 };
@@ -214,12 +235,14 @@ public:
   }
 };
 
-void delayedRestart(){
-  xTaskCreate([](void *p){
+bool delayedRestart(){
+  return xTaskCreate([](void *p){
+    GwLog *logRef=(GwLog *)p;
+    logRef->logDebug(GwLog::LOG,"delayed reset started");
     delay(500);
     ESP.restart();
     vTaskDelete(NULL);
-  },"reset",1000,NULL,0,NULL);
+  },"reset",1000,&logger,0,NULL) == pdPASS;
 }
 
 
@@ -243,7 +266,9 @@ protected:
   {
     logger.logDebug(GwLog::LOG, "Reset Button");
     result = JSON_OK;
-    delayedRestart();
+    if (!delayedRestart()){
+      logger.logDebug(GwLog::ERROR,"cannot initiate restart");
+    }
   }
 };
 
@@ -463,10 +488,10 @@ void setup() {
 
   // Start TCP server
   socketServer.begin();
-  usbSerial->flush();
+  logger.flush();
 
   logger.logDebug(GwLog::LOG,"usbRead: %s", usbReadFilter.toString().c_str());
-  usbSerial->flush();
+  logger.flush();
 
   webserver.registerMainHandler("/api/reset", [](AsyncWebServerRequest *request)->GwRequestMessage *{
     return new ResetRequest();
@@ -540,7 +565,7 @@ void setup() {
   preferences.end();
 
   logger.logDebug(GwLog::LOG,"NodeAddress=%d", NodeAddress);
-  usbSerial->flush();
+  logger.flush();
   NMEA2000.SetMode(tNMEA2000::N2km_ListenAndNode, NodeAddress);
   NMEA2000.SetForwardOwnMessages(false);
   // Set the information for other bus devices, which messages we support
@@ -549,7 +574,7 @@ void setup() {
     unsigned long *op=pgns;
     while (*op != 0){
       logger.logDebug(GwLog::DEBUG,"add transmit pgn %ld",(long)(*op));
-      usbSerial->flush();
+      logger.flush();
       op++;
     }
   }
@@ -666,6 +691,7 @@ class NMEAMessageReceiver : public GwBufferWriter{
 NMEAMessageReceiver receiver;
 unsigned long lastHeapReport=0;
 void loop() {
+  logger.flush();
   gwWifi.loop();
   unsigned long now=millis();
   if (HEAP_REPORT_TIME > 0 && now > (lastHeapReport+HEAP_REPORT_TIME)){

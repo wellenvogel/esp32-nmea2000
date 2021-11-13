@@ -16,7 +16,7 @@ class GwSerial{
         GwBuffer::WriteStatus write();
         int id=-1;
         int overflows=0;
-        size_t enqueue(const uint8_t *data, size_t len);
+        size_t enqueue(const uint8_t *data, size_t len,bool partial=false);
         HardwareSerial *serial;
     public:
         static const int bufferSize=200;
@@ -24,7 +24,7 @@ class GwSerial{
         ~GwSerial();
         int setup(int baud,int rxpin,int txpin);
         bool isInitialized();
-        void sendToClients(const char *buf,int sourceId);
+        size_t sendToClients(const char *buf,int sourceId,bool partial=false);
         void loop(bool handleRead=true);
         bool readMessages(GwBufferWriter *writer);
         void flush();

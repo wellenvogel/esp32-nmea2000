@@ -28,6 +28,7 @@ void handleLeds(void *param){
     GwLog *logger=api->getLogger();
     #ifndef GWLED_FASTLED
         LOG_DEBUG(GwLog::LOG,"currently only fastled handling");
+        delay(50);
         vTaskDelete(NULL);
         return;
     #else

@@ -6,6 +6,7 @@ class GwLogWriter{
     public:
         virtual ~GwLogWriter(){}
         virtual void write(const char *data)=0;
+        virtual void flush(){};
 };
 class GwLog{
     private:
@@ -25,6 +26,7 @@ class GwLog{
         void logString(const char *fmt,...);
         void logDebug(int level, const char *fmt,...);
         int isActive(int level){return level <= logLevel;};
+        void flush();
 };
 #define LOG_DEBUG(level,...){ if (logger != NULL && logger->isActive(level)) logger->logDebug(level,__VA_ARGS__);}
 
