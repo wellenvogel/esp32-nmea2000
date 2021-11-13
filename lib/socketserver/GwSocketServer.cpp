@@ -117,7 +117,7 @@ class GwClient{
                 LOG_DEBUG(GwLog::LOG,"write called on empty client");
                 return GwBuffer::ERROR;
             }
-            GwBuffer::WriteStatus rt=buffer->fetchData(writer,false);
+            GwBuffer::WriteStatus rt=buffer->fetchData(writer,-1,false);
             if (rt != GwBuffer::OK){
                 LOG_DEBUG(GwLog::DEBUG+1,"write returns %d on %s",rt,remoteIp.c_str());
             }
