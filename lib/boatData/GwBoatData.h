@@ -52,6 +52,7 @@ class GwBoatItemBase{
         virtual void toJsonDoc(JsonDocument *doc, unsigned long minTime)=0;
         virtual size_t getJsonSize(){return JSON_OBJECT_SIZE(15);}
         virtual int getLastSource()=0;
+        virtual void refresh(unsigned long ts=0){uls(ts);}
 };
 class GwBoatData;
 template<class T> class GwBoatItem : public GwBoatItemBase{
@@ -81,6 +82,19 @@ template<class T> class GwBoatItem : public GwBoatItemBase{
             lastUpdateSource=source;
             uls(now);
             return true;
+        }
+        bool updateMax(T nv,int sourceId=-1){
+            unsigned long now=millis();
+            if (! isValid(now)){
+                return update(nv,sourceId);
+            }
+            if (getData() < nv){
+                data=nv;
+                lastUpdateSource=sourceId;
+                uls(now);
+                return true;
+            }
+            return false;
         }
         T getData(){
             return data;
@@ -173,6 +187,10 @@ public:
         data.update(info);
         return true;
     }
+    virtual void toJsonDoc(JsonDocument *doc, unsigned long minTime){
+            data.houseKeeping();
+            GwBoatItem<GwSatInfoList>::toJsonDoc(doc,minTime);
+    }
 
 };
 
@@ -216,8 +234,8 @@ class GwBoatData{
     GWBOATDATA(double,BTW,4000,formatCourse)
     GWBOATDATA(double,WPLatitude,4000,formatLatitude)
     GWBOATDATA(double,WPLongitude,4000,formatLongitude)
-    GWBOATDATA(uint32_t,Log,0,mtr2nm)
-    GWBOATDATA(uint32_t,TripLog,0,mtr2nm)
+    GWBOATDATA(uint32_t,Log,16000,mtr2nm)
+    GWBOATDATA(uint32_t,TripLog,16000,mtr2nm)
     GWBOATDATA(uint32_t,DaysSince1970,4000,formatFixed0)
     GWBOATDATA(int16_t,Timezone,8000,formatFixed0)
     GWSPECBOATDATA(GwBoatDataSatList,SatInfo,GwSatInfoList::lifeTime,formatFixed0);

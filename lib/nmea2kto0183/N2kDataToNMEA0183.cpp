@@ -71,10 +71,7 @@ private:
         unsigned long now = millis();
         if (!item->isValid(now))
             return;
-        if (item->getData() > maxItem->getData() || !maxItem->isValid(now))
-        {
-            maxItem->update(item->getData(),sourceId);
-        }
+        maxItem->updateMax(item->getData(),sourceId);
     }
     void updateDouble(GwBoatItem<double> *item, double value)
     {

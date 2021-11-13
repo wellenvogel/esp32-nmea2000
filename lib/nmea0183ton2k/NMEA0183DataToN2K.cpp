@@ -247,11 +247,13 @@ private:
                 n2kRef=N2kWind_Apparent;
                 shouldSend=updateDouble(boatData->AWA,WindAngle,msg.sourceId) && 
                     updateDouble(boatData->AWS,WindSpeed,msg.sourceId);
+                if (WindSpeed != NMEA0183DoubleNA) boatData->MaxAws->updateMax(WindSpeed);    
                 break;
             case NMEA0183Wind_True:
                 n2kRef=N2kWind_True_North;
                 shouldSend=updateDouble(boatData->TWD,WindAngle,msg.sourceId) && 
                     updateDouble(boatData->TWS,WindSpeed,msg.sourceId);
+                if (WindSpeed != NMEA0183DoubleNA) boatData->MaxTws->updateMax(WindSpeed);    
                 break;      
             default:
                 LOG_DEBUG(GwLog::DEBUG,"unknown wind reference %d in %s",(int)Reference,msg.line);
@@ -295,6 +297,7 @@ private:
         bool shouldSend = false;
         shouldSend = updateDouble(boatData->AWA, WindAngle, msg.sourceId) &&
                      updateDouble(boatData->AWS, WindSpeed, msg.sourceId);
+        if (WindSpeed != NMEA0183DoubleNA) boatData->MaxAws->updateMax(WindSpeed);             
         if (shouldSend)
         {
             SetN2kWindSpeed(n2kMsg, 1, WindSpeed, WindAngle, N2kWind_Apparent);
@@ -337,6 +340,7 @@ private:
         if (WindAngle != NMEA0183DoubleNA){
             shouldSend = updateDouble(boatData->TWD, WindAngle, msg.sourceId) &&
                          updateDouble(boatData->TWS, WindSpeed, msg.sourceId);
+            if (WindSpeed != NMEA0183DoubleNA) boatData->MaxTws->updateMax(WindSpeed);             
         }
         if (shouldSend)
         {
