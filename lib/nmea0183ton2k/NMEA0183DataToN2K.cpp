@@ -128,6 +128,21 @@ private:
     }
     #define UD(item) updateDouble(boatData->item, item, msg.sourceId)
     #define UI(item) updateUint32(boatData->item, item, msg.sourceId)
+    tN2kXTEMode xteMode(const char modeChar){
+        switch(modeChar){
+                    case 'D':
+                        return N2kxtem_Differential;
+                    case 'E':
+                        return N2kxtem_Estimated;
+                    case 'M':
+                        return N2kxtem_Manual;
+                    case 'S':
+                        return N2kxtem_Simulator;
+                    default:
+                        break; 
+        }
+        return N2kxtem_Autonomous;     
+    }
     void convertRMB(const SNMEA0183Msg &msg)
     {
         LOG_DEBUG(GwLog::DEBUG + 1, "convert RMB");
@@ -141,23 +156,7 @@ private:
             tN2kXTEMode mode=N2kxtem_Autonomous;
             if (msg.FieldCount() > 13){
                 const char *modeChar=msg.Field(13);
-                switch(*modeChar){
-                    case 'D':
-                        mode=N2kxtem_Differential;
-                        break;
-                    case 'E':
-                        mode=N2kxtem_Estimated;
-                        break;
-                    case 'M':
-                        mode=N2kxtem_Manual;
-                        break;
-                    case 'S':
-                        mode=N2kxtem_Simulator;
-                        break;
-                    default:
-                        break;    
-
-                }
+                mode=xteMode(*modeChar);
             }
             SetN2kXTE(n2kMsg,1,mode,false,rmb.xte);
             send(n2kMsg);
@@ -725,6 +724,25 @@ private:
         SetN2kRateOfTurn(n2kMsg,1,ROT);
         send(n2kMsg);
     }
+    void convertXTE(const SNMEA0183Msg &msg){
+        if (msg.FieldCount() < 6){
+            LOG_DEBUG(GwLog::DEBUG,"unable to parse XTE %s",msg.line);
+            return; 
+        }
+        if (msg.Field(0)[0] != 'A') return;
+        if (msg.Field(1)[0] != 'A') return;
+        if (msg.Field(4)[0] != 'N') return; //nm only
+        if (msg.FieldLen(2) < 1) return;
+        const char dir=msg.Field(3)[0];
+        if (dir != 'L' && dir != 'R') return;
+        double xte=atof(msg.Field(2)) * nmTom;
+        if (dir == 'R') xte=-xte;
+        if (! updateDouble(boatData->XTE,xte,msg.sourceId)) return;
+        tN2kMsg n2kMsg;
+        tN2kXTEMode mode=xteMode(msg.Field(5)[0]);
+        SetN2kXTE(n2kMsg,1,mode,false,xte);
+        send(n2kMsg);
+    }
 
 //shortcut for lambda converters
 #define CVL [](const SNMEA0183Msg &msg, NMEA0183DataToN2KFunctions *p) -> void
@@ -791,7 +809,10 @@ private:
             String(F("GLL")), &NMEA0183DataToN2KFunctions::convertGLL); 
         converters.registerConverter(
             127251UL,
-            String(F("ROT")), &NMEA0183DataToN2KFunctions::convertROT);     
+            String(F("ROT")), &NMEA0183DataToN2KFunctions::convertROT);
+        converters.registerConverter(
+            129283UL,
+            String(F("XTE")), &NMEA0183DataToN2KFunctions::convertXTE);         
         unsigned long *aispgns=new unsigned long[7]{129810UL,129809UL,129040UL,129039UL,129802UL,129794UL,129038UL};
         converters.registerConverter(7,&aispgns[0],
             String(F("AIVDM")),&NMEA0183DataToN2KFunctions::convertAIVDX);

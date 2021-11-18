@@ -58,7 +58,7 @@ uint32_t mtr2nm(uint32_t m)
 }
 double mtr2nm(double m)
 {
-    return m / 1852;
+    return m / 1852.0;
 }
 
 bool convertToJson(const GwSatInfoList &si,JsonVariant &variant){

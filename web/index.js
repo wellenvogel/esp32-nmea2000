@@ -548,6 +548,14 @@ let valueFormatters = {
             return x.toFixed(2);
         },
         u:'°/s'
+    },
+    formatXte:{
+        f: function(v){
+            let x=parseFloat(v);
+            if (isNaN(x)) return '---';
+            return x.toFixed(0);
+        },
+        u:'m'
     }
 }
 function createDashboardItem(name, def, parent) {

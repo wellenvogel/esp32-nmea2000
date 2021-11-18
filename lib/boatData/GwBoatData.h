@@ -16,6 +16,7 @@ class GwBoatItemBase{
         GWSC(formatWind);
         GWSC(formatLatitude);
         GWSC(formatLongitude);
+        GWSC(formatXte);
         GWSC(formatFixed0);
         GWSC(formatDepth);
         GWSC(kelvinToC);
@@ -239,7 +240,7 @@ class GwBoatData{
     GWBOATDATA(double,DepthTransducer,4000,formatDepth)
     GWBOATDATA(double,SecondsSinceMidnight,4000,formatFixed0)
     GWBOATDATA(double,WaterTemperature,4000,kelvinToC)
-    GWBOATDATA(double,XTE,4000,formatFixed0)
+    GWBOATDATA(double,XTE,4000,formatXte)
     GWBOATDATA(double,DTW,4000,mtr2nm)
     GWBOATDATA(double,BTW,4000,formatCourse)
     GWBOATDATA(double,WPLatitude,4000,formatLatitude)

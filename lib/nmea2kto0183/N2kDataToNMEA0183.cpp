@@ -1030,6 +1030,50 @@ private:
             SendMessage(nmeamsg);
         }
     }
+    void HandleXTE(const tN2kMsg &msg){
+        unsigned char SID=0;
+        tN2kXTEMode XTEMode;
+        bool NavigationTerminated=false;
+        double XTE=N2kDoubleNA;
+        if (! ParseN2kXTE(msg,SID,XTEMode,NavigationTerminated,XTE)){
+            LOG_DEBUG(GwLog::DEBUG,"unable to parse PGN %d",msg.PGN);
+            return; 
+        }
+        if (NavigationTerminated) return;
+        if (! updateDouble(boatData->XTE,XTE)) return;
+        tNMEA0183Msg nmeamsg;
+        if (!nmeamsg.Init("XTE",talkerId)) return;
+        const char *mode="A";
+        switch(XTEMode){
+            case N2kxtem_Differential:
+                mode="D";
+                break;
+            case N2kxtem_Estimated:
+                mode="E";
+                break;
+            case N2kxtem_Simulator:
+                mode="S";
+                break;
+            case N2kxtem_Manual:
+                mode="M";
+                break;
+            default:
+                break;    
+        }
+        if (!nmeamsg.AddStrField("A")) return;
+        if (!nmeamsg.AddStrField("A")) return;
+        double val=mtr2nm(XTE);
+        const char *dir="L";
+        if (val < 0) {
+            dir="R";
+            val=-val;
+        }
+        if (! nmeamsg.AddDoubleField(val,1.0,"%.4f")) return;
+        if (! nmeamsg.AddStrField(dir)) return;
+        if (! nmeamsg.AddStrField("N")) return;
+        if (! nmeamsg.AddStrField(mode)) return;
+        SendMessage(nmeamsg);
+    }
 
 
     void registerConverters()
@@ -1055,6 +1099,7 @@ private:
       converters.registerConverter(129539UL, &N2kToNMEA0183Functions::HandleDop);
       converters.registerConverter(129540UL, &N2kToNMEA0183Functions::HandleSats);
       converters.registerConverter(127251UL, &N2kToNMEA0183Functions::HandleROT);
+      converters.registerConverter(129283UL, &N2kToNMEA0183Functions::HandleXTE);
 #define HANDLE_AIS
 #ifdef HANDLE_AIS
       converters.registerConverter(129038UL, &N2kToNMEA0183Functions::HandleAISClassAPosReport);  // AIS Class A Position Report, Message Type 1
