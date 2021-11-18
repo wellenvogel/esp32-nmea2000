@@ -1075,6 +1075,83 @@ private:
         SendMessage(nmeamsg);
     }
 
+    void HandleNavigation(const tN2kMsg &msg){
+        unsigned char SID=0;
+        double DistanceToWaypoint=N2kDoubleNA;
+        tN2kHeadingReference BearingReference;
+        bool PerpendicularCrossed=false; 
+        bool ArrivalCircleEntered=false; 
+        tN2kDistanceCalculationType CalculationType;
+        double ETATime=N2kDoubleNA;
+        int16_t ETADate=0;
+        double BearingOriginToDestinationWaypoint=N2kDoubleNA;
+        double BearingPositionToDestinationWaypoint=N2kDoubleNA;
+        uint8_t OriginWaypointNumber; 
+        uint8_t DestinationWaypointNumber;
+        double DestinationLatitude=N2kDoubleNA;
+        double DestinationLongitude=N2kDoubleNA;
+        double WaypointClosingVelocity=N2kDoubleNA;
+        if (! ParseN2kNavigationInfo(msg,SID,DistanceToWaypoint,BearingReference,
+                      PerpendicularCrossed, ArrivalCircleEntered,CalculationType,
+                      ETATime, ETADate, BearingOriginToDestinationWaypoint, BearingPositionToDestinationWaypoint,
+                      OriginWaypointNumber, DestinationWaypointNumber,
+                      DestinationLatitude, DestinationLongitude,WaypointClosingVelocity)){
+            LOG_DEBUG(GwLog::DEBUG,"unable to parse PGN %d",msg.PGN);
+            return;    
+        }
+        if (CalculationType != N2kdct_GreatCircle){
+            LOG_DEBUG(GwLog::DEBUG,"can only handle %d with great circle type",msg.PGN);
+            return;
+        }
+        if (BearingReference != N2khr_true && BearingReference != N2khr_magnetic){
+            LOG_DEBUG(GwLog::DEBUG,"invalid bearing ref  %d for %d ",(int)BearingReference, msg.PGN);
+            return;
+        }
+        if (BearingReference == N2khr_magnetic){
+            if (! boatData->Variation->isValid()){
+                LOG_DEBUG(GwLog::DEBUG,"missing variation to compute true heading for %d ", msg.PGN);
+                return;   
+            }
+            BearingPositionToDestinationWaypoint-=boatData->Variation->getData();
+
+        }
+        if (! updateDouble(boatData->DTW,DistanceToWaypoint)) return;
+        if (! updateDouble(boatData->BTW,BearingPositionToDestinationWaypoint)) return;
+        if (! updateDouble(boatData->WPLatitude,DestinationLatitude)) return;
+        if (! updateDouble(boatData->WPLongitude,DestinationLongitude)) return;
+        tNMEA0183Msg nmeaMsg;
+        if (! nmeaMsg.Init("RMB",talkerId)) return;
+        if (! nmeaMsg.AddStrField("A")) return;
+        const char *dir="L";
+        double xte=boatData->XTE->getDataWithDefault(NMEA0183DoubleNA);
+        if (xte != NMEA0183DoubleNA){
+            if (xte < 0){
+                xte=-xte;
+                dir="R";
+            }
+            xte=mtr2nm(xte);
+            if (xte > 9.99) xte=9.99;
+        }
+        if (! nmeaMsg.AddDoubleField(xte,1.0,"%.2f",dir)) return;
+        //TODO: handle waypoint names
+        if (! nmeaMsg.AddUInt32Field(OriginWaypointNumber)) return;
+        if (! nmeaMsg.AddUInt32Field(DestinationWaypointNumber)) return;
+        if (! nmeaMsg.AddLatitudeField(DestinationLatitude)) return;
+        if (! nmeaMsg.AddLongitudeField(DestinationLongitude)) return;
+        double distance=mtr2nm(DistanceToWaypoint);
+        if (distance > 999.9) distance=999.9;
+        if (! nmeaMsg.AddDoubleField(distance,1,"%.1f")) return;
+        if (! nmeaMsg.AddDoubleField(formatCourse(BearingPositionToDestinationWaypoint))) return;
+        if (WaypointClosingVelocity != N2kDoubleNA){
+            if (!nmeaMsg.AddDoubleField(msToKnots(WaypointClosingVelocity))) return;
+        }
+        else{
+            if (!nmeaMsg.AddEmptyField()) return;
+        }
+        if (! nmeaMsg.AddStrField(ArrivalCircleEntered?"A":"V")) return;
+        SendMessage(nmeaMsg);
+    }
+
 
     void registerConverters()
     {
@@ -1100,6 +1177,7 @@ private:
       converters.registerConverter(129540UL, &N2kToNMEA0183Functions::HandleSats);
       converters.registerConverter(127251UL, &N2kToNMEA0183Functions::HandleROT);
       converters.registerConverter(129283UL, &N2kToNMEA0183Functions::HandleXTE);
+      converters.registerConverter(129284UL, &N2kToNMEA0183Functions::HandleNavigation);
 #define HANDLE_AIS
 #ifdef HANDLE_AIS
       converters.registerConverter(129038UL, &N2kToNMEA0183Functions::HandleAISClassAPosReport);  // AIS Class A Position Report, Message Type 1
