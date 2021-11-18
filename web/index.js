@@ -540,6 +540,15 @@ let valueFormatters = {
         },
         u: ''
     },
+    formatRot:{
+        f: function(v){
+            let x=parseFloat(v);
+            if (isNaN(x)) return '---';
+            x = x * 180.0 / Math.PI;
+            return x.toFixed(2);
+        },
+        u:'°/s'
+    }
 }
 function createDashboardItem(name, def, parent) {
     let frame = addEl('div', 'dash', parent);
