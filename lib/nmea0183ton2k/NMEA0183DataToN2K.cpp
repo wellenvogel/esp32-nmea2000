@@ -714,6 +714,18 @@ private:
         send(n2kMsg);
     }
 
+    void convertROT(const SNMEA0183Msg &msg){
+        double ROT=NMEA0183DoubleNA;
+        if (! NMEA0183ParseROT_nc(msg,ROT)){
+            LOG_DEBUG(GwLog::DEBUG,"unable to parse ROT %s",msg.line);
+            return;
+        }
+        if (! updateDouble(boatData->ROT,ROT,msg.sourceId)) return;
+        tN2kMsg n2kMsg;
+        SetN2kRateOfTurn(n2kMsg,1,ROT);
+        send(n2kMsg);
+    }
+
 //shortcut for lambda converters
 #define CVL [](const SNMEA0183Msg &msg, NMEA0183DataToN2KFunctions *p) -> void
     void registerConverters()
@@ -776,7 +788,10 @@ private:
             String(F("GSV")), &NMEA0183DataToN2KFunctions::convertGSV);
         converters.registerConverter(
             129025UL,
-            String(F("GLL")), &NMEA0183DataToN2KFunctions::convertGLL);              
+            String(F("GLL")), &NMEA0183DataToN2KFunctions::convertGLL); 
+        converters.registerConverter(
+            127251UL,
+            String(F("ROT")), &NMEA0183DataToN2KFunctions::convertROT);     
         unsigned long *aispgns=new unsigned long[7]{129810UL,129809UL,129040UL,129039UL,129802UL,129794UL,129038UL};
         converters.registerConverter(7,&aispgns[0],
             String(F("AIVDM")),&NMEA0183DataToN2KFunctions::convertAIVDX);

@@ -73,13 +73,13 @@ private:
             return;
         maxItem->updateMax(item->getData(),sourceId);
     }
-    void updateDouble(GwBoatItem<double> *item, double value)
+    bool updateDouble(GwBoatItem<double> *item, double value)
     {
         if (value == N2kDoubleNA)
-            return;
+            return false;
         if (!item)
-            return;
-        item->update(value,sourceId);
+            return false;
+        return item->update(value,sourceId);
     }
     
     unsigned long LastPosSend;
@@ -1017,6 +1017,19 @@ private:
         if (DaysSince1970 != N2kUInt16NA) boatData->DaysSince1970->update(DaysSince1970,sourceId);
         if (LocalOffset != N2kInt16NA) boatData->Timezone->update(LocalOffset,sourceId);
     }
+    void HandleROT(const tN2kMsg &msg){
+        unsigned char SID=0;
+        double ROT=N2kDoubleNA;
+        if (! ParseN2kRateOfTurn(msg,SID,ROT)){
+            LOG_DEBUG(GwLog::DEBUG,"unable to parse PGN %d",msg.PGN);
+            return;
+        }
+        if (!updateDouble(boatData->ROT,ROT)) return;
+        tNMEA0183Msg nmeamsg;
+        if (NMEA0183SetROT(nmeamsg,ROT,talkerId)){
+            SendMessage(nmeamsg);
+        }
+    }
 
 
     void registerConverters()
@@ -1041,6 +1054,7 @@ private:
       converters.registerConverter(129033UL, &N2kToNMEA0183Functions::HandleTimeOffset);
       converters.registerConverter(129539UL, &N2kToNMEA0183Functions::HandleDop);
       converters.registerConverter(129540UL, &N2kToNMEA0183Functions::HandleSats);
+      converters.registerConverter(127251UL, &N2kToNMEA0183Functions::HandleROT);
 #define HANDLE_AIS
 #ifdef HANDLE_AIS
       converters.registerConverter(129038UL, &N2kToNMEA0183Functions::HandleAISClassAPosReport);  // AIS Class A Position Report, Message Type 1
