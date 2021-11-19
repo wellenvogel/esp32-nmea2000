@@ -1,0 +1,313 @@
+{
+    "Temperature": {
+        "id":0,
+        "selector": [
+            {
+                "l": "SeaTemperature(0)",
+                "v": "0"
+            },
+            {
+                "l": "OutsideTemperature(1)",
+                "v": "1"
+            },
+            {
+                "l": "InsideTemperature(2)",
+                "v": "2"
+            },
+            {
+                "l": "EngineRoomTemperature(3)",
+                "v": "3"
+            },
+            {
+                "l": "MainCabinTemperature(4)",
+                "v": "4"
+            },
+            {
+                "l": "LiveWellTemperature(5)",
+                "v": "5"
+            },
+            {
+                "l": "BaitWellTemperature(6)",
+                "v": "6"
+            },
+            {
+                "l": "RefridgerationTemperature(7)",
+                "v": "7"
+            },
+            {
+                "l": "HeatingSystemTemperature(8)",
+                "v": "8"
+            },
+            {
+                "l": "DewPointTemperature(9)",
+                "v": "9"
+            },
+            {
+                "l": "ApparentWindChillTemperature(10)",
+                "v": "10"
+            },
+            {
+                "l": "TheoreticalWindChillTemperature(11)",
+                "v": "11"
+            },
+            {
+                "l": "HeatIndexTemperature(12)",
+                "v": "12"
+            },
+            {
+                "l": "FreezerTemperature(13)",
+                "v": "13"
+            },
+            {
+                "l": "ExhaustGasTemperature(14)",
+                "v": "14"
+            }
+        ]
+    },
+    "Humidity": {
+        "id":1,
+        "selector": [
+            {
+                "l": "InsideHumidity(0)",
+                "v": "0"
+            },
+            {
+                "l": "OutsideHumidity(1)",
+                "v": "1"
+            },
+            {
+                "l": "Undef(0xff)",
+                "v": "0xff"
+            }
+        ]
+    },
+    "Pressure": {
+        "id":2,
+        "selector": [
+            {
+                "l": "Atmospheric(0)",
+                "v": "0"
+            },
+            {
+                "l": "Water(1)",
+                "v": "1"
+            },
+            {
+                "l": "Steam(2)",
+                "v": "2"
+            },
+            {
+                "l": "CompressedAir(3)",
+                "v": "3"
+            },
+            {
+                "l": "Hydraulic(4)",
+                "v": "4"
+            },
+            {
+                "l": "Filter(5)",
+                "v": "5"
+            },
+            {
+                "l": "AltimeterSetting(6)",
+                "v": "6"
+            },
+            {
+                "l": "Oil(7)",
+                "v": "7"
+            },
+            {
+                "l": "Fuel(8)",
+                "v": "8"
+            }
+        ]
+    },
+    "TimeSource": {
+        "enabled": false,
+        "id":3,
+        "values": [
+            {
+                "l": "GPS(0)",
+                "v": "0"
+            },
+            {
+                "l": "GLONASS(1)",
+                "v": "1"
+            },
+            {
+                "l": "RadioStation(2)",
+                "v": "2"
+            },
+            {
+                "l": "LocalCesiumClock(3)",
+                "v": "3"
+            },
+            {
+                "l": "LocalRubidiumClock(4)",
+                "v": "4"
+            },
+            {
+                "l": "LocalCrystalClock(5)",
+                "v": "5"
+            }
+        ]
+    },
+    "Fluid": {
+        "d":"127505",
+        "id":4,
+        "selector": [
+            {
+                "l": "Fuel(0)",
+                "v": "0"
+            },
+            {
+                "l": "Water(1)",
+                "v": "1"
+            },
+            {
+                "l": "GrayWater(2)",
+                "v": "2"
+            },
+            {
+                "l": "LiveWell(3)",
+                "v": "3"
+            },
+            {
+                "l": "Oil(4)",
+                "v": "4"
+            },
+            {
+                "l": "BlackWater(5)",
+                "v": "5"
+            },
+            {
+                "l": "FuelGasoline(6)",
+                "v": "6"
+            },
+            {
+                "l": "Error(14)",
+                "v": "14"
+            },
+            {
+                "l": "Unavailable(15)",
+                "v": "15"
+            }
+        ],
+        "fields":[
+            {"l":"Level","v":0,"t":-1},
+            {"l":"Capacity","v":1,"t":-1}
+        ]
+    },
+    "DCType": {
+        "enabled":false,
+        "id":5,
+        "values": [
+            {
+                "l": "Battery(0)",
+                "v": "0"
+            },
+            {
+                "l": "Alternator(1)",
+                "v": "1"
+            },
+            {
+                "l": "Converter(2)",
+                "v": "2"
+            },
+            {
+                "l": "SolarCell(3)",
+                "v": "3"
+            },
+            {
+                "l": "WindGenerator(4)",
+                "v": "4"
+            }
+        ]
+    },
+    "BatType": {
+        "enabled":false,
+        "id":6,
+        "values": [
+            {
+                "l": "Flooded(0)",
+                "v": "0"
+            },
+            {
+                "l": "Gel(1)",
+                "v": "1"
+            },
+            {
+                "l": "AGM(2)",
+                "v": "2"
+            }
+        ]
+    },
+    "BatChem": {
+        "enabled":false,
+        "id":7,
+        "values": [
+            {
+                "l": "LeadAcid(0)",
+                "v": "0"
+            },
+            {
+                "l": "LiIon(1)",
+                "v": "1"
+            },
+            {
+                "l": "NiCad(2)",
+                "v": "2"
+            },
+            {
+                "l": "NiMh(3)",
+                "v": "3"
+            }
+        ]
+    },
+    "TransmissionGear": {
+        "enabled":false,
+        "id":8,
+        "values": [
+            {
+                "l": "Forward(0)",
+                "v": "0"
+            },
+            {
+                "l": "Neutral(1)",
+                "v": "1"
+            },
+            {
+                "l": "Reverse(2)",
+                "v": "2"
+            },
+            {
+                "l": "Unknown(3)",
+                "v": "3"
+            }
+        ]
+    },
+    "Battery":{
+        "d":"127508",
+        "id":9,
+        "fields":[
+            "BatteryVoltage",
+            "BatteryCurrent",
+            "BatteryTemperature"
+        ]
+    },
+    "Engine":{
+        "d":"127489",
+        "id":10,
+        "fields":[
+            "EngineOilPress",
+            "EngineOilTemp",
+            "EngineCoolantTemp",
+            "FuelRate",
+            "EngineHours",
+            "EngineCoolantPress",
+            "EngineFuelPress",
+            "EngineLoad",
+            "EngineTorque"
+        ]
+    }
+}

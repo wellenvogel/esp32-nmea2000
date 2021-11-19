@@ -60,6 +60,7 @@ const unsigned long HEAP_REPORT_TIME=2000; //set to 0 to disable heap reporting
 #include "GwButtons.h"
 #include "GwLeds.h"
 #include "GwCounter.h"
+#include "GwXDRMappings.h"
 
 
 //NMEA message channels
