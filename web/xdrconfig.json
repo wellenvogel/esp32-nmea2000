@@ -1,6 +1,7 @@
 {
     "Temperature": {
         "id":0,
+        "type":4,
         "selector": [
             {
                 "l": "SeaTemperature(0)",
@@ -66,6 +67,7 @@
     },
     "Humidity": {
         "id":1,
+        "type":5,
         "selector": [
             {
                 "l": "InsideHumidity(0)",
@@ -83,6 +85,7 @@
     },
     "Pressure": {
         "id":2,
+        "type":0,
         "selector": [
             {
                 "l": "Atmospheric(0)",
@@ -194,8 +197,8 @@
             }
         ],
         "fields":[
-            {"l":"Level","v":0,"t":-1},
-            {"l":"Capacity","v":1,"t":-1}
+            {"l":"Level","v":0,"t":6},
+            {"l":"Capacity","v":1,"t":7}
         ]
     },
     "DCType": {
@@ -290,24 +293,24 @@
         "d":"127508",
         "id":9,
         "fields":[
-            "BatteryVoltage",
-            "BatteryCurrent",
-            "BatteryTemperature"
+            {"l":"BatteryVoltage","t":2},
+            {"l":"BatteryCurrent","t":3},
+            {"l":"BatteryTemperature","t":4}
         ]
     },
     "Engine":{
         "d":"127489",
         "id":10,
         "fields":[
-            "EngineOilPress",
-            "EngineOilTemp",
-            "EngineCoolantTemp",
-            "FuelRate",
-            "EngineHours",
-            "EngineCoolantPress",
-            "EngineFuelPress",
-            "EngineLoad",
-            "EngineTorque"
+            {"l":"EngineOilPress","t":0},
+            {"l":"EngineOilTemp","t":4},
+            {"l":"EngineCoolantTemp","t":4},
+            {"l":"FuelRate","t":8},
+            {"l":"EngineHours","t":99},
+            {"l":"EngineCoolantPress","t":0},
+            {"l":"EngineFuelPress","t":0},
+            {"l":"EngineLoad","t":99},
+            {"l":"EngineTorque","t":99}
         ]
     }
 }

@@ -4,6 +4,7 @@
 #include "GWConfig.h"
 #include <WString.h>
 #include <vector>
+#include <map>
 //enum must match the defines in xdrconfig.json
 typedef enum {
     XDRTEMP=0,
@@ -24,7 +25,13 @@ class GwXDRType{
         PRESS=0,
         PERCENT=1,
         VOLT=2,
-        AMP=3
+        AMP=3,
+        TEMP=4,
+        HUMID=5,
+        VOLPERCENT=6,
+        VOLUME=7,
+        FLOW=8,
+        UNKNOWN=99
     }TypeCode;
     typedef double (* convert)(double);
     TypeCode code;
@@ -45,11 +52,11 @@ class GwXDRTypeMapping{
         GwXDRCategory category;
         int fieldIndex;
         GwXDRType::TypeCode type;
-        GwXDRTypeMapping(GwXDRCategory category,
+        GwXDRTypeMapping(int category,
             int fieldIndex,
-            GwXDRType::TypeCode type){
-                this->category=category;
-                this->type=type;
+            int type){
+                this->category=(GwXDRCategory) category;
+                this->type=(GwXDRType::TypeCode)type;
                 this->fieldIndex=fieldIndex;
             }
 };
@@ -91,44 +98,63 @@ class GwXDRMappingDef{
         category=XDRTEMP;
     }
     String toString();
-    static GwXDRMappingDef *fromString(String s);    
+    static GwXDRMappingDef *fromString(String s);
+    //we allow 100 entities of code,selector and field nid
+    static long n2kKey(GwXDRCategory category, int selector, int field)
+    {
+        long rt = (int)category;
+        if (selector < 0)
+            selector = 0;
+        rt = rt * 100 + selector;
+        if (field < 0)
+            field = 0;
+        rt = rt * 100 * field;
+        return rt;
+    }
+    long n2kKey(){
+        return n2kKey(category,selector,field);
+    }
+    static String n183key(String xdrName, String xdrType, String xdrUnit)
+    {
+        String rt = xdrName;
+        rt += ",";
+        rt += xdrType;
+        rt += ",";
+        rt += xdrUnit;
+        return rt;
+    }
+    typedef std::vector<GwXDRMappingDef*> MappingList;
     private:
     static bool handleToken(String tok,int index,GwXDRMappingDef *def);
 };
 class GwXDRMapping{
     public:
-        GwXDRMappingDef *definition;
+        GwXDRMappingDef::MappingList definitions;
         GwXDRType *type;
         GwXDRMapping(GwXDRMappingDef *definition,GwXDRType *type){
-            this->definition=definition;
+            this->definitions.push_back(definition);
             this->type=type;
         }
-        //we allow 100 entities of code,selector and field nid
-        static long n2kKey(GwXDRType::TypeCode code,int selector,int field){
-            long rt=(int)code;
-            if (selector < 0) selector=0;
-            rt=rt*100+selector;
-            if (field < 0) field=0;
-            rt=rt*100*field;
-            return rt;
+        void addMappingDef(GwXDRMappingDef *definition){
+            this->definitions.push_back(definition);
         }
-        static String n183key(String xdrName,String xdrType,String xdrUnit){
-            String rt=xdrName;
-            rt+=",";
-            rt+=xdrType;
-            rt+=",";
-            rt+=xdrUnit;
-            return rt;
-        }
+        typedef std::map<String,GwXDRMapping*> N138Map;
+        typedef std::map<long,GwXDRMapping*> N2KMap;
 };
 
 class GwXDRMappings{
     private:
      GwLog *logger;
      GwConfigHandler *config;
+     GwXDRMapping::N138Map n183Map;
+     GwXDRMapping::N2KMap n2kMap;
     public:
         GwXDRMappings(GwLog *logger,GwConfigHandler *config);
         void begin();
+        //get the mappings
+        //the returned mapping will exactly contain one mapping def
+        GwXDRMapping getMapping(String xName,String xType,String xUnit);
+        GwXDRMapping getMapping(GwXDRCategory category,int selector,int field=0,int instance=0);
 
 };
 

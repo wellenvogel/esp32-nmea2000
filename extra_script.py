@@ -9,8 +9,11 @@ from datetime import datetime
 Import("env")
 GEN_DIR='generated'
 CFG_FILE='web/config.json'
-FILES=['web/index.html',CFG_FILE,'web/index.js','web/index.css']
+XDR_FILE='web/xdrconfig.json'
+FILES=['web/index.html',CFG_FILE,XDR_FILE,'web/index.js','web/index.css']
 CFG_INCLUDE='GwConfigDefinitions.h'
+XDR_INCLUDE='GwXdrTypeMappings.h'
+
 
 def basePath():
     #see: https://stackoverflow.com/questions/16771894/python-nameerror-global-name-file-is-not-defined
@@ -90,11 +93,71 @@ def generateCfg():
             os.unlink(outfile)
             raise        
 
+def generateXdrMappings():
+    outfile=os.path.join(outPath(),XDR_INCLUDE)
+    infile=os.path.join(basePath(),XDR_FILE)
+    if isCurrent(infile,outfile):
+        return
+    print("creating %s"%XDR_INCLUDE)
+    oh=None
+
+    with open(infile,"rb") as fp:
+        jdoc=json.load(fp)
+        try:
+            with open(outfile,"w") as oh:
+                oh.write("static GwXDRTypeMapping* typeMappings[]={\n")
+                first=True
+                for cat in jdoc:
+                    item=jdoc[cat]
+                    cid=item.get('id')
+                    if cid is None:
+                        continue
+                    tc=item.get('type')
+                    if tc is not None:
+                        if first:
+                            first=False
+                        else:
+                            oh.write(",\n")
+                        oh.write("   new GwXDRTypeMapping(%d,%d,0)"%(cid,tc))
+                    fields=item.get('fields')
+                    if fields is None:
+                        continue
+                    idx=0
+                    for fe in fields:
+                        if not isinstance(fe,dict):
+                            continue
+                        tc=fe.get('t')
+                        id=fe.get('v')
+                        if id is None:
+                            id=idx
+                        idx+=1
+                        l=fe.get('l') or ''
+                        if tc is None or id is None:
+                            continue
+                        if first:
+                            first=False
+                        else:
+                            oh.write(",\n")
+                        oh.write("   new GwXDRTypeMapping(%d,%d,%d) /*%s*/"%(cid,tc,id,l))
+                oh.write("\n")
+                oh.write("};\n")
+        except Exception as e:
+            if oh:
+                try:
+                    oh.close()
+                except:
+                    pass
+            os.unlink(outfile)
+            raise
+
+
+
 if not checkDir():
     sys.exit(1)
 for f in FILES:
     print("compressing %s"%f)
     compressFile(f)
 generateCfg()
+generateXdrMappings()
 version="dev"+datetime.now().strftime("%Y%m%d")
 env.Append(CPPDEFINES=[('GWDEVVERSION',version)])
