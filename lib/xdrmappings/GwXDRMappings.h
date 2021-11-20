@@ -166,7 +166,7 @@ class GwXDRMappings{
      GwXDRMapping::N138Map n183Map;
      GwXDRMapping::N2KMap n2kMap;
      std::vector<unsigned long> unknown;
-     GwXDRFoundMapping selectMapping(GwXDRMapping::MappingList *list,int instance);
+     GwXDRFoundMapping selectMapping(GwXDRMapping::MappingList *list,int instance,const char * key);
      bool addUnknown(GwXDRCategory category,int selector,int field=0,int instance=-1);
     public:
         GwXDRMappings(GwLog *logger,GwConfigHandler *config);

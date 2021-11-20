@@ -288,7 +288,7 @@ void GwXDRMappings::begin()
  * select the best matching mapping
  * depending on the instance id
  */
-GwXDRFoundMapping GwXDRMappings::selectMapping(GwXDRMapping::MappingList *list,int instance,unsigned long key){
+GwXDRFoundMapping GwXDRMappings::selectMapping(GwXDRMapping::MappingList *list,int instance,const char * key){
     GwXDRMapping *candidate=NULL;
     for (auto mit=list->begin();mit != list->end();mit++){
         GwXDRMappingDef *def=(*mit)->definition;
@@ -296,14 +296,15 @@ GwXDRFoundMapping GwXDRMappings::selectMapping(GwXDRMapping::MappingList *list,i
         //otherwise we prefer a matching instance before we use auto/ignore
         if (instance < 0){
             if (def->instanceMode != GwXDRMappingDef::IS_IGNORE) continue;
-            LOG_DEBUG(GwLog::DEBUG,"found mapping %s",def->toString().c_str());
+            LOG_DEBUG(GwLog::DEBUG,"selected mapping %s for %s",def->toString().c_str(),key);
             return GwXDRFoundMapping(*mit);
         }
         else{
             switch(def->instanceMode){
                 case GwXDRMappingDef::IS_SINGLE:
                     if (def->instanceId == instance){
-                        LOG_DEBUG(GwLog::DEBUG,"found mapping %s",def->toString().c_str());
+                        LOG_DEBUG(GwLog::DEBUG,"selected mapping %s for %s, i=%d",
+                            def->toString().c_str(),key,instance);
                         return GwXDRFoundMapping(*mit,instance); 
                     }
                 case GwXDRMappingDef::IS_AUTO:
@@ -319,10 +320,11 @@ GwXDRFoundMapping GwXDRMappings::selectMapping(GwXDRMapping::MappingList *list,i
         }
     }
     if (candidate != NULL){
-        LOG_DEBUG(GwLog::DEBUG,"found mapping %s",candidate->definition->toString().c_str());
+        LOG_DEBUG(GwLog::DEBUG,"selected mapping %s for %s, i=%d",
+            candidate->definition->toString().c_str(),key,instance);
         return GwXDRFoundMapping(candidate,instance);
     }
-    LOG_DEBUG(GwLog::DEBUG,"no instance mapping found for key=%lu, i=%d",key,instance);
+    LOG_DEBUG(GwLog::DEBUG,"no instance mapping found for key=%s, i=%d",key,instance);
     return GwXDRFoundMapping();
 }
 GwXDRFoundMapping GwXDRMappings::getMapping(String xName,String xType,String xUnit){
@@ -341,7 +343,7 @@ GwXDRFoundMapping GwXDRMappings::getMapping(String xName,String xType,String xUn
         LOG_DEBUG(GwLog::DEBUG,"find n183mapping for %s,i=%d - nothing found",n183Key.c_str(),instance);
         return GwXDRFoundMapping();
     }
-    return selectMapping(&(it->second),instance);
+    return selectMapping(&(it->second),instance,n183Key.c_str());
 }
 GwXDRFoundMapping GwXDRMappings::getMapping(GwXDRCategory category,int selector,int field,int instance){
     unsigned long n2kKey=GwXDRMappingDef::n2kKey(category,selector,field);
@@ -352,7 +354,10 @@ GwXDRFoundMapping GwXDRMappings::getMapping(GwXDRCategory category,int selector,
         addUnknown(category,selector,field,instance);    
         return GwXDRFoundMapping();
     }
-    GwXDRFoundMapping rt=selectMapping(&(it->second),instance);
+    char kbuf[20];
+    snprintf(kbuf,19,"%lu",n2kKey);
+    kbuf[19]=0;
+    GwXDRFoundMapping rt=selectMapping(&(it->second),instance,kbuf);
     if (rt.empty){
         addUnknown(category,selector,field,instance);    
     }

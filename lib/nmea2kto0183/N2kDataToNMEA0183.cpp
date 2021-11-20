@@ -86,7 +86,7 @@ private:
             mapping.type->xdrtype.c_str(),
             value,
             mapping.type->xdrunit.c_str(),
-            name);
+            name.c_str());
         buffer[39]=0;    
         return String(buffer);
     }
