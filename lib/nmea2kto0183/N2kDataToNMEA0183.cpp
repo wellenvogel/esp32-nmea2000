@@ -32,9 +32,9 @@
 
 
 
-N2kDataToNMEA0183::N2kDataToNMEA0183(GwLog * logger, GwBoatData *boatData, tNMEA2000 *NMEA2000, 
+N2kDataToNMEA0183::N2kDataToNMEA0183(GwLog * logger, GwBoatData *boatData, 
   tSendNMEA0183MessageCallback callback, int id,String talkerId) 
-: tNMEA2000::tMsgHandler(0,NMEA2000){
+    {
     SendNMEA0183MessageCallback=0;
     this->SendNMEA0183MessageCallback=callback;
     strncpy(this->talkerId,talkerId.c_str(),2);
@@ -146,7 +146,7 @@ private:
           LOG_DEBUG(GwLog::DEBUG+1,"no handler for %ld",N2kMsg.PGN);
         }
         else{
-            //LOG_DEBUG(GwLog::DEBUG+1,"handled %ld",N2kMsg.PGN);
+            LOG_DEBUG(GwLog::DEBUG+1,"handled %ld",N2kMsg.PGN);
         }
     }
     virtual void toJson(JsonDocument &json)
@@ -1252,9 +1252,9 @@ private:
 
   public:
     N2kToNMEA0183Functions(GwLog *logger, GwBoatData *boatData, 
-        tNMEA2000 *NMEA2000, tSendNMEA0183MessageCallback callback, int sourceId,
+        tSendNMEA0183MessageCallback callback, int sourceId,
         String talkerId, GwXDRMappings *xdrMappings) 
-    : N2kDataToNMEA0183(logger, boatData, NMEA2000, callback,sourceId,talkerId)
+    : N2kDataToNMEA0183(logger, boatData, callback,sourceId,talkerId)
     {
         LastPosSend = 0;
         lastLoopTime = 0;
@@ -1277,9 +1277,9 @@ private:
 };
 
 
-N2kDataToNMEA0183* N2kDataToNMEA0183::create(GwLog *logger, GwBoatData *boatData, tNMEA2000 *NMEA2000, 
+N2kDataToNMEA0183* N2kDataToNMEA0183::create(GwLog *logger, GwBoatData *boatData, 
     tSendNMEA0183MessageCallback callback, int sourceId,String talkerId, GwXDRMappings *xdrMappings){
   LOG_DEBUG(GwLog::LOG,"creating N2kToNMEA0183");    
-  return new N2kToNMEA0183Functions(logger,boatData,NMEA2000,callback, sourceId,talkerId,xdrMappings);
+  return new N2kToNMEA0183Functions(logger,boatData,callback, sourceId,talkerId,xdrMappings);
 }
 //*****************************************************************************

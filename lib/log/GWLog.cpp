@@ -44,6 +44,9 @@ void GwLog::logDebug(int level,const char *fmt,...){
         return;
     }
     writer->write(prefix.c_str());
+    char buf[20];
+    snprintf(buf,20,"%lu:",millis());
+    writer->write(buf);
     writer->write(buffer);
     writer->write("\n");
     xSemaphoreGive(locker);

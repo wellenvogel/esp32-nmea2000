@@ -529,7 +529,7 @@ void setup() {
   xdrMappings.begin();
   logger.flush();
   
-  nmea0183Converter= N2kDataToNMEA0183::create(&logger, &boatData,&NMEA2000, 
+  nmea0183Converter= N2kDataToNMEA0183::create(&logger, &boatData, 
     SendNMEA0183Message, N2K_CHANNEL_ID,config.getString(config.talkerId,String("GP")),&xdrMappings);
 
   toN2KConverter= NMEA0183DataToN2K::create(&logger,&boatData,[](const tN2kMsg &msg)->bool{
@@ -591,7 +591,9 @@ void setup() {
       if ( N2kToSeasmart(n2kMsg, millis(), buf, MAX_NMEA2000_MESSAGE_SEASMART_SIZE) == 0 ) return;
       socketServer.sendToClients(buf,N2K_CHANNEL_ID);
     }
+    logger.logDebug(GwLog::DEBUG+1,"handling pgn %d",n2kMsg.PGN);
     nmea0183Converter->HandleMsg(n2kMsg);
+    logger.logDebug(GwLog::DEBUG+1,"done pgn %d",n2kMsg.PGN);
   }); 
   NMEA2000.Open();
   logger.logDebug(GwLog::LOG,"starting addon tasks");

@@ -31,7 +31,7 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <GwXDRMappings.h>
 
 //------------------------------------------------------------------------------
-class N2kDataToNMEA0183 : public tNMEA2000::tMsgHandler
+class N2kDataToNMEA0183 
 {
 public:
   using tSendNMEA0183MessageCallback = void (*)(const tNMEA0183Msg &NMEA0183Msg, int id);
@@ -43,11 +43,11 @@ protected:
   char talkerId[3];
   tSendNMEA0183MessageCallback SendNMEA0183MessageCallback;
   void SendMessage(const tNMEA0183Msg &NMEA0183Msg);
-  N2kDataToNMEA0183(GwLog *logger, GwBoatData *boatData, tNMEA2000 *NMEA2000, 
+  N2kDataToNMEA0183(GwLog *logger, GwBoatData *boatData,  
     tSendNMEA0183MessageCallback callback, int sourceId,String talkerId);
 
 public:
-  static N2kDataToNMEA0183* create(GwLog *logger, GwBoatData *boatData, tNMEA2000 *NMEA2000, tSendNMEA0183MessageCallback callback, 
+  static N2kDataToNMEA0183* create(GwLog *logger, GwBoatData *boatData,  tSendNMEA0183MessageCallback callback, 
     int sourceId,String talkerId, GwXDRMappings *xdrMappings);
   virtual void HandleMsg(const tN2kMsg &N2kMsg) = 0;
   virtual void loop();
