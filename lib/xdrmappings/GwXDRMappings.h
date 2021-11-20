@@ -123,23 +123,39 @@ class GwXDRMappingDef{
         rt += xdrUnit;
         return rt;
     }
-    typedef std::vector<GwXDRMappingDef*> MappingList;
     private:
     static bool handleToken(String tok,int index,GwXDRMappingDef *def);
 };
 class GwXDRMapping{
     public:
-        GwXDRMappingDef::MappingList definitions;
+        GwXDRMappingDef *definition;
         GwXDRType *type;
         GwXDRMapping(GwXDRMappingDef *definition,GwXDRType *type){
-            this->definitions.push_back(definition);
+            this->definition=definition;
             this->type=type;
         }
-        void addMappingDef(GwXDRMappingDef *definition){
-            this->definitions.push_back(definition);
+        typedef std::vector<GwXDRMapping*> MappingList;
+        typedef std::map<String,MappingList> N138Map;
+        typedef std::map<long,MappingList> N2KMap;
+};
+class GwXDRFoundMapping{
+    public:
+        GwXDRMappingDef *definition=NULL;
+        GwXDRType *type=NULL;
+        int instanceId=-1;
+        bool empty=true;
+        GwXDRFoundMapping(GwXDRMappingDef *definition,GwXDRType *type){
+            this->definition=definition;
+            this->type=type;
+            empty=false;
         }
-        typedef std::map<String,GwXDRMapping*> N138Map;
-        typedef std::map<long,GwXDRMapping*> N2KMap;
+        GwXDRFoundMapping(GwXDRMapping* mapping,int instance=-1){
+            this->definition=mapping->definition;
+            this->type=mapping->type;
+            this->instanceId=instance;
+            empty=false;
+        }
+        GwXDRFoundMapping(){}
 };
 
 class GwXDRMappings{
@@ -148,13 +164,14 @@ class GwXDRMappings{
      GwConfigHandler *config;
      GwXDRMapping::N138Map n183Map;
      GwXDRMapping::N2KMap n2kMap;
+     GwXDRFoundMapping selectMapping(GwXDRMapping::MappingList *list,int instance);
     public:
         GwXDRMappings(GwLog *logger,GwConfigHandler *config);
         void begin();
         //get the mappings
         //the returned mapping will exactly contain one mapping def
-        GwXDRMapping getMapping(String xName,String xType,String xUnit);
-        GwXDRMapping getMapping(GwXDRCategory category,int selector,int field=0,int instance=0);
+        GwXDRFoundMapping getMapping(String xName,String xType,String xUnit);
+        GwXDRFoundMapping getMapping(GwXDRCategory category,int selector,int field=0,int instance=-1);
 
 };
 

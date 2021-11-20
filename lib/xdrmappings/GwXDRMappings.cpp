@@ -230,36 +230,112 @@ void GwXDRMappings::begin()
                     LOG_DEBUG(GwLog::DEBUG, "no type definition for %s", def->toString().c_str());
                     continue;
                 }
-                long n2kkey=def->n2kKey();
-                auto it=n2kMap.find(n2kkey);
-                if (it == n2kMap.end()){
-                    LOG_DEBUG(GwLog::DEBUG,"insert mapping with key %ld",n2kkey);
-                    GwXDRMapping *mapping = new GwXDRMapping(def, type);
-                    n2kMap[n2kkey]=mapping;
+                long n2kkey = def->n2kKey();
+                auto it = n2kMap.find(n2kkey);
+                GwXDRMapping *mapping = new GwXDRMapping(def, type);
+                if (it == n2kMap.end())
+                {
+                    LOG_DEBUG(GwLog::DEBUG, "insert mapping with key %ld", n2kkey);
+                    GwXDRMapping::MappingList mappings;
+                    mappings.push_back(mapping);
+                    n2kMap[n2kkey] = mappings;
                 }
-                else{
-                    LOG_DEBUG(GwLog::DEBUG,"append mapping with key %ld",n2kkey);
-                    it->second->addMappingDef(def);
+                else
+                {
+                    LOG_DEBUG(GwLog::DEBUG, "append mapping with key %ld", n2kkey);
+                    it->second.push_back(mapping);
                 }
                 //for nmea0183 there could be multiple entries
                 //as potentially there are different units that we can handle
                 //so after we inserted the definition we do additional type lookups
-                while (type != NULL){
-                    String n183key=GwXDRMappingDef::n183key(def->xdrName,
-                        type->xdrtype,type->xdrunit);
-                    auto it=n183Map.find(n183key);
-                    if (it == n183Map.end()){
-                        LOG_DEBUG(GwLog::DEBUG,"insert mapping with n183key %s",n183key.c_str());
-                        n183Map[n183key]=new GwXDRMapping(def,type);
+                while (type != NULL)
+                {
+                    String n183key = GwXDRMappingDef::n183key(def->xdrName,
+                                                              type->xdrtype, type->xdrunit);
+                    auto it = n183Map.find(n183key);
+                    if (it == n183Map.end())
+                    {
+                        LOG_DEBUG(GwLog::DEBUG, "insert mapping with n183key %s", n183key.c_str());
+                        GwXDRMapping::MappingList mappings;
+                        mappings.push_back(mapping);
+                        n183Map[n183key] = mappings;
                     }
-                    else{
-                        LOG_DEBUG(GwLog::DEBUG,"append mapping with n183key %s",n183key.c_str());
-                        it->second->addMappingDef(def);
+                    else
+                    {
+                        LOG_DEBUG(GwLog::DEBUG, "append mapping with n183key %s", n183key.c_str());
+                        it->second.push_back(mapping);
                     }
-                    type=findType(code,&typeIndex);
-                    if (! type) break;
+                    type = findType(code, &typeIndex);
+                    if (!type)
+                        break;
+                    mapping=new GwXDRMapping(def,type);    
                 }
             }
         }
     }
+}
+
+/**
+ * select the best matching mapping
+ * depending on the instance id
+ */
+GwXDRFoundMapping GwXDRMappings::selectMapping(GwXDRMapping::MappingList *list,int instance){
+    GwXDRMapping *candidate=NULL;
+    for (auto mit=list->begin();mit != list->end();mit++){
+        GwXDRMappingDef *def=(*mit)->definition;
+        //if there is no instance we take a mapping with instance type ignore
+        //otherwise we prefer a matching instance before we use auto/ignore
+        if (instance < 0){
+            if (def->instanceMode != GwXDRMappingDef::IS_IGNORE) continue;
+            LOG_DEBUG(GwLog::DEBUG,"found mapping %s",def->toString().c_str());
+            return GwXDRFoundMapping(*mit);
+        }
+        else{
+            switch(def->instanceMode){
+                case GwXDRMappingDef::IS_SINGLE:
+                    if (def->instanceId == instance){
+                        LOG_DEBUG(GwLog::DEBUG,"found mapping %s",def->toString().c_str());
+                        return GwXDRFoundMapping(*mit,instance); 
+                    }
+                case GwXDRMappingDef::IS_AUTO:
+                    candidate=*mit;
+                    break;
+                default:
+                    break;    
+            }
+        }
+    }
+    if (candidate != NULL){
+        LOG_DEBUG(GwLog::DEBUG,"found mapping %s",candidate->definition->toString().c_str());
+        return GwXDRFoundMapping(candidate,instance);
+    }
+    return GwXDRFoundMapping();
+}
+GwXDRFoundMapping GwXDRMappings::getMapping(String xName,String xType,String xUnit){
+    //get an instance suffix from the name and separate it
+    int sepIdx=xName.indexOf('#');
+    int instance=-1;
+    if (sepIdx>=0){
+        String istr=xName.substring(sepIdx+1);
+        xName=xName.substring(0,sepIdx);
+        instance=istr.toInt();
+    }
+    if (xName == "") return GwXDRFoundMapping();
+    String n183Key=GwXDRMappingDef::n183key(xName,xType,xUnit);
+    auto it=n183Map.find(n183Key);
+    if (it == n183Map.end()) {
+        LOG_DEBUG(GwLog::DEBUG,"find n183mapping for %s,i=%d - nothing found",n183Key.c_str(),instance);
+        return GwXDRFoundMapping();
+    }
+    return selectMapping(&(it->second),instance);
+}
+GwXDRFoundMapping GwXDRMappings::getMapping(GwXDRCategory category,int selector,int field,int instance){
+    long n2kKey=GwXDRMappingDef::n2kKey(category,selector,field);
+    auto it=n2kMap.find(n2kKey);
+    if (it == n2kMap.end()){
+        LOG_DEBUG(GwLog::DEBUG,"find n2kmapping for c=%d,s=%d,f=%d,i=%d - nothing found",
+            (int)category,selector,field,instance);
+        return GwXDRFoundMapping();
+    }
+    return selectMapping(&(it->second),instance);
 }
