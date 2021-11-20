@@ -22,7 +22,11 @@ void GwLog::logString(const char *fmt,...){
     va_start(args,fmt);
     xSemaphoreTake(locker, portMAX_DELAY);
     vsnprintf(buffer,99,fmt,args);
-    if (! writer) return;
+    buffer[99]=0;
+    if (! writer) {
+        xSemaphoreGive(locker);
+        return;
+    }
     writer->write(prefix.c_str());
     writer->write(buffer);
     writer->write("\n");

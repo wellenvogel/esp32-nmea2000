@@ -64,8 +64,52 @@ class N2kToNMEA0183Functions : public N2kDataToNMEA0183
 {
 
 private:
+    GwXDRMappings *xdrMappings;
     ConverterList<N2kToNMEA0183Functions,tN2kMsg> converters;
     static const unsigned long RMCPeriod = 500;
+    tNMEA0183Msg xdrMessage;
+    bool xdrOpened=false;
+
+    String buildXdrEntry(GwXDRFoundMapping &mapping,double value){
+        char buffer[40];
+        String name=mapping.definition->xdrName;
+        if (mapping.definition->instanceMode == GwXDRMappingDef::IS_AUTO ||
+            mapping.definition->instanceMode == GwXDRMappingDef::IS_SINGLE
+        ){
+            name+="#";
+            name+=String(mapping.instanceId);
+        }
+        if (mapping.type->tonmea){
+            value=(* (mapping.type->tonmea))(value);
+        }
+        snprintf(buffer,39,"%s,%.3f,%s,%s",
+            mapping.type->xdrtype.c_str(),
+            value,
+            mapping.type->xdrunit.c_str(),
+            name);
+        buffer[39]=0;    
+        return String(buffer);
+    }
+    bool addToXdr(String entry){
+        if (! xdrOpened){
+            xdrMessage.Init("XDR",talkerId);
+            xdrOpened=true;
+        }
+        int len=entry.length();
+        if (! xdrMessage.AddStrField(entry.c_str())){
+            SendMessage(xdrMessage);
+            xdrMessage.Init("XDR",talkerId);
+            xdrMessage.AddStrField(entry.c_str());
+        }
+        return true;
+    }
+    bool finalizeXdr(){
+        if (! xdrOpened) return false;
+        SendMessage(xdrMessage);
+        xdrOpened=false;
+        return true;
+    }
+
     void setMax(GwBoatItem<double> *maxItem, GwBoatItem<double> *item)
     {
         unsigned long now = millis();
@@ -1152,6 +1196,23 @@ private:
         SendMessage(nmeaMsg);
     }
 
+    void Handle130314(const tN2kMsg &msg){
+        unsigned char SID=-1;
+        unsigned char PressureInstance=0;
+        tN2kPressureSource PressureSource;
+        double ActualPressure;
+        if (! ParseN2kPGN130314(msg,SID, PressureInstance,
+                       PressureSource, ActualPressure)){
+            LOG_DEBUG(GwLog::DEBUG,"unable to parse PGN %d",msg.PGN);
+            return; 
+        }
+        GwXDRFoundMapping mapping=xdrMappings->getMapping(XDRPRESSURE,(int)PressureSource,0,PressureInstance);
+        if (mapping.empty) return;
+        LOG_DEBUG(GwLog::DEBUG,"found pressure mapping %s",mapping.definition->toString().c_str());
+        addToXdr(buildXdrEntry(mapping,ActualPressure));
+        finalizeXdr();
+    }
+
 
     void registerConverters()
     {
@@ -1178,6 +1239,7 @@ private:
       converters.registerConverter(127251UL, &N2kToNMEA0183Functions::HandleROT);
       converters.registerConverter(129283UL, &N2kToNMEA0183Functions::HandleXTE);
       converters.registerConverter(129284UL, &N2kToNMEA0183Functions::HandleNavigation);
+      converters.registerConverter(130314UL, &N2kToNMEA0183Functions::Handle130314);
 #define HANDLE_AIS
 #ifdef HANDLE_AIS
       converters.registerConverter(129038UL, &N2kToNMEA0183Functions::HandleAISClassAPosReport);  // AIS Class A Position Report, Message Type 1
@@ -1191,7 +1253,7 @@ private:
   public:
     N2kToNMEA0183Functions(GwLog *logger, GwBoatData *boatData, 
         tNMEA2000 *NMEA2000, tSendNMEA0183MessageCallback callback, int sourceId,
-        String talkerId) 
+        String talkerId, GwXDRMappings *xdrMappings) 
     : N2kDataToNMEA0183(logger, boatData, NMEA2000, callback,sourceId,talkerId)
     {
         LastPosSend = 0;
@@ -1200,6 +1262,7 @@ private:
 
         this->logger = logger;
         this->boatData = boatData;
+        this->xdrMappings=xdrMappings;
         registerConverters();
     }
     virtual void loop()
@@ -1215,8 +1278,8 @@ private:
 
 
 N2kDataToNMEA0183* N2kDataToNMEA0183::create(GwLog *logger, GwBoatData *boatData, tNMEA2000 *NMEA2000, 
-    tSendNMEA0183MessageCallback callback, int sourceId,String talkerId){
+    tSendNMEA0183MessageCallback callback, int sourceId,String talkerId, GwXDRMappings *xdrMappings){
   LOG_DEBUG(GwLog::LOG,"creating N2kToNMEA0183");    
-  return new N2kToNMEA0183Functions(logger,boatData,NMEA2000,callback, sourceId,talkerId);
+  return new N2kToNMEA0183Functions(logger,boatData,NMEA2000,callback, sourceId,talkerId,xdrMappings);
 }
 //*****************************************************************************

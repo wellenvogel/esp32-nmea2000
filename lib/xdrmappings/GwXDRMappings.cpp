@@ -90,7 +90,7 @@ static GwXDRType::TypeCode findTypeMapping(GwXDRCategory category, int field)
     }
     return GwXDRType::UNKNOWN;
 }
-
+//category,direction,selector,field,instanceMode,instance,name
 String GwXDRMappingDef::toString()
 {
     String rt = "";
@@ -105,6 +105,8 @@ String GwXDRMappingDef::toString()
     rt += String(instanceMode);
     rt += ",";
     rt += String(instanceId);
+    rt += ",";
+    rt += xdrName;
     return rt;
 }
 bool GwXDRMappingDef::handleToken(String tok, int index, GwXDRMappingDef *def)
@@ -151,10 +153,13 @@ bool GwXDRMappingDef::handleToken(String tok, int index, GwXDRMappingDef *def)
         i = tok.toInt();
         def->instanceId = i;
         return true;
+    case 6:
+        def->xdrName=tok;
+        return true;
     default:
         break;
     }
-    return false;
+    return true; //ignore unknown trailing stuff
 }
 GwXDRMappingDef *GwXDRMappingDef::fromString(String s)
 {
@@ -216,7 +221,8 @@ void GwXDRMappings::begin()
             if (def)
             {
                 int typeIndex = 0;
-                LOG_DEBUG(GwLog::DEBUG, "read xdr mapping %s", def->toString().c_str());
+                LOG_DEBUG(GwLog::DEBUG, "read xdr mapping %s from %s", 
+                    def->toString().c_str(),namebuf);
                 //n2k: find first matching type mapping
                 GwXDRType::TypeCode code = findTypeMapping(def->category, def->field);
                 if (code == GwXDRType::UNKNOWN)
@@ -271,6 +277,9 @@ void GwXDRMappings::begin()
                     mapping=new GwXDRMapping(def,type);    
                 }
             }
+            else{
+                LOG_DEBUG(GwLog::DEBUG,"unable to parse mapping %s",cfg->asCString());
+            }
         }
     }
 }
@@ -279,7 +288,7 @@ void GwXDRMappings::begin()
  * select the best matching mapping
  * depending on the instance id
  */
-GwXDRFoundMapping GwXDRMappings::selectMapping(GwXDRMapping::MappingList *list,int instance){
+GwXDRFoundMapping GwXDRMappings::selectMapping(GwXDRMapping::MappingList *list,int instance,unsigned long key){
     GwXDRMapping *candidate=NULL;
     for (auto mit=list->begin();mit != list->end();mit++){
         GwXDRMappingDef *def=(*mit)->definition;
@@ -300,6 +309,10 @@ GwXDRFoundMapping GwXDRMappings::selectMapping(GwXDRMapping::MappingList *list,i
                 case GwXDRMappingDef::IS_AUTO:
                     candidate=*mit;
                     break;
+                case GwXDRMappingDef::IS_IGNORE:
+                    if (candidate == NULL) candidate=*mit;
+                    break;
+                    
                 default:
                     break;    
             }
@@ -309,6 +322,7 @@ GwXDRFoundMapping GwXDRMappings::selectMapping(GwXDRMapping::MappingList *list,i
         LOG_DEBUG(GwLog::DEBUG,"found mapping %s",candidate->definition->toString().c_str());
         return GwXDRFoundMapping(candidate,instance);
     }
+    LOG_DEBUG(GwLog::DEBUG,"no instance mapping found for key=%lu, i=%d",key,instance);
     return GwXDRFoundMapping();
 }
 GwXDRFoundMapping GwXDRMappings::getMapping(String xName,String xType,String xUnit){
@@ -330,12 +344,30 @@ GwXDRFoundMapping GwXDRMappings::getMapping(String xName,String xType,String xUn
     return selectMapping(&(it->second),instance);
 }
 GwXDRFoundMapping GwXDRMappings::getMapping(GwXDRCategory category,int selector,int field,int instance){
-    long n2kKey=GwXDRMappingDef::n2kKey(category,selector,field);
+    unsigned long n2kKey=GwXDRMappingDef::n2kKey(category,selector,field);
     auto it=n2kMap.find(n2kKey);
     if (it == n2kMap.end()){
         LOG_DEBUG(GwLog::DEBUG,"find n2kmapping for c=%d,s=%d,f=%d,i=%d - nothing found",
             (int)category,selector,field,instance);
+        addUnknown(category,selector,field,instance);    
         return GwXDRFoundMapping();
     }
-    return selectMapping(&(it->second),instance);
+    GwXDRFoundMapping rt=selectMapping(&(it->second),instance);
+    if (rt.empty){
+        addUnknown(category,selector,field,instance);    
+    }
+    return rt;
+}
+#define MAX_UNKNOWN 200
+bool GwXDRMappings::addUnknown(GwXDRCategory category,int selector,int field,int instance){
+    if (unknown.size() >= 200) return false;
+    unsigned long uk=((int)category) &0x7f;
+    if (selector < 0) selector=0;
+    uk=(uk<<7) + (selector &0x7f);
+    if (field < 0) field=0;
+    uk=(uk<<7) + (field & 0x7f);
+    if (instance < 0 || instance > 255) instance=256; //unknown
+    uk=(uk << 9) + (instance & 0x1ff);
+    unknown.push_back(uk);
+    return true;
 }

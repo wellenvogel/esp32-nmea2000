@@ -85,6 +85,7 @@ bool fixedApPass=true;
 GwWifi gwWifi(&config,&logger,fixedApPass);
 GwSocketServer socketServer(&config,&logger,MIN_TCP_CHANNEL_ID);
 GwBoatData boatData(&logger);
+GwXDRMappings xdrMappings(&logger,&config);
 
 
 int NodeAddress;  // To store last Node Address
@@ -249,7 +250,7 @@ bool delayedRestart(){
 
 void startAddOnTask(TaskFunction_t task,int sourceId){
   ApiImpl* api=new ApiImpl(sourceId);
-  xTaskCreate(task,"user",1000,api,3,NULL);
+  xTaskCreate(task,"user",2000,api,3,NULL);
 }
 
 #define JSON_OK "{\"status\":\"OK\"}"
@@ -525,9 +526,11 @@ void setup() {
                               { return new BoatDataRequest(); });
 
   webserver.begin();
+  xdrMappings.begin();
+  logger.flush();
   
   nmea0183Converter= N2kDataToNMEA0183::create(&logger, &boatData,&NMEA2000, 
-    SendNMEA0183Message, N2K_CHANNEL_ID,config.getString(config.talkerId,String("GP")));
+    SendNMEA0183Message, N2K_CHANNEL_ID,config.getString(config.talkerId,String("GP")),&xdrMappings);
 
   toN2KConverter= NMEA0183DataToN2K::create(&logger,&boatData,[](const tN2kMsg &msg)->bool{
     logger.logDebug(GwLog::DEBUG+2,"send N2K %ld",msg.PGN);
@@ -591,10 +594,12 @@ void setup() {
     nmea0183Converter->HandleMsg(n2kMsg);
   }); 
   NMEA2000.Open();
+  logger.logDebug(GwLog::LOG,"starting addon tasks");
+  logger.flush();
   startAddOnTask(handleButtons,100);
   setLedMode(LED_GREEN);
   startAddOnTask(handleLeds,101);
-
+  logger.logDebug(GwLog::LOG,"setup done");
 }  
 //*****************************************************************************
 

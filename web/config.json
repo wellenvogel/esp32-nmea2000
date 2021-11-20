@@ -237,6 +237,22 @@
         "check": "checkSSID",
         "description": "the SSID for an external WIFI network",
         "category":"wifi client"
+    },
+    {
+        "name": "XDR1",
+        "label": "XDR1",
+        "type": "xdr",
+        "default": "",
+        "check": "checkXDR",
+        "category":"xdr"
+    },
+    {
+        "name": "XDR2",
+        "label": "XDR2",
+        "type": "xdr",
+        "default": "",
+        "check": "checkXDR",
+        "category":"xdr"
     }
     
 

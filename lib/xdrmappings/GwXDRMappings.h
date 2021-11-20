@@ -9,7 +9,7 @@
 typedef enum {
     XDRTEMP=0,
     XDRHUMIDITY=1,
-    XDRPRSSURE=2,
+    XDRPRESSURE=2,
     XDRTIME=3, //unused
     XDRFLUID=4,
     XDRDCTYPE=5, //unused
@@ -79,7 +79,7 @@ class GwXDRMappingDef{
     String xdrName;
     GwXDRCategory category;
     int selector=-1;
-    int field=-1;
+    int field=0;
     InstanceMode instanceMode=IS_AUTO;
     int instanceId=-1;
     Direction direction=M_BOTH;
@@ -97,21 +97,22 @@ class GwXDRMappingDef{
     GwXDRMappingDef(){
         category=XDRTEMP;
     }
+    //category,direction,selector,field,instanceMode,instance,name
     String toString();
     static GwXDRMappingDef *fromString(String s);
     //we allow 100 entities of code,selector and field nid
-    static long n2kKey(GwXDRCategory category, int selector, int field)
+    static unsigned long n2kKey(GwXDRCategory category, int selector, int field)
     {
-        long rt = (int)category;
+        long rt = ((int)category)&0xff;
         if (selector < 0)
             selector = 0;
-        rt = rt * 100 + selector;
+        rt = (rt<<8) + (selector & 0xff);
         if (field < 0)
             field = 0;
-        rt = rt * 100 * field;
+        rt = (rt <<8) + (field & 0xff);
         return rt;
     }
-    long n2kKey(){
+    unsigned long n2kKey(){
         return n2kKey(category,selector,field);
     }
     static String n183key(String xdrName, String xdrType, String xdrUnit)
@@ -136,7 +137,7 @@ class GwXDRMapping{
         }
         typedef std::vector<GwXDRMapping*> MappingList;
         typedef std::map<String,MappingList> N138Map;
-        typedef std::map<long,MappingList> N2KMap;
+        typedef std::map<unsigned long,MappingList> N2KMap;
 };
 class GwXDRFoundMapping{
     public:
@@ -164,7 +165,9 @@ class GwXDRMappings{
      GwConfigHandler *config;
      GwXDRMapping::N138Map n183Map;
      GwXDRMapping::N2KMap n2kMap;
+     std::vector<unsigned long> unknown;
      GwXDRFoundMapping selectMapping(GwXDRMapping::MappingList *list,int instance);
+     bool addUnknown(GwXDRCategory category,int selector,int field=0,int instance=-1);
     public:
         GwXDRMappings(GwLog *logger,GwConfigHandler *config);
         void begin();
