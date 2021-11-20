@@ -138,7 +138,7 @@ def generateXdrMappings():
                             first=False
                         else:
                             oh.write(",\n")
-                        oh.write("   new GwXDRTypeMapping(%d,%d,%d) /*%s:%s*/"%(cid,tc,cat,id,l))
+                        oh.write("   new GwXDRTypeMapping(%d,%d,%d) /*%s:%s*/"%(cid,tc,id,cat,l))
                 oh.write("\n")
                 oh.write("};\n")
         except Exception as e:
