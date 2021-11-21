@@ -72,13 +72,7 @@ private:
 
     String buildXdrEntry(GwXDRFoundMapping &mapping,double value){
         char buffer[40];
-        String name=mapping.definition->xdrName;
-        if (mapping.definition->instanceMode == GwXDRMappingDef::IS_AUTO ||
-            mapping.definition->instanceMode == GwXDRMappingDef::IS_SINGLE
-        ){
-            name+="#";
-            name+=String(mapping.instanceId);
-        }
+        String name=mapping.getTransducerName();
         if (mapping.type->tonmea){
             value=(* (mapping.type->tonmea))(value);
         }
