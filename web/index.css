@@ -64,7 +64,6 @@ body{
       flex-direction: row;
       flex-wrap: wrap;
       align-items: center;
-      min-width: 21em;
   }
   input,select {
       border: 1px solid #808080a1;
@@ -105,14 +104,13 @@ body{
   #xdrPage .value{
     width: 24em;
   }
-  #xdrPage .row{
-    min-width: 24em;
-  }
+  
   .xdrline {
     padding-top: 0.2em;
     padding-bottom: 0.2em;
     display: flex;
     flex-direction: row;
+    flex-wrap: wrap;
   }
   .xdrunused{
     opacity: 0;
