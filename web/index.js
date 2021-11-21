@@ -3,12 +3,14 @@ let lastUpdate = (new Date()).getTime();
 let reloadConfig = false;
 function addEl(type, clazz, parent, text) {
     let el = document.createElement(type);
-    if ( ! (clazz instanceof Array)){
-        clazz=clazz.split(/  */);
+    if (clazz) {
+        if (!(clazz instanceof Array)) {
+            clazz = clazz.split(/  */);
+        }
+        clazz.forEach(function (ce) {
+            el.classList.add(ce);
+        });
     }
-    clazz.forEach(function(ce){
-        el.classList.add(ce);
-    });
     if (text) el.textContent = text;
     if (parent) parent.appendChild(el);
     return el;
@@ -230,15 +232,22 @@ function checkChange(el, row) {
         }
     }
 }
+let configDefinitions;
+let xdrConfig;
 function createInput(configItem, frame) {
     let el;
     if (configItem.type === 'boolean' || configItem.type === 'list') {
-        el = document.createElement('select')
+        el=addEl('select','',frame);
         el.setAttribute('name', configItem.name)
         let slist = [];
         if (configItem.list) {
             configItem.list.forEach(function (v) {
-                slist.push({ l: v, v: v });
+                if (v instanceof Object){
+                    slist.push({l:v.l,v:v.v});
+                }
+                else{
+                    slist.push({ l: v, v: v });
+                }
             })
         }
         else {
@@ -246,60 +255,16 @@ function createInput(configItem, frame) {
             slist.push({ l: 'off', v: 'false' })
         }
         slist.forEach(function (sitem) {
-            let sitemEl = document.createElement('option');
+            let sitemEl = addEl('option','',el,sitem.l);
             sitemEl.setAttribute('value', sitem.v);
-            sitemEl.textContent = sitem.l;
-            el.appendChild(sitemEl);
         })
-        frame.appendChild(el);
         return el;
     }
     if (configItem.type === 'filter') {
-        el = document.createElement('div');
-        el.classList.add('filter');
-        let ais = createInput({
-            type: 'list',
-            name: configItem.name + "_ais",
-            list: ['aison', 'aisoff']
-        }, el);
-        let mode = createInput({
-            type: 'list',
-            name: configItem.name + "_mode",
-            list: ['whitelist', 'blacklist']
-        }, el);
-        let sentences = createInput({
-            type: 'text',
-            name: configItem.name + "_sentences",
-        }, el);
-        let data = document.createElement('input');
-        data.setAttribute('type', 'hidden');
-        el.appendChild(data);
-        let changeFunction = function () {
-            let cv = data.value || "";
-            let parts = cv.split(":");
-            ais.value = (parts[0] == '0') ? "aisoff" : "aison";
-            mode.value = (parts[1] == '0') ? "whitelist" : "blacklist";
-            sentences.value = parts[2] || "";
-        }
-        let updateFunction = function () {
-            let nv = (ais.value == 'aison') ? "1" : "0";
-            nv += ":";
-            nv += (mode.value == 'blacklist') ? "1" : "0";
-            nv += ":";
-            nv += sentences.value;
-            data.value = nv;
-            let chev = new Event('change');
-            data.dispatchEvent(chev);
-        }
-        mode.addEventListener('change', updateFunction);
-        ais.addEventListener("change", updateFunction);
-        sentences.addEventListener("change", updateFunction);
-        data.addEventListener('change', function (ev) {
-            changeFunction();
-        });
-        data.setAttribute('name', configItem.name);
-        frame.appendChild(el);
-        return data;
+        return createFilterInput(configItem,frame);    
+    }
+    if (configItem.type === 'xdr'){
+        return createXdrInput(configItem,frame);
     }
     el = document.createElement('input');
     el.setAttribute('name', configItem.name)
@@ -324,78 +289,259 @@ function createInput(configItem, frame) {
     }
     return el;
 }
-let configDefinitions;
+
+function updateSelectList(item,slist){
+    item.innerHTML='';
+    slist.forEach(function (sitem) {
+        let sitemEl = addEl('option','',item,sitem.l);
+        sitemEl.setAttribute('value', sitem.v);
+    })
+}
+function getXdrCategories(){
+    let rt=[];
+    for (let c in xdrConfig){
+        if (xdrConfig[c].enabled !== false){
+            rt.push({l:c,v:xdrConfig[c].id});
+        }
+    }
+    return rt;
+}
+function getXdrSelectors(category){
+    category=parseInt(category);
+    for (let c in xdrConfig){
+        let base=xdrConfig[c];
+        if (parseInt(base.id) == category){
+            return base.selector || [];
+        }
+    }
+    return [];
+}
+function getXdrFields(category){
+    category=parseInt(category);
+    for (let c in xdrConfig){
+        let base=xdrConfig[c];
+        if (parseInt(base.id) == category){
+            return base.fields || [];
+        }
+    }
+    return [];
+}
+
+
+function createXdrInput(configItem,frame){
+    let el = addEl('div','filter',frame);
+    let direction=createInput({
+        type:'list',
+        name: configItem.name+"_dir",
+        list: [
+            //GwXDRMappingDef::Direction
+            {l:'off',v:0},
+            {l:'bidir',v:1},
+            {l:'to2K',v:2},
+            {l:'from2K',v:3}
+        ]
+    },el);
+    let category=createInput({
+        type: 'list',
+        name: configItem.name+"_cat",
+        list:getXdrCategories()
+    },el);
+    let selector=createInput({
+        type: 'list',
+        name: configItem.name+"_sel",
+        list:[]
+    },el);
+    let field=createInput({
+        type:'list',
+        name: configItem.name+'_field',
+        list: []
+    },el);
+    let imode=createInput({
+        type:'list',
+        name: configItem.name+"_imode",
+        list:[
+            //GwXDRMappingDef::InstanceMode
+            {l:'single',v:0},
+            {l:'ignore',v:1},
+            {l:'auto',v:2}
+        ]
+    },el);
+    let instance=createInput({
+        type:'number',
+        name: configItem.name+"_instance",
+    },el);
+    let xdrName=createInput({
+        type:'text',
+        name: configItem.name+"_xdr"
+    },el);
+    let data = addEl('input',undefined,el);
+    data.setAttribute('type', 'hidden');
+    data.setAttribute('name', configItem.name);
+    let changeFunction = function () {
+        let parts=data.value.split(',');
+        direction.value=parts[1] || 0;
+        category.value=parts[0] || 0;
+        updateSelectList(selector,getXdrSelectors(category.value));
+        updateSelectList(field,getXdrFields(category.value));
+        selector.value=parts[2]||0;
+        field.value=parts[3]||0;
+        imode.value=parts[4]||0;
+        instance.value=parts[5]||0;
+        xdrName.value=parts[6]||'';
+    }
+    let updateFunction = function () {
+        let txt=category.value+","+direction.value+","+
+            selector.value+","+field.value+","+imode.value;
+        let instanceValue=parseInt(instance.value||0);
+        if (isNaN(instanceValue)) instanceValue=0;
+        if (instanceValue<0) instanceValue=0;
+        if (instanceValue>255) instanceValue=255;
+        txt+=","+instanceValue;
+        let xdr=xdrName.value.replace(/[^a-zA-Z0-9]/g,'');
+        txt+=","+xdr;    
+        data.value=txt;
+        let ev=new Event('change');
+        data.dispatchEvent(ev);
+    }
+    category.addEventListener('change',updateFunction);
+    direction.addEventListener('change',updateFunction);
+    selector.addEventListener('change',updateFunction);
+    field.addEventListener('change',updateFunction);
+    imode.addEventListener('change',updateFunction);
+    instance.addEventListener('change',updateFunction);
+    xdrName.addEventListener('change',updateFunction);
+    data.addEventListener('change',changeFunction);
+    return data;
+}
+
+function createFilterInput(configItem, frame) {
+    let el = addEl('div','filter',frame);
+    let ais = createInput({
+        type: 'list',
+        name: configItem.name + "_ais",
+        list: ['aison', 'aisoff']
+    }, el);
+    let mode = createInput({
+        type: 'list',
+        name: configItem.name + "_mode",
+        list: ['whitelist', 'blacklist']
+    }, el);
+    let sentences = createInput({
+        type: 'text',
+        name: configItem.name + "_sentences",
+    }, el);
+    let data = addEl('input',undefined,el);
+    data.setAttribute('type', 'hidden');
+    let changeFunction = function () {
+        let cv = data.value || "";
+        let parts = cv.split(":");
+        ais.value = (parts[0] == '0') ? "aisoff" : "aison";
+        mode.value = (parts[1] == '0') ? "whitelist" : "blacklist";
+        sentences.value = parts[2] || "";
+    }
+    let updateFunction = function () {
+        let nv = (ais.value == 'aison') ? "1" : "0";
+        nv += ":";
+        nv += (mode.value == 'blacklist') ? "1" : "0";
+        nv += ":";
+        nv += sentences.value;
+        data.value = nv;
+        let chev = new Event('change');
+        data.dispatchEvent(chev);
+    }
+    mode.addEventListener('change', updateFunction);
+    ais.addEventListener("change", updateFunction);
+    sentences.addEventListener("change", updateFunction);
+    data.addEventListener('change', function (ev) {
+        changeFunction();
+    });
+    data.setAttribute('name', configItem.name);
+    return data;
+}
+
+function createConfigDefinitions(parent, capabilities, defs,includeXdr) {
+    let category;
+    let categoryEl;
+    let frame = parent.querySelector('.configFormRows');
+    if (!frame) throw Error("no config form");
+    frame.innerHTML = '';
+    configDefinitions = defs;
+    defs.forEach(function (item) {
+        if (!item.type) return;
+        if ((item.category === 'xdr') !== includeXdr) return; 
+        if (item.category != category || !categoryEl) {
+            let categoryFrame = addEl('div', 'category', frame);
+            let categoryTitle = addEl('div', 'title', categoryFrame);
+            let categoryButton = addEl('span', 'icon icon-more', categoryTitle);
+            addEl('span', 'label', categoryTitle, item.category);
+            categoryEl = addEl('div', 'content', categoryFrame);
+            categoryEl.classList.add('hidden');
+            let currentEl = categoryEl;
+            categoryTitle.addEventListener('click', function (ev) {
+                let rs = currentEl.classList.toggle('hidden');
+                if (rs) {
+                    categoryButton.classList.add('icon-more');
+                    categoryButton.classList.remove('icon-less');
+                }
+                else {
+                    categoryButton.classList.remove('icon-more');
+                    categoryButton.classList.add('icon-less');
+                }
+            })
+            category = item.category;
+        }
+        if (item.capabilities !== undefined) {
+            for (let capability in item.capabilities) {
+                let values = item.capabilities[capability];
+                if (!capabilities[capability]) return;
+                let found = false;
+                values.forEach(function (v) {
+                    if (capabilities[capability] == v) found = true;
+                });
+                if (!found) return;
+            }
+        }
+        let row = addEl('div', 'row', categoryEl);
+        let label = item.label || item.name;
+        addEl('span', 'label', row, label);
+        let valueFrame = addEl('div', 'value', row);
+        let valueEl = createInput(item, valueFrame);
+        if (!valueEl) return;
+        valueEl.setAttribute('data-default', item.default);
+        valueEl.addEventListener('change', function (ev) {
+            let el = ev.target;
+            checkChange(el, row);
+        })
+        if (item.check) valueEl.setAttribute('data-check', item.check);
+        let btContainer = addEl('div', 'buttonContainer', row);
+        let bt = addEl('button', 'defaultButton', btContainer, 'X');
+        bt.setAttribute('data-default', item.default);
+        bt.addEventListener('click', function (ev) {
+            valueEl.value = valueEl.getAttribute('data-default');
+            let changeEvent = new Event('change');
+            valueEl.dispatchEvent(changeEvent);
+        })
+        bt = addEl('button', 'infoButton', btContainer, '?');
+        bt.addEventListener('click', function (ev) {
+            showOverlay(item.description);
+        });
+    })
+}
 function loadConfigDefinitions() {
     getJson("api/capabilities")
         .then(function (capabilities) {
             getJson("config.json")
                 .then(function (defs) {
-                    let category;
-                    let categoryEl;
-                    let frame = document.querySelector('.configFormRows');
-                    if (!frame) throw Error("no config form");
-                    frame.innerHTML = '';
-                    configDefinitions = defs;
-                    defs.forEach(function (item) {
-                        if (!item.type) return;
-                        if (item.category != category || !categoryEl) {
-                            let categoryFrame = addEl('div', 'category', frame);
-                            let categoryTitle = addEl('div', 'title', categoryFrame);
-                            let categoryButton = addEl('span', 'icon icon-more', categoryTitle);
-                            addEl('span', 'label', categoryTitle, item.category);
-                            categoryEl = addEl('div', 'content', categoryFrame);
-                            categoryEl.classList.add('hidden');
-                            let currentEl = categoryEl;
-                            categoryTitle.addEventListener('click', function (ev) {
-                                let rs = currentEl.classList.toggle('hidden');
-                                if (rs) {
-                                    categoryButton.classList.add('icon-more');
-                                    categoryButton.classList.remove('icon-less');
-                                }
-                                else {
-                                    categoryButton.classList.remove('icon-more');
-                                    categoryButton.classList.add('icon-less');
-                                }
-                            })
-                            category = item.category;
-                        }
-                        if (item.capabilities !== undefined) {
-                            for (let capability in item.capabilities) {
-                                let values = item.capabilities[capability];
-                                if (!capabilities[capability]) return;
-                                let found = false;
-                                values.forEach(function (v) {
-                                    if (capabilities[capability] == v) found = true;
-                                });
-                                if (!found) return;
-                            }
-                        }
-                        let row = addEl('div', 'row', categoryEl);
-                        let label = item.label || item.name;
-                        addEl('span', 'label', row, label);
-                        let valueFrame = addEl('div', 'value', row);
-                        let valueEl = createInput(item, valueFrame);
-                        if (!valueEl) return;
-                        valueEl.setAttribute('data-default', item.default);
-                        valueEl.addEventListener('change', function (ev) {
-                            let el = ev.target;
-                            checkChange(el, row);
+                    getJson("xdrconfig.json")
+                        .then(function(xdr){
+                            xdrConfig=xdr;
+                            configDefinitions=defs;
+                            let normalConfig=document.getElementById('configPage');
+                            let xdrParent=document.getElementById('xdrPage');
+                            if (normalConfig) createConfigDefinitions(normalConfig,capabilities,defs,false);
+                            if (xdrParent) createConfigDefinitions(xdrParent,capabilities,defs,true);
+                            resetForm();
                         })
-                        if (item.check) valueEl.setAttribute('data-check', item.check);
-                        let btContainer = addEl('div', 'buttonContainer', row);
-                        let bt = addEl('button', 'defaultButton', btContainer, 'X');
-                        bt.setAttribute('data-default', item.default);
-                        bt.addEventListener('click', function (ev) {
-                            valueEl.value = valueEl.getAttribute('data-default');
-                            let changeEvent = new Event('change');
-                            valueEl.dispatchEvent(changeEvent);
-                        })
-                        bt = addEl('button', 'infoButton', btContainer, '?');
-                        bt.addEventListener('click', function (ev) {
-                            showOverlay(item.description);
-                        });
-                    })
-                    resetForm();
                 })
         })
         .catch(function (err) { alert("unable to load config: " + err) })

@@ -89,6 +89,12 @@ body{
   .hidden{
     display: none !important;
   }
+  #xdrPage .content.hidden {
+    display: unset !important;
+  }
+  #xdrPage .category .title{
+    display: none;
+  }
   .msgDetails .value {
       width: 5em;
       text-align: right;
