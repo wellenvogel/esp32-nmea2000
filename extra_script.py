@@ -163,6 +163,8 @@ def getContentType(fn):
         return "application/json"
     if (fn.endswith('js')):
         return "text/javascript"
+    if (fn.endswith('css')):    
+        return "text/css"
     return "application/octet-stream"
 
 def prebuild(env):
