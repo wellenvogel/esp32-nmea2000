@@ -192,4 +192,17 @@ def prebuild(env):
     version="dev"+datetime.now().strftime("%Y%m%d")
     env.Append(CPPDEFINES=[('GWDEVVERSION',version)])
 
+def cleangenerated(source, target, env):
+    od=outPath()
+    if os.path.isdir(od):
+        print("#cleaning up %s"%od)
+        for f in os.listdir(od):
+            if f == "." or f == "..":
+                continue
+            fn=os.path.join(od,f)
+            os.unlink(f)
+
+print("#prescript...")
 prebuild(env)
+#script does not run on clean yet - maybe in the future
+env.AddPostAction("clean",cleangenerated)
