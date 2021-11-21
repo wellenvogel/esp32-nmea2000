@@ -234,10 +234,10 @@ function checkChange(el, row) {
 }
 let configDefinitions;
 let xdrConfig;
-function createInput(configItem, frame) {
+function createInput(configItem, frame,clazz) {
     let el;
     if (configItem.type === 'boolean' || configItem.type === 'list') {
-        el=addEl('select','',frame);
+        el=addEl('select',clazz,frame);
         el.setAttribute('name', configItem.name)
         let slist = [];
         if (configItem.list) {
@@ -261,14 +261,13 @@ function createInput(configItem, frame) {
         return el;
     }
     if (configItem.type === 'filter') {
-        return createFilterInput(configItem,frame);    
+        return createFilterInput(configItem,frame,clazz);    
     }
     if (configItem.type === 'xdr'){
-        return createXdrInput(configItem,frame);
+        return createXdrInput(configItem,frame,clazz);
     }
-    el = document.createElement('input');
+    el = addEl('input',clazz,frame);
     el.setAttribute('name', configItem.name)
-    frame.appendChild(el);
     if (configItem.type === 'password') {
         el.setAttribute('type', 'password');
         let vis = addEl('span', 'icon-eye icon', frame);
@@ -327,9 +326,20 @@ function getXdrFields(category){
     return [];
 }
 
+function createXdrLine(parent,label){
+    let d=addEl('div','xdrline',parent);
+    addEl('span','xdrlabel',d,label);
+    return d;
+}
+function showHideXdr(el,show,useParent){
+    if (useParent) el=el.parentElement;
+    if (show) el.classList.remove('xdrunused');
+    else el.classList.add('xdrunused');
+}
 
 function createXdrInput(configItem,frame){
-    let el = addEl('div','filter',frame);
+    let el = addEl('div','xdrinput',frame);
+    let d=createXdrLine(el,'Direction');
     let direction=createInput({
         type:'list',
         name: configItem.name+"_dir",
@@ -340,22 +350,26 @@ function createXdrInput(configItem,frame){
             {l:'to2K',v:2},
             {l:'from2K',v:3}
         ]
-    },el);
+    },d,'xdrdir');
+    d=createXdrLine(el,'Category');
     let category=createInput({
         type: 'list',
         name: configItem.name+"_cat",
         list:getXdrCategories()
-    },el);
+    },d,'xdrcat');
+    d=createXdrLine(el,'Source');
     let selector=createInput({
         type: 'list',
         name: configItem.name+"_sel",
         list:[]
-    },el);
+    },d,'xdrsel');
+    d=createXdrLine(el,'Field');
     let field=createInput({
         type:'list',
         name: configItem.name+'_field',
         list: []
-    },el);
+    },d,'xdrfield');
+    d=createXdrLine(el,'Instance');
     let imode=createInput({
         type:'list',
         name: configItem.name+"_imode",
@@ -365,15 +379,16 @@ function createXdrInput(configItem,frame){
             {l:'ignore',v:1},
             {l:'auto',v:2}
         ]
-    },el);
+    },d,'xdrimode');
     let instance=createInput({
         type:'number',
         name: configItem.name+"_instance",
-    },el);
+    },d,'xdrinstance');
+    d=createXdrLine(el,'Transducer');
     let xdrName=createInput({
         type:'text',
         name: configItem.name+"_xdr"
-    },el);
+    },d,'xdrname');
     let data = addEl('input',undefined,el);
     data.setAttribute('type', 'hidden');
     data.setAttribute('name', configItem.name);
@@ -381,12 +396,17 @@ function createXdrInput(configItem,frame){
         let parts=data.value.split(',');
         direction.value=parts[1] || 0;
         category.value=parts[0] || 0;
-        updateSelectList(selector,getXdrSelectors(category.value));
-        updateSelectList(field,getXdrFields(category.value));
+        let selectors=getXdrSelectors(category.value);
+        updateSelectList(selector,selectors);
+        showHideXdr(selector,selectors.length>0);
+        let fields=getXdrFields(category.value);
+        updateSelectList(field,fields);
+        showHideXdr(field,fields.length>0);
         selector.value=parts[2]||0;
         field.value=parts[3]||0;
         imode.value=parts[4]||0;
         instance.value=parts[5]||0;
+        showHideXdr(instance,imode.value == 0);
         xdrName.value=parts[6]||'';
     }
     let updateFunction = function () {
@@ -398,6 +418,7 @@ function createXdrInput(configItem,frame){
         if (instanceValue>255) instanceValue=255;
         txt+=","+instanceValue;
         let xdr=xdrName.value.replace(/[^a-zA-Z0-9]/g,'');
+        xdr=xdr.substr(0,12);
         txt+=","+xdr;    
         data.value=txt;
         let ev=new Event('change');
