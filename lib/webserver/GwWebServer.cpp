@@ -16,15 +16,12 @@ class EmbeddedFile {
       embeddedFiles[name]=this;
     }
 } ;
-#define EMBED_GZ_FILE(fileName, fileExt, contentType) \
-  extern const uint8_t  fileName##_##fileExt##_File[] asm("_binary_generated_" #fileName "_" #fileExt "_gz_start"); \
-  extern const uint8_t  fileName##_##fileExt##_FileLen[] asm("_binary_generated_" #fileName "_" #fileExt "_gz_size"); \
-  const EmbeddedFile fileName##_##fileExt##_Config(#fileName "." #fileExt,contentType,(const uint8_t*)fileName##_##fileExt##_File,(int)fileName##_##fileExt##_FileLen);
+#define EMBED_GZ_FILE(fileName, binName, contentType) \
+  extern const uint8_t  binName##_File[] asm("_binary_" #binName "_start"); \
+  extern const uint8_t  binName##_FileLen[] asm("_binary_" #binName "_size"); \
+  const EmbeddedFile binName##_Config(fileName,contentType,(const uint8_t*)binName##_File,(int)binName##_FileLen);
 
-EMBED_GZ_FILE(index,html,"text/html")
-EMBED_GZ_FILE(config,json,"application/json")
-EMBED_GZ_FILE(index,js,"text/javascript")
-EMBED_GZ_FILE(index,css,"text/css")
+#include "GwEmbeddedFiles.h"
 
 void sendEmbeddedFile(String name,String contentType,AsyncWebServerRequest *request){
     std::map<String,EmbeddedFile*>::iterator it=embeddedFiles.find(name);
