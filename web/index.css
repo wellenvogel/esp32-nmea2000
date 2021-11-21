@@ -1,3 +1,6 @@
+*{
+  box-sizing: border-box;
+}
 body{
     font-family: Arial, Helvetica, sans-serif;
   }
@@ -88,6 +91,58 @@ body{
   }
   .hidden{
     display: none !important;
+  }
+  #xdrPage .content.hidden {
+    display: unset !important;
+  }
+  #xdrPage .category .title{
+    display: none;
+  }
+  #xdrPage span.label{
+    width: 4em;
+  }
+  #xdrPage .value{
+    width: 24em;
+  }
+  
+  .xdrline {
+    padding-top: 0.2em;
+    padding-bottom: 0.2em;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  .xdrunused{
+    opacity: 0;
+    pointer-events: none;
+  }
+  span.xdrlabel {
+    width: 8em;
+    display: inline-block;
+  } 
+  .xdrinput .xdrdir {
+    width: 12em;
+  }
+  .xdrinput .xdrdir:before {
+    content: 'Direction';
+  }
+  .xdrinput .xdrcat {
+    width: 12em;
+  }
+  .xdrinput .xdrsel {
+    width: 12em;
+  }
+  .xdrinput .xdrfield {
+    width: 12em;
+  }
+  .xdrinput .xdrimode {
+    width: 8em;
+  }
+  .xdrinput .xdrinstance {
+    width: 4em;
+  }
+  .xdrinput .xdrname {
+    width: 16em;
   }
   .msgDetails .value {
       width: 5em;

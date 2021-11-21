@@ -17,6 +17,7 @@
 <div id="tabs">
   <div class="tab active" data-page="statusPage">Status</div>
   <div class="tab" data-page="configPage">Config</div>
+  <div class="tab" data-page="xdrPage">XDR</div>
   <div class="tab" data-page="dashboardPage">Data</div>
 </div>
 <div id="statusPage" class="tabPage">
@@ -54,6 +55,16 @@
     <button id="resetForm">ReloadConfig</button>
     <button id="changeConfig">Save&Restart</button>
     <button id="factoryReset">FactoryReset</button>
+  </div>
+</div>
+<div class="configForm tabPage hidden" id="xdrPage" >
+  <div class="configFormRows">
+
+  </div>
+  <div class="buttons">
+    <button id="resetForm">ReloadConfig</button>
+    <button id="changeConfig">Save&Restart</button>
+    <button id="loadUnassigned">Show Unmapped</button>
   </div>
 </div>
 <div class="tabPage hidden" id="dashboardPage">
