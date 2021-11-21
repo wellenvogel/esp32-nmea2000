@@ -124,7 +124,7 @@ def generateXdrMappings(fp,oh,inFile=''):
                 first=False
             else:
                 oh.write(",\n")
-            oh.write("   new GwXDRTypeMapping(%d,%d,0) /*%s*/"%(cid,tc,cat))
+            oh.write("   new GwXDRTypeMapping(%d,0,%d) /*%s*/"%(cid,tc,cat))
         fields=item.get('fields')
         if fields is None:
             continue
@@ -144,7 +144,7 @@ def generateXdrMappings(fp,oh,inFile=''):
                 first=False
             else:
                 oh.write(",\n")
-            oh.write("   new GwXDRTypeMapping(%d,%d,%d) /*%s:%s*/"%(cid,tc,id,cat,l))
+            oh.write("   new GwXDRTypeMapping(%d,%d,%d) /*%s:%s*/"%(cid,id,tc,cat,l))
     oh.write("\n")
     oh.write("};\n")
 
