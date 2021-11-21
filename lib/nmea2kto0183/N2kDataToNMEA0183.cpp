@@ -1196,6 +1196,23 @@ private:
         SendMessage(nmeaMsg);
     }
 
+    void Handle130312(const tN2kMsg &msg){
+        unsigned char SID=-1;
+        unsigned char TemperatureInstance=0;
+        tN2kTempSource TemperatureSource;
+        double Temperature=N2kDoubleNA;
+        double setTemperature=N2kDoubleNA;
+        if (!ParseN2kPGN130312(msg,SID,TemperatureInstance,TemperatureSource,Temperature,setTemperature)){
+           LOG_DEBUG(GwLog::DEBUG,"unable to parse PGN %d",msg.PGN);
+           return;
+        }
+        GwXDRFoundMapping mapping=xdrMappings->getMapping(XDRTEMP,(int)TemperatureSource,0,TemperatureInstance);
+        if (mapping.empty) return;
+        LOG_DEBUG(GwLog::DEBUG,"found temperature mapping %s",mapping.definition->toString().c_str());
+        addToXdr(buildXdrEntry(mapping,Temperature));
+        finalizeXdr();
+    }
+
     void Handle130314(const tN2kMsg &msg){
         unsigned char SID=-1;
         unsigned char PressureInstance=0;
@@ -1239,6 +1256,7 @@ private:
       converters.registerConverter(127251UL, &N2kToNMEA0183Functions::HandleROT);
       converters.registerConverter(129283UL, &N2kToNMEA0183Functions::HandleXTE);
       converters.registerConverter(129284UL, &N2kToNMEA0183Functions::HandleNavigation);
+      converters.registerConverter(130312UL, &N2kToNMEA0183Functions::Handle130312);
       converters.registerConverter(130314UL, &N2kToNMEA0183Functions::Handle130314);
 #define HANDLE_AIS
 #ifdef HANDLE_AIS
