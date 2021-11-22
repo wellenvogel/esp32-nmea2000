@@ -374,7 +374,7 @@ GwXDRFoundMapping GwXDRMappings::getMapping(GwXDRCategory category,int selector,
     }
     return rt;
 }
-#define MAX_UNKNOWN 200
+
 bool GwXDRMappings::addUnknown(GwXDRCategory category,int selector,int field,int instance){
     if (unknown.size() >= 200) return false;
     unsigned long uk=((int)category) &0x7f;
@@ -388,16 +388,14 @@ bool GwXDRMappings::addUnknown(GwXDRCategory category,int selector,int field,int
     return true;
 }
 
-char * GwXDRMappings::getUnMapped(){
-    const int ESIZE=13;
-    int sz=(unknown.size()+1)*ESIZE;
-    char *rt=new char[sz];
-    *rt=0;
-    char *ptr=rt;
+const char * GwXDRMappings::getUnMapped(){
+    if (unknowAsString == NULL) unknowAsString=new char[(MAX_MAPPINGS+1)*ESIZE];
+    *unknowAsString=0;
+    char *ptr=unknowAsString;
     for (auto it=unknown.begin();it!=unknown.end();it++){
         snprintf(ptr,ESIZE-1,"%lu,",*it);
         *(ptr+ESIZE-1)=0;
         while (*ptr != 0) ptr++;
     }
-    return rt;
+    return unknowAsString;
 }
