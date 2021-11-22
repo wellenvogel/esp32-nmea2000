@@ -201,6 +201,23 @@ String GwXDRMappingDef::getTransducerName(int instance)
     return name;
 }
 
+String GwXDRFoundMapping::buildXdrEntry(double value)
+{
+    char buffer[40];
+    String name = getTransducerName();
+    if (type->tonmea)
+    {
+        value = (*(type->tonmea))(value);
+    }
+    snprintf(buffer, 39, "%s,%.3f,%s,%s",
+             type->xdrtype.c_str(),
+             value,
+             type->xdrunit.c_str(),
+             name.c_str());
+    buffer[39] = 0;
+    return String(buffer);
+}
+
 GwXDRMappings::GwXDRMappings(GwLog *logger, GwConfigHandler *config)
 {
     this->logger = logger;
@@ -393,9 +410,33 @@ const char * GwXDRMappings::getUnMapped(){
     *unknowAsString=0;
     char *ptr=unknowAsString;
     for (auto it=unknown.begin();it!=unknown.end();it++){
-        snprintf(ptr,ESIZE-1,"%lu,",*it);
+        snprintf(ptr,ESIZE-1,"%lu\n",*it);
         *(ptr+ESIZE-1)=0;
         while (*ptr != 0) ptr++;
     }
     return unknowAsString;
+}
+
+String GwXDRMappings::getXdrEntry(String mapping, double value,int instance){
+    String rt;
+    GwXDRMappingDef *def=GwXDRMappingDef::fromString(mapping);
+    if (! def) return rt;
+    int typeIndex=0;
+    GwXDRType::TypeCode code = findTypeMapping(def->category, def->field);
+    if (code == GwXDRType::UNKNOWN)
+    {
+        return rt;
+    }
+    GwXDRType *type = findType(code, &typeIndex);
+    bool first=true;
+    while (type){
+        GwXDRFoundMapping found(def,type);
+        found.instanceId=instance;
+        if (first) first=false;
+        else rt+=",";
+        rt+=found.buildXdrEntry(value);
+        type = findType(code, &typeIndex);
+    }
+    delete def;
+    return rt;
 }

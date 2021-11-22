@@ -421,6 +421,44 @@ protected:
   }
 };
 
+class XdrExampleRequest : public GwRequestMessage
+{
+public:
+  String mapping;
+  double value;
+  XdrExampleRequest(String mapping, double value) : GwRequestMessage(F("text/plain"),F("xdrExample")){
+    this->mapping=mapping;
+    this->value=value;
+  };
+
+protected:
+  virtual void processRequest()
+  {
+    String val=xdrMappings.getXdrEntry(mapping,value);
+    if (val == "") {
+      result=val;
+      return;
+    }
+    tNMEA0183Msg msg;
+    msg.Init("XDR",config.getString(config.talkerId,String("GP")).c_str());
+    msg.AddStrField(val.c_str());
+    char buf[MAX_NMEA0183_MSG_BUF_LEN];
+    msg.GetMessage(buf,MAX_NMEA0183_MSG_BUF_LEN);
+    result=buf;
+  }
+};
+class XdrUnMappedRequest : public GwRequestMessage
+{
+public:
+  XdrUnMappedRequest() : GwRequestMessage(F("text/plain"),F("boatData")){};
+
+protected:
+  virtual void processRequest()
+  {
+    result = xdrMappings.getUnMapped();
+  }
+};
+
 void setup() {
 
   uint8_t chipid[6];
@@ -524,6 +562,14 @@ void setup() {
                               { return new ResetConfigRequest(); });
   webserver.registerMainHandler("/api/boatData", [](AsyncWebServerRequest *request)->GwRequestMessage *
                               { return new BoatDataRequest(); });
+  webserver.registerMainHandler("/api/xdrExample", [](AsyncWebServerRequest *request)->GwRequestMessage *
+                              { 
+                                String mapping=request->arg("mapping");
+                                double value=atof(request->arg("value").c_str());
+                                return new XdrExampleRequest(mapping,value); 
+                              });
+  webserver.registerMainHandler("/api/xdrUnmapped", [](AsyncWebServerRequest *request)->GwRequestMessage *
+                              { return new XdrUnMappedRequest(); });                              
 
   webserver.begin();
   xdrMappings.begin();

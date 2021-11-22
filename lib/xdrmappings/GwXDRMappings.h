@@ -162,6 +162,7 @@ class GwXDRFoundMapping{
         String getTransducerName(){
             return definition->getTransducerName(instanceId);
         }
+        String buildXdrEntry(double value);
 };
 
 //the class GwXDRMappings is not intended to be deleted
@@ -185,6 +186,7 @@ class GwXDRMappings{
         //the returned mapping will exactly contain one mapping def
         GwXDRFoundMapping getMapping(String xName,String xType,String xUnit);
         GwXDRFoundMapping getMapping(GwXDRCategory category,int selector,int field=0,int instance=-1);
+        String getXdrEntry(String mapping, double value,int instance=0);
         const char * getUnMapped();
 
 };
