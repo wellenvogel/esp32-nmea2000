@@ -566,7 +566,9 @@ function findFreeXdr(data){
             el.value=data;
             let ev=new Event('change');
             el.dispatchEvent(ev);
-            el.scrollIntoView();
+            window.setTimeout(function(){
+                cat.scrollIntoView();
+            },50);
         }
         return true;
     });
