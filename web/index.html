@@ -82,6 +82,37 @@
     </div>
   </div>
 </div>
+<div id="xdrHelp" class="hidden">
+  <h1>XDR Help</h1>
+  <p>You can configure the mapping of various NMEA2000 entities to XDR records.</p>
+  <p>To set up such a mapping you select the category, the source of data 
+    (if the category has different sources) and the field (if the category has multiple fields).</p>
+  <p>You have to provide the name of the transducer for the XDR record.</p>  
+  <p>Many of the NMEA2000 messages have an instance id (0..255) to allow
+    for different sources of the data. You need to decide how do you want to
+    map such IDs to XDR records.
+  </p>
+  <ul>
+  <li>IGNORE: the instance id will be ignored</li>
+  <li>AUTO: the instance will be appended to the transducer name: #123</li>
+  <li>SINGLE: just map exactlly one instance to this transducer name</li>
+  </ul>
+  <p>You can also decide if you want a both way mapping, i.e. also map
+    received XDR records back to NMEA 2000.
+  </p>
+  <p>Once you create a mapping the system will show an example of the 
+    generated XDR records (and the accepted ones).
+  </p>
+  <p>To ease the set up the system will track received NMEA2000 data 
+    that it currently does not map.
+    With clicking <span class="txtShowUnmapped">"Show Unmapped"</span> you bring up such a list and for each 
+    found mapping there is a "+" button that will allow you to create a mapping
+    for this record.
+  </p>
+  <p>The set of handled PGNs that can be mapped to XDR records can be found
+    in the documentation.
+  </p>  
+</div>
 </body>
 </html>
 

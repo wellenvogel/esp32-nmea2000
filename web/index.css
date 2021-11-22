@@ -165,6 +165,7 @@ body{
       right: 0;
       background-color: #80808070;
       display: flex;
+      overflow-y: auto;
   }
   
   div#overlay {

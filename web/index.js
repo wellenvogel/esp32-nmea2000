@@ -626,6 +626,12 @@ function loadUnassigned(){
             });
         })
 }
+function showXdrHelp(){
+    let helpContent=document.getElementById('xdrHelp');
+    if (helpContent){
+        showOverlay(helpContent.innerHTML,true);
+    }
+}
 function toggleClass(el,id,classList){
     let nc=classList[id];
     let rt=false;
@@ -707,7 +713,14 @@ function createConfigDefinitions(parent, capabilities, defs,includeXdr) {
         })
         bt = addEl('button', 'infoButton', btContainer, '?');
         bt.addEventListener('click', function (ev) {
-            showOverlay(item.description);
+            if (item.description){
+                showOverlay(item.description);
+            }
+            else{
+                if (item.category.match(/^xdr/)){
+                    showXdrHelp();
+                }
+            }
         });
     })
 }
