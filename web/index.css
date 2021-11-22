@@ -146,7 +146,10 @@ body{
   .xdrexample {
     max-width: 16em;
     overflow: auto;
-}
+  }
+  button.addunassigned {
+    margin-left: 1em;
+  }
   .msgDetails .value {
       width: 5em;
       text-align: right;

@@ -236,8 +236,8 @@ function checkChange(el, row) {
         }
     }
 }
-let configDefinitions;
-let xdrConfig;
+let configDefinitions={};
+let xdrConfig={};
 function createInput(configItem, frame,clazz) {
     let el;
     if (configItem.type === 'boolean' || configItem.type === 'list') {
@@ -309,25 +309,32 @@ function getXdrCategories(){
     }
     return rt;
 }
-function getXdrSelectors(category){
-    category=parseInt(category);
+function getXdrCategoryName(cid){
+    category=parseInt(cid);
     for (let c in xdrConfig){
         let base=xdrConfig[c];
         if (parseInt(base.id) == category){
-            return base.selector || [];
+            return c;
         }
     }
-    return [];
+}
+function getXdrCategory(cid){
+    category=parseInt(cid);
+    for (let c in xdrConfig){
+        let base=xdrConfig[c];
+        if (parseInt(base.id) == category){
+            return base;
+        }
+    }
+    return {};
+}
+function getXdrSelectors(category){
+    let base=getXdrCategory(category);
+    return base.selector || [];
 }
 function getXdrFields(category){
-    category=parseInt(category);
-    for (let c in xdrConfig){
-        let base=xdrConfig[c];
-        if (parseInt(base.id) == category){
-            return base.fields || [];
-        }
-    }
-    return [];
+    let base=getXdrCategory(category);
+    return base.fields || [];
 }
 
 function createXdrLine(parent,label){
@@ -565,6 +572,60 @@ function findFreeXdr(data){
     });
 }
 
+function convertUnassigned(value){
+    let rt={};
+    value=parseInt(value);
+    if (isNaN(value)) return;
+    //see GwXDRMappings::addUnknown
+    let instance=value & 0x1ff;
+    value = value >> 9;
+    let field=value & 0x7f;
+    value = value >> 7;
+    let selector=value & 0x7f;
+    value = value >> 7;
+    let cid=value & 0x7f;
+    let category=getXdrCategory(cid);
+    let cname=getXdrCategoryName(cid);
+    if (! cname) return rt;
+    let fieldName="";
+    (category.fields || []).forEach(function(f){
+        if (parseInt(f.v) == field) fieldName=f.l;
+    });
+    let selectorName=selector+"";
+    (category.selector ||[]).forEach(function(s){
+        if (parseInt(s.v) == selector) selectorName=s.l;
+    });
+    rt.l=cname+","+selectorName+","+fieldName+","+instance;
+    rt.v=cid+",1,"+selector+","+field+",1,"+instance+",";
+    return rt;
+}
+
+function unassignedAdd(ev) {
+    let dv = ev.target.getAttribute('data-value');
+    if (dv) {
+        findFreeXdr(dv);
+        hideOverlay();
+    }
+}
+function loadUnassigned(){
+    getText("/api/xdrUnmapped")
+        .then(function(txt){
+            let ot="";
+            txt.split('\n').forEach(function(line){
+                let cv=convertUnassigned(line);
+                if (!cv || !cv.l) return;
+                ot+='<div class="xdrunassigned"><span>'+
+                    cv.l+'</span>'+
+                    '<button class="addunassigned" data-value="'+
+                    cv.v+
+                    '">+</button></div>';
+            })
+            showOverlay(ot,true);
+            forEl('.addunassigned',function(bt){
+                bt.onclick=unassignedAdd;
+            });
+        })
+}
 function toggleClass(el,id,classList){
     let nc=classList[id];
     let rt=false;
