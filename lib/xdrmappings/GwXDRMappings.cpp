@@ -1,5 +1,6 @@
 #include "GwXDRMappings.h"
 #include "N2kMessages.h"
+
 double PtoBar(double v)
 {
     if (N2kIsNA(v))
@@ -189,6 +190,16 @@ GwXDRMappingDef *GwXDRMappingDef::fromString(String s)
     }
     return rt;
 }
+String GwXDRMappingDef::getTransducerName(int instance)
+{
+    String name = xdrName;
+    if (instanceMode == GwXDRMappingDef::IS_AUTO)
+    {
+        name += "#";
+        name += String(instance);
+    }
+    return name;
+}
 
 GwXDRMappings::GwXDRMappings(GwLog *logger, GwConfigHandler *config)
 {
@@ -373,6 +384,20 @@ bool GwXDRMappings::addUnknown(GwXDRCategory category,int selector,int field,int
     uk=(uk<<7) + (field & 0x7f);
     if (instance < 0 || instance > 255) instance=256; //unknown
     uk=(uk << 9) + (instance & 0x1ff);
-    unknown.push_back(uk);
+    unknown.insert(uk);
     return true;
+}
+
+char * GwXDRMappings::getUnMapped(){
+    const int ESIZE=13;
+    int sz=(unknown.size()+1)*ESIZE;
+    char *rt=new char[sz];
+    *rt=0;
+    char *ptr=rt;
+    for (auto it=unknown.begin();it!=unknown.end();it++){
+        snprintf(ptr,ESIZE-1,"%lu,",*it);
+        *(ptr+ESIZE-1)=0;
+        while (*ptr != 0) ptr++;
+    }
+    return rt;
 }

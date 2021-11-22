@@ -7,6 +7,8 @@ import inspect
 import json
 from datetime import datetime
 Import("env")
+#print(env.Dump())
+OWN_FILE="extra_script.py"
 GEN_DIR='generated'
 CFG_FILE='web/config.json'
 XDR_FILE='web/xdrconfig.json'
@@ -43,6 +45,11 @@ def isCurrent(infile,outfile):
         otime=os.path.getmtime(outfile)
         itime=os.path.getmtime(infile)
         if (otime >= itime):
+            own=os.path.join(basePath(),OWN_FILE)
+            if os.path.exists(own):
+                owntime=os.path.getmtime(own)
+                if owntime > otime:
+                    return False
             print("%s is newer then %s, no need to recreate"%(outfile,infile))
             return True
     return False        

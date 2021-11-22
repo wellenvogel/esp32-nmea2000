@@ -5,6 +5,7 @@
 #include <WString.h>
 #include <vector>
 #include <map>
+#include <unordered_set>
 //enum must match the defines in xdrconfig.json
 typedef enum {
     XDRTEMP=0,
@@ -124,6 +125,7 @@ class GwXDRMappingDef{
         rt += xdrUnit;
         return rt;
     }
+    String getTransducerName(int instance);
     private:
     static bool handleToken(String tok,int index,GwXDRMappingDef *def);
 };
@@ -157,6 +159,9 @@ class GwXDRFoundMapping{
             empty=false;
         }
         GwXDRFoundMapping(){}
+        String getTransducerName(){
+            return definition->getTransducerName(instanceId);
+        }
 };
 
 class GwXDRMappings{
@@ -165,7 +170,7 @@ class GwXDRMappings{
      GwConfigHandler *config;
      GwXDRMapping::N138Map n183Map;
      GwXDRMapping::N2KMap n2kMap;
-     std::vector<unsigned long> unknown;
+     std::unordered_set<unsigned long> unknown;
      GwXDRFoundMapping selectMapping(GwXDRMapping::MappingList *list,int instance,const char * key);
      bool addUnknown(GwXDRCategory category,int selector,int field=0,int instance=-1);
     public:
@@ -175,6 +180,8 @@ class GwXDRMappings{
         //the returned mapping will exactly contain one mapping def
         GwXDRFoundMapping getMapping(String xName,String xType,String xUnit);
         GwXDRFoundMapping getMapping(GwXDRCategory category,int selector,int field=0,int instance=-1);
+        //returns a newly created buffer - user must destroy!
+        char * getUnMapped();
 
 };
 
