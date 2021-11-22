@@ -110,9 +110,39 @@ function checkApPass(v) {
         return "password must be at least 8 characters";
     }
 }
+function checkXDR(v,allValues){
+    if (! v) return;
+    let parts=v.split(',');
+    if (parseInt(parts[1])  == 0) return;
+    if (parseInt(parts[1]) != 0 && ! parts[6]) return "missing transducer name";
+    for (let k in allValues){
+        if (! k.match(/^XDR/)) continue;
+        let cmp=allValues[k];
+        if (cmp == v){
+            return "same mapping already defined in "+k;
+        }
+        let cmpParts=cmp.split(',');
+        if (parseInt(cmpParts[1]) != 0 && parts[6] == cmpParts[6]){
+            return "transducer "+parts[6]+" already defined in "+k;
+        }
+        //check similar mappings
+        if (parts[0]==cmpParts[0] && parts[2] == cmpParts[2] && parts[3] == cmpParts[3]){
+            if (parts[4] == cmpParts[4] && parts[5] == cmpParts[5]){
+                return "mapping for the same entity already defined in "+k;
+            }
+            if ((parseInt(parts[4]) == 0 && parseInt(cmpParts[4]) == 1)||
+            (parseInt(parts[4]) == 1 && parseInt(cmpParts[4]) == 0)
+            ){
+                //ignore and single for the same mapping
+                return "mapping for the same entity already defined in "+k;
+            }
+        }
+    }
+}
 function changeConfig() {
     let url = "/api/setConfig?";
     let values = document.querySelectorAll('.configForm select , .configForm input');
+    let allValues={};
     for (let i = 0; i < values.length; i++) {
         let v = values[i];
         let name = v.getAttribute('name');
@@ -121,7 +151,7 @@ function changeConfig() {
         let check = v.getAttribute('data-check');
         if (check) {
             if (typeof (self[check]) === 'function') {
-                let res = self[check](v.value);
+                let res = self[check](v.value,allValues);
                 if (res) {
                     let value = v.value;
                     if (v.type === 'password') value = "******";
@@ -130,6 +160,7 @@ function changeConfig() {
                 }
             }
         }
+        allValues[name]=v.value;
         url += name + "=" + encodeURIComponent(v.value) + "&";
     }
     getJson(url)
@@ -484,7 +515,8 @@ function createXdrInput(configItem,frame){
 
 function isXdrUsed(element){
     let parts=element.value.split(',');
-    if (! parts[0]) return false;
+    if (! parts[1]) return false;
+    if (! parseInt(parts[1])) return false;
     if (! parts[6]) return false;
     return true;
 }
