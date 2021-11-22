@@ -331,7 +331,7 @@ GwXDRFoundMapping GwXDRMappings::selectMapping(GwXDRMapping::MappingList *list,i
             switch(def->instanceMode){
                 case GwXDRMappingDef::IS_SINGLE:
                     if (def->instanceId == instance){
-                        LOG_DEBUG(GwLog::DEBUG,"selected mapping %s for %s, i=%d",
+                        LOG_DEBUG(GwLog::DEBUG+1,"selected mapping %s for %s, i=%d",
                             def->toString().c_str(),key,instance);
                         return GwXDRFoundMapping(*mit,instance); 
                     }
@@ -348,11 +348,11 @@ GwXDRFoundMapping GwXDRMappings::selectMapping(GwXDRMapping::MappingList *list,i
         }
     }
     if (candidate != NULL){
-        LOG_DEBUG(GwLog::DEBUG,"selected mapping %s for %s, i=%d",
+        LOG_DEBUG(GwLog::DEBUG+1,"selected mapping %s for %s, i=%d",
             candidate->definition->toString().c_str(),key,instance);
         return GwXDRFoundMapping(candidate,instance);
     }
-    LOG_DEBUG(GwLog::DEBUG,"no instance mapping found for key=%s, i=%d",key,instance);
+    LOG_DEBUG(GwLog::DEBUG+1,"no instance mapping found for key=%s, i=%d",key,instance);
     return GwXDRFoundMapping();
 }
 GwXDRFoundMapping GwXDRMappings::getMapping(String xName,String xType,String xUnit){
@@ -368,7 +368,7 @@ GwXDRFoundMapping GwXDRMappings::getMapping(String xName,String xType,String xUn
     String n183Key=GwXDRMappingDef::n183key(xName,xType,xUnit);
     auto it=n183Map.find(n183Key);
     if (it == n183Map.end()) {
-        LOG_DEBUG(GwLog::DEBUG,"find n183mapping for %s,i=%d - nothing found",n183Key.c_str(),instance);
+        LOG_DEBUG(GwLog::DEBUG+1,"find n183mapping for %s,i=%d - nothing found",n183Key.c_str(),instance);
         return GwXDRFoundMapping();
     }
     return selectMapping(&(it->second),instance,n183Key.c_str());
@@ -377,7 +377,7 @@ GwXDRFoundMapping GwXDRMappings::getMapping(GwXDRCategory category,int selector,
     unsigned long n2kKey=GwXDRMappingDef::n2kKey(category,selector,field);
     auto it=n2kMap.find(n2kKey);
     if (it == n2kMap.end()){
-        LOG_DEBUG(GwLog::DEBUG,"find n2kmapping for c=%d,s=%d,f=%d,i=%d - nothing found",
+        LOG_DEBUG(GwLog::DEBUG+1,"find n2kmapping for c=%d,s=%d,f=%d,i=%d - nothing found",
             (int)category,selector,field,instance);
         addUnknown(category,selector,field,instance);    
         return GwXDRFoundMapping();

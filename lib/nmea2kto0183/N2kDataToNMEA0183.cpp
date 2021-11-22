@@ -70,20 +70,6 @@ private:
     tNMEA0183Msg xdrMessage;
     bool xdrOpened=false;
 
-    String buildXdrEntry(GwXDRFoundMapping &mapping,double value){
-        char buffer[40];
-        String name=mapping.getTransducerName();
-        if (mapping.type->tonmea){
-            value=(* (mapping.type->tonmea))(value);
-        }
-        snprintf(buffer,39,"%s,%.3f,%s,%s",
-            mapping.type->xdrtype.c_str(),
-            value,
-            mapping.type->xdrunit.c_str(),
-            name.c_str());
-        buffer[39]=0;    
-        return String(buffer);
-    }
     bool addToXdr(String entry){
         if (! xdrOpened){
             xdrMessage.Init("XDR",talkerId);
@@ -1202,8 +1188,8 @@ private:
         }
         GwXDRFoundMapping mapping=xdrMappings->getMapping(XDRTEMP,(int)TemperatureSource,0,TemperatureInstance);
         if (mapping.empty) return;
-        LOG_DEBUG(GwLog::DEBUG,"found temperature mapping %s",mapping.definition->toString().c_str());
-        addToXdr(buildXdrEntry(mapping,Temperature));
+        LOG_DEBUG(GwLog::DEBUG+1,"found temperature mapping %s",mapping.definition->toString().c_str());
+        addToXdr(mapping.buildXdrEntry(Temperature));
         finalizeXdr();
     }
 
@@ -1219,8 +1205,8 @@ private:
         }
         GwXDRFoundMapping mapping=xdrMappings->getMapping(XDRHUMIDITY,(int)HumiditySource,0,HumidityInstance);
         if (mapping.empty) return;
-        LOG_DEBUG(GwLog::DEBUG,"found humidity mapping %s",mapping.definition->toString().c_str());
-        addToXdr(buildXdrEntry(mapping,ActualHumidity));
+        LOG_DEBUG(GwLog::DEBUG+1,"found humidity mapping %s",mapping.definition->toString().c_str());
+        addToXdr(mapping.buildXdrEntry(ActualHumidity));
         finalizeXdr();
     }
 
@@ -1236,8 +1222,8 @@ private:
         }
         GwXDRFoundMapping mapping=xdrMappings->getMapping(XDRPRESSURE,(int)PressureSource,0,PressureInstance);
         if (mapping.empty) return;
-        LOG_DEBUG(GwLog::DEBUG,"found pressure mapping %s",mapping.definition->toString().c_str());
-        addToXdr(buildXdrEntry(mapping,ActualPressure));
+        LOG_DEBUG(GwLog::DEBUG+1,"found pressure mapping %s",mapping.definition->toString().c_str());
+        addToXdr(mapping.buildXdrEntry(ActualPressure));
         finalizeXdr();
     }
 
