@@ -421,10 +421,16 @@ function createXdrInput(configItem,frame){
             if (used) {
                 el.classList.add('xdrcused');
                 el.classList.remove('xdrcunused');
+                forEl('.categoryAdd',function(add){
+                    add.textContent=xdrName.value;
+                },el);
             }
             else {
                 el.classList.remove('xdrcused');
                 el.classList.add('xdrcunused');
+                forEl('.categoryAdd',function(add){
+                    add.textContent='';
+                },el);
             }
             if (modified){
                 el.classList.add('changed');
@@ -542,6 +548,7 @@ function createConfigDefinitions(parent, capabilities, defs,includeXdr) {
             let categoryTitle = addEl('div', 'title', categoryFrame);
             let categoryButton = addEl('span', 'icon icon-more', categoryTitle);
             addEl('span', 'label', categoryTitle, item.category);
+            addEl('span','categoryAdd',categoryTitle);
             categoryEl = addEl('div', 'content', categoryFrame);
             categoryEl.classList.add('hidden');
             let currentEl = categoryEl;
