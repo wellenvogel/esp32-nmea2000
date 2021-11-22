@@ -326,9 +326,11 @@ function createInput(configItem, frame,clazz) {
 
 function updateSelectList(item,slist){
     item.innerHTML='';
+    let idx=0;
     slist.forEach(function (sitem) {
         let sitemEl = addEl('option','',item,sitem.l);
-        sitemEl.setAttribute('value', sitem.v);
+        sitemEl.setAttribute('value', sitem.v !== undefined?sitem.v:idx);
+        idx++;
     })
 }
 function getXdrCategories(){
@@ -365,7 +367,14 @@ function getXdrSelectors(category){
 }
 function getXdrFields(category){
     let base=getXdrCategory(category);
-    return base.fields || [];
+    if (!base.fields) return [];
+    let rt=[];
+    base.fields.forEach(function(f){
+        if (f.t === undefined) return;
+        if (parseInt(f.t) == 99) return; //unknown type
+        rt.push(f);
+    });
+    return rt;
 }
 
 function createXdrLine(parent,label){
@@ -487,7 +496,12 @@ function createXdrInput(configItem,frame){
             example.textContent='';
         }
     }
-    let updateFunction = function () {
+    let updateFunction = function (evt) {
+        if (evt.target == category){
+            selector.value=0;
+            field.value=0;
+            instance.value=0;
+        }
         let txt=category.value+","+direction.value+","+
             selector.value+","+field.value+","+imode.value;
         let instanceValue=parseInt(instance.value||0);
