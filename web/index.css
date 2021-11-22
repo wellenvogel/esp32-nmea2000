@@ -31,10 +31,13 @@ body{
       margin-left: 1em;
   }
   .changed input{
-      color: green
+      color: green;
   }
   .changed select{
-      color: green
+      color: green;
+  }
+  .category.changed{
+    color: green;
   }
   span.label {
       width: 10em;
@@ -92,19 +95,15 @@ body{
   .hidden{
     display: none !important;
   }
-  #xdrPage .content.hidden {
-    display: unset !important;
-  }
-  #xdrPage .category .title{
+  #xdrPage .row>.label{
     display: none;
-  }
-  #xdrPage span.label{
-    width: 4em;
   }
   #xdrPage .value{
     width: 24em;
   }
-  
+  .xdrcunused .title{
+    opacity: 0.6;
+  }
   .xdrline {
     padding-top: 0.2em;
     padding-bottom: 0.2em;
@@ -144,6 +143,10 @@ body{
   .xdrinput .xdrname {
     width: 16em;
   }
+  .xdrexample {
+    max-width: 16em;
+    overflow: auto;
+}
   .msgDetails .value {
       width: 5em;
       text-align: right;

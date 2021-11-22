@@ -30,6 +30,10 @@ function getJson(url) {
     return fetch(url)
         .then(function (r) { return r.json() });
 }
+function getText(url){
+    return fetch(url)
+        .then(function (r) { return r.text() });
+}
 function reset() {
     fetch('/api/reset');
     alertRestart();
@@ -338,6 +342,7 @@ function showHideXdr(el,show,useParent){
 }
 
 function createXdrInput(configItem,frame){
+    let configCategory=configItem.category;
     let el = addEl('div','xdrinput',frame);
     let d=createXdrLine(el,'Direction');
     let direction=createInput({
@@ -389,7 +394,9 @@ function createXdrInput(configItem,frame){
         type:'text',
         name: configItem.name+"_xdr"
     },d,'xdrname');
-    let data = addEl('input',undefined,el);
+    d=createXdrLine(el,'Example');
+    let example=addEl('div','xdrexample',d,'');
+    let data = addEl('input','xdrvalue',el);
     data.setAttribute('type', 'hidden');
     data.setAttribute('name', configItem.name);
     let changeFunction = function () {
@@ -408,6 +415,33 @@ function createXdrInput(configItem,frame){
         instance.value=parts[5]||0;
         showHideXdr(instance,imode.value == 0);
         xdrName.value=parts[6]||'';
+        let used=isXdrUsed(data);
+        let modified=data.value != data.getAttribute('data-loaded');
+        forEl('[data-category='+configCategory+']',function(el){
+            if (used) {
+                el.classList.add('xdrcused');
+                el.classList.remove('xdrcunused');
+            }
+            else {
+                el.classList.remove('xdrcused');
+                el.classList.add('xdrcunused');
+            }
+            if (modified){
+                el.classList.add('changed');
+            }
+            else{
+                el.classList.remove('changed');
+            }
+        });
+        if (used){
+            getText('/api/xdrExample?mapping='+encodeURIComponent(data.value)+'&value=2.1')
+                .then(function(txt){
+                    example.textContent=txt;
+                })
+        }
+        else{
+            example.textContent='';
+        }
     }
     let updateFunction = function () {
         let txt=category.value+","+direction.value+","+
@@ -433,6 +467,13 @@ function createXdrInput(configItem,frame){
     xdrName.addEventListener('change',updateFunction);
     data.addEventListener('change',changeFunction);
     return data;
+}
+
+function isXdrUsed(element){
+    let parts=element.value.split(',');
+    if (! parts[0]) return false;
+    if (! parts[6]) return false;
+    return true;
 }
 
 function createFilterInput(configItem, frame) {
@@ -489,9 +530,15 @@ function createConfigDefinitions(parent, capabilities, defs,includeXdr) {
     configDefinitions = defs;
     defs.forEach(function (item) {
         if (!item.type) return;
-        if ((item.category === 'xdr') !== includeXdr) return; 
+        if (item.category.match(/^xdr/)){
+            if (! includeXdr) return;
+        }
+        else{
+            if(includeXdr) return;
+        } 
         if (item.category != category || !categoryEl) {
             let categoryFrame = addEl('div', 'category', frame);
+            categoryFrame.setAttribute('data-category',item.category)
             let categoryTitle = addEl('div', 'title', categoryFrame);
             let categoryButton = addEl('span', 'icon icon-more', categoryTitle);
             addEl('span', 'label', categoryTitle, item.category);
