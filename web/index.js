@@ -526,6 +526,56 @@ function createFilterInput(configItem, frame) {
     data.setAttribute('name', configItem.name);
     return data;
 }
+let moreicons=['icon-more','icon-less'];
+
+function collapseCategories(parent,expand){
+    let doExpand=expand;
+    forEl('.category',function(cat){
+        if (typeof(expand) === 'function') doExpand=expand(cat);
+        forEl('.content',function(content){
+            if (doExpand){
+                content.classList.remove('hidden');
+            }
+            else{
+                content.classList.add('hidden');
+            }
+        },cat);
+        forEl('.title .icon',function(icon){
+            toggleClass(icon,doExpand?1:0,moreicons);    
+        },cat);
+    },parent);
+}
+
+function findFreeXdr(data){
+    let page=document.getElementById('xdrPage');
+    let el=undefined;
+    collapseCategories(page,function(cat){
+        if (el) return false;
+        let vEl=cat.querySelector('.xdrvalue');
+        if (!vEl) return false;
+        if (isXdrUsed(vEl)) return false;
+        el=vEl;
+        if (data){
+            el.value=data;
+            let ev=new Event('change');
+            el.dispatchEvent(ev);
+            el.scrollIntoView();
+        }
+        return true;
+    });
+}
+
+function toggleClass(el,id,classList){
+    let nc=classList[id];
+    let rt=false;
+    if (nc && !el.classList.contains(nc)) rt=true;
+    for (let i in classList){
+        if (i == id) continue;
+        el.classList.remove(classList[i])
+    }
+    if (nc) el.classList.add(nc);
+    return rt;
+}
 
 function createConfigDefinitions(parent, capabilities, defs,includeXdr) {
     let category;
@@ -555,12 +605,10 @@ function createConfigDefinitions(parent, capabilities, defs,includeXdr) {
             categoryTitle.addEventListener('click', function (ev) {
                 let rs = currentEl.classList.toggle('hidden');
                 if (rs) {
-                    categoryButton.classList.add('icon-more');
-                    categoryButton.classList.remove('icon-less');
+                    toggleClass(categoryButton,0,moreicons);
                 }
                 else {
-                    categoryButton.classList.remove('icon-more');
-                    categoryButton.classList.add('icon-less');
+                    toggleClass(categoryButton,1,moreicons);
                 }
             })
             category = item.category;
