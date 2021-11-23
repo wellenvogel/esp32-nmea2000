@@ -147,6 +147,11 @@ body{
     max-width: 16em;
     overflow: auto;
   }
+  .uploadXdr{
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+  }
   button.addunassigned {
     margin-left: 1em;
   }

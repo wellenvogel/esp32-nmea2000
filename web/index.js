@@ -680,6 +680,82 @@ function showXdrHelp(){
         showOverlay(helpContent.innerHTML,true);
     }
 }
+function formatDate(d){
+    if (! d) d=new Date();
+    let rt=""+d.getFullYear();
+    let v=d.getMonth();
+    if (v < 10) rt+="0"+v;
+    else rt+=v;
+    v=d.getDate();
+    if (v < 10) rt+="0"+v;
+    else rt+=v;
+    return rt;
+}
+function exportXdr(){
+    let data={};
+    forEl('.xdrvalue',function(el) {
+        let name=el.getAttribute('name');
+        let value=el.value;
+        let err=checkXDR(value,data);
+        if (err){
+            alert("error in "+name+": "+value+"\n"+err);
+            return;
+        }
+        data[name]=value;
+    })
+    let url="data:application/octet-stream,"+encodeURIComponent(JSON.stringify(data,undefined,2));
+    let target=document.getElementById('downloadXdr');
+    if (! target) return;
+    target.setAttribute('href',url);
+    target.setAttribute('download',"xdr"+formatDate()+".json");
+    target.click();
+}
+function importXdr(){
+    forEl('.uploadXdr',function(ul){
+        ul.remove();
+    });
+    let ip=addEl('input','uploadXdr',document.body);
+    ip.setAttribute('type','file');
+    ip.addEventListener('change',function(ev){
+        if (ip.files.length > 0){
+            let f=ip.files[0];
+            let reader=new FileReader();
+            reader.onloadend=function(status){
+                try{
+                    let idata=JSON.parse(reader.result);
+                    let hasOverwrites=false;
+                    for (let k in idata){
+                        if (! k.match(/^XDR[0-9][0-9]*/)){
+                            alert("file contains invalid key "+k);
+                            return;
+                        }
+                        let del=document.querySelector('input[name='+k+']');
+                        if (del){
+                            hasOverwrites=true;
+                        }        
+                    }
+                    if (hasOverwrites){
+                        if (!confirm("overwrite existing data?")) return;
+                    }
+                    for (let k in idata){
+                        let del=document.querySelector('input[name='+k+']');
+                        if (del){
+                            del.value=idata[k];
+                            let ev=new Event('change');
+                            del.dispatchEvent(ev);
+                        }
+                    }
+                }catch (error){
+                    alert("unable to parse upload: "+error);
+                    return;
+                }
+            };
+            reader.readAsBinaryString(f);
+        }
+        ip.remove();
+    });
+    ip.click(); 
+}
 function toggleClass(el,id,classList){
     let nc=classList[id];
     let rt=false;
