@@ -10,6 +10,16 @@ GwBoatData::~GwBoatData(){
     }
 }
 
+template<class T> GwBoatItem<T> *GwBoatData::getOrCreate(T dummy, String name, String format,
+                                                  unsigned long invalidTime)
+{
+    for (auto it=values.begin();it != values.end();it++){
+        if ((*it)->getName() == name){
+            return *it;
+        }
+    }
+    return new GwBoatItem<T>(name,format,invalidTime,&values);
+}
 String GwBoatData::toJson() const {
     unsigned long minTime=millis();
     GwBoatItemBase::GwBoatItemMap::const_iterator it;
