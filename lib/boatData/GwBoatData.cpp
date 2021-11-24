@@ -6,20 +6,42 @@ GwBoatData::GwBoatData(GwLog *logger){
 GwBoatData::~GwBoatData(){
     GwBoatItemBase::GwBoatItemMap::iterator it;
     for (it=values.begin() ; it != values.end();it++){
-        delete *it;
+        delete it->second;
     }
 }
 
-template<class T> GwBoatItem<T> *GwBoatData::getOrCreate(T dummy, String name, String format,
-                                                  unsigned long invalidTime)
+template<class T> GwBoatItem<T> *GwBoatData::getOrCreate(T initial, GwBoatItemNameProvider *provider)
 {
-    for (auto it=values.begin();it != values.end();it++){
-        if ((*it)->getName() == name){
-            return *it;
+    String name=provider->getBoatItemName();
+    auto it=values.find(name);
+    if (it != values.end()) {
+        int expectedType=GwBoatItemTypes::getType(initial);
+        if (expectedType != it->second->getCurrentType()){
+            return NULL;
         }
+        return (GwBoatItem<T>*)(it->second);
     }
-    return new GwBoatItem<T>(name,format,invalidTime,&values);
+    GwBoatItem<T> *rt=new GwBoatItem<T>(GwBoatItemTypes::getType(initial), name,
+        provider->getBoatItemFormat(),
+        provider->getInvalidTime(),
+        &values);
+    rt->update(initial);
+    return rt;
 }
+template<class T> bool GwBoatData::update(T value,int source,GwBoatItemNameProvider *provider){
+    GwBoatItem<T> *item=getOrCreate(value,provider);
+    if (! item) return false;
+    return item->update(value,source);
+}
+template bool GwBoatData::update<double>(double value,int source,GwBoatItemNameProvider *provider);
+template<class T> T GwBoatData::getDataWithDefault(T defaultv, GwBoatItemNameProvider *provider){
+    auto it=values.find(provider->getBoatItemName());
+    if (it == values.end()) return defaultv;
+    int expectedType=GwBoatItemTypes::getType(defaultv);
+    if (expectedType != it->second->getCurrentType()) return defaultv;
+    return ((GwBoatItem<T> *)(it->second))->getDataWithDefault(defaultv);
+}
+template double GwBoatData::getDataWithDefault<double>(double defaultv, GwBoatItemNameProvider *provider);
 String GwBoatData::toJson() const {
     unsigned long minTime=millis();
     GwBoatItemBase::GwBoatItemMap::const_iterator it;
@@ -27,11 +49,11 @@ String GwBoatData::toJson() const {
     size_t elementSizes=0;
     for (it=values.begin() ; it != values.end();it++){
         count++;
-        elementSizes+=(*it)->getJsonSize();
+        elementSizes+=it->second->getJsonSize();
     }
     DynamicJsonDocument json(JSON_OBJECT_SIZE(count)+elementSizes+10);
     for (it=values.begin() ; it != values.end();it++){
-        (*it)->toJsonDoc(&json,minTime);
+        it->second->toJsonDoc(&json,minTime);
     }
     String buf;
     serializeJson(json,buf);

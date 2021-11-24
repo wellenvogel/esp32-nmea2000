@@ -1222,6 +1222,7 @@ private:
         }
         GwXDRFoundMapping mapping=xdrMappings->getMapping(XDRPRESSURE,(int)PressureSource,0,PressureInstance);
         if (mapping.empty) return;
+        if (! boatData->update(ActualPressure,sourceId,&mapping)) return;
         LOG_DEBUG(GwLog::DEBUG+1,"found pressure mapping %s",mapping.definition->toString().c_str());
         addToXdr(mapping.buildXdrEntry(ActualPressure));
         finalizeXdr();
