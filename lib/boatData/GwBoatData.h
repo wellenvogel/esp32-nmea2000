@@ -4,9 +4,21 @@
 #include "GwLog.h"
 #include <ArduinoJson.h>
 #include <Arduino.h>
-#include <vector>
+#include <map>
 #define GW_BOAT_VALUE_LEN 32
 #define GWSC(name) static constexpr const __FlashStringHelper* name=F(#name)
+#define GWTYPE_DOUBLE 1
+#define GWTYPE_UINT32 2
+#define GWTYPE_UINT16 3
+#define GWTYPE_INT16 4
+#define GWTYPE_USER 100
+class GwBoatItemTypes{
+    public:
+        static int getType(const uint32_t &x){return GWTYPE_UINT32;}
+        static int getType(const uint16_t &x){return GWTYPE_UINT16;}
+        static int getType(const int16_t &x){return GWTYPE_INT16;}
+        static int getType(const double &x){return GWTYPE_DOUBLE;}
+};
 class GwBoatItemBase{
     public:
         static const unsigned long INVALID_TIME=60000;
@@ -23,8 +35,9 @@ class GwBoatItemBase{
         GWSC(mtr2nm);
         GWSC(formatDop);
         GWSC(formatRot);
-        typedef std::vector<GwBoatItemBase*> GwBoatItemMap;
+        typedef std::map<String,GwBoatItemBase*> GwBoatItemMap;
     protected:
+        int type;
         unsigned long lastSet=0;
         unsigned long invalidTime=INVALID_TIME;
         String name;
@@ -34,6 +47,7 @@ class GwBoatItemBase{
             else lastSet=millis();
         }
     public:
+        int getCurrentType(){return type;}
         unsigned long getLastSet() const {return lastSet;}
         bool isValid(unsigned long now=0) const {
             if (lastSet == 0) return false;
@@ -46,13 +60,14 @@ class GwBoatItemBase{
             this->invalidTime=invalidTime;
             this->name=name;
             this->format=format;
+            this->type=0;
         }
         virtual ~GwBoatItemBase(){}
         void invalidate(){
             lastSet=0;
         }
         virtual void toJsonDoc(JsonDocument *doc, unsigned long minTime)=0;
-        virtual size_t getJsonSize(){return JSON_OBJECT_SIZE(15);}
+        virtual size_t getJsonSize(){return JSON_OBJECT_SIZE(10);}
         virtual int getLastSource()=0;
         virtual void refresh(unsigned long ts=0){uls(ts);}
         String getName(){return name;}
@@ -63,10 +78,11 @@ template<class T> class GwBoatItem : public GwBoatItemBase{
         T data;
         int lastUpdateSource;
     public:
-        GwBoatItem(String name,String formatInfo,unsigned long invalidTime=INVALID_TIME,GwBoatItemMap *map=NULL):
+        GwBoatItem(int type,String name,String formatInfo,unsigned long invalidTime=INVALID_TIME,GwBoatItemMap *map=NULL):
             GwBoatItemBase(name,formatInfo,invalidTime){
+            this->type=type;
             if (map){
-                map->push_back(this);
+                (*map)[name]=this;
             }
             lastUpdateSource=-1;
         }
@@ -77,7 +93,7 @@ template<class T> class GwBoatItem : public GwBoatItemBase{
                 //priority handling
                 //sources with lower ids will win
                 //and we will not overwrite their value
-                if (lastUpdateSource < source){
+                if (lastUpdateSource < source && lastUpdateSource >= 0){
                     return false;
                 }
             }
@@ -171,7 +187,8 @@ bool convertToJson(const GwSatInfoList &si,JsonVariant &variant);
 class GwBoatDataSatList : public GwBoatItem<GwSatInfoList>
 {
 public:
-    GwBoatDataSatList(String name, String formatInfo, unsigned long invalidTime = INVALID_TIME, GwBoatItemMap *map = NULL) : GwBoatItem<GwSatInfoList>(name, formatInfo, invalidTime, map) {}
+    GwBoatDataSatList(String name, String formatInfo, unsigned long invalidTime = INVALID_TIME, GwBoatItemMap *map = NULL) : 
+        GwBoatItem<GwSatInfoList>(GWTYPE_USER+1, name, formatInfo, invalidTime, map) {}
     bool update(GwSatInfo info, int source)
     {
         unsigned long now = millis();
@@ -205,8 +222,16 @@ public:
 
 };
 
+class GwBoatItemNameProvider
+{
+public:
+    virtual String getBoatItemName() = 0;
+    virtual String getBoatItemFormat() = 0;
+    virtual unsigned long getInvalidTime(){ return GwBoatItemBase::INVALID_TIME;}
+    virtual ~GwBoatItemNameProvider() {}
+};
 #define GWBOATDATA(type,name,time,fmt)  \
-    GwBoatItem<type> *name=new GwBoatItem<type>(F(#name),GwBoatItemBase::fmt,time,&values) ;
+    GwBoatItem<type> *name=new GwBoatItem<type>(GwBoatItemTypes::getType((type)0),F(#name),GwBoatItemBase::fmt,time,&values) ;
 #define GWSPECBOATDATA(clazz,name,time,fmt)  \
     clazz *name=new clazz(F(#name),GwBoatItemBase::fmt,time,&values) ;
 class GwBoatData{
@@ -254,43 +279,11 @@ class GwBoatData{
     public:
         GwBoatData(GwLog *logger);
         ~GwBoatData();
-        template<class T> GwBoatItem<T> *getOrCreate(T dummy,String name,String format,
-            unsigned long invalidTime=GwBoatItemBase::INVALID_TIME);
+        template<class T> GwBoatItem<T> *getOrCreate(T initial,GwBoatItemNameProvider *provider);
+        template<class T> bool update(T value,int source,GwBoatItemNameProvider *provider);
+        template<class T> T getDataWithDefault(T defaultv, GwBoatItemNameProvider *provider);
         String toJson() const;
 };
-/**
- * class for lazy creation of a boat item
- * once we have someone that knows the name for it
- * and providing fast access without searching all the time trough the map
- * xdr mappings implement such a provider
- */
-class GwBoatItemNameProvider
-{
-public:
-    virtual String getBoatItemName() = 0;
-    virtual String getBoatItemFormat() = 0;
-    virtual ~GwBoatItemNameProvider() {}
-};
-template<class T> class GwBoatItemHolder{
-    private:
-        GwBoatItem<T> *item=NULL;
-        GwBoatData *data;
-        unsigned long invalidTime=GwBoatItemBase::INVALID_TIME;
-    public:
-        GwBoatItemHolder(GwBoatData *data,unsigned long invalidTime=GwBoatItemBase::INVALID_TIME){
-            this->data=data;
-            this->invalidTime=invalidTime;
-        }
-        GwBoatItem<T> *getItem(GwBoatItemNameProvider *provider){
-                if (item) return item;
-                T dummy;
-                item=data->getOrCreate(dummy,
-                    provider->getBoatItemName() ,
-                    provider->getBoatItemFormat(),
-                    invalidTime);
-                return item;
-            }
-        GwBoatItem<T> *getItem(){return item;}       
-};
+
 
 #endif
