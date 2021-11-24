@@ -110,9 +110,39 @@ function checkApPass(v) {
         return "password must be at least 8 characters";
     }
 }
+function checkXDR(v,allValues){
+    if (! v) return;
+    let parts=v.split(',');
+    if (parseInt(parts[1])  == 0) return;
+    if (parseInt(parts[1]) != 0 && ! parts[6]) return "missing transducer name";
+    for (let k in allValues){
+        if (! k.match(/^XDR/)) continue;
+        let cmp=allValues[k];
+        if (cmp == v){
+            return "same mapping already defined in "+k;
+        }
+        let cmpParts=cmp.split(',');
+        if (parseInt(cmpParts[1]) != 0 && parts[6] == cmpParts[6]){
+            return "transducer "+parts[6]+" already defined in "+k;
+        }
+        //check similar mappings
+        if (parts[0]==cmpParts[0] && parts[2] == cmpParts[2] && parts[3] == cmpParts[3]){
+            if (parts[4] == cmpParts[4] && parts[5] == cmpParts[5]){
+                return "mapping for the same entity already defined in "+k;
+            }
+            if ((parseInt(parts[4]) == 0 && parseInt(cmpParts[4]) == 1)||
+            (parseInt(parts[4]) == 1 && parseInt(cmpParts[4]) == 0)
+            ){
+                //ignore and single for the same mapping
+                return "mapping for the same entity already defined in "+k;
+            }
+        }
+    }
+}
 function changeConfig() {
     let url = "/api/setConfig?";
     let values = document.querySelectorAll('.configForm select , .configForm input');
+    let allValues={};
     for (let i = 0; i < values.length; i++) {
         let v = values[i];
         let name = v.getAttribute('name');
@@ -121,7 +151,7 @@ function changeConfig() {
         let check = v.getAttribute('data-check');
         if (check) {
             if (typeof (self[check]) === 'function') {
-                let res = self[check](v.value);
+                let res = self[check](v.value,allValues);
                 if (res) {
                     let value = v.value;
                     if (v.type === 'password') value = "******";
@@ -130,6 +160,7 @@ function changeConfig() {
                 }
             }
         }
+        allValues[name]=v.value;
         url += name + "=" + encodeURIComponent(v.value) + "&";
     }
     getJson(url)
@@ -236,8 +267,8 @@ function checkChange(el, row) {
         }
     }
 }
-let configDefinitions;
-let xdrConfig;
+let configDefinitions={};
+let xdrConfig={};
 function createInput(configItem, frame,clazz) {
     let el;
     if (configItem.type === 'boolean' || configItem.type === 'list') {
@@ -295,9 +326,11 @@ function createInput(configItem, frame,clazz) {
 
 function updateSelectList(item,slist){
     item.innerHTML='';
+    let idx=0;
     slist.forEach(function (sitem) {
         let sitemEl = addEl('option','',item,sitem.l);
-        sitemEl.setAttribute('value', sitem.v);
+        sitemEl.setAttribute('value', sitem.v !== undefined?sitem.v:idx);
+        idx++;
     })
 }
 function getXdrCategories(){
@@ -309,25 +342,39 @@ function getXdrCategories(){
     }
     return rt;
 }
-function getXdrSelectors(category){
-    category=parseInt(category);
+function getXdrCategoryName(cid){
+    category=parseInt(cid);
     for (let c in xdrConfig){
         let base=xdrConfig[c];
         if (parseInt(base.id) == category){
-            return base.selector || [];
+            return c;
         }
     }
-    return [];
+}
+function getXdrCategory(cid){
+    category=parseInt(cid);
+    for (let c in xdrConfig){
+        let base=xdrConfig[c];
+        if (parseInt(base.id) == category){
+            return base;
+        }
+    }
+    return {};
+}
+function getXdrSelectors(category){
+    let base=getXdrCategory(category);
+    return base.selector || [];
 }
 function getXdrFields(category){
-    category=parseInt(category);
-    for (let c in xdrConfig){
-        let base=xdrConfig[c];
-        if (parseInt(base.id) == category){
-            return base.fields || [];
-        }
-    }
-    return [];
+    let base=getXdrCategory(category);
+    if (!base.fields) return [];
+    let rt=[];
+    base.fields.forEach(function(f){
+        if (f.t === undefined) return;
+        if (parseInt(f.t) == 99) return; //unknown type
+        rt.push(f);
+    });
+    return rt;
 }
 
 function createXdrLine(parent,label){
@@ -421,10 +468,16 @@ function createXdrInput(configItem,frame){
             if (used) {
                 el.classList.add('xdrcused');
                 el.classList.remove('xdrcunused');
+                forEl('.categoryAdd',function(add){
+                    add.textContent=xdrName.value;
+                },el);
             }
             else {
                 el.classList.remove('xdrcused');
                 el.classList.add('xdrcunused');
+                forEl('.categoryAdd',function(add){
+                    add.textContent='';
+                },el);
             }
             if (modified){
                 el.classList.add('changed');
@@ -443,7 +496,12 @@ function createXdrInput(configItem,frame){
             example.textContent='';
         }
     }
-    let updateFunction = function () {
+    let updateFunction = function (evt) {
+        if (evt.target == category){
+            selector.value=0;
+            field.value=0;
+            instance.value=0;
+        }
         let txt=category.value+","+direction.value+","+
             selector.value+","+field.value+","+imode.value;
         let instanceValue=parseInt(instance.value||0);
@@ -471,7 +529,8 @@ function createXdrInput(configItem,frame){
 
 function isXdrUsed(element){
     let parts=element.value.split(',');
-    if (! parts[0]) return false;
+    if (! parts[1]) return false;
+    if (! parseInt(parts[1])) return false;
     if (! parts[6]) return false;
     return true;
 }
@@ -520,6 +579,194 @@ function createFilterInput(configItem, frame) {
     data.setAttribute('name', configItem.name);
     return data;
 }
+let moreicons=['icon-more','icon-less'];
+
+function collapseCategories(parent,expand){
+    let doExpand=expand;
+    forEl('.category',function(cat){
+        if (typeof(expand) === 'function') doExpand=expand(cat);
+        forEl('.content',function(content){
+            if (doExpand){
+                content.classList.remove('hidden');
+            }
+            else{
+                content.classList.add('hidden');
+            }
+        },cat);
+        forEl('.title .icon',function(icon){
+            toggleClass(icon,doExpand?1:0,moreicons);    
+        },cat);
+    },parent);
+}
+
+function findFreeXdr(data){
+    let page=document.getElementById('xdrPage');
+    let el=undefined;
+    collapseCategories(page,function(cat){
+        if (el) return false;
+        let vEl=cat.querySelector('.xdrvalue');
+        if (!vEl) return false;
+        if (isXdrUsed(vEl)) return false;
+        el=vEl;
+        if (data){
+            el.value=data;
+            let ev=new Event('change');
+            el.dispatchEvent(ev);
+            window.setTimeout(function(){
+                cat.scrollIntoView();
+            },50);
+        }
+        return true;
+    });
+}
+
+function convertUnassigned(value){
+    let rt={};
+    value=parseInt(value);
+    if (isNaN(value)) return;
+    //see GwXDRMappings::addUnknown
+    let instance=value & 0x1ff;
+    value = value >> 9;
+    let field=value & 0x7f;
+    value = value >> 7;
+    let selector=value & 0x7f;
+    value = value >> 7;
+    let cid=value & 0x7f;
+    let category=getXdrCategory(cid);
+    let cname=getXdrCategoryName(cid);
+    if (! cname) return rt;
+    let fieldName="";
+    (category.fields || []).forEach(function(f){
+        if (parseInt(f.v) == field) fieldName=f.l;
+    });
+    let selectorName=selector+"";
+    (category.selector ||[]).forEach(function(s){
+        if (parseInt(s.v) == selector) selectorName=s.l;
+    });
+    rt.l=cname+","+selectorName+","+fieldName+","+instance;
+    rt.v=cid+",1,"+selector+","+field+",1,"+instance+",";
+    return rt;
+}
+
+function unassignedAdd(ev) {
+    let dv = ev.target.getAttribute('data-value');
+    if (dv) {
+        findFreeXdr(dv);
+        hideOverlay();
+    }
+}
+function loadUnassigned(){
+    getText("/api/xdrUnmapped")
+        .then(function(txt){
+            let ot="";
+            txt.split('\n').forEach(function(line){
+                let cv=convertUnassigned(line);
+                if (!cv || !cv.l) return;
+                ot+='<div class="xdrunassigned"><span>'+
+                    cv.l+'</span>'+
+                    '<button class="addunassigned" data-value="'+
+                    cv.v+
+                    '">+</button></div>';
+            })
+            showOverlay(ot,true);
+            forEl('.addunassigned',function(bt){
+                bt.onclick=unassignedAdd;
+            });
+        })
+}
+function showXdrHelp(){
+    let helpContent=document.getElementById('xdrHelp');
+    if (helpContent){
+        showOverlay(helpContent.innerHTML,true);
+    }
+}
+function formatDate(d){
+    if (! d) d=new Date();
+    let rt=""+d.getFullYear();
+    let v=d.getMonth();
+    if (v < 10) rt+="0"+v;
+    else rt+=v;
+    v=d.getDate();
+    if (v < 10) rt+="0"+v;
+    else rt+=v;
+    return rt;
+}
+function exportXdr(){
+    let data={};
+    forEl('.xdrvalue',function(el) {
+        let name=el.getAttribute('name');
+        let value=el.value;
+        let err=checkXDR(value,data);
+        if (err){
+            alert("error in "+name+": "+value+"\n"+err);
+            return;
+        }
+        data[name]=value;
+    })
+    let url="data:application/octet-stream,"+encodeURIComponent(JSON.stringify(data,undefined,2));
+    let target=document.getElementById('downloadXdr');
+    if (! target) return;
+    target.setAttribute('href',url);
+    target.setAttribute('download',"xdr"+formatDate()+".json");
+    target.click();
+}
+function importXdr(){
+    forEl('.uploadXdr',function(ul){
+        ul.remove();
+    });
+    let ip=addEl('input','uploadXdr',document.body);
+    ip.setAttribute('type','file');
+    ip.addEventListener('change',function(ev){
+        if (ip.files.length > 0){
+            let f=ip.files[0];
+            let reader=new FileReader();
+            reader.onloadend=function(status){
+                try{
+                    let idata=JSON.parse(reader.result);
+                    let hasOverwrites=false;
+                    for (let k in idata){
+                        if (! k.match(/^XDR[0-9][0-9]*/)){
+                            alert("file contains invalid key "+k);
+                            return;
+                        }
+                        let del=document.querySelector('input[name='+k+']');
+                        if (del){
+                            hasOverwrites=true;
+                        }        
+                    }
+                    if (hasOverwrites){
+                        if (!confirm("overwrite existing data?")) return;
+                    }
+                    for (let k in idata){
+                        let del=document.querySelector('input[name='+k+']');
+                        if (del){
+                            del.value=idata[k];
+                            let ev=new Event('change');
+                            del.dispatchEvent(ev);
+                        }
+                    }
+                }catch (error){
+                    alert("unable to parse upload: "+error);
+                    return;
+                }
+            };
+            reader.readAsBinaryString(f);
+        }
+        ip.remove();
+    });
+    ip.click(); 
+}
+function toggleClass(el,id,classList){
+    let nc=classList[id];
+    let rt=false;
+    if (nc && !el.classList.contains(nc)) rt=true;
+    for (let i in classList){
+        if (i == id) continue;
+        el.classList.remove(classList[i])
+    }
+    if (nc) el.classList.add(nc);
+    return rt;
+}
 
 function createConfigDefinitions(parent, capabilities, defs,includeXdr) {
     let category;
@@ -542,18 +789,17 @@ function createConfigDefinitions(parent, capabilities, defs,includeXdr) {
             let categoryTitle = addEl('div', 'title', categoryFrame);
             let categoryButton = addEl('span', 'icon icon-more', categoryTitle);
             addEl('span', 'label', categoryTitle, item.category);
+            addEl('span','categoryAdd',categoryTitle);
             categoryEl = addEl('div', 'content', categoryFrame);
             categoryEl.classList.add('hidden');
             let currentEl = categoryEl;
             categoryTitle.addEventListener('click', function (ev) {
                 let rs = currentEl.classList.toggle('hidden');
                 if (rs) {
-                    categoryButton.classList.add('icon-more');
-                    categoryButton.classList.remove('icon-less');
+                    toggleClass(categoryButton,0,moreicons);
                 }
                 else {
-                    categoryButton.classList.remove('icon-more');
-                    categoryButton.classList.add('icon-less');
+                    toggleClass(categoryButton,1,moreicons);
                 }
             })
             category = item.category;
@@ -591,7 +837,14 @@ function createConfigDefinitions(parent, capabilities, defs,includeXdr) {
         })
         bt = addEl('button', 'infoButton', btContainer, '?');
         bt.addEventListener('click', function (ev) {
-            showOverlay(item.description);
+            if (item.description){
+                showOverlay(item.description);
+            }
+            else{
+                if (item.category.match(/^xdr/)){
+                    showXdrHelp();
+                }
+            }
         });
     })
 }

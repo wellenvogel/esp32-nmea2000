@@ -55,6 +55,7 @@ class GwBoatItemBase{
         virtual size_t getJsonSize(){return JSON_OBJECT_SIZE(15);}
         virtual int getLastSource()=0;
         virtual void refresh(unsigned long ts=0){uls(ts);}
+        String getName(){return name;}
 };
 class GwBoatData;
 template<class T> class GwBoatItem : public GwBoatItemBase{
@@ -253,8 +254,43 @@ class GwBoatData{
     public:
         GwBoatData(GwLog *logger);
         ~GwBoatData();
+        template<class T> GwBoatItem<T> *getOrCreate(T dummy,String name,String format,
+            unsigned long invalidTime=GwBoatItemBase::INVALID_TIME);
         String toJson() const;
 };
-
+/**
+ * class for lazy creation of a boat item
+ * once we have someone that knows the name for it
+ * and providing fast access without searching all the time trough the map
+ * xdr mappings implement such a provider
+ */
+class GwBoatItemNameProvider
+{
+public:
+    virtual String getBoatItemName() = 0;
+    virtual String getBoatItemFormat() = 0;
+    virtual ~GwBoatItemNameProvider() {}
+};
+template<class T> class GwBoatItemHolder{
+    private:
+        GwBoatItem<T> *item=NULL;
+        GwBoatData *data;
+        unsigned long invalidTime=GwBoatItemBase::INVALID_TIME;
+    public:
+        GwBoatItemHolder(GwBoatData *data,unsigned long invalidTime=GwBoatItemBase::INVALID_TIME){
+            this->data=data;
+            this->invalidTime=invalidTime;
+        }
+        GwBoatItem<T> *getItem(GwBoatItemNameProvider *provider){
+                if (item) return item;
+                T dummy;
+                item=data->getOrCreate(dummy,
+                    provider->getBoatItemName() ,
+                    provider->getBoatItemFormat(),
+                    invalidTime);
+                return item;
+            }
+        GwBoatItem<T> *getItem(){return item;}       
+};
 
 #endif

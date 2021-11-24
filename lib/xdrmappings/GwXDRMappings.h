@@ -2,6 +2,7 @@
 #define _GWXDRMAPPINGS_H
 #include "GwLog.h"
 #include "GWConfig.h"
+#include "GwBoatData.h"
 #include <WString.h>
 #include <vector>
 #include <map>
@@ -141,7 +142,7 @@ class GwXDRMapping{
         typedef std::map<String,MappingList> N138Map;
         typedef std::map<unsigned long,MappingList> N2KMap;
 };
-class GwXDRFoundMapping{
+class GwXDRFoundMapping : public GwBoatItemNameProvider{
     public:
         GwXDRMappingDef *definition=NULL;
         GwXDRType *type=NULL;
@@ -163,6 +164,14 @@ class GwXDRFoundMapping{
             return definition->getTransducerName(instanceId);
         }
         String buildXdrEntry(double value);
+        //boat Data info
+        virtual String getBoatItemName(){
+            return getTransducerName();
+        };
+        virtual String getBoatItemFormat(){
+            return "formatXdr"+type->xdrunit; //TODO: use the type def for the correct format
+        };
+        virtual ~GwXDRFoundMapping(){}
 };
 
 //the class GwXDRMappings is not intended to be deleted

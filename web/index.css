@@ -146,7 +146,15 @@ body{
   .xdrexample {
     max-width: 16em;
     overflow: auto;
-}
+  }
+  .uploadXdr{
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+  }
+  button.addunassigned {
+    margin-left: 1em;
+  }
   .msgDetails .value {
       width: 5em;
       text-align: right;
@@ -162,6 +170,7 @@ body{
       right: 0;
       background-color: #80808070;
       display: flex;
+      overflow-y: auto;
   }
   
   div#overlay {

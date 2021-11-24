@@ -6,16 +6,101 @@
         "default": "ESP32NMEA2K",
         "check": "checkSystemName",
         "description": "system name, used for the access point and for services",
-        "category":"system"
+        "category": "system"
     },
     {
-        "name":"talkerId",
-        "label":"NMEA0183 ID",
-        "type":"list",
-        "default":"GP",
-        "list":["AB","AD","AG","AP","AI","AN","AR","AS","AT","AX","BI","BN","CA","CD","CR","CS","CT","CV","CX","DF","DU","DP","EC","EI","EP","ER","FD","FE","FR","FS","GA","GB","GI","GL","GN","GP","GQ","HC","HE","HF","HN","HD","HS","II","IN","JA","JB","JC","JD","JE","JF","JG","JH","LC","NL","NV","RA","RB","RC","RI","SA","SC","SD","SG","SN","SS","TC","TI","UP","VD","VM","VW","VA","VS","VT","VR","WD","WI","WL","YX","ZA","ZC","ZQ","ZV"],
-        "description":"the talkerId used in generated NMEA0183 records",
-        "category":"system"
+        "name": "talkerId",
+        "label": "NMEA0183 ID",
+        "type": "list",
+        "default": "GP",
+        "list": [
+            "AB",
+            "AD",
+            "AG",
+            "AP",
+            "AI",
+            "AN",
+            "AR",
+            "AS",
+            "AT",
+            "AX",
+            "BI",
+            "BN",
+            "CA",
+            "CD",
+            "CR",
+            "CS",
+            "CT",
+            "CV",
+            "CX",
+            "DF",
+            "DU",
+            "DP",
+            "EC",
+            "EI",
+            "EP",
+            "ER",
+            "FD",
+            "FE",
+            "FR",
+            "FS",
+            "GA",
+            "GB",
+            "GI",
+            "GL",
+            "GN",
+            "GP",
+            "GQ",
+            "HC",
+            "HE",
+            "HF",
+            "HN",
+            "HD",
+            "HS",
+            "II",
+            "IN",
+            "JA",
+            "JB",
+            "JC",
+            "JD",
+            "JE",
+            "JF",
+            "JG",
+            "JH",
+            "LC",
+            "NL",
+            "NV",
+            "RA",
+            "RB",
+            "RC",
+            "RI",
+            "SA",
+            "SC",
+            "SD",
+            "SG",
+            "SN",
+            "SS",
+            "TC",
+            "TI",
+            "UP",
+            "VD",
+            "VM",
+            "VW",
+            "VA",
+            "VS",
+            "VT",
+            "VR",
+            "WD",
+            "WI",
+            "WL",
+            "YX",
+            "ZA",
+            "ZC",
+            "ZQ",
+            "ZV"
+        ],
+        "description": "the talkerId used in generated NMEA0183 records",
+        "category": "system"
     },
     {
         "name": "stopApTime",
@@ -23,7 +108,7 @@
         "default": "0",
         "check": "checkStopApTime",
         "description": "stop the access point after that many minutes if not used",
-        "category":"system"
+        "category": "system"
     },
     {
         "name": "apPassword",
@@ -31,8 +116,12 @@
         "default": "esp32nmea2k",
         "check": "checkApPass",
         "description": "set the password for the Wifi access point",
-        "category":"system",
-        "capabilities":{"hardwareReset":["true"]}
+        "category": "system",
+        "capabilities": {
+            "hardwareReset": [
+                "true"
+            ]
+        }
     },
     {
         "name": "usbBaud",
@@ -40,8 +129,21 @@
         "type": "list",
         "default": "115200",
         "description": "baud rate for the USB port",
-        "list": [1200,2400,4800,9600,14400,19200,28800,38400,57600,115200,230400,460800],
-        "category":"usb port"
+        "list": [
+            1200,
+            2400,
+            4800,
+            9600,
+            14400,
+            19200,
+            28800,
+            38400,
+            57600,
+            115200,
+            230400,
+            460800
+        ],
+        "category": "usb port"
     },
     {
         "name": "sendUsb",
@@ -49,7 +151,7 @@
         "type": "boolean",
         "default": "true",
         "description": "send out NMEA data on the USB port",
-        "category":"usb port"
+        "category": "usb port"
     },
     {
         "name": "receiveUsb",
@@ -57,7 +159,7 @@
         "type": "boolean",
         "default": "true",
         "description": "receive NMEA data on the USB port",
-        "category":"usb port"
+        "category": "usb port"
     },
     {
         "name": "usbToN2k",
@@ -65,7 +167,7 @@
         "type": "boolean",
         "default": "true",
         "description": "convert NMEA0183 from the USB port to NMEA2000",
-        "category":"usb port"
+        "category": "usb port"
     },
     {
         "name": "usbReadFilter",
@@ -73,7 +175,7 @@
         "type": "filter",
         "default": "",
         "description": "filter for NMEA0183 data when reading from USB\nselect aison|aisoff, set a whitelist or a blacklist with NMEA sentences like RMC,RMB",
-        "category":"usb port"
+        "category": "usb port"
     },
     {
         "name": "usbWriteFilter",
@@ -81,17 +183,25 @@
         "type": "filter",
         "default": "",
         "description": "filter for NMEA0183 data when writing to USB\nselect aison|aisoff, set a whitelist or a blacklist with NMEA sentences like RMC,RMB",
-        "category":"usb port"
+        "category": "usb port"
     },
     {
         "name": "serialDirection",
         "label": "serial direction",
         "type": "list",
         "default": "receive",
-        "list": ["send","receive","off"],
+        "list": [
+            "send",
+            "receive",
+            "off"
+        ],
         "description": "use the serial port to send or receive data",
-        "capabilities":{"serialmode":["UNI"]},
-        "category":"serial port"
+        "capabilities": {
+            "serialmode": [
+                "UNI"
+            ]
+        },
+        "category": "serial port"
     },
     {
         "name": "serialBaud",
@@ -99,9 +209,29 @@
         "type": "list",
         "default": "115200",
         "description": "baud rate for the serial port",
-        "list": [1200,2400,4800,9600,14400,19200,28800,38400,57600,115200,230400,460800],
-        "capabilities":{"serialmode":["RX","TX","UNI","BI"]},
-        "category":"serial port"
+        "list": [
+            1200,
+            2400,
+            4800,
+            9600,
+            14400,
+            19200,
+            28800,
+            38400,
+            57600,
+            115200,
+            230400,
+            460800
+        ],
+        "capabilities": {
+            "serialmode": [
+                "RX",
+                "TX",
+                "UNI",
+                "BI"
+            ]
+        },
+        "category": "serial port"
     },
     {
         "name": "sendSerial",
@@ -109,8 +239,13 @@
         "type": "boolean",
         "default": "true",
         "description": "send out NMEA data on the serial port",
-        "capabilities":{"serialmode":["TX","BI"]},
-        "category":"serial port"
+        "capabilities": {
+            "serialmode": [
+                "TX",
+                "BI"
+            ]
+        },
+        "category": "serial port"
     },
     {
         "name": "receiveSerial",
@@ -118,8 +253,13 @@
         "type": "boolean",
         "default": "true",
         "description": "receive NMEA data on the serial port",
-        "capabilities":{"serialmode":["RX","BI"]},
-        "category":"serial port"
+        "capabilities": {
+            "serialmode": [
+                "RX",
+                "BI"
+            ]
+        },
+        "category": "serial port"
     },
     {
         "name": "serialToN2k",
@@ -127,8 +267,14 @@
         "type": "boolean",
         "default": "true",
         "description": "convert NMEA0183 from the serial port to NMEA2000",
-        "capabilities":{"serialmode":["RX","BI","UNI"]},
-        "category":"serial port"
+        "capabilities": {
+            "serialmode": [
+                "RX",
+                "BI",
+                "UNI"
+            ]
+        },
+        "category": "serial port"
     },
     {
         "name": "serialReadF",
@@ -136,8 +282,14 @@
         "type": "filter",
         "default": "",
         "description": "filter for NMEA0183 data when reading from serial\nselect aison|aisoff, set a whitelist or a blacklist with NMEA sentences like RMC,RMB",
-        "capabilities":{"serialmode":["RX","BI","UNI"]},
-        "category":"serial port"
+        "capabilities": {
+            "serialmode": [
+                "RX",
+                "BI",
+                "UNI"
+            ]
+        },
+        "category": "serial port"
     },
     {
         "name": "serialWriteF",
@@ -145,8 +297,14 @@
         "type": "filter",
         "default": "",
         "description": "filter for NMEA0183 data when writing to serial\nselect aison|aisoff, set a whitelist or a blacklist with NMEA sentences like RMC,RMB",
-        "capabilities":{"serialmode":["TX","BI","UNI"]},
-        "category":"serial port"
+        "capabilities": {
+            "serialmode": [
+                "TX",
+                "BI",
+                "UNI"
+            ]
+        },
+        "category": "serial port"
     },
     {
         "name": "serverPort",
@@ -154,16 +312,16 @@
         "type": "number",
         "default": "10110",
         "description": "the TCP port we listen on",
-        "category":"TCP port"
+        "category": "TCP port"
     },
     {
         "name": "maxClients",
         "label": "max. TCP clients",
         "type": "number",
         "default": "10",
-        "check":"checkMaxClients",
+        "check": "checkMaxClients",
         "description": "the number of clients we allow to connect to us",
-        "category":"TCP port"
+        "category": "TCP port"
     },
     {
         "name": "sendTCP",
@@ -171,7 +329,7 @@
         "type": "boolean",
         "default": "true",
         "description": "send out NMEA data to connected TCP clients",
-        "category":"TCP port"
+        "category": "TCP port"
     },
     {
         "name": "readTCP",
@@ -179,7 +337,7 @@
         "type": "boolean",
         "default": "true",
         "description": "receive NMEA data from connected TCP clients",
-        "category":"TCP port"
+        "category": "TCP port"
     },
     {
         "name": "tcpToN2k",
@@ -187,7 +345,7 @@
         "type": "boolean",
         "default": "true",
         "description": "convert NMEA0183 from TCP clients to NMEA2000",
-        "category":"TCP port"
+        "category": "TCP port"
     },
     {
         "name": "tcpReadFilter",
@@ -195,7 +353,7 @@
         "type": "filter",
         "default": "",
         "description": "filter for NMEA0183 data when reading from TCP\nselect aison|aisoff, set a whitelist or a blacklist with NMEA sentences like RMC,RMB",
-        "category":"TCP port"
+        "category": "TCP port"
     },
     {
         "name": "tcpWriteFilter",
@@ -203,7 +361,7 @@
         "type": "filter",
         "default": "",
         "description": "filter for NMEA0183 data when writing to TCP\nselect aison|aisoff, set a whitelist or a blacklist with NMEA sentences like RMC,RMB",
-        "category":"TCP port"
+        "category": "TCP port"
     },
     {
         "name": "sendSeasmart",
@@ -211,7 +369,7 @@
         "type": "boolean",
         "default": "false",
         "description": "send NMEA2000 as seasmart to connected TCP clients",
-        "category":"TCP port"
+        "category": "TCP port"
     },
     {
         "name": "wifiClient",
@@ -219,7 +377,7 @@
         "type": "boolean",
         "default": "false",
         "description": "connect to an external WIFI network",
-        "category":"wifi client"
+        "category": "wifi client"
     },
     {
         "name": "wifiPass",
@@ -227,7 +385,7 @@
         "type": "password",
         "default": "",
         "description": "the password for an external WIFI network",
-        "category":"wifi client"
+        "category": "wifi client"
     },
     {
         "name": "wifiSSID",
@@ -236,7 +394,7 @@
         "default": "",
         "check": "checkSSID",
         "description": "the SSID for an external WIFI network",
-        "category":"wifi client"
+        "category": "wifi client"
     },
     {
         "name": "XDR1",
@@ -244,7 +402,7 @@
         "type": "xdr",
         "default": "",
         "check": "checkXDR",
-        "category":"xdr1"
+        "category": "xdr1"
     },
     {
         "name": "XDR2",
@@ -252,8 +410,230 @@
         "type": "xdr",
         "default": "",
         "check": "checkXDR",
-        "category":"xdr2"
+        "category": "xdr2"
+    },
+    {
+        "name": "XDR3",
+        "label": "XDR3",
+        "type": "xdr",
+        "default": "",
+        "check": "checkXDR",
+        "category": "xdr3"
+    },
+    {
+        "name": "XDR4",
+        "label": "XDR4",
+        "type": "xdr",
+        "default": "",
+        "check": "checkXDR",
+        "category": "xdr4"
+    },
+    {
+        "name": "XDR5",
+        "label": "XDR5",
+        "type": "xdr",
+        "default": "",
+        "check": "checkXDR",
+        "category": "xdr5"
+    },
+    {
+        "name": "XDR6",
+        "label": "XDR6",
+        "type": "xdr",
+        "default": "",
+        "check": "checkXDR",
+        "category": "xdr6"
+    },
+    {
+        "name": "XDR7",
+        "label": "XDR7",
+        "type": "xdr",
+        "default": "",
+        "check": "checkXDR",
+        "category": "xdr7"
+    },
+    {
+        "name": "XDR8",
+        "label": "XDR8",
+        "type": "xdr",
+        "default": "",
+        "check": "checkXDR",
+        "category": "xdr8"
+    },
+    {
+        "name": "XDR9",
+        "label": "XDR9",
+        "type": "xdr",
+        "default": "",
+        "check": "checkXDR",
+        "category": "xdr9"
+    },
+    {
+        "name": "XDR10",
+        "label": "XDR10",
+        "type": "xdr",
+        "default": "",
+        "check": "checkXDR",
+        "category": "xdr10"
+    },
+    {
+        "name": "XDR11",
+        "label": "XDR11",
+        "type": "xdr",
+        "default": "",
+        "check": "checkXDR",
+        "category": "xdr11"
+    },
+    {
+        "name": "XDR12",
+        "label": "XDR12",
+        "type": "xdr",
+        "default": "",
+        "check": "checkXDR",
+        "category": "xdr12"
+    },
+    {
+        "name": "XDR13",
+        "label": "XDR13",
+        "type": "xdr",
+        "default": "",
+        "check": "checkXDR",
+        "category": "xdr13"
+    },
+    {
+        "name": "XDR14",
+        "label": "XDR14",
+        "type": "xdr",
+        "default": "",
+        "check": "checkXDR",
+        "category": "xdr14"
+    },
+    {
+        "name": "XDR15",
+        "label": "XDR15",
+        "type": "xdr",
+        "default": "",
+        "check": "checkXDR",
+        "category": "xdr15"
+    },
+    {
+        "name": "XDR16",
+        "label": "XDR16",
+        "type": "xdr",
+        "default": "",
+        "check": "checkXDR",
+        "category": "xdr16"
+    },
+    {
+        "name": "XDR17",
+        "label": "XDR17",
+        "type": "xdr",
+        "default": "",
+        "check": "checkXDR",
+        "category": "xdr17"
+    },
+    {
+        "name": "XDR18",
+        "label": "XDR18",
+        "type": "xdr",
+        "default": "",
+        "check": "checkXDR",
+        "category": "xdr18"
+    },
+    {
+        "name": "XDR19",
+        "label": "XDR19",
+        "type": "xdr",
+        "default": "",
+        "check": "checkXDR",
+        "category": "xdr19"
+    },
+    {
+        "name": "XDR20",
+        "label": "XDR20",
+        "type": "xdr",
+        "default": "",
+        "check": "checkXDR",
+        "category": "xdr20"
+    },
+    {
+        "name": "XDR21",
+        "label": "XDR21",
+        "type": "xdr",
+        "default": "",
+        "check": "checkXDR",
+        "category": "xdr21"
+    },
+    {
+        "name": "XDR22",
+        "label": "XDR22",
+        "type": "xdr",
+        "default": "",
+        "check": "checkXDR",
+        "category": "xdr22"
+    },
+    {
+        "name": "XDR23",
+        "label": "XDR23",
+        "type": "xdr",
+        "default": "",
+        "check": "checkXDR",
+        "category": "xdr23"
+    },
+    {
+        "name": "XDR24",
+        "label": "XDR24",
+        "type": "xdr",
+        "default": "",
+        "check": "checkXDR",
+        "category": "xdr24"
+    },
+    {
+        "name": "XDR25",
+        "label": "XDR25",
+        "type": "xdr",
+        "default": "",
+        "check": "checkXDR",
+        "category": "xdr25"
+    },
+    {
+        "name": "XDR26",
+        "label": "XDR26",
+        "type": "xdr",
+        "default": "",
+        "check": "checkXDR",
+        "category": "xdr26"
+    },
+    {
+        "name": "XDR27",
+        "label": "XDR27",
+        "type": "xdr",
+        "default": "",
+        "check": "checkXDR",
+        "category": "xdr27"
+    },
+    {
+        "name": "XDR28",
+        "label": "XDR28",
+        "type": "xdr",
+        "default": "",
+        "check": "checkXDR",
+        "category": "xdr28"
+    },
+    {
+        "name": "XDR29",
+        "label": "XDR29",
+        "type": "xdr",
+        "default": "",
+        "check": "checkXDR",
+        "category": "xdr29"
+    },
+    {
+        "name": "XDR30",
+        "label": "XDR30",
+        "type": "xdr",
+        "default": "",
+        "check": "checkXDR",
+        "category": "xdr30"
     }
-    
-
 ]
