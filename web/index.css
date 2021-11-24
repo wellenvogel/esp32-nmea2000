@@ -242,7 +242,7 @@ body{
   }
   
   .dash {
-      width: 6em;
+      width: 6.5em;
       height: 4em;
       display: flex;
       flex-direction: column;

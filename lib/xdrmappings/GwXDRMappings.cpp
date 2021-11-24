@@ -188,6 +188,10 @@ GwXDRMappingDef *GwXDRMappingDef::fromString(String s)
             return NULL;
         }
     }
+    if (rt->direction == GwXDRMappingDef::M_DISABLED || rt->xdrName == ""){
+        delete rt;
+        return NULL;
+    }
     return rt;
 }
 String GwXDRMappingDef::getTransducerName(int instance)

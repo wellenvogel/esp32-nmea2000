@@ -80,7 +80,7 @@ template<class T> class GwBoatItem : public GwBoatItemBase{
     public:
         GwBoatItem(int type,String name,String formatInfo,unsigned long invalidTime=INVALID_TIME,GwBoatItemMap *map=NULL):
             GwBoatItemBase(name,formatInfo,invalidTime){
-                type=type;
+            this->type=type;
             if (map){
                 (*map)[name]=this;
             }
@@ -93,7 +93,7 @@ template<class T> class GwBoatItem : public GwBoatItemBase{
                 //priority handling
                 //sources with lower ids will win
                 //and we will not overwrite their value
-                if (lastUpdateSource < source){
+                if (lastUpdateSource < source && lastUpdateSource >= 0){
                     return false;
                 }
             }

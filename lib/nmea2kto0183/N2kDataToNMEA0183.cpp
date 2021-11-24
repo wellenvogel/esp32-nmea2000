@@ -105,6 +105,10 @@ private:
             return false;
         return item->update(value,sourceId);
     }
+    bool updateDouble(GwXDRFoundMapping * mapping, double &value){
+        if (mapping->empty) return false;
+        return boatData->update(value,sourceId,mapping);
+    }
     
     unsigned long LastPosSend;
     unsigned long NextRMCSend;
@@ -1187,7 +1191,7 @@ private:
            return;
         }
         GwXDRFoundMapping mapping=xdrMappings->getMapping(XDRTEMP,(int)TemperatureSource,0,TemperatureInstance);
-        if (mapping.empty) return;
+        if (! updateDouble(&mapping,Temperature)) return;
         LOG_DEBUG(GwLog::DEBUG+1,"found temperature mapping %s",mapping.definition->toString().c_str());
         addToXdr(mapping.buildXdrEntry(Temperature));
         finalizeXdr();
@@ -1204,7 +1208,7 @@ private:
            return;
         }
         GwXDRFoundMapping mapping=xdrMappings->getMapping(XDRHUMIDITY,(int)HumiditySource,0,HumidityInstance);
-        if (mapping.empty) return;
+        if (! updateDouble(&mapping,ActualHumidity)) return;
         LOG_DEBUG(GwLog::DEBUG+1,"found humidity mapping %s",mapping.definition->toString().c_str());
         addToXdr(mapping.buildXdrEntry(ActualHumidity));
         finalizeXdr();
@@ -1221,8 +1225,7 @@ private:
             return; 
         }
         GwXDRFoundMapping mapping=xdrMappings->getMapping(XDRPRESSURE,(int)PressureSource,0,PressureInstance);
-        if (mapping.empty) return;
-        if (! boatData->update(ActualPressure,sourceId,&mapping)) return;
+        if (! updateDouble(&mapping,ActualPressure)) return;
         LOG_DEBUG(GwLog::DEBUG+1,"found pressure mapping %s",mapping.definition->toString().c_str());
         addToXdr(mapping.buildXdrEntry(ActualPressure));
         finalizeXdr();

@@ -17,6 +17,8 @@ template<class T> GwBoatItem<T> *GwBoatData::getOrCreate(T initial, GwBoatItemNa
     if (it != values.end()) {
         int expectedType=GwBoatItemTypes::getType(initial);
         if (expectedType != it->second->getCurrentType()){
+            LOG_DEBUG(GwLog::DEBUG,"invalid type for boat item %s, expected %d, got %d",
+                name.c_str(),expectedType,it->second->getCurrentType());
             return NULL;
         }
         return (GwBoatItem<T>*)(it->second);
@@ -26,6 +28,8 @@ template<class T> GwBoatItem<T> *GwBoatData::getOrCreate(T initial, GwBoatItemNa
         provider->getInvalidTime(),
         &values);
     rt->update(initial);
+    LOG_DEBUG(GwLog::LOG,"creating boatItem %s, type %d",
+        name.c_str(),rt->getCurrentType());
     return rt;
 }
 template<class T> bool GwBoatData::update(T value,int source,GwBoatItemNameProvider *provider){

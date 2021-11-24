@@ -1025,6 +1025,15 @@ let valueFormatters = {
         u:'m'
     }
 }
+function resizeFont(el,reset,maxIt){
+    if (maxIt === undefined) maxIt=10;
+    if (! el) return;
+    if (reset) el.style.fontSize='';
+    while (el.scrollWidth > el.clientWidth && maxIt){
+        let next=parseFloat(window.getComputedStyle(el).fontSize)*0.9;
+        el.style.fontSize=next+"px";
+    }
+}
 function createDashboardItem(name, def, parent) {
     let frame = addEl('div', 'dash', parent);
     let title = addEl('span', 'dashTitle', frame, name);
@@ -1035,7 +1044,11 @@ function createDashboardItem(name, def, parent) {
     let footer = addEl('div','footer',frame);
     let src= addEl('span','source',footer);
     src.setAttribute('id','source_'+name);
-    addEl('span','unit',footer,fmt?fmt.u:'');
+    let u=fmt?fmt.u:'';
+    if (! fmt && def.format.match(/formatXdr/)){
+        u=def.format.replace(/formatXdr/,'');
+    }
+    addEl('span','unit',footer,u);
     return value;
 }
 function createDashboard() {
@@ -1057,9 +1070,14 @@ function sourceName(v){
     return "---";
 }
 function updateDashboard(data) {
+    let frame = document.getElementById('dashboardPage');
     for (let n in data) {
         let de = document.getElementById('data_' + n);
+        if (! de && frame){
+            de=createDashboardItem(n,data[n],frame);   
+        }
         if (de) {
+            let newContent='----';
             if (data[n].valid) {
                 let formatter;
                 if (data[n].format && data[n].format != "NULL") {
@@ -1067,26 +1085,38 @@ function updateDashboard(data) {
                     formatter = valueFormatters[key];
                 }
                 if (formatter) {
-                    de.textContent = formatter.f(data[n].value);
+                    newContent = formatter.f(data[n].value);
                 }
                 else {
                     let v = parseFloat(data[n].value);
                     if (!isNaN(v)) {
                         v = v.toFixed(3)
-                        de.textContent = v;
+                        newContent = v;
                     }
                     else {
-                        de.textContent = data[n].value;
+                        newContent = data[n].value;
                     }
                 }
             }
-            else de.textContent = "---";
+            else newContent = "---";
+            if (newContent !== de.textContent){
+                de.textContent=newContent;
+                resizeFont(de,true);
+            }
         }
         let src=document.getElementById('source_'+n);
         if (src){
             src.textContent=sourceName(data[n].source);
         }
     }
+    forEl('.dashValue',function(el){
+        let id=el.getAttribute('id');
+        if (id){
+            if (! data[id.replace(/^data_/,'')]){
+                el.parentElement.remove();
+            }
+        }
+    });
 }
 
 window.setInterval(update, 1000);
