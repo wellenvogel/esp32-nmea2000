@@ -55,7 +55,9 @@ String GwBoatData::toJson() const {
         count++;
         elementSizes+=it->second->getJsonSize();
     }
-    DynamicJsonDocument json(JSON_OBJECT_SIZE(count)+elementSizes+10);
+    int sz=JSON_OBJECT_SIZE(count)+elementSizes+10;
+    LOG_DEBUG(GwLog::DEBUG,"size for boatData: %d",sz);
+    DynamicJsonDocument json(sz);
     for (it=values.begin() ; it != values.end();it++){
         it->second->toJsonDoc(&json,minTime);
     }

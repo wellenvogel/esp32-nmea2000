@@ -67,7 +67,7 @@ class GwBoatItemBase{
             lastSet=0;
         }
         virtual void toJsonDoc(JsonDocument *doc, unsigned long minTime)=0;
-        virtual size_t getJsonSize(){return JSON_OBJECT_SIZE(15);}
+        virtual size_t getJsonSize(){return JSON_OBJECT_SIZE(10);}
         virtual int getLastSource()=0;
         virtual void refresh(unsigned long ts=0){uls(ts);}
         String getName(){return name;}
