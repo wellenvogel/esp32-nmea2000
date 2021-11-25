@@ -1172,6 +1172,37 @@ private:
         }
     }
 
+    void HandleBatteryStatus(const tN2kMsg &N2kMsg)
+    {
+        unsigned char SID=-1;
+        unsigned char BatteryInstance;
+        double BatteryVoltage=N2kDoubleNA;
+        double BatteryCurrent=N2kDoubleNA;
+        double BatteryTemperature=N2kDoubleNA;
+        if (ParseN2kPGN127508(N2kMsg,BatteryInstance,BatteryVoltage,BatteryCurrent,BatteryTemperature,SID)) {
+            int i=0;
+            GwXDRFoundMapping mapping=xdrMappings->getMapping(XDRBAT,0,0,BatteryInstance);
+            if (updateDouble(&mapping,BatteryVoltage)){
+                LOG_DEBUG(GwLog::DEBUG+1,"found BatteryVoltage mapping %s",mapping.definition->toString().c_str());
+                addToXdr(mapping.buildXdrEntry(BatteryVoltage));
+                i++;
+            }
+            mapping=xdrMappings->getMapping(XDRBAT,1,0,BatteryInstance);
+            if (updateDouble(&mapping,BatteryCurrent)){
+                LOG_DEBUG(GwLog::DEBUG+1,"found BatteryCurrent mapping %s",mapping.definition->toString().c_str());
+                addToXdr(mapping.buildXdrEntry(BatteryCurrent));
+                i++;
+            }
+            mapping=xdrMappings->getMapping(XDRBAT,2,0,BatteryInstance);
+            if (updateDouble(&mapping,BatteryTemperature)){
+                LOG_DEBUG(GwLog::DEBUG+1,"found BatteryTemperature mapping %s",mapping.definition->toString().c_str());
+                addToXdr(mapping.buildXdrEntry(BatteryTemperature));
+                i++;
+            }
+            if (i>0) finalizeXdr();
+        }
+    }
+
     void Handle130310(const tN2kMsg &N2kMsg)
     {
 
@@ -1334,6 +1365,7 @@ private:
       converters.registerConverter(129540UL, &N2kToNMEA0183Functions::HandleSats);
       converters.registerConverter(127251UL, &N2kToNMEA0183Functions::HandleROT);
       converters.registerConverter(127505UL, &N2kToNMEA0183Functions::HandleFluidLevel);
+      converters.registerConverter(127508UL, &N2kToNMEA0183Functions::HandleBatteryStatus);
       converters.registerConverter(129283UL, &N2kToNMEA0183Functions::HandleXTE);
       converters.registerConverter(129284UL, &N2kToNMEA0183Functions::HandleNavigation);
       converters.registerConverter(130310UL, &N2kToNMEA0183Functions::Handle130310);
