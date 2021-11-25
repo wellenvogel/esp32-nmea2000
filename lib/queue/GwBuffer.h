@@ -20,7 +20,7 @@ class GwBufferWriter{
 class GwBuffer{
     public:
         static const size_t TX_BUFFER_SIZE=1620; // app. 20 NMEA messages
-        static const size_t RX_BUFFER_SIZE=200;  // enough for 1 NMEA message...
+        static const size_t RX_BUFFER_SIZE=400;  // enough for 1 NMEA message or actisense message
         typedef enum {
             OK,
             ERROR,
@@ -47,6 +47,8 @@ class GwBuffer{
         size_t freeSpace();
         size_t usedSpace();
         size_t addData(const uint8_t *data,size_t len,bool addPartial=false);
+        int read();
+        int peek();
         /**
          * write some data to the buffer writer
          * return an error if the buffer writer returned < 0

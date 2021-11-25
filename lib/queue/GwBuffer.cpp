@@ -2,7 +2,7 @@
 
 void GwBuffer::lp(const char *fkt, int p)
 {
-    LOG_DEBUG(GwLog::DEBUG + 1, "Buffer[%s]: buf=%p,wp=%d,rp=%d,used=%d,free=%d, p=%d",
+    LOG_DEBUG(GwLog::DEBUG+2 , "Buffer[%s]: buf=%p,wp=%d,rp=%d,used=%d,free=%d, p=%d",
               fkt, buffer, offset(writePointer), offset(readPointer), usedSpace(), freeSpace(), p);
 }
 
@@ -36,6 +36,19 @@ size_t GwBuffer::usedSpace()
     if (readPointer <= writePointer)
         return writePointer - readPointer;
     return writePointer+bufferSize-readPointer;
+}
+int GwBuffer::read(){
+    if (! usedSpace()) return -1;
+    int rt=*readPointer;
+    readPointer++;
+    if (offset(readPointer) >= bufferSize)
+                readPointer -= bufferSize;
+    lp("read");
+    return rt;            
+}
+int GwBuffer::peek(){
+    if (! usedSpace()) return -1;
+    return *readPointer;
 }
 size_t GwBuffer::addData(const uint8_t *data, size_t len, bool addPartial)
 {

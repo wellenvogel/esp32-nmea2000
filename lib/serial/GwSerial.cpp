@@ -1,4 +1,44 @@
 #include "GwSerial.h"
+
+class GwSerialStream: public Stream{
+    private:
+        GwSerial *serial;
+        bool partialWrites;
+    public:
+    GwSerialStream(GwSerial *serial,bool partialWrites=false){
+        this->serial=serial;
+        this->partialWrites=partialWrites;
+    }
+    virtual int available(){
+        if (! serial->isInitialized()) return 0;
+        if (! serial->readBuffer) return 0;
+        return serial->readBuffer->usedSpace();
+    }
+    virtual int read(){
+        if (! serial->isInitialized()) return -1;
+        if (! serial->readBuffer) return -1;
+        return serial->readBuffer->read();
+    }
+    virtual int peek(){
+        if (! serial->isInitialized()) return -1;
+        if (! serial->readBuffer) return -1;
+        return serial->readBuffer->peek();
+    }
+    virtual void flush() {};
+    virtual size_t write(uint8_t v){
+        if (! serial->isInitialized()) return 0;
+        size_t rt=serial->buffer->addData(&v,1,partialWrites);
+        return rt;
+    }
+    virtual size_t write(const uint8_t *buffer, size_t size){
+        if (! serial->isInitialized()) return 0;
+        size_t rt=serial->buffer->addData(buffer,size,partialWrites);
+        return rt;
+    }
+
+};
+
+
 class SerialWriter : public GwBufferWriter{
     private:
         HardwareSerial *serial;
@@ -90,4 +130,7 @@ void GwSerial::flush(){
    while (buffer->fetchData(writer,-1,false) == GwBuffer::AGAIN){
        vTaskDelay(1);
    }
+}
+Stream * GwSerial::getStream(bool partialWrite){
+    return new GwSerialStream(this,partialWrite);
 }

@@ -34,6 +34,7 @@ const unsigned long HEAP_REPORT_TIME=2000; //set to 0 to disable heap reporting
 
 #include <Arduino.h>
 #include <NMEA2000_CAN.h>  // This will automatically choose right CAN library and create suitable NMEA2000 object
+#include <ActisenseReader.h>
 #include <Seasmart.h>
 #include <N2kMessages.h>
 #include <WiFi.h>
@@ -94,6 +95,8 @@ int NodeAddress;  // To store last Node Address
 Preferences preferences;             // Nonvolatile storage on ESP32 - To store LastDeviceAddress
 N2kDataToNMEA0183 *nmea0183Converter=NULL;
 NMEA0183DataToN2K *toN2KConverter=NULL;
+tActisenseReader *actisenseReader=NULL;
+
 
 
 void SendNMEA0183Message(const tNMEA0183Msg &NMEA0183Msg,int id);
@@ -140,6 +143,7 @@ void updateNMEACounter(int id,const char *msg,bool incoming,bool fail=false){
 
 
 GwConfigInterface *sendUsb=config.getConfigItem(config.sendUsb,true);
+GwConfigInterface *usbActisense=config.getConfigItem(config.usbActisense,true);
 GwConfigInterface *sendTCP=config.getConfigItem(config.sendTCP,true);
 GwConfigInterface *sendSeasmart=config.getConfigItem(config.sendSeasmart,true);
 GwConfigInterface *systemName=config.getConfigItem(config.systemName,true);
@@ -474,6 +478,16 @@ protected:
   }
 };
 
+void handleN2kMessage(const tN2kMsg &n2kMsg){
+    if ( sendSeasmart->asBoolean() ) {
+      char buf[MAX_NMEA2000_MESSAGE_SEASMART_SIZE];
+      if ( N2kToSeasmart(n2kMsg, millis(), buf, MAX_NMEA2000_MESSAGE_SEASMART_SIZE) == 0 ) return;
+      socketServer.sendToClients(buf,N2K_CHANNEL_ID);
+    }
+    logger.logDebug(GwLog::DEBUG+1,"handling pgn %d",n2kMsg.PGN);
+    nmea0183Converter->HandleMsg(n2kMsg);
+    logger.logDebug(GwLog::DEBUG+1,"done pgn %d",n2kMsg.PGN);
+  };
 void setup() {
 
   uint8_t chipid[6];
@@ -649,15 +663,20 @@ void setup() {
   NMEA2000.ExtendReceiveMessages(nmea0183Converter->handledPgns());
   NMEA2000.SetMsgHandler([](const tN2kMsg &n2kMsg){
     countNMEA2KIn.add(n2kMsg.PGN);
-    if ( sendSeasmart->asBoolean() ) {
-      char buf[MAX_NMEA2000_MESSAGE_SEASMART_SIZE];
-      if ( N2kToSeasmart(n2kMsg, millis(), buf, MAX_NMEA2000_MESSAGE_SEASMART_SIZE) == 0 ) return;
-      socketServer.sendToClients(buf,N2K_CHANNEL_ID);
-    }
-    logger.logDebug(GwLog::DEBUG+1,"handling pgn %d",n2kMsg.PGN);
-    nmea0183Converter->HandleMsg(n2kMsg);
-    logger.logDebug(GwLog::DEBUG+1,"done pgn %d",n2kMsg.PGN);
-  }); 
+    handleN2kMessage(n2kMsg);
+  });
+  if (usbActisense->asBoolean()){
+    actisenseReader=new tActisenseReader();
+    Stream *usbStream=usbSerial->getStream(false);
+    actisenseReader->SetReadStream(usbStream);
+    NMEA2000.SetForwardStream(usbStream);
+    NMEA2000.SetForwardType(tNMEA2000::fwdt_Actisense);
+    actisenseReader->SetMsgHandler([](const tN2kMsg &msg){
+      NMEA2000.SendMsg(msg);
+      handleN2kMessage(msg);
+    });
+    NMEA2000.SetForwardOwnMessages(true);
+  } 
   NMEA2000.Open();
   logger.logDebug(GwLog::LOG,"starting addon tasks");
   logger.flush();
@@ -680,7 +699,7 @@ void sendBufferToChannels(const char * buffer, int sourceId){
     socketServer.sendToClients(buffer,sourceId);
     updateNMEACounter(MIN_TCP_CHANNEL_ID,buffer,false);
   }
-  if (sendUsb->asBoolean() && checkFilter(buffer,USB_CHANNEL_ID,false)){
+  if (! actisenseReader && sendUsb->asBoolean() && checkFilter(buffer,USB_CHANNEL_ID,false)){
     usbSerial->sendToClients(buffer,sourceId);
     updateNMEACounter(USB_CHANNEL_ID,buffer,false);
   }
@@ -791,9 +810,12 @@ void loop() {
   //read channels
   socketServer.readMessages(&receiver);
   receiver.id=USB_CHANNEL_ID;
-  usbSerial->readMessages(&receiver);
+  if (! actisenseReader) usbSerial->readMessages(&receiver);
   receiver.id=SERIAL1_CHANNEL_ID;
   if (serial1 && serCanRead ) serial1->readMessages(&receiver);
+  if (actisenseReader){
+    actisenseReader->ParseMessages();
+  }
 
   //handle message requests
   GwMessage *msg=mainQueue.fetchMessage(0);

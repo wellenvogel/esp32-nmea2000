@@ -124,6 +124,18 @@
         }
     },
     {
+        "name": "usbActisense",
+        "label": "USB mode",
+        "type": "list",
+        "default": "false",
+        "description": "send/receive NMEA0183 or actisense format on USB",
+        "list": [
+            {"l":"actisense","v":"true"},
+            {"l":"nmea0183","v":"false"}
+        ],
+        "category": "usb port"
+    },
+    {
         "name": "usbBaud",
         "label": "USB baud rate",
         "type": "list",
@@ -151,7 +163,8 @@
         "type": "boolean",
         "default": "true",
         "description": "send out NMEA data on the USB port",
-        "category": "usb port"
+        "category": "usb port",
+        "condition":{"usbActisense":"false"}
     },
     {
         "name": "receiveUsb",
@@ -159,7 +172,8 @@
         "type": "boolean",
         "default": "true",
         "description": "receive NMEA data on the USB port",
-        "category": "usb port"
+        "category": "usb port",
+        "condition":{"usbActisense":"false"}
     },
     {
         "name": "usbToN2k",
@@ -167,7 +181,8 @@
         "type": "boolean",
         "default": "true",
         "description": "convert NMEA0183 from the USB port to NMEA2000",
-        "category": "usb port"
+        "category": "usb port",
+        "condition":{"usbActisense":"false"}
     },
     {
         "name": "usbReadFilter",
@@ -175,7 +190,8 @@
         "type": "filter",
         "default": "",
         "description": "filter for NMEA0183 data when reading from USB\nselect aison|aisoff, set a whitelist or a blacklist with NMEA sentences like RMC,RMB",
-        "category": "usb port"
+        "category": "usb port",
+        "condition":{"usbActisense":"false"}
     },
     {
         "name": "usbWriteFilter",
@@ -183,7 +199,8 @@
         "type": "filter",
         "default": "",
         "description": "filter for NMEA0183 data when writing to USB\nselect aison|aisoff, set a whitelist or a blacklist with NMEA sentences like RMC,RMB",
-        "category": "usb port"
+        "category": "usb port",
+        "condition":{"usbActisense":"false"}
     },
     {
         "name": "serialDirection",

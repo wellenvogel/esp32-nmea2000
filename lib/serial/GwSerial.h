@@ -4,6 +4,7 @@
 #include "GwLog.h"
 #include "GwBuffer.h"
 class SerialWriter;
+class GwSerialStream;
 class GwSerial{
     private:
         GwBuffer *buffer;
@@ -28,5 +29,7 @@ class GwSerial{
         void loop(bool handleRead=true);
         bool readMessages(GwBufferWriter *writer);
         void flush();
+        Stream *getStream(bool partialWrites);
+    friend GwSerialStream;
 };
 #endif
