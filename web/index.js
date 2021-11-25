@@ -636,8 +636,15 @@ function convertUnassigned(value){
     let cname=getXdrCategoryName(cid);
     if (! cname) return rt;
     let fieldName="";
+    let idx=0;
     (category.fields || []).forEach(function(f){
-        if (parseInt(f.v) == field) fieldName=f.l;
+        if (f.v === undefined){
+            if (idx == field) fieldName=f.l;
+        }
+        else{
+            if (parseInt(f.v) == field) fieldName=f.l;
+        }
+        idx++;
     });
     let selectorName=selector+"";
     (category.selector ||[]).forEach(function(s){
