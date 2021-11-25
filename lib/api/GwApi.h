@@ -4,6 +4,7 @@
 #include "N2kMessages.h"
 #include "NMEA0183Messages.h"
 #include "GWConfig.h"
+#include "GwBoatData.h"
 //API to be used for additional tasks
 class GwApi{
     public:
@@ -13,5 +14,6 @@ class GwApi{
         virtual int getSourceId()=0;
         virtual GwConfigHandler *getConfig()=0;
         virtual GwLog *getLogger()=0;
+        virtual GwBoatData *getBoatData()=0;
 };
 #endif
