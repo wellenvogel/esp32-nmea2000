@@ -1155,6 +1155,23 @@ private:
         SendMessage(nmeaMsg);
     }
 
+    void HandleFluidLevel(const tN2kMsg &N2kMsg)
+    {
+        unsigned char Instance;
+        tN2kFluidType FluidType;
+        double Level=N2kDoubleNA;
+        double Capacity=N2kDoubleNA;
+        if (ParseN2kPGN127505(N2kMsg,Instance,FluidType,Level,Capacity)) {
+            double flc= Level/Capacity*100;
+            GwXDRFoundMapping mapping=xdrMappings->getMapping(XDRFLUID,FluidType,0,Instance);
+            if (updateDouble(&mapping,flc)){
+                LOG_DEBUG(GwLog::DEBUG+1,"found fluidlevel mapping %s",mapping.definition->toString().c_str());
+                addToXdr(mapping.buildXdrEntry(flc));
+                finalizeXdr();
+            }
+        }
+    }
+
     void Handle130310(const tN2kMsg &N2kMsg)
     {
 
@@ -1316,6 +1333,7 @@ private:
       converters.registerConverter(129539UL, &N2kToNMEA0183Functions::HandleDop);
       converters.registerConverter(129540UL, &N2kToNMEA0183Functions::HandleSats);
       converters.registerConverter(127251UL, &N2kToNMEA0183Functions::HandleROT);
+      converters.registerConverter(127505UL, &N2kToNMEA0183Functions::HandleFluidLevel);
       converters.registerConverter(129283UL, &N2kToNMEA0183Functions::HandleXTE);
       converters.registerConverter(129284UL, &N2kToNMEA0183Functions::HandleNavigation);
       converters.registerConverter(130310UL, &N2kToNMEA0183Functions::Handle130310);
