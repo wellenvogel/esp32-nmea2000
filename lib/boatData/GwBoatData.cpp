@@ -172,12 +172,15 @@ static void writeToString(GwTextWriter *writer,GwSatInfoList &value){
 
 template <class T>
 void GwBoatItem<T>::fillString(){
+    bool valid=isValid();
+    if (writer.getSize() && (valid == lastStringValid)) return;
+    lastStringValid=valid;
     writer.reset();
     WriterWrapper wrapper(&writer);
     GwTextWriter stringWriter(wrapper);
     stringWriter.writeRaw(name.c_str());
     stringWriter.writeChar(',');
-    stringWriter.writeInteger(isValid()?1:0);
+    stringWriter.writeInteger(valid?1:0);
     stringWriter.writeChar(',');
     stringWriter.writeInteger(lastSet);
     stringWriter.writeChar(',');

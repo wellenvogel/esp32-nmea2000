@@ -1088,7 +1088,7 @@ function updateDashboard(data) {
     let names={};
     for (let n in data) {
         let current=parseBoatDataLine(data[n]);
-        if (! current.name) return;
+        if (! current.name) continue;
         names[current.name]=true;
         let de = document.getElementById('data_' + current.name);
         if (! de && frame){
@@ -1127,6 +1127,7 @@ function updateDashboard(data) {
             src.textContent=sourceName(current.source);
         }
     }
+    console.log("update");
     forEl('.dashValue',function(el){
         let id=el.getAttribute('id');
         if (id){

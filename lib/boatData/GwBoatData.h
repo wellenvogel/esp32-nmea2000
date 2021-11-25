@@ -48,6 +48,7 @@ class GwBoatItemBase{
         void uls(unsigned long ts=0){
             if (ts) lastSet=ts;
             else lastSet=millis();
+            writer.reset(); //value has changed
         }
         int lastUpdateSource;
     public:
@@ -74,6 +75,7 @@ class GwBoatData;
 template<class T> class GwBoatItem : public GwBoatItemBase{
     protected:
         T data;
+        bool lastStringValid=false;
     public:
         GwBoatItem(String name,String formatInfo,unsigned long invalidTime=INVALID_TIME,GwBoatItemMap *map=NULL);
         virtual ~GwBoatItem(){}
