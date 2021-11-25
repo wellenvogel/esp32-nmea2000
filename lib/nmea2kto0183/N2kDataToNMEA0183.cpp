@@ -105,9 +105,17 @@ private:
             return false;
         return item->update(value,sourceId);
     }
-    bool updateDouble(GwXDRFoundMapping * mapping, double &value){
+    bool updateDouble(GwXDRFoundMapping * mapping, const double &value){
         if (mapping->empty) return false;
+        if (value == N2kDoubleNA)
+            return false;
         return boatData->update(value,sourceId,mapping);
+    }
+    bool updateDouble(GwXDRFoundMapping * mapping, const int8_t &value){
+        if (mapping->empty) return false;
+        if (value == N2kInt8NA)
+            return false;
+        return boatData->update((double)value,sourceId,mapping);
     }
     
     unsigned long LastPosSend;
@@ -1230,6 +1238,59 @@ private:
         addToXdr(mapping.buildXdrEntry(ActualPressure));
         finalizeXdr();
     }
+    void Handle127489(const tN2kMsg &msg){
+        unsigned char instance=-1;
+        double values[8];
+        int8_t ivalues[2];
+        if (! ParseN2kPGN127489(msg,instance,
+            values[0],values[1],values[2],values[3],values[4],values[5],
+            values[6],values[7],ivalues[0],ivalues[1]
+            )){
+           LOG_DEBUG(GwLog::DEBUG,"unable to parse PGN %d",msg.PGN); 
+        }
+        for (int i=0;i<8;i++){
+            GwXDRFoundMapping mapping=xdrMappings->getMapping(XDRENGINE,0,i,instance);
+            if (! updateDouble(&mapping,values[i])) continue; 
+            addToXdr(mapping.buildXdrEntry(values[i])); 
+        }
+        for (int i=0;i< 2;i++){
+            GwXDRFoundMapping mapping=xdrMappings->getMapping(XDRENGINE,0,i+8,instance);
+            if (! updateDouble(&mapping,ivalues[i])) continue; 
+            addToXdr(mapping.buildXdrEntry((double)values[i])); 
+        }
+        finalizeXdr();
+    }
+    void Handle127488(const tN2kMsg &msg){
+        unsigned char instance=-1;
+        double speed,pressure;
+        int8_t tilt;
+        if (! ParseN2kPGN127488(msg,instance,
+            speed,pressure,tilt)){
+           LOG_DEBUG(GwLog::DEBUG,"unable to parse PGN %d",msg.PGN); 
+        }
+        GwXDRFoundMapping mapping=xdrMappings->getMapping(XDRENGINE,0,10,instance);
+        if (updateDouble(&mapping,speed)){
+            addToXdr(mapping.buildXdrEntry(speed)); 
+        }
+        mapping=xdrMappings->getMapping(XDRENGINE,0,11,instance);
+        if (updateDouble(&mapping,pressure)){
+            addToXdr(mapping.buildXdrEntry(pressure)); 
+        }
+        mapping=xdrMappings->getMapping(XDRENGINE,0,12,instance);
+        if (updateDouble(&mapping,tilt)){
+            addToXdr(mapping.buildXdrEntry((double)tilt)); 
+        }
+        finalizeXdr();
+        if (speed == N2kDoubleNA) return;
+        tNMEA0183Msg nmeaMsg;
+        if (! nmeaMsg.Init("RPM",talkerId)) return;
+        if (! nmeaMsg.AddStrField("E")) return;
+        if (! nmeaMsg.AddDoubleField(instance)) return;
+        if (! nmeaMsg.AddDoubleField(speed)) return;
+        if (! nmeaMsg.AddEmptyField()) return;
+        if (! nmeaMsg.AddStrField("V")) return;
+        SendMessage(nmeaMsg);
+    }
 
 
     void registerConverters()
@@ -1260,6 +1321,8 @@ private:
       converters.registerConverter(130312UL, &N2kToNMEA0183Functions::Handle130312);
       converters.registerConverter(130313UL, &N2kToNMEA0183Functions::Handle130313);
       converters.registerConverter(130314UL, &N2kToNMEA0183Functions::Handle130314);
+      converters.registerConverter(127489UL, &N2kToNMEA0183Functions::Handle127489);
+      converters.registerConverter(127488UL, &N2kToNMEA0183Functions::Handle127488);
 #define HANDLE_AIS
 #ifdef HANDLE_AIS
       converters.registerConverter(129038UL, &N2kToNMEA0183Functions::HandleAISClassAPosReport);  // AIS Class A Position Report, Message Type 1

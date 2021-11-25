@@ -284,7 +284,7 @@ template<class T> GwBoatItem<T> *GwBoatData::getOrCreate(T initial, GwBoatItemNa
         name.c_str(),rt->getCurrentType());
     return rt;
 }
-template<class T> bool GwBoatData::update(T value,int source,GwBoatItemNameProvider *provider){
+template<class T> bool GwBoatData::update(const T value,int source,GwBoatItemNameProvider *provider){
     GwBoatItem<T> *item=getOrCreate(value,provider);
     if (! item) return false;
     return item->update(value,source);

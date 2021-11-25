@@ -51,6 +51,9 @@ GwXDRType *types[] = {
     new GwXDRType(GwXDRType::VOLPERCENT, "V", "P"),
     new GwXDRType(GwXDRType::VOLUME, "V", "M", m3ToL, ltrTom3),
     new GwXDRType(GwXDRType::FLOW, "R", "I", ps2ph, ph2ps),
+    new GwXDRType(GwXDRType::GENERIC, "G", ""),
+    new GwXDRType(GwXDRType::DISPLACEMENT, "A", "P"),
+    new GwXDRType(GwXDRType::RPM,"T","R"),
     //important to have 2x NULL!
     NULL,
     NULL};

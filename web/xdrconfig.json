@@ -299,18 +299,22 @@
         ]
     },
     "Engine":{
-        "d":"127489",
+        "d":"127489,1278488",
         "id":10,
         "fields":[
             {"l":"EngineOilPress","t":0},
             {"l":"EngineOilTemp","t":4},
             {"l":"EngineCoolantTemp","t":4},
+            {"l":"AlternatorVoltage","t":2},
             {"l":"FuelRate","t":8},
-            {"l":"EngineHours","t":99},
+            {"l":"EngineHours","t":9},
             {"l":"EngineCoolantPress","t":0},
             {"l":"EngineFuelPress","t":0},
-            {"l":"EngineLoad","t":99},
-            {"l":"EngineTorque","t":99}
+            {"l":"EngineLoad","t":9},
+            {"l":"EngineTorque","t":9},
+            {"l":"EngineSpeed","t":11},
+            {"l":"EngineBoostPressure","t":0},
+            {"l":"EngineTiltTrim","t":10}
         ]
     }
 }

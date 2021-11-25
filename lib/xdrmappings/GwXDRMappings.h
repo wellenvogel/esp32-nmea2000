@@ -33,6 +33,9 @@ class GwXDRType{
         VOLPERCENT=6,
         VOLUME=7,
         FLOW=8,
+        GENERIC=9,
+        DISPLACEMENT=10,
+        RPM=11,
         UNKNOWN=99
     }TypeCode;
     typedef double (* convert)(double);
