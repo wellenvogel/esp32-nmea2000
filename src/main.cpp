@@ -61,6 +61,7 @@ const unsigned long HEAP_REPORT_TIME=2000; //set to 0 to disable heap reporting
 #include "GwLeds.h"
 #include "GwCounter.h"
 #include "GwXDRMappings.h"
+#include "GwExampleTask.h"
 
 
 //NMEA message channels
@@ -234,6 +235,9 @@ public:
   }
   virtual GwLog* getLogger(){
     return &logger;
+  }
+  virtual GwBoatData *getBoatData(){
+    return &boatData;
   }
 };
 
@@ -660,6 +664,7 @@ void setup() {
   startAddOnTask(handleButtons,100);
   setLedMode(LED_GREEN);
   startAddOnTask(handleLeds,101);
+  startAddOnTask(exampleTask,102);
   logger.logDebug(GwLog::LOG,"setup done");
 }  
 //*****************************************************************************
