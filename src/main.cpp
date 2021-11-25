@@ -420,6 +420,17 @@ protected:
     result = boatData.toJson();
   }
 };
+class BoatDataStringRequest : public GwRequestMessage
+{
+public:
+  BoatDataStringRequest() : GwRequestMessage(F("text/plain"),F("boatDataString")){};
+
+protected:
+  virtual void processRequest()
+  {
+    result = boatData.toString();
+  }
+};
 
 class XdrExampleRequest : public GwRequestMessage
 {
@@ -562,6 +573,8 @@ void setup() {
                               { return new ResetConfigRequest(); });
   webserver.registerMainHandler("/api/boatData", [](AsyncWebServerRequest *request)->GwRequestMessage *
                               { return new BoatDataRequest(); });
+  webserver.registerMainHandler("/api/boatDataString", [](AsyncWebServerRequest *request)->GwRequestMessage *
+                              { return new BoatDataStringRequest(); });                              
   webserver.registerMainHandler("/api/xdrExample", [](AsyncWebServerRequest *request)->GwRequestMessage *
                               { 
                                 String mapping=request->arg("mapping");

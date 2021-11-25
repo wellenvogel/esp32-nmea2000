@@ -10,6 +10,19 @@
 
 class GwBoatItemBase{
     public:
+        class StringWriter{
+            uint8_t *buffer =NULL;
+            uint8_t *wp=NULL;
+            size_t bufferSize=0;
+            void ensure(size_t size);
+            public:
+                StringWriter();
+                size_t write(uint8_t c);
+                size_t write(const uint8_t* s, size_t n);
+                const char * c_str() const;
+                int getSize() const;
+                void reset();
+        };
         static const unsigned long INVALID_TIME=60000;
         //the formatter names that must be known in js
         GWSC(formatCourse);
@@ -31,10 +44,12 @@ class GwBoatItemBase{
         unsigned long invalidTime=INVALID_TIME;
         String name;
         String format;
+        StringWriter writer;
         void uls(unsigned long ts=0){
             if (ts) lastSet=ts;
             else lastSet=millis();
         }
+        int lastUpdateSource;
     public:
         int getCurrentType(){return type;}
         unsigned long getLastSet() const {return lastSet;}
@@ -44,9 +59,14 @@ class GwBoatItemBase{
         void invalidate(){
             lastSet=0;
         }
+        const char *getDataString(){
+            fillString();
+            return writer.c_str();
+            }
+        virtual void fillString()=0;
         virtual void toJsonDoc(JsonDocument *doc, unsigned long minTime)=0;
         virtual size_t getJsonSize(){return JSON_OBJECT_SIZE(10);}
-        virtual int getLastSource()=0;
+        virtual int getLastSource(){return lastUpdateSource;}
         virtual void refresh(unsigned long ts=0){uls(ts);}
         String getName(){return name;}
 };
@@ -54,7 +74,6 @@ class GwBoatData;
 template<class T> class GwBoatItem : public GwBoatItemBase{
     protected:
         T data;
-        int lastUpdateSource;
     public:
         GwBoatItem(String name,String formatInfo,unsigned long invalidTime=INVALID_TIME,GwBoatItemMap *map=NULL);
         virtual ~GwBoatItem(){}
@@ -67,6 +86,7 @@ template<class T> class GwBoatItem : public GwBoatItemBase{
             if (! isValid(millis())) return defaultv;
             return data;
         }
+        virtual void fillString();
         virtual void toJsonDoc(JsonDocument *doc, unsigned long minTime);
         virtual int getLastSource(){return lastUpdateSource;}
 };
@@ -178,6 +198,7 @@ class GwBoatData{
         template<class T> bool update(T value,int source,GwBoatItemNameProvider *provider);
         template<class T> T getDataWithDefault(T defaultv, GwBoatItemNameProvider *provider);
         String toJson() const;
+        String toString();
 };
 
 

@@ -1035,6 +1035,7 @@ function resizeFont(el,reset,maxIt){
     }
 }
 function createDashboardItem(name, def, parent) {
+    if (! def.name) return;
     let frame = addEl('div', 'dash', parent);
     let title = addEl('span', 'dashTitle', frame, name);
     let value = addEl('span', 'dashValue', frame);
@@ -1044,22 +1045,35 @@ function createDashboardItem(name, def, parent) {
     let footer = addEl('div','footer',frame);
     let src= addEl('span','source',footer);
     src.setAttribute('id','source_'+name);
-    let u=fmt?fmt.u:'';
-    if (! fmt && def.format.match(/formatXdr/)){
+    let u=fmt?fmt.u:' ';
+    if (! fmt && def.format && def.format.match(/formatXdr/)){
         u=def.format.replace(/formatXdr/,'');
     }
     addEl('span','unit',footer,u);
     return value;
 }
+function parseBoatDataLine(line){
+    let rt={};
+    let parts=line.split(',');
+    rt.name=parts[0];
+    rt.valid=parts[1] === '1';
+    rt.update=parseInt(parts[2]);
+    rt.source=parseInt(parts[3]);
+    rt.format=parts[4];
+    rt.value=parts[5];
+    return rt;
+}
 function createDashboard() {
     let frame = document.getElementById('dashboardPage');
     if (!frame) return;
-    getJson("api/boatData").then(function (json) {
+    getText("api/boatDataString").then(function (txt) {
         frame.innerHTML = '';
-        for (let n in json) {
-            createDashboardItem(n, json[n], frame);
+        let values=txt.split('\n');
+        for (let n in values) {
+            let def=parseBoatDataLine(values[n]);
+            createDashboardItem(def.name, def, frame);
         }
-        updateDashboard(json);
+        updateDashboard(values);
     });
 }
 function sourceName(v){
@@ -1071,30 +1085,34 @@ function sourceName(v){
 }
 function updateDashboard(data) {
     let frame = document.getElementById('dashboardPage');
+    let names={};
     for (let n in data) {
-        let de = document.getElementById('data_' + n);
+        let current=parseBoatDataLine(data[n]);
+        if (! current.name) return;
+        names[current.name]=true;
+        let de = document.getElementById('data_' + current.name);
         if (! de && frame){
-            de=createDashboardItem(n,data[n],frame);   
+            de=createDashboardItem(current.name,current,frame);   
         }
         if (de) {
             let newContent='----';
-            if (data[n].valid) {
+            if (current.valid) {
                 let formatter;
-                if (data[n].format && data[n].format != "NULL") {
-                    let key = data[n].format.replace(/^\&/, '');
+                if (current.format && current.format != "NULL") {
+                    let key = current.format.replace(/^\&/, '');
                     formatter = valueFormatters[key];
                 }
                 if (formatter) {
-                    newContent = formatter.f(data[n].value);
+                    newContent = formatter.f(current.value);
                 }
                 else {
-                    let v = parseFloat(data[n].value);
+                    let v = parseFloat(current.value);
                     if (!isNaN(v)) {
                         v = v.toFixed(3)
                         newContent = v;
                     }
                     else {
-                        newContent = data[n].value;
+                        newContent = current.value;
                     }
                 }
             }
@@ -1104,15 +1122,15 @@ function updateDashboard(data) {
                 resizeFont(de,true);
             }
         }
-        let src=document.getElementById('source_'+n);
+        let src=document.getElementById('source_'+current.name);
         if (src){
-            src.textContent=sourceName(data[n].source);
+            src.textContent=sourceName(current.source);
         }
     }
     forEl('.dashValue',function(el){
         let id=el.getAttribute('id');
         if (id){
-            if (! data[id.replace(/^data_/,'')]){
+            if (! names[id.replace(/^data_/,'')]){
                 el.parentElement.remove();
             }
         }
@@ -1123,8 +1141,8 @@ window.setInterval(update, 1000);
 window.setInterval(function () {
     let dp = document.getElementById('dashboardPage');
     if (dp.classList.contains('hidden')) return;
-    getJson('api/boatData').then(function (data) {
-        updateDashboard(data);
+    getText('api/boatDataString').then(function (data) {
+        updateDashboard(data.split('\n'));
     });
 }, 1000);
 window.addEventListener('load', function () {

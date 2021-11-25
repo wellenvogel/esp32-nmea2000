@@ -1,4 +1,5 @@
 #include "GwBoatData.h"
+#include <ArduinoJson/Json/TextFormatter.hpp>
 #define GWTYPE_DOUBLE 1
 #define GWTYPE_UINT32 2
 #define GWTYPE_UINT16 3
@@ -30,8 +31,55 @@ GwBoatItemBase::GwBoatItemBase(String name, String format, unsigned long invalid
     this->name = name;
     this->format = format;
     this->type = 0;
+    this->lastUpdateSource=-1;
 }
-
+#define STRING_SIZE 40
+GwBoatItemBase::StringWriter::StringWriter(){
+    buffer=new uint8_t[STRING_SIZE];
+    wp=buffer;
+    bufferSize=STRING_SIZE;
+    buffer [0]=0;
+};
+const char *GwBoatItemBase::StringWriter::c_str() const{
+    return (const char *)buffer;
+}
+int GwBoatItemBase::StringWriter::getSize() const{
+    return wp-buffer;
+}
+void GwBoatItemBase::StringWriter::reset(){
+    wp=buffer;
+    *wp=0;
+}
+void GwBoatItemBase::StringWriter::ensure(size_t size){
+    size_t fill=wp-buffer;
+    size_t newSize=bufferSize;
+    while ((fill+size) >= (newSize-1) ){
+        newSize+=STRING_SIZE;       
+    }
+    if (newSize != bufferSize){
+        uint8_t *newBuffer=new uint8_t[newSize];
+        memcpy(newBuffer,buffer,fill);
+        newBuffer[fill]=0;
+        delete buffer;
+        buffer=newBuffer;
+        wp=newBuffer+fill;
+        bufferSize=newSize;
+    }
+}
+size_t GwBoatItemBase::StringWriter::write(uint8_t c){
+    ensure(1);
+    *wp=c;
+    wp++;
+    *wp=0;
+    return 1;
+}
+size_t GwBoatItemBase::StringWriter::write(const uint8_t* s, size_t n){
+    ensure(n);
+    memcpy(wp,s,n);
+    wp+=n;
+    *wp=0;
+    return n;
+}
 template<class T> GwBoatItem<T>::GwBoatItem(String name,String formatInfo,unsigned long invalidTime,GwBoatItemMap *map):
     GwBoatItemBase(name,formatInfo,invalidTime){
             T dummy;
@@ -39,7 +87,6 @@ template<class T> GwBoatItem<T>::GwBoatItem(String name,String formatInfo,unsign
             if (map){
                 (*map)[name]=this;
             }
-            lastUpdateSource=-1;
 }
 
 template <class T>
@@ -88,6 +135,59 @@ void GwBoatItem<T>::toJsonDoc(JsonDocument *doc, unsigned long minTime)
     o[F("valid")] = isValid(minTime);
     o[F("format")] = format;
 }
+
+
+class WriterWrapper{
+    GwBoatItemBase::StringWriter *writer=NULL;
+    public:
+        WriterWrapper(GwBoatItemBase::StringWriter *w){
+            writer=w;
+        }
+        size_t write(uint8_t c){
+            if (! writer) return 0;
+            return writer->write(c);
+        }
+        size_t write(const uint8_t* s, size_t n){
+            if (! writer) return 0;
+            return writer->write(s,n);
+        }
+};
+typedef ARDUINOJSON_NAMESPACE::TextFormatter<WriterWrapper> GwTextWriter;
+
+static void writeToString(GwTextWriter *writer,const double &value){
+    writer->writeFloat(value);
+}
+static void writeToString(GwTextWriter *writer,const uint16_t &value){
+    writer->writeInteger(value);
+}
+static void writeToString(GwTextWriter *writer,const uint32_t &value){
+    writer->writeInteger(value);
+}
+static void writeToString(GwTextWriter *writer,const int16_t &value){
+    writer->writeInteger(value);
+}
+static void writeToString(GwTextWriter *writer,GwSatInfoList &value){
+    writer->writeInteger(value.getNumSats());
+}
+
+template <class T>
+void GwBoatItem<T>::fillString(){
+    writer.reset();
+    WriterWrapper wrapper(&writer);
+    GwTextWriter stringWriter(wrapper);
+    stringWriter.writeRaw(name.c_str());
+    stringWriter.writeChar(',');
+    stringWriter.writeInteger(isValid()?1:0);
+    stringWriter.writeChar(',');
+    stringWriter.writeInteger(lastSet);
+    stringWriter.writeChar(',');
+    stringWriter.writeInteger(lastUpdateSource);
+    stringWriter.writeChar(',');
+    stringWriter.writeRaw(format.c_str());
+    stringWriter.writeChar(',');
+    writeToString(&stringWriter,data);
+}
+
 template class GwBoatItem<double>;
 template class GwBoatItem<uint32_t>;
 template class GwBoatItem<uint16_t>;
@@ -214,7 +314,14 @@ String GwBoatData::toJson() const {
     serializeJson(json,buf);
     return buf;
 }
-
+String GwBoatData::toString(){
+    String rt;
+    for (auto it=values.begin() ; it != values.end();it++){
+        rt+=it->second->getDataString();
+        rt+="\n";
+    }
+    return rt;
+}
 double formatCourse(double cv)
 {
     double rt = cv * 180.0 / M_PI;
