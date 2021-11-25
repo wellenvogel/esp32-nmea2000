@@ -1,4 +1,153 @@
 #include "GwBoatData.h"
+#define GWTYPE_DOUBLE 1
+#define GWTYPE_UINT32 2
+#define GWTYPE_UINT16 3
+#define GWTYPE_INT16 4
+#define GWTYPE_USER 100
+class GwBoatItemTypes{
+    public:
+        static int getType(const uint32_t &x){return GWTYPE_UINT32;}
+        static int getType(const uint16_t &x){return GWTYPE_UINT16;}
+        static int getType(const int16_t &x){return GWTYPE_INT16;}
+        static int getType(const double &x){return GWTYPE_DOUBLE;}
+        static int getType(const GwSatInfoList &x){ return GWTYPE_USER+1;}
+};
+
+bool GwBoatItemBase::isValid(unsigned long now) const
+{
+    if (lastSet == 0)
+        return false;
+    if (invalidTime == 0)
+        return true;
+    if (now == 0)
+        now = millis();
+    return (lastSet + invalidTime) >= now;
+}
+GwBoatItemBase::GwBoatItemBase(String name, String format, unsigned long invalidTime)
+{
+    lastSet = 0;
+    this->invalidTime = invalidTime;
+    this->name = name;
+    this->format = format;
+    this->type = 0;
+}
+
+template<class T> GwBoatItem<T>::GwBoatItem(String name,String formatInfo,unsigned long invalidTime,GwBoatItemMap *map):
+    GwBoatItemBase(name,formatInfo,invalidTime){
+            T dummy;
+            this->type=GwBoatItemTypes::getType(dummy);
+            if (map){
+                (*map)[name]=this;
+            }
+            lastUpdateSource=-1;
+}
+
+template <class T>
+bool GwBoatItem<T>::update(T nv, int source)
+{
+    unsigned long now = millis();
+    if (isValid(now))
+    {
+        //priority handling
+        //sources with lower ids will win
+        //and we will not overwrite their value
+        if (lastUpdateSource < source && lastUpdateSource >= 0)
+        {
+            return false;
+        }
+    }
+    data = nv;
+    lastUpdateSource = source;
+    uls(now);
+    return true;
+}
+template <class T>
+bool GwBoatItem<T>::updateMax(T nv, int sourceId)
+{
+    unsigned long now = millis();
+    if (!isValid(now))
+    {
+        return update(nv, sourceId);
+    }
+    if (getData() < nv)
+    {
+        data = nv;
+        lastUpdateSource = sourceId;
+        uls(now);
+        return true;
+    }
+    return false;
+}
+template <class T>
+void GwBoatItem<T>::toJsonDoc(JsonDocument *doc, unsigned long minTime)
+{
+    JsonObject o = doc->createNestedObject(name);
+    o[F("value")] = getData();
+    o[F("update")] = minTime - lastSet;
+    o[F("source")] = lastUpdateSource;
+    o[F("valid")] = isValid(minTime);
+    o[F("format")] = format;
+}
+template class GwBoatItem<double>;
+template class GwBoatItem<uint32_t>;
+template class GwBoatItem<uint16_t>;
+template class GwBoatItem<int16_t>;
+void GwSatInfoList::houseKeeping(unsigned long ts)
+{
+    if (ts == 0)
+        ts = millis();
+    sats.erase(std::remove_if(
+                   sats.begin(),
+                   sats.end(),
+                   [ts, this](const GwSatInfo &info)
+                   {
+                       return (info.timestamp + lifeTime) < ts;
+                   }),
+               sats.end());
+}
+void GwSatInfoList::update(GwSatInfo entry)
+{
+    unsigned long now = millis();
+    entry.timestamp = now;
+    for (auto it = sats.begin(); it != sats.end(); it++)
+    {
+        if (it->PRN == entry.PRN)
+        {
+            *it = entry;
+            houseKeeping();
+            return;
+        }
+    }
+    houseKeeping();
+    sats.push_back(entry);
+}
+
+GwBoatDataSatList::GwBoatDataSatList(String name, String formatInfo, unsigned long invalidTime , GwBoatItemMap *map) : 
+        GwBoatItem<GwSatInfoList>(name, formatInfo, invalidTime, map) {}
+
+bool GwBoatDataSatList::update(GwSatInfo info, int source)
+{
+    unsigned long now = millis();
+    if (isValid(now))
+    {
+        //priority handling
+        //sources with lower ids will win
+        //and we will not overwrite their value
+        if (lastUpdateSource < source)
+        {
+            return false;
+        }
+    }
+    lastUpdateSource = source;
+    uls(now);
+    data.update(info);
+    return true;
+}
+void GwBoatDataSatList::toJsonDoc(JsonDocument *doc, unsigned long minTime)
+{
+    data.houseKeeping();
+    GwBoatItem<GwSatInfoList>::toJsonDoc(doc, minTime);
+}
 
 GwBoatData::GwBoatData(GwLog *logger){
     this->logger=logger;
@@ -23,7 +172,7 @@ template<class T> GwBoatItem<T> *GwBoatData::getOrCreate(T initial, GwBoatItemNa
         }
         return (GwBoatItem<T>*)(it->second);
     }
-    GwBoatItem<T> *rt=new GwBoatItem<T>(GwBoatItemTypes::getType(initial), name,
+    GwBoatItem<T> *rt=new GwBoatItem<T>(name,
         provider->getBoatItemFormat(),
         provider->getInvalidTime(),
         &values);
@@ -102,3 +251,18 @@ double mtr2nm(double m)
 bool convertToJson(const GwSatInfoList &si,JsonVariant &variant){
     return variant.set(si.getNumSats());
 }
+
+#ifdef _UNDEF
+#include <ArduinoJson/Json/TextFormatter.hpp>
+
+class XWriter{
+    public:
+     void write(uint8_t c) {
+    }
+
+  void write(const uint8_t* s, size_t n) {
+  }   
+};
+static XWriter xwriter;
+ARDUINOJSON_NAMESPACE::TextFormatter<XWriter> testWriter(xwriter);
+#endif
