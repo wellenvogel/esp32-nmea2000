@@ -617,31 +617,6 @@ private:
     }
 
     //*****************************************************************************
-    void HandleWaterTemp(const tN2kMsg &N2kMsg)
-    {
-
-        unsigned char SID;
-        double OutsideAmbientAirTemperature;
-        double AtmosphericPressure;
-        double WaterTemperature;
-        if (ParseN2kPGN130310(N2kMsg, SID, WaterTemperature, OutsideAmbientAirTemperature, AtmosphericPressure))
-        {
-
-            updateDouble(boatData->WaterTemperature, WaterTemperature);
-            tNMEA0183Msg NMEA0183Msg;
-
-            if (!NMEA0183Msg.Init("MTW", talkerId))
-                return;
-            if (!NMEA0183Msg.AddDoubleField(KelvinToC(WaterTemperature)))
-                return;
-            if (!NMEA0183Msg.AddStrField("C"))
-                return;
-
-            SendMessage(NMEA0183Msg);
-        }
-    }
-
-    //*****************************************************************************
     // 129038 AIS Class A Position Report (Message 1, 2, 3)
     void HandleAISClassAPosReport(const tN2kMsg &N2kMsg)
     {
@@ -1188,6 +1163,125 @@ private:
         SendMessage(nmeaMsg);
     }
 
+    void HandleFluidLevel(const tN2kMsg &N2kMsg)
+    {
+        unsigned char Instance;
+        tN2kFluidType FluidType;
+        double Level=N2kDoubleNA;
+        double Capacity=N2kDoubleNA;
+        if (ParseN2kPGN127505(N2kMsg,Instance,FluidType,Level,Capacity)) {
+            double flc= Level/Capacity*100;
+            GwXDRFoundMapping mapping=xdrMappings->getMapping(XDRFLUID,FluidType,0,Instance);
+            if (updateDouble(&mapping,flc)){
+                LOG_DEBUG(GwLog::DEBUG+1,"found fluidlevel mapping %s",mapping.definition->toString().c_str());
+                addToXdr(mapping.buildXdrEntry(flc));
+                finalizeXdr();
+            }
+        }
+    }
+
+    void HandleBatteryStatus(const tN2kMsg &N2kMsg)
+    {
+        unsigned char SID=-1;
+        unsigned char BatteryInstance;
+        double BatteryVoltage=N2kDoubleNA;
+        double BatteryCurrent=N2kDoubleNA;
+        double BatteryTemperature=N2kDoubleNA;
+        if (ParseN2kPGN127508(N2kMsg,BatteryInstance,BatteryVoltage,BatteryCurrent,BatteryTemperature,SID)) {
+            int i=0;
+            GwXDRFoundMapping mapping=xdrMappings->getMapping(XDRBAT,0,0,BatteryInstance);
+            if (updateDouble(&mapping,BatteryVoltage)){
+                LOG_DEBUG(GwLog::DEBUG+1,"found BatteryVoltage mapping %s",mapping.definition->toString().c_str());
+                addToXdr(mapping.buildXdrEntry(BatteryVoltage));
+                i++;
+            }
+            mapping=xdrMappings->getMapping(XDRBAT,1,0,BatteryInstance);
+            if (updateDouble(&mapping,BatteryCurrent)){
+                LOG_DEBUG(GwLog::DEBUG+1,"found BatteryCurrent mapping %s",mapping.definition->toString().c_str());
+                addToXdr(mapping.buildXdrEntry(BatteryCurrent));
+                i++;
+            }
+            mapping=xdrMappings->getMapping(XDRBAT,2,0,BatteryInstance);
+            if (updateDouble(&mapping,BatteryTemperature)){
+                LOG_DEBUG(GwLog::DEBUG+1,"found BatteryTemperature mapping %s",mapping.definition->toString().c_str());
+                addToXdr(mapping.buildXdrEntry(BatteryTemperature));
+                i++;
+            }
+            if (i>0) finalizeXdr();
+        }
+    }
+
+    void Handle130310(const tN2kMsg &N2kMsg)
+    {
+
+        unsigned char SID=-1;
+        double OutsideAmbientAirTemperature;
+        double AtmosphericPressure;
+        double WaterTemperature;
+        if (ParseN2kPGN130310(N2kMsg, SID, WaterTemperature, OutsideAmbientAirTemperature, AtmosphericPressure))
+        {
+            updateDouble(boatData->WaterTemperature, WaterTemperature);
+            tNMEA0183Msg NMEA0183Msg;
+
+            if (!NMEA0183Msg.Init("MTW", talkerId))
+                return;
+            if (!NMEA0183Msg.AddDoubleField(KelvinToC(WaterTemperature)))
+                return;
+            if (!NMEA0183Msg.AddStrField("C"))
+                return;
+
+            SendMessage(NMEA0183Msg);
+        }
+        int i=0;
+        GwXDRFoundMapping mapping=xdrMappings->getMapping(XDRTEMP,N2kts_OutsideTemperature,0,0);
+        if (updateDouble(&mapping,OutsideAmbientAirTemperature)){
+            LOG_DEBUG(GwLog::DEBUG+1,"found temperature mapping %s",mapping.definition->toString().c_str());
+            addToXdr(mapping.buildXdrEntry(OutsideAmbientAirTemperature));
+            i++;
+        }
+        mapping=xdrMappings->getMapping(XDRPRESSURE,N2kps_Atmospheric,0,0);
+        if (updateDouble(&mapping,AtmosphericPressure)){
+            LOG_DEBUG(GwLog::DEBUG+1,"found pressure mapping %s",mapping.definition->toString().c_str());
+            addToXdr(mapping.buildXdrEntry(AtmosphericPressure));
+            i++;
+        }
+        if (i>0) finalizeXdr();
+    }
+
+    void Handle130311(const tN2kMsg &msg){
+        unsigned char SID=-1;
+        tN2kTempSource TempSource;
+        double Temperature=N2kDoubleNA;
+        tN2kHumiditySource HumiditySource;
+        double Humidity=N2kDoubleNA;
+        double AtmosphericPressure=N2kDoubleNA;
+        if (!ParseN2kPGN130311(msg,SID,TempSource,Temperature,HumiditySource,Humidity,AtmosphericPressure)) {
+            LOG_DEBUG(GwLog::DEBUG,"unable to parse PGN %d",msg.PGN);
+            return;
+        }
+        int i=0;
+        GwXDRFoundMapping mapping=xdrMappings->getMapping(XDRTEMP,TempSource,0,0);
+        if (updateDouble(&mapping,Temperature)){
+            LOG_DEBUG(GwLog::DEBUG+1,"found temperature mapping %s",mapping.definition->toString().c_str());
+            addToXdr(mapping.buildXdrEntry(Temperature));
+            i++;
+        }
+        mapping=xdrMappings->getMapping(XDRHUMIDITY,HumiditySource,0,0);
+        if (updateDouble(&mapping,Humidity)){
+            LOG_DEBUG(GwLog::DEBUG+1,"found humidity mapping %s",mapping.definition->toString().c_str());
+            addToXdr(mapping.buildXdrEntry(Humidity));
+            i++;
+        }   
+        mapping=xdrMappings->getMapping(XDRPRESSURE,N2kps_Atmospheric,0,0);
+        if (updateDouble(&mapping,AtmosphericPressure)){
+            LOG_DEBUG(GwLog::DEBUG+1,"found pressure mapping %s",mapping.definition->toString().c_str());
+            addToXdr(mapping.buildXdrEntry(AtmosphericPressure));
+            i++;
+        }
+        if (i>0) finalizeXdr();
+
+    }
+
     void Handle130312(const tN2kMsg &msg){
         unsigned char SID=-1;
         unsigned char TemperatureInstance=0;
@@ -1292,6 +1386,22 @@ private:
         SendMessage(nmeaMsg);
     }
 
+    void Handle130316(const tN2kMsg &msg){
+        unsigned char SID=-1;
+        unsigned char TemperatureInstance=0;
+        tN2kTempSource TemperatureSource;
+        double Temperature=N2kDoubleNA;
+        double setTemperature=N2kDoubleNA;
+        if (!ParseN2kPGN130316(msg,SID,TemperatureInstance,TemperatureSource,Temperature,setTemperature)){
+           LOG_DEBUG(GwLog::DEBUG,"unable to parse PGN %d",msg.PGN);
+           return;
+        }
+        GwXDRFoundMapping mapping=xdrMappings->getMapping(XDRTEMP,(int)TemperatureSource,0,TemperatureInstance);
+        if (! updateDouble(&mapping,Temperature)) return;
+        LOG_DEBUG(GwLog::DEBUG+1,"found temperature mapping %s",mapping.definition->toString().c_str());
+        addToXdr(mapping.buildXdrEntry(Temperature));
+        finalizeXdr();
+    }
 
     void registerConverters()
     {
@@ -1310,19 +1420,23 @@ private:
       converters.registerConverter(130306UL, &N2kToNMEA0183Functions::HandleWind);
       converters.registerConverter(128275UL, &N2kToNMEA0183Functions::HandleLog);
       converters.registerConverter(127245UL, &N2kToNMEA0183Functions::HandleRudder);
-      converters.registerConverter(130310UL, &N2kToNMEA0183Functions::HandleWaterTemp);
       converters.registerConverter(126992UL, &N2kToNMEA0183Functions::HandleSystemTime);
       converters.registerConverter(129033UL, &N2kToNMEA0183Functions::HandleTimeOffset);
       converters.registerConverter(129539UL, &N2kToNMEA0183Functions::HandleDop);
       converters.registerConverter(129540UL, &N2kToNMEA0183Functions::HandleSats);
       converters.registerConverter(127251UL, &N2kToNMEA0183Functions::HandleROT);
+      converters.registerConverter(127505UL, &N2kToNMEA0183Functions::HandleFluidLevel);
+      converters.registerConverter(127508UL, &N2kToNMEA0183Functions::HandleBatteryStatus);
       converters.registerConverter(129283UL, &N2kToNMEA0183Functions::HandleXTE);
       converters.registerConverter(129284UL, &N2kToNMEA0183Functions::HandleNavigation);
+      converters.registerConverter(130310UL, &N2kToNMEA0183Functions::Handle130310);
+      converters.registerConverter(130311UL, &N2kToNMEA0183Functions::Handle130311);
       converters.registerConverter(130312UL, &N2kToNMEA0183Functions::Handle130312);
       converters.registerConverter(130313UL, &N2kToNMEA0183Functions::Handle130313);
       converters.registerConverter(130314UL, &N2kToNMEA0183Functions::Handle130314);
       converters.registerConverter(127489UL, &N2kToNMEA0183Functions::Handle127489);
       converters.registerConverter(127488UL, &N2kToNMEA0183Functions::Handle127488);
+      converters.registerConverter(130316UL, &N2kToNMEA0183Functions::Handle130316);
 #define HANDLE_AIS
 #ifdef HANDLE_AIS
       converters.registerConverter(129038UL, &N2kToNMEA0183Functions::HandleAISClassAPosReport);  // AIS Class A Position Report, Message Type 1
