@@ -22,6 +22,14 @@ function forEl(query, callback,base) {
         callback(all[i]);
     }
 }
+function closestParent(element,clazz){
+    while (true){
+        let parent=element.parentElement;
+        if (! parent) return;
+        if (parent.classList.contains(clazz)) return parent;
+        element=parent;
+    }
+}
 function alertRestart() {
     reloadConfig = true;
     alert("Board reset triggered, reconnect WLAN if necessary");
@@ -256,7 +264,7 @@ function hideOverlay() {
     let container = document.getElementById('overlayContainer');
     container.classList.add('hidden');
 }
-function checkChange(el, row) {
+function checkChange(el, row,name) {
     let loaded = el.getAttribute('data-loaded');
     if (loaded !== undefined) {
         if (loaded != el.value) {
@@ -266,9 +274,52 @@ function checkChange(el, row) {
             row.classList.remove("changed");
         }
     }
+    let dependend=conditionRelations[name];
+    if (dependend){
+        for (let el in dependend){
+            checkCondition(dependend[el]);
+        }
+    }
 }
 let configDefinitions={};
 let xdrConfig={};
+//a map between the name of a config item and a list of dependend items
+let conditionRelations={};
+function getConditions(name){
+    if (! name) return;
+    let def;
+    for (let k in configDefinitions){
+        if (configDefinitions[k].name === name){
+            def=configDefinitions[k];
+            break;
+        }
+    }
+    if (! def) return;
+    let condition=def.condition;
+    if (! condition) return;
+    if (! (condition instanceof Array)) condition=[condition];
+    return condition;
+}
+function checkCondition(element){
+    let name=element.getAttribute('name');
+    let condition=getConditions(name);
+    if (! condition) return;
+    let visible=false;
+    condition.forEach(function(cel){
+        let lvis=true;
+        for (let k in cel){
+            let item=document.querySelector('[name='+k+']');
+            if (item){
+                if (item.value != cel[k]) lvis=false;
+            }
+        }
+        if (lvis) visible=true;
+    });
+    let row=closestParent(element,'row');
+    if (!row) return;
+    if (visible) row.classList.remove('hidden');
+    else row.classList.add('hidden');
+}
 function createInput(configItem, frame,clazz) {
     let el;
     if (configItem.type === 'boolean' || configItem.type === 'list') {
@@ -831,8 +882,19 @@ function createConfigDefinitions(parent, capabilities, defs,includeXdr) {
         valueEl.setAttribute('data-default', item.default);
         valueEl.addEventListener('change', function (ev) {
             let el = ev.target;
-            checkChange(el, row);
+            checkChange(el, row,item.name);
         })
+        let condition=getConditions(item.name);
+        if (condition){
+            condition.forEach(function(cel){
+                for (let c in cel){
+                    if (!conditionRelations[c]){
+                        conditionRelations[c]=[];
+                    }
+                    conditionRelations[c].push(valueEl);
+                }
+            })
+        }
         if (item.check) valueEl.setAttribute('data-check', item.check);
         let btContainer = addEl('div', 'buttonContainer', row);
         let bt = addEl('button', 'defaultButton', btContainer, 'X');
