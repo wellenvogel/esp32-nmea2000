@@ -96,7 +96,7 @@ Preferences preferences;             // Nonvolatile storage on ESP32 - To store 
 N2kDataToNMEA0183 *nmea0183Converter=NULL;
 NMEA0183DataToN2K *toN2KConverter=NULL;
 tActisenseReader *actisenseReader=NULL;
-
+Stream *usbStream=NULL;
 
 
 void SendNMEA0183Message(const tNMEA0183Msg &NMEA0183Msg,int id);
@@ -143,8 +143,11 @@ void updateNMEACounter(int id,const char *msg,bool incoming,bool fail=false){
 
 
 GwConfigInterface *sendUsb=config.getConfigItem(config.sendUsb,true);
+GwConfigInterface *readUsb=config.getConfigItem(config.receiveUsb,true);
 GwConfigInterface *usbActisense=config.getConfigItem(config.usbActisense,true);
+GwConfigInterface *usbSendActisens=config.getConfigItem(config.usbActSend,true);
 GwConfigInterface *sendTCP=config.getConfigItem(config.sendTCP,true);
+GwConfigInterface *readTCP=config.getConfigItem(config.readTCP,true);
 GwConfigInterface *sendSeasmart=config.getConfigItem(config.sendSeasmart,true);
 GwConfigInterface *systemName=config.getConfigItem(config.systemName,true);
 GwConfigInterface *n2kFromTCP=config.getConfigItem(config.tcpToN2k,true);
@@ -478,6 +481,7 @@ protected:
   }
 };
 
+//received or converted N2K message
 void handleN2kMessage(const tN2kMsg &n2kMsg){
     if ( sendSeasmart->asBoolean() ) {
       char buf[MAX_NMEA2000_MESSAGE_SEASMART_SIZE];
@@ -488,6 +492,12 @@ void handleN2kMessage(const tN2kMsg &n2kMsg){
     nmea0183Converter->HandleMsg(n2kMsg);
     logger.logDebug(GwLog::DEBUG+1,"done pgn %d",n2kMsg.PGN);
   };
+void trySendActisense(const tN2kMsg &n2kMsg){
+  if (actisenseReader &&  usbStream && usbSendActisens->asBoolean()){
+      countUSBOut.add(String(n2kMsg.PGN));
+      n2kMsg.SendInActisenseFormat(usbStream);
+    }
+}
 void setup() {
 
   uint8_t chipid[6];
@@ -613,6 +623,7 @@ void setup() {
     logger.logDebug(GwLog::DEBUG+2,"send N2K %ld",msg.PGN);
     countNMEA2KOut.add(msg.PGN);
     NMEA2000.SendMsg(msg);
+    trySendActisense(msg);
     return true;
   });  
   
@@ -661,22 +672,22 @@ void setup() {
   }
   NMEA2000.ExtendTransmitMessages(pgns);
   NMEA2000.ExtendReceiveMessages(nmea0183Converter->handledPgns());
-  NMEA2000.SetMsgHandler([](const tN2kMsg &n2kMsg){
-    countNMEA2KIn.add(n2kMsg.PGN);
-    handleN2kMessage(n2kMsg);
-  });
   if (usbActisense->asBoolean()){
     actisenseReader=new tActisenseReader();
-    Stream *usbStream=usbSerial->getStream(false);
+    usbStream=usbSerial->getStream(false);
     actisenseReader->SetReadStream(usbStream);
-    NMEA2000.SetForwardStream(usbStream);
-    NMEA2000.SetForwardType(tNMEA2000::fwdt_Actisense);
     actisenseReader->SetMsgHandler([](const tN2kMsg &msg){
+      countNMEA2KOut.add(msg.PGN);
       NMEA2000.SendMsg(msg);
       handleN2kMessage(msg);
+      countUSBIn.add(String(msg.PGN));
     });
-    NMEA2000.SetForwardOwnMessages(true);
   } 
+  NMEA2000.SetMsgHandler([](const tN2kMsg &n2kMsg){
+    countNMEA2KIn.add(n2kMsg.PGN);
+    trySendActisense(n2kMsg);
+    handleN2kMessage(n2kMsg);
+  });
   NMEA2000.Open();
   logger.logDebug(GwLog::LOG,"starting addon tasks");
   logger.flush();
@@ -808,9 +819,9 @@ void loop() {
   nmea0183Converter->loop();
 
   //read channels
-  socketServer.readMessages(&receiver);
+  if (readTCP->asBoolean()) socketServer.readMessages(&receiver);
   receiver.id=USB_CHANNEL_ID;
-  if (! actisenseReader) usbSerial->readMessages(&receiver);
+  if (! actisenseReader && readUsb->asBoolean()) usbSerial->readMessages(&receiver);
   receiver.id=SERIAL1_CHANNEL_ID;
   if (serial1 && serCanRead ) serial1->readMessages(&receiver);
   if (actisenseReader){

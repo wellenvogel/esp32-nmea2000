@@ -203,6 +203,15 @@
         "condition":{"usbActisense":"false"}
     },
     {
+        "name": "usbActSend",
+        "label": "N2K to USB actisense",
+        "type": "boolean",
+        "default": "true",
+        "description": "send out N2k data on the USB port in actisense format",
+        "category": "usb port",
+        "condition":{"usbActisense":"true"}
+    },
+    {
         "name": "serialDirection",
         "label": "serial direction",
         "type": "list",
