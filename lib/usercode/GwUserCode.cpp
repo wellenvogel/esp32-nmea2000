@@ -1,6 +1,7 @@
 #include "GwUserCode.h"
 #include <Arduino.h>
 #include <vector>
+#include <map>
 //user task handling
 class UserTask{
     public:
@@ -11,7 +12,9 @@ class UserTask{
             this->task=task;
         }
 };
+
 std::vector<UserTask> userTasks;
+GwUserCode::Capabilities userCapabilities;
 
 void registerUserTask(TaskFunction_t task,String name){
   userTasks.push_back(UserTask(name,task));
@@ -23,7 +26,14 @@ class GwUserTask{
             registerUserTask(task,name);
         }
 };
+class GwUserCapability{
+    public:
+        GwUserCapability(String name,String value){
+            userCapabilities[name]=value;  
+        }
+};
 #define DECLARE_USERTASK(task) GwUserTask __##task##__(task,#task);
+#define DECLARE_CAPABILITY(name,value) GwUserCapability __CAP##name__(#name,#value); 
 #include "GwUserTasks.h"
 #include "GwApi.h"
 class TaskApi : public GwApi
@@ -86,4 +96,8 @@ void GwUserCode::startUserTasks(int baseId){
 void GwUserCode::startAddonTask(String name, TaskFunction_t task, int id){
     LOG_DEBUG(GwLog::LOG,"starting addon task %s with id %d",name.c_str(),id);
     startAddOnTask(api,task,id);
+}
+
+GwUserCode::Capabilities * GwUserCode::getCapabilities(){
+    return &userCapabilities;
 }

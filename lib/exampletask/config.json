@@ -1,0 +1,13 @@
+[
+    {
+        "name": "exampleConfig",
+        "label": "logging on",
+        "type": "boolean",
+        "default": "false",
+        "description": "switch on logging of position acquired/failed",
+        "category": "example",
+        "capabilities": {
+            "testboard":"true"
+        }
+    }
+]

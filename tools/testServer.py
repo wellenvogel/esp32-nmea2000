@@ -49,26 +49,31 @@ class RequestHandler(http.server.SimpleHTTPRequestHandler):
             path = urllib.parse.unquote(path)
         path = posixpath.normpath(path)
         words = path.split('/')
-        words = filter(None, words)
-        path = self.server.baseDir
-        for word in words:
-            if os.path.dirname(word) or word in (os.curdir, os.pardir):
-                # Ignore components that are not a simple file/directory name
-                continue
-            path = os.path.join(path, word)
-        if trailing_slash:
-            path += '/'
-        return path
-
-def run(baseDir,port,apiUrl,server_class=http.server.HTTPServer, handler_class=RequestHandler):
+        words = list(filter(None, words))
+        for baseDir in [
+            os.path.join(self.server.baseDir,'lib','generated'),
+            os.path.join(self.server.baseDir,'web')]:
+            rpath = baseDir
+            for word in words:
+                if os.path.dirname(word) or word in (os.curdir, os.pardir):
+                    # Ignore components that are not a simple file/directory name
+                    continue
+                rpath = os.path.join(rpath, word)
+            if trailing_slash:
+                rpath += '/'
+            if os.path.exists(rpath):
+                return rpath
+                
+def run(port,apiUrl,server_class=http.server.HTTPServer, handler_class=RequestHandler):
+    basedir=os.path.join(os.path.dirname(__file__),'..')
     server_address = ('', port)
     httpd = server_class(server_address, handler_class)
     httpd.proxyUrl=apiUrl
-    httpd.baseDir=baseDir
+    httpd.baseDir=basedir
     httpd.serve_forever()
 
 if __name__ == '__main__':
-    if len(sys.argv) != 4:
-        print("usage: %s basedir port apiurl"%sys.argv[0])
+    if len(sys.argv) != 3:
+        print("usage: %s port apiurl"%sys.argv[0])
         sys.exit(1)
-    run(sys.argv[1],int(sys.argv[2]),sys.argv[3])    
+    run(int(sys.argv[1]),sys.argv[2])    

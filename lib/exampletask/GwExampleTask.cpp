@@ -35,10 +35,15 @@ class GetBoatDataRequest: public GwMessage{
 void exampleTask(void *param){
     GwApi *api=(GwApi*)param;
     GwLog *logger=api->getLogger();
+    //get some configuration data
+    bool exampleSwitch=api->getConfig()->getConfigItem(
+        api->getConfig()->exampleConfig,
+        true)->asBoolean();
     //------
     //initialization goes here
     //------
     bool hasPosition=false;
+    LOG_DEBUG(GwLog::DEBUG,"example switch ist %s",exampleSwitch?"true":"false");
     while(true){
         delay(1000);
         /*
@@ -65,14 +70,14 @@ void exampleTask(void *param){
         }
         if (r->latitude == INVALID_COORD || r->longitude == INVALID_COORD){
             if (hasPosition){
-                logger->logDebug(GwLog::ERROR,"position lost...");
+                if (exampleSwitch) logger->logDebug(GwLog::ERROR,"position lost...");
                 hasPosition=false;
             }
         }
         else{
             //do something with the data we have from boatData
             if (! hasPosition){
-                logger->logDebug(GwLog::LOG,"postion now available lat=%f, lon=%f",
+                if (exampleSwitch) logger->logDebug(GwLog::LOG,"postion now available lat=%f, lon=%f",
                     r->latitude,r->longitude);
                     hasPosition=true;
             }

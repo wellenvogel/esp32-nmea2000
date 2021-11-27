@@ -265,6 +265,7 @@ bool delayedRestart(){
   },"reset",1000,&logger,0,NULL) == pdPASS;
 }
 
+GwUserCode userCodeHandler(new ApiImpl(200));
 
 #define JSON_OK "{\"status\":\"OK\"}"
 
@@ -329,7 +330,12 @@ class CapabilitiesRequest : public GwRequestMessage{
     CapabilitiesRequest() : GwRequestMessage(F("application/json"),F("capabilities")){};
   protected:
     virtual void processRequest(){
-      DynamicJsonDocument json(JSON_OBJECT_SIZE(6));
+      int numCapabilities=userCodeHandler.getCapabilities()->size();
+      DynamicJsonDocument json(JSON_OBJECT_SIZE(numCapabilities*3+6));
+      for (auto it=userCodeHandler.getCapabilities()->begin();
+        it != userCodeHandler.getCapabilities()->end();it++){
+          json[it->first]=it->second;
+        }
       #ifdef GWSERIAL_MODE
       String serial(F(GWSERIAL_MODE));
       #else
@@ -692,11 +698,10 @@ void setup() {
   NMEA2000.Open();
   logger.logDebug(GwLog::LOG,"starting addon tasks");
   logger.flush();
-  GwUserCode userHandler(new ApiImpl(200));
-  userHandler.startAddonTask(F("handleButtons"),handleButtons,100);
+  userCodeHandler.startAddonTask(F("handleButtons"),handleButtons,100);
   setLedMode(LED_GREEN);
-  userHandler.startAddonTask(F("handleLeds"),handleLeds,101);
-  userHandler.startUserTasks(200);
+  userCodeHandler.startAddonTask(F("handleLeds"),handleLeds,101);
+  userCodeHandler.startUserTasks(200);
   
   logger.logDebug(GwLog::LOG,"setup done");
 }  

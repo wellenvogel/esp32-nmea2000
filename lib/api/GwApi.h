@@ -19,4 +19,7 @@ class GwApi{
 #ifndef DECLARE_USERTASK
 #define DECLARE_USERTASK(task)
 #endif
+#ifndef DECLARE_CAPABILITY
+#define DECLARE_CAPABILITY(name,value)
+#endif
 #endif

@@ -91,31 +91,57 @@ def writeFileIfChanged(fileName,data):
     with open(fileName,"w") as oh:
         oh.write(data)
 
-def generateCfg(ch,oh,inFile=''):
-    config=json.load(ch)      
-    oh.write("//generated from %s\n"%inFile)
-    oh.write('#include "GwConfigItem.h"\n')
-    l=len(config)
-    oh.write('class GwConfigDefinitions{\n')
-    oh.write('  public:\n')
-    oh.write('  int getNumConfig() const{return %d;}\n'%(l))
-    for item in config:
-        n=item.get('name')
-        if n is None:
-            continue
-        if len(n) > 15:
-            raise Exception("%s: config names must be max 15 caracters"%n)
-        oh.write('  const String %s=F("%s");\n'%(n,n))
-    oh.write('  protected:\n')    
-    oh.write('  GwConfigItem *configs[%d]={\n'%(l))
-    first=True
-    for item in config:
-        if not first:
-            oh.write(',\n')
-        first=False    
-        oh.write("    new GwConfigItem(%s,\"%s\")"%(item.get('name'),item.get('default')))
-    oh.write('};\n')  
-    oh.write('};\n')
+def mergeConfig(base,other):
+    for bdir in other:
+        cname=os.path.join(bdir,"config.json")
+        if os.path.exists(cname):
+            print("merge config %s"%cname)
+            with open(cname,'rb') as ah:
+                merge=json.load(ah)
+                base=base+merge
+    return base
+
+def generateMergedConfig(inFile,outFile,addDirs=[]):
+    if not os.path.exists(inFile):
+        raise Exception("unable to read cfg file %s"%inFile)
+    data=""
+    with open(inFile,'rb') as ch:    
+        config=json.load(ch)
+        config=mergeConfig(config,addDirs)
+        data=json.dumps(config,indent=2)
+        writeFileIfChanged(outFile,data)
+
+def generateCfg(inFile,outFile,addDirs=[]):
+    if not os.path.exists(inFile):
+        raise Exception("unable to read cfg file %s"%inFile)
+    data=""
+    with open(inFile,'rb') as ch:    
+        config=json.load(ch)
+        config=mergeConfig(config,addDirs)      
+        data+="//generated from %s\n"%inFile
+        data+='#include "GwConfigItem.h"\n'
+        l=len(config)
+        data+='class GwConfigDefinitions{\n'
+        data+='  public:\n'
+        data+='  int getNumConfig() const{return %d;}\n'%(l)
+        for item in config:
+            n=item.get('name')
+            if n is None:
+                continue
+            if len(n) > 15:
+                raise Exception("%s: config names must be max 15 caracters"%n)
+            data+='  const String %s=F("%s");\n'%(n,n)
+        data+='  protected:\n'    
+        data+='  GwConfigItem *configs[%d]={\n'%(l)
+        first=True
+        for item in config:
+            if not first:
+                data+=',\n'
+            first=False    
+            data+="    new GwConfigItem(%s,\"%s\")"%(item.get('name'),item.get('default'))
+        data+='};\n'  
+        data+='};\n'
+    writeFileIfChanged(outFile,data)    
                     
 
 def generateXdrMappings(fp,oh,inFile=''):
@@ -157,10 +183,17 @@ def generateXdrMappings(fp,oh,inFile=''):
     oh.write("\n")
     oh.write("};\n")
 
-def genereateUserTasks(outfile):
-    includes=[]
+userTaskDirs=[]
+
+def getUserTaskDirs():
+    rt=[]
     taskdirs=glob.glob(os.path.join('lib','*task*'))
     for task in taskdirs:
+        rt.append(task)
+    return rt
+def genereateUserTasks(outfile):
+    includes=[]
+    for task in userTaskDirs:
         #print("##taskdir=%s"%task)
         base=os.path.basename(task)
         includeNames=[base.lower()+".h",'gw'+base.lower()+'.h']
@@ -201,9 +234,11 @@ def getContentType(fn):
     return "application/octet-stream"
 
 def prebuild(env):
+    global userTaskDirs
     print("#prebuild running")
     if not checkDir():
         sys.exit(1)
+    userTaskDirs=getUserTaskDirs()
     embedded=getEmbeddedFiles(env)
     filedefs=[]
     for ef in embedded:
@@ -223,7 +258,10 @@ def prebuild(env):
             print("#WARNING: infile %s for %s not found"%(inFile,ef))
     generateEmbedded(filedefs,os.path.join(outPath(),EMBEDDED_INCLUDE))
     genereateUserTasks(os.path.join(outPath(), TASK_INCLUDE))
-    generateFile(os.path.join(basePath(),CFG_FILE),os.path.join(outPath(),CFG_INCLUDE),generateCfg)
+    mergedConfig=os.path.join(outPath(),os.path.basename(CFG_FILE))
+    generateMergedConfig(os.path.join(basePath(),CFG_FILE),mergedConfig,userTaskDirs)
+    compressFile(mergedConfig,mergedConfig+".gz")
+    generateCfg(mergedConfig,os.path.join(outPath(),CFG_INCLUDE))
     generateFile(os.path.join(basePath(),XDR_FILE),os.path.join(outPath(),XDR_INCLUDE),generateXdrMappings)
     version="dev"+datetime.now().strftime("%Y%m%d")
     env.Append(CPPDEFINES=[('GWDEVVERSION',version)])

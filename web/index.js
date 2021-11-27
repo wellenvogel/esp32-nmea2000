@@ -829,10 +829,12 @@ function toggleClass(el,id,classList){
 function createConfigDefinitions(parent, capabilities, defs,includeXdr) {
     let category;
     let categoryEl;
+    let categoryFrame;
     let frame = parent.querySelector('.configFormRows');
     if (!frame) throw Error("no config form");
     frame.innerHTML = '';
     configDefinitions = defs;
+    let currentCategoryPopulated=true;
     defs.forEach(function (item) {
         if (!item.type) return;
         if (item.category.match(/^xdr/)){
@@ -842,7 +844,11 @@ function createConfigDefinitions(parent, capabilities, defs,includeXdr) {
             if(includeXdr) return;
         } 
         if (item.category != category || !categoryEl) {
-            let categoryFrame = addEl('div', 'category', frame);
+            if (categoryFrame && ! currentCategoryPopulated){
+                categoryFrame.remove();
+            }
+            currentCategoryPopulated=false;
+            categoryFrame = addEl('div', 'category', frame);
             categoryFrame.setAttribute('data-category',item.category)
             let categoryTitle = addEl('div', 'title', categoryFrame);
             let categoryButton = addEl('span', 'icon icon-more', categoryTitle);
@@ -862,60 +868,67 @@ function createConfigDefinitions(parent, capabilities, defs,includeXdr) {
             })
             category = item.category;
         }
+        let showItem=true;
         if (item.capabilities !== undefined) {
             for (let capability in item.capabilities) {
                 let values = item.capabilities[capability];
-                if (!capabilities[capability]) return;
                 let found = false;
+                if (! (values instanceof Array)) values=[values];
                 values.forEach(function (v) {
                     if (capabilities[capability] == v) found = true;
                 });
-                if (!found) return;
+                if (!found) showItem=false;
             }
         }
-        let row = addEl('div', 'row', categoryEl);
-        let label = item.label || item.name;
-        addEl('span', 'label', row, label);
-        let valueFrame = addEl('div', 'value', row);
-        let valueEl = createInput(item, valueFrame);
-        if (!valueEl) return;
-        valueEl.setAttribute('data-default', item.default);
-        valueEl.addEventListener('change', function (ev) {
-            let el = ev.target;
-            checkChange(el, row,item.name);
-        })
-        let condition=getConditions(item.name);
-        if (condition){
-            condition.forEach(function(cel){
-                for (let c in cel){
-                    if (!conditionRelations[c]){
-                        conditionRelations[c]=[];
-                    }
-                    conditionRelations[c].push(valueEl);
-                }
+        if (showItem) {
+            currentCategoryPopulated=true;
+            let row = addEl('div', 'row', categoryEl);
+            let label = item.label || item.name;
+            addEl('span', 'label', row, label);
+            let valueFrame = addEl('div', 'value', row);
+            let valueEl = createInput(item, valueFrame);
+            if (!valueEl) return;
+            valueEl.setAttribute('data-default', item.default);
+            valueEl.addEventListener('change', function (ev) {
+                let el = ev.target;
+                checkChange(el, row, item.name);
             })
-        }
-        if (item.check) valueEl.setAttribute('data-check', item.check);
-        let btContainer = addEl('div', 'buttonContainer', row);
-        let bt = addEl('button', 'defaultButton', btContainer, 'X');
-        bt.setAttribute('data-default', item.default);
-        bt.addEventListener('click', function (ev) {
-            valueEl.value = valueEl.getAttribute('data-default');
-            let changeEvent = new Event('change');
-            valueEl.dispatchEvent(changeEvent);
-        })
-        bt = addEl('button', 'infoButton', btContainer, '?');
-        bt.addEventListener('click', function (ev) {
-            if (item.description){
-                showOverlay(item.description);
+            let condition = getConditions(item.name);
+            if (condition) {
+                condition.forEach(function (cel) {
+                    for (let c in cel) {
+                        if (!conditionRelations[c]) {
+                            conditionRelations[c] = [];
+                        }
+                        conditionRelations[c].push(valueEl);
+                    }
+                })
             }
-            else{
-                if (item.category.match(/^xdr/)){
-                    showXdrHelp();
+            if (item.check) valueEl.setAttribute('data-check', item.check);
+            let btContainer = addEl('div', 'buttonContainer', row);
+            let bt = addEl('button', 'defaultButton', btContainer, 'X');
+            bt.setAttribute('data-default', item.default);
+            bt.addEventListener('click', function (ev) {
+                valueEl.value = valueEl.getAttribute('data-default');
+                let changeEvent = new Event('change');
+                valueEl.dispatchEvent(changeEvent);
+            })
+            bt = addEl('button', 'infoButton', btContainer, '?');
+            bt.addEventListener('click', function (ev) {
+                if (item.description) {
+                    showOverlay(item.description);
                 }
-            }
-        });
-    })
+                else {
+                    if (item.category.match(/^xdr/)) {
+                        showXdrHelp();
+                    }
+                }
+            });
+        }
+    });
+    if (categoryFrame && ! currentCategoryPopulated){
+        categoryFrame.remove();
+    }
 }
 function loadConfigDefinitions() {
     getJson("api/capabilities")
