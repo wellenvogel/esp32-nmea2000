@@ -31,22 +31,6 @@
 // #define FALLBACK_SERIAL
 const unsigned long HEAP_REPORT_TIME=2000; //set to 0 to disable heap reporting
 #include <Arduino.h>
-//user task handling
-std::vector<TaskFunction_t> userTasks;
-
-void registerUserTask(TaskFunction_t task){
-  //logWriter.write("register user task\n");
-  userTasks.push_back(task);
-}
-
-class GwUserTask{
-    public:
-        GwUserTask(TaskFunction_t task){
-            registerUserTask(task);
-        }
-};
-#define DECLARE_USERTASK(task) GwUserTask __##task##__(task);
-//#include "GwUserTasks.h"
 #include "GwHardware.h"
 
 #include <NMEA2000_CAN.h>  // This will automatically choose right CAN library and create suitable NMEA2000 object
@@ -78,6 +62,7 @@ class GwUserTask{
 #include "GwLeds.h"
 #include "GwCounter.h"
 #include "GwXDRMappings.h"
+#include "GwUserCode.h"
 
 
 #include "GwApi.h"
@@ -280,12 +265,6 @@ bool delayedRestart(){
   },"reset",1000,&logger,0,NULL) == pdPASS;
 }
 
-
-
-void startAddOnTask(TaskFunction_t task,int sourceId){
-  ApiImpl* api=new ApiImpl(sourceId);
-  xTaskCreate(task,"user",2000,api,3,NULL);
-}
 
 #define JSON_OK "{\"status\":\"OK\"}"
 
@@ -713,15 +692,12 @@ void setup() {
   NMEA2000.Open();
   logger.logDebug(GwLog::LOG,"starting addon tasks");
   logger.flush();
-  startAddOnTask(handleButtons,100);
+  GwUserCode userHandler(new ApiImpl(200));
+  userHandler.startAddonTask(F("handleButtons"),handleButtons,100);
   setLedMode(LED_GREEN);
-  startAddOnTask(handleLeds,101);
-  int userTaskId=200;
-  for (auto it=userTasks.begin();it != userTasks.end();it++){
-    logger.logDebug(GwLog::LOG,"starting user task with id %d",userTaskId);
-    startAddOnTask(*it,userTaskId);
-    userTaskId++;
-  }
+  userHandler.startAddonTask(F("handleLeds"),handleLeds,101);
+  userHandler.startUserTasks(200);
+  
   logger.logDebug(GwLog::LOG,"setup done");
 }  
 //*****************************************************************************
