@@ -6,6 +6,7 @@
 class GwWebServer{
     private:
         AsyncWebServer *server;
+        AsyncWebSocket *debugSocket;
         GwRequestQueue *queue;
         GwLog *logger;
     public:
@@ -15,5 +16,6 @@ class GwWebServer{
         void begin();
         bool registerMainHandler(const char *url,RequestCreator creator);
         void handleAsyncWebRequest(AsyncWebServerRequest *request, GwRequestMessage *msg);
+        void sendDebugLine(const char *line);
 };
 #endif

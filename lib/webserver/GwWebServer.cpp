@@ -39,6 +39,8 @@ void sendEmbeddedFile(String name,String contentType,AsyncWebServerRequest *requ
 
 GwWebServer::GwWebServer(GwLog* logger,GwRequestQueue *queue,int port){
     server=new AsyncWebServer(port);
+    debugSocket=new AsyncWebSocket("/api/debugSocket");
+    server->addHandler(debugSocket);
     this->queue=queue;
     this->logger=logger;
 }
@@ -116,5 +118,8 @@ bool GwWebServer::registerMainHandler(const char *url,RequestCreator creator){
         handleAsyncWebRequest(request,msg);
     });
     return true;
+}
+void GwWebServer::sendDebugLine(const char *line){
+  debugSocket->textAll(line);
 }
 
