@@ -30,9 +30,25 @@
 // #define GW_MESSAGE_DEBUG_ENABLED
 // #define FALLBACK_SERIAL
 const unsigned long HEAP_REPORT_TIME=2000; //set to 0 to disable heap reporting
+#include <Arduino.h>
+//user task handling
+std::vector<TaskFunction_t> userTasks;
+
+void registerUserTask(TaskFunction_t task){
+  //logWriter.write("register user task\n");
+  userTasks.push_back(task);
+}
+
+class GwUserTask{
+    public:
+        GwUserTask(TaskFunction_t task){
+            registerUserTask(task);
+        }
+};
+#define DECLARE_USERTASK(task) GwUserTask __##task##__(task);
+//#include "GwUserTasks.h"
 #include "GwHardware.h"
 
-#include <Arduino.h>
 #include <NMEA2000_CAN.h>  // This will automatically choose right CAN library and create suitable NMEA2000 object
 #include <ActisenseReader.h>
 #include <Seasmart.h>
@@ -43,6 +59,7 @@ const unsigned long HEAP_REPORT_TIME=2000; //set to 0 to disable heap reporting
 #include <ArduinoJson.h>
 #include <ESPmDNS.h>
 #include <map>
+#include <vector>
 #include "esp_heap_caps.h"
 
 #include "N2kDataToNMEA0183.h"
@@ -57,13 +74,13 @@ const unsigned long HEAP_REPORT_TIME=2000; //set to 0 to disable heap reporting
 #include "GwSerial.h"
 #include "GwWebServer.h"
 #include "NMEA0183DataToN2K.h"
-#include "GwApi.h"
 #include "GwButtons.h"
 #include "GwLeds.h"
 #include "GwCounter.h"
 #include "GwXDRMappings.h"
-#include "GwExampleTask.h"
 
+
+#include "GwApi.h"
 
 //NMEA message channels
 #define N2K_CHANNEL_ID 0
@@ -73,6 +90,8 @@ const unsigned long HEAP_REPORT_TIME=2000; //set to 0 to disable heap reporting
 
 #define MAX_NMEA2000_MESSAGE_SEASMART_SIZE 500
 #define MAX_NMEA0183_MESSAGE_SIZE 150 // For AIS
+
+
 
 typedef std::map<String,String> StringMap;
 
@@ -211,6 +230,8 @@ class GwSerialLog : public GwLogWriter{
 
 };
 
+GwSerialLog logWriter;
+
 class ApiImpl : public GwApi
 {
 private:
@@ -258,6 +279,7 @@ bool delayedRestart(){
     vTaskDelete(NULL);
   },"reset",1000,&logger,0,NULL) == pdPASS;
 }
+
 
 
 void startAddOnTask(TaskFunction_t task,int sourceId){
@@ -522,9 +544,8 @@ void setup() {
     logger.prefix="FALLBACK:";
   }
   else{
-    GwSerialLog *writer=new GwSerialLog();
     logger.prefix="GWSERIAL:";
-    logger.setWriter(writer);
+    logger.setWriter(&logWriter);
     logger.logDebug(GwLog::LOG,"created GwSerial for USB port");
   }  
   logger.logDebug(GwLog::LOG,"config: %s", config.toString().c_str());
@@ -695,7 +716,12 @@ void setup() {
   startAddOnTask(handleButtons,100);
   setLedMode(LED_GREEN);
   startAddOnTask(handleLeds,101);
-  startAddOnTask(exampleTask,102);
+  int userTaskId=200;
+  for (auto it=userTasks.begin();it != userTasks.end();it++){
+    logger.logDebug(GwLog::LOG,"starting user task with id %d",userTaskId);
+    startAddOnTask(*it,userTaskId);
+    userTaskId++;
+  }
   logger.logDebug(GwLog::LOG,"setup done");
 }  
 //*****************************************************************************

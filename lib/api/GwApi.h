@@ -1,8 +1,8 @@
 #ifndef _GWAPI_H
 #define _GWAPI_H
 #include "GwMessage.h"
-#include "N2kMessages.h"
-#include "NMEA0183Messages.h"
+#include "N2kMsg.h"
+#include "NMEA0183Msg.h"
 #include "GWConfig.h"
 #include "GwBoatData.h"
 //API to be used for additional tasks
@@ -16,4 +16,7 @@ class GwApi{
         virtual GwLog *getLogger()=0;
         virtual GwBoatData *getBoatData()=0;
 };
+#ifndef DECLARE_USERTASK
+#define DECLARE_USERTASK(task)
+#endif
 #endif

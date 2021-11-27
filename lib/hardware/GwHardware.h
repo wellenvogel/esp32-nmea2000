@@ -13,6 +13,7 @@
 */
 #ifndef _GWHARDWARE_H
 #define _GWHARDWARE_H
+#include "GwUserTasks.h"
 
 //SERIAL_MODE can be: UNI (RX or TX only), BI (both), RX, TX
 //board specific pins

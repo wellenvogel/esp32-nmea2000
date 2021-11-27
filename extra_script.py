@@ -5,15 +5,17 @@ import os
 import sys
 import inspect
 import json
+import glob
 from datetime import datetime
 Import("env")
 #print(env.Dump())
 OWN_FILE="extra_script.py"
-GEN_DIR='generated'
+GEN_DIR='lib/generated'
 CFG_FILE='web/config.json'
 XDR_FILE='web/xdrconfig.json'
 CFG_INCLUDE='GwConfigDefinitions.h'
 XDR_INCLUDE='GwXdrTypeMappings.h'
+TASK_INCLUDE='GwUserTasks.h'
 EMBEDDED_INCLUDE="GwEmbeddedFiles.h"
 
 def getEmbeddedFiles(env):
@@ -155,6 +157,30 @@ def generateXdrMappings(fp,oh,inFile=''):
     oh.write("\n")
     oh.write("};\n")
 
+def genereateUserTasks(outfile):
+    includes=[]
+    taskdirs=glob.glob(os.path.join('lib','*task*'))
+    for task in taskdirs:
+        #print("##taskdir=%s"%task)
+        base=os.path.basename(task)
+        includeNames=[base.lower()+".h",'gw'+base.lower()+'.h']
+        for f in os.listdir(task):
+            if not f.endswith('.h'):
+                continue
+            match=False
+            for cmp in includeNames:
+                #print("##check %s<->%s"%(f.lower(),cmp))
+                if f.lower() == cmp:
+                    match=True
+            if not match:
+                continue
+            includes.append(f)
+    includeData=""
+    for i in includes:
+        print("#task include %s"%i)
+        includeData+="#include <%s>\n"%i
+    writeFileIfChanged(outfile,includeData)            
+
 def generateEmbedded(elist,outFile):
     content=""
     for entry in elist:
@@ -196,6 +222,7 @@ def prebuild(env):
         else:
             print("#WARNING: infile %s for %s not found"%(inFile,ef))
     generateEmbedded(filedefs,os.path.join(outPath(),EMBEDDED_INCLUDE))
+    genereateUserTasks(os.path.join(outPath(), TASK_INCLUDE))
     generateFile(os.path.join(basePath(),CFG_FILE),os.path.join(outPath(),CFG_INCLUDE),generateCfg)
     generateFile(os.path.join(basePath(),XDR_FILE),os.path.join(outPath(),XDR_INCLUDE),generateXdrMappings)
     version="dev"+datetime.now().strftime("%Y%m%d")

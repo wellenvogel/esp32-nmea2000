@@ -1,4 +1,7 @@
 
+//we only compile for some boards
+#ifdef BOARD_TEST
+#include "GwExampleTask.h"
 #include "GwApi.h"
 
 #define INVALID_COORD -99999
@@ -80,3 +83,5 @@ void exampleTask(void *param){
     vTaskDelete(NULL);
     
 }
+
+#endif
