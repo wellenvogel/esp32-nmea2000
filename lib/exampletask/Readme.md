@@ -19,7 +19,6 @@ Files
    Avoid including headers from other libraries in this file as this could interfere with the main code. Just only include them in your .cpp files (or in other headers).
    * [GwExampleTaks.cpp](GwExampleTask.cpp) includes the implementation of our task. This tasks runs in an own thread - see the comments in the code.
    We can have as many cpp (and header files) as we need to structure our code.  
-   * [GwExampleHardware.h](GwExampleHardware.h) includes our pin definitions for the board.
    * [config.json](config.json)<br>
      This file allows to add some config definitions that are needed for our task. For the possible options have a look at the global [config.json](../../web/config.json). Be careful not to overwrite config defitions from the global file. A good practice wood be to prefix the names of definitions with parts of the library name. Always put them in a separate category so that they do not interfere with the system ones.
      The defined config items can later be accessed in the code (see the example in [GwExampleTask.cpp](GwExampleTask.cpp)).
