@@ -50,6 +50,7 @@ class RequestHandler(http.server.SimpleHTTPRequestHandler):
         path = posixpath.normpath(path)
         words = path.split('/')
         words = list(filter(None, words))
+        isSecond=False
         for baseDir in [
             os.path.join(self.server.baseDir,'lib','generated'),
             os.path.join(self.server.baseDir,'web')]:
@@ -63,6 +64,9 @@ class RequestHandler(http.server.SimpleHTTPRequestHandler):
                 rpath += '/'
             if os.path.exists(rpath):
                 return rpath
+            if isSecond:
+                return rpath
+            isSecond=True
                 
 def run(port,apiUrl,server_class=http.server.HTTPServer, handler_class=RequestHandler):
     basedir=os.path.join(os.path.dirname(__file__),'..')

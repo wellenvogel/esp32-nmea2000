@@ -2,12 +2,12 @@
 #define _GWBOATDATA_H
 
 #include "GwLog.h"
-#include <ArduinoJson.h>
 #include <Arduino.h>
 #include <map>
 #define GW_BOAT_VALUE_LEN 32
 #define GWSC(name) static constexpr const __FlashStringHelper* name=F(#name)
 
+class GwJsonDocument;
 class GwBoatItemBase{
     public:
         class StringWriter{
@@ -65,8 +65,8 @@ class GwBoatItemBase{
             return writer.c_str();
             }
         virtual void fillString()=0;
-        virtual void toJsonDoc(JsonDocument *doc, unsigned long minTime)=0;
-        virtual size_t getJsonSize(){return JSON_OBJECT_SIZE(10);}
+        virtual void toJsonDoc(GwJsonDocument *doc, unsigned long minTime)=0;
+        virtual size_t getJsonSize();
         virtual int getLastSource(){return lastUpdateSource;}
         virtual void refresh(unsigned long ts=0){uls(ts);}
         String getName(){return name;}
@@ -89,7 +89,7 @@ template<class T> class GwBoatItem : public GwBoatItemBase{
             return data;
         }
         virtual void fillString();
-        virtual void toJsonDoc(JsonDocument *doc, unsigned long minTime);
+        virtual void toJsonDoc(GwJsonDocument *doc, unsigned long minTime);
         virtual int getLastSource(){return lastUpdateSource;}
 };
 double formatCourse(double cv);
@@ -127,7 +127,7 @@ class GwBoatDataSatList : public GwBoatItem<GwSatInfoList>
 public:
     GwBoatDataSatList(String name, String formatInfo, unsigned long invalidTime = INVALID_TIME, GwBoatItemMap *map = NULL);
     bool update(GwSatInfo info, int source);
-    virtual void toJsonDoc(JsonDocument *doc, unsigned long minTime);
+    virtual void toJsonDoc(GwJsonDocument *doc, unsigned long minTime);
     GwSatInfo *getAt(int idx){
         if (! isValid()) return NULL;
         return data.getAt(idx);

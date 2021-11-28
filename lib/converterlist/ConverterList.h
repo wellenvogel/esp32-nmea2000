@@ -2,7 +2,7 @@
 #define _NMEA0183CONVERTERLIST_H
 
 #include "WString.h"
-#include "ArduinoJson.h"
+#include "GwJsonDocument.h"
 #include <map>
 
 template <class T, class Msg>
@@ -189,10 +189,10 @@ private:
     int numConverters(){
         return converters.size();
     }
-    void toJson(String prefix, JsonDocument &json){
+    void toJson(String prefix, GwJsonDocument *json){
         for (auto it = converters.begin(); it != converters.end(); it++)
         {
-            json[prefix][String(it->first)] = it->second.count;
+            (*json)[prefix][String(it->first)] = it->second.count;
         }
     }
     String handledKeys(){

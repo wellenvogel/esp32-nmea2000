@@ -1,10 +1,13 @@
 #include "GwBoatData.h"
+#include <GwJsonDocument.h>
 #include <ArduinoJson/Json/TextFormatter.hpp>
 #define GWTYPE_DOUBLE 1
 #define GWTYPE_UINT32 2
 #define GWTYPE_UINT16 3
 #define GWTYPE_INT16 4
 #define GWTYPE_USER 100
+
+
 class GwBoatItemTypes{
     public:
         static int getType(const uint32_t &x){return GWTYPE_UINT32;}
@@ -33,6 +36,7 @@ GwBoatItemBase::GwBoatItemBase(String name, String format, unsigned long invalid
     this->type = 0;
     this->lastUpdateSource=-1;
 }
+size_t GwBoatItemBase::getJsonSize(){return JSON_OBJECT_SIZE(10);}
 #define STRING_SIZE 40
 GwBoatItemBase::StringWriter::StringWriter(){
     buffer=new uint8_t[STRING_SIZE];
@@ -126,7 +130,7 @@ bool GwBoatItem<T>::updateMax(T nv, int sourceId)
     return false;
 }
 template <class T>
-void GwBoatItem<T>::toJsonDoc(JsonDocument *doc, unsigned long minTime)
+void GwBoatItem<T>::toJsonDoc(GwJsonDocument *doc, unsigned long minTime)
 {
     JsonObject o = doc->createNestedObject(name);
     o[F("value")] = getData();
@@ -246,7 +250,7 @@ bool GwBoatDataSatList::update(GwSatInfo info, int source)
     data.update(info);
     return true;
 }
-void GwBoatDataSatList::toJsonDoc(JsonDocument *doc, unsigned long minTime)
+void GwBoatDataSatList::toJsonDoc(GwJsonDocument *doc, unsigned long minTime)
 {
     data.houseKeeping();
     GwBoatItem<GwSatInfoList>::toJsonDoc(doc, minTime);
@@ -309,7 +313,7 @@ String GwBoatData::toJson() const {
     }
     int sz=JSON_OBJECT_SIZE(count)+elementSizes+10;
     LOG_DEBUG(GwLog::DEBUG,"size for boatData: %d",sz);
-    DynamicJsonDocument json(sz);
+    GwJsonDocument json(sz);
     for (it=values.begin() ; it != values.end();it++){
         it->second->toJsonDoc(&json,minTime);
     }

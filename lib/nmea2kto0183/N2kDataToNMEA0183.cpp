@@ -28,6 +28,7 @@
 #include "N2kDataToNMEA0183.h"
 #include "NMEA0183AISMessages.h"
 #include "ConverterList.h"
+#include "GwJsonDocument.h"
 
 
 
@@ -141,7 +142,7 @@ private:
             LOG_DEBUG(GwLog::DEBUG+1,"handled %ld",N2kMsg.PGN);
         }
     }
-    virtual void toJson(JsonDocument &json)
+    virtual void toJson(GwJsonDocument *json)
     {
         converters.toJson(String(F("cnv")),json);
     }

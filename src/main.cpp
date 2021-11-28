@@ -40,12 +40,11 @@ const unsigned long HEAP_REPORT_TIME=2000; //set to 0 to disable heap reporting
 #include <WiFi.h>
 #include <ESPAsyncWebServer.h>
 #include <Preferences.h>
-#include <ArduinoJson.h>
 #include <ESPmDNS.h>
 #include <map>
 #include <vector>
 #include "esp_heap_caps.h"
-
+#include "GwJsonDocument.h"
 #include "N2kDataToNMEA0183.h"
 
 
@@ -297,7 +296,7 @@ protected:
   virtual void processRequest()
   {
     int numPgns = nmea0183Converter->numPgns();
-    DynamicJsonDocument status(256 + 
+    GwJsonDocument status(256 + 
       countNMEA2KIn.getJsonSize()+
       countNMEA2KOut.getJsonSize() +
       countUSBIn.getJsonSize()+
@@ -331,7 +330,7 @@ class CapabilitiesRequest : public GwRequestMessage{
   protected:
     virtual void processRequest(){
       int numCapabilities=userCodeHandler.getCapabilities()->size();
-      DynamicJsonDocument json(JSON_OBJECT_SIZE(numCapabilities*3+6));
+      GwJsonDocument json(JSON_OBJECT_SIZE(numCapabilities*3+6));
       for (auto it=userCodeHandler.getCapabilities()->begin();
         it != userCodeHandler.getCapabilities()->end();it++){
           json[it->first]=it->second;
@@ -353,7 +352,7 @@ class ConverterInfoRequest : public GwRequestMessage{
     ConverterInfoRequest() : GwRequestMessage(F("application/json"),F("converterInfo")){};
   protected:
     virtual void processRequest(){
-      DynamicJsonDocument json(512);
+      GwJsonDocument json(512);
       String keys=toN2KConverter->handledKeys();
       logger.logDebug(GwLog::DEBUG,"handled nmea0183: %s",keys.c_str());
       json["nmea0183"]=keys;
@@ -408,7 +407,7 @@ protected:
     }
     else
     {
-      DynamicJsonDocument rt(100);
+      GwJsonDocument rt(100);
       rt["status"] = error;
       serializeJson(rt, result);
     }

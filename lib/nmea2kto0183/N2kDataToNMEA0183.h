@@ -25,12 +25,12 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <NMEA0183.h>
 #include <NMEA2000.h>
 
-
 #include <GwLog.h>
 #include <GwBoatData.h>
 #include <GwXDRMappings.h>
 
 //------------------------------------------------------------------------------
+class GwJsonDocument;
 class N2kDataToNMEA0183 
 {
 public:
@@ -54,7 +54,7 @@ public:
   virtual ~N2kDataToNMEA0183(){}
   virtual unsigned long* handledPgns()=0;
   virtual int numPgns()=0;
-  virtual void toJson(JsonDocument &json)=0;
+  virtual void toJson(GwJsonDocument *json)=0;
   virtual String handledKeys()=0;
 };
 #endif
