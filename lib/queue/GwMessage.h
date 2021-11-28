@@ -22,9 +22,9 @@ class GwMessage{
     String name;
   protected:
     virtual void processImpl()=0;
+    virtual ~GwMessage();
   public:
     GwMessage(String name=F("unknown"));
-    virtual ~GwMessage();
     void unref();
     void ref();
     int wait(int maxWaitMillis);
@@ -46,9 +46,9 @@ class GwRequestMessage : public GwMessage{
   protected:
     virtual void processRequest()=0;  
     virtual void processImpl();
+    virtual ~GwRequestMessage();
   public:
     GwRequestMessage(String contentType,String name=F("web"));
-    virtual ~GwRequestMessage();
     String getResult(){return result;}
     int getLen(){return len;}
     int consume(uint8_t *destination,int maxLen);
