@@ -25,6 +25,6 @@ class GwSocketServer{
         void loop(bool handleRead=true);
         void sendToClients(const char *buf,int sourceId);
         int numClients();
-        bool readMessages(GwBufferWriter *writer);
+        bool readMessages(GwMessageFetcher *writer);
 };
 #endif

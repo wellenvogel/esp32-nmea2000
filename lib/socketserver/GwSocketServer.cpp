@@ -154,9 +154,9 @@ class GwClient{
             }
             return true;
         }
-        bool messagesFromBuffer(GwBufferWriter *writer){
+        bool messagesFromBuffer(GwMessageFetcher *writer){
             if (! allowRead) return false;
-            return readBuffer->fetchMessage(writer,'\n',true) == GwBuffer::OK;
+            return writer->handleBuffer(readBuffer);
         }
 };
 
@@ -239,7 +239,7 @@ void GwSocketServer::loop(bool handleRead)
     }
 }
 
-bool GwSocketServer::readMessages(GwBufferWriter *writer){
+bool GwSocketServer::readMessages(GwMessageFetcher *writer){
     if (! allowReceive || ! clients) return false;
     bool hasMessages=false;
     for (int i = 0; i < maxClients; i++){

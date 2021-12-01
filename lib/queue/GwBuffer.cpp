@@ -18,8 +18,9 @@ GwBuffer::GwBuffer(GwLog *logger,size_t bufferSize)
 GwBuffer::~GwBuffer(){
     delete buffer;
 }
-void GwBuffer::reset()
+void GwBuffer::reset(String reason)
 {
+    LOG_DEBUG(GwLog::LOG,"reseting buffer %p, reason %s",this,reason.c_str());
     writePointer = buffer;
     readPointer = buffer;
     lp("reset");
@@ -131,6 +132,45 @@ GwBuffer::WriteStatus GwBuffer::fetchData(GwBufferWriter *writer, int maxLen,boo
     }
     return (written == len)?OK:AGAIN;
 }
+size_t GwBuffer::fetchData(int maxLen, GwBufferHandleFunction handler, void *param){
+    if (usedSpace() < 1) return 0;
+    size_t len=0;
+    if (writePointer > readPointer){
+        len=writePointer-readPointer;
+    }
+    else{
+        len=bufferSize-offset(readPointer)-1;
+    }
+    if (maxLen >= 0 && maxLen < len) len=maxLen;
+    size_t handled=handler(readPointer,len,param);
+    if (handled > len) handled=len;
+    readPointer+=handled;
+    if (offset(readPointer) >= bufferSize ) readPointer-=bufferSize;
+    return handled;
+}
+size_t GwBuffer::fillData(int maxLen, GwBufferHandleFunction handler, void *param)
+{
+    if (freeSpace() < 1)
+        return 0;
+    size_t len = 0;
+    if (writePointer > readPointer)
+    {
+        len = bufferSize - offset(writePointer) - 1;
+    }
+    else
+    {
+        len = readPointer - writePointer - 1;
+    }
+    if (maxLen >= 0 && maxLen < len)
+        len = maxLen;
+    size_t handled = handler(writePointer, len,param);
+    if (handled > len)
+        handled = len;
+    writePointer += handled;
+    if (offset(writePointer) >= bufferSize)
+        writePointer -= bufferSize;
+    return handled;
+}
 
 int GwBuffer::findChar(char x){
     lp("findChar",x);
@@ -159,4 +199,34 @@ GwBuffer::WriteStatus GwBuffer::fetchMessage(GwBufferWriter *writer,char delimit
         return AGAIN;
     }
     return fetchData(writer,pos+1,true);
+}
+
+size_t GwMessageFetcher::fetchMessageToBuffer(GwBuffer *gwbuffer,uint8_t *buffer, size_t bufferLen,char delimiter){
+    int offset=gwbuffer->findChar(delimiter);
+    if (offset <0) {
+        if (! gwbuffer->freeSpace()){
+            gwbuffer->reset(F("Message to long for input buffer"));
+        }
+        return 0;
+    }
+    offset+=1; //we include the delimiter
+    if (offset >= bufferLen){
+        gwbuffer->reset(F("Message to long for message buffer"));
+        return 0;
+    }
+    size_t fetched=0;
+    while (fetched < offset){
+        size_t max=offset-fetched;
+        size_t rd=gwbuffer->fetchData(max,[](uint8_t *buffer, size_t len, void *p)->size_t{
+            memcpy(p,buffer,len);
+            return len;
+        },buffer+fetched);
+        if (rd == 0){
+            //some internal error
+            gwbuffer->reset(F("Internal fetch error"));
+            return 0;
+        }
+        fetched+=rd;
+    }
+    return fetched;
 }

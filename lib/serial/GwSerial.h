@@ -3,14 +3,12 @@
 #include "HardwareSerial.h"
 #include "GwLog.h"
 #include "GwBuffer.h"
-class SerialWriter;
 class GwSerialStream;
 class GwSerial{
     private:
         GwBuffer *buffer;
         GwBuffer *readBuffer=NULL;
         GwLog *logger; 
-        SerialWriter *writer;
         int num;
         bool initialized=false;
         bool allowRead=true;
@@ -27,7 +25,7 @@ class GwSerial{
         bool isInitialized();
         size_t sendToClients(const char *buf,int sourceId,bool partial=false);
         void loop(bool handleRead=true);
-        bool readMessages(GwBufferWriter *writer);
+        bool readMessages(GwMessageFetcher *writer);
         void flush();
         Stream *getStream(bool partialWrites);
     friend GwSerialStream;

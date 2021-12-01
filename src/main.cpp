@@ -783,20 +783,15 @@ void handleSendAndRead(bool handleRead){
   usbSerial->loop(handleRead);
   if (serial1) serial1->loop(handleRead);
 }
-class NMEAMessageReceiver : public GwBufferWriter{
-  uint8_t buffer[GwBuffer::RX_BUFFER_SIZE+4];
+class NMEAMessageReceiver : public GwMessageFetcher{
+  static const int bufferSize=GwBuffer::RX_BUFFER_SIZE+4;
+  uint8_t buffer[bufferSize];
   uint8_t *writePointer=buffer;
   public:
-    virtual int write(const uint8_t *buffer,size_t len){
-      size_t toWrite=GwBuffer::RX_BUFFER_SIZE-(writePointer-buffer);
-      if (toWrite > len) toWrite=len;
-      memcpy(writePointer,buffer,toWrite);
-      writePointer+=toWrite;
-      *writePointer=0;
-      return toWrite;
-    }
-    virtual void done(){
-      if (writePointer == buffer) return;
+    virtual bool handleBuffer(GwBuffer *gwbuffer){
+      size_t len=fetchMessageToBuffer(gwbuffer,buffer,bufferSize-4,'\n');
+      writePointer=buffer+len;
+      if (writePointer == buffer) return false;
       uint8_t *p;
       for (p=writePointer-1;p>=buffer && *p <= 0x20;p--){
         *p=0;
@@ -821,6 +816,7 @@ class NMEAMessageReceiver : public GwBufferWriter{
         handleSendAndRead(false);
       }
       writePointer=buffer;
+      return true;
     }
 };
 NMEAMessageReceiver receiver;
