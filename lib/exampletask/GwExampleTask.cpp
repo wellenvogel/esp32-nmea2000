@@ -4,6 +4,12 @@
 #include "GwExampleTask.h"
 #include "GwApi.h"
 
+/**
+ * an init function that ist being called before other initializations from the core
+ */
+void exampleInit(GwApi *api){
+    api->getLogger()->logDebug(GwLog::LOG,"example init running");
+}
 #define INVALID_COORD -99999
 class GetBoatDataRequest: public GwMessage{
     private:
@@ -32,8 +38,7 @@ class GetBoatDataRequest: public GwMessage{
             longitude=api->getBoatData()->Longitude->getDataWithDefault(INVALID_COORD);
         };
 };
-void exampleTask(void *param){
-    GwApi *api=(GwApi*)param;
+void exampleTask(GwApi *api){
     GwLog *logger=api->getLogger();
     //get some configuration data
     bool exampleSwitch=api->getConfig()->getConfigItem(

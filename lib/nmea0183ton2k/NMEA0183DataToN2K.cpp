@@ -17,10 +17,7 @@ NMEA0183DataToN2K::NMEA0183DataToN2K(GwLog *logger, GwBoatData *boatData,N2kSend
     LOG_DEBUG(GwLog::LOG,"NMEA0183DataToN2K created %p",this);
 }
 
-bool NMEA0183DataToN2K::parseAndSend(const char *buffer, int sourceId) {
-    LOG_DEBUG(GwLog::DEBUG,"NMEA0183DataToN2K[%d] parsing %s",sourceId,buffer)
-    return false;
-}
+
 
 class SNMEA0183Msg : public tNMEA0183Msg{
         public:
@@ -821,6 +818,7 @@ private:
     }
 
 public:
+    
     virtual bool parseAndSend(const char *buffer, int sourceId)
     {
         LOG_DEBUG(GwLog::DEBUG + 1, "NMEA0183DataToN2K[%d] parsing %s", sourceId, buffer)
@@ -843,7 +841,6 @@ public:
         }
         return rt;
     }
-
     virtual unsigned long *handledPgns()
     {
         return converters.handledPgns();

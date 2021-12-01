@@ -1,29 +1,35 @@
 #include "GwUserCode.h"
+#include "GwSynchronized.h"
 #include <Arduino.h>
 #include <vector>
 #include <map>
 //user task handling
-class UserTask{
+
+
+
+std::vector<GwUserTask> userTasks;
+std::vector<GwUserTask> initTasks;
+GwUserCode::Capabilities userCapabilities;
+
+
+
+class GwUserTaskDef{
     public:
-        String name;
-        TaskFunction_t task;
-        UserTask(String name,TaskFunction_t task){
-            this->name=name;
-            this->task=task;
+        GwUserTaskDef(TaskFunction_t task,String name){
+            userTasks.push_back(GwUserTask(name,task));
+        }
+        GwUserTaskDef(GwUserTaskFunction task,String name){
+            userTasks.push_back(GwUserTask(name,task));
         }
 };
 
-std::vector<UserTask> userTasks;
-GwUserCode::Capabilities userCapabilities;
-
-void registerUserTask(TaskFunction_t task,String name){
-  userTasks.push_back(UserTask(name,task));
-}
-
-class GwUserTask{
+class GwInitTask{
     public:
-        GwUserTask(TaskFunction_t task,String name){
-            registerUserTask(task,name);
+        GwInitTask(TaskFunction_t task, String name){
+            initTasks.push_back(GwUserTask(name,task));
+        }
+        GwInitTask(GwUserTaskFunction task, String name){
+            initTasks.push_back(GwUserTask(name,task));
         }
 };
 class GwUserCapability{
@@ -32,32 +38,37 @@ class GwUserCapability{
             userCapabilities[name]=value;  
         }
 };
-#define DECLARE_USERTASK(task) GwUserTask __##task##__(task,#task);
-#define DECLARE_CAPABILITY(name,value) GwUserCapability __CAP##name__(#name,#value); 
-#include "GwUserTasks.h"
+#define DECLARE_USERTASK(task) GwUserTaskDef __##task##__(task,#task);
+#define DECLARE_INITFUNCTION(task) GwInitTask __Init##task##__(task,#task);
+#define DECLARE_CAPABILITY(name,value) GwUserCapability __CAP##name##__(#name,#value); 
 #include "GwApi.h"
+#include "GwUserTasks.h"
 class TaskApi : public GwApi
 {
     GwApi *api;
     int sourceId;
+    SemaphoreHandle_t *mainLock;
 
 public:
-    TaskApi(GwApi *api, int sourceId)
+    TaskApi(GwApi *api, int sourceId, SemaphoreHandle_t *mainLock)
     {
         this->sourceId = sourceId;
         this->api = api;
+        this->mainLock=mainLock;
     }
     virtual GwRequestQueue *getQueue()
     {
         return api->getQueue();
     }
-    virtual void sendN2kMessage(const tN2kMsg &msg)
+    virtual void sendN2kMessage(const tN2kMsg &msg,bool convert)
     {
-        api->sendN2kMessage(msg);
+        GWSYNCHRONIZED(mainLock);
+        api->sendN2kMessage(msg,convert);
     }
-    virtual void sendNMEA0183Message(const tNMEA0183Msg &msg, int sourceId)
+    virtual void sendNMEA0183Message(const tNMEA0183Msg &msg, int sourceId, bool convert)
     {
-        api->sendNMEA0183Message(msg, sourceId);
+        GWSYNCHRONIZED(mainLock);
+        api->sendNMEA0183Message(msg, this->sourceId,convert);
     }
     virtual int getSourceId()
     {
@@ -75,27 +86,50 @@ public:
     {
         return api->getBoatData();
     }
+    virtual ~TaskApi(){};
 };
 
-GwUserCode::GwUserCode(GwApi *api){
+GwUserCode::GwUserCode(GwApi *api,SemaphoreHandle_t *mainLock){
     this->logger=api->getLogger();
     this->api=api;
+    this->mainLock=mainLock;
 }
-static void startAddOnTask(GwApi *api,TaskFunction_t task,int sourceId){
-  TaskApi* taskApi=new TaskApi(api,sourceId);
-  xTaskCreate(task,"user",2000,taskApi,3,NULL);
+void userTaskStart(void *p){
+    GwUserTask *task=(GwUserTask*)p;
+    if (task->isUserTask){
+        task->usertask(task->api);
+    }
+    else{
+        task->task(task->api);
+    }
+    delete task->api;
+    task->api=NULL;
+}
+void GwUserCode::startAddOnTask(GwApi *api,GwUserTask *task,int sourceId,String name){
+    task->api=new TaskApi(api,sourceId,mainLock);
+    xTaskCreate(userTaskStart,name.c_str(),2000,task,3,NULL);
 }
 void GwUserCode::startUserTasks(int baseId){
     LOG_DEBUG(GwLog::DEBUG,"starting %d user tasks",userTasks.size());
     for (auto it=userTasks.begin();it != userTasks.end();it++){
         LOG_DEBUG(GwLog::LOG,"starting user task %s with id %d",it->name.c_str(),baseId);
-        startAddOnTask(api,it->task,baseId);
+        startAddOnTask(api,&(*it),baseId,it->name);
+        baseId++;
+    }
+}
+void GwUserCode::startInitTasks(int baseId){
+    LOG_DEBUG(GwLog::DEBUG,"starting %d user init tasks",initTasks.size());
+    for (auto it=initTasks.begin();it != initTasks.end();it++){
+        LOG_DEBUG(GwLog::LOG,"starting user init task %s with id %d",it->name.c_str(),baseId);
+        it->api=new TaskApi(api,baseId,mainLock);
+        userTaskStart(&(*it));
         baseId++;
     }
 }
 void GwUserCode::startAddonTask(String name, TaskFunction_t task, int id){
     LOG_DEBUG(GwLog::LOG,"starting addon task %s with id %d",name.c_str(),id);
-    startAddOnTask(api,task,id);
+    GwUserTask *userTask=new GwUserTask(name,task); //memory leak - acceptable as only during startup
+    startAddOnTask(api,userTask,id,userTask->name);
 }
 
 GwUserCode::Capabilities * GwUserCode::getCapabilities(){

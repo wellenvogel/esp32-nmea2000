@@ -1,7 +1,7 @@
 [
     {
         "name": "exampleConfig",
-        "label": "logging on",
+        "label": "monitor position",
         "type": "boolean",
         "default": "false",
         "description": "switch on logging of position acquired/failed",

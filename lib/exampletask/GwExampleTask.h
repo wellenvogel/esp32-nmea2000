@@ -23,11 +23,19 @@
 //brightness 0...255
 #define GWLED_BRIGHTNESS 64
 
-void exampleTask(void *param);
+void exampleTask(GwApi *param);
+void exampleInit(GwApi *param);
 //make the task known to the core
+//the task function should not return (unless you delete the task - see example code)
 DECLARE_USERTASK(exampleTask);
+//let the core call an init function before the 
+//N2K Stuff and the communication is set up
+//normally you should not need this at all
+//this function must return when done - otherwise the core will not start up
+DECLARE_INITFUNCTION(exampleInit);
 //we declare a capability that we can
 //use in config.json to only show some
 //elements when this capability is set correctly
 DECLARE_CAPABILITY(testboard,true);
+DECLARE_CAPABILITY(testboard2,true);
 #endif
