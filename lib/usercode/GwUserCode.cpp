@@ -70,6 +70,11 @@ public:
         GWSYNCHRONIZED(mainLock);
         api->sendNMEA0183Message(msg, this->sourceId,convert);
     }
+    virtual void sendNMEA0183Message(const tNMEA0183Msg &msg, bool convert)
+    {
+        GWSYNCHRONIZED(mainLock);
+        api->sendNMEA0183Message(msg, this->sourceId,convert);
+    }
     virtual int getSourceId()
     {
         return sourceId;
@@ -85,6 +90,9 @@ public:
     virtual GwBoatData *getBoatData()
     {
         return api->getBoatData();
+    }
+    virtual const char* getTalkerId(){
+        return api->getTalkerId();
     }
     virtual ~TaskApi(){};
 };

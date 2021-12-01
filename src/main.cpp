@@ -317,6 +317,10 @@ public:
   {
       SendNMEA0183Message(msg, sourceId,convert);
   }
+  virtual void sendNMEA0183Message(const tNMEA0183Msg &msg, bool convert)
+  {
+      SendNMEA0183Message(msg, sourceId,convert);
+  }
   virtual int getSourceId()
   {
     return sourceId;
@@ -330,6 +334,9 @@ public:
   }
   virtual GwBoatData *getBoatData(){
     return &boatData;
+  }
+  virtual const char* getTalkerId(){
+    return config.getString(config.talkerId,String("GP")).c_str();
   }
   virtual ~ApiImpl(){}
 };

@@ -10,11 +10,16 @@ class GwApi{
     public:
         virtual GwRequestQueue *getQueue()=0;
         virtual void sendN2kMessage(const tN2kMsg &msg, bool convert=true)=0;
+        /**
+         * deprecated - sourceId will be ignored
+         */
         virtual void sendNMEA0183Message(const tNMEA0183Msg &msg, int sourceId,bool convert=true)=0;
+        virtual void sendNMEA0183Message(const tNMEA0183Msg &msg, bool convert=true)=0;
         virtual int getSourceId()=0;
         virtual GwConfigHandler *getConfig()=0;
         virtual GwLog *getLogger()=0;
         virtual GwBoatData *getBoatData()=0;
+        virtual const char* getTalkerId()=0;
         virtual ~GwApi(){}
 };
 #ifndef DECLARE_USERTASK
