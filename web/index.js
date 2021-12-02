@@ -98,6 +98,12 @@ function resetForm(ev) {
                     el.dispatchEvent(changeEvent);
                 }
             }
+            let name=jsonData.systemName;
+            if (name){
+                let el=document.getElementById('headline');
+                if (el) el.textContent=name;
+                document.title=name;
+            }
         });
 }
 function checkMaxClients(v) {
