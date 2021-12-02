@@ -28,7 +28,7 @@
 #endif
 
 // #define GW_MESSAGE_DEBUG_ENABLED
-// #define FALLBACK_SERIAL
+//#define FALLBACK_SERIAL
 const unsigned long HEAP_REPORT_TIME=2000; //set to 0 to disable heap reporting
 #include <Arduino.h>
 #include "GwHardware.h"

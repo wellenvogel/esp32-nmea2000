@@ -3,88 +3,46 @@
 #include <lwip/sockets.h>
 #include "GwBuffer.h"
 
-class Writer : public GwBufferWriter{
-    public:
-    wiFiClientPtr client;
-    bool writeError=false;
-    bool timeOut=false;
-    unsigned long writeTimeout;
-    unsigned long lastWrite;
-    bool pending;
-    Writer(wiFiClientPtr client, unsigned long writeTimeout=10000){
-        this->client=client;
-        pending=false;
-        this->writeTimeout=writeTimeout;
-    }
-    virtual ~Writer(){}
-    virtual int write(const uint8_t *buffer,size_t len){
-        int res = send(client->fd(), (void*) buffer, len, MSG_DONTWAIT);
-        if (res < 0){
-            if (errno != EAGAIN){
-                writeError=true;
-                return res;
-            }
-            res=0;
-        }
-        if (res >= len){
-            pending=false;
-        }
-        else{
-            if (!pending){
-                lastWrite=millis();
-                pending=true;
-            }
-            else{
-                //we need to check if we have still not been able 
-                //to write until timeout
-                if (millis() >= (lastWrite+writeTimeout)){
-                    timeOut=true;
-                }
-            }
-        }
-        return res;
-    }
-};
 class GwClient{
     public:
         wiFiClientPtr client;
         int overflows;
         String remoteIp;
     private:
-        Writer *writer=NULL;
+        unsigned long lastWrite=0;
+        unsigned long writeTimeout=10000;
+        bool pendingWrite=false;
+        bool writeError=false; 
         bool allowRead;
         GwBuffer *buffer=NULL;
         GwBuffer *readBuffer=NULL;
         GwLog *logger;
     public:        
-        GwClient(wiFiClientPtr client,GwLog *logger, bool allowRead=false){
+        GwClient(wiFiClientPtr client,GwLog *logger,int id, bool allowRead=false){
             this->client=client;
             this->logger=logger;
             this->allowRead=allowRead;
-            buffer=new GwBuffer(logger,GwBuffer::TX_BUFFER_SIZE);
+            String bufName="Sock(";
+            bufName+=String(id);
+            bufName+=")";
+            buffer=new GwBuffer(logger,GwBuffer::TX_BUFFER_SIZE,bufName+"wr");
             if (allowRead){
-                readBuffer=new GwBuffer(logger,GwBuffer::RX_BUFFER_SIZE);
+                readBuffer=new GwBuffer(logger,GwBuffer::RX_BUFFER_SIZE,bufName+"rd");
             }
             overflows=0;
             if (client != NULL){
-                writer=new Writer(client);
-                LOG_DEBUG(GwLog::DEBUG,"creating SocketWriter %p",writer);
                 remoteIp=client->remoteIP().toString();
             }
         }
         void setClient(wiFiClientPtr client){
             this->client=client;
-            buffer->reset();
-            if (readBuffer) readBuffer->reset();
+            buffer->reset("new client");
+            if (readBuffer) readBuffer->reset("new client");
             overflows=0;
-            if (writer) {
-                LOG_DEBUG(GwLog::DEBUG,"deleting SocketWriter %p",writer);
-                delete writer;
-            }
-            writer=NULL;
+            pendingWrite=false;
+            writeError=false;
+            lastWrite=0;
             if (client){
-                writer=new Writer(client);
-                LOG_DEBUG(GwLog::DEBUG,"creating SocketWriter %p",writer);
                 remoteIp=client->remoteIP().toString();
             }
             else{
@@ -95,7 +53,6 @@ class GwClient{
             return client != NULL;
         }
         ~GwClient(){
-            delete writer;
             delete buffer;
             if (readBuffer) delete readBuffer;
         }
@@ -112,29 +69,8 @@ class GwClient{
         bool hasData(){
             return buffer->usedSpace() > 0;
         }
-        GwBuffer::WriteStatus write(){
-            if (! writer) {
-                LOG_DEBUG(GwLog::LOG,"write called on empty client");
-                return GwBuffer::ERROR;
-            }
-            GwBuffer::WriteStatus rt=buffer->fetchData(writer,-1,false);
-            if (rt != GwBuffer::OK){
-                LOG_DEBUG(GwLog::DEBUG+1,"write returns %d on %s",rt,remoteIp.c_str());
-            }
-            if (writer->timeOut ){
-                LOG_DEBUG(GwLog::LOG,"timeout on %s",remoteIp.c_str());
-                return GwBuffer::ERROR;
-            }    
-            return rt;
-        }
-        bool read(){
-            size_t maxLen=allowRead?readBuffer->freeSpace():100;
-            if (!maxLen) {
-                return false;
-            }
-            char buffer[maxLen];
-            int res = recv(client->fd(), (void*) buffer, maxLen, MSG_DONTWAIT);
-            if (res == 0){
+        bool handleError(int res,bool errorIf0=true){
+            if (res == 0 && errorIf0){
                 LOG_DEBUG(GwLog::LOG,"client shutdown (recv 0) on %s",remoteIp.c_str());
                 client->stop();
                 return false;
@@ -147,11 +83,61 @@ class GwClient{
                 }
                 return false;
             }
-            if (! allowRead) return true;
-            size_t stored=readBuffer->addData((uint8_t*)buffer,res);
-            if (stored != res){
-                LOG_DEBUG(GwLog::LOG,"internal read error buffer overflow (w=%d,c=%d) on %s",res,(int)stored,remoteIp.c_str());
+            return true;
+        }
+        GwBuffer::WriteStatus write(){
+            if (! hasClient()) {
+                LOG_DEBUG(GwLog::LOG,"write called on empty client");
+                return GwBuffer::ERROR;
             }
+            if (! buffer->usedSpace()){
+                pendingWrite=false;
+                return GwBuffer::OK;
+            }
+            buffer->fetchData(-1,[](uint8_t *buffer, size_t len, void *param)->size_t{
+                GwClient *c=(GwClient*)param;
+                int res = send(c->client->fd(), (void*) buffer, len, MSG_DONTWAIT);
+                if (! c->handleError(res,false)) return 0;
+                if (res >= len){
+                    c->pendingWrite=false;
+                }
+                else{
+                    if (!c->pendingWrite){
+                        c->lastWrite=millis();
+                        c->pendingWrite=true;
+                    }
+                    else{
+                        //we need to check if we have still not been able 
+                        //to write until timeout
+                        if (millis() >= (c->lastWrite+c->writeTimeout)){
+                            c->logger->logDebug(GwLog::ERROR,"Write timeout on channel %s",c->remoteIp.c_str());
+                            c->writeError=true;
+                        }
+                    }
+                }
+                return res;
+            },this);
+            if (writeError){
+                LOG_DEBUG(GwLog::DEBUG+1,"write error on %s",remoteIp.c_str());
+                return GwBuffer::ERROR;
+            }
+                
+            return GwBuffer::OK;
+        }
+        
+        bool read(){
+            if (! allowRead){
+                size_t maxLen=100;
+                char buffer[maxLen];
+                int res = recv(client->fd(), (void*) buffer, maxLen, MSG_DONTWAIT);
+                return handleError(res);
+            }
+            readBuffer->fillData(-1,[](uint8_t *buffer, size_t len, void *param)->size_t{
+                GwClient *c=(GwClient*)param;
+                int res = recv(c->client->fd(), (void*) buffer, len, MSG_DONTWAIT);
+                if (! c->handleError(res)) return 0;
+                return res;
+            },this);
             return true;
         }
         bool messagesFromBuffer(GwMessageFetcher *writer){
@@ -171,7 +157,7 @@ GwSocketServer::GwSocketServer(const GwConfigHandler *config,GwLog *logger,int m
 void GwSocketServer::begin(){
     clients=new gwClientPtr[maxClients];
     for (int i=0;i<maxClients;i++){
-        clients[i]=gwClientPtr(new GwClient(wiFiClientPtr(NULL),logger,allowReceive));
+        clients[i]=gwClientPtr(new GwClient(wiFiClientPtr(NULL),logger,i,allowReceive));
     }
     server=new WiFiServer(config->getInt(config->serverPort),maxClients);
     server->begin();

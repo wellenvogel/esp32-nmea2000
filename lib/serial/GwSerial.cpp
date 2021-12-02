@@ -42,17 +42,19 @@ class GwSerialStream: public Stream{
 
 GwSerial::GwSerial(GwLog *logger, int num, int id,bool allowRead)
 {
-    LOG_DEBUG(GwLog::DEBUG,"creating GwSerial %p port %d",this,(int)num);
+    LOG_DEBUG(GwLog::DEBUG,"creating GwSerial %p port %d for %d",this,(int)num,id);
     this->id=id;
     this->logger = logger;
     this->num = num;
-    this->buffer = new GwBuffer(logger,GwBuffer::TX_BUFFER_SIZE);
+    String bufName="Ser(";
+    bufName+=String(id);
+    bufName+=")";
+    this->buffer = new GwBuffer(logger,GwBuffer::TX_BUFFER_SIZE,bufName+"wr");
     this->allowRead=allowRead;
     if (allowRead){
-        this->readBuffer=new GwBuffer(logger, GwBuffer::RX_BUFFER_SIZE);
+        this->readBuffer=new GwBuffer(logger, GwBuffer::RX_BUFFER_SIZE,bufName+"rd");
     }
     this->serial=new HardwareSerial(num);
-
 }
 GwSerial::~GwSerial()
 {
@@ -63,7 +65,7 @@ GwSerial::~GwSerial()
 int GwSerial::setup(int baud, int rxpin, int txpin)
 {
     serial->begin(baud,SERIAL_8N1,rxpin,txpin);
-    buffer->reset();
+    buffer->reset(F("init"));
     initialized = true;
     return 0;
 }
@@ -79,7 +81,9 @@ GwBuffer::WriteStatus GwSerial::write(){
     size_t rt=buffer->fetchData(numWrite,[](uint8_t *buffer,size_t len, void *p){
         return ((GwSerial *)p)->serial->write(buffer,len);
     },this);
-    LOG_DEBUG(GwLog::DEBUG+1,"Serial %p write %d",this,rt);
+    if (rt != 0){
+        LOG_DEBUG(GwLog::DEBUG+1,"Serial %d write %d",id,rt);
+    }
     return buffer->usedSpace()?GwBuffer::AGAIN:GwBuffer::OK;
 }
 size_t GwSerial::sendToClients(const char *buf,int sourceId,bool partial){
@@ -102,7 +106,9 @@ void GwSerial::loop(bool handleRead){
         size_t rd=readBuffer->fillData(available,[](uint8_t *buffer, size_t len, void *p)->size_t{
             return ((GwSerial *)p)->serial->readBytes(buffer,len);
         },this);
-        this->logger->logDebug(GwLog::DEBUG+2,"GwSerial read %d bytes",rd);
+        if (rd != 0){
+            LOG_DEBUG(GwLog::DEBUG+2,"GwSerial %d read %d bytes",id,rd);
+        }
     }
     else{
         uint8_t buffer[10];

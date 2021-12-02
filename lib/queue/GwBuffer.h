@@ -5,13 +5,6 @@
 #include "GwLog.h"
 
 class GwBuffer;
-class GwBufferWriter{
-    public:
-        int id=0; //can be set be users
-        virtual int write(const uint8_t *buffer,size_t len)=0;
-        virtual void done(){}
-        virtual ~GwBufferWriter(){};
-};
 
 class GwMessageFetcher{
     public:
@@ -44,9 +37,10 @@ class GwBuffer{
             return (size_t)(ptr-buffer);
         }
         GwLog *logger;
+        String name;
         void lp(const char *fkt,int p=0);
     public:
-        GwBuffer(GwLog *logger,size_t bufferSize);
+        GwBuffer(GwLog *logger,size_t bufferSize,String name);
         ~GwBuffer();
         void reset(String reason="");
         size_t freeSpace();
@@ -57,15 +51,9 @@ class GwBuffer{
         int peek();
         size_t fetchData(int maxLen,GwBufferHandleFunction handler, void *param);
         /**
-         * write some data to the buffer writer
-         * return an error if the buffer writer returned < 0
-         */
-        WriteStatus fetchData(GwBufferWriter *writer, int maxLen=-1,bool errorIf0 = true);
-        /**
          * find the first occurance of x in the buffer, -1 if not found
          */
         int findChar(char x);
-        WriteStatus fetchMessage(GwBufferWriter *writer,char delimiter,bool emptyIfFull=true);
 };
 
 #endif
