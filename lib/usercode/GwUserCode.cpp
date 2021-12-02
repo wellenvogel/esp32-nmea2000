@@ -15,11 +15,11 @@ GwUserCode::Capabilities userCapabilities;
 
 class GwUserTaskDef{
     public:
-        GwUserTaskDef(TaskFunction_t task,String name){
-            userTasks.push_back(GwUserTask(name,task));
+        GwUserTaskDef(TaskFunction_t task,String name, int stackSize=2000){
+            userTasks.push_back(GwUserTask(name,task,stackSize));
         }
-        GwUserTaskDef(GwUserTaskFunction task,String name){
-            userTasks.push_back(GwUserTask(name,task));
+        GwUserTaskDef(GwUserTaskFunction task,String name,int stackSize=2000){
+            userTasks.push_back(GwUserTask(name,task,stackSize));
         }
 };
 
@@ -39,6 +39,7 @@ class GwUserCapability{
         }
 };
 #define DECLARE_USERTASK(task) GwUserTaskDef __##task##__(task,#task);
+#define DECLARE_USERTASK_PARAM(task,...) GwUserTaskDef __##task##__(task,#task,__VA_ARGS__);
 #define DECLARE_INITFUNCTION(task) GwInitTask __Init##task##__(task,#task);
 #define DECLARE_CAPABILITY(name,value) GwUserCapability __CAP##name##__(#name,#value); 
 #include "GwApi.h"
@@ -115,12 +116,12 @@ void userTaskStart(void *p){
 }
 void GwUserCode::startAddOnTask(GwApi *api,GwUserTask *task,int sourceId,String name){
     task->api=new TaskApi(api,sourceId,mainLock);
-    xTaskCreate(userTaskStart,name.c_str(),2000,task,3,NULL);
+    xTaskCreate(userTaskStart,name.c_str(),task->stackSize,task,3,NULL);
 }
 void GwUserCode::startUserTasks(int baseId){
     LOG_DEBUG(GwLog::DEBUG,"starting %d user tasks",userTasks.size());
     for (auto it=userTasks.begin();it != userTasks.end();it++){
-        LOG_DEBUG(GwLog::LOG,"starting user task %s with id %d",it->name.c_str(),baseId);
+        LOG_DEBUG(GwLog::LOG,"starting user task %s with id %d, stackSize %d",it->name.c_str(), baseId,it->stackSize);
         startAddOnTask(api,&(*it),baseId,it->name);
         baseId++;
     }

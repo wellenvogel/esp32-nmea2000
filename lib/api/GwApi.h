@@ -25,6 +25,9 @@ class GwApi{
 #ifndef DECLARE_USERTASK
 #define DECLARE_USERTASK(task)
 #endif
+#ifndef DECLARE_USERTASK_PARAM
+#define DECLARE_USERTASK_PARAM(task,...)
+#endif
 #ifndef DECLARE_INITFUNCTION
 #define DECLARE_INITFUNCTION(task)
 #endif
