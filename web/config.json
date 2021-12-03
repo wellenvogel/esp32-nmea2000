@@ -140,7 +140,7 @@
         "default": "50",
         "check": "checkMinMax",
         "min": 5,
-        "description": "min interval in ms between 2 NMEA 2000 records with the same PGN (> 5)",
+        "description": "min interval in ms between 2 NMEA 2000 records with the same PGN and the same source (> 5)",
         "category": "converter"
     },
     {
