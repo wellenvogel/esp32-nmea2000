@@ -161,7 +161,7 @@ class GwXDRFoundMapping : public GwBoatItemNameProvider{
             this->type=type;
             empty=false;
         }
-        GwXDRFoundMapping(GwXDRMapping* mapping,int instance=-1){
+        GwXDRFoundMapping(GwXDRMapping* mapping,int instance=0){
             this->definition=mapping->definition;
             this->type=mapping->type;
             this->instanceId=instance;

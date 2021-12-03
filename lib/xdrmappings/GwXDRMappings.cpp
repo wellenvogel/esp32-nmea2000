@@ -325,43 +325,50 @@ void GwXDRMappings::begin()
  * select the best matching mapping
  * depending on the instance id
  */
-GwXDRFoundMapping GwXDRMappings::selectMapping(GwXDRMapping::MappingList *list,int instance,const char * key){
-    GwXDRMapping *candidate=NULL;
-    for (auto mit=list->begin();mit != list->end();mit++){
-        GwXDRMappingDef *def=(*mit)->definition;
-        //if there is no instance we take a mapping with instance type ignore
-        //otherwise we prefer a matching instance before we use auto/ignore
-        if (instance < 0){
-            if (def->instanceMode != GwXDRMappingDef::IS_IGNORE) continue;
-            LOG_DEBUG(GwLog::DEBUG,"selected mapping %s for %s",def->toString().c_str(),key);
-            return GwXDRFoundMapping(*mit);
-        }
-        else{
-            switch(def->instanceMode){
-                case GwXDRMappingDef::IS_SINGLE:
-                    if (def->instanceId == instance){
-                        LOG_DEBUG(GwLog::DEBUG+1,"selected mapping %s for %s, i=%d",
-                            def->toString().c_str(),key,instance);
-                        return GwXDRFoundMapping(*mit,instance); 
-                    }
-                case GwXDRMappingDef::IS_AUTO:
-                    candidate=*mit;
-                    break;
-                case GwXDRMappingDef::IS_IGNORE:
-                    if (candidate == NULL) candidate=*mit;
-                    break;
-                    
-                default:
-                    break;    
+GwXDRFoundMapping GwXDRMappings::selectMapping(GwXDRMapping::MappingList *list, int instance, const char *key)
+{
+    GwXDRMapping *candidate = NULL;
+    for (auto mit = list->begin(); mit != list->end(); mit++)
+    {
+        GwXDRMappingDef *def = (*mit)->definition;
+        //if there is no instance (coming from xdr with no instance) we take a mapping with instance type ignore
+        //or the first explicit mapping
+        //for coming from xdr we only should have one mapping in the list
+        //but auto will not match for unknwn instance
+        switch (def->instanceMode)
+        {
+        case GwXDRMappingDef::IS_SINGLE:
+            if (def->instanceId == instance)
+            {
+                LOG_DEBUG(GwLog::DEBUG + 1, "selected mapping %s for %s, i=%d",
+                          def->toString().c_str(), key, instance);
+                return GwXDRFoundMapping(*mit, instance);
             }
+            if (instance < 0)
+            {
+                if (candidate == NULL)
+                    candidate = *mit;
+            }
+        case GwXDRMappingDef::IS_AUTO:
+            if (instance >= 0)
+                candidate = *mit;
+            break;
+        case GwXDRMappingDef::IS_IGNORE:
+            if (candidate == NULL)
+                candidate = *mit;
+            break;
+
+        default:
+            break;
         }
     }
-    if (candidate != NULL){
-        LOG_DEBUG(GwLog::DEBUG+1,"selected mapping %s for %s, i=%d",
-            candidate->definition->toString().c_str(),key,instance);
-        return GwXDRFoundMapping(candidate,instance);
+    if (candidate != NULL)
+    {
+        LOG_DEBUG(GwLog::DEBUG + 1, "selected mapping %s for %s, i=%d",
+                  candidate->definition->toString().c_str(), key, instance);
+        return GwXDRFoundMapping(candidate, instance>=0?instance:candidate->definition->instanceId);
     }
-    LOG_DEBUG(GwLog::DEBUG+1,"no instance mapping found for key=%s, i=%d",key,instance);
+    LOG_DEBUG(GwLog::DEBUG + 1, "no instance mapping found for key=%s, i=%d", key, instance);
     return GwXDRFoundMapping();
 }
 GwXDRFoundMapping GwXDRMappings::getMapping(String xName,String xType,String xUnit){

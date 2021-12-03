@@ -719,7 +719,7 @@ function convertUnassigned(value){
         if (parseInt(s.v) == selector) selectorName=s.l;
     });
     rt.l=cname+","+selectorName+","+fieldName+","+instance;
-    rt.v=cid+",1,"+selector+","+field+",1,"+instance+",";
+    rt.v=cid+",1,"+selector+","+field+",0,"+instance+",";
     return rt;
 }
 

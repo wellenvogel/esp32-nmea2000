@@ -216,7 +216,10 @@ private:
             if (found.empty) continue;
             value=found.valueFromXdr(value);
             if (!boatData->update(value,msg.sourceId,&found)) continue;
-            LOG_DEBUG(GwLog::DEBUG,"found mapped XDR %s, value %f",transducerName,value);
+            LOG_DEBUG(GwLog::DEBUG,"found mapped XDR %s:%s, value %f",
+                transducerName.c_str(),
+                found.definition->toString().c_str(),
+                value);
             foundMappings.push_back(XdrMappingAndValue(found,value));
         }
         static const int maxFields=20;
@@ -291,7 +294,7 @@ private:
                     }
                 }
                 else{
-                    if (fillFieldList(current, fields, 12,13)){
+                    if (fillFieldList(current, fields, 10,13)){
                         SetN2kPGN127488(n2kMsg,current.mapping.instanceId,
                         fields[10],fields[11],fields[12]);
                         send(n2kMsg, buildN2KKey(n2kMsg, current.mapping));
