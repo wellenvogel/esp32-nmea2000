@@ -3,8 +3,10 @@
 #include "N2kMessages.h"
 #include "ConverterList.h"
 #include <map>
+#include <set>
 #include <strings.h>
 #include "NMEA0183AIStoNMEA2000.h"
+#include "GwXDRMappings.h"
 
 static const double mToFathoms=0.546806649;
 static const double mToFeet=3.2808398950131;
@@ -44,6 +46,7 @@ class SNMEA0183Msg : public tNMEA0183Msg{
             }
 
     };
+    
 class NMEA0183DataToN2KFunctions : public NMEA0183DataToN2K
 {
 private:   
@@ -51,6 +54,7 @@ private:
     ConverterList<NMEA0183DataToN2KFunctions, SNMEA0183Msg> converters;
     std::map<String,unsigned long> lastSends;
     unsigned long minSendInterval=50;
+    GwXDRMappings *xdrMappings;
     class WaypointNumber{
         public:
             unsigned long id;
@@ -145,6 +149,161 @@ private:
         }
         return N2kxtem_Autonomous;     
     }
+    class XdrMappingAndValue{
+        public:
+            GwXDRFoundMapping mapping;
+            double value;
+            XdrMappingAndValue(GwXDRFoundMapping &mapping,double value){
+                this->mapping=mapping;
+                this->value=value;
+            }
+            int field(){return mapping.definition->field;}
+    };
+    typedef std::vector<XdrMappingAndValue> XdrMappingList;
+    /**
+     * find a mapping for a different field from the same
+     * category with similar instanceId and selector
+     */
+    GwXDRFoundMapping getOtherFieldMapping(GwXDRFoundMapping &found, int field){
+        if (found.empty) return GwXDRFoundMapping();
+        return xdrMappings->getMapping(found.definition->category,
+            found.definition->selector,
+            field,
+            found.instanceId);
+    }
+    double getOtherFieldValue(GwXDRFoundMapping &found, int field){
+        GwXDRFoundMapping other=getOtherFieldMapping(found,field);
+        if (other.empty) return N2kDoubleNA;
+        LOG_DEBUG(GwLog::DEBUG,"found other field mapping %s",other.definition->toString().c_str());
+        return boatData->getDataWithDefault(N2kDoubleNA,&other);
+    }
+    /**
+     * fill all the fields we potentially need for the n2k message
+     * we take the current transducer value from the XdrMappingAndValue and
+     * try to find a mapping with similar category/instance/selector but different
+     * field id for the other fields
+     * if such a mapping exists we try to fetch the entry from boatData
+     * if we at least inserted one valid value into the field list
+     * we return true so that we can send out the message
+     */
+    bool fillFieldList(XdrMappingAndValue &current,double *list,int numFields,int start=0){
+        bool rt=false;
+        for (int i=start;i<numFields;i++){
+            if (i == current.field()) *(list+i)=current.value;
+            *(list+i)=getOtherFieldValue(current.mapping,i);
+            if (! N2kIsNA(*(list+i))) rt=true;
+        }
+        return rt;
+    }
+    String buildN2KKey(const tN2kMsg &msg,GwXDRFoundMapping &found){
+        String rt(msg.PGN);
+        rt+=".";
+        rt+=String(found.definition->selector);
+        rt+=".";
+        rt+=String(found.instanceId);
+        return rt;
+    }
+    void convertXDR(const SNMEA0183Msg &msg){
+        XdrMappingList foundMappings;
+        for (int offset=0;offset <= (msg.FieldCount()-4);offset+=4){
+            //parse next transducer
+            String type=msg.Field(offset);
+            if (msg.FieldLen(offset+1) < 1) continue; //empty value
+            double value=atof(msg.Field(offset+1));
+            String unit=msg.Field(offset+2);
+            String transducerName=msg.Field(offset+3);
+            GwXDRFoundMapping found=xdrMappings->getMapping(transducerName,type,unit);
+            if (found.empty) continue;
+            value=found.valueFromXdr(value);
+            if (!boatData->update(value,msg.sourceId,&found)) continue;
+            LOG_DEBUG(GwLog::DEBUG,"found mapped XDR %s, value %f",transducerName,value);
+            foundMappings.push_back(XdrMappingAndValue(found,value));
+        }
+        static const int maxFields=20;
+        double fields[maxFields];
+        //currently we will build similar n2k messages if there are
+        //multiple transducers in one XDR
+        //but we finally rely on the send interval filter
+        //to not send them multiple times
+        //it could be optimized by checking if we already created
+        //a message with similar key in this round and skipp the fillFieldList
+        //in this case
+        for (auto it=foundMappings.begin();it != foundMappings.end();it++){
+            XdrMappingAndValue current=*it;
+            tN2kMsg n2kMsg;
+            switch (current.mapping.definition->category)
+            {
+
+            case XDRFLUID:
+                if (fillFieldList(current, fields, 2))
+                {
+                    SetN2kPGN127505(n2kMsg, current.mapping.instanceId,
+                                    (tN2kFluidType)(current.mapping.definition->selector),
+                                    fields[0],
+                                    fields[1]);
+                    send(n2kMsg, buildN2KKey(n2kMsg, current.mapping));
+                }
+                break;
+            case XDRBAT:
+                if (fillFieldList(current, fields, 3))
+                {
+                    SetN2kPGN127508(n2kMsg, current.mapping.instanceId,
+                                    fields[0], fields[1], fields[2]);
+                    send(n2kMsg, buildN2KKey(n2kMsg, current.mapping));
+                }
+                break;
+            case XDRTEMP:
+                if (fillFieldList(current,fields,2)){
+                    SetN2kPGN130312(n2kMsg,1,current.mapping.instanceId,
+                        (tN2kTempSource)(current.mapping.definition->selector),
+                        fields[0],fields[1]);
+                    send(n2kMsg,buildN2KKey(n2kMsg,current.mapping));    
+                }
+                break;
+            case XDRHUMIDITY:
+                if (fillFieldList(current,fields,2)){
+                    SetN2kPGN130313(n2kMsg,1,current.mapping.instanceId,
+                    (tN2kHumiditySource)(current.mapping.definition->selector),
+                    fields[0],
+                    fields[1]
+                    );
+                    send(n2kMsg,buildN2KKey(n2kMsg,current.mapping));
+                }
+                break;
+            case XDRPRESSURE:
+                if (fillFieldList(current,fields,1)){
+                    SetN2kPGN130314(n2kMsg,1,current.mapping.instanceId,
+                    (tN2kPressureSource)(current.mapping.definition->selector),
+                    fields[0]);
+                    send(n2kMsg,buildN2KKey(n2kMsg,current.mapping));
+                }
+                break;
+            case XDRENGINE:
+                if (current.field() <= 9)
+                {
+                    if (fillFieldList(current, fields, 10))
+                    {
+                        SetN2kPGN127489(n2kMsg, current.mapping.instanceId,
+                                        fields[0], fields[1], fields[2], fields[3], fields[4],
+                                        fields[5], fields[6], fields[7], (int8_t)fields[8], (int8_t)fields[9],
+                                        tN2kEngineDiscreteStatus1(), tN2kEngineDiscreteStatus2());
+                        send(n2kMsg, buildN2KKey(n2kMsg, current.mapping));
+                    }
+                }
+                else{
+                    if (fillFieldList(current, fields, 12,13)){
+                        SetN2kPGN127488(n2kMsg,current.mapping.instanceId,
+                        fields[10],fields[11],fields[12]);
+                        send(n2kMsg, buildN2KKey(n2kMsg, current.mapping));
+                    }
+                }
+                break;
+            default:
+                continue;
+            }
+        }
+    }
+
     void convertRMB(const SNMEA0183Msg &msg)
     {
         LOG_DEBUG(GwLog::DEBUG + 1, "convert RMB");
@@ -815,6 +974,11 @@ private:
         converters.registerConverter(
             129283UL,
             String(F("XTE")), &NMEA0183DataToN2KFunctions::convertXTE);         
+        unsigned long *xdrpgns=new unsigned long[7]{127505UL,127508UL,130312UL,130313UL,130314UL,127489UL,127488UL};    
+        converters.registerConverter(
+            7,
+            xdrpgns,
+            F("XDR"), &NMEA0183DataToN2KFunctions::convertXDR);
         unsigned long *aispgns=new unsigned long[7]{129810UL,129809UL,129040UL,129039UL,129802UL,129794UL,129038UL};
         converters.registerConverter(7,&aispgns[0],
             String(F("AIVDM")),&NMEA0183DataToN2KFunctions::convertAIVDX);
@@ -858,10 +1022,13 @@ public:
         return converters.handledKeys();
     }
 
-    NMEA0183DataToN2KFunctions(GwLog *logger, GwBoatData *boatData, N2kSender callback, unsigned long minSendInterval)
+    NMEA0183DataToN2KFunctions(GwLog *logger, GwBoatData *boatData, N2kSender callback, 
+        GwXDRMappings *xdrMappings,
+        unsigned long minSendInterval)
         : NMEA0183DataToN2K(logger, boatData, callback)
     {
         this->minSendInterval=minSendInterval;
+        this->xdrMappings=xdrMappings;
         aisDecoder= new MyAisDecoder(logger,this->sender);
         registerConverters();
         LOG_DEBUG(GwLog::LOG, "NMEA0183DataToN2KFunctions: registered %d converters", converters.numConverters());
@@ -869,7 +1036,8 @@ public:
     };
 
 NMEA0183DataToN2K* NMEA0183DataToN2K::create(GwLog *logger,GwBoatData *boatData,N2kSender callback,
+    GwXDRMappings *xdrMappings,
     unsigned long minSendInterval){
-    return new NMEA0183DataToN2KFunctions(logger, boatData,callback,minSendInterval);
+    return new NMEA0183DataToN2KFunctions(logger, boatData,callback,xdrMappings,minSendInterval);
 
 }

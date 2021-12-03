@@ -726,6 +726,7 @@ void setup() {
     handleN2kMessage(msg,N2KT_MSGOUT);
     return true;
   },
+  &xdrMappings,
   config.getInt(config.min2KInterval,50)
   );  
   

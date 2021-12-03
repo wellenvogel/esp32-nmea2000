@@ -63,11 +63,14 @@
                 "l": "ExhaustGasTemperature(14)",
                 "v": "14"
             }
+        ],
+        "fields":[
+            {"l":"ActualTemperature","v":0,"t":4},
+            {"l":"SetTemperature","v":1,"t":4}
         ]
     },
     "Humidity": {
         "id":1,
-        "type":5,
         "selector": [
             {
                 "l": "InsideHumidity(0)",
@@ -81,6 +84,10 @@
                 "l": "Undef(0xff)",
                 "v": "0xff"
             }
+        ],
+        "fields":[
+            {"l":"ActualHumidity","v":0,"t":5},
+            {"l":"SetHumidity","v":1,"t":5}
         ]
     },
     "Pressure": {

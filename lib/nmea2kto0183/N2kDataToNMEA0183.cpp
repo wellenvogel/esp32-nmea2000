@@ -1188,13 +1188,17 @@ private:
         double Level=N2kDoubleNA;
         double Capacity=N2kDoubleNA;
         if (ParseN2kPGN127505(N2kMsg,Instance,FluidType,Level,Capacity)) {
-            double flc= Level/Capacity*100;
             GwXDRFoundMapping mapping=xdrMappings->getMapping(XDRFLUID,FluidType,0,Instance);
-            if (updateDouble(&mapping,flc)){
+            if (updateDouble(&mapping,Level)){
                 LOG_DEBUG(GwLog::DEBUG+1,"found fluidlevel mapping %s",mapping.definition->toString().c_str());
-                addToXdr(mapping.buildXdrEntry(flc));
-                finalizeXdr();
+                addToXdr(mapping.buildXdrEntry(Level));
             }
+            mapping=xdrMappings->getMapping(XDRFLUID,FluidType,1,Instance);
+            if (updateDouble(&mapping,Capacity)){
+                LOG_DEBUG(GwLog::DEBUG+1,"found fluid capacity mapping %s",mapping.definition->toString().c_str());
+                addToXdr(mapping.buildXdrEntry(Capacity));
+            }
+            finalizeXdr();
         }
     }
 
@@ -1213,13 +1217,13 @@ private:
                 addToXdr(mapping.buildXdrEntry(BatteryVoltage));
                 i++;
             }
-            mapping=xdrMappings->getMapping(XDRBAT,1,0,BatteryInstance);
+            mapping=xdrMappings->getMapping(XDRBAT,0,1,BatteryInstance);
             if (updateDouble(&mapping,BatteryCurrent)){
                 LOG_DEBUG(GwLog::DEBUG+1,"found BatteryCurrent mapping %s",mapping.definition->toString().c_str());
                 addToXdr(mapping.buildXdrEntry(BatteryCurrent));
                 i++;
             }
-            mapping=xdrMappings->getMapping(XDRBAT,2,0,BatteryInstance);
+            mapping=xdrMappings->getMapping(XDRBAT,0,2,BatteryInstance);
             if (updateDouble(&mapping,BatteryTemperature)){
                 LOG_DEBUG(GwLog::DEBUG+1,"found BatteryTemperature mapping %s",mapping.definition->toString().c_str());
                 addToXdr(mapping.buildXdrEntry(BatteryTemperature));
@@ -1311,9 +1315,15 @@ private:
            return;
         }
         GwXDRFoundMapping mapping=xdrMappings->getMapping(XDRTEMP,(int)TemperatureSource,0,TemperatureInstance);
-        if (! updateDouble(&mapping,Temperature)) return;
-        LOG_DEBUG(GwLog::DEBUG+1,"found temperature mapping %s",mapping.definition->toString().c_str());
-        addToXdr(mapping.buildXdrEntry(Temperature));
+        if (! updateDouble(&mapping,Temperature)){
+            LOG_DEBUG(GwLog::DEBUG+1,"found temperature mapping %s",mapping.definition->toString().c_str());
+            addToXdr(mapping.buildXdrEntry(Temperature));
+        }
+        mapping=xdrMappings->getMapping(XDRTEMP,(int)TemperatureSource,1,TemperatureInstance);
+        if (! updateDouble(&mapping,setTemperature)){
+            LOG_DEBUG(GwLog::DEBUG+1,"found temperature mapping %s",mapping.definition->toString().c_str());
+            addToXdr(mapping.buildXdrEntry(setTemperature));
+        }
         finalizeXdr();
     }
 
@@ -1328,9 +1338,15 @@ private:
            return;
         }
         GwXDRFoundMapping mapping=xdrMappings->getMapping(XDRHUMIDITY,(int)HumiditySource,0,HumidityInstance);
-        if (! updateDouble(&mapping,ActualHumidity)) return;
-        LOG_DEBUG(GwLog::DEBUG+1,"found humidity mapping %s",mapping.definition->toString().c_str());
-        addToXdr(mapping.buildXdrEntry(ActualHumidity));
+        if (updateDouble(&mapping,ActualHumidity)){
+            LOG_DEBUG(GwLog::DEBUG+1,"found humidity mapping %s",mapping.definition->toString().c_str());
+            addToXdr(mapping.buildXdrEntry(ActualHumidity));
+        }
+        mapping=xdrMappings->getMapping(XDRHUMIDITY,(int)HumiditySource,1,HumidityInstance);
+        if (updateDouble(&mapping,SetHumidity)){
+            LOG_DEBUG(GwLog::DEBUG+1,"found humidity mapping %s",mapping.definition->toString().c_str());
+            addToXdr(mapping.buildXdrEntry(SetHumidity));
+        }
         finalizeXdr();
     }
 
@@ -1368,7 +1384,7 @@ private:
         for (int i=0;i< 2;i++){
             GwXDRFoundMapping mapping=xdrMappings->getMapping(XDRENGINE,0,i+8,instance);
             if (! updateDouble(&mapping,ivalues[i])) continue; 
-            addToXdr(mapping.buildXdrEntry((double)values[i])); 
+            addToXdr(mapping.buildXdrEntry((double)ivalues[i])); 
         }
         finalizeXdr();
     }
@@ -1415,9 +1431,15 @@ private:
            return;
         }
         GwXDRFoundMapping mapping=xdrMappings->getMapping(XDRTEMP,(int)TemperatureSource,0,TemperatureInstance);
-        if (! updateDouble(&mapping,Temperature)) return;
-        LOG_DEBUG(GwLog::DEBUG+1,"found temperature mapping %s",mapping.definition->toString().c_str());
-        addToXdr(mapping.buildXdrEntry(Temperature));
+        if (updateDouble(&mapping,Temperature)){
+            LOG_DEBUG(GwLog::DEBUG+1,"found temperature mapping %s",mapping.definition->toString().c_str());
+            addToXdr(mapping.buildXdrEntry(Temperature));
+        }
+        mapping=xdrMappings->getMapping(XDRTEMP,(int)TemperatureSource,1,TemperatureInstance);
+        if (updateDouble(&mapping,setTemperature)){
+            LOG_DEBUG(GwLog::DEBUG+1,"found temperature mapping %s",mapping.definition->toString().c_str());
+            addToXdr(mapping.buildXdrEntry(setTemperature));
+        }
         finalizeXdr();
     }
 
