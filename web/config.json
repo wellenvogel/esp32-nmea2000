@@ -106,7 +106,7 @@
         "name": "stopApTime",
         "type": "number",
         "default": "0",
-        "check": "checkStopApTime",
+        "check": "checkMinMax",
         "description": "stop the access point after that many minutes if not used",
         "category": "system"
     },
@@ -128,7 +128,8 @@
         "label":"min XDR interval",
         "type": "number",
         "default": "100",
-        "check": "checkMinXdrInterval",
+        "check": "checkMinMax",
+        "min": 10,
         "description": "min interval in ms between 2 XDR records with the same transducer (> 10)",
         "category": "converter"
     },
@@ -137,7 +138,8 @@
         "label":"min N2K interval",
         "type": "number",
         "default": "50",
-        "check": "checkMin2KInterval",
+        "check": "checkMinMax",
+        "min": 5,
         "description": "min interval in ms between 2 NMEA 2000 records with the same PGN (> 5)",
         "category": "converter"
     },
@@ -363,7 +365,9 @@
         "label": "max. TCP clients",
         "type": "number",
         "default": "10",
-        "check": "checkMaxClients",
+        "check": "checkMinMax",
+        "min": 0,
+        "max": 10,
         "description": "the number of clients we allow to connect to us",
         "category": "TCP port"
     },

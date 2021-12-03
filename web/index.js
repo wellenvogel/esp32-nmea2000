@@ -106,12 +106,17 @@ function resetForm(ev) {
             }
         });
 }
-function checkMaxClients(v) {
-    let parsed = parseInt(v);
-    if (isNaN(parsed)) return "not a valid number";
-    if (parsed < 0) return "must be >= 0";
-    if (parsed > 10) return "max is 10";
+function checkMinMax(v,allValues,def){
+    let parsed=parseFloat(v);
+    if (isNaN(parsed)) return "must be a number";
+    if (def.min !== undefined){
+        if (parsed < parseFloat(def.min)) return "must be >= "+def.min;
+    }
+    if (def.max !== undefined){
+        if (parsed > parseFloat(def.max)) return "must be <= "+def.max;
+    }
 }
+
 function checkSystemName(v) {
     //2...32 characters for ssid
     let allowed = v.replace(/[^a-zA-Z0-9]*/g, '');
@@ -124,16 +129,7 @@ function checkApPass(v) {
         return "password must be at least 8 characters";
     }
 }
-function checkMinXdrInterval(v){
-    let vv=parseInt(v);
-    if (isNaN(vv)) return "is not a number";
-    if (vv < 10) return "must be >= 10";
-}
-function checkMin2KInterval(v){
-    let vv=parseInt(v);
-    if (isNaN(vv)) return "is not a number";
-    if (vv < 5) return "must be >= 5";
-}
+
 function checkXDR(v,allValues){
     if (! v) return;
     let parts=v.split(',');
@@ -175,7 +171,7 @@ function changeConfig() {
         let check = v.getAttribute('data-check');
         if (check) {
             if (typeof (self[check]) === 'function') {
-                let res = self[check](v.value,allValues);
+                let res = self[check](v.value,allValues,getConfigDefition(name));
                 if (res) {
                     let value = v.value;
                     if (v.type === 'password') value = "******";
@@ -301,8 +297,8 @@ let configDefinitions={};
 let xdrConfig={};
 //a map between the name of a config item and a list of dependend items
 let conditionRelations={};
-function getConditions(name){
-    if (! name) return;
+function getConfigDefition(name){
+    if (! name) return {};
     let def;
     for (let k in configDefinitions){
         if (configDefinitions[k].name === name){
@@ -310,6 +306,11 @@ function getConditions(name){
             break;
         }
     }
+    if (! def) return {};
+    return def;
+}
+function getConditions(name){
+    let def=getConfigDefition(name);
     if (! def) return;
     let condition=def.condition;
     if (! condition) return;
