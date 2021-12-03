@@ -339,6 +339,15 @@ public:
   virtual GwLog* getLogger(){
     return &logger;
   }
+  virtual GwApi::ValueMap getBoatDataValues(GwApi::StringList names){
+    std::map<String,double> rt;
+    for (auto it=names.begin();it!= names.end();it++){
+      if (boatData.isValid(*it)){
+        rt[*it]=boatData.getDoubleValue(*it,0);
+      }
+    }
+    return rt;
+  }
   virtual GwBoatData *getBoatData(){
     return &boatData;
   }
@@ -357,8 +366,8 @@ bool delayedRestart(){
     vTaskDelete(NULL);
   },"reset",1000,&logger,0,NULL) == pdPASS;
 }
-
-GwUserCode userCodeHandler(new ApiImpl(MIN_USER_TASK),&mainLock);
+ApiImpl *apiImpl=new ApiImpl(MIN_USER_TASK);
+GwUserCode userCodeHandler(apiImpl,&mainLock);
 
 #define JSON_OK "{\"status\":\"OK\"}"
 

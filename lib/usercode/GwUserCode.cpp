@@ -95,6 +95,10 @@ public:
     virtual const char* getTalkerId(){
         return api->getTalkerId();
     }
+    virtual ValueMap getBoatDataValues(StringList names){
+        GWSYNCHRONIZED(mainLock);
+        return api->getBoatDataValues(names);
+    }
     virtual ~TaskApi(){};
 };
 

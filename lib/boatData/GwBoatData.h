@@ -69,7 +69,9 @@ class GwBoatItemBase{
         virtual size_t getJsonSize();
         virtual int getLastSource(){return lastUpdateSource;}
         virtual void refresh(unsigned long ts=0){uls(ts);}
+        virtual double getDoubleValue()=0;
         String getName(){return name;}
+        String getFormat(){return format;}
 };
 class GwBoatData;
 template<class T> class GwBoatItem : public GwBoatItemBase{
@@ -88,6 +90,7 @@ template<class T> class GwBoatItem : public GwBoatItemBase{
             if (! isValid(millis())) return defaultv;
             return data;
         }
+        virtual double getDoubleValue(){return (double)data;}
         virtual void fillString();
         virtual void toJsonDoc(GwJsonDocument *doc, unsigned long minTime);
         virtual int getLastSource(){return lastUpdateSource;}
@@ -120,6 +123,7 @@ class GwSatInfoList{
             if (idx >= 0 && idx < sats.size()) return &sats.at(idx);
             return NULL;
         }
+        operator double(){ return getNumSats();}
 };
 
 class GwBoatDataSatList : public GwBoatItem<GwSatInfoList>
@@ -135,6 +139,9 @@ public:
     int getNumSats(){
         if (! isValid()) return 0;
         return data.getNumSats();
+    }
+    virtual double getDoubleValue(){
+        return (double)(data.getNumSats());
     }
 
 };
@@ -199,6 +206,8 @@ class GwBoatData{
         template<class T> GwBoatItem<T> *getOrCreate(T initial,GwBoatItemNameProvider *provider);
         template<class T> bool update(T value,int source,GwBoatItemNameProvider *provider);
         template<class T> T getDataWithDefault(T defaultv, GwBoatItemNameProvider *provider);
+        bool isValid(String name);
+        double getDoubleValue(String name,double defaultv);
         String toJson() const;
         String toString();
 };

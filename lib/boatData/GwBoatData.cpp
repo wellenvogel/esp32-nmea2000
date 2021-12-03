@@ -329,6 +329,17 @@ String GwBoatData::toString(){
     }
     return rt;
 }
+bool GwBoatData::isValid(String name){
+    auto it=values.find(name);
+    if (it == values.end()) return false;
+    return it->second->isValid();
+}
+double GwBoatData::getDoubleValue(String name,double defaultv){
+    auto it=values.find(name);
+    if (it == values.end()) return defaultv;
+    if (! it->second->isValid()) return defaultv;
+    return it->second->getDoubleValue();
+}
 double formatCourse(double cv)
 {
     double rt = cv * 180.0 / M_PI;

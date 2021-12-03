@@ -27,10 +27,11 @@ void exampleTask(GwApi *param);
 void exampleInit(GwApi *param);
 //make the task known to the core
 //the task function should not return (unless you delete the task - see example code)
-DECLARE_USERTASK(exampleTask)
-//if your task needs more stack then the default 2000 bytes, replace the DECLARE_USERTASK
-//with: DECLARE_USERTASK_PARAM(exampleTask,2500);
-//this will give you 2500 bytes of stack
+//we create our task with a stack size of 4000 bytes
+DECLARE_USERTASK_PARAM(exampleTask,4000)
+//if your task is happy with the default 2000 bytes of stack, replace the DECLARE_USERTASK_PARAM
+//with: DECLARE_USERTASK(exampleTask);
+
 
 //let the core call an init function before the 
 //N2K Stuff and the communication is set up
