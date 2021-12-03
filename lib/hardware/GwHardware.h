@@ -20,6 +20,8 @@
 #ifdef BOARD_M5ATOM
 #define ESP32_CAN_TX_PIN GPIO_NUM_22
 #define ESP32_CAN_RX_PIN GPIO_NUM_19
+//150mA if we power from the bus
+#define N2K_LOAD_LEVEL 3 
 //if using tail485
 #define GWSERIAL_TX 26
 #define GWSERIAL_RX 32

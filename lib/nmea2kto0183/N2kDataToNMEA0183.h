@@ -48,7 +48,7 @@ protected:
 
 public:
   static N2kDataToNMEA0183* create(GwLog *logger, GwBoatData *boatData,  tSendNMEA0183MessageCallback callback, 
-    int sourceId,String talkerId, GwXDRMappings *xdrMappings);
+    int sourceId,String talkerId, GwXDRMappings *xdrMappings,int minXdrInterval=100);
   virtual void HandleMsg(const tN2kMsg &N2kMsg) = 0;
   virtual void loop();
   virtual ~N2kDataToNMEA0183(){}

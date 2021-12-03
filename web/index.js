@@ -124,6 +124,16 @@ function checkApPass(v) {
         return "password must be at least 8 characters";
     }
 }
+function checkMinXdrInterval(v){
+    let vv=parseInt(v);
+    if (isNaN(vv)) return "is not a number";
+    if (vv < 10) return "must be >= 10";
+}
+function checkMin2KInterval(v){
+    let vv=parseInt(v);
+    if (isNaN(vv)) return "is not a number";
+    if (vv < 5) return "must be >= 5";
+}
 function checkXDR(v,allValues){
     if (! v) return;
     let parts=v.split(',');

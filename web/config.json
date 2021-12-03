@@ -124,6 +124,24 @@
         }
     },
     {
+        "name": "minXdrInterval",
+        "label":"min XDR interval",
+        "type": "number",
+        "default": "100",
+        "check": "checkMinXdrInterval",
+        "description": "min interval in ms between 2 XDR records with the same transducer (> 10)",
+        "category": "converter"
+    },
+    {
+        "name": "min2KInterval",
+        "label":"min N2K interval",
+        "type": "number",
+        "default": "50",
+        "check": "checkMin2KInterval",
+        "description": "min interval in ms between 2 NMEA 2000 records with the same PGN (> 5)",
+        "category": "converter"
+    },
+    {
         "name": "usbActisense",
         "label": "USB mode",
         "type": "list",

@@ -36,7 +36,6 @@
 N2kDataToNMEA0183::N2kDataToNMEA0183(GwLog * logger, GwBoatData *boatData, 
   tSendNMEA0183MessageCallback callback, int id,String talkerId) 
     {
-    SendNMEA0183MessageCallback=0;
     this->SendNMEA0183MessageCallback=callback;
     strncpy(this->talkerId,talkerId.c_str(),2);
     this->talkerId[2]=0;
@@ -65,27 +64,45 @@ class N2kToNMEA0183Functions : public N2kDataToNMEA0183
 {
 
 private:
+    int minXdrInterval=100; //minimal interval between 2 sends of the same transducer
     GwXDRMappings *xdrMappings;
     ConverterList<N2kToNMEA0183Functions,tN2kMsg> converters;
+    std::map<String,unsigned long> lastSendTransducers;
     static const unsigned long RMCPeriod = 500;
     tNMEA0183Msg xdrMessage;
     bool xdrOpened=false;
+    int xdrCount=0;
 
-    bool addToXdr(String entry){
+    bool addToXdr(GwXDRFoundMapping::XdrEntry entry){
+        auto it=lastSendTransducers.find(entry.transducer);
+        unsigned long now=millis();
+        if (it != lastSendTransducers.end()){
+            if ((it->second + minXdrInterval) > now) return false;
+        }
+        lastSendTransducers[entry.transducer]=now;
         if (! xdrOpened){
             xdrMessage.Init("XDR",talkerId);
             xdrOpened=true;
+            xdrCount=0;
         }
-        int len=entry.length();
-        if (! xdrMessage.AddStrField(entry.c_str())){
+        int len=entry.entry.length();
+        if (! xdrMessage.AddStrField(entry.entry.c_str())){
             SendMessage(xdrMessage);
             xdrMessage.Init("XDR",talkerId);
-            xdrMessage.AddStrField(entry.c_str());
+            xdrMessage.AddStrField(entry.entry.c_str());
+            xdrCount=1;
+        }
+        else{
+            xdrCount++;
         }
         return true;
     }
     bool finalizeXdr(){
         if (! xdrOpened) return false;
+        if ( xdrCount < 1){
+            xdrOpened=false;
+            return false;
+        }
         SendMessage(xdrMessage);
         xdrOpened=false;
         return true;
@@ -1451,7 +1468,7 @@ private:
   public:
     N2kToNMEA0183Functions(GwLog *logger, GwBoatData *boatData, 
         tSendNMEA0183MessageCallback callback, int sourceId,
-        String talkerId, GwXDRMappings *xdrMappings) 
+        String talkerId, GwXDRMappings *xdrMappings, int minXdrInterval) 
     : N2kDataToNMEA0183(logger, boatData, callback,sourceId,talkerId)
     {
         LastPosSend = 0;
@@ -1461,6 +1478,7 @@ private:
         this->logger = logger;
         this->boatData = boatData;
         this->xdrMappings=xdrMappings;
+        this->minXdrInterval=minXdrInterval;
         registerConverters();
     }
     virtual void loop()
@@ -1476,8 +1494,9 @@ private:
 
 
 N2kDataToNMEA0183* N2kDataToNMEA0183::create(GwLog *logger, GwBoatData *boatData, 
-    tSendNMEA0183MessageCallback callback, int sourceId,String talkerId, GwXDRMappings *xdrMappings){
+    tSendNMEA0183MessageCallback callback, int sourceId,String talkerId, GwXDRMappings *xdrMappings,
+    int minXdrInterval){
   LOG_DEBUG(GwLog::LOG,"creating N2kToNMEA0183");    
-  return new N2kToNMEA0183Functions(logger,boatData,callback, sourceId,talkerId,xdrMappings);
+  return new N2kToNMEA0183Functions(logger,boatData,callback, sourceId,talkerId,xdrMappings,minXdrInterval);
 }
 //*****************************************************************************

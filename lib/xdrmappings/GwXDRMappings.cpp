@@ -208,10 +208,11 @@ String GwXDRMappingDef::getTransducerName(int instance)
     return name;
 }
 
-String GwXDRFoundMapping::buildXdrEntry(double value)
+GwXDRFoundMapping::XdrEntry GwXDRFoundMapping::buildXdrEntry(double value)
 {
     char buffer[40];
-    String name = getTransducerName();
+    XdrEntry rt;
+    rt.transducer = getTransducerName();
     if (type->tonmea)
     {
         value = (*(type->tonmea))(value);
@@ -220,9 +221,10 @@ String GwXDRFoundMapping::buildXdrEntry(double value)
              type->xdrtype.c_str(),
              value,
              type->xdrunit.c_str(),
-             name.c_str());
+             rt.transducer.c_str());
     buffer[39] = 0;
-    return String(buffer);
+    rt.entry=String(buffer);
+    return rt;
 }
 
 GwXDRMappings::GwXDRMappings(GwLog *logger, GwConfigHandler *config)
@@ -441,7 +443,7 @@ String GwXDRMappings::getXdrEntry(String mapping, double value,int instance){
         found.instanceId=instance;
         if (first) first=false;
         else rt+=",";
-        rt+=found.buildXdrEntry(value);
+        rt+=found.buildXdrEntry(value).entry;
         type = findType(code, &typeIndex);
     }
     delete def;

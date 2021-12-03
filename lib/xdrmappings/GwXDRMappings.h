@@ -147,6 +147,11 @@ class GwXDRMapping{
 };
 class GwXDRFoundMapping : public GwBoatItemNameProvider{
     public:
+        class XdrEntry{
+            public:
+            String entry;
+            String transducer;
+        };
         GwXDRMappingDef *definition=NULL;
         GwXDRType *type=NULL;
         int instanceId=-1;
@@ -166,7 +171,7 @@ class GwXDRFoundMapping : public GwBoatItemNameProvider{
         String getTransducerName(){
             return definition->getTransducerName(instanceId);
         }
-        String buildXdrEntry(double value);
+        XdrEntry buildXdrEntry(double value);
         //boat Data info
         virtual String getBoatItemName(){
             return String("xdr")+getTransducerName();

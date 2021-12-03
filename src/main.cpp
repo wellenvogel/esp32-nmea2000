@@ -31,7 +31,16 @@
 //#define FALLBACK_SERIAL
 const unsigned long HEAP_REPORT_TIME=2000; //set to 0 to disable heap reporting
 #include <Arduino.h>
+#include "GwApi.h"
 #include "GwHardware.h"
+
+#ifndef N2K_LOAD_LEVEL
+#define N2K_LOAD_LEVEL 0
+#endif
+
+#ifndef N2K_CERTIFICATION_LEVEL
+#define N2K_CERTIFICATION_LEVEL 0xff
+#endif
 
 #include <NMEA2000_CAN.h>  // This will automatically choose right CAN library and create suitable NMEA2000 object
 #include <ActisenseReader.h>
@@ -64,8 +73,6 @@ const unsigned long HEAP_REPORT_TIME=2000; //set to 0 to disable heap reporting
 #include "GwSynchronized.h"
 #include "GwUserCode.h"
 
-
-#include "GwApi.h"
 
 //NMEA message channels
 #define N2K_CHANNEL_ID 0
@@ -699,13 +706,19 @@ void setup() {
     [](const tNMEA0183Msg &msg, int sourceId){
       SendNMEA0183Message(msg,sourceId,false);
     }
-    , N2K_CHANNEL_ID,config.getString(config.talkerId,String("GP")),&xdrMappings);
+    , N2K_CHANNEL_ID,
+    config.getString(config.talkerId,String("GP")),
+    &xdrMappings,
+    config.getInt(config.minXdrInterval,100)
+    );
 
   toN2KConverter= NMEA0183DataToN2K::create(&logger,&boatData,[](const tN2kMsg &msg)->bool{
     logger.logDebug(GwLog::DEBUG+2,"send N2K %ld",msg.PGN);
     handleN2kMessage(msg,N2KT_MSGOUT);
     return true;
-  });  
+  },
+  config.getInt(config.min2KInterval,50)
+  );  
   
   NMEA2000.SetN2kCANMsgBufSize(8);
   NMEA2000.SetN2kCANReceiveFrameBufSize(250);
@@ -719,7 +732,10 @@ void setup() {
                                  100, // Manufacturer's product code
                                  systemName->asCString(),  // Manufacturer's Model ID
                                  VERSION,  // Manufacturer's Software version code
-                                 VERSION // Manufacturer's Model version
+                                 VERSION, // Manufacturer's Model version,
+                                 N2K_LOAD_LEVEL,
+                                 0xffff, //Version
+                                 N2K_CERTIFICATION_LEVEL
                                 );
   // Set device information
   NMEA2000.SetDeviceInformation(id, // Unique number. Use e.g. Serial number. Id is generated from MAC-Address

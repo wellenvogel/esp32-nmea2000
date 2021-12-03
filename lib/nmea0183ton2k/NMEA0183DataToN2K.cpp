@@ -49,7 +49,8 @@ class NMEA0183DataToN2KFunctions : public NMEA0183DataToN2K
 private:   
     MyAisDecoder *aisDecoder=NULL;
     ConverterList<NMEA0183DataToN2KFunctions, SNMEA0183Msg> converters;
-    std::map<unsigned long,unsigned long> lastSends;
+    std::map<String,unsigned long> lastSends;
+    unsigned long minSendInterval=50;
     class WaypointNumber{
         public:
             unsigned long id;
@@ -92,21 +93,25 @@ private:
         waypointMap[wpName]=newWp;
         return newWp.id;
     }
-    bool send(tN2kMsg &msg,unsigned long minDiff=50){
+    bool send(tN2kMsg &msg,String key,unsigned long minDiff){
         unsigned long now=millis();
         unsigned long pgn=msg.PGN;
-        auto it=lastSends.find(pgn);
+        if (key == "") key=String(msg.PGN);
+        auto it=lastSends.find(key);
         if (it == lastSends.end()){
-            lastSends[pgn]=now;
+            lastSends[key]=now;
             sender(msg);
             return true;
         }
         if ((it->second + minDiff) <= now){
-            lastSends[pgn]=now;
+            lastSends[key]=now;
             sender(msg);
             return true;
         }
         return false;
+    }
+    bool send(tN2kMsg &msg, String key=""){
+        send(msg,key,minSendInterval);
     }
     bool updateDouble(GwBoatItem<double> *target,double v, int sourceId){
         if (v != NMEA0183DoubleNA){
@@ -256,7 +261,7 @@ private:
         }
         if (shouldSend){
             SetN2kWindSpeed(n2kMsg,1,WindSpeed,WindAngle,n2kRef);  
-            send(n2kMsg);  
+            send(n2kMsg,String(n2kMsg.PGN)+String((int)n2kRef));  
         }
     }
     void convertVWR(const SNMEA0183Msg &msg)
@@ -297,7 +302,7 @@ private:
         if (shouldSend)
         {
             SetN2kWindSpeed(n2kMsg, 1, WindSpeed, WindAngle, N2kWind_Apparent);
-            send(n2kMsg);
+            send(n2kMsg,String(n2kMsg.PGN)+String((int)N2kWind_Apparent));
         }
     }
 
@@ -341,11 +346,11 @@ private:
         if (shouldSend)
         {
             SetN2kWindSpeed(n2kMsg, 1, WindSpeed, WindAngle, N2kWind_True_North);
-            send(n2kMsg);
+            send(n2kMsg,String(n2kMsg.PGN)+String((int)N2kWind_True_North));
         }
         if (WindAngleMagnetic != NMEA0183DoubleNA && shouldSend){
             SetN2kWindSpeed(n2kMsg, 1, WindSpeed, WindAngleMagnetic, N2kWind_Magnetic);
-            send(n2kMsg,0); //force sending
+            send(n2kMsg,String(n2kMsg.PGN)+String((int)N2kWind_Magnetic));
         }
     }
 
@@ -434,7 +439,7 @@ private:
         if (! boatData->DepthTransducer->update(DepthBelowTransducer)) return;
         tN2kMsg n2kMsg;
         SetN2kWaterDepth(n2kMsg,1,DepthBelowTransducer,Offset);
-        send(n2kMsg);
+        send(n2kMsg,String(n2kMsg.PGN)+String((Offset != N2kDoubleNA)?1:0));
     }
     typedef enum {
         DBS,
@@ -469,7 +474,7 @@ private:
                     if (! boatData->DepthTransducer->update(Depth,msg.sourceId)) return;
                     tN2kMsg n2kMsg;
                     SetN2kWaterDepth(n2kMsg,1,Depth,N2kDoubleNA); 
-                    send(n2kMsg);
+                    send(n2kMsg,String(n2kMsg.PGN)+String(0));
                     return;   
                 }
                 //we can only send if we have a valid depth beloww tranducer
@@ -489,7 +494,7 @@ private:
                 }
                 tN2kMsg n2kMsg;
                 SetN2kWaterDepth(n2kMsg,1,Depth,offset);
-                send(n2kMsg);
+                send(n2kMsg,String(n2kMsg.PGN)+String((offset != N2kDoubleNA)?1:0));
             }            
         }        
     }
@@ -853,16 +858,18 @@ public:
         return converters.handledKeys();
     }
 
-    NMEA0183DataToN2KFunctions(GwLog *logger, GwBoatData *boatData, N2kSender callback)
+    NMEA0183DataToN2KFunctions(GwLog *logger, GwBoatData *boatData, N2kSender callback, unsigned long minSendInterval)
         : NMEA0183DataToN2K(logger, boatData, callback)
     {
+        this->minSendInterval=minSendInterval;
         aisDecoder= new MyAisDecoder(logger,this->sender);
         registerConverters();
         LOG_DEBUG(GwLog::LOG, "NMEA0183DataToN2KFunctions: registered %d converters", converters.numConverters());
     }
     };
 
-NMEA0183DataToN2K* NMEA0183DataToN2K::create(GwLog *logger,GwBoatData *boatData,N2kSender callback){
-    return new NMEA0183DataToN2KFunctions(logger, boatData,callback);
+NMEA0183DataToN2K* NMEA0183DataToN2K::create(GwLog *logger,GwBoatData *boatData,N2kSender callback,
+    unsigned long minSendInterval){
+    return new NMEA0183DataToN2KFunctions(logger, boatData,callback,minSendInterval);
 
 }
