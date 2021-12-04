@@ -112,6 +112,7 @@ private:
             sender(msg);
             return true;
         }
+        LOG_DEBUG(GwLog::DEBUG+1,"skipped n2k message %d",msg.PGN);
         return false;
     }
     bool send(tN2kMsg &msg, String key=""){
@@ -158,6 +159,7 @@ private:
                 this->value=value;
             }
             int field(){return mapping.definition->field;}
+            int selector(){return mapping.definition->selector;}
     };
     typedef std::vector<XdrMappingAndValue> XdrMappingList;
     /**
@@ -174,7 +176,7 @@ private:
     double getOtherFieldValue(GwXDRFoundMapping &found, int field){
         GwXDRFoundMapping other=getOtherFieldMapping(found,field);
         if (other.empty) return N2kDoubleNA;
-        LOG_DEBUG(GwLog::DEBUG,"found other field mapping %s",other.definition->toString().c_str());
+        LOG_DEBUG(GwLog::DEBUG+1,"found other field mapping %s",other.definition->toString().c_str());
         return boatData->getDataWithDefault(N2kDoubleNA,&other);
     }
     /**
@@ -193,6 +195,11 @@ private:
             *(list+i)=getOtherFieldValue(current.mapping,i);
             if (! N2kIsNA(*(list+i))) rt=true;
         }
+        LOG_DEBUG(GwLog::DEBUG+1,"fillFieldList current=%s, start=%d, num=%d, val=%f, return=%s",
+            current.mapping.definition->toString().c_str(),
+            start,numFields,
+            current.value,
+            rt?"true":"false");
         return rt;
     }
     String buildN2KKey(const tN2kMsg &msg,GwXDRFoundMapping &found){
@@ -202,6 +209,10 @@ private:
         rt+=".";
         rt+=String(found.instanceId);
         return rt;
+    }
+    int8_t fromDouble(double v){
+        if (N2kIsNA(v)) return N2kInt8NA;
+        return v;
     }
     void convertXDR(const SNMEA0183Msg &msg){
         XdrMappingList foundMappings;
@@ -216,7 +227,7 @@ private:
             if (found.empty) continue;
             value=found.valueFromXdr(value);
             if (!boatData->update(value,msg.sourceId,&found)) continue;
-            LOG_DEBUG(GwLog::DEBUG,"found mapped XDR %s:%s, value %f",
+            LOG_DEBUG(GwLog::DEBUG+1,"found mapped XDR %s:%s, value %f",
                 transducerName.c_str(),
                 found.definition->toString().c_str(),
                 value);
@@ -241,7 +252,7 @@ private:
                 if (fillFieldList(current, fields, 2))
                 {
                     SetN2kPGN127505(n2kMsg, current.mapping.instanceId,
-                                    (tN2kFluidType)(current.mapping.definition->selector),
+                                    (tN2kFluidType)(current.selector()),
                                     fields[0],
                                     fields[1]);
                     send(n2kMsg, buildN2KKey(n2kMsg, current.mapping));
@@ -258,7 +269,7 @@ private:
             case XDRTEMP:
                 if (fillFieldList(current,fields,2)){
                     SetN2kPGN130312(n2kMsg,1,current.mapping.instanceId,
-                        (tN2kTempSource)(current.mapping.definition->selector),
+                        (tN2kTempSource)(current.selector()),
                         fields[0],fields[1]);
                     send(n2kMsg,buildN2KKey(n2kMsg,current.mapping));    
                 }
@@ -266,7 +277,7 @@ private:
             case XDRHUMIDITY:
                 if (fillFieldList(current,fields,2)){
                     SetN2kPGN130313(n2kMsg,1,current.mapping.instanceId,
-                    (tN2kHumiditySource)(current.mapping.definition->selector),
+                    (tN2kHumiditySource)(current.selector()),
                     fields[0],
                     fields[1]
                     );
@@ -276,7 +287,7 @@ private:
             case XDRPRESSURE:
                 if (fillFieldList(current,fields,1)){
                     SetN2kPGN130314(n2kMsg,1,current.mapping.instanceId,
-                    (tN2kPressureSource)(current.mapping.definition->selector),
+                    (tN2kPressureSource)(current.selector()),
                     fields[0]);
                     send(n2kMsg,buildN2KKey(n2kMsg,current.mapping));
                 }
@@ -288,15 +299,15 @@ private:
                     {
                         SetN2kPGN127489(n2kMsg, current.mapping.instanceId,
                                         fields[0], fields[1], fields[2], fields[3], fields[4],
-                                        fields[5], fields[6], fields[7], (int8_t)fields[8], (int8_t)fields[9],
+                                        fields[5], fields[6], fields[7], fromDouble(fields[8]), fromDouble(fields[9]),
                                         tN2kEngineDiscreteStatus1(), tN2kEngineDiscreteStatus2());
                         send(n2kMsg, buildN2KKey(n2kMsg, current.mapping));
                     }
                 }
                 else{
-                    if (fillFieldList(current, fields, 10,13)){
+                    if (fillFieldList(current, fields, 13,10)){
                         SetN2kPGN127488(n2kMsg,current.mapping.instanceId,
-                        fields[10],fields[11],fields[12]);
+                        fields[10],fields[11],fromDouble(fields[12]));
                         send(n2kMsg, buildN2KKey(n2kMsg, current.mapping));
                     }
                 }
