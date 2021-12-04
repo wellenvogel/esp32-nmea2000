@@ -1315,12 +1315,12 @@ private:
            return;
         }
         GwXDRFoundMapping mapping=xdrMappings->getMapping(XDRTEMP,(int)TemperatureSource,0,TemperatureInstance);
-        if (! updateDouble(&mapping,Temperature)){
+        if (updateDouble(&mapping,Temperature)){
             LOG_DEBUG(GwLog::DEBUG+1,"found temperature mapping %s",mapping.definition->toString().c_str());
             addToXdr(mapping.buildXdrEntry(Temperature));
         }
         mapping=xdrMappings->getMapping(XDRTEMP,(int)TemperatureSource,1,TemperatureInstance);
-        if (! updateDouble(&mapping,setTemperature)){
+        if (updateDouble(&mapping,setTemperature)){
             LOG_DEBUG(GwLog::DEBUG+1,"found temperature mapping %s",mapping.definition->toString().c_str());
             addToXdr(mapping.buildXdrEntry(setTemperature));
         }
