@@ -9,5 +9,16 @@
         "capabilities": {
             "testboard":"true"
         }
+    },
+    {
+        "name": "exampleBDSel",
+        "label": "value to check",
+        "type": "boatData",
+        "default": "",
+        "description": "select a value to monitor for value change",
+        "category": "example",
+        "capabilities": {
+            "testboard":"true"
+        }
     }
 ]

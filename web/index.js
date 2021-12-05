@@ -339,7 +339,7 @@ function checkCondition(element){
 }
 function createInput(configItem, frame,clazz) {
     let el;
-    if (configItem.type === 'boolean' || configItem.type === 'list') {
+    if (configItem.type === 'boolean' || configItem.type === 'list' || configItem.type == 'boatData') {
         el=addEl('select',clazz,frame);
         el.setAttribute('name', configItem.name)
         let slist = [];
@@ -353,7 +353,7 @@ function createInput(configItem, frame,clazz) {
                 }
             })
         }
-        else {
+        else if (configItem.type != 'boatData') {
             slist.push({ l: 'on', v: 'true' })
             slist.push({ l: 'off', v: 'false' })
         }
@@ -361,6 +361,9 @@ function createInput(configItem, frame,clazz) {
             let sitemEl = addEl('option','',el,sitem.l);
             sitemEl.setAttribute('value', sitem.v);
         })
+        if (configItem.type == 'boatData'){
+            el.classList.add('boatDataSelect');
+        }
         return el;
     }
     if (configItem.type === 'filter') {
@@ -961,6 +964,9 @@ function loadConfigDefinitions() {
                             if (normalConfig) createConfigDefinitions(normalConfig,capabilities,defs,false);
                             if (xdrParent) createConfigDefinitions(xdrParent,capabilities,defs,true);
                             resetForm();
+                            getText('api/boatDataString').then(function (data) {
+                                updateDashboard(data.split('\n'));
+                            });
                         })
                 })
         })
@@ -1182,6 +1188,7 @@ function sourceName(v){
     if (v >= 3) return "TCP";
     return "---";
 }
+let lastSelectList=[];
 function updateDashboard(data) {
     let frame = document.getElementById('dashboardPage');
     let names={};
@@ -1235,6 +1242,27 @@ function updateDashboard(data) {
             }
         }
     });
+    let selectList=[];
+    for (let n in names){
+        selectList.push({l:n,v:n});
+    }
+    let selectChanged=false;
+    if (lastSelectList.length == selectList.length){
+        for (let i=0;i<lastSelectList.length;i++){
+            if (selectList[i] != lastSelectList[i]){
+                selectChanged=true;
+                break;
+            }
+        }
+    }
+    else{
+        selectChanged=true;
+    }
+    if (selectChanged){
+        forEl('.boatDataSelect',function(el){
+            updateSelectList(el,selectList);
+        });
+    }
 }
 
 window.setInterval(update, 1000);

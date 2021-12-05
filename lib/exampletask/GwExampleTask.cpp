@@ -45,6 +45,7 @@ void exampleTask(GwApi *api){
     bool exampleSwitch=api->getConfig()->getConfigItem(
         api->getConfig()->exampleConfig,
         true)->asBoolean();
+    String boatItemName=api->getConfig()->getString(api->getConfig()->exampleBDSel);    
     //------
     //initialization goes here
     //------
@@ -53,7 +54,10 @@ void exampleTask(GwApi *api){
     LOG_DEBUG(GwLog::DEBUG,"example switch ist %s",exampleSwitch?"true":"false");
     GwApi::BoatValue *longitude=new GwApi::BoatValue(F("Longitude"));
     GwApi::BoatValue *latitude=new GwApi::BoatValue(F("Latitude"));
-    GwApi::BoatValue *valueList[]={longitude,latitude};
+    GwApi::BoatValue *testValue=new GwApi::BoatValue(boatItemName);
+    GwApi::BoatValue *valueList[]={longitude,latitude,testValue};
+    double lastTestValue=0;
+    bool lastTestValueValid=false;
     while(true){
         delay(1000);
         /*
@@ -101,7 +105,7 @@ void exampleTask(GwApi *api){
             or with the ValueMap approach.
         **/
         //fetch the current values of the items that we have in itemNames
-        api->getBoatDataValues(2,valueList);
+        api->getBoatDataValues(3,valueList);
         //check if the values are valid (i.e. the values we requested have been found in boatData)
         if (longitude->valid && latitude->valid){
             //both values are there - so we have a valid position
@@ -116,6 +120,19 @@ void exampleTask(GwApi *api){
             if (hasPosition2){
                 if (exampleSwitch) LOG_DEBUG(GwLog::LOG,"(2)position lost");
                 hasPosition2=false;
+            }
+        }
+        if (testValue->valid){
+            if (! lastTestValueValid || lastTestValue != testValue->value){
+                LOG_DEBUG(GwLog::LOG,"%s new value %f",testValue->getName().c_str(),testValue->value);
+                lastTestValueValid=true;
+                lastTestValue=testValue->value;
+            }
+        }
+        else{
+            if (lastTestValueValid){
+                LOG_DEBUG(GwLog::LOG,"%s now invalid",testValue->getName().c_str());
+                lastTestValueValid=false;
             }
         }
 
