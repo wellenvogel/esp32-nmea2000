@@ -845,13 +845,100 @@ class NMEAMessageReceiver : public GwMessageFetcher{
       return true;
     }
 };
+class TimeMonitor{
+  public:
+    unsigned long *times=NULL;
+    size_t len;
+    TimeMonitor(size_t len){
+      this->len=len;
+      times=new unsigned long[len];
+      reset();
+    }
+    void reset(){
+      if (len>0) times[0]=millis();
+      for (size_t i=1;i<len;i++){
+        times[i]=0;
+      }
+    }
+    unsigned long getMax(){
+      unsigned long maxTime=0;
+      for (size_t i=1;i< len;i++){
+        if (times[i] != 0){
+          if (times[i] > maxTime) maxTime=times[i];
+        }
+      }
+      if (maxTime > 0) return maxTime-times[0];
+      return 0;
+    }
+    void writeLog(unsigned long minTime){
+      unsigned long maxTime=getMax();
+      if (maxTime == 0 || maxTime < minTime) return;
+      String log;
+      for (size_t i=1;i<len;i++){
+        if (times[i] != 0){
+          log+=String(i);
+          log+=":";
+          log+=String((times[i]-times[0]));
+          log+=",";
+        }
+      }
+      logger.logDebug(GwLog::LOG,"times: %s",log.c_str());
+    }
+    void setTime(size_t index){
+      if (index < 1 || index >= len) return;
+      times[index]=millis();
+    }
+};
+class TimeAverage{
+  size_t len;
+  size_t wp=0;
+  size_t filled=0;
+  unsigned long *diffs=NULL;
+  unsigned long count=0;
+  unsigned long sum=0;
+  public:
+    TimeAverage(size_t len){
+      this->len=len;
+      wp=0;
+      filled=0;
+      diffs=new unsigned long[len];
+    }
+    void add(unsigned long diff){
+      count++;
+      sum+=diff;
+      diffs[wp]=diff;
+      wp++;
+      if (filled < len){
+        filled++;
+      }
+      else{
+        if (wp >= len) wp=0;
+        sum-=diffs[wp];
+      }
+    }
+    unsigned long current(){
+      if (filled == 0) return 0;
+      return sum*1000/filled;
+    }
+
+    unsigned long getCount(){
+      return count;
+    }
+
+};
+TimeMonitor monitor(20);
+TimeAverage average(50);
+unsigned long lastReportCount=0;
 NMEAMessageReceiver receiver;
 unsigned long lastHeapReport=0;
 void loop() {
+  monitor.reset();
   GWSYNCHRONIZED(&mainLock);
   logger.flush();
+  monitor.setTime(1);
   gwWifi.loop();
   unsigned long now=millis();
+  monitor.setTime(2);
   if (HEAP_REPORT_TIME > 0 && now > (lastHeapReport+HEAP_REPORT_TIME)){
     lastHeapReport=now;
     if (logger.isActive(GwLog::DEBUG)){
@@ -859,10 +946,26 @@ void loop() {
           (long)xPortGetFreeHeapSize(),
           (long)xPortGetMinimumEverFreeHeapSize()
       );
+      logger.logDebug(GwLog::DEBUG,"Main loop count=%d, average=%dus",
+        (int)(average.getCount()-lastReportCount),
+        (int)average.current()
+        );
+      lastReportCount=average.getCount();  
     }
   }
+  monitor.setTime(3);
+  socketServer.loop(true,false);
+  monitor.setTime(4);
+  socketServer.loop(false,true);
+  monitor.setTime(5);  
+  usbSerial->loop(true);
+  monitor.setTime(6);
+  if (serial1) serial1->loop(true);
+  monitor.setTime(7);
   handleSendAndRead(true);
+  monitor.setTime(8);
   NMEA2000.ParseMessages();
+  monitor.setTime(9);
 
   int SourceAddress = NMEA2000.GetN2kSource();
   if (SourceAddress != NodeAddress) { // Save potentially changed Source Address to NVS memory
@@ -873,21 +976,31 @@ void loop() {
     logger.logDebug(GwLog::LOG,"Address Change: New Address=%d\n", SourceAddress);
   }
   nmea0183Converter->loop();
+  monitor.setTime(10);
 
   //read channels
   if (readTCP->asBoolean()) socketServer.readMessages(&receiver);
+  monitor.setTime(11);
   receiver.id=USB_CHANNEL_ID;
   if (! actisenseReader && readUsb->asBoolean()) usbSerial->readMessages(&receiver);
+  monitor.setTime(12);
   receiver.id=SERIAL1_CHANNEL_ID;
   if (serial1 && serCanRead ) serial1->readMessages(&receiver);
+  monitor.setTime(13);
   if (actisenseReader){
     actisenseReader->ParseMessages();
   }
+  monitor.setTime(14);
 
   //handle message requests
   GwMessage *msg=mainQueue.fetchMessage(0);
   if (msg){
     msg->process();
     msg->unref();
+  }
+  monitor.setTime(15);
+  average.add(monitor.getMax());
+  if (logger.isActive(GwLog::LOG)){
+    monitor.writeLog(10);
   }
 }

@@ -166,7 +166,7 @@ void GwSocketServer::begin(){
     MDNS.addService("_nmea-0183","_tcp",config->getInt(config->serverPort));    
 
 }
-void GwSocketServer::loop(bool handleRead)
+void GwSocketServer::loop(bool handleRead,bool handleWrite)
 {
     if (! clients) return;
     WiFiClient client = server->available(); // listen for incoming clients
@@ -193,17 +193,20 @@ void GwSocketServer::loop(bool handleRead)
             client.stop();
         }
     }
-    //sending
-    for (int i = 0; i < maxClients; i++)
+    if (handleWrite)
     {
-        gwClientPtr client = clients[i];
-        if (!client->hasClient())
-            continue;
-        GwBuffer::WriteStatus rt = client->write();
-        if (rt == GwBuffer::ERROR)
+        //sending
+        for (int i = 0; i < maxClients; i++)
         {
-            LOG_DEBUG(GwLog::ERROR, "write error on %s, closing", client->remoteIp.c_str());
-            client->client->stop();
+            gwClientPtr client = clients[i];
+            if (!client->hasClient())
+                continue;
+            GwBuffer::WriteStatus rt = client->write();
+            if (rt == GwBuffer::ERROR)
+            {
+                LOG_DEBUG(GwLog::ERROR, "write error on %s, closing", client->remoteIp.c_str());
+                client->client->stop();
+            }
         }
     }
     for (int i = 0; i < maxClients; i++)
