@@ -10,7 +10,8 @@ class GwLogWriter{
 };
 class GwLog{
     private:
-        char buffer[100];
+        static const size_t bufferSize=200;
+        char buffer[bufferSize];
         int logLevel=1;
         GwLogWriter *writer;
         SemaphoreHandle_t locker;

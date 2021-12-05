@@ -21,13 +21,16 @@ void GwLog::logString(const char *fmt,...){
     va_list args;
     va_start(args,fmt);
     xSemaphoreTake(locker, portMAX_DELAY);
-    vsnprintf(buffer,99,fmt,args);
-    buffer[99]=0;
+    vsnprintf(buffer,bufferSize-1,fmt,args);
+    buffer[bufferSize-1]=0;
     if (! writer) {
         xSemaphoreGive(locker);
         return;
     }
     writer->write(prefix.c_str());
+    char buf[20];
+    snprintf(buf,20,"%lu:",millis());
+    writer->write(buf);
     writer->write(buffer);
     writer->write("\n");
     xSemaphoreGive(locker);
@@ -37,8 +40,8 @@ void GwLog::logDebug(int level,const char *fmt,...){
     va_list args;
     va_start(args,fmt);
     xSemaphoreTake(locker, portMAX_DELAY);
-    vsnprintf(buffer,99,fmt,args);
-    buffer[99]=0;
+    vsnprintf(buffer,bufferSize-1,fmt,args);
+    buffer[bufferSize-1]=0;
     if (! writer) {
         xSemaphoreGive(locker);
         return;
