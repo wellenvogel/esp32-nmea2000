@@ -16,7 +16,7 @@ class GwApi{
                 double value=0;
                 bool valid=false;
                 BoatValue(){}
-                BoatValue(String n):name(n){
+                BoatValue(const String &n):name(n){
                 }
                 void setFormat(const String &format){
                     if (formatSet) return;
