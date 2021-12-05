@@ -340,14 +340,18 @@ public:
   virtual GwLog* getLogger(){
     return &logger;
   }
-  virtual GwApi::ValueMap getBoatDataValues(GwApi::StringList names){
-    std::map<String,double> rt;
-    for (auto it=names.begin();it!= names.end();it++){
-      if (boatData.isValid(*it)){
-        rt[*it]=boatData.getDoubleValue(*it,0);
+  virtual void getBoatDataValues(int numValues,BoatValue **list){
+    for (int i=0;i<numValues;i++){
+      GwBoatItemBase *item=boatData.getBase(list[i]->getName());
+      if (item){
+        list[i]->valid=item->isValid();
+        if (list[i]->valid) list[i]->value=item->getDoubleValue();
+        list[i]->setFormat(item->getFormat());
+      }
+      else{
+        list[i]->valid=false;
       }
     }
-    return rt;
   }
   virtual GwBoatData *getBoatData(){
     return &boatData;

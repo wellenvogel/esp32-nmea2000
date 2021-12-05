@@ -334,6 +334,11 @@ bool GwBoatData::isValid(String name){
     if (it == values.end()) return false;
     return it->second->isValid();
 }
+GwBoatItemBase* GwBoatData::getBase(String name){
+    auto it=values.find(name);
+    if (it == values.end()) return NULL;
+    return it->second;
+}
 double GwBoatData::getDoubleValue(String name,double defaultv){
     auto it=values.find(name);
     if (it == values.end()) return defaultv;

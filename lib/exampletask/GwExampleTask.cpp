@@ -51,9 +51,9 @@ void exampleTask(GwApi *api){
     bool hasPosition=false;
     bool hasPosition2=false;
     LOG_DEBUG(GwLog::DEBUG,"example switch ist %s",exampleSwitch?"true":"false");
-    GwApi::StringList itemNames;
-    itemNames.push_back(F("Latitude"));
-    itemNames.push_back(F("Longitude"));
+    GwApi::BoatValue *longitude=new GwApi::BoatValue(F("Longitude"));
+    GwApi::BoatValue *latitude=new GwApi::BoatValue(F("Latitude"));
+    GwApi::BoatValue *valueList[]={longitude,latitude};
     while(true){
         delay(1000);
         /*
@@ -96,30 +96,19 @@ void exampleTask(GwApi *api){
         r->unref(); //delete the request
 
         /** second example with string based functions to access boatData
-            uses STL vector and map - but does not need any request handling
-            this uses a reasonable amount of mmeory on the stack:
-            up to 2x the size of the list of names and 2x the size of the returned map
-            the default stack size of 2000 will not fit.
-            So be sure to use DECLARA_USERTASK_PARAM(taskFuntion,stackSize) and provide
-            a reasonable stack size (e.g. 4000 in this example).
+            This does not need the request handling approach
             Finally it only makes sense to use one of the versions - either with the request
             or with the ValueMap approach.
-            The request access to boatData gives you more options on how to access the data
-            and ueses less ressources and runtime but this one is maybe easier to understand and implement
         **/
         //fetch the current values of the items that we have in itemNames
-        GwApi::ValueMap boatItems=api->getBoatDataValues(itemNames);
-        //get the values out of the map
-        //the returned item is a map iterator
-        auto longitude=boatItems.find(itemNames[1]);
-        auto latitude=boatItems.find(itemNames[0]);
-        //check if the iterators are valid (i.e. the values we requested have been found in boatData)
-        if (longitude != boatItems.end() && latitude != boatItems.end()){
+        api->getBoatDataValues(2,valueList);
+        //check if the values are valid (i.e. the values we requested have been found in boatData)
+        if (longitude->valid && latitude->valid){
             //both values are there - so we have a valid position
             if (! hasPosition2){
                 //access to the values via iterator->second (iterator->first would be the name)
                 if (exampleSwitch) LOG_DEBUG(GwLog::LOG,"(2)position availale lat=%f, lon=%f",
-                    latitude->second,longitude->second);
+                    latitude->value,longitude->value);
                 hasPosition2=true;
             }
         }

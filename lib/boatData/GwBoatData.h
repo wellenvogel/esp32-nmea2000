@@ -71,7 +71,7 @@ class GwBoatItemBase{
         virtual void refresh(unsigned long ts=0){uls(ts);}
         virtual double getDoubleValue()=0;
         String getName(){return name;}
-        String getFormat(){return format;}
+        const String & getFormat() const{return format;}
 };
 class GwBoatData;
 template<class T> class GwBoatItem : public GwBoatItemBase{
@@ -208,6 +208,7 @@ class GwBoatData{
         template<class T> T getDataWithDefault(T defaultv, GwBoatItemNameProvider *provider);
         bool isValid(String name);
         double getDoubleValue(String name,double defaultv);
+        GwBoatItemBase *getBase(String name);
         String toJson() const;
         String toString();
 };

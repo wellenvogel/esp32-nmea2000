@@ -5,13 +5,28 @@
 #include "NMEA0183Msg.h"
 #include "GWConfig.h"
 #include "GwBoatData.h"
-#include <map>
-#include <vector>
 //API to be used for additional tasks
 class GwApi{
     public:
-        typedef std::map<String,double> ValueMap;
-        typedef std::vector<String> StringList;
+        class BoatValue{
+            const String name;
+            String format;
+            bool formatSet=false;
+            public:
+                double value=0;
+                bool valid=false;
+                BoatValue(){}
+                BoatValue(String n):name(n){
+                }
+                void setFormat(const String &format){
+                    if (formatSet) return;
+                    this->format=format;
+                    formatSet=true;
+                }
+                const String & getName() const{
+                    return name;
+                }
+        }; 
         /**
          * thread safe methods - can directly be called from a user task
          */
@@ -31,13 +46,14 @@ class GwApi{
         virtual GwLog *getLogger()=0;
         virtual const char* getTalkerId()=0;
         /**
-         * get a set of boat data values by their names
-         * the returned map will have the keys being the strings in the names list
-         * the values are the boat data values converted to double
-         * invalid values are not returned in the map
-         * this method is thread safe and can directly be used from a user task
+         * get a set of boat data values 
+         * the provided list of BoatValue must be initialized with 
+         * empty boatValues (see exampleTask source code)
+         * the method will fill the valid flag, the value and the format string of
+         * each boat value
+         * just make sure to have the list being of appropriate size (numValues)
          */
-        virtual ValueMap getBoatDataValues(StringList)=0;
+        virtual void getBoatDataValues(int numValues,BoatValue **list)=0;
         /**
          * not thread safe methods
          * accessing boat data must only be executed from within the main thread
