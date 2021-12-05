@@ -248,13 +248,9 @@ void GwSocketServer::sendToClients(const char *buf,int source){
         gwClientPtr client = clients[i];
         if (! client->hasClient()) continue;
         if ( client->client->connected() ) {
-        bool rt=client->enqueue((uint8_t*)buf,len);
-        if (!rt){
-            LOG_DEBUG(GwLog::DEBUG,"overflow in send to %s",client->remoteIp.c_str());    
+            client->enqueue((uint8_t*)buf,len);
         }
-        
     }
-  }
 }
 
 int GwSocketServer::numClients(){

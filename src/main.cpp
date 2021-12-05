@@ -1001,6 +1001,6 @@ void loop() {
   monitor.setTime(15);
   average.add(monitor.getMax());
   if (logger.isActive(GwLog::LOG)){
-    monitor.writeLog(10);
+    monitor.writeLog(6);
   }
 }
