@@ -90,7 +90,6 @@ const unsigned long HEAP_REPORT_TIME=2000; //set to 0 to disable heap reporting
 
 typedef std::map<String,String> StringMap;
 
-
 GwLog logger(LOGLEVEL,NULL);
 GwConfigHandler config(&logger);
 #ifdef GWBUTTON_PIN
@@ -280,13 +279,15 @@ class GwSerialLog : public GwLogWriter{
     virtual ~GwSerialLog(){}
     virtual void write(const char *data){
       int len=strlen(data);
-      if ((wp+len) >= (bufferSize-1)) return;
+      if ((wp+len) >= (bufferSize-2)) return;
       strncpy(logBuffer+wp,data,len);
       wp+=len;
+      logBuffer[wp]='\n';
+      wp++;
       logBuffer[wp]=0;
     }
     virtual void flush(){
-      webserver.sendDebugLine(logBuffer);
+      //webserver.sendDebugLine(logBuffer);
       size_t handled=0;
       while (handled < wp){
         usbSerial->flush();
@@ -599,6 +600,9 @@ protected:
 
 
 void setup() {
+  logger.startAsync([](const char *data){
+    webserver.sendDebugLine(data);
+  });
   mainLock=xSemaphoreCreateMutex();
   uint8_t chipid[6];
   uint32_t id = 0;
@@ -805,7 +809,6 @@ void setup() {
     GWSYNCHRONIZED(&mainLock);
     userCodeHandler.startUserTasks(MIN_USER_TASK);
   }
-  
   logger.logDebug(GwLog::LOG,"setup done");
 }  
 //*****************************************************************************

@@ -1,5 +1,7 @@
 #include <ESPmDNS.h>
 #include "GwWebServer.h"
+#include <AsyncTCP.h>
+#include <GwSynchronized.h>
 #include <map>
 
 class EmbeddedFile;
@@ -43,8 +45,20 @@ GwWebServer::GwWebServer(GwLog* logger,GwRequestQueue *queue,int port){
     server->addHandler(debugSocket);
     this->queue=queue;
     this->logger=logger;
+    lock=xSemaphoreCreateMutex();
 }
 void GwWebServer::begin(){
+    asyncTcpRegisterLockCallback([](void *p,bool doLock){
+      GwWebServer *s=(GwWebServer*)p;
+      return;
+      if (doLock){
+        xSemaphoreTake(s->lock,portMAX_DELAY);
+        return;
+      }
+      else{
+        xSemaphoreGive(s->lock);
+      }
+    },this);
     server->onNotFound([](AsyncWebServerRequest *request){
         request->send(404, "text/plain", "Not found");
     });
@@ -120,6 +134,7 @@ bool GwWebServer::registerMainHandler(const char *url,RequestCreator creator){
     return true;
 }
 void GwWebServer::sendDebugLine(const char *line){
+  GWSYNCHRONIZED(&lock);
   debugSocket->textAll(line);
 }
 

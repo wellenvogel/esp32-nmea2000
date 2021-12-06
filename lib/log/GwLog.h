@@ -9,12 +9,17 @@ class GwLogWriter{
         virtual void flush(){};
 };
 class GwLog{
+    public:
+        typedef void (*AsyncLogFunction)(const char *); 
     private:
         static const size_t bufferSize=200;
         char buffer[bufferSize];
         int logLevel=1;
         GwLogWriter *writer;
         SemaphoreHandle_t locker;
+        QueueHandle_t queue;
+        AsyncLogFunction async=NULL;
+        void sendAsync(const char *buf);
     public:
         static const int LOG=1;
         static const int ERROR=0;
@@ -28,6 +33,7 @@ class GwLog{
         void logDebug(int level, const char *fmt,...);
         int isActive(int level){return level <= logLevel;};
         void flush();
+        void startAsync(AsyncLogFunction function);
 };
 #define LOG_DEBUG(level,...){ if (logger != NULL && logger->isActive(level)) logger->logDebug(level,__VA_ARGS__);}
 
