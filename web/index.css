@@ -1,14 +1,36 @@
 *{
   box-sizing: border-box;
 }
-body{
-    font-family: Arial, Helvetica, sans-serif;
-  }
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+  
+.main {
+  display: flex;
+  flex-direction: column;
+  margin: 0.2em;
+  overflow: hidden;
+}
+
+.tabPage{
+  overflow: auto;
+}
+
   .configForm {
       padding-bottom: 0.5em;
   }
   .configForm .buttons {
-      margin-top: 0.5em;
+      margin-bottom: 0.5em;
   }
   .configForm .content>div:nth-child(even) {
       background-color: rgb(211 211 211 / 43%);
@@ -284,4 +306,25 @@ body{
   .footer .source{
     flex: 1;
   }  
-  
+  #diagContainer span {
+    display: block;
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+  .diagFrame {
+    display: flex;
+    flex-direction: column;
+    overflow: auto;
+  }
+  #diagContainer {
+    margin: 0.3em;
+    font-size: 0.9em;
+  }
+div#diagPage {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+#diagPage span.label {
+  width: 3em;
+}

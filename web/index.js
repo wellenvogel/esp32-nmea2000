@@ -1265,13 +1265,62 @@ function updateDashboard(data) {
     }
 }
 
+//---------- diag ----------------------------
+let diagSocket;
+let diagCount=0;
+function showLog(){
+    if (diagSocket) return;
+    forEl('#diagContainer',function(el){el.innerHTML=''});
+    diagCount=0;
+    let host=window.location.host;
+    let s=window.location.search.split(/[?&]/);
+    s.forEach(function(qp){
+        let parts=qp.split(/=/);
+        if (parts[0]=='remote' && parts[1]){
+            host=parts[1];
+        }
+    });
+    let url="ws://"+host+"/api/debugSocket";
+    diagSocket=new WebSocket(url);
+    let container=document.getElementById('diagContainer');
+    diagSocket.onmessage=function(msg){
+        let ne=addEl('span','',container,msg.data);
+        diagCount++;
+        if (diagCount > 50){
+            container.firstChild.remove();
+            diagCount--;
+        }
+        ne.scrollIntoView();
+    };
+
+}
+function stopLog(){
+    if (! diagSocket) return;
+    try{
+        diagSocket.close();
+    }catch (e){}
+    diagSocket=undefined;
+}
+//---------- main ----------------------------
 window.setInterval(update, 1000);
 window.setInterval(function () {
     let dp = document.getElementById('dashboardPage');
-    if (dp.classList.contains('hidden')) return;
-    getText('api/boatDataString').then(function (data) {
-        updateDashboard(data.split('\n'));
-    });
+    if (! dp.classList.contains('hidden')){
+        getText('api/boatDataString').then(function (data) {
+            updateDashboard(data.split('\n'));
+        });
+    }
+    dp = document.getElementById('diagPage');
+    if (! dp.classList.contains('hidden')){
+        let dvel=document.getElementById('debugLevel');
+        if (dvel){
+            getJson('api/logLevel?level='+dvel.value)
+                .then(function(jdata){
+
+                })
+                .catch(function(err){});
+        }
+    }
 }, 1000);
 window.addEventListener('load', function () {
     let buttons = document.querySelectorAll('button');

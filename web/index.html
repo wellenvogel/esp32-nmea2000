@@ -19,6 +19,7 @@
   <div class="tab" data-page="configPage">Config</div>
   <div class="tab" data-page="xdrPage">XDR</div>
   <div class="tab" data-page="dashboardPage">Data</div>
+  <div class="tab" data-page="diagPage">Diag</div>
 </div>
 <div id="statusPage" class="tabPage">
   <div id="statusPageContent">
@@ -48,19 +49,16 @@
   <button id="reset">Reset</button>
 </div>
 <div class="configForm tabPage hidden" id="configPage" >
-  <div class="configFormRows">
-
-  </div>
   <div class="buttons">
     <button id="resetForm">ReloadConfig</button>
     <button id="changeConfig">Save&Restart</button>
     <button id="factoryReset">FactoryReset</button>
   </div>
-</div>
-<div class="configForm tabPage hidden" id="xdrPage" >
   <div class="configFormRows">
 
   </div>
+</div>
+<div class="configForm tabPage hidden" id="xdrPage" >
   <div class="buttons">
     <button id="resetForm">ReloadConfig</button>
     <button id="changeConfig">Save&Restart</button>
@@ -68,9 +66,28 @@
     <button id="exportXdr">Export</button>
     <button id="importXdr">Import</button>
   </div>
+  <div class="configFormRows">
+
+  </div>
 </div>
 <div class="tabPage hidden" id="dashboardPage">
 
+</div>
+<div class="tabPage hidden" id="diagPage">
+  <div class="buttons">
+    <span class="label">Level</span>
+    <select id="debugLevel" >
+      <option value="0">Error</option>
+      <option value="1" selected>Log</option>
+      <option value="3">Debug</option>
+      <option value="6">All</option>
+    </select>
+    <button id="showLog">ShowLog</button>
+    <button id="stopLog">StopLog</button>
+  </div>
+  <div class="diagFrame">
+    <div id="diagContainer"></div>  
+  </div>
 </div>
 
 </div>

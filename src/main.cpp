@@ -597,6 +597,20 @@ protected:
   }
 };
 
+class LogLevelRequest : public GwRequestMessage
+{
+public:
+  LogLevelRequest() : GwRequestMessage(F("application/json"),F("logLevel")){};
+  int level;
+protected:
+  virtual void processRequest()
+  {
+    //logger.logDebug(GwLog::DEBUG,"set loglevel to %d",level);
+    logger.setAsyncLevel(level,3000);
+    result = JSON_OK; 
+  }
+};
+
 
 
 void setup() {
@@ -715,6 +729,13 @@ void setup() {
                               });
   webserver.registerMainHandler("/api/xdrUnmapped", [](AsyncWebServerRequest *request)->GwRequestMessage *
                               { return new XdrUnMappedRequest(); });                              
+
+  webserver.registerMainHandler("/api/logLevel", [](AsyncWebServerRequest *request)->GwRequestMessage *
+                              { 
+                                LogLevelRequest *r=new LogLevelRequest();
+                                r->level=atoi(request->arg("level").c_str());
+                                return r; 
+                              });                              
 
   webserver.begin();
   xdrMappings.begin();
