@@ -286,7 +286,6 @@ class GwSerialLog : public GwLogWriter{
       logBuffer[wp]=0;
     }
     virtual void flush(){
-      webserver.sendDebugLine(logBuffer);
       size_t handled=0;
       while (handled < wp){
         usbSerial->flush();
