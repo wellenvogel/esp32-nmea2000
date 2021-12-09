@@ -39,6 +39,38 @@ class GetBoatDataRequest: public GwMessage{
             longitude=api->getBoatData()->Longitude->getDataWithDefault(INVALID_COORD);
         };
 };
+
+String formatValue(GwApi::BoatValue *value){
+    if (! value->valid) return "----";
+    static const int bsize=30;
+    char buffer[bsize+1];
+    buffer[0]=0;
+    if (value->getFormat() == "formatDate"){
+        time_t tv=tNMEA0183Msg::daysToTime_t(value->value);
+        tmElements_t parts;
+        tNMEA0183Msg::breakTime(tv,parts);
+        snprintf(buffer,bsize,"%04d/%02d/%02d",parts.tm_year+1900,parts.tm_mon+1,parts.tm_mday);
+    }
+    else if(value->getFormat() == "formatTime"){
+        double inthr;
+        double intmin;
+        double intsec;
+        double val;
+        val=modf(value->value/3600.0,&inthr);
+        val=modf(val*3600.0/60.0,&intmin);
+        modf(val*60.0,&intsec);
+        snprintf(buffer,bsize,"%02.0f:%02.0f:%02.0f",inthr,intmin,intsec);
+    }
+    else if (value->getFormat() == "formatFixed0"){
+        snprintf(buffer,bsize,"%.0f",value->value);
+    }
+    else{
+        snprintf(buffer,bsize,"%.4f",value->value);
+    }
+    buffer[bsize]=0;
+    return String(buffer);
+}
+
 void exampleTask(GwApi *api){
     GwLog *logger=api->getLogger();
     //get some configuration data
@@ -111,8 +143,8 @@ void exampleTask(GwApi *api){
             //both values are there - so we have a valid position
             if (! hasPosition2){
                 //access to the values via iterator->second (iterator->first would be the name)
-                if (exampleSwitch) LOG_DEBUG(GwLog::LOG,"(2)position availale lat=%f, lon=%f",
-                    latitude->value,longitude->value);
+                if (exampleSwitch) LOG_DEBUG(GwLog::LOG,"(2)position availale lat=%s, lon=%s",
+                    formatValue(latitude).c_str(),formatValue(longitude).c_str());
                 hasPosition2=true;
             }
         }
@@ -124,7 +156,7 @@ void exampleTask(GwApi *api){
         }
         if (testValue->valid){
             if (! lastTestValueValid || lastTestValue != testValue->value){
-                LOG_DEBUG(GwLog::LOG,"%s new value %f",testValue->getName().c_str(),testValue->value);
+                LOG_DEBUG(GwLog::LOG,"%s new value %s",testValue->getName().c_str(),formatValue(testValue).c_str());
                 lastTestValueValid=true;
                 lastTestValue=testValue->value;
             }

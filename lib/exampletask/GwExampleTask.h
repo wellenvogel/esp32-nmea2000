@@ -27,9 +27,9 @@ void exampleTask(GwApi *param);
 void exampleInit(GwApi *param);
 //make the task known to the core
 //the task function should not return (unless you delete the task - see example code)
-DECLARE_USERTASK(exampleTask)
+//DECLARE_USERTASK(exampleTask)
 //if your task is not happy with the default 2000 bytes of stack, replace the DECLARE_USERTASK
-//with: DECLARE_USERTASK_PARAM(exampleTask,4000);
+DECLARE_USERTASK_PARAM(exampleTask,4000);
 //this would create our task with a stack size of 4000 bytes
 
 
