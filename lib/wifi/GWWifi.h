@@ -15,6 +15,7 @@ class GwWifi{
         unsigned long apShutdownTime=0;
         bool apActive=false;
         bool fixedApPass=true;
+        bool clientIsConnected=false;
     public:
         GwWifi(const GwConfigHandler *config,GwLog *log, bool fixedApPass=true);
         void setup();

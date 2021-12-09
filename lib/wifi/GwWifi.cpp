@@ -36,25 +36,39 @@ void GwWifi::setup(){
     if (apShutdownTime < 120 && apShutdownTime != 0) apShutdownTime=120; //min 2 minutes
     logger->logString("GWWIFI: AP auto shutdown %s (%ds)",apShutdownTime> 0?"enabled":"disabled",apShutdownTime);
     apShutdownTime=apShutdownTime*1000; //ms   
+    clientIsConnected=false;
     connectInternal();    
 }
 bool GwWifi::connectInternal(){
     if (wifiClient->asBoolean()){
+        clientIsConnected=false;
         logger->logString("creating wifiClient ssid=%s",wifiSSID->asString().c_str());
-        WiFi.begin(wifiSSID->asCString(),wifiPass->asCString());
+        wl_status_t rt=WiFi.begin(wifiSSID->asCString(),wifiPass->asCString());
+        LOG_DEBUG(GwLog::LOG,"wifiClient connect returns %d",(int)rt);
         lastConnectStart=millis();
         return true;
     }
     return false;
 }
-#define RETRY_MILLIS 10000
+#define RETRY_MILLIS 20000
 void GwWifi::loop(){
-    if (wifiClient->asBoolean() && ! clientConnected()){
-        long now=millis();
-        if (lastConnectStart > now || (lastConnectStart+RETRY_MILLIS) < now){
-            logger->logString("wifiClient: retry connect to %s",wifiSSID->asCString());
-            WiFi.disconnect();
-            connectInternal();
+    if (wifiClient->asBoolean())
+    {
+        if (!clientConnected())
+        {
+            long now = millis();
+            if (lastConnectStart > now || (lastConnectStart + RETRY_MILLIS) < now)
+            {
+                LOG_DEBUG(GwLog::LOG,"wifiClient: retry connect to %s", wifiSSID->asCString());
+                WiFi.disconnect();
+                connectInternal();
+            }
+        }
+        else{
+            if (! clientIsConnected){
+                LOG_DEBUG(GwLog::LOG,"client %s now connected",wifiSSID->asCString());
+                clientIsConnected=true;
+            }
         }
     }
     if (apShutdownTime != 0 && apActive){
