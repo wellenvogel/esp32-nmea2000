@@ -259,7 +259,7 @@ private:
             updateDouble(boatData->STW, WaterReferenced);
             unsigned long now = millis();
             double MagneticHeading = (boatData->Heading->isValid(now) && boatData->Variation->isValid(now)) ? boatData->Heading->getData() + boatData->Variation->getData() : NMEA0183DoubleNA;
-            if (NMEA0183SetVHW(NMEA0183Msg, boatData->Heading->getData(), MagneticHeading, WaterReferenced,talkerId))
+            if (NMEA0183SetVHW(NMEA0183Msg, boatData->Heading->getDataWithDefault(NMEA0183DoubleNA), MagneticHeading, WaterReferenced,talkerId))
             {
                 SendMessage(NMEA0183Msg);
             }
