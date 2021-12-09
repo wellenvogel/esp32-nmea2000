@@ -2,6 +2,7 @@
 #define _GWUSERCODE_H
 #include <Arduino.h>
 #include <map>
+#include <vector>
 class GwLog;
 class GwApi;
 typedef void (*GwUserTaskFunction)(GwApi *);
@@ -25,17 +26,20 @@ class GwUserTask{
             this->stackSize=stackSize;
         }
 };
+class GwUserApiImpl;
 class GwUserCode{
     GwLog *logger;
     GwApi *api;
     SemaphoreHandle_t *mainLock;
     void startAddOnTask(GwApi *api,GwUserTask *task,int sourceId,String name);
+    std::vector<GwUserApiImpl*> apis;
     public:
         typedef std::map<String,String> Capabilities;
         GwUserCode(GwApi *api, SemaphoreHandle_t *mainLock);
         void startUserTasks(int baseId);
         void startInitTasks(int baseId);
         void startAddonTask(String name,TaskFunction_t task, int id);
+        bool handleNMEA0183(const char *buffer,bool fromConverter=false);
         Capabilities *getCapabilities();
 };
 #endif

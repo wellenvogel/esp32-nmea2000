@@ -253,13 +253,17 @@ void handleReceivedNmeaMessage(const char *buf, int sourceId){
 }  
 
 //*****************************************************************************
-void SendNMEA0183Message(const tNMEA0183Msg &NMEA0183Msg, int sourceId,bool convert=false) {
+typedef bool (*NMEA0183Handler)(const char *buffer);
+void SendNMEA0183Message(const tNMEA0183Msg &NMEA0183Msg, int sourceId,bool convert=false,NMEA0183Handler handler=NULL) {
   logger.logDebug(GwLog::DEBUG+2,"SendNMEA0183(1)");
   char buf[MAX_NMEA0183_MESSAGE_SIZE+3];
   if ( !NMEA0183Msg.GetMessage(buf, MAX_NMEA0183_MESSAGE_SIZE) ) return;
   logger.logDebug(GwLog::DEBUG+2,"SendNMEA0183: %s",buf);
   if (convert){
     toN2KConverter->parseAndSend(buf,sourceId);
+  }
+  if (handler){
+    (*handler)(buf);
   }
   size_t len=strlen(buf);
   buf[len]=0x0d;
@@ -305,10 +309,7 @@ class ApiImpl : public GwApi
 {
 private:
   int sourceId = -1;
-  bool receive0183=false;
-  bool include0183Converted=false;
-  QueueHandle_t nmea0183Queue;
-
+  
 public:
   ApiImpl(int sourceId)
   {
@@ -361,35 +362,13 @@ public:
   virtual const char* getTalkerId(){
     return config.getString(config.talkerId,String("GP")).c_str();
   }
-  virtual void receiveNMEA0183(bool includeConverted,int queueLen=5){
-    if (! receive0183){
-      nmea0183Queue=xQueueCreate(queueLen,sizeof(char*));
-      receive0183=true;
-    }
-    include0183Converted=includeConverted;
+  virtual void receiveNMEA0183(bool includeConverted,int queueLen=5){    
   }
 
-  virtual bool getNMEA0183Message(tNMEA0183Msg &msg,unsigned long waitTime=0){
-    char *rmsg=NULL;
-    bool rt=xQueueReceive(nmea0183Queue,&rmsg,pdMS_TO_TICKS(waitTime));
-    if (rt) msg.SetMessage(rmsg);
-    delete rmsg;
-    return rt;
+  virtual bool getNMEA0183Message(tNMEA0183Msg &msg,unsigned long waitTime=0){   
+    return false;
   }
   virtual ~ApiImpl(){}
-  bool handleNMEA0183(const char *buf){
-    if (! receive0183) return false;
-    size_t len=strlen(buf);
-    char *m=new char[len+1];
-    memcpy(m,buf,len+1);
-    if (! xQueueSend(nmea0183Queue,&m,0)){
-      delete m;
-      return false;
-    }
-    return true;
-  }
-  
-
 };
 
 bool delayedRestart(){
@@ -748,7 +727,10 @@ void setup() {
   
   nmea0183Converter= N2kDataToNMEA0183::create(&logger, &boatData, 
     [](const tNMEA0183Msg &msg, int sourceId){
-      SendNMEA0183Message(msg,sourceId,false);
+      SendNMEA0183Message(msg,sourceId,false,
+        [](const char *buffer)->bool{
+         return userCodeHandler.handleNMEA0183(buffer,true);
+      });
     }
     , N2K_CHANNEL_ID,
     config.getString(config.talkerId,String("GP")),
@@ -873,7 +855,7 @@ class NMEAMessageReceiver : public GwMessageFetcher{
       else{
         logger.logDebug(GwLog::DEBUG,"NMEA[%d]: %s",id,(const char *)p);
         handleReceivedNmeaMessage((const char *)p,id);
-        apiImpl->handleNMEA0183((const char *)p);
+        userCodeHandler.handleNMEA0183((const char *)p);
         //trigger sending to empty buffers
         handleSendAndRead(false);
       }
