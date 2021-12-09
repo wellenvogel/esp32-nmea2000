@@ -1038,6 +1038,20 @@ function handleTab(el) {
     }
     return str;
 };
+function formatFixed(v,dig,fract){
+    v=parseFloat(v);
+    if (dig === undefined) return v.toFixed(fract);
+    let s=v<0?"-":"";
+    v=Math.abs(v);
+    let rv=v.toFixed(fract);
+    let parts=rv.split('.');
+    parts[0]="0000000000"+parts[0];
+    if (dig >= 10) dig=10;
+    if (fract > 0){
+        return s+parts[0].substr(parts[0].length-dig)+"."+parts[1];
+    }
+    return s+parts[0].substr(parts[0].length-dig);
+}
 let valueFormatters = {
     formatCourse: {
         f: function (v) {
@@ -1128,7 +1142,37 @@ let valueFormatters = {
             return x.toFixed(0);
         },
         u:'m'
+    },
+    formatDate:{
+        f: function(v){
+            v=parseFloat(v);
+            if (isNaN(v)) return "----/--/--";
+            //strange day offset from NMEA0183 lib
+            let d=new Date("2010/01/01");
+            let days=14610-d.getTime()/1000/86400;
+            let tbase=(v-days)*1000*86400;
+            let od=new Date(tbase);
+            return formatFixed(od.getFullYear(),4,0)+
+                "/"+formatFixed(od.getMonth()+1,2,0)+
+                "/"+formatFixed(od.getDate(),2,0);
+        },
+        u:''
+    },
+    formatTime:{
+        f:function(v){
+            v=parseFloat(v);
+            if (isNaN(v)) return "--:--:--";
+            let hr=Math.floor(v/3600.0);
+            let min=Math.floor((v-hr*3600.0)/60);
+            let s=Math.floor((v-hr*3600.0-min*60.0));
+            return formatFixed(hr,2,0)+':'+
+                formatFixed(min,2,0)+':'+
+                formatFixed(s,2,0);
+        },
+        u:''
     }
+
+
 }
 function resizeFont(el,reset,maxIt){
     if (maxIt === undefined) maxIt=10;

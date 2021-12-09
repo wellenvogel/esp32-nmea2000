@@ -293,7 +293,10 @@ body {
     }
   .dashValue.formatLongitude {
         font-size: 1.1em;
-    }  
+    }
+  .dashValue.formatDate {
+    font-size: 1.2em;
+  }    
   .footer {
     display: flex;
     flex-direction: row;
