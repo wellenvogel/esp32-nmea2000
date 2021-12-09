@@ -26,6 +26,9 @@ class GwApi{
                 const String & getName() const{
                     return name;
                 }
+                const String & getFormat() const{
+                    return format;
+                }
         }; 
         /**
          * thread safe methods - can directly be called from a user task
