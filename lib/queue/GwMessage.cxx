@@ -124,7 +124,7 @@ GwRequestQueue::MessageSendStatus GwRequestQueue::sendAndWait(GwMessage *msg,uns
 }
 GwMessage* GwRequestQueue::fetchMessage(unsigned long waitMillis){
     GwMessage *msg=NULL;
-    if (xQueueReceive(theQueue,&msg,waitMillis)){
+    if (xQueueReceive(theQueue,&msg,pdMS_TO_TICKS(waitMillis))){
         return msg;
     }
     return NULL;

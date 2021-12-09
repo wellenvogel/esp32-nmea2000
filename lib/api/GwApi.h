@@ -57,6 +57,10 @@ class GwApi{
          * just make sure to have the list being of appropriate size (numValues)
          */
         virtual void getBoatDataValues(int numValues,BoatValue **list)=0;
+
+        virtual void receiveNMEA0183(bool includeConverted,int queueLen=5)=0;
+        virtual bool getNMEA0183Message(tNMEA0183Msg &msg,unsigned long waitTime=0)=0;
+
         /**
          * not thread safe methods
          * accessing boat data must only be executed from within the main thread

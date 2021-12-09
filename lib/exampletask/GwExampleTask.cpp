@@ -81,6 +81,7 @@ void exampleTask(GwApi *api){
     //------
     //initialization goes here
     //------
+    api->receiveNMEA0183(true);
     bool hasPosition=false;
     bool hasPosition2=false;
     LOG_DEBUG(GwLog::DEBUG,"example switch ist %s",exampleSwitch?"true":"false");
@@ -167,7 +168,14 @@ void exampleTask(GwApi *api){
                 lastTestValueValid=false;
             }
         }
-
+        tNMEA0183Msg msg;
+        while (api->getNMEA0183Message(msg))
+        {
+            if (strncmp("RMC", msg.MessageCode(), 3) == 0)
+            {
+                LOG_DEBUG(GwLog::DEBUG, "RMC in example task");
+            }
+        }
     }
     vTaskDelete(NULL);
     

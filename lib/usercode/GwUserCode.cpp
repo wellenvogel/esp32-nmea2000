@@ -99,6 +99,13 @@ public:
         GWSYNCHRONIZED(mainLock);
         api->getBoatDataValues(num,list);
     }
+    virtual void receiveNMEA0183(bool includeConverted,int queueLen=5){
+        return api->receiveNMEA0183(includeConverted,queueLen);
+    }
+    virtual bool getNMEA0183Message(tNMEA0183Msg &msg,unsigned long waitTime=0){
+        return api->getNMEA0183Message(msg,waitTime);
+    }
+
     virtual ~TaskApi(){};
 };
 

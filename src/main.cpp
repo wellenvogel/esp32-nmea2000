@@ -305,6 +305,9 @@ class ApiImpl : public GwApi
 {
 private:
   int sourceId = -1;
+  bool receive0183=false;
+  bool include0183Converted=false;
+  QueueHandle_t nmea0183Queue;
 
 public:
   ApiImpl(int sourceId)
@@ -358,7 +361,35 @@ public:
   virtual const char* getTalkerId(){
     return config.getString(config.talkerId,String("GP")).c_str();
   }
+  virtual void receiveNMEA0183(bool includeConverted,int queueLen=5){
+    if (! receive0183){
+      nmea0183Queue=xQueueCreate(queueLen,sizeof(char*));
+      receive0183=true;
+    }
+    include0183Converted=includeConverted;
+  }
+
+  virtual bool getNMEA0183Message(tNMEA0183Msg &msg,unsigned long waitTime=0){
+    char *rmsg=NULL;
+    bool rt=xQueueReceive(nmea0183Queue,&rmsg,pdMS_TO_TICKS(waitTime));
+    if (rt) msg.SetMessage(rmsg);
+    delete rmsg;
+    return rt;
+  }
   virtual ~ApiImpl(){}
+  bool handleNMEA0183(const char *buf){
+    if (! receive0183) return false;
+    size_t len=strlen(buf);
+    char *m=new char[len+1];
+    memcpy(m,buf,len+1);
+    if (! xQueueSend(nmea0183Queue,&m,0)){
+      delete m;
+      return false;
+    }
+    return true;
+  }
+  
+
 };
 
 bool delayedRestart(){
@@ -842,6 +873,7 @@ class NMEAMessageReceiver : public GwMessageFetcher{
       else{
         logger.logDebug(GwLog::DEBUG,"NMEA[%d]: %s",id,(const char *)p);
         handleReceivedNmeaMessage((const char *)p,id);
+        apiImpl->handleNMEA0183((const char *)p);
         //trigger sending to empty buffers
         handleSendAndRead(false);
       }
