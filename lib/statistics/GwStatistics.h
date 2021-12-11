@@ -38,28 +38,42 @@ class TimeAverage{
 
 };
 class TimeMonitor{
-  public:
     TimeAverage **times=NULL;
-    unsigned long *current=NULL;
-    unsigned long start=0;
+    struct timeval *current=NULL;
+    struct timeval start;
     unsigned long lastLog=0;
     unsigned long lastLogCount=0;
     unsigned long count=0;
     unsigned long max=0;
     size_t len;
+    unsigned long tdiff(struct timeval &tnew,struct timeval &told){
+      time_t sdiff=tnew.tv_sec-told.tv_sec;
+      time_t udiff=0;
+      if (tnew.tv_usec < told.tv_usec){
+        if (sdiff > 0) {
+          sdiff--;
+          udiff=tnew.tv_usec+1000000UL-told.tv_usec;
+        }
+      }
+      else{
+        udiff=tnew.tv_usec-told.tv_usec;
+      }
+      return sdiff * 1000000UL +udiff;
+    }
+  public:  
     TimeMonitor(size_t len,double factor=0.3){
       this->len=len;
       times=new TimeAverage*[len];
       for (size_t i=0;i<len;i++){
           times[i]=new TimeAverage(factor);
       }
-      current=new unsigned long[len];
+      current=new struct timeval[len];
       reset();
       count=0;
     }
     void reset(){
-      start=millis();
-      for (size_t i=0;i<len;i++) current[i]=0;
+      gettimeofday(&start,NULL);
+      for (size_t i=0;i<len;i++) current[i]={0,0};
       count++;
       
     }
@@ -73,7 +87,7 @@ class TimeMonitor{
             log+=String((double)(num*1000)/(double)tdif);
             log+="/s[";
             log+=String(max);
-            log+="ms]#";
+            log+="us]#";
           }
       }
       lastLog=now;
@@ -96,14 +110,14 @@ class TimeMonitor{
     }
     void setTime(size_t index){
       if (index < 1 || index >= len) return;
-      unsigned long sv=start;
+      struct timeval *sv=&start;
       for (size_t i=0;i<index;i++){
-        if (current[i] != 0) sv=current[i];
+        if (current[i].tv_usec != 0 || current[i].tv_usec != 0) sv=&current[i];
       }
-      unsigned long now=millis();
-      current[index]=now;
-      unsigned long currentv=now-sv;
-      if ((now-start) > max) max=now-start;
+      gettimeofday(&current[index],NULL);
+      unsigned long currentv=tdiff(current[index],*sv);
+      unsigned long startDiff=tdiff(current[index],start);
+      if (startDiff > max) max=startDiff;
       times[index-1]->add(currentv);
     }
 };
