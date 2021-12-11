@@ -10,7 +10,7 @@ class GwLogWriter{
 };
 class GwLog{
     private:
-        static const size_t bufferSize=200;
+        static const size_t bufferSize=250;
         char buffer[bufferSize];
         int logLevel=1;
         GwLogWriter *writer;
