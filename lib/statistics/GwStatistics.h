@@ -40,10 +40,12 @@ class TimeAverage{
 class TimeMonitor{
   public:
     TimeAverage **times=NULL;
+    unsigned long *current=NULL;
     unsigned long start=0;
     unsigned long lastLog=0;
     unsigned long lastLogCount=0;
     unsigned long count=0;
+    unsigned long max=0;
     size_t len;
     TimeMonitor(size_t len,double factor=0.3){
       this->len=len;
@@ -51,21 +53,15 @@ class TimeMonitor{
       for (size_t i=0;i<len;i++){
           times[i]=new TimeAverage(factor);
       }
+      current=new unsigned long[len];
       reset();
       count=0;
     }
     void reset(){
       start=millis();
+      for (size_t i=0;i<len;i++) current[i]=0;
       count++;
       
-    }
-    double getMax(){
-        double rt=0;
-        for (size_t i=0;i<len;i++){
-            if (times[i]->getCurrent() == 0) continue;
-            if (times[i]->getCurrent() > rt) rt=times[i]->getCurrent();
-        }
-        return rt;
     }
     String getLog(){
       unsigned long now=millis();
@@ -75,13 +71,14 @@ class TimeMonitor{
           unsigned long tdif=now-lastLog;
           if (tdif > 0){
             log+=String((double)(num*1000)/(double)tdif);
-            log+="/s,";
-            log+=String(getMax());
-            log+="ms#";
+            log+="/s[";
+            log+=String(max);
+            log+="ms]#";
           }
       }
       lastLog=now;
-      lastLogCount=count; 
+      lastLogCount=count;
+      max=0; 
       for (size_t i=1;i<len;i++){
         if (times[i]->getCount()){
           log+=String(i);
@@ -99,7 +96,14 @@ class TimeMonitor{
     }
     void setTime(size_t index){
       if (index < 1 || index >= len) return;
-      unsigned long current=millis()-start;
-      times[index-1]->add(current);
+      unsigned long sv=start;
+      for (size_t i=0;i<index;i++){
+        if (current[i] != 0) sv=current[i];
+      }
+      unsigned long now=millis();
+      current[index]=now;
+      unsigned long currentv=now-sv;
+      if ((now-start) > max) max=now-start;
+      times[index-1]->add(currentv);
     }
 };

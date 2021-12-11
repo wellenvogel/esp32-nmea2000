@@ -402,7 +402,6 @@ public:
 protected:
   virtual void processRequest()
   {
-    int numPgns = nmea0183Converter->numPgns();
     GwJsonDocument status(256 + 
       countNMEA2KIn.getJsonSize()+
       countNMEA2KOut.getJsonSize() +
