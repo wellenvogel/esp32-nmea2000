@@ -124,6 +124,14 @@
         }
     },
     {
+        "name": "showInvalidData",
+        "label": "show all data",
+        "type": "boolean",
+        "default": "true",
+        "description": "show also not received items on data page",
+        "category": "system"
+    },
+    {
         "name": "minXdrInterval",
         "label":"min XDR interval",
         "type": "number",

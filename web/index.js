@@ -1215,15 +1215,7 @@ function parseBoatDataLine(line){
 function createDashboard() {
     let frame = document.getElementById('dashboardPage');
     if (!frame) return;
-    getText("api/boatDataString").then(function (txt) {
-        frame.innerHTML = '';
-        let values=txt.split('\n');
-        for (let n in values) {
-            let def=parseBoatDataLine(values[n]);
-            createDashboardItem(def.name, def, frame);
-        }
-        updateDashboard(values);
-    });
+    frame.innerHTML = '';
 }
 function sourceName(v){
     if (v == 0) return "N2K";
@@ -1235,14 +1227,23 @@ function sourceName(v){
 let lastSelectList=[];
 function updateDashboard(data) {
     let frame = document.getElementById('dashboardPage');
+    let showInvalid=true;
+    forEl('select[name=showInvalidData]',function(el){
+        if (el.value == 'false') showInvalid=false;
+    })
     let names={};
     for (let n in data) {
         let current=parseBoatDataLine(data[n]);
         if (! current.name) continue;
         names[current.name]=true;
         let de = document.getElementById('data_' + current.name);
-        if (! de && frame){
+        let isValid=current.valid;
+        if (! de && frame && (isValid || showInvalid)){
             de=createDashboardItem(current.name,current,frame);   
+        }
+        if (de && (!isValid && !showInvalid)){
+            de.parentElement.remove();
+            continue;
         }
         if (de) {
             let newContent='----';
@@ -1339,8 +1340,8 @@ window.addEventListener('load', function () {
             handleTab(ev.target);
         });
     }
-    loadConfigDefinitions();
     createDashboard();
+    loadConfigDefinitions();
     let statusPage=document.getElementById('statusPageContent');
     if (statusPage){
         let even=true;
