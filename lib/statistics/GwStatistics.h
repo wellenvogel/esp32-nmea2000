@@ -119,6 +119,6 @@ class TimeMonitor{
       current[index]=now;
       int64_t currentv=now-sv;
       if ((now-start) > max) max=now-start;
-      times[index-1]->add(currentv);
+      times[index]->add(currentv);
     }
 };

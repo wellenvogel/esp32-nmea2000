@@ -1205,10 +1205,10 @@ function parseBoatDataLine(line){
     let rt={};
     let parts=line.split(',');
     rt.name=parts[0];
-    rt.valid=parts[1] === '1';
-    rt.update=parseInt(parts[2]);
-    rt.source=parseInt(parts[3]);
-    rt.format=parts[4];
+    rt.valid=parts[2] === '1';
+    rt.update=parseInt(parts[3]);
+    rt.source=parseInt(parts[4]);
+    rt.format=parts[1];
     rt.value=parts[5];
     return rt;
 }

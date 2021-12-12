@@ -14,6 +14,7 @@ class GwBoatItemBase{
             uint8_t *buffer =NULL;
             uint8_t *wp=NULL;
             size_t bufferSize=0;
+            size_t baseOffset=0;
             void ensure(size_t size);
             public:
                 StringWriter();
@@ -21,6 +22,8 @@ class GwBoatItemBase{
                 size_t write(const uint8_t* s, size_t n);
                 const char * c_str() const;
                 int getSize() const;
+                void setBase();
+                bool baseFilled();
                 void reset();
         };
         static const unsigned long INVALID_TIME=60000;
