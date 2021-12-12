@@ -151,15 +151,17 @@ GwSocketServer::GwSocketServer(const GwConfigHandler *config,GwLog *logger,int m
     this->config=config;
     this->logger=logger;
     this->minId=minId;
-    maxClients=config->getInt(config->maxClients);
-    allowReceive=config->getBool(config->readTCP);
+    maxClients=1;
+    allowReceive=false;
 }
 void GwSocketServer::begin(){
+    maxClients=config->getInt(config->maxClients);
+    allowReceive=config->getBool(config->readTCP);
     clients=new gwClientPtr[maxClients];
     for (int i=0;i<maxClients;i++){
         clients[i]=gwClientPtr(new GwClient(wiFiClientPtr(NULL),logger,i,allowReceive));
     }
-    server=new WiFiServer(config->getInt(config->serverPort),maxClients);
+    server=new WiFiServer(config->getInt(config->serverPort),maxClients+1);
     server->begin();
     logger->logString("Socket server created, port=%d",
         config->getInt(config->serverPort));

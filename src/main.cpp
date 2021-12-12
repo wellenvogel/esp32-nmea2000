@@ -871,8 +871,10 @@ void loop() {
     }
   }
   monitor.setTime(3);
+  //read sockets
   socketServer.loop(true,false);
   monitor.setTime(4);
+  //write sockets
   socketServer.loop(false,true);
   monitor.setTime(5);  
   usbSerial->loop(true);

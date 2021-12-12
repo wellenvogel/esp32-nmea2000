@@ -92,6 +92,20 @@ function resetForm(ev) {
                 let el = document.querySelector("[name='" + k + "']");
                 if (el) {
                     let v = jsonData[k];
+                    let def=getConfigDefition(k);
+                    if (def.check == 'checkMinMax'){
+                        //simple migration if the current value is outside the range
+                        //we even "hide" this from the user
+                        v=parseFloat(v);
+                        if (! isNaN(v)){
+                            if (def.min !== undefined){
+                                if (v < parseFloat(def.min)) v=parseFloat(def.min);
+                            }
+                            if (def.max !== undefined){
+                                if (v > parseFloat(def.max)) v=parseFloat(def.max);
+                            }
+                        }
+                    }
                     el.value = v;
                     el.setAttribute('data-loaded', v);
                     let changeEvent = new Event('change');
