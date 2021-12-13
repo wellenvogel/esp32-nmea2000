@@ -132,7 +132,7 @@ def generateCfg(inFile,outFile,addDirs=[]):
                 raise Exception("%s: config names must be max 15 caracters"%n)
             data+='  const String %s=F("%s");\n'%(n,n)
         data+='  protected:\n'    
-        data+='  GwConfigItem *configs[%d]={\n'%(l)
+        data+='  GwConfigInterface *configs[%d]={\n'%(l)
         first=True
         for item in config:
             if not first:
@@ -141,7 +141,7 @@ def generateCfg(inFile,outFile,addDirs=[]):
             secret="false";
             if item.get('type') == 'password':
                 secret="true"   
-            data+="    new GwConfigItem(%s,\"%s\",%s)"%(item.get('name'),item.get('default'),secret)
+            data+="    new GwConfigInterface(%s,\"%s\",%s)"%(item.get('name'),item.get('default'),secret)
         data+='};\n'  
         data+='};\n'
     writeFileIfChanged(outFile,data)    

@@ -2,22 +2,16 @@
 #define _GWCONFIGITEM_H
 #include "WString.h"
 #include <vector>
+
+class GwConfigHandler;
 class GwConfigInterface{
-    public:
-    virtual String asString() const=0;
-    virtual const char * asCString() const =0;
-    virtual bool asBoolean() const = 0;
-    virtual int asInt() const = 0;
-    virtual bool isSecret() const =0;
-};
-class GwConfigItem: public GwConfigInterface{
     private:
         String name;
         String initialValue;
         String value;
         bool secret=false;
     public:
-        GwConfigItem(const String &name, const String initialValue, bool secret=false){
+        GwConfigInterface(const String &name, const String initialValue, bool secret=false){
             this->name=name;
             this->initialValue=initialValue;
             this->value=initialValue;
@@ -29,9 +23,6 @@ class GwConfigItem: public GwConfigInterface{
         virtual const char * asCString() const{
             return value.c_str();
         };
-        virtual void fromString(const String v){
-            value=v;
-        };
         virtual bool asBoolean() const{
             return strcasecmp(value.c_str(),"true") == 0;
         }
@@ -40,9 +31,6 @@ class GwConfigItem: public GwConfigInterface{
         }
         String getName() const{
             return name;
-        }
-        virtual void reset(){
-            value=initialValue;
         }
         virtual bool isSecret() const{
             return secret;
@@ -53,6 +41,7 @@ class GwConfigItem: public GwConfigInterface{
         String getDefault() const {
             return initialValue;
         }
+        friend class GwConfigHandler;
 };
 
 class GwNmeaFilter{

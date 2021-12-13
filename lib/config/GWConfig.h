@@ -5,12 +5,15 @@
 #include "GwLog.h"
 #include "GwConfigItem.h"
 #include "GwConfigDefinitions.h"
+#include <map>
 
 
 class GwConfigHandler: public GwConfigDefinitions{
     private:
         Preferences prefs;
         GwLog *logger;
+        typedef std::map<String,String> StringMap;
+        StringMap changedValues;
     public:
         public:
         GwConfigHandler(GwLog *logger);
@@ -23,7 +26,6 @@ class GwConfigHandler: public GwConfigDefinitions{
         String getString(const String name,const String defaultv="") const;
         bool getBool(const String name,bool defaultv=false) const ;
         int getInt(const String name,int defaultv=0) const;
-        GwConfigItem * findConfig(const String name, bool dummy=false);
         GwConfigInterface * getConfigItem(const String name, bool dummy=false) const;
     private:
 };

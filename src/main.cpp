@@ -894,7 +894,8 @@ void setup() {
     GWSYNCHRONIZED(&mainLock);
     userCodeHandler.startUserTasks(MIN_USER_TASK);
   }
-  
+  logger.logDebug(GwLog::ERROR,"wifi AP pass: %s",config.getString(config.apPassword).c_str());
+  logger.logDebug(GwLog::ERROR,"admin pass: %s",config.getString(config.adminPassword).c_str());
   logger.logDebug(GwLog::LOG,"setup done");
 }  
 //*****************************************************************************

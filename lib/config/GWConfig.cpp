@@ -8,13 +8,9 @@ bool isTrue(const char * value){
     return (strcasecmp(value,"true") == 0);
 }
 
-class DummyConfig : public GwConfigItem{
+class DummyConfig : public GwConfigInterface{
     public:
-        DummyConfig():GwConfigItem("dummy",""){}
-        virtual void fromString(const String v){
-        };
-        virtual void reset(){
-        }
+        DummyConfig():GwConfigInterface("dummy",""){}
 };
 
 DummyConfig dummyConfig;
@@ -46,13 +42,7 @@ String GwConfigHandler::toJson() const{
     logger->logString("configJson: %s",rt.c_str());
     return rt;
 }
-GwConfigItem * GwConfigHandler::findConfig(const String name, bool dummy){
-    for (int i=0;i<getNumConfig();i++){
-        if (configs[i]->getName() == name) return configs[i];
-    }
-    if (!dummy) return NULL;
-    return &dummyConfig;
-}
+
 GwConfigInterface * GwConfigHandler::getConfigItem(const String name, bool dummy) const{
     for (int i=0;i<getNumConfig();i++){
         if (configs[i]->getName() == name) return configs[i];
@@ -68,7 +58,7 @@ bool GwConfigHandler::loadConfig(){
     prefs.begin(PREF_NAME,true);
     for (int i=0;i<getNumConfig();i++){
         String v=prefs.getString(configs[i]->getName().c_str(),configs[i]->getDefault());
-        configs[i]->fromString(v);
+        configs[i]->value=v;
     }
     prefs.end();
     return true;
@@ -76,8 +66,13 @@ bool GwConfigHandler::loadConfig(){
 bool GwConfigHandler::saveConfig(){
     prefs.begin(PREF_NAME,false);
     for (int i=0;i<getNumConfig();i++){
-        logger->logString("saving %s=%s",configs[i]->getName().c_str(),configs[i]->asCString());
-        prefs.putString(configs[i]->getName().c_str(),configs[i]->asString());
+        String val=configs[i]->asString();
+        auto it=changedValues.find(configs[i]->getName());
+        if (it != changedValues.end()){
+            val=it->second;
+        }
+        logger->logString("saving %s=%s",configs[i]->getName().c_str(),val.c_str());
+        prefs.putString(configs[i]->getName().c_str(),val);
     }
     prefs.end();
     logger->logString("saved config");
@@ -85,21 +80,21 @@ bool GwConfigHandler::saveConfig(){
 }
 
 bool GwConfigHandler::updateValue(String name, String value){
-    GwConfigItem *i=findConfig(name);
+    GwConfigInterface *i=getConfigItem(name);
     if (i == NULL) return false;
     if (i->isSecret() && value.isEmpty()){
         LOG_DEBUG(GwLog::LOG,"skip empty password %s",name.c_str());
     }
     else{
         LOG_DEBUG(GwLog::LOG,"update config %s=>%s",name.c_str(),i->isSecret()?"***":value.c_str());
-        i->fromString(value);
+        changedValues[name]=value;
     }
     return true;
 }
 bool GwConfigHandler::reset(bool save){
     logger->logString("reset config");
     for (int i=0;i<getNumConfig();i++){
-        configs[i]->reset();
+        changedValues[configs[i]->getName()]=configs[i]->getDefault();
     }
     if (!save) return true;
     return saveConfig();
