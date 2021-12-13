@@ -124,6 +124,26 @@
         }
     },
     {
+        "name": "useAdminPass",
+        "type": "boolean",
+        "default": "true",
+        "description": "use a password for config modifications",
+        "category": "system"
+    },
+    {
+        "name": "adminPassword",
+        "type": "password",
+        "default": "esp32admin",
+        "check": "checkAdminPass",
+        "description": "set the password for config modifications",
+        "category": "system",
+        "capabilities": {
+            "hardwareReset": [
+                "true"
+            ]
+        }
+    },
+    {
         "name": "showInvalidData",
         "label": "show all data",
         "type": "boolean",

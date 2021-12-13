@@ -53,6 +53,7 @@ const unsigned long HEAP_REPORT_TIME=2000; //set to 0 to disable heap reporting
 #include <map>
 #include <vector>
 #include "esp_heap_caps.h"
+#include <MD5Builder.h>
 #include "GwJsonDocument.h"
 #include "N2kDataToNMEA0183.h"
 
@@ -126,6 +127,47 @@ GwCounter<String> countTCPIn("countTCPin");
 GwCounter<String> countTCPOut("countTCPout");
 GwCounter<String> countSerialIn("countSerialIn");
 GwCounter<String> countSerialOut("countSerialOut");
+
+unsigned long saltBase=esp_random();
+
+char hv(uint8_t nibble){
+  nibble=nibble&0xf;
+  if (nibble < 10) return (char)('0'+nibble);
+  return (char)('A'+nibble-10);
+}
+void toHex(unsigned long v,char *buffer,size_t bsize){
+  uint8_t *bp=(uint8_t *)&v;
+  size_t i=0;
+  for (;i<sizeof(v) && (2*i +1)< bsize;i++){
+    buffer[2*i]=hv((*bp) >> 4);
+    buffer[2*i+1]=hv(*bp);
+    bp++;
+  }
+  if ((2*i) < bsize) buffer[2*i]=0;
+}
+
+bool checkPass(String hash){
+  if (! config.getBool(config.useAdminPass)) return true;
+  String pass=config.getString(config.adminPassword);
+  unsigned long now=millis()/1000UL & ~0x7UL;
+  MD5Builder builder;
+  char buffer[2*sizeof(now)+1];
+  for (int i=0;i< 5 ;i++){
+    unsigned long base=saltBase+now;
+    toHex(base,buffer,2*sizeof(now)+1);
+    builder.begin();
+    builder.add(buffer);
+    builder.add(pass);
+    builder.calculate();
+    String md5=builder.toString();
+    bool rt=hash == md5;
+    logger.logDebug(GwLog::DEBUG,"checking pass %s, base=%ld, hash=%s, res=%d",
+      hash.c_str(),base,md5.c_str(),(int)rt);
+    if (rt) return true;
+    now -= 8;
+  }
+  return false;
+}
 
 void updateNMEACounter(int id,const char *msg,bool incoming,bool fail=false){
   //we rely on the msg being long enough
@@ -417,6 +459,11 @@ protected:
     status["clientIP"] = WiFi.localIP().toString();
     status["numClients"] = socketServer.numClients();
     status["apIp"] = gwWifi.apIP();
+    size_t bsize=2*sizeof(unsigned long)+1;
+    unsigned long base=saltBase + ( millis()/1000UL & ~0x7UL);
+    char buffer[bsize];
+    toHex(base,buffer,bsize);
+    status["salt"] = buffer;
     //nmea0183Converter->toJson(status);
     countNMEA2KIn.toJson(status);
     countNMEA2KOut.toJson(status);
@@ -430,6 +477,20 @@ protected:
   }
 };
 
+class CheckPassRequest : public GwRequestMessage{
+  String hash;
+  public:
+    CheckPassRequest(String h): GwRequestMessage(F("application/json"),F("checkPass")){
+      this->hash=h;
+    };
+  protected:
+    virtual void processRequest(){
+      bool res=checkPass(hash);
+      if (res) result=JSON_OK;
+      else result=F("{\"status\":\"ERROR\"}");
+    }
+
+};
 class CapabilitiesRequest : public GwRequestMessage{
   public:
     CapabilitiesRequest() : GwRequestMessage(F("application/json"),F("capabilities")){};
@@ -709,6 +770,11 @@ void setup() {
                               });
   webserver.registerMainHandler("/api/xdrUnmapped", [](AsyncWebServerRequest *request)->GwRequestMessage *
                               { return new XdrUnMappedRequest(); });                              
+  webserver.registerMainHandler("/api/checkPass", [](AsyncWebServerRequest *request)->GwRequestMessage *
+                              { 
+                                String hash=request->arg("hash");
+                                return new CheckPassRequest(hash); 
+                              });                            
 
   webserver.begin();
   xdrMappings.begin();

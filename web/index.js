@@ -1,6 +1,8 @@
 let self = this;
 let lastUpdate = (new Date()).getTime();
 let reloadConfig = false;
+let adminPass="ABCDE";
+let lastSalt="";
 function addEl(type, clazz, parent, text) {
     let el = document.createElement(type);
     if (clazz) {
@@ -60,6 +62,9 @@ function update() {
     getJson('/api/status')
         .then(function (jsonData) {
             for (let k in jsonData) {
+                if (k == "salt"){
+                    lastSalt=jsonData[k];
+                }
                 if (typeof (jsonData[k]) === 'object') {
                     for (let sk in jsonData[k]) {
                         let key = k + "." + sk;
@@ -985,6 +990,24 @@ function loadConfigDefinitions() {
                 })
         })
         .catch(function (err) { alert("unable to load config: " + err) })
+}
+function verifyPass(){
+    return new Promise(function(resolve,reject){
+        let hash=lastSalt+adminPass;
+        let md5hash=MD5(hash);
+        getJson('api/checkPass?hash='+encodeURIComponent(md5hash))
+            .then(function(jsonData){
+                if (jsonData.status == 'OK') resolve('ok');
+                else reject(jsonData.status);
+                return;
+            })
+            .catch(function(error){reject(error);})
+    });
+}
+function testPass(){
+    verifyPass()
+    .then(function(r){console.log("password ok");})
+    .catch(function(e){alert("check failed: "+e);});
 }
 function converterInfo() {
     getJson("api/converterInfo").then(function (json) {
