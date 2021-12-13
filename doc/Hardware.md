@@ -61,7 +61,7 @@ M5 Stack Atom Canunit
 
 Can be used e.g. as an NMEA2000 Adapter for a laptop running e.g. OpenCPN with the NMEA2000 Data converted to NMEA0183.
 
-![OpenCPN on Laptop via USB and MFD on Android via WiFi](in_action1.jpg =640x480) ![OpenCPN on Laptop via USB and AvNav on Android via WiFi](in_action2.jpg =640x480)
+![OpenCPN on Laptop via USB and MFD on Android via WiFi](in_action1.jpg){width=50% height=50%} ![OpenCPN on Laptop via USB and AvNav on Android via WiFi](in_action2.jpg){width=50% height=50%}
 
 M5 Stick C Canunit
 ------------------
