@@ -76,12 +76,26 @@
 
 </div>
 <div class="overlayContainer hidden" id="overlayContainer">
-  <div id="overlay">
-    <div id="overlayContent">
+  <div id="overlay" class="overlay">
+    <div id="overlayContent" class="overlayContent">
       AHA
     </div>
     <div class="overlayButtons">
       <button id="hideOverlay">Close</button>
+    </div>
+  </div>
+</div>
+<div class="overlayContainer hidden" id="adminPassOverlay">
+  <div id="adminPassOverlay" class="overlay">
+    <div id="adminPassOverlayContent" class="overlayContent">
+      <h2>Admin Password</h2>
+      <div id="adminPassHint"></div>
+      <div id="adminPassError" ></div>
+      <input id="adminPassInput" type="password">
+      <div class="overlayButtons">
+        <button id="adminPassCancel">Cancel</button>
+        <button id="adminPassOk">OK</button>
+      </div>
     </div>
   </div>
 </div>

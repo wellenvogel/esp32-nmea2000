@@ -195,14 +195,14 @@ body {
       overflow-y: auto;
   }
   
-  div#overlay {
+  .overlay {
       margin: auto;
       background-color: white;
       padding: 0.5em;
       max-width: 100%;
       box-sizing: border-box;
   }
-  div#overlayContent {
+  .overlayContent {
       padding: 0.5em;
   }
   div#overlayContent.text{
@@ -236,6 +236,10 @@ body {
   }
   .buttons button{
     padding: 0.5em;
+  }
+  .overlayButtons button{
+    padding: 0.5em;
+    margin-left: 0.3em;
   }
   button#reset{
     padding: 0.5em;
@@ -309,4 +313,7 @@ body {
   .footer .source{
     flex: 1;
   }  
+  #adminPassInput {
+    margin-bottom: 1em;
+  }
   

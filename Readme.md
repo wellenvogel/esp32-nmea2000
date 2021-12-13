@@ -55,6 +55,8 @@ Afterwards use a Bonjour Browser, the address ESP32NMEA2k.local or the ip addres
 You will get a small UI to watch the status and make settings.
 If you want to connect to another wifi network, just enter the credentials in the wifi client tab and enable the wifi client.
 For all the potential inputs and outputs (NMEA2000, USB, TCP, RS485) you can set the configuration including NMEA0183 filtering.
+To store your changes you will be asked for an admin password. The initial one is esp32admin. You can change this password at the config/system tab (and even completely disable it).
+Be careful to notice the password - you can only recover from a lost password with a factory reset of the device (long press the led button until it goes blue->red->green).
 On the data page you will have a small dashboard for the currently received data.
 On the status page you can check the number of messages flowing in and out.
 

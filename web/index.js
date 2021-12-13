@@ -1,7 +1,7 @@
 let self = this;
 let lastUpdate = (new Date()).getTime();
 let reloadConfig = false;
-let adminPass="ABCDE";
+let needAdminPass=true;
 let lastSalt="";
 function addEl(type, clazz, parent, text) {
     let el = document.createElement(type);
@@ -45,8 +45,12 @@ function getText(url){
         .then(function (r) { return r.text() });
 }
 function reset() {
-    fetch('/api/reset');
-    alertRestart();
+    ensurePass()
+        .then(function (hash) {
+            fetch('/api/reset?_hash='+encodeURIComponent(hash));
+            alertRestart();
+        })
+        .catch(function (e) { });
 }
 function update() {
     let now = (new Date()).getTime();
@@ -94,6 +98,9 @@ function resetForm(ev) {
     getJson("/api/config")
         .then(function (jsonData) {
             for (let k in jsonData) {
+                if (k == "useAdminPass"){
+                    needAdminPass=jsonData[k] != 'false';
+                }
                 let el = document.querySelector("[name='" + k + "']");
                 if (el) {
                     let v = jsonData[k];
@@ -182,52 +189,69 @@ function checkXDR(v,allValues){
     }
 }
 function changeConfig() {
-    let url = "/api/setConfig?";
-    let values = document.querySelectorAll('.configForm select , .configForm input');
-    let allValues={};
-    for (let i = 0; i < values.length; i++) {
-        let v = values[i];
-        let name = v.getAttribute('name');
-        if (!name) continue;
-        if (name.indexOf("_") >= 0) continue;
-        let def=getConfigDefition(name);
-        if (def.type === 'password' && v.value == '') {
-            continue;
-        }
-        let check = v.getAttribute('data-check');
-        if (check) {
-            if (typeof (self[check]) === 'function') {
-                let res = self[check](v.value,allValues,getConfigDefition(name));
-                if (res) {
-                    let value = v.value;
-                    if (v.type === 'password') value = "******";
-                    alert("invalid config for " + v.getAttribute('name') + "(" + value + "):\n" + res);
-                    return;
+    ensurePass()
+        .then(function (pass) {
+            let newAdminPass;
+            let url = "/api/setConfig?_hash="+encodeURIComponent(pass)+"&";
+            let values = document.querySelectorAll('.configForm select , .configForm input');
+            let allValues = {};
+            for (let i = 0; i < values.length; i++) {
+                let v = values[i];
+                let name = v.getAttribute('name');
+                if (!name) continue;
+                if (name.indexOf("_") >= 0) continue;
+                let def = getConfigDefition(name);
+                if (def.type === 'password' && v.value == '') {
+                    continue;
                 }
+                let check = v.getAttribute('data-check');
+                if (check) {
+                    if (typeof (self[check]) === 'function') {
+                        let res = self[check](v.value, allValues, getConfigDefition(name));
+                        if (res) {
+                            let value = v.value;
+                            if (v.type === 'password') value = "******";
+                            alert("invalid config for " + v.getAttribute('name') + "(" + value + "):\n" + res);
+                            return;
+                        }
+                    }
+                }
+                if (name == 'adminPassword'){
+                    newAdminPass=v.value;
+                }
+                allValues[name] = v.value;
+                url += name + "=" + encodeURIComponent(v.value) + "&";
             }
-        }
-        allValues[name]=v.value;
-        url += name + "=" + encodeURIComponent(v.value) + "&";
-    }
-    getJson(url)
-        .then(function (status) {
-            if (status.status == 'OK') {
-                alertRestart();
-            }
-            else {
-                alert("unable to set config: " + status.status);
-            }
+            getJson(url)
+                .then(function (status) {
+                    if (status.status == 'OK') {
+                        if (newAdminPass !== undefined) {
+                            forEl('#adminPassInput', function (el) {
+                                el.valu = newAdminPass;
+                            });
+                        }
+                        alertRestart();
+                    }
+                    else {
+                        alert("unable to set config: " + status.status);
+                    }
+                })
         })
+        .catch(function (e) { alert("Invalid password"); })
 }
 function factoryReset() {
-    if (!confirm("Really delete all configuration?\n" +
-        "This will reset all your Wifi settings and disconnect you.")) {
-        return;
-    }
-    getJson("/api/resetConfig")
-        .then(function (status) {
-            alertRestart();
+    ensurePass()
+        .then(function (hash) {
+            if (!confirm("Really delete all configuration?\n" +
+                "This will reset all your Wifi settings and disconnect you.")) {
+                return;
+            }
+            getJson("/api/resetConfig?_hash="+encodeURIComponent(hash))
+                .then(function (status) {
+                    alertRestart();
+                })
         })
+        .catch(function (e) { });
 }
 function createCounterDisplay(parent,label,key,isEven){
     let clazz="row icon-row counter-row";
@@ -998,23 +1022,71 @@ function loadConfigDefinitions() {
         })
         .catch(function (err) { alert("unable to load config: " + err) })
 }
-function verifyPass(){
+function verifyPass(pass){
     return new Promise(function(resolve,reject){
-        let hash=lastSalt+adminPass;
+        let hash=lastSalt+pass;
         let md5hash=MD5(hash);
         getJson('api/checkPass?hash='+encodeURIComponent(md5hash))
             .then(function(jsonData){
-                if (jsonData.status == 'OK') resolve('ok');
+                if (jsonData.status == 'OK') resolve(md5hash);
                 else reject(jsonData.status);
                 return;
             })
             .catch(function(error){reject(error);})
     });
 }
-function testPass(){
-    verifyPass()
-    .then(function(r){console.log("password ok");})
-    .catch(function(e){alert("check failed: "+e);});
+
+
+function adminPassCancel(){
+    forEl('#adminPassOverlay',function(el){el.classList.add('hidden')});
+    forEl('#adminPassInput',function(el){el.value=''});
+}
+
+function ensurePass(){
+    return new Promise(function(resolve,reject){
+        if (! needAdminPass) {
+            resolve('');
+            return;
+        }
+        let pe=document.getElementById('adminPassInput');
+        let hint=document.getElementById('adminPassError');
+        if (!pe) {
+            reject('no input');
+            return;
+        }
+        if (pe.value == ''){
+            let ok=document.getElementById('adminPassOk');
+            if (!ok) {
+                reject('no button');
+                return;
+            }
+            ok.onclick=function(){
+                verifyPass(pe.value)
+                    .then(function(pass){
+                        forEl('#adminPassOverlay',function(el){el.classList.add('hidden')});
+                        resolve(pass);
+                    })
+                    .catch(function(err){
+                        if (hint){
+                            hint.textContent="invalid password";
+                        }
+                    });
+            };
+            if (hint) hint.textContent='';
+            forEl('#adminPassOverlay',function(el){el.classList.remove('hidden')});
+        }
+        else{
+            verifyPass(pe.value)
+                .then(function(np){resolve(np);})
+                .catch(function(err){
+                    pe.value='';
+                    ensurePass()
+                        .then(function(p){resolve(p);})
+                        .catch(function(e){reject(e);});
+                });
+            return;    
+        }
+    });
 }
 function converterInfo() {
     getJson("api/converterInfo").then(function (json) {

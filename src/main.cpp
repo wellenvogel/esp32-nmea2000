@@ -407,28 +407,36 @@ bool delayedRestart(){
   return xTaskCreate([](void *p){
     GwLog *logRef=(GwLog *)p;
     logRef->logDebug(GwLog::LOG,"delayed reset started");
-    delay(500);
+    delay(800);
     ESP.restart();
     vTaskDelete(NULL);
-  },"reset",1000,&logger,0,NULL) == pdPASS;
+  },"reset",2000,&logger,0,NULL) == pdPASS;
 }
 ApiImpl *apiImpl=new ApiImpl(MIN_USER_TASK);
 GwUserCode userCodeHandler(apiImpl,&mainLock);
 
 #define JSON_OK "{\"status\":\"OK\"}"
+#define JSON_INVALID_PASS F("{\"status\":\"invalid password\"}")
 
 //WebServer requests that should
 //be processed inside the main loop
 //this prevents us from the need to sync all the accesses
 class ResetRequest : public GwRequestMessage
 {
+  String hash;
 public:
-  ResetRequest() : GwRequestMessage(F("application/json"),F("reset")){};
+  ResetRequest(String hash) : GwRequestMessage(F("application/json"),F("reset")){
+    this->hash=hash;
+  };
 
 protected:
   virtual void processRequest()
   {
     logger.logDebug(GwLog::LOG, "Reset Button");
+    if (! checkPass(hash)){
+      result=JSON_INVALID_PASS;
+      return;
+    }
     result = JSON_OK;
     if (!delayedRestart()){
       logger.logDebug(GwLog::ERROR,"cannot initiate restart");
@@ -552,8 +560,18 @@ protected:
   {
     bool ok = true;
     String error;
+    String hash;
+    auto it=args.find("_hash");
+    if (it != args.end()){
+      hash=it->second;
+    }
+    if (! checkPass(hash)){
+      result=JSON_INVALID_PASS;
+      return;
+    }
     for (StringMap::iterator it = args.begin(); it != args.end(); it++)
     {
+      if (it->first.indexOf("_")>= 0) continue;
       bool rt = config.updateValue(it->first, it->second);
       if (!rt)
       {
@@ -582,12 +600,19 @@ protected:
 };
 class ResetConfigRequest : public GwRequestMessage
 {
+  String hash;
 public:
-  ResetConfigRequest() : GwRequestMessage(F("application/json"),F("resetConfig")){};
+  ResetConfigRequest(String hash) : GwRequestMessage(F("application/json"),F("resetConfig")){
+    this->hash=hash;
+  };
 
 protected:
   virtual void processRequest()
   {
+    if (! checkPass(hash)){
+      result=JSON_INVALID_PASS;
+      return;
+    }
     config.reset(true);
     logger.logString("reset config, restart");
     result = JSON_OK;
@@ -732,7 +757,7 @@ void setup() {
   logger.flush();
 
   webserver.registerMainHandler("/api/reset", [](AsyncWebServerRequest *request)->GwRequestMessage *{
-    return new ResetRequest();
+    return new ResetRequest(request->arg("_hash"));
   });
   webserver.registerMainHandler("/api/capabilities", [](AsyncWebServerRequest *request)->GwRequestMessage *{
     return new CapabilitiesRequest();
@@ -757,7 +782,7 @@ void setup() {
                                 return msg;
                               });
   webserver.registerMainHandler("/api/resetConfig", [](AsyncWebServerRequest *request)->GwRequestMessage *
-                              { return new ResetConfigRequest(); });
+                              { return new ResetConfigRequest(request->arg("_hash")); });
   webserver.registerMainHandler("/api/boatData", [](AsyncWebServerRequest *request)->GwRequestMessage *
                               { return new BoatDataRequest(); });
   webserver.registerMainHandler("/api/boatDataString", [](AsyncWebServerRequest *request)->GwRequestMessage *
