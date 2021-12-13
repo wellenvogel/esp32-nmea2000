@@ -148,6 +148,9 @@ function checkApPass(v) {
         return "password must be at least 8 characters";
     }
 }
+function checkAdminPass(v){
+    return checkApPass(v);
+}
 
 function checkXDR(v,allValues){
     if (! v) return;
@@ -187,6 +190,10 @@ function changeConfig() {
         let name = v.getAttribute('name');
         if (!name) continue;
         if (name.indexOf("_") >= 0) continue;
+        let def=getConfigDefition(name);
+        if (def.type === 'password' && v.value == '') {
+            continue;
+        }
         let check = v.getAttribute('data-check');
         if (check) {
             if (typeof (self[check]) === 'function') {

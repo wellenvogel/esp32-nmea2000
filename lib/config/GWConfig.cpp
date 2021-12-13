@@ -35,7 +35,12 @@ String GwConfigHandler::toJson() const{
     int num=getNumConfig();
     DynamicJsonDocument jdoc(JSON_OBJECT_SIZE(num*2));
     for (int i=0;i<num;i++){
-        jdoc[configs[i]->getName()]=configs[i]->asCString();
+        if (configs[i]->isSecret()){
+            jdoc[configs[i]->getName()]="";    
+        }
+        else{
+            jdoc[configs[i]->getName()]=configs[i]->asCString();
+        }
     }
     serializeJson(jdoc,rt);
     logger->logString("configJson: %s",rt.c_str());
@@ -78,18 +83,17 @@ bool GwConfigHandler::saveConfig(){
     logger->logString("saved config");
     return true;
 }
-bool GwConfigHandler::updateValue(const char *name, const char * value){
-    GwConfigItem *i=findConfig(name);
-    if (i == NULL) return false;
-    logger->logString("update config %s=>%s",name,value);
-    i->fromString(value);
-    return true;
-}
+
 bool GwConfigHandler::updateValue(String name, String value){
     GwConfigItem *i=findConfig(name);
     if (i == NULL) return false;
-    logger->logString("update config %s=>%s",name.c_str(),value.c_str());
-    i->fromString(value);
+    if (i->isSecret() && value.isEmpty()){
+        LOG_DEBUG(GwLog::LOG,"skip empty password %s",name.c_str());
+    }
+    else{
+        LOG_DEBUG(GwLog::LOG,"update config %s=>%s",name.c_str(),i->isSecret()?"***":value.c_str());
+        i->fromString(value);
+    }
     return true;
 }
 bool GwConfigHandler::reset(bool save){

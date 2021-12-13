@@ -16,7 +16,6 @@ class GwConfigHandler: public GwConfigDefinitions{
         GwConfigHandler(GwLog *logger);
         bool loadConfig();
         bool saveConfig();
-        bool updateValue(const char *name, const char * value);
         bool updateValue(String name, String value);
         bool reset(bool save);
         String toString() const;

@@ -8,17 +8,20 @@ class GwConfigInterface{
     virtual const char * asCString() const =0;
     virtual bool asBoolean() const = 0;
     virtual int asInt() const = 0;
+    virtual bool isSecret() const =0;
 };
 class GwConfigItem: public GwConfigInterface{
     private:
         String name;
         String initialValue;
         String value;
+        bool secret=false;
     public:
-        GwConfigItem(const String &name, const String initialValue){
+        GwConfigItem(const String &name, const String initialValue, bool secret=false){
             this->name=name;
             this->initialValue=initialValue;
             this->value=initialValue;
+            this->secret=secret;
         }
         virtual String asString() const{
             return value;
@@ -40,6 +43,9 @@ class GwConfigItem: public GwConfigInterface{
         }
         virtual void reset(){
             value=initialValue;
+        }
+        virtual bool isSecret() const{
+            return secret;
         }
         bool changed() const{
             return value != initialValue;

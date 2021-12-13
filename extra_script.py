@@ -137,8 +137,11 @@ def generateCfg(inFile,outFile,addDirs=[]):
         for item in config:
             if not first:
                 data+=',\n'
-            first=False    
-            data+="    new GwConfigItem(%s,\"%s\")"%(item.get('name'),item.get('default'))
+            first=False 
+            secret="false";
+            if item.get('type') == 'password':
+                secret="true"   
+            data+="    new GwConfigItem(%s,\"%s\",%s)"%(item.get('name'),item.get('default'),secret)
         data+='};\n'  
         data+='};\n'
     writeFileIfChanged(outFile,data)    
