@@ -32,7 +32,7 @@ M5 Atom CAN with M5 Tail485
 * Build Define: BOARD_M5ATOM
 * Power: 12V via Tail485
 
-![M5 AtomCAn with Tail485](tail485-front.jpg)
+![M5 AtomCAN with Tail485](tail485-front.jpg)
 
 With this set up you can use the device as a gateway between NMEA2000 and NMEA0183. The NMEA0183 connection can only work as either a sender or receiver. Additionally you can connect other devices via Wifi.
 This way you get a simple 12V powered NMEA2000-NMEA0183 Wifi gateway.
@@ -52,17 +52,26 @@ With this set up you get basically all the features from the plain AtomCAN and t
 
 M5 Stack Atom Canunit
 ---------------------
-* Hardware:
+* Hardware: [M5_ATOM](http://docs.m5stack.com/en/core/atom_lite) + [CAN Unit](http://docs.m5stack.com/en/unit/can)
 * Prebuild Binary: m5stack-atom-canunit-all.bin
 * Build Define: BOARD_M5ATOM_CANUNIT
-* Power:
+* Power: Via USB
+
+![M5_Atom_with CAN unit](atom_can.jpg)
+
+Can be used e.g. as an NMEA2000 Adapter for a laptop running e.g. OpenCPN with the NMEA2000 Data converted to NMEA0183.
 
 M5 Stick C Canunit
 ------------------
-* Hardware:
+* Hardware: [M5_StickC+](http://docs.m5stack.com/en/core/m5stickc_plus) + [CAN Unit](http://docs.m5stack.com/en/unit/can)
 * Prebuild Binary: m5stickc-atom-canunit-all.bin
 * Build Define: BOARD_M5STICK_CANUNIT
-* Power:
+* Power: Via USB
+* LCD: not yet implemented
+
+![M5StickC+ with CAN unit](stickc_can.jpg)
+
+Can be used e.g. as an NMEA2000 Adapter for a laptop running e.g. OpenCPN with the NMEA2000 Data converted to NMEA0183.
 
 Node MCU32s -  [Homberger Board](https://github.com/AK-Homberger/NMEA2000WifiGateway-with-ESP32)
 --------------------------------------
