@@ -229,6 +229,7 @@ function changeConfig() {
                             forEl('#adminPassInput', function (el) {
                                 el.valu = newAdminPass;
                             });
+                            saveAdminPass(newAdminPass,true);
                         }
                         alertRestart();
                     }
@@ -1041,7 +1042,25 @@ function adminPassCancel(){
     forEl('#adminPassOverlay',function(el){el.classList.add('hidden')});
     forEl('#adminPassInput',function(el){el.value=''});
 }
-
+function saveAdminPass(pass,forceIfSet){
+    forEl('#adminPassKeep',function(el){
+        try{
+            let old=localStorage.getItem('adminPass');
+            if (el.value == 'true' || (forceIfSet && old !== undefined)){
+                localStorage.setItem('adminPass',pass);
+            }
+            else{
+                localStorage.removeItem('adminPass');
+            }
+        }catch (e){}
+    });
+}
+function forgetPass(){
+    localStorage.removeItem('adminPass');
+    forEl('#adminPassInput',function(el){
+        el.value='';
+    });
+}
 function ensurePass(){
     return new Promise(function(resolve,reject){
         if (! needAdminPass) {
@@ -1064,6 +1083,7 @@ function ensurePass(){
                 verifyPass(pe.value)
                     .then(function(pass){
                         forEl('#adminPassOverlay',function(el){el.classList.add('hidden')});
+                        saveAdminPass(pe.value);
                         resolve(pass);
                     })
                     .catch(function(err){
@@ -1458,6 +1478,14 @@ window.addEventListener('load', function () {
     }
     createDashboard();
     loadConfigDefinitions();
+    try{
+        let storedPass=localStorage.getItem('adminPass');
+        if (storedPass){
+            forEl('#adminPassInput',function(el){
+                el.value=storedPass;
+            });
+        }
+    }catch(e){}
     let statusPage=document.getElementById('statusPageContent');
     if (statusPage){
         let even=true;

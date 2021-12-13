@@ -51,6 +51,7 @@
 <div class="configForm tabPage hidden" id="configPage" >
   <div class="buttons">
     <button id="resetForm">ReloadConfig</button>
+    <button id="forgetPass">ForgetPass</button>
     <button id="changeConfig">Save&Restart</button>
     <button id="factoryReset">FactoryReset</button>
   </div>
@@ -92,6 +93,13 @@
       <div id="adminPassHint"></div>
       <div id="adminPassError" ></div>
       <input id="adminPassInput" type="password">
+      <div class="row">
+        <span class="label">remember me</span>
+        <select id="adminPassKeep">
+          <option value="true">on</option>
+          <option value="false" selected>off</option>
+        </select>
+      </div>
       <div class="overlayButtons">
         <button id="adminPassCancel">Cancel</button>
         <button id="adminPassOk">OK</button>
