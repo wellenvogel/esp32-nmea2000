@@ -87,7 +87,11 @@ const unsigned long HEAP_REPORT_TIME=2000; //set to 0 to disable heap reporting
 #define MAX_NMEA2000_MESSAGE_SEASMART_SIZE 500
 #define MAX_NMEA0183_MESSAGE_SIZE 150 // For AIS
 
+#ifndef FIRMWARE_TYPE
+#define FIRMWARE_TYPE PIO_ENV_BUILD
+#endif
 
+String firmwareType(GWSTRINGIFY(FIRMWARE_TYPE));
 
 typedef std::map<String,String> StringMap;
 
@@ -474,6 +478,7 @@ protected:
     char buffer[bsize];
     toHex(base,buffer,bsize);
     status["salt"] = buffer;
+    status["fwtype"]= firmwareType;
     //nmea0183Converter->toJson(status);
     countNMEA2KIn.toJson(status);
     countNMEA2KOut.toJson(status);
