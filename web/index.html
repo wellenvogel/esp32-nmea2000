@@ -76,10 +76,20 @@
 
 </div>
 <div class="tabPage hidden" id="updatePage">
-  <form action="api/update" method="post" id="uploadForm">
+  <div class="row">
+    <span class="label">currentVersion</span>
+    <span class="value status-version">---</span>
+  </div>
+  <div class="row">
+    <span class="label">New Firmware</span>
     <input type="file" name="file1" id="uploadFile">
-  </form>
-  <button id="uploadBin">Upload</button>
+  </div>
+  <div id="uploadProgress">
+    <div id="uploadDone"></div>
+  </div>
+  <div class="buttons">
+    <button id="uploadBin">Upload</button>
+  </div>
 </div>
 
 </div>

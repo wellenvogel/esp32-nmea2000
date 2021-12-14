@@ -85,6 +85,9 @@ function update() {
                 else {
                     let el = document.getElementById(k);
                     if (el) el.textContent = jsonData[k];
+                    forEl('.status-'+k,function(el){
+                        el.textContent=jsonData[k];
+                    });
                 }
             }
             lastUpdate = (new Date()).getTime();
@@ -1447,13 +1450,50 @@ function updateDashboard(data) {
 }
 function uploadBin(){
     let el=document.getElementById("uploadFile");
+    let progressEl=document.getElementById("uploadDone");
     if (! el) return;
     if ( el.files.length < 1) return;
     ensurePass()
         .then (function(hash){
+            let file=el.files[0];
+            let len=file.size;
             let req = new XMLHttpRequest();
             req.onloadend=function(){
-                alert("upload complete");
+                let result="unknown error";
+                try{
+                    let jresult=JSON.parse(req.responseText);
+                    if (jresult.status == 'OK'){
+                        result='';
+                    }
+                    else{
+                        if (jresult.status) {
+                            result=jresult.status;
+                        }
+                    }
+                }catch (e){
+                    result="Error "+req.status;
+                }
+                if (progressEl){
+                    progressEl.style.width=0;
+                }
+                if (! result){
+                    alertRestart();
+                }
+                else{
+                    alert("update error: "+result);
+                }
+            }
+            req.onerror=function(e){
+                alert("unable to upload: "+e);
+            }
+            if (progressEl){
+                progressEl.style.width=0;
+                req.upload.onprogress=function(ev){
+                    if (ev.lengthComputable){
+                        let percent=100*ev.loaded/ev.total;
+                        progressEl.style.width=percent+"%";
+                    }
+                }
             }
             let formData = new FormData();
             formData.append("file1", el.files[0]);                                

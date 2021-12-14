@@ -316,4 +316,22 @@ body {
   #adminPassInput {
     margin-bottom: 1em;
   }
-  
+  input#uploadFile {
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+  }
+  div#uploadProgress {
+    width: 100%;
+    max-width: 20em;
+    height: 1em;
+    margin-left: 1em;
+    /* margin-right: auto; */
+    border: 1px solid grey;
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+}
+#uploadDone{
+  background-color: blue;
+  width: 0px;
+  height: 100%;
+}
