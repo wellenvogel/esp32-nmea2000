@@ -15,5 +15,6 @@ class GwWebServer{
         void begin();
         bool registerMainHandler(const char *url,RequestCreator creator);
         void handleAsyncWebRequest(AsyncWebServerRequest *request, GwRequestMessage *msg);
+        AsyncWebServer * getServer(){return server;}
 };
 #endif

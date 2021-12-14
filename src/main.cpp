@@ -74,7 +74,7 @@ const unsigned long HEAP_REPORT_TIME=2000; //set to 0 to disable heap reporting
 #include "GwSynchronized.h"
 #include "GwUserCode.h"
 #include "GwStatistics.h"
-
+#include "GwUpdate.h"
 
 //NMEA message channels
 #define N2K_CHANNEL_ID 0
@@ -168,6 +168,8 @@ bool checkPass(String hash){
   }
   return false;
 }
+
+GwUpdate updater(&logger,&webserver,checkPass);
 
 void updateNMEACounter(int id,const char *msg,bool incoming,bool fail=false){
   //we rely on the msg being long enough
