@@ -5,31 +5,57 @@ import sys
 import http
 import http.server
 import urllib.request
+import urllib.parse
 import posixpath
 import os
+import traceback
 
 class RequestHandler(http.server.SimpleHTTPRequestHandler):
-    def do_GET(self):
+    def do_proxy(self):
         p=self.path
         print("path=%s"%p)
         if p.startswith("/api/"):
             apiurl=self.server.proxyUrl
             url=apiurl+p.replace("/api","")
+            hostname=urllib.parse.urlparse(url).netloc
             print("proxy to %s"%url)
             try:
-                with urllib.request.urlopen(url,timeout=10) as response:
+                body = None
+                if self.headers.get('content-length') is not None:
+                    content_len = int(self.headers.get('content-length'))
+                    print("reading %d bytes body"%content_len)
+                    body = self.rfile.read(content_len)
+
+                # set new headers
+                new_headers = {}
+                for item in self.headers.items():
+                    new_headers[item[0]] = item[1]
+                new_headers['host'] = hostname
+                try:
+                    del new_headers['accept-encoding']
+                except KeyError:
+                    pass
+                req=urllib.request.Request(url,headers=new_headers,data=body)
+                with urllib.request.urlopen(req,timeout=50) as response:
                     self.send_response(http.HTTPStatus.OK)
-                    self.send_header("Content-type", response.getheader("Content-type"))
-                
+                    for h in response.getheaders():
+                        self.send_header(h[0],h[1])               
                     self.end_headers()
                     shutil.copyfileobj(response,self.wfile)
+                    return True
                 return None
                 self.send_error(http.HTTPStatus.NOT_FOUND, "api not found")
                 return None
             except Exception as e:
+                print("Exception: %s"%traceback.format_exc())
                 self.send_error(http.HTTPStatus.INTERNAL_SERVER_ERROR, "api error %s"%str(e))
                 return None
-        super().do_GET()        
+    def do_GET(self):
+        if not self.do_proxy():            
+            super().do_GET()
+    def do_POST(self):
+        if not self.do_proxy():            
+            super().do_POST()        
     def translate_path(self, path):
         """Translate a /-separated PATH to the local filename syntax.
 

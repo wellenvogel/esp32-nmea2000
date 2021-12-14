@@ -9,6 +9,7 @@ class UpdateParam{
     public:
         String error;
         size_t uplodaded=0;
+        bool otherUpdate=false;
         bool hasError(){
             return ! error.isEmpty();
         }
@@ -23,12 +24,12 @@ bool GwUpdate::delayedRestart(){
     vTaskDelete(NULL);
   },"reset",2000,logger,0,NULL) == pdPASS;
 }
-GwUpdate::GwUpdate(GwLog *log, GwWebServer *webserver, PasswordChecker checker)
+GwUpdate::GwUpdate(GwLog *log, GwWebServer *webserver, PasswordChecker ckr)
 {
-    this->checker=checker;
+    this->checker=ckr;
     this->logger = log;
     this->server = webserver->getServer();
-    server->on("/update", HTTP_POST, [&](AsyncWebServerRequest *request) {
+    server->on("/api/update", HTTP_POST, [&](AsyncWebServerRequest *request) {
                 // the request handler is triggered after the upload has finished... 
                 // create the response, add header, and send response
                 String result="{\"status\":\"OK\"}";
@@ -50,11 +51,13 @@ GwUpdate::GwUpdate(GwLog *log, GwWebServer *webserver, PasswordChecker checker)
                     if (!updateOk){
                         result=jsonError(String("Update failed: ")+param->error);
                     }
+                    if (! param->otherUpdate) {
+                        updateRunning=0;
+                    }
                 }
                 AsyncWebServerResponse *response = request->beginResponse(200, "application/json",result);
                 response->addHeader("Connection", "close");
                 request->send(response);
-                updateRunning=false;
                 if (updateOk) delayedRestart();
             }, [&](AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final) {
                 //Upload handler chunks in data
@@ -67,29 +70,37 @@ GwUpdate::GwUpdate(GwLog *log, GwWebServer *webserver, PasswordChecker checker)
                         param=new UpdateParam();
                         request->_tempObject=param;
                     }
-                    if (updateRunning){
+                    if (updateRunning > 0 && (updateRunning + 60000) >= millis()){
                         param->error="another update is running";
+                        param->otherUpdate=true;
                     }
                     else{
-                        updateRunning=true;
+                        updateRunning=millis();
                     }
                     if (!param->hasError())
                     {
-                        if (!request->hasParam("_hash", true))
+                        AsyncWebParameter *hash=request->getParam("_hash");
+                        if (! hash){
+                            hash=request->getParam("_hash",true);
+                        }
+                        if (!hash)
                         {
                             LOG_DEBUG(GwLog::ERROR, "missing _hash in update");
                             param->error = "missing _hash";
                         }
                         else
                         {
-                            if (!checker(request->getParam("_hash")->value()))
+                            String shash=hash->value();
+                            LOG_DEBUG(GwLog::DEBUG,"checking hash %s",shash.c_str());
+                            if (!checker(shash))
                             {
-                                LOG_DEBUG(GwLog::ERROR, "invalid _hash in update");
+                                LOG_DEBUG(GwLog::ERROR, "invalid _hash in update %s",shash.c_str());
                                 param->error = "invalid password";
                             }
                         }
                     }
                     if (! param->hasError()){
+                        Update.abort(); //abort any dangling update
                         int cmd=U_FLASH;
                         if (!Update.begin(UPDATE_SIZE_UNKNOWN, cmd)) { // Start with max available size
                             LOG_DEBUG(GwLog::ERROR,"unable to start update %s",Update.errorString());
@@ -107,6 +118,7 @@ GwUpdate::GwUpdate(GwLog *log, GwWebServer *webserver, PasswordChecker checker)
                         {
                             LOG_DEBUG(GwLog::ERROR, "invalid write, expected %d got %d", (int)len, (int)wr);
                             param->error="unable to write";
+                            Update.abort();
                         }
                         else{
                             param->uplodaded+=wr;
@@ -115,10 +127,12 @@ GwUpdate::GwUpdate(GwLog *log, GwWebServer *webserver, PasswordChecker checker)
 
                     if (final && ! param->hasError())
                     { // if the final flag is set then this is the last frame of data
+                        LOG_DEBUG(GwLog::DEBUG,"finalizing update");
                         if (!Update.end(true))
                         { //true to set the size to the current progress
                             LOG_DEBUG(GwLog::ERROR, "unable to end update %s", Update.errorString());
                             param->error=String("unable to end update:") + String(Update.errorString());
+                            Update.abort();
                         }
                     }
                     else

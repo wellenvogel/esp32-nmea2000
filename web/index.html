@@ -20,6 +20,7 @@
   <div class="tab" data-page="configPage">Config</div>
   <div class="tab" data-page="xdrPage">XDR</div>
   <div class="tab" data-page="dashboardPage">Data</div>
+  <div class="tab" data-page="updatePage">Update</div>
 </div>
 <div id="statusPage" class="tabPage">
   <div id="statusPageContent">
@@ -73,6 +74,12 @@
 </div>
 <div class="tabPage hidden" id="dashboardPage">
 
+</div>
+<div class="tabPage hidden" id="updatePage">
+  <form action="api/update" method="post" id="uploadForm">
+    <input type="file" name="file1" id="uploadFile">
+  </form>
+  <button id="uploadBin">Upload</button>
 </div>
 
 </div>

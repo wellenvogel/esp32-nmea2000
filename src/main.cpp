@@ -169,7 +169,7 @@ bool checkPass(String hash){
   return false;
 }
 
-GwUpdate updater(&logger,&webserver,checkPass);
+GwUpdate updater(&logger,&webserver,&checkPass);
 
 void updateNMEACounter(int id,const char *msg,bool incoming,bool fail=false){
   //we rely on the msg being long enough

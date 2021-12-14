@@ -7,7 +7,7 @@ class GwUpdate{
         AsyncWebServer *server;
         GwLog *logger;
         PasswordChecker checker;
-        bool updateRunning=false;
+        unsigned long updateRunning=0;
     public:
         bool delayedRestart();
         GwUpdate(GwLog *log,GwWebServer *webserver, PasswordChecker checker);

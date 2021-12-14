@@ -1445,7 +1445,23 @@ function updateDashboard(data) {
         });
     }
 }
-
+function uploadBin(){
+    let el=document.getElementById("uploadFile");
+    if (! el) return;
+    if ( el.files.length < 1) return;
+    ensurePass()
+        .then (function(hash){
+            let req = new XMLHttpRequest();
+            req.onloadend=function(){
+                alert("upload complete");
+            }
+            let formData = new FormData();
+            formData.append("file1", el.files[0]);                                
+            req.open("POST", '/api/update?_hash='+encodeURIComponent(hash));
+            req.send(formData);
+        })
+        .catch(function(e){});
+}
 window.setInterval(update, 1000);
 window.setInterval(function () {
     let dp = document.getElementById('dashboardPage');
