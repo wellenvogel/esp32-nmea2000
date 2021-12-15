@@ -281,5 +281,8 @@ def cleangenerated(source, target, env):
 
 print("#prescript...")
 prebuild(env)
+env.Append(
+    LINKFLAGS=[ "-u", "custom_app_desc" ]
+)
 #script does not run on clean yet - maybe in the future
 env.AddPostAction("clean",cleangenerated)

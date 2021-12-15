@@ -11,7 +11,6 @@
   License along with this library; if not, write to the Free Software
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
-
 #define GWSTR(x) #x
 #define GWSTRINGIFY(x) GWSTR(x)
 #ifdef GWRELEASEVERSION
@@ -56,6 +55,7 @@ const unsigned long HEAP_REPORT_TIME=2000; //set to 0 to disable heap reporting
 #include <MD5Builder.h>
 #include "GwJsonDocument.h"
 #include "N2kDataToNMEA0183.h"
+#include <esp_image_format.h>
 
 
 #include "GwLog.h"
@@ -76,6 +76,10 @@ const unsigned long HEAP_REPORT_TIME=2000; //set to 0 to disable heap reporting
 #include "GwStatistics.h"
 #include "GwUpdate.h"
 
+#ifndef FIRMWARE_TYPE
+#define FIRMWARE_TYPE PIO_ENV_BUILD
+#endif
+
 //NMEA message channels
 #define N2K_CHANNEL_ID 0
 #define USB_CHANNEL_ID 1
@@ -87,9 +91,19 @@ const unsigned long HEAP_REPORT_TIME=2000; //set to 0 to disable heap reporting
 #define MAX_NMEA2000_MESSAGE_SEASMART_SIZE 500
 #define MAX_NMEA0183_MESSAGE_SIZE 150 // For AIS
 
-#ifndef FIRMWARE_TYPE
-#define FIRMWARE_TYPE PIO_ENV_BUILD
-#endif
+__attribute__((section(".rodata_custom_desc"))) esp_app_desc_t custom_app_desc = { 
+  ESP_APP_DESC_MAGIC_WORD,
+  1,
+  {0,0},
+  VERSION,
+  GWSTRINGIFY(FIRMWARE_TYPE),
+  "00:00:00",
+  "2021/12/13",
+  "0000",
+  {},
+  {}
+};
+
 
 String firmwareType(GWSTRINGIFY(FIRMWARE_TYPE));
 
