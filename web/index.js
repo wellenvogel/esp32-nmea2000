@@ -1453,54 +1453,125 @@ function uploadBin(){
     let progressEl=document.getElementById("uploadDone");
     if (! el) return;
     if ( el.files.length < 1) return;
-    ensurePass()
-        .then (function(hash){
-            let file=el.files[0];
-            let len=file.size;
-            let req = new XMLHttpRequest();
-            req.onloadend=function(){
-                let result="unknown error";
-                try{
-                    let jresult=JSON.parse(req.responseText);
-                    if (jresult.status == 'OK'){
-                        result='';
-                    }
-                    else{
-                        if (jresult.status) {
-                            result=jresult.status;
+    let file=el.files[0];
+    checkImageFile(file)
+        .then(function (result) {
+            let currentType;
+            let currentVersion;
+            forEl('.status-version', function (el) { currentVersion = el.textContent });
+            forEl('.status-fwtype', function (el) { currentType = el.textContent });
+            let confirmText = 'Ready to update firmware?\n';
+            if (currentType != result.fwtype) {
+                confirmText += "WARNING: image has different type: " + result.fwtype + "\n";
+                confirmText += "** Really update anyway? - device can become unusable **";
+            }
+            else {
+                if (currentVersion == result.version) {
+                    confirmText += "WARNING: image has the same version as current " + result.version;
+                }
+                else {
+                    confirmText += "version in image: " + result.version;
+                }
+            }
+            if (!confirm(confirmText)) return;
+            ensurePass()
+                .then(function (hash) {
+                    let len = file.size;
+                    let req = new XMLHttpRequest();
+                    req.onloadend = function () {
+                        let result = "unknown error";
+                        try {
+                            let jresult = JSON.parse(req.responseText);
+                            if (jresult.status == 'OK') {
+                                result = '';
+                            }
+                            else {
+                                if (jresult.status) {
+                                    result = jresult.status;
+                                }
+                            }
+                        } catch (e) {
+                            result = "Error " + req.status;
+                        }
+                        if (progressEl) {
+                            progressEl.style.width = 0;
+                        }
+                        if (!result) {
+                            alertRestart();
+                        }
+                        else {
+                            alert("update error: " + result);
                         }
                     }
-                }catch (e){
-                    result="Error "+req.status;
-                }
-                if (progressEl){
-                    progressEl.style.width=0;
-                }
-                if (! result){
-                    alertRestart();
-                }
-                else{
-                    alert("update error: "+result);
-                }
-            }
-            req.onerror=function(e){
-                alert("unable to upload: "+e);
-            }
-            if (progressEl){
-                progressEl.style.width=0;
-                req.upload.onprogress=function(ev){
-                    if (ev.lengthComputable){
-                        let percent=100*ev.loaded/ev.total;
-                        progressEl.style.width=percent+"%";
+                    req.onerror = function (e) {
+                        alert("unable to upload: " + e);
                     }
-                }
-            }
-            let formData = new FormData();
-            formData.append("file1", el.files[0]);                                
-            req.open("POST", '/api/update?_hash='+encodeURIComponent(hash));
-            req.send(formData);
+                    if (progressEl) {
+                        progressEl.style.width = 0;
+                        req.upload.onprogress = function (ev) {
+                            if (ev.lengthComputable) {
+                                let percent = 100 * ev.loaded / ev.total;
+                                progressEl.style.width = percent + "%";
+                            }
+                        }
+                    }
+                    let formData = new FormData();
+                    formData.append("file1", el.files[0]);
+                    req.open("POST", '/api/update?_hash=' + encodeURIComponent(hash));
+                    req.send(formData);
+                })
+                .catch(function (e) { });
         })
-        .catch(function(e){});
+        .catch(function (e) {
+            alert("This file is an invalid image file:\n" + e);
+        })
+}
+let HDROFFSET=288;
+let VERSIONOFFSET=16;
+let NAMEOFFSET=48;
+let MINSIZE=HDROFFSET+NAMEOFFSET+32;
+let imageCheckBytes={
+    0: 0xe9, //image magic
+    288: 0x32, //app header magic
+    289: 0x54,
+    290: 0xcd,
+    291: 0xab
+};
+function decodeFromBuffer(buffer,start,length){
+    while (length > 0 && buffer[start+length-1] == 0){
+        length--;
+    }
+    if (length <= 0) return "";
+    let decoder=new TextDecoder();
+    let rt=decoder.decode(buffer.slice(
+            start,
+            start+length));
+    return rt;        
+}
+function checkImageFile(file){
+    return new Promise(function(resolve,reject){
+        if (! file) reject("no file");
+        if (file.size < MINSIZE) reject("file is too small");
+        let slice=file.slice(0,MINSIZE);
+    let reader=new FileReader();
+    reader.addEventListener('load',function(e){
+        let content=new Uint8Array(e.target.result);
+        for (let idx in imageCheckBytes){
+            if (content[idx] != imageCheckBytes[idx] ){
+                reject("missing magic byte at position "+idx+", expected "+
+                    imageCheckBytes[idx]+", got "+content[idx]);
+            }
+        }
+        let version=decodeFromBuffer(content,HDROFFSET+VERSIONOFFSET,32);
+        let fwtype=decodeFromBuffer(content,HDROFFSET+NAMEOFFSET,32);
+        let rt={
+            fwtype:fwtype,
+            version: version,
+        };
+        resolve(rt);    
+    });
+    reader.readAsArrayBuffer(slice);
+    });
 }
 window.setInterval(update, 1000);
 window.setInterval(function () {
@@ -1550,4 +1621,23 @@ window.addEventListener('load', function () {
             even=!even;
         }
     }
+    forEl('#uploadFile',function(el){
+        el.addEventListener('change',function(ev){
+            if (ev.target.files.length < 1) return;
+            let file=ev.target.files[0];
+            checkImageFile(file)
+                .then(function(res){
+                    forEl('#imageProperties',function(iel){
+                        iel.textContent=res.fwtype+", "+res.version;
+                        iel.classList.remove("error");
+                    })    
+                })
+                .catch(function(e){
+                    forEl('#imageProperties',function(iel){
+                        iel.textContent=e;
+                        iel.classList.add("error");
+                    })
+                })
+        })
+    })
 });
