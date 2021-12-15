@@ -90,7 +90,15 @@ const unsigned long HEAP_REPORT_TIME=2000; //set to 0 to disable heap reporting
 
 #define MAX_NMEA2000_MESSAGE_SEASMART_SIZE 500
 #define MAX_NMEA0183_MESSAGE_SIZE 150 // For AIS
-
+//https://curiouser.cheshireeng.com/2014/08/19/c-compile-time-assert/
+#define CASSERT(predicate, text) _impl_CASSERT_LINE(predicate,__LINE__) 
+#define _impl_PASTE(a,b) a##b
+#define _impl_CASSERT_LINE(predicate, line) typedef char _impl_PASTE(assertion_failed_CASSERT_,line)[(predicate)?1:-1];
+//assert length of firmware name and version
+CASSERT(strlen(GWSTRINGIFY(FIRMWARE_TYPE)) <= 32, "environment name (FIRMWARE_TYPE) must not exceed 32 chars");
+CASSERT(strlen(VERSION) <= 32, "VERSION must not exceed 32 chars");
+//https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/system/app_image_format.html
+//and removed the bugs in the doc...
 __attribute__((section(".rodata_custom_desc"))) esp_app_desc_t custom_app_desc = { 
   ESP_APP_DESC_MAGIC_WORD,
   1,
