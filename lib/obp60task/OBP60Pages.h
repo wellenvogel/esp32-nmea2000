@@ -4,23 +4,13 @@
 #include <Arduino.h>
 
 // Global vars
-uint pageNumber = 0;            // Page number for actual page
-String key_label[6] = {"     ", "     ", "     ", "     ", "     ", "     "};
+int pageNumber = 0;            // Page number for actual page
 bool first_view = true;
 
 
 void showPage(){
   // Clear display
   display.fillRect(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, GxEPD_WHITE);   // Draw white sreen
-
-  /*
-  // If new first page the init the display for reducing ghost picture
-  if(first_view == true){
-    display.init();
-    display.fillRect(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, GxEPD_WHITE); // Draw white sreen
-    display.update();
-  }
-  */
 
   // Draw status heder
   // display.fillRect(0, 0, GxEPD_WIDTH, 20, GxEPD_BLACK);   // Draw black  box
@@ -30,7 +20,6 @@ void showPage(){
   display.print(" WiFi AP TCP N2K 183 GPS");
   display.setCursor(230, 15);
   display.print("14.12.2021 17:50 UTC");
-  
 
   // Read page number
   switch (pageNumber) {
@@ -44,7 +33,7 @@ void showPage(){
       page_2();
       break;
     case 3:
-      // Statement(s)
+      page_3();
       break;
     case 4:
       // Statement(s)
@@ -58,7 +47,7 @@ void showPage(){
   }
 
   // Partial update display
-  display.updateWindow(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, false);    // Partial update (fast)
+  display.updateWindow(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, true);    // Partial update (fast)
   
   first_view = false;
 }

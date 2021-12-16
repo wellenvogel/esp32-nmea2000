@@ -18,16 +18,12 @@
 #include "OBP60Keypad.h"                // Functions lib for keypad
 
 // True type character sets
-#include "Ubuntu_Bold6pt7b.h"
 #include "Ubuntu_Bold8pt7b.h"
-#include "Ubuntu_Bold10pt7b.h"
+#include "Ubuntu_Bold20pt7b.h"
 #include "Ubuntu_Bold32pt7b.h"
-#include "Seven_Segment32pt7b.h"
+#include "DSEG7Classic-BoldItalic16pt7b.h"
+#include "DSEG7Classic-BoldItalic42pt7b.h"
 #include "DSEG7Classic-BoldItalic60pt7b.h"
-#include <Fonts/FreeMonoBold9pt7b.h>
-#include <Fonts/FreeMonoBold12pt7b.h>
-#include <Fonts/FreeMonoBold24pt7b.h>
-
 
 // Pictures
 //#include GxEPD_BitmapExamples         // Example picture
@@ -35,9 +31,10 @@
 #include "Logo_OBP_400x300_sw.h"        // OBP Logo
 
 #include "OBP60QRWiFi.h"                // Functions lib for WiFi QR code
-#include "Page_0.h"                     // Page 0
-#include "Page_1.h"                     // Page 1
-#include "Page_2.h"                     // Page 2
+#include "Page_0.h"                     // Page 0 Depth
+#include "Page_1.h"                     // Page 1 Speed
+#include "Page_2.h"                     // Page 2 VBat
+#include "Page_3.h"                     // Page 3 Depht / Speed
 #include "OBP60Pages.h"                 // Functions lib for show pages
 
 tNMEA0183Msg NMEA0183Msg;
@@ -219,10 +216,11 @@ void OBP60Task(void *param){
         display.updateWindow(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, true);   // Partial update (fast)
         delay(SHOW_TIME);                                // Logo show time
         display.fillRect(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, GxEPD_WHITE); // Draw white sreen
-        display.update();                                // Full update (slow)
+        display.updateWindow(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, true);    // Partial update (fast)
         if(displayMode == "Logo + QR Code"){
             qrWiFi();                                        // Show QR code for WiFi connection
             delay(SHOW_TIME);                                // Logo show time
+            display.fillRect(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, GxEPD_WHITE); // Draw white sreen
         }
     }
 
@@ -243,6 +241,7 @@ void OBP60Task(void *param){
                     keystatus = "0";
                 }
             }
+            // Change page number
             if(keystatus == "5s"){
                 pageNumber ++;
                 if(pageNumber > MAX_PAGE_NUMBER - 1){
@@ -261,7 +260,7 @@ void OBP60Task(void *param){
             }
         }
 
-        // Subtask all 1000ms
+        // Subtask all 1000ms show pages
         if((taskRunCounter % 100) == 0  || first_view == true){
  //           LOG_DEBUG(GwLog::DEBUG,"Subtask 1");
             LOG_DEBUG(GwLog::DEBUG,"Keystatus: %s", keystatus);

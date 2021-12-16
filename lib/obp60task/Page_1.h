@@ -9,9 +9,10 @@ void page_1(){
   display.setFont(&Ubuntu_Bold32pt7b);
   display.setTextColor(GxEPD_BLACK);
   display.setCursor(20, 100);
-  display.print("Speed:");
-  display.setCursor(310, 240);
-  display.print("kn");
+  display.print("Speed");
+  display.setFont(&Ubuntu_Bold20pt7b);
+  display.setCursor(270, 100);
+  display.print("km/h");
   display.setFont(&DSEG7Classic_BoldItalic60pt7b);
   display.setCursor(20, 240);
   float speed = 5;

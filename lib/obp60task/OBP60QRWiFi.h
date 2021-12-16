@@ -35,7 +35,8 @@ void qrWiFi(){
   display.setTextColor(GxEPD_BLACK);
   display.setCursor(140, 285);
   display.print("WiFi");
-  display.update();       // Full update (slow)
+  display.updateWindow(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, true);   // Partial update (fast)
+//  display.update();       // Full update (slow)
 }
 
 #endif

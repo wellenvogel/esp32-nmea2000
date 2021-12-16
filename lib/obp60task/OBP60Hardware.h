@@ -15,14 +15,13 @@
     #define OBP_SPI_BUSY 4
     #define OBP_SPI_CLK 18
     #define OBP_SPI_DIN 23
-    #define X_PIX 400           // X display dimension in pix
-    #define Y_PIX 300           // Y display dimension in pix
-    #define SHOW_TIME 6000      // Show time for logo and WiFi QR code
+    #define SHOW_TIME 6000        // Show time for logo and WiFi QR code
     #define FULL_REFRESH_TIME 600 // Refresh cycle time in [s][600...3600] for full display update (very important healcy function)
-    #define MAX_PAGE_NUMBER 3   // Max number of pages for show data
-    #define FONT_MIN_SIZE "AA"
-    #define FONT_MIDDLE_SIZE "Ubuntu_Bold32pt7b"
-    #define FONT_MAX_SIZE "DSEG7Classic_BoldItalic80pt7b"
+    #define MAX_PAGE_NUMBER 4     // Max number of pages for show data
+    #define FONT1 "Ubuntu_Bold8pt7b"
+    #define FONT2 "Ubuntu_Bold24pt7b"
+    #define FONT3 "Ubuntu_Bold32pt7b"
+    #define FONT4 "DSEG7Classic_BoldItalic80pt7b"
 
     // GPS (NEO-6M)
      #define OBP_GPS_TX 35      // Read only GPS data
