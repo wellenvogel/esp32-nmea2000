@@ -1,7 +1,35 @@
 Import("env", "projenv")
 import os
+import glob
+import shutil
 
 print("##post script running")
+HDROFFSET=288
+VERSIONOFFSET=16
+NAMEOFFSET=48
+MINSIZE=HDROFFSET+NAMEOFFSET+32
+CHECKBYTES={
+    0: 0xe9, #image magic
+    288: 0x32, #app header magic
+    289: 0x54,
+    290: 0xcd,
+    291: 0xab
+}
+def getString(buffer,offset,len):
+    return buffer[offset:offset+len].rstrip(b'\0').decode('utf-8')
+
+def getFirmwareInfo(imageFile):
+    with open(imageFile,"rb") as ih:
+        buffer=ih.read(MINSIZE)
+        if len(buffer) != MINSIZE:
+            raise Exception("invalid image file %s, to short",imageFile)
+        for k,v in CHECKBYTES.items():
+            if buffer[k] != v:
+                raise Exception("invalid magic in %s at %d, expected %d got %d"
+                    %(imageFile,k,v,buffer[k]))
+        name=getString(buffer,HDROFFSET+NAMEOFFSET,32)      
+        version=getString(buffer,HDROFFSET+VERSIONOFFSET,32)
+    return (name,version)    
 
 def post(source,target,env):
     #print(env.Dump())
@@ -10,6 +38,8 @@ def post(source,target,env):
     base=env.subst("$PIOENV")
     appoffset=env.subst("$ESP32_APP_OFFSET")
     firmware=env.subst("$BUILD_DIR/${PROGNAME}.bin")
+    (fwname,version)=getFirmwareInfo(firmware)
+    print("found fwname=%s, fwversion=%s"%(fwname,version))
     python=env.subst("$PYTHONEXE")
     print("base=%s,esptool=%s,appoffset=%s,uploaderflags=%s"%(base,esptool,appoffset,uploaderflags))
     uploadparts=uploaderflags.split(" ")
@@ -23,7 +53,17 @@ def post(source,target,env):
             print("file %s for combine not found"%uploadfiles[i])
             return
     offset=uploadfiles[0]
-    outfile=os.path.join(env.subst("$BUILD_DIR"),base+"-all.bin")
+    #cleanup old versioned files
+    outdir=env.subst("$BUILD_DIR")
+    for f in glob.glob(os.path.join(outdir,base+"*.bin")):
+        print("removing old file %s"%f)
+        os.unlink(f)
+    ofversion=''
+    if not version.startswith('dev'):
+        ofversion="-"+version
+        versionedFile=os.path.join(outdir,"%s%s-update.bin"%(base,ofversion))
+        shutil.copyfile(firmware,versionedFile)
+    outfile=os.path.join(outdir,"%s%s-all.bin"%(base,ofversion))
     cmd=[python,esptool,"--chip","esp32","merge_bin","--target-offset",offset,"-o",outfile]
     cmd+=uploadfiles
     cmd+=[appoffset,firmware]        

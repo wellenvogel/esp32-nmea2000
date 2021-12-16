@@ -16,7 +16,7 @@
 #ifdef GWRELEASEVERSION
 #define VERSION GWSTRINGIFY(GWRELEASEVERSION)
 #define LOGLEVEL GwLog::ERROR
-#endif
+#else
 #ifdef GWDEVVERSION
 #define VERSION GWSTRINGIFY(GWDEVVERSION)
 #define LOGLEVEL GwLog::DEBUG
@@ -24,6 +24,7 @@
 #ifndef VERSION
 #define VERSION "0.7.0"
 #define LOGLEVEL GwLog::DEBUG
+#endif
 #endif
 
 // #define GW_MESSAGE_DEBUG_ENABLED
