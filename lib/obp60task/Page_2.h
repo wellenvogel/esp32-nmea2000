@@ -15,7 +15,7 @@ void page_2(){
   display.print("V");
   display.setFont(&DSEG7Classic_BoldItalic60pt7b);
   display.setCursor(20, 240);
-  float actVoltage = (float(analogRead(OBP_ANALOG0)) * 3.3 / 4096) * 20;   // Vin = 1/20 
+  float actVoltage = (float(analogRead(OBP_ANALOG0)) * 3.3 / 4096 + 0.17) * 20;   // Vin = 1/20 
   display.print(actVoltage,1);
 
   // Key Layout
