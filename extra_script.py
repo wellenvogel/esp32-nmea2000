@@ -86,10 +86,11 @@ def writeFileIfChanged(fileName,data):
             old=ih.read()
             ih.close()
             if old == data:
-                return
+                return False
     print("#generating %s"%fileName)
     with open(fileName,"w") as oh:
         oh.write(data)
+    return True    
 
 def mergeConfig(base,other):
     for bdir in other:
@@ -242,6 +243,10 @@ def prebuild(env):
     if not checkDir():
         sys.exit(1)
     userTaskDirs=getUserTaskDirs()
+    mergedConfig=os.path.join(outPath(),os.path.basename(CFG_FILE))
+    generateMergedConfig(os.path.join(basePath(),CFG_FILE),mergedConfig,userTaskDirs)
+    compressFile(mergedConfig,mergedConfig+".gz")
+    generateCfg(mergedConfig,os.path.join(outPath(),CFG_INCLUDE))
     embedded=getEmbeddedFiles(env)
     filedefs=[]
     for ef in embedded:
@@ -261,10 +266,6 @@ def prebuild(env):
             print("#WARNING: infile %s for %s not found"%(inFile,ef))
     generateEmbedded(filedefs,os.path.join(outPath(),EMBEDDED_INCLUDE))
     genereateUserTasks(os.path.join(outPath(), TASK_INCLUDE))
-    mergedConfig=os.path.join(outPath(),os.path.basename(CFG_FILE))
-    generateMergedConfig(os.path.join(basePath(),CFG_FILE),mergedConfig,userTaskDirs)
-    compressFile(mergedConfig,mergedConfig+".gz")
-    generateCfg(mergedConfig,os.path.join(outPath(),CFG_INCLUDE))
     generateFile(os.path.join(basePath(),XDR_FILE),os.path.join(outPath(),XDR_INCLUDE),generateXdrMappings)
     version="dev"+datetime.now().strftime("%Y%m%d")
     env.Append(CPPDEFINES=[('GWDEVVERSION',version)])
