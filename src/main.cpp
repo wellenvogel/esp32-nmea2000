@@ -412,12 +412,20 @@ public:
   virtual void getBoatDataValues(int numValues,BoatValue **list){
     for (int i=0;i<numValues;i++){
       GwBoatItemBase *item=boatData.getBase(list[i]->getName());
+      list[i]->changed=false;
       if (item){
-        list[i]->valid=item->isValid();
-        if (list[i]->valid) list[i]->value=item->getDoubleValue();
+        bool newValid=item->isValid();
+        if (newValid != list[i]->valid) list[i]->changed=true;
+        list[i]->valid=newValid;
+        if (newValid){
+          double newValue=item->getDoubleValue();
+          if (newValue != list[i]->value) list[i]->changed=true;
+          list[i]->value=newValue;
+        }
         list[i]->setFormat(item->getFormat());
       }
       else{
+        if (list[i]->valid) list[i]->changed=true;
         list[i]->valid=false;
       }
     }
