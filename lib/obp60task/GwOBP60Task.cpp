@@ -31,6 +31,7 @@
 #include "Logo_OBP_400x300_sw.h"        // OBP Logo
 
 #include "OBP60QRWiFi.h"                // Functions lib for WiFi QR code
+#include "OBP60Data.h"                  // Data stucture
 #include "Page_0.h"                     // Page 0 Depth
 #include "Page_1.h"                     // Page 1 Speed
 #include "Page_2.h"                     // Page 2 VBat
@@ -184,24 +185,26 @@ void OBP60Task(void *param){
     GwLog *logger=api->getLogger();
 
     bool hasPosition = false;
-
+    
     // Get some configuration data from webside
-    bool exampleSwitch=api->getConfig()->getConfigItem(api->getConfig()->obp60Config,true)->asBoolean();
+    bool exampleSwitch = api->getConfig()->getConfigItem(api->getConfig()->obp60Config,true)->asBoolean();
     LOG_DEBUG(GwLog::DEBUG,"example switch ist %s",exampleSwitch?"true":"false");
-    bool gpsOn=api->getConfig()->getConfigItem(api->getConfig()->useGPS,true)->asBoolean();
-    bool bme280On=api->getConfig()->getConfigItem(api->getConfig()->useBME280,true)->asBoolean();
-    bool onewireOn=api->getConfig()->getConfigItem(api->getConfig()->use1Wire,true)->asBoolean();
+    bool gpsOn = api->getConfig()->getConfigItem(api->getConfig()->useGPS,true)->asBoolean();
+    bool bme280On = api->getConfig()->getConfigItem(api->getConfig()->useBME280,true)->asBoolean();
+    bool onewireOn = api->getConfig()->getConfigItem(api->getConfig()->use1Wire,true)->asBoolean();
+    busInfo.simulation = api->getConfig()->getConfigItem(api->getConfig()->useSimuData,true)->asBoolean();
     String powerMode=api->getConfig()->getConfigItem(api->getConfig()->powerMode,true)->asString();
     String displayMode=api->getConfig()->getConfigItem(api->getConfig()->display,true)->asString();
     String backlightMode=api->getConfig()->getConfigItem(api->getConfig()->backlight,true)->asString();
 
     // Initializing all necessary boat data
-    double lastWaterDepth=0;
-    bool lastWaterDepthValid=false;
+    GwApi::BoatValue *sog=new GwApi::BoatValue(F("SOG"));
+    GwApi::BoatValue *date=new GwApi::BoatValue(F("DaysSince1970"));
+    GwApi::BoatValue *time=new GwApi::BoatValue(F("SecondsSinceMidnight"));
     GwApi::BoatValue *longitude=new GwApi::BoatValue(F("Longitude"));
     GwApi::BoatValue *latitude=new GwApi::BoatValue(F("Latitude"));
     GwApi::BoatValue *waterdepth=new GwApi::BoatValue(F("WaterDepth"));
-    GwApi::BoatValue *valueList[]={longitude, latitude, waterdepth};
+    GwApi::BoatValue *valueList[]={sog, date, time, longitude, latitude, waterdepth};
 
     //Init E-Ink display
     display.init();                         // Initialize and clear display
@@ -260,16 +263,6 @@ void OBP60Task(void *param){
             }
         }
 
-        // Subtask all 1000ms show pages
-        if((taskRunCounter % 100) == 0  || first_view == true){
- //           LOG_DEBUG(GwLog::DEBUG,"Subtask 1");
-            LOG_DEBUG(GwLog::DEBUG,"Keystatus: %s", keystatus);
-            LOG_DEBUG(GwLog::DEBUG,"Pagenumber: %d", pageNumber);
-            if(displayMode == "Logo + QR Code" || displayMode == "Logo" || displayMode == "White Screen"){
-                showPage();
-            }
-        }
-
         // Subtask all 3000ms
         if((taskRunCounter % 300) == 0){
  //           LOG_DEBUG(GwLog::DEBUG,"Subtask 2");
@@ -277,12 +270,6 @@ void OBP60Task(void *param){
             if(keystatus == "left" || keystatus == "right"){
                 keystatus = "0";
             }
-        }
-
-        // Subtask E-Ink full refresh
-        if((taskRunCounter % (FULL_REFRESH_TIME * 100)) == 0){
-            LOG_DEBUG(GwLog::DEBUG,"E-Ink full refresh");
-            display.update(); 
         }
 
         // Send NMEA0183 GPS data on several bus systems
@@ -296,22 +283,25 @@ void OBP60Task(void *param){
         }
 
         //fetch the current values of the items that we have in itemNames
-        api->getBoatDataValues(3,valueList);
-        //check if the values are valid (i.e. the values we requested have been found in boatData)
-        if (waterdepth->valid){
-            //both values are there - so we have a valid position
-            if (! lastWaterDepthValid){
-                //access to the values via iterator->second (iterator->first would be the name)
-                LOG_DEBUG(GwLog::LOG,"%s new value %f",waterdepth->getName().c_str(),waterdepth->value);
-                lastWaterDepthValid=true;
-                lastWaterDepth=waterdepth->value;
+        api->getBoatDataValues(6,valueList);
+        busInfo.WaterDepth.fvalue = waterdepth->value;
+        busInfo.WaterDepth.valid = int(waterdepth->valid);
+        busInfo.SOG.fvalue = sog->value;
+        busInfo.SOG.valid = int(sog->valid);
+
+        // Subtask all 1000ms show pages
+        if((taskRunCounter % 100) == 0  || first_view == true){
+            LOG_DEBUG(GwLog::DEBUG,"Keystatus: %s", keystatus);
+            LOG_DEBUG(GwLog::DEBUG,"Pagenumber: %d", pageNumber);
+            if(displayMode == "Logo + QR Code" || displayMode == "Logo" || displayMode == "White Screen"){
+                showPage(busInfo);
             }
         }
-        else{
-            if (lastWaterDepthValid){
-                if (exampleSwitch) LOG_DEBUG(GwLog::LOG,"Water depth lost");
-                lastWaterDepthValid=false;
-            }
+
+        // Subtask E-Ink full refresh
+        if((taskRunCounter % (FULL_REFRESH_TIME * 100)) == 0){
+            LOG_DEBUG(GwLog::DEBUG,"E-Ink full refresh");
+            display.update(); 
         }
 
         taskRunCounter++;

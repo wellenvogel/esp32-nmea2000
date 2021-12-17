@@ -61,6 +61,17 @@
         }
     },
     {
+        "name": "useSimuData",
+        "label": "Simulation Data",
+        "type": "boolean",
+        "default": "false",
+        "description": "Can use for simulation data by missing bus data.",
+        "category": "OBP60",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
         "name": "display",
         "label": "Display Mode",
         "type": "list",

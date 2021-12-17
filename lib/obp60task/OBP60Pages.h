@@ -4,11 +4,10 @@
 #include <Arduino.h>
 
 // Global vars
-int pageNumber = 0;            // Page number for actual page
+int pageNumber = 0;           // Page number for actual page
 bool first_view = true;
 
-
-void showPage(){
+void showPage(busData values){
   // Clear display
   display.fillRect(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, GxEPD_WHITE);   // Draw white sreen
 
@@ -24,7 +23,7 @@ void showPage(){
   // Read page number
   switch (pageNumber) {
     case 0:
-      page_0();
+      page_0(values);
       break;
     case 1:
       page_1();
@@ -42,7 +41,7 @@ void showPage(){
       // Statement(s)
       break;    
     default:
-        page_0();
+        page_0(values);
       break;
   }
 
