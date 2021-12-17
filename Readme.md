@@ -12,7 +12,7 @@ Goal
 ----
 Have a simple ready-to-go ESP32 binary that can be flashed onto a [M5 Atom CAN](https://docs.m5stack.com/en/atom/atom_can), potentially extended by an [Atom Tail485](https://shop.m5stack.com/collections/atom-series/products/atom-tail485?variant=32169041559642) for NMEA0183 connection and power supply.
 
-But will also run on other ESP32 boards.
+But will also run on other ESP32 boards see [Hardware](doc/Hardware.md).
 
 What is included
 ----------------------------------
@@ -75,6 +75,11 @@ On the data page you will have a small dashboard for the currently received data
 On the status page you can check the number of messages flowing in and out.
 To help you recover lost passwords the Wifi access point passowrd and the admin password will be output at the USB port when the device starts up. So by connecting a terminal program you can retrieve those passwords.
 
+Security Hints
+--------------
+You should only connect the Wifi of the device to trusted networks. There is only some very limited protection against network sniffing of denial of service attacks. Never connect the device directly to the internet without a firewall in between (like e.g. your Wifi or LTE router). Especially be careful when connecting to open port networks.
+When making changes you will be asked for the admin password - and this one is always send somehow encrypted. But when you change the Wifi access point password or the Wifi client password it will be sent in clear text.
+When you enable the "remember me" for the admin password it will be stored in clear text in your browser (use ForgetPassword to remove it from there).
 
 Conversion from and to NMEA0183 XDR
 -----------------------------------
