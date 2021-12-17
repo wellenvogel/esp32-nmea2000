@@ -11,22 +11,7 @@
   License along with this library; if not, write to the Free Software
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
-#define GWSTR(x) #x
-#define GWSTRINGIFY(x) GWSTR(x)
-#ifdef GWRELEASEVERSION
-#define VERSION GWSTRINGIFY(GWRELEASEVERSION)
-#define LOGLEVEL GwLog::ERROR
-#else
-#ifdef GWDEVVERSION
-#define VERSION GWSTRINGIFY(GWDEVVERSION)
-#define LOGLEVEL GwLog::DEBUG
-#endif
-#ifndef VERSION
-#define VERSION "0.7.0"
-#define LOGLEVEL GwLog::DEBUG
-#endif
-#endif
-
+#include "GwAppInfo.h"
 // #define GW_MESSAGE_DEBUG_ENABLED
 //#define FALLBACK_SERIAL
 const unsigned long HEAP_REPORT_TIME=2000; //set to 0 to disable heap reporting
@@ -77,9 +62,6 @@ const unsigned long HEAP_REPORT_TIME=2000; //set to 0 to disable heap reporting
 #include "GwStatistics.h"
 #include "GwUpdate.h"
 
-#ifndef FIRMWARE_TYPE
-#define FIRMWARE_TYPE PIO_ENV_BUILD
-#endif
 
 //NMEA message channels
 #define N2K_CHANNEL_ID 0
@@ -96,7 +78,7 @@ const unsigned long HEAP_REPORT_TIME=2000; //set to 0 to disable heap reporting
 #define _impl_PASTE(a,b) a##b
 #define _impl_CASSERT_LINE(predicate, line) typedef char _impl_PASTE(assertion_failed_CASSERT_,line)[(predicate)?1:-1];
 //assert length of firmware name and version
-CASSERT(strlen(GWSTRINGIFY(FIRMWARE_TYPE)) <= 32, "environment name (FIRMWARE_TYPE) must not exceed 32 chars");
+CASSERT(strlen(FIRMWARE_TYPE) <= 32, "environment name (FIRMWARE_TYPE) must not exceed 32 chars");
 CASSERT(strlen(VERSION) <= 32, "VERSION must not exceed 32 chars");
 //https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/system/app_image_format.html
 //and removed the bugs in the doc...
@@ -105,7 +87,7 @@ __attribute__((section(".rodata_custom_desc"))) esp_app_desc_t custom_app_desc =
   1,
   {0,0},
   VERSION,
-  GWSTRINGIFY(FIRMWARE_TYPE),
+  FIRMWARE_TYPE,
   "00:00:00",
   "2021/12/13",
   "0000",
@@ -114,7 +96,7 @@ __attribute__((section(".rodata_custom_desc"))) esp_app_desc_t custom_app_desc =
 };
 
 
-String firmwareType(GWSTRINGIFY(FIRMWARE_TYPE));
+String firmwareType(FIRMWARE_TYPE);
 
 typedef std::map<String,String> StringMap;
 
