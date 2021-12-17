@@ -38,15 +38,29 @@ The software is prepared to run on different kinds of ESP32 based modules and ac
 For the list of hardware set ups refer to [Hardware](doc/Hardware.md).
 
 
-Pre Build Binaries
-------------------
-In the [release section](https://github.com/wellenvogel/esp32-nmea2000/releases) you can find a couple of pre-build binaries that can easily be flashed on your ESP32 board using [ESPTool](https://github.com/espressif/esptool).
+Installation
+------------
+In the [release section](releases) you can find a couple of pre-build binaries.<br>
+They are devided into binaries for an initial flash (xxx-all.bin) and binaries for updating an existing device (xxx-update.bin).
+
+Initial Flash
+*************
+To initially flash a deviceyou can use [ESPTool](https://github.com/espressif/esptool).
 The flash command must be (example for m5stack-atom):
 
 ```
-esptool.py --port XXXX --chip esp32 write_flash 0x1000  m5stack-atom-all.bin
+esptool.py --port XXXX --chip esp32 write_flash 0x1000  m5stack-atom-20211217-all.bin
 ```
 For the meaning of the board names have a look at [Hardware](doc/Hardware.md). For details refer to the code in [platformio.ini](platformio.ini) and look for the hardware definitions in [GwHardware.h](lib/hardware/GwHardware.h).
+
+Update
+******
+To update a device you can use the Web-UI (Update tab). In principle you could also update a device using the initial flash command (and an xxx-all.bin) firmware but this would erase all your configuration.
+So for normal operation just download a xxx-update.bin from the [release](release) page and use the UI to install it.
+![install](doc/ota-ok1.png).
+When you choose a file for the update the UI will check if it is a valid firmware file en will reject invalid ones.
+To really execute the update click the "Upload" button. You will have a progress indicator and get a notification about the update result.
+Please reload the page in your browser after the "connected" state is green as the new version could have changes thatv otherwise will not work.
 
 Starting
 ---------
@@ -59,6 +73,8 @@ To store your changes you will be asked for an admin password. The initial one i
 Be careful to notice the password - you can only recover from a lost password with a factory reset of the device (long press the led button until it goes blue->red->green).
 On the data page you will have a small dashboard for the currently received data.
 On the status page you can check the number of messages flowing in and out.
+To help you recover lost passwords the Wifi access point passowrd and the admin password will be output at the USB port when the device starts up. So by connecting a terminal program you can retrieve those passwords.
+
 
 Conversion from and to NMEA0183 XDR
 -----------------------------------
