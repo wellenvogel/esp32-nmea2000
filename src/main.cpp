@@ -595,7 +595,7 @@ protected:
       bool rt = config.updateValue(it->first, it->second);
       if (!rt)
       {
-        logger.logString("ERR: unable to update %s to %s", it->first.c_str(), it->second.c_str());
+        logger.logDebug(GwLog::ERROR,"ERR: unable to update %s to %s", it->first.c_str(), it->second.c_str());
         ok = false;
         error += it->first;
         error += "=";
@@ -606,7 +606,7 @@ protected:
     if (ok)
     {
       result = JSON_OK;
-      logger.logString("update config and restart");
+      logger.logDebug(GwLog::ERROR,"update config and restart");
       config.saveConfig();
       delayedRestart();
     }
@@ -634,7 +634,7 @@ protected:
       return;
     }
     config.reset(true);
-    logger.logString("reset config, restart");
+    logger.logDebug(GwLog::ERROR,"reset config, restart");
     result = JSON_OK;
     delayedRestart();
   }

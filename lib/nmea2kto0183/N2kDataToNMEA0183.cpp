@@ -142,7 +142,7 @@ private:
     
     virtual unsigned long *handledPgns()
     {
-        logger->logString("CONV: # %d handled PGNS", converters.numConverters());
+        LOG_DEBUG(GwLog::LOG,"CONV: # %d handled PGNS", converters.numConverters());
         return converters.handledPgns();
     }
     virtual String handledKeys(){

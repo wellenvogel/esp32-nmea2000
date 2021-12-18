@@ -11,7 +11,7 @@ GwWifi::GwWifi(const GwConfigHandler *config,GwLog *log, bool fixedApPass){
     this->fixedApPass=fixedApPass;
 }
 void GwWifi::setup(){
-    logger->logString("Wifi setup");
+    LOG_DEBUG(GwLog::LOG,"Wifi setup");
     
     IPAddress AP_local_ip(192, 168, 15, 1);  // Static address for AP
     IPAddress AP_gateway(192, 168, 15, 1);
@@ -26,7 +26,7 @@ void GwWifi::setup(){
     }
     delay(100);
     WiFi.softAPConfig(AP_local_ip, AP_gateway, AP_subnet);
-    logger->logString("WifiAP created: ssid=%s,adress=%s",
+    LOG_DEBUG(GwLog::LOG,"WifiAP created: ssid=%s,adress=%s",
         ssid,
         WiFi.softAPIP().toString().c_str()
         );
@@ -34,7 +34,7 @@ void GwWifi::setup(){
     lastApAccess=millis();
     apShutdownTime=config->getConfigItem(config->stopApTime)->asInt() * 60;
     if (apShutdownTime < 120 && apShutdownTime != 0) apShutdownTime=120; //min 2 minutes
-    logger->logString("GWWIFI: AP auto shutdown %s (%ds)",apShutdownTime> 0?"enabled":"disabled",apShutdownTime);
+    LOG_DEBUG(GwLog::LOG,"GWWIFI: AP auto shutdown %s (%ds)",apShutdownTime> 0?"enabled":"disabled",apShutdownTime);
     apShutdownTime=apShutdownTime*1000; //ms   
     clientIsConnected=false;
     connectInternal();    
@@ -42,7 +42,7 @@ void GwWifi::setup(){
 bool GwWifi::connectInternal(){
     if (wifiClient->asBoolean()){
         clientIsConnected=false;
-        logger->logString("creating wifiClient ssid=%s",wifiSSID->asString().c_str());
+        LOG_DEBUG(GwLog::LOG,"creating wifiClient ssid=%s",wifiSSID->asString().c_str());
         wl_status_t rt=WiFi.begin(wifiSSID->asCString(),wifiPass->asCString());
         LOG_DEBUG(GwLog::LOG,"wifiClient connect returns %d",(int)rt);
         lastConnectStart=millis();
@@ -76,7 +76,7 @@ void GwWifi::loop(){
             lastApAccess=millis();
         }
         if ((lastApAccess + apShutdownTime) < millis()){
-            logger->logString("GWWIFI: shutdown AP");
+            LOG_DEBUG(GwLog::LOG,"GWWIFI: shutdown AP");
             WiFi.softAPdisconnect(true);
             apActive=false;
         }
