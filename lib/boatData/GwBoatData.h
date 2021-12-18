@@ -193,7 +193,7 @@ class GwBoatData{
     GWBOATDATA(double,Altitude,4000,formatFixed0)
     GWBOATDATA(double,WaterDepth,4000,formatDepth)
     GWBOATDATA(double,DepthTransducer,4000,formatDepth)
-    GWBOATDATA(double,SecondsSinceMidnight,4000,formatTime)
+    GWBOATDATA(double,GpsTime,4000,formatTime)
     GWBOATDATA(double,WaterTemperature,4000,kelvinToC)
     GWBOATDATA(double,XTE,4000,formatXte)
     GWBOATDATA(double,DTW,4000,mtr2nm)
@@ -202,7 +202,7 @@ class GwBoatData{
     GWBOATDATA(double,WPLongitude,4000,formatLongitude)
     GWBOATDATA(uint32_t,Log,16000,mtr2nm)
     GWBOATDATA(uint32_t,TripLog,16000,mtr2nm)
-    GWBOATDATA(uint32_t,DaysSince1970,4000,formatDate)
+    GWBOATDATA(uint32_t,GpsDate,4000,formatDate)
     GWBOATDATA(int16_t,Timezone,8000,formatFixed0)
     GWSPECBOATDATA(GwBoatDataSatList,SatInfo,GwSatInfoList::lifeTime,formatFixed0);
     public:

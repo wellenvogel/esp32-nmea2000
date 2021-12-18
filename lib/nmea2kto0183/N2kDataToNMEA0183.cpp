@@ -242,7 +242,7 @@ private:
         ParseN2kMagneticVariation(N2kMsg, SID, Source, DaysSince1970, Variation);
         updateDouble(boatData->Variation, Variation);
         if (DaysSince1970 != N2kUInt16NA && DaysSince1970 != 0)
-            boatData->DaysSince1970->update(DaysSince1970,sourceId);
+            boatData->GpsDate->update(DaysSince1970,sourceId);
     }
 
     //*****************************************************************************
@@ -377,23 +377,23 @@ private:
         double Longitude;
         double Altitude;
         uint16_t DaysSince1970;
-        double SecondsSinceMidnight;
-        if (ParseN2kGNSS(N2kMsg, SID, DaysSince1970, SecondsSinceMidnight, Latitude, Longitude, Altitude, GNSStype, GNSSmethod,
+        double GpsTime;
+        if (ParseN2kGNSS(N2kMsg, SID, DaysSince1970, GpsTime, Latitude, Longitude, Altitude, GNSStype, GNSSmethod,
                          nSatellites, HDOP, PDOP, GeoidalSeparation,
                          nReferenceStations, ReferenceStationType, ReferenceSationID, AgeOfCorrection))
         {
             updateDouble(boatData->Latitude, Latitude);
             updateDouble(boatData->Longitude, Longitude);
             updateDouble(boatData->Altitude, Altitude);
-            updateDouble(boatData->SecondsSinceMidnight, SecondsSinceMidnight);
+            updateDouble(boatData->GpsTime, GpsTime);
             updateDouble(boatData->HDOP,HDOP);
             updateDouble(boatData->PDOP,PDOP);
             if (DaysSince1970 != N2kUInt16NA && DaysSince1970 != 0)
-                boatData->DaysSince1970->update(DaysSince1970,sourceId);
+                boatData->GpsDate->update(DaysSince1970,sourceId);
             int quality=0;
             if ((int)GNSSmethod <= 5) quality=(int)GNSSmethod;
             tNMEA0183AISMsg nmeaMsg;
-            if (NMEA0183SetGGA(nmeaMsg,SecondsSinceMidnight,Latitude,Longitude,
+            if (NMEA0183SetGGA(nmeaMsg,GpsTime,Latitude,Longitude,
                 quality,nSatellites,HDOP,Altitude,GeoidalSeparation,AgeOfCorrection,
                 ReferenceSationID,talkerId)){
                 SendMessage(nmeaMsg);
@@ -555,12 +555,12 @@ private:
             tNMEA0183Msg NMEA0183Msg;
             if (NMEA0183SetRMC(NMEA0183Msg,
 
-                               boatData->SecondsSinceMidnight->getDataWithDefault(NMEA0183DoubleNA),
+                               boatData->GpsTime->getDataWithDefault(NMEA0183DoubleNA),
                                boatData->Latitude->getDataWithDefault(NMEA0183DoubleNA),
                                boatData->Longitude->getDataWithDefault(NMEA0183DoubleNA),
                                boatData->COG->getDataWithDefault(NMEA0183DoubleNA),
                                boatData->SOG->getDataWithDefault(NMEA0183DoubleNA),
-                               boatData->DaysSince1970->getDataWithDefault(NMEA0183UInt32NA),
+                               boatData->GpsDate->getDataWithDefault(NMEA0183UInt32NA),
                                boatData->Variation->getDataWithDefault(NMEA0183DoubleNA),
                                talkerId))
             {
@@ -574,16 +574,16 @@ private:
     void HandleLog(const tN2kMsg &N2kMsg)
     {
         uint16_t DaysSince1970;
-        double SecondsSinceMidnight;
+        double GpsTime;
         uint32_t Log, TripLog;
-        if (ParseN2kDistanceLog(N2kMsg, DaysSince1970, SecondsSinceMidnight, Log, TripLog))
+        if (ParseN2kDistanceLog(N2kMsg, DaysSince1970, GpsTime, Log, TripLog))
         {
             if (Log != N2kUInt32NA)
                 boatData->Log->update(Log,sourceId);
             if (TripLog != N2kUInt32NA)
                 boatData->TripLog->update(TripLog,sourceId);
             if (DaysSince1970 != N2kUInt16NA && DaysSince1970 != 0)
-                boatData->DaysSince1970->update(DaysSince1970,sourceId);
+                boatData->GpsDate->update(DaysSince1970,sourceId);
             tNMEA0183Msg NMEA0183Msg;
 
             if (!NMEA0183Msg.Init("VLW", talkerId))
@@ -996,27 +996,27 @@ private:
     void HandleSystemTime(const tN2kMsg &msg){
         unsigned char sid=-1;
         uint16_t DaysSince1970=N2kUInt16NA;
-        double SecondsSinceMidnight=N2kDoubleNA;
+        double GpsTime=N2kDoubleNA;
         tN2kTimeSource TimeSource;
 
-        if (! ParseN2kSystemTime(msg,sid,DaysSince1970,SecondsSinceMidnight,TimeSource)){
+        if (! ParseN2kSystemTime(msg,sid,DaysSince1970,GpsTime,TimeSource)){
             LOG_DEBUG(GwLog::DEBUG,"unable to parse PGN %d",msg.PGN);
             return;
         }
-        updateDouble(boatData->SecondsSinceMidnight,SecondsSinceMidnight);
-        if (DaysSince1970 != N2kUInt16NA) boatData->DaysSince1970->update(DaysSince1970,sourceId);
-        if (boatData->DaysSince1970->isValid() && boatData->SecondsSinceMidnight->isValid()){
+        updateDouble(boatData->GpsTime,GpsTime);
+        if (DaysSince1970 != N2kUInt16NA) boatData->GpsDate->update(DaysSince1970,sourceId);
+        if (boatData->GpsDate->isValid() && boatData->GpsTime->isValid()){
             tNMEA0183Msg nmeaMsg;
             nmeaMsg.Init("ZDA",talkerId);
             char utc[7];
-            double seconds=boatData->SecondsSinceMidnight->getData();
+            double seconds=boatData->GpsTime->getData();
             int hours=floor(seconds/3600.0);
             int minutes=floor(seconds/60) - hours *60;
             int sec=floor(seconds)-60*minutes-3600*hours;
             snprintf(utc,7,"%02d%02d%02d",hours,minutes,sec);
             nmeaMsg.AddStrField(utc);
             tmElements_t timeParts;
-            tNMEA0183Msg::breakTime(tNMEA0183Msg::daysToTime_t(boatData->DaysSince1970->getData()),timeParts);
+            tNMEA0183Msg::breakTime(tNMEA0183Msg::daysToTime_t(boatData->GpsDate->getData()),timeParts);
             nmeaMsg.AddUInt32Field(tNMEA0183Msg::GetDay(timeParts));
             nmeaMsg.AddUInt32Field(tNMEA0183Msg::GetMonth(timeParts));
             nmeaMsg.AddUInt32Field(tNMEA0183Msg::GetYear(timeParts));
@@ -1036,14 +1036,14 @@ private:
 
     void HandleTimeOffset(const tN2kMsg &msg){
         uint16_t DaysSince1970 =N2kUInt16NA;
-        double SecondsSinceMidnight=N2kDoubleNA;
+        double GpsTime=N2kDoubleNA;
         int16_t LocalOffset=N2kInt16NA;
-        if (!ParseN2kLocalOffset(msg,DaysSince1970,SecondsSinceMidnight,LocalOffset)){
+        if (!ParseN2kLocalOffset(msg,DaysSince1970,GpsTime,LocalOffset)){
             LOG_DEBUG(GwLog::DEBUG,"unable to parse PGN %d",msg.PGN);
             return;
         }
-        updateDouble(boatData->SecondsSinceMidnight,SecondsSinceMidnight);
-        if (DaysSince1970 != N2kUInt16NA) boatData->DaysSince1970->update(DaysSince1970,sourceId);
+        updateDouble(boatData->GpsTime,GpsTime);
+        if (DaysSince1970 != N2kUInt16NA) boatData->GpsDate->update(DaysSince1970,sourceId);
         if (LocalOffset != N2kInt16NA) boatData->Timezone->update(LocalOffset,sourceId);
     }
     void HandleROT(const tN2kMsg &msg){
