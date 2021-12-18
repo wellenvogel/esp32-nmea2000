@@ -113,6 +113,22 @@ Extending the Software
 To give room for adding own software and still being able to keep in sync with this master part there is a concept of user tasks that will allow you to add your own hardware definitions and to add code that should be executed without the need to change parts of the existing software.
 For details refer to the [example description](lib/exampletask/Readme.md).
 
+Changelog
+---------
+[20211218](releases/tag/20211218)
+********
+* 1st real release
+* use the initial flash if you had the pre-release installed
+* most of the N2K <-> 0183 conversions working, see [Conversions](doc/Conversions.pdf)
+* display of received data
+* xdr record mapping (see [XdrMappings](doc/XdrMappings.md))
+* OTA update included in the UI
+* description updated
+* extension API
 
+[20211113](releases/tag/20211113)
+********
+* Pre-release
+* basic functions are working
 
 
