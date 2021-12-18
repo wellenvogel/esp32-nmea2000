@@ -75,7 +75,9 @@ Update
 ******
 To update a device you can use the Web-UI (Update tab). In principle you could also update a device using the initial flash command (and an xxx-all.bin) firmware but this would erase all your configuration.
 So for normal operation just download a xxx-update.bin from the [release](../../releases) page and use the UI to install it.
+
 ![install](doc/ota-ok1.png).
+
 When you choose a file for the update the UI will check if it is a valid firmware file and will reject invalid ones.
 To really execute the update click the "Upload" button. You will have a progress indicator and get a notification about the update result.
 Please reload the page in your browser after the "connected" state is green as the new version could have changes thatv otherwise will not work.
