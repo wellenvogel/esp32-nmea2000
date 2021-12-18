@@ -40,7 +40,7 @@ For the list of hardware set ups refer to [Hardware](doc/Hardware.md).
 
 Installation
 ------------
-In the [release section](releases) you can find a couple of pre-build binaries.<br>
+In the [release section](../releases) you can find a couple of pre-build binaries.<br>
 They are devided into binaries for an initial flash (xxx-all.bin) and binaries for updating an existing device (xxx-update.bin).
 
 Initial Flash
