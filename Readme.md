@@ -53,12 +53,30 @@ esptool.py --port XXXX --chip esp32 write_flash 0x1000  m5stack-atom-20211217-al
 ```
 For the meaning of the board names have a look at [Hardware](doc/Hardware.md). For details refer to the code in [platformio.ini](platformio.ini) and look for the hardware definitions in [GwHardware.h](lib/hardware/GwHardware.h).
 
+__linux users__<br>
+You can typically install the esptool (once you have python 3 installed) with
+```
+sudo pip install esptool
+```
+__windows users__<br> 
+You can find a prebuild executable in tools: [esptool.exe](tools/esptool.exe).
+Just create an empty directory on your machine, download the esptool to this directory and also download the binary (xxx-all.bin) from [releases](releases).
+Afterwards you need to install the driver for the serial port to connect your ESP32 board. For a modern windows the driver at [FTDI](https://ftdichip.com/drivers/d2xx-drivers/) should be working.
+After installing the driver check with your device manager for the com port that is assigned to your connected esp device.
+Open a command prompt and change into the directory you downloaded the esptool.exe and the firmware binary.
+Flash with the command
+```
+esptool.exe --port COM3 0x1000 xxxxx-xxxx-all.bin
+```
+Replace COM3 with the port shown in the device manager and the xxx with the name of the downloaded binary.
+
+
 Update
 ******
 To update a device you can use the Web-UI (Update tab). In principle you could also update a device using the initial flash command (and an xxx-all.bin) firmware but this would erase all your configuration.
 So for normal operation just download a xxx-update.bin from the [release](release) page and use the UI to install it.
 ![install](doc/ota-ok1.png).
-When you choose a file for the update the UI will check if it is a valid firmware file en will reject invalid ones.
+When you choose a file for the update the UI will check if it is a valid firmware file and will reject invalid ones.
 To really execute the update click the "Upload" button. You will have a progress indicator and get a notification about the update result.
 Please reload the page in your browser after the "connected" state is green as the new version could have changes thatv otherwise will not work.
 
