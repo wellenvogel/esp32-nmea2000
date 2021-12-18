@@ -60,7 +60,7 @@ sudo pip install esptool
 ```
 __windows users__<br> 
 You can find a prebuild executable in tools: [esptool.exe](tools/esptool.exe).
-Just create an empty directory on your machine, download the esptool to this directory and also download the binary (xxx-all.bin) from [releases](releases).
+Just create an empty directory on your machine, download the esptool to this directory and also download the binary (xxx-all.bin) from [releases](../../releases).
 Afterwards you need to install the driver for the serial port to connect your ESP32 board. For a modern windows the driver at [FTDI](https://ftdichip.com/drivers/d2xx-drivers/) should be working.
 After installing the driver check with your device manager for the com port that is assigned to your connected esp device.
 Open a command prompt and change into the directory you downloaded the esptool.exe and the firmware binary.
@@ -74,7 +74,7 @@ Replace COM3 with the port shown in the device manager and the xxx with the name
 Update
 ******
 To update a device you can use the Web-UI (Update tab). In principle you could also update a device using the initial flash command (and an xxx-all.bin) firmware but this would erase all your configuration.
-So for normal operation just download a xxx-update.bin from the [release](release) page and use the UI to install it.
+So for normal operation just download a xxx-update.bin from the [release](../../releases) page and use the UI to install it.
 ![install](doc/ota-ok1.png).
 When you choose a file for the update the UI will check if it is a valid firmware file and will reject invalid ones.
 To really execute the update click the "Upload" button. You will have a progress indicator and get a notification about the update result.
@@ -115,7 +115,7 @@ For details refer to the [example description](lib/exampletask/Readme.md).
 
 Changelog
 ---------
-[20211218](releases/tag/20211218)
+[20211218](../../releases/tag/20211218)
 ********
 * 1st real release
 * use the initial flash if you had the pre-release installed
@@ -126,7 +126,7 @@ Changelog
 * description updated
 * extension API
 
-[20211113](releases/tag/20211113)
+[20211113](../../releases/tag/20211113)
 ********
 * Pre-release
 * basic functions are working
