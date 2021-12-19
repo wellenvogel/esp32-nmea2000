@@ -8,6 +8,8 @@ Based on the work of
 and a couple of other open source projects.
 Many thanks for all the great work.
 
+This project is part of [OpenBoatProjects](https://open-boat-projects.org/de/nmea2000-gateway-mit-m5stack-atom/).
+
 Goal
 ----
 Have a simple ready-to-go ESP32 binary that can be flashed onto a [M5 Atom CAN](https://docs.m5stack.com/en/atom/atom_can), potentially extended by an [Atom Tail485](https://shop.m5stack.com/collections/atom-series/products/atom-tail485?variant=32169041559642) for NMEA0183 connection and power supply.
