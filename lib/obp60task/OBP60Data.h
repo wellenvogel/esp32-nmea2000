@@ -6,6 +6,7 @@
 typedef struct{
   float fvalue = 0;           // Float value
   char svalue[31] = "";       // Char value
+  char unit[8] = "";          // Unit
   int valid = 0;              // Valid flag
 } dataContainer;
 

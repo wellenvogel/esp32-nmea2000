@@ -5,7 +5,7 @@
 #include "OBP60Hardware.h"
 
 void page_0(busData pvalues){
-  // Measuring Values
+  // Name and unit
   display.setFont(&Ubuntu_Bold32pt7b);
   display.setTextColor(GxEPD_BLACK);
   display.setCursor(20, 100);

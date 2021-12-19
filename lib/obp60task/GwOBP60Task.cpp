@@ -80,6 +80,37 @@ class GetBoatDataRequest: public GwMessage{
         };
 };
 
+String formatValue(GwApi::BoatValue *value){
+    if (! value->valid) return "----";
+    static const int bsize=30;
+    char buffer[bsize+1];
+    buffer[0]=0;
+    if (value->getFormat() == "formatDate"){
+        time_t tv=tNMEA0183Msg::daysToTime_t(value->value);
+        tmElements_t parts;
+        tNMEA0183Msg::breakTime(tv,parts);
+        snprintf(buffer,bsize,"%02d.%02d.%04d",parts.tm_mday,parts.tm_mon+1,parts.tm_year+1900);
+    }
+    else if(value->getFormat() == "formatTime"){
+        double inthr;
+        double intmin;
+        double intsec;
+        double val;
+        val=modf(value->value/3600.0,&inthr);
+        val=modf(val*3600.0/60.0,&intmin);
+        modf(val*60.0,&intsec);
+        snprintf(buffer,bsize,"%02.0f:%02.0f:%02.0f",inthr,intmin,intsec);
+    }
+    else if (value->getFormat() == "formatFixed0"){
+        snprintf(buffer,bsize,"%.0f",value->value);
+    }
+    else{
+        snprintf(buffer,bsize,"%.4f",value->value);
+    }
+    buffer[bsize]=0;
+    return String(buffer);
+}
+
 // Hardware initialisation before start all services
 //##################################################
 void OBP60Init(GwApi *api){
@@ -204,7 +235,8 @@ void OBP60Task(void *param){
     GwApi::BoatValue *longitude=new GwApi::BoatValue(F("Longitude"));
     GwApi::BoatValue *latitude=new GwApi::BoatValue(F("Latitude"));
     GwApi::BoatValue *waterdepth=new GwApi::BoatValue(F("WaterDepth"));
-    GwApi::BoatValue *valueList[]={sog, date, time, longitude, latitude, waterdepth};
+    GwApi::BoatValue *pdop=new GwApi::BoatValue(F("PDOP"));
+    GwApi::BoatValue *valueList[]={sog, date, time, longitude, latitude, waterdepth, pdop};
 
     //Init E-Ink display
     display.init();                         // Initialize and clear display
@@ -283,14 +315,23 @@ void OBP60Task(void *param){
         }
 
         //fetch the current values of the items that we have in itemNames
-        api->getBoatDataValues(6,valueList);
+        api->getBoatDataValues(7,valueList);
         busInfo.WaterDepth.fvalue = waterdepth->value;
+        waterdepth->getFormat().toCharArray(busInfo.WaterDepth.unit, 8, 0);
         busInfo.WaterDepth.valid = int(waterdepth->valid);
         busInfo.SOG.fvalue = sog->value;
+        sog->getFormat().toCharArray(busInfo.SOG.unit, 8, 0);
         busInfo.SOG.valid = int(sog->valid);
+        formatValue(date).toCharArray(busInfo.Date.svalue, 31, 0);
+        busInfo.Date.valid = date->valid;
+        formatValue(time).toCharArray(busInfo.Time.svalue, 31, 0);
+        busInfo.Time.valid = time->valid;
+        busInfo.PDOP.fvalue = pdop->value;
+        busInfo.PDOP.valid = pdop->valid;
 
-        // Subtask all 1000ms show pages
-        if((taskRunCounter % 100) == 0  || first_view == true){
+
+        // Subtask all 500ms show pages
+        if((taskRunCounter % 50) == 0  || first_view == true){
             LOG_DEBUG(GwLog::DEBUG,"Keystatus: %s", keystatus);
             LOG_DEBUG(GwLog::DEBUG,"Pagenumber: %d", pageNumber);
             if(displayMode == "Logo + QR Code" || displayMode == "Logo" || displayMode == "White Screen"){

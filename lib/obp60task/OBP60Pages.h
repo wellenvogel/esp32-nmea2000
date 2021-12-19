@@ -6,6 +6,7 @@
 // Global vars
 int pageNumber = 0;           // Page number for actual page
 bool first_view = true;
+bool heartbeat = false;
 
 void showPage(busData values){
   // Clear display
@@ -17,8 +18,25 @@ void showPage(busData values){
   display.setTextColor(GxEPD_BLACK);
   display.setCursor(0, 15);
   display.print(" WiFi AP TCP N2K 183 GPS");
+  display.setFont(&Ubuntu_Bold32pt7b);
+  display.setCursor(205, 14);
+  if(heartbeat == true){
+    display.print(".");
+  }
+  else{
+    display.print(" ");
+  }
+  heartbeat = !heartbeat; 
+  display.setFont(&Ubuntu_Bold8pt7b);
   display.setCursor(230, 15);
-  display.print("14.12.2021 17:50 UTC");
+  if(values.PDOP.valid == true && values.PDOP.fvalue <= 50){
+    display.print(values.Date.svalue);
+    display.print(" ");
+    display.print(values.Time.svalue);
+  }
+  else{
+    display.print("No GPS data");
+  }
 
   // Read page number
   switch (pageNumber) {
