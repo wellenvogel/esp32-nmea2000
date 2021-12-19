@@ -2,7 +2,10 @@
 import tkinter as tk
 from tkinter import ttk
 import tkinter.font as tkFont
+
+import os
 import serial.tools.list_ports
+from tkinter import filedialog as FileDialog
 
 import builtins
 
@@ -10,7 +13,7 @@ import builtins
 
 oldprint=builtins.print
 def print(*args, **kwargs):
-    app.addText(args[0])
+    app.addText(args[0],kwargs.get('end') == '')
 
 
 builtins.print=print
@@ -35,7 +38,9 @@ class App:
         self.port.grid(row=1,column=1,sticky="ew")
         tk.Label(frame,text="Select Firmware").grid(row=2,column=0,sticky='ew')
         self.filename=tk.StringVar()
-        tk.Entry(frame,textvariable=self.filename).grid(row=2,column=1,sticky='ew')
+        fn=tk.Entry(frame,textvariable=self.filename)
+        fn.grid(row=2,column=1,sticky='ew')
+        fn.bind("<1>",self.fileDialog)
         tk.Label(frame,text="Address 0x10000").grid(row=3,column=0,columnspan=2,sticky='ew',pady=10)
         tk.Button(frame,text="Flash",command=self.buttonAction).grid(row=4,column=0,columnspan=2,pady=10)
         self.text_widget = tk.Text(frame)
@@ -43,6 +48,10 @@ class App:
         self.text_widget.grid(row=5,column=0,columnspan=2,sticky='news')
         self.readDevices()
 
+    def fileDialog(self,ev):
+        fn=FileDialog.askopenfilename()
+        if fn is not None:
+            self.filename.set(fn)
     def readDevices(self):
         self.serialDevices=[]
         names=[]
@@ -54,8 +63,12 @@ class App:
                 label=dev.name+"("+dev.device+")"
             names.append(label)
         self.port.configure(values=names)
-    def addText(self,text):
-        self.text_widget.insert(tk.END,text+"\n")
+    def addText(self,text,preventNl=False):
+        le="\n"
+        if preventNl:
+            le=''
+        self.text_widget.insert(tk.END,text+le)
+        root.update()
 
     def buttonAction(self):
         self.text_widget.delete("1.0", "end")
@@ -64,8 +77,22 @@ class App:
             self.addText("ERROR: no com port selected")
             return
         port=self.serialDevices[idx]
+        fn=self.filename.get()
+        if fn is None or fn == '':
+            self.addText("ERROR: no filename selected")
+            return
+        if not os.path.exists(fn):
+            self.addText("ERROR: file %s not found"%fn)
+            return
+        with open(fn,"rb") as fh:
+            ct=fh.read(1)
+            if ct[0] != 0xe9:
+                self.addText("ERROR: invalid magic in file expected 0xe9, got "+str(ct[0]))
+                return
         command=['--chip','ESP32','--port',port,'chip_id']
         print("run esptool: %s"%" ".join(command))
+        root.update()
+        root.update_idletasks()
         try:
             esptool.main(command)
             print("esptool done")
