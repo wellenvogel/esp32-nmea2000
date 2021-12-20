@@ -54,12 +54,20 @@ The flash command must be (example for m5stack-atom):
 esptool.py --port XXXX --chip esp32 write_flash 0x1000  m5stack-atom-20211217-all.bin
 ```
 For the meaning of the board names have a look at [Hardware](doc/Hardware.md). For details refer to the code in [platformio.ini](platformio.ini) and look for the hardware definitions in [GwHardware.h](lib/hardware/GwHardware.h).
+Additionally there is a small GUI for the esptool included here at [tools/flashtool.py](tools/flashtool.py)
 
 __linux users__<br>
 You can typically install the esptool (once you have python 3 installed) with
 ```
 sudo pip install esptool
 ```
+To use the flashtool just copy flashtool.py and esptool.py from [tools](tools) to an empty directory.
+```
+sudo pip install tkinter
+sudo pip install pyserial
+```
+Afterwards run flashtool.py (potentially making it executable before).
+
 __windows users__<br> 
 You can find a prebuild executable in tools: [esptool.exe](tools/esptool.exe).
 Just create an empty directory on your machine, download the esptool to this directory and also download the binary (xxx-all.bin) from [releases](../../releases).
@@ -71,6 +79,8 @@ Flash with the command
 esptool.exe --port COM3 0x1000 xxxxx-xxxx-all.bin
 ```
 Replace COM3 with the port shown in the device manager and the xxx with the name of the downloaded binary.
+If you do not want to use the command line you can download the precompiled [flashtool.exe](../../raw/master/tools/flashtool.exe).
+Just start the downloaded exe. Unfortunately some virus scanners seem to consider the exe a virus or trojan. There is not much I can do against this - the exe is simply build from flashtool.py - see [tools readme](tools/readme-esptool-win.txt).
 
 
 Update
