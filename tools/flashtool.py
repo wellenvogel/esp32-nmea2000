@@ -28,30 +28,64 @@ class App:
         root.columnconfigure(0, weight=1)
         root.rowconfigure(0, weight=1)
         frame=tk.Frame(root)
+        row=0
         frame.grid(row=0,column=0,sticky='news')
         #frame.configure(background='lightblue')
         frame.columnconfigure(0,weight=1)
         frame.columnconfigure(1, weight=3)
-        tk.Label(frame,text="ESP32 NMEA2000 Flash Tool").grid(row=0,column=0,columnspan=2,sticky='ew')
-        tk.Label(frame, text="Com Port").grid(row=1,column=0,sticky='ew')
+        tk.Label(frame,text="ESP32 NMEA2000 Flash Tool").grid(row=row,column=0,columnspan=2,sticky='ew')
+        row+=1
+        self.mode=tk.IntVar()
+        self.mode.set(1)
+        btFrame=tk.Frame(frame)
+        btFrame.grid(row=row,column=1,sticky="ew",pady=20)
+        tk.Radiobutton(btFrame,text="Initial Flash",value=1,variable=self.mode,command=self.changeMode).grid(row=0,column=0)
+        tk.Radiobutton(btFrame, text="Update Flash", value=2, variable=self.mode,command=self.changeMode).grid(row=0,column=1)
+        row+=1
+        tk.Label(frame, text="Com Port").grid(row=row,column=0,sticky='ew')
         self.port=ttk.Combobox(frame)
-        self.port.grid(row=1,column=1,sticky="ew")
-        tk.Label(frame,text="Select Firmware").grid(row=2,column=0,sticky='ew')
+        self.port.grid(row=row,column=1,sticky="ew")
+        row+=1
+        tk.Label(frame,text="Select Firmware").grid(row=row,column=0,sticky='ew')
         self.filename=tk.StringVar()
         fn=tk.Entry(frame,textvariable=self.filename)
-        fn.grid(row=2,column=1,sticky='ew')
+        fn.grid(row=row,column=1,sticky='ew')
         fn.bind("<1>",self.fileDialog)
-        tk.Label(frame,text="Address 0x10000").grid(row=3,column=0,columnspan=2,sticky='ew',pady=10)
-        tk.Button(frame,text="Flash",command=self.buttonAction).grid(row=4,column=0,columnspan=2,pady=10)
+        row+=1
+        self.fileInfo=tk.StringVar()
+        tk.Label(frame,textvariable=self.fileInfo).grid(row=row,column=0,columnspan=2,sticky="ew")
+        row+=1
+        self.flashInfo=tk.StringVar()
+        self.flashInfo.set("Address 0x1000")
+        tk.Label(frame,textvariable=self.flashInfo).grid(row=row,column=0,columnspan=2,sticky='ew',pady=10)
+        row+=1
+        tk.Button(frame,text="Flash",command=self.buttonAction).grid(row=row,column=0,columnspan=2,pady=10)
+        row+=1
         self.text_widget = tk.Text(frame)
-        frame.rowconfigure(5,weight=1)
-        self.text_widget.grid(row=5,column=0,columnspan=2,sticky='news')
+        frame.rowconfigure(row,weight=1)
+        self.text_widget.grid(row=row,column=0,columnspan=2,sticky='news')
         self.readDevices()
 
+    def updateFlashInfo(self):
+        if self.mode.get() == 1:
+            #full
+            self.flashInfo.set("Address 0x1000")
+        else:
+            self.flashInfo.set("Address 0x10000")
+    def changeMode(self):
+        m=self.mode.get()
+        self.updateFlashInfo()
+        self.filename.set('')
+        self.fileInfo.set('')
     def fileDialog(self,ev):
         fn=FileDialog.askopenfilename()
         if fn is not None:
             self.filename.set(fn)
+            info=self.checkImageFile(fn,self.mode.get() == 1)
+            if info['error']:
+                self.fileInfo.set("***ERROR: %s"%info['info'])
+            else:
+                self.fileInfo.set(info['info'])
     def readDevices(self):
         self.serialDevices=[]
         names=[]
@@ -70,9 +104,56 @@ class App:
         self.text_widget.insert(tk.END,text+le)
         root.update()
 
+    FULLOFFSET=61440
+    HDROFFSET = 288
+    VERSIONOFFSET = 16
+    NAMEOFFSET = 48
+    MINSIZE = HDROFFSET + NAMEOFFSET + 32
+    CHECKBYTES = {
+        0: 0xe9,  # image magic
+        288: 0x32,  # app header magic
+        289: 0x54,
+        290: 0xcd,
+        291: 0xab
+    }
+
+    def getString(self,buffer, offset, len):
+        return buffer[offset:offset + len].rstrip(b'\0').decode('utf-8')
+
+    def getFirmwareInfo(self,ih,imageFile,offset):
+        buffer = ih.read(self.MINSIZE)
+        if len(buffer) != self.MINSIZE:
+            return self.setErr("invalid image file %s, to short"%imageFile)
+        for k, v in self.CHECKBYTES.items():
+            if buffer[k] != v:
+                return self.setErr("invalid magic at %d, expected %d got %d"
+                                % (k+offset, v, buffer[k]))
+        name = self.getString(buffer, self.HDROFFSET + self.NAMEOFFSET, 32)
+        version = self.getString(buffer, self.HDROFFSET + self.VERSIONOFFSET, 32)
+        return {'error':False,'info':"%s:%s"%(name,version)}
+
+    def setErr(self,err):
+        return {'error':True,'info':err}
+    def checkImageFile(self,filename,isFull):
+        if not os.path.exists(filename):
+            return self.setErr("file %s not found"%filename)
+        with open(filename,"rb") as fh:
+            offset=0
+            if isFull:
+                b=fh.read(1)
+                if len(b) != 1:
+                    return self.setErr("unable to read header")
+                if b[0] != 0xe9:
+                    return self.setErr("invalid magic in file, expected 0xe9 got 0x%02x"%b[0])
+                st=fh.seek(self.FULLOFFSET)
+                offset=self.FULLOFFSET
+            return self.getFirmwareInfo(fh,filename,offset)
+
+
     def buttonAction(self):
         self.text_widget.delete("1.0", "end")
         idx=self.port.current()
+        isFull=self.mode.get() == 1
         if idx < 0:
             self.addText("ERROR: no com port selected")
             return
@@ -81,14 +162,10 @@ class App:
         if fn is None or fn == '':
             self.addText("ERROR: no filename selected")
             return
-        if not os.path.exists(fn):
-            self.addText("ERROR: file %s not found"%fn)
+        info=self.checkImageFile(fn,isFull)
+        if info['error']:
+            print("ERROR: %s"%info['info'])
             return
-        with open(fn,"rb") as fh:
-            ct=fh.read(1)
-            if ct[0] != 0xe9:
-                self.addText("ERROR: invalid magic in file expected 0xe9, got "+str(ct[0]))
-                return
         command=['--chip','ESP32','--port',port,'chip_id']
         print("run esptool: %s"%" ".join(command))
         root.update()
