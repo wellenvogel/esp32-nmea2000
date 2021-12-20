@@ -9,7 +9,7 @@ from tkinter import filedialog as FileDialog
 
 import builtins
 
-
+VERSION="1.0, esptool 3.2"
 
 oldprint=builtins.print
 def print(*args, **kwargs):
@@ -34,6 +34,8 @@ class App:
         frame.columnconfigure(0,weight=1)
         frame.columnconfigure(1, weight=3)
         tk.Label(frame,text="ESP32 NMEA2000 Flash Tool").grid(row=row,column=0,columnspan=2,sticky='ew')
+        row+=1
+        tk.Label(frame, text=VERSION).grid(row=row,column=0,columnspan=2,sticky="ew",pady=10)
         row+=1
         self.mode=tk.IntVar()
         self.mode.set(1)
