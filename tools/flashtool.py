@@ -119,6 +119,7 @@ class App:
             self.text_widget.insert(tk.END,"\n")
         else:
             self.text_widget.insert(tk.END,kwargs.get('end'))
+        self.text_widget.see('end')
         root.update()
         if self.interrupt:
             self.interrupt=False
