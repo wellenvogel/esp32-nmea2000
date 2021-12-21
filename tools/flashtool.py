@@ -9,7 +9,7 @@ from tkinter import filedialog as FileDialog
 
 import builtins
 
-VERSION="1.0, esptool 3.2"
+VERSION="Version 1.1, esptool 3.2"
 
 oldprint=builtins.print
 def print(*args, **kwargs):
@@ -29,7 +29,8 @@ class App:
         root.rowconfigure(0, weight=1)
         frame=tk.Frame(root)
         row=0
-        frame.grid(row=0,column=0,sticky='news')
+        frame.grid(row=0,column=0,sticky='news',padx=10,pady=5)
+        DUMMY = "prevent to handled as virus"
         #frame.configure(background='lightblue')
         frame.columnconfigure(0,weight=1)
         frame.columnconfigure(1, weight=3)
@@ -45,13 +46,15 @@ class App:
         tk.Radiobutton(rdFrame, text="Update Flash", value=2, variable=self.mode,command=self.changeMode).grid(row=0,column=1)
         row+=1
         tk.Label(frame, text="Com Port").grid(row=row,column=0,sticky='ew')
+        ttk.Style().configure("TCombobox",padding=8,arrowsize=28)
+        ttk.Style().configure("TEntry", padding=8)
         self.port=ttk.Combobox(frame)
-        self.port.grid(row=row,column=1,sticky="ew")
+        self.port.grid(row=row,column=1,sticky="ew",pady=5)
         row+=1
         tk.Label(frame,text="Select Firmware").grid(row=row,column=0,sticky='ew')
         self.filename=tk.StringVar()
-        fn=tk.Entry(frame,textvariable=self.filename)
-        fn.grid(row=row,column=1,sticky='ew')
+        fn=ttk.Entry(frame,textvariable=self.filename)
+        fn.grid(row=row,column=1,sticky='ew',pady=5)
         fn.bind("<1>",self.fileDialog)
         row+=1
         self.fileInfo=tk.StringVar()
