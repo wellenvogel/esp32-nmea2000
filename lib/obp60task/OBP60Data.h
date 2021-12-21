@@ -12,7 +12,7 @@ typedef struct{
 
 typedef struct{
   bool simulation = false;    // Simulate boat data
-  bool headline = true;
+  bool statusline = true;
   char dateformat[3] = "GB";
   int timezone = 0;
   bool refresh = false;

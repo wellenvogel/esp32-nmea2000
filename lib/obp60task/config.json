@@ -42,7 +42,7 @@
     },
     {
         "name": "draft",
-        "label": "Boat Draft",
+        "label": "Boat Draft [m]",
         "type": "number",
         "default": "0",
         "check": "checkMinMax",
@@ -56,7 +56,7 @@
     },
     {
         "name": "fuelTank",
-        "label": "Fuel Tank",
+        "label": "Fuel Tank [l]",
         "type": "number",
         "default": "0",
         "check": "checkMinMax",
@@ -70,7 +70,7 @@
     },
     {
         "name": "fuelConsumption",
-        "label": "Fuel Consuption",
+        "label": "Fuel Consuption [l/h]",
         "type": "number",
         "default": "0",
         "check": "checkMinMax",
@@ -84,7 +84,21 @@
     },
     {
         "name": "waterTank",
-        "label": "Water Tank",
+        "label": "Water Tank [l]",
+        "type": "number",
+        "default": "0",
+        "check": "checkMinMax",
+        "min": 0,
+        "max": 5000,
+        "description": "Water tank capacity [0...5000l]",
+        "category": "OBP60 Settings",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "wasteTank",
+        "label": "Waste Tank [l]",
         "type": "number",
         "default": "0",
         "check": "checkMinMax",
@@ -98,7 +112,7 @@
     },
     {
         "name": "batteryVoltage",
-        "label": "Battery Voltage",
+        "label": "Battery Voltage [V]",
         "type": "number",
         "default": "12",
         "check": "checkMinMax",
@@ -129,13 +143,13 @@
     },
     {
         "name": "batteryCapacity",
-        "label": "Battery Capacity",
+        "label": "Battery Capacity [Ah]",
         "type": "number",
         "default": "0",
         "check": "checkMinMax",
         "min": 0,
-        "max": 5000,
-        "description": "Fuel tank capacity [0...5000Ah]",
+        "max": 10000,
+        "description": "Fuel tank capacity [0...10000Ah]",
         "category": "OBP60 Settings",
         "capabilities": {
             "obp60":"true"
@@ -329,7 +343,7 @@
     },
     {
         "name": "buzzerPower",
-        "label": "Buzzer Power",
+        "label": "Buzzer Power [%]",
         "type": "number",
         "default": "50",
         "check": "checkMinMax",
@@ -351,20 +365,6 @@
         "max": 10,
         "description": "Number of user pages [1...10]",
         "category": "OBP60 Pages",
-        "capabilities": {
-            "obp60":"true"
-        }
-      },
-      {
-        "name": "lastSettings",
-        "label": "Dummy",
-        "type": "number",
-        "default": "50",
-        "check": "checkMinMax",
-        "min": 0,
-        "max": 100,
-        "description": "Dummy",
-        "category": "OBP60 End",
         "capabilities": {
             "obp60":"true"
         }

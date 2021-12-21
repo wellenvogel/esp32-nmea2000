@@ -227,6 +227,8 @@ void OBP60Task(void *param){
     busInfo.simulation = api->getConfig()->getConfigItem(api->getConfig()->useSimuData,true)->asBoolean();
     String powerMode=api->getConfig()->getConfigItem(api->getConfig()->powerMode,true)->asString();
     String displayMode=api->getConfig()->getConfigItem(api->getConfig()->display,true)->asString();
+    busInfo.statusline = api->getConfig()->getConfigItem(api->getConfig()->statusLine,true)->asBoolean();
+    bool refreshOn = api->getConfig()->getConfigItem(api->getConfig()->refresh,true)->asBoolean();
     String backlightMode=api->getConfig()->getConfigItem(api->getConfig()->backlight,true)->asString();
 
     // Initializing all necessary boat data
