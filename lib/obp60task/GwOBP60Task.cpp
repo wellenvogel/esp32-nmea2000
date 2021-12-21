@@ -99,7 +99,8 @@ String formatValue(GwApi::BoatValue *value){
         val=modf(value->value/3600.0,&inthr);
         val=modf(val*3600.0/60.0,&intmin);
         modf(val*60.0,&intsec);
-        snprintf(buffer,bsize,"%02.0f:%02.0f:%02.0f",inthr,intmin,intsec);
+//        snprintf(buffer,bsize,"%02.0f:%02.0f:%02.0f",inthr,intmin,intsec);
+        snprintf(buffer,bsize,"%02.0f:%02.0f",inthr,intmin);
     }
     else if (value->getFormat() == "formatFixed0"){
         snprintf(buffer,bsize,"%.0f",value->value);
@@ -322,9 +323,9 @@ void OBP60Task(void *param){
         busInfo.SOG.fvalue = sog->value;
         sog->getFormat().toCharArray(busInfo.SOG.unit, 8, 0);
         busInfo.SOG.valid = int(sog->valid);
-        formatValue(date).toCharArray(busInfo.Date.svalue, 31, 0);
+        formatValue(date).toCharArray(busInfo.Date.svalue, 16, 0);
         busInfo.Date.valid = date->valid;
-        formatValue(time).toCharArray(busInfo.Time.svalue, 31, 0);
+        formatValue(time).toCharArray(busInfo.Time.svalue, 16, 0);
         busInfo.Time.valid = time->valid;
         busInfo.PDOP.fvalue = pdop->value;
         busInfo.PDOP.valid = pdop->valid;

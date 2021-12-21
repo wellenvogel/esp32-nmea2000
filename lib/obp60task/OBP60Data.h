@@ -5,13 +5,17 @@
 
 typedef struct{
   float fvalue = 0;           // Float value
-  char svalue[31] = "";       // Char value
+  char svalue[16] = "";       // Char value
   char unit[8] = "";          // Unit
   int valid = 0;              // Valid flag
 } dataContainer;
 
 typedef struct{
   bool simulation = false;    // Simulate boat data
+  bool headline = true;
+  char dateformat[3] = "GB";
+  int timezone = 0;
+  bool refresh = false;
   dataContainer AWA;
   dataContainer AWD;
   dataContainer AWS;

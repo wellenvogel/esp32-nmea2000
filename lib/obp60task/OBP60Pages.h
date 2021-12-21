@@ -33,6 +33,8 @@ void showPage(busData values){
     display.print(values.Date.svalue);
     display.print(" ");
     display.print(values.Time.svalue);
+    display.print(" ");
+    display.print("UTC");
   }
   else{
     display.print("No GPS data");
