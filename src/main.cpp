@@ -11,21 +11,7 @@
   License along with this library; if not, write to the Free Software
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
-#define GWSTR(x) #x
-#define GWSTRINGIFY(x) GWSTR(x)
-#ifdef GWRELEASEVERSION
-#define VERSION GWSTRINGIFY(GWRELEASEVERSION)
-#define LOGLEVEL GwLog::ERROR
-#endif
-#ifdef GWDEVVERSION
-#define VERSION GWSTRINGIFY(GWDEVVERSION)
-#define LOGLEVEL GwLog::DEBUG
-#endif
-#ifndef VERSION
-#define VERSION "0.7.0"
-#define LOGLEVEL GwLog::DEBUG
-#endif
-
+#include "GwAppInfo.h"
 // #define GW_MESSAGE_DEBUG_ENABLED
 //#define FALLBACK_SERIAL
 const unsigned long HEAP_REPORT_TIME=2000; //set to 0 to disable heap reporting
@@ -76,9 +62,6 @@ const unsigned long HEAP_REPORT_TIME=2000; //set to 0 to disable heap reporting
 #include "GwStatistics.h"
 #include "GwUpdate.h"
 
-#ifndef FIRMWARE_TYPE
-#define FIRMWARE_TYPE PIO_ENV_BUILD
-#endif
 
 //NMEA message channels
 #define N2K_CHANNEL_ID 0
@@ -95,7 +78,7 @@ const unsigned long HEAP_REPORT_TIME=2000; //set to 0 to disable heap reporting
 #define _impl_PASTE(a,b) a##b
 #define _impl_CASSERT_LINE(predicate, line) typedef char _impl_PASTE(assertion_failed_CASSERT_,line)[(predicate)?1:-1];
 //assert length of firmware name and version
-CASSERT(strlen(GWSTRINGIFY(FIRMWARE_TYPE)) <= 32, "environment name (FIRMWARE_TYPE) must not exceed 32 chars");
+CASSERT(strlen(FIRMWARE_TYPE) <= 32, "environment name (FIRMWARE_TYPE) must not exceed 32 chars");
 CASSERT(strlen(VERSION) <= 32, "VERSION must not exceed 32 chars");
 //https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/system/app_image_format.html
 //and removed the bugs in the doc...
@@ -104,7 +87,7 @@ __attribute__((section(".rodata_custom_desc"))) esp_app_desc_t custom_app_desc =
   1,
   {0,0},
   VERSION,
-  GWSTRINGIFY(FIRMWARE_TYPE),
+  FIRMWARE_TYPE,
   "00:00:00",
   "2021/12/13",
   "0000",
@@ -113,7 +96,7 @@ __attribute__((section(".rodata_custom_desc"))) esp_app_desc_t custom_app_desc =
 };
 
 
-String firmwareType(GWSTRINGIFY(FIRMWARE_TYPE));
+String firmwareType(FIRMWARE_TYPE);
 
 typedef std::map<String,String> StringMap;
 
@@ -412,12 +395,20 @@ public:
   virtual void getBoatDataValues(int numValues,BoatValue **list){
     for (int i=0;i<numValues;i++){
       GwBoatItemBase *item=boatData.getBase(list[i]->getName());
+      list[i]->changed=false;
       if (item){
-        list[i]->valid=item->isValid();
-        if (list[i]->valid) list[i]->value=item->getDoubleValue();
+        bool newValid=item->isValid();
+        if (newValid != list[i]->valid) list[i]->changed=true;
+        list[i]->valid=newValid;
+        if (newValid){
+          double newValue=item->getDoubleValue();
+          if (newValue != list[i]->value) list[i]->changed=true;
+          list[i]->value=newValue;
+        }
         list[i]->setFormat(item->getFormat());
       }
       else{
+        if (list[i]->valid) list[i]->changed=true;
         list[i]->valid=false;
       }
     }
@@ -604,7 +595,7 @@ protected:
       bool rt = config.updateValue(it->first, it->second);
       if (!rt)
       {
-        logger.logString("ERR: unable to update %s to %s", it->first.c_str(), it->second.c_str());
+        logger.logDebug(GwLog::ERROR,"ERR: unable to update %s to %s", it->first.c_str(), it->second.c_str());
         ok = false;
         error += it->first;
         error += "=";
@@ -615,7 +606,7 @@ protected:
     if (ok)
     {
       result = JSON_OK;
-      logger.logString("update config and restart");
+      logger.logDebug(GwLog::ERROR,"update config and restart");
       config.saveConfig();
       delayedRestart();
     }
@@ -643,7 +634,7 @@ protected:
       return;
     }
     config.reset(true);
-    logger.logString("reset config, restart");
+    logger.logDebug(GwLog::ERROR,"reset config, restart");
     result = JSON_OK;
     delayedRestart();
   }

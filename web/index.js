@@ -1448,11 +1448,12 @@ function updateDashboard(data) {
         });
     }
 }
-function uploadBin(){
+function uploadBin(ev){
     let el=document.getElementById("uploadFile");
     let progressEl=document.getElementById("uploadDone");
     if (! el) return;
     if ( el.files.length < 1) return;
+    ev.target.disabled=true;
     let file=el.files[0];
     checkImageFile(file)
         .then(function (result) {
@@ -1473,12 +1474,16 @@ function uploadBin(){
                     confirmText += "version in image: " + result.version;
                 }
             }
-            if (!confirm(confirmText)) return;
+            if (!confirm(confirmText)) {
+                ev.target.disabled=false;
+                return;
+            }
             ensurePass()
                 .then(function (hash) {
                     let len = file.size;
                     let req = new XMLHttpRequest();
                     req.onloadend = function () {
+                        ev.target.disabled=false;
                         let result = "unknown error";
                         try {
                             let jresult = JSON.parse(req.responseText);
@@ -1504,6 +1509,7 @@ function uploadBin(){
                         }
                     }
                     req.onerror = function (e) {
+                        ev.target.disabled=false;
                         alert("unable to upload: " + e);
                     }
                     if (progressEl) {
@@ -1520,10 +1526,13 @@ function uploadBin(){
                     req.open("POST", '/api/update?_hash=' + encodeURIComponent(hash));
                     req.send(formData);
                 })
-                .catch(function (e) { });
+                .catch(function (e) {
+                    ev.target.disabled=false;
+                 });
         })
         .catch(function (e) {
             alert("This file is an invalid image file:\n" + e);
+            ev.target.disabled=false;
         })
 }
 let HDROFFSET=288;

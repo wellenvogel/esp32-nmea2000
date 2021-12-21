@@ -88,8 +88,6 @@ void exampleTask(GwApi *api){
     GwApi::BoatValue *latitude=new GwApi::BoatValue(F("Latitude"));
     GwApi::BoatValue *testValue=new GwApi::BoatValue(boatItemName);
     GwApi::BoatValue *valueList[]={longitude,latitude,testValue};
-    double lastTestValue=0;
-    bool lastTestValueValid=false;
     while(true){
         delay(1000);
         /*
@@ -155,16 +153,13 @@ void exampleTask(GwApi *api){
             }
         }
         if (testValue->valid){
-            if (! lastTestValueValid || lastTestValue != testValue->value){
+            if (testValue->changed){
                 LOG_DEBUG(GwLog::LOG,"%s new value %s",testValue->getName().c_str(),formatValue(testValue).c_str());
-                lastTestValueValid=true;
-                lastTestValue=testValue->value;
             }
         }
         else{
-            if (lastTestValueValid){
+            if (testValue->changed){
                 LOG_DEBUG(GwLog::LOG,"%s now invalid",testValue->getName().c_str());
-                lastTestValueValid=false;
             }
         }
 

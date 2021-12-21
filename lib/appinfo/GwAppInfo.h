@@ -1,0 +1,18 @@
+#pragma once
+#define GWSTR(x) #x
+#define GWSTRINGIFY(x) GWSTR(x)
+#ifdef GWRELEASEVERSION
+#define VERSION GWSTRINGIFY(GWRELEASEVERSION)
+#define LOGLEVEL GwLog::ERROR
+#else
+#ifdef GWDEVVERSION
+#define VERSION GWSTRINGIFY(GWDEVVERSION)
+#define LOGLEVEL GwLog::DEBUG
+#endif
+#ifndef VERSION
+#define VERSION "0.9.9"
+#define LOGLEVEL GwLog::DEBUG
+#endif
+#endif
+
+#define FIRMWARE_TYPE GWSTRINGIFY(PIO_ENV_BUILD)

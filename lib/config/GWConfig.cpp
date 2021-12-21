@@ -39,7 +39,7 @@ String GwConfigHandler::toJson() const{
         }
     }
     serializeJson(jdoc,rt);
-    logger->logString("configJson: %s",rt.c_str());
+    LOG_DEBUG(GwLog::DEBUG,"configJson: %s",rt.c_str());
     return rt;
 }
 
@@ -71,11 +71,11 @@ bool GwConfigHandler::saveConfig(){
         if (it != changedValues.end()){
             val=it->second;
         }
-        logger->logString("saving %s=%s",configs[i]->getName().c_str(),val.c_str());
+        LOG_DEBUG(GwLog::LOG,"saving %s=%s",configs[i]->getName().c_str(),val.c_str());
         prefs.putString(configs[i]->getName().c_str(),val);
     }
     prefs.end();
-    logger->logString("saved config");
+    LOG_DEBUG(GwLog::LOG,"saved config");
     return true;
 }
 
@@ -92,7 +92,7 @@ bool GwConfigHandler::updateValue(String name, String value){
     return true;
 }
 bool GwConfigHandler::reset(bool save){
-    logger->logString("reset config");
+    LOG_DEBUG(GwLog::LOG,"reset config");
     for (int i=0;i<getNumConfig();i++){
         changedValues[configs[i]->getName()]=configs[i]->getDefault();
     }

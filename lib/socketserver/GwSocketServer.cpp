@@ -163,7 +163,7 @@ void GwSocketServer::begin(){
     }
     server=new WiFiServer(config->getInt(config->serverPort),maxClients+1);
     server->begin();
-    logger->logString("Socket server created, port=%d",
+    LOG_DEBUG(GwLog::LOG,"Socket server created, port=%d",
         config->getInt(config->serverPort));
     MDNS.addService("_nmea-0183","_tcp",config->getInt(config->serverPort));    
 
@@ -175,7 +175,7 @@ void GwSocketServer::loop(bool handleRead,bool handleWrite)
 
     if (client)
     {
-        logger->logString("new client connected from %s",
+        LOG_DEBUG(GwLog::LOG,"new client connected from %s",
                           client.remoteIP().toString().c_str());
         fcntl(client.fd(), F_SETFL, O_NONBLOCK);
         bool canHandle = false;
@@ -184,7 +184,7 @@ void GwSocketServer::loop(bool handleRead,bool handleWrite)
             if (!clients[i]->hasClient())
             {
                 clients[i]->setClient(wiFiClientPtr(new WiFiClient(client)));
-                logger->logString("set client as number %d", i);
+                LOG_DEBUG(GwLog::LOG,"set client as number %d", i);
                 canHandle = true;
                 break;
             }
@@ -219,7 +219,7 @@ void GwSocketServer::loop(bool handleRead,bool handleWrite)
 
         if (!client->client->connected())
         {
-            logger->logString("client %d disconnect %s", i, client->remoteIp.c_str());
+            LOG_DEBUG(GwLog::LOG,"client %d disconnect %s", i, client->remoteIp.c_str());
             client->client->stop();
             client->setClient(NULL);
         }

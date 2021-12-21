@@ -116,12 +116,7 @@
         "default": "esp32nmea2k",
         "check": "checkApPass",
         "description": "set the password for the Wifi access point",
-        "category": "system",
-        "capabilities": {
-            "hardwareReset": [
-                "true"
-            ]
-        }
+        "category": "system"
     },
     {
         "name": "useAdminPass",
@@ -136,12 +131,7 @@
         "default": "esp32admin",
         "check": "checkAdminPass",
         "description": "set the password for config modifications",
-        "category": "system",
-        "capabilities": {
-            "hardwareReset": [
-                "true"
-            ]
-        }
+        "category": "system"
     },
     {
         "name": "showInvalidData",
@@ -456,20 +446,20 @@
         "category": "wifi client"
     },
     {
-        "name": "wifiPass",
-        "label": "wifi client password",
-        "type": "password",
-        "default": "",
-        "description": "the password for an external WIFI network",
-        "category": "wifi client"
-    },
-    {
         "name": "wifiSSID",
         "label": "wifi client SSID",
         "type": "string",
         "default": "",
         "check": "checkSSID",
         "description": "the SSID for an external WIFI network",
+        "category": "wifi client"
+    },
+    {
+        "name": "wifiPass",
+        "label": "wifi client password",
+        "type": "password",
+        "default": "",
+        "description": "the password for an external WIFI network",
         "category": "wifi client"
     },
     {

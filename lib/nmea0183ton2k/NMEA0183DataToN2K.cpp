@@ -365,23 +365,23 @@ private:
     }
     void convertRMC(const SNMEA0183Msg &msg)
     {
-        double SecondsSinceMidnight=0, Latitude=0, Longitude=0, COG=0, SOG=0, Variation=0;
-        unsigned long DaysSince1970=0;
+        double GpsTime=0, Latitude=0, Longitude=0, COG=0, SOG=0, Variation=0;
+        unsigned long GpsDate=0;
         time_t DateTime;
         char status;
-        if (!NMEA0183ParseRMC_nc(msg, SecondsSinceMidnight, status, Latitude, Longitude, COG, SOG, DaysSince1970, Variation, &DateTime))
+        if (!NMEA0183ParseRMC_nc(msg, GpsTime, status, Latitude, Longitude, COG, SOG, GpsDate, Variation, &DateTime))
         {
             LOG_DEBUG(GwLog::DEBUG, "failed to parse RMC %s", msg.line);
             return;
         }
         tN2kMsg n2kMsg;
         if (
-            UD(SecondsSinceMidnight) &&
-            UI(DaysSince1970)
+            UD(GpsTime) &&
+            UI(GpsDate)
         )
         {
             
-            SetN2kSystemTime(n2kMsg, 1, DaysSince1970, SecondsSinceMidnight);
+            SetN2kSystemTime(n2kMsg, 1, GpsDate, GpsTime);
             send(n2kMsg);
         }
         if (UD(Latitude) &&
@@ -395,7 +395,7 @@ private:
         }
         if (UD(Variation)){
             SetN2kMagneticVariation(n2kMsg,1,N2kmagvar_Calc,
-                getUint32(boatData->DaysSince1970), Variation);
+                getUint32(boatData->GpsDate), Variation);
             send(n2kMsg);    
         }
 
@@ -739,9 +739,9 @@ private:
         uint32_t DaysSince1970=tNMEA0183Msg::elapsedDaysSince1970(DateTime);
         tmElements_t parts;
         tNMEA0183Msg::breakTime(DateTime,parts);
-        double SecondsSinceMidnight=parts.tm_sec+60*parts.tm_min+3600*parts.tm_hour;
-        if (! boatData->DaysSince1970->update(DaysSince1970,msg.sourceId)) return;
-        if (! boatData->SecondsSinceMidnight->update(SecondsSinceMidnight,msg.sourceId)) return;
+        double GpsTime=parts.tm_sec+60*parts.tm_min+3600*parts.tm_hour;
+        if (! boatData->GpsDate->update(DaysSince1970,msg.sourceId)) return;
+        if (! boatData->GpsTime->update(GpsTime,msg.sourceId)) return;
         bool timezoneValid=false;
         if (msg.FieldLen(4) > 0 && msg.FieldLen(5)>0){
             Timezone=Timezone/60; //N2K has offset in minutes
@@ -750,10 +750,10 @@ private:
         }
         tN2kMsg n2kMsg;
         if (timezoneValid){
-            SetN2kLocalOffset(n2kMsg,DaysSince1970,SecondsSinceMidnight,Timezone);
+            SetN2kLocalOffset(n2kMsg,DaysSince1970,GpsTime,Timezone);
             send(n2kMsg);
         }
-        SetN2kSystemTime(n2kMsg,1,DaysSince1970,SecondsSinceMidnight);
+        SetN2kSystemTime(n2kMsg,1,DaysSince1970,GpsTime);
         send(n2kMsg);
     }
     void convertGGA(const SNMEA0183Msg &msg){
@@ -773,16 +773,16 @@ private:
             LOG_DEBUG(GwLog::DEBUG, "failed to parse GGA %s", msg.line);
             return;   
         }
-        if (! updateDouble(boatData->SecondsSinceMidnight,GPSTime,msg.sourceId)) return;
+        if (! updateDouble(boatData->GpsTime,GPSTime,msg.sourceId)) return;
         if (! updateDouble(boatData->Latitude,Latitude,msg.sourceId)) return;        
         if (! updateDouble(boatData->Longitude,Longitude,msg.sourceId)) return;    
         if (! updateDouble(boatData->Altitude,Altitude,msg.sourceId)) return;
         if (! updateDouble(boatData->HDOP,HDOP,msg.sourceId)) return;    
-        if (! boatData->DaysSince1970->isValid()) return;
+        if (! boatData->GpsDate->isValid()) return;
         tN2kMsg n2kMsg;
         tN2kGNSSmethod method=N2kGNSSm_noGNSS;
         if (GPSQualityIndicator <=5 ) method= (tN2kGNSSmethod)GPSQualityIndicator;
-        SetN2kGNSS(n2kMsg,1, boatData->DaysSince1970->getData(),
+        SetN2kGNSS(n2kMsg,1, boatData->GpsDate->getData(),
              GPSTime, Latitude, Longitude, Altitude,
                      N2kGNSSt_GPS, method,
                      SatelliteCount, HDOP, boatData->PDOP->getDataWithDefault(N2kDoubleNA), 0,
@@ -882,7 +882,7 @@ private:
         if (GLL.status != 'A') return;
         if (! updateDouble(boatData->Latitude,GLL.latitude,msg.sourceId)) return;
         if (! updateDouble(boatData->Longitude,GLL.longitude,msg.sourceId)) return;
-        if (! updateDouble(boatData->SecondsSinceMidnight,GLL.GPSTime,msg.sourceId)) return;
+        if (! updateDouble(boatData->GpsTime,GLL.GPSTime,msg.sourceId)) return;
         tN2kMsg n2kMsg;
         SetN2kLatLonRapid(n2kMsg,GLL.latitude,GLL.longitude);
         send(n2kMsg);
