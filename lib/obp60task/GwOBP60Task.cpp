@@ -231,8 +231,8 @@ void OBP60Task(void *param){
 
     // Initializing all necessary boat data
     GwApi::BoatValue *sog=new GwApi::BoatValue(F("SOG"));
-    GwApi::BoatValue *date=new GwApi::BoatValue(F("DaysSince1970"));
-    GwApi::BoatValue *time=new GwApi::BoatValue(F("SecondsSinceMidnight"));
+    GwApi::BoatValue *date=new GwApi::BoatValue(F("GpsDate"));
+    GwApi::BoatValue *time=new GwApi::BoatValue(F("GpsTime"));
     GwApi::BoatValue *longitude=new GwApi::BoatValue(F("Longitude"));
     GwApi::BoatValue *latitude=new GwApi::BoatValue(F("Latitude"));
     GwApi::BoatValue *waterdepth=new GwApi::BoatValue(F("WaterDepth"));
