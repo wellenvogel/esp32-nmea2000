@@ -18,7 +18,7 @@ void showPage(busData values){
     display.setTextColor(GxEPD_BLACK);
     display.setCursor(0, 15);
     display.print(" WiFi AP TCP N2K 183 ");
-    if(values.PDOP.valid == true && values.PDOP.fvalue <= 50){
+    if(values.gps == true && values.PDOP.valid == true && values.PDOP.fvalue <= 50){
      display.print("GPS");
     }
 
@@ -36,34 +36,60 @@ void showPage(busData values){
     // Date and time
     display.setFont(&Ubuntu_Bold8pt7b);
     display.setCursor(230, 15);
-    char newdate[16] = "";
-    if(values.PDOP.valid == true && values.PDOP.fvalue <= 50){
-      if(String(values.dateformat) == "DE"){
-        display.print(values.Date.svalue);
-      }
-      if(String(values.dateformat) == "GB"){
-        values.Date.svalue[2] = '/';
-        values.Date.svalue[5] = '/';
-        display.print(values.Date.svalue);
-      }
-      if(String(values.dateformat) == "US"){
+    if(values.gps == true){
+      if(values.PDOP.valid == true && values.PDOP.fvalue <= 50){
         char newdate[16] = "";
-        strcpy(newdate, values.Date.svalue);
-        newdate[0] = values.Date.svalue[3];
-        newdate[1] = values.Date.svalue[4];
-        newdate[2] = '/';
-        newdate[3] = values.Date.svalue[0];
-        newdate[4] = values.Date.svalue[1];
-        newdate[5] = '/';
-        display.print(newdate);
+        if(String(values.dateformat) == "DE"){
+          display.print(values.Date.svalue);
+        }
+        if(String(values.dateformat) == "GB"){
+          values.Date.svalue[2] = '/';
+          values.Date.svalue[5] = '/';
+          display.print(values.Date.svalue);
+        }
+        if(String(values.dateformat) == "US"){
+          char newdate[16] = "";
+          strcpy(newdate, values.Date.svalue);
+          newdate[0] = values.Date.svalue[3];
+          newdate[1] = values.Date.svalue[4];
+          newdate[2] = '/';
+          newdate[3] = values.Date.svalue[0];
+          newdate[4] = values.Date.svalue[1];
+          newdate[5] = '/';
+          display.print(newdate);
+        }
+        display.print(" ");
+        if(values.timezone == 0){
+          display.print(values.Time.svalue);
+          display.print(" ");
+          display.print("UTC");
+        }
+        else{
+          char newtime[16] = "";
+          char newhour[3] = "";
+          int hour = 0;
+          strcpy(newtime, values.Time.svalue);    
+          newhour[0] = values.Time.svalue[0];
+          newhour[1] = values.Time.svalue[1];
+          hour = strtol(newhour, 0, 10);
+          if(values.timezone > 0){
+            hour += values.timezone;
+          }
+          else{
+            hour += values.timezone + 24;
+          }
+          hour %= 24;
+          sprintf(newhour, "%d", hour);
+          newtime[0] = newhour[0];
+          newtime[1] = newhour[1];
+          display.print(newtime);
+          display.print(" ");
+          display.print("LOT");
+        }
       }
-      display.print(" ");
-      display.print(values.Time.svalue);
-      display.print(" ");
-      display.print("UTC");
-    }
-    else{
-      display.print("No GPS data");
+      else{
+        display.print("No GPS data");
+      }
     }
   }
 
@@ -94,8 +120,14 @@ void showPage(busData values){
 
   // Update display
   if(values.refresh == true){
-    display.update(); // Full update
-  }
+    if(first_view == true){
+      display.updateWindow(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, true);    // Needs partial update before full update to refresh the frame buffer
+      display.update(); // Full update
+    }
+    else{
+      display.updateWindow(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, true);    // Partial update (fast)
+    }
+  }  
   else{
     display.updateWindow(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, true);    // Partial update (fast)
   }
