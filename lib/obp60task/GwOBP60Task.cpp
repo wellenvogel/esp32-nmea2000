@@ -218,18 +218,40 @@ void OBP60Task(void *param){
 
     bool hasPosition = false;
     
-    // Get some configuration data from webside
+    // Get configuration data from webside
+    // OBP60 Settings
     bool exampleSwitch = api->getConfig()->getConfigItem(api->getConfig()->obp60Config,true)->asBoolean();
     LOG_DEBUG(GwLog::DEBUG,"example switch ist %s",exampleSwitch?"true":"false");
-    bool gpsOn = api->getConfig()->getConfigItem(api->getConfig()->useGPS,true)->asBoolean();
-    bool bme280On = api->getConfig()->getConfigItem(api->getConfig()->useBME280,true)->asBoolean();
-    bool onewireOn = api->getConfig()->getConfigItem(api->getConfig()->use1Wire,true)->asBoolean();
+    api->getConfig()->getConfigItem(api->getConfig()->dateFormat,true)->asString().toCharArray(busInfo.dateformat, 3);
+    busInfo.timezone = api->getConfig()->getConfigItem(api->getConfig()->timeZone,true)->asInt();
+    busInfo.draft = api->getConfig()->getConfigItem(api->getConfig()->draft,true)->asString().toFloat();
+    busInfo.fueltank = api->getConfig()->getConfigItem(api->getConfig()->fuelTank,true)->asString().toFloat();
+    busInfo.fuelconsumption = api->getConfig()->getConfigItem(api->getConfig()->fuelConsumption,true)->asString().toFloat();
+    busInfo.watertank = api->getConfig()->getConfigItem(api->getConfig()->waterTank,true)->asString().toFloat();
+    busInfo.wastetank = api->getConfig()->getConfigItem(api->getConfig()->wasteTank,true)->asString().toFloat();
+    busInfo.batvoltage = api->getConfig()->getConfigItem(api->getConfig()->batteryVoltage,true)->asString().toFloat();
+    api->getConfig()->getConfigItem(api->getConfig()->batteryType,true)->asString().toCharArray(busInfo.battype, 16);
+    busInfo.batcapacity = api->getConfig()->getConfigItem(api->getConfig()->batteryCapacity,true)->asString().toFloat();
+    // OBP60 Hardware
+    busInfo.gps = api->getConfig()->getConfigItem(api->getConfig()->useGPS,true)->asBoolean();
+    busInfo.bme280 = api->getConfig()->getConfigItem(api->getConfig()->useBME280,true)->asBoolean();
+    busInfo.onewire = api->getConfig()->getConfigItem(api->getConfig()->use1Wire,true)->asBoolean();
+    String powerMode = api->getConfig()->getConfigItem(api->getConfig()->powerMode,true)->asString();
     busInfo.simulation = api->getConfig()->getConfigItem(api->getConfig()->useSimuData,true)->asBoolean();
-    String powerMode=api->getConfig()->getConfigItem(api->getConfig()->powerMode,true)->asString();
-    String displayMode=api->getConfig()->getConfigItem(api->getConfig()->display,true)->asString();
+    // OBP60 Display
+    String displayMode = api->getConfig()->getConfigItem(api->getConfig()->display,true)->asString();
     busInfo.statusline = api->getConfig()->getConfigItem(api->getConfig()->statusLine,true)->asBoolean();
-    bool refreshOn = api->getConfig()->getConfigItem(api->getConfig()->refresh,true)->asBoolean();
-    String backlightMode=api->getConfig()->getConfigItem(api->getConfig()->backlight,true)->asString();
+    busInfo.refresh = api->getConfig()->getConfigItem(api->getConfig()->refresh,true)->asBoolean();
+    String backlightMode = api->getConfig()->getConfigItem(api->getConfig()->backlight,true)->asString();
+    api->getConfig()->getConfigItem(api->getConfig()->flashLED,true)->asString().toCharArray(busInfo.flashled, 16);
+    // OBP60 Buzzer
+    busInfo.buzerror = api->getConfig()->getConfigItem(api->getConfig()->buzzerError,true)->asBoolean();
+    busInfo.buzgps = api->getConfig()->getConfigItem(api->getConfig()->buzzerGps,true)->asBoolean();
+    busInfo.buzlimits = api->getConfig()->getConfigItem(api->getConfig()->buzzerLim,true)->asBoolean();
+    api->getConfig()->getConfigItem(api->getConfig()->buzzerMode,true)->asString().toCharArray(busInfo.buzmode, 16);
+    busInfo.buzpower = api->getConfig()->getConfigItem(api->getConfig()->buzzerPower,true)->asInt();
+    // OBP60 Pages
+    busInfo.numpages = api->getConfig()->getConfigItem(api->getConfig()->numberPages,true)->asInt();
 
     // Initializing all necessary boat data
     GwApi::BoatValue *sog=new GwApi::BoatValue(F("SOG"));
@@ -308,7 +330,7 @@ void OBP60Task(void *param){
         }
 
         // Send NMEA0183 GPS data on several bus systems
-        if(gpsOn == true){   // If config enabled
+        if(busInfo.gps == true){   // If config enabled
                 if(gps_ready = true){
                     tNMEA0183Msg NMEA0183Msg;
                     while(NMEA0183.GetMessage(NMEA0183Msg)){
@@ -319,16 +341,21 @@ void OBP60Task(void *param){
 
         //fetch the current values of the items that we have in itemNames
         api->getBoatDataValues(7,valueList);
+
         busInfo.WaterDepth.fvalue = waterdepth->value;
         waterdepth->getFormat().toCharArray(busInfo.WaterDepth.unit, 8, 0);
         busInfo.WaterDepth.valid = int(waterdepth->valid);
+
         busInfo.SOG.fvalue = sog->value;
         sog->getFormat().toCharArray(busInfo.SOG.unit, 8, 0);
         busInfo.SOG.valid = int(sog->valid);
+
         formatValue(date).toCharArray(busInfo.Date.svalue, 16, 0);
         busInfo.Date.valid = date->valid;
+
         formatValue(time).toCharArray(busInfo.Time.svalue, 16, 0);
         busInfo.Time.valid = time->valid;
+
         busInfo.PDOP.fvalue = pdop->value;
         busInfo.PDOP.valid = pdop->valid;
 
