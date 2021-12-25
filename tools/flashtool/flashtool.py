@@ -1,4 +1,14 @@
 #! /usr/bin/env python3
+import subprocess
+import sys
+
+try:
+    import serial
+except ImportError:
+    subprocess.check_call([sys.executable, "-m", "pip", "install", 'pyserial'])
+finally:
+    import serial
+
 import tkinter as tk
 from tkinter import ttk
 import tkinter.font as tkFont
