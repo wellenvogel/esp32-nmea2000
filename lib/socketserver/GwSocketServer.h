@@ -4,7 +4,6 @@
 #include "GwLog.h"
 #include "GwBuffer.h"
 #include <memory>
-#include <WiFi.h>
 
 class GwClient;
 class GwSocketServer{
