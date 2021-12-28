@@ -5,12 +5,12 @@
 #include "GwBuffer.h"
 #include <memory>
 
-class GwClient;
+class GwSocketConnection;
 class GwSocketServer{
     private:
         const GwConfigHandler *config;
         GwLog *logger;
-        GwClient **clients=NULL;
+        GwSocketConnection **clients=NULL;
         int listener=-1;
         int listenerPort=-1;
         bool allowReceive;
