@@ -6,18 +6,19 @@
 #include <memory>
 #include <WiFi.h>
 
-using wiFiClientPtr = std::shared_ptr<WiFiClient>;
 class GwClient;
-using gwClientPtr = std::shared_ptr<GwClient>;
 class GwSocketServer{
     private:
         const GwConfigHandler *config;
         GwLog *logger;
-        gwClientPtr *clients=NULL;
-        WiFiServer *server=NULL;
+        GwClient **clients=NULL;
+        int listener=-1;
+        int listenerPort=-1;
         bool allowReceive;
         int maxClients;
         int minId;
+        bool createListener();
+        int available();
     public:
         GwSocketServer(const GwConfigHandler *config,GwLog *logger,int minId);
         ~GwSocketServer();
