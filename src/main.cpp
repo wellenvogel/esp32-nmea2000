@@ -136,7 +136,7 @@ GwCounter<unsigned long> countNMEA2KOut("count2Kout");
 GwChannelConfig usbChannel(&logger,"USB");
 GwChannelConfig actisenseChannel(&logger,"USB");
 GwChannelConfig tcpChannel(&logger,"TCPServer");
-GwChannelConfig serialChannel(&logger,"TCPClient");
+GwChannelConfig serialChannel(&logger,"SER");
 GwChannelConfig tclChannel(&logger,"TCPClient");
 
 GwChannelConfig * channelFromSource(int source){
@@ -205,7 +205,7 @@ GwSerial *usbSerial = new GwSerial(NULL, 0, USB_CHANNEL_ID);
 GwSerial *serial1=NULL;
 
 void sendBufferToChannels(const char * buffer, int sourceId){
-  if (sourceId < MIN_TCP_CHANNEL_ID && tcpChannel.canSendOut(buffer)){
+  if (tcpChannel.canSendOut(buffer)){
     socketServer.sendToClients(buffer,sourceId);
   }
   if (sourceId != USB_CHANNEL_ID && usbChannel.canSendOut(buffer)){

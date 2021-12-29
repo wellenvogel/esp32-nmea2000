@@ -306,12 +306,14 @@ function updateMsgDetails(key, details) {
 let counters={
     count2Kin: 'NMEA2000 in',
     count2Kout: 'NMEA2000 out',
-    countTCPin: 'TCP in',
-    countTCPout: 'TCP out',
+    countTCPServerin: 'TCPserver in',
+    countTCPServerout: 'TCPserver out',
+    countTCPclientin: 'TCPclient in',
+    countTCPclientout: 'TCPclient out',
     countUSBin: 'USB in',
     countUSBout: 'USB out',
-    countSerialIn: 'Serial in',
-    countSerialOut: 'Serial out'
+    countSERIn: 'Serial in',
+    countSEROut: 'Serial out'
 }
 function showOverlay(text, isHtml) {
     let el = document.getElementById('overlayContent');

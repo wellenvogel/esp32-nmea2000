@@ -24,6 +24,8 @@ void GwChannelConfig::begin(
     this->writeFilter=writeFilter.isEmpty()?
         NULL:
         new GwNmeaFilter(writeFilter);
+    this->seaSmartOut=seaSmartOut;
+    this->toN2k=toN2k;
 }
 void GwChannelConfig::updateCounter(const char *msg, bool out)
 {
@@ -94,9 +96,9 @@ String GwChannelConfig::toString(){
     rt+=enabled?"[ena]":"[dis]";
     rt+=NMEAin?"in,":"";
     rt+=NMEAout?"out,":"";
-    if (readFilter) rt+="RF:"+ readFilter->toString();
-    if (writeFilter) rt+="WF:"+ writeFilter->toString();
-    rt+=","+ toN2k?"n2k":"";
-    rt+=","+ seaSmartOut?"SM":"";
+    rt+=String("RF:") + (readFilter?readFilter->toString():"[]");
+    rt+=String("WF:") + (writeFilter?writeFilter->toString():"[]");
+    rt+=String(",")+ (toN2k?"n2k":"");
+    rt+=String(",")+ (seaSmartOut?"SM":"");
     return rt;
 }
