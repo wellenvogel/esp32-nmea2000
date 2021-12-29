@@ -391,7 +391,7 @@
     },
     {
         "name": "sendTCP",
-        "label": "NMEA to TCP",
+        "label": "NMEA0183 out",
         "type": "boolean",
         "default": "true",
         "description": "send out NMEA data to connected TCP clients",
@@ -399,7 +399,7 @@
     },
     {
         "name": "readTCP",
-        "label": "NMEA from TCP",
+        "label": "NMEA0183 in",
         "type": "boolean",
         "default": "true",
         "description": "receive NMEA data from connected TCP clients",
@@ -407,7 +407,7 @@
     },
     {
         "name": "tcpToN2k",
-        "label": "TCP to NMEA2000",
+        "label": "to NMEA2000",
         "type": "boolean",
         "default": "true",
         "description": "convert NMEA0183 from TCP clients to NMEA2000",
@@ -415,7 +415,7 @@
     },
     {
         "name": "tcpReadFilter",
-        "label": "TCP read Filter",
+        "label": "NMEA read Filter",
         "type": "filter",
         "default": "",
         "description": "filter for NMEA0183 data when reading from TCP\nselect aison|aisoff, set a whitelist or a blacklist with NMEA sentences like RMC,RMB",
@@ -423,7 +423,7 @@
     },
     {
         "name": "tcpWriteFilter",
-        "label": "TCP write Filter",
+        "label": "NMEA write Filter",
         "type": "filter",
         "default": "",
         "description": "filter for NMEA0183 data when writing to TCP\nselect aison|aisoff, set a whitelist or a blacklist with NMEA sentences like RMC,RMB",
@@ -431,7 +431,7 @@
     },
     {
         "name": "sendSeasmart",
-        "label": "Seasmart to TCP",
+        "label": "Seasmart out",
         "type": "boolean",
         "default": "false",
         "description": "send NMEA2000 as seasmart to connected TCP clients",
@@ -439,7 +439,7 @@
     },
     {
         "name": "tclEnabled",
-        "label": "enable TCP client",
+        "label": "enable",
         "type": "boolean",
         "default": "false",
         "description":"enable the TCP client",
@@ -464,7 +464,7 @@
     },
     {
         "name": "sendTCL",
-        "label": "NMEA to TCP client",
+        "label": "NMEA0183 out",
         "type": "boolean",
         "default": "true",
         "description": "send out NMEA data to remote TCP server",
@@ -472,7 +472,7 @@
     },
     {
         "name": "readTCL",
-        "label": "NMEA from TCP client",
+        "label": "NMEA0183 in",
         "type": "boolean",
         "default": "true",
         "description": "receive NMEA data from remote TCP server",
@@ -480,7 +480,7 @@
     },
     {
         "name": "tclToN2k",
-        "label": "TCP client to NMEA2000",
+        "label": "to NMEA2000",
         "type": "boolean",
         "default": "true",
         "description": "convert NMEA0183 from remote TCP server to NMEA2000",
@@ -488,7 +488,7 @@
     },
     {
         "name": "tclReadFilter",
-        "label": "TCP client read Filter",
+        "label": "NMEA read Filter",
         "type": "filter",
         "default": "",
         "description": "filter for NMEA0183 data when reading from remote TCP server\nselect aison|aisoff, set a whitelist or a blacklist with NMEA sentences like RMC,RMB",
@@ -496,7 +496,7 @@
     },
     {
         "name": "tclWriteFilter",
-        "label": "TCP client write Filter",
+        "label": "NMEA write Filter",
         "type": "filter",
         "default": "",
         "description": "filter for NMEA0183 data when writing to remote TCP server\nselect aison|aisoff, set a whitelist or a blacklist with NMEA sentences like RMC,RMB",
@@ -504,7 +504,7 @@
     },
     {
         "name": "tclSeasmart",
-        "label": "Seasmart to TCP client",
+        "label": "Seasmart out",
         "type": "boolean",
         "default": "false",
         "description": "send NMEA2000 as seasmart to remote TCP server",
