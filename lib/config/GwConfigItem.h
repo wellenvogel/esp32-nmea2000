@@ -46,7 +46,7 @@ class GwConfigInterface{
 
 class GwNmeaFilter{
     private:
-        GwConfigInterface *config=NULL;
+        String config;
         bool isReady=false;
         bool ais=true;
         bool blacklist=true;
@@ -54,7 +54,7 @@ class GwNmeaFilter{
         void handleToken(String token, int index);
         void parseFilter();
     public:
-        GwNmeaFilter(GwConfigInterface *config){
+        GwNmeaFilter(String config){
             this->config=config;
             isReady=false;
         }

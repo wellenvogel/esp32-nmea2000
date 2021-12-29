@@ -140,18 +140,21 @@ void GwNmeaFilter::parseFilter(){
     // "0:1:RMB,RMC"
     // 0: AIS off, 1:whitelist, list of sentences
     if (isReady) return;
+    if (config.isEmpty()){
+        isReady=true;
+        return;
+    }
     int found=0;
     int last=0;
     int index=0;
-    String data=config->asString();
-    while ((found = data.indexOf(':',last)) >= 0){
-        String tok=data.substring(last,found);
+    while ((found = config.indexOf(':',last)) >= 0){
+        String tok=config.substring(last,found);
         handleToken(tok,index);
         last=found+1;
         index++;
     }
-    if (last < data.length()){
-        String tok=data.substring(last);
+    if (last < config.length()){
+        String tok=config.substring(last);
         handleToken(tok,index);
     }
     isReady=true;    
