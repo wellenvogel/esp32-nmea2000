@@ -4,65 +4,6 @@
 #include "GwBuffer.h"
 #include "GwSocketConnection.h"
 
-class GwTcpClient
-{
-    GwSocketConnection *gwClient = NULL;
-    IPAddress remoteAddress;
-    uint16_t port = 0;
-    GwLog *logger;
-
-public:
-    typedef enum
-    {
-        C_DISABLED = 0,
-        C_INITIALIZED = 1,
-        C_CONNECTING = 2,
-        C_CONNECTED = 3
-    } State;
-
-private:
-    State state = C_DISABLED;
-    void stop()
-    {
-        if (gwClient->hasClient())
-        {
-            LOG_DEBUG(GwLog::DEBUG, "stopping tcp client");
-            gwClient->stop();
-        }
-        state = C_DISABLED;
-    }
-    void startConnection()
-    {
-        //TODO
-        state = C_CONNECTING;
-    }
-    void checkConnection()
-    {
-    }
-
-public:
-    GwTcpClient(GwLog *logger, GwSocketConnection *gwClient)
-    {
-        this->logger = logger;
-        this->gwClient = gwClient;
-    }
-    void begin(IPAddress address, uint16_t port)
-    {
-        stop();
-        this->remoteAddress = address;
-        this->port = port;
-        state = C_INITIALIZED;
-        startConnection();
-    }
-    void loop()
-    {
-        if (state == C_CONNECTING)
-        {
-            checkConnection();
-        }
-    }
-};
-
 GwSocketServer::GwSocketServer(const GwConfigHandler *config, GwLog *logger, int minId)
 {
     this->config = config;

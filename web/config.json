@@ -376,7 +376,7 @@
         "type": "number",
         "default": "10110",
         "description": "the TCP port we listen on",
-        "category": "TCP port"
+        "category": "TCP server"
     },
     {
         "name": "maxClients",
@@ -387,7 +387,7 @@
         "min": 0,
         "max": 6,
         "description": "the number of clients we allow to connect to us",
-        "category": "TCP port"
+        "category": "TCP server"
     },
     {
         "name": "sendTCP",
@@ -395,7 +395,7 @@
         "type": "boolean",
         "default": "true",
         "description": "send out NMEA data to connected TCP clients",
-        "category": "TCP port"
+        "category": "TCP server"
     },
     {
         "name": "readTCP",
@@ -403,7 +403,7 @@
         "type": "boolean",
         "default": "true",
         "description": "receive NMEA data from connected TCP clients",
-        "category": "TCP port"
+        "category": "TCP server"
     },
     {
         "name": "tcpToN2k",
@@ -411,7 +411,7 @@
         "type": "boolean",
         "default": "true",
         "description": "convert NMEA0183 from TCP clients to NMEA2000",
-        "category": "TCP port"
+        "category": "TCP server"
     },
     {
         "name": "tcpReadFilter",
@@ -419,7 +419,7 @@
         "type": "filter",
         "default": "",
         "description": "filter for NMEA0183 data when reading from TCP\nselect aison|aisoff, set a whitelist or a blacklist with NMEA sentences like RMC,RMB",
-        "category": "TCP port"
+        "category": "TCP server"
     },
     {
         "name": "tcpWriteFilter",
@@ -427,7 +427,7 @@
         "type": "filter",
         "default": "",
         "description": "filter for NMEA0183 data when writing to TCP\nselect aison|aisoff, set a whitelist or a blacklist with NMEA sentences like RMC,RMB",
-        "category": "TCP port"
+        "category": "TCP server"
     },
     {
         "name": "sendSeasmart",
@@ -435,7 +435,80 @@
         "type": "boolean",
         "default": "false",
         "description": "send NMEA2000 as seasmart to connected TCP clients",
-        "category": "TCP port"
+        "category": "TCP server"
+    },
+    {
+        "name": "tclEnabled",
+        "label": "enable TCP client",
+        "type": "boolean",
+        "default": "false",
+        "description":"enable the TCP client",
+        "category":"TCP client"
+    },
+    {
+        "name": "remotePort",
+        "label": "remote port",
+        "type": "number",
+        "default": "10110",
+        "description": "the TCP port we connect to",
+        "category": "TCP client"
+    },
+    {
+        "name": "remoteAddress",
+        "label": "remote address",
+        "type": "string",
+        "default": "",
+        "check": "checkIpAddress",
+        "description": "the IP address we connect to",
+        "category": "TCP client"
+    },
+    {
+        "name": "sendTCL",
+        "label": "NMEA to TCP client",
+        "type": "boolean",
+        "default": "true",
+        "description": "send out NMEA data to remote TCP server",
+        "category": "TCP client"
+    },
+    {
+        "name": "readTCL",
+        "label": "NMEA from TCP client",
+        "type": "boolean",
+        "default": "true",
+        "description": "receive NMEA data from remote TCP server",
+        "category": "TCP client"
+    },
+    {
+        "name": "tclToN2k",
+        "label": "TCP client to NMEA2000",
+        "type": "boolean",
+        "default": "true",
+        "description": "convert NMEA0183 from remote TCP server to NMEA2000",
+        "category": "TCP client"
+    },
+    {
+        "name": "tclReadFilter",
+        "label": "TCP client read Filter",
+        "type": "filter",
+        "default": "",
+        "description": "filter for NMEA0183 data when reading from remote TCP server\nselect aison|aisoff, set a whitelist or a blacklist with NMEA sentences like RMC,RMB",
+        "category": "TCP client"
+    },
+    {
+        "name": "tclWriteFilter",
+        "label": "TCP client write Filter",
+        "type": "filter",
+        "default": "",
+        "description": "filter for NMEA0183 data when writing to remote TCP server\nselect aison|aisoff, set a whitelist or a blacklist with NMEA sentences like RMC,RMB",
+        "category": "TCP client"
+    },
+    {
+        "name": "tclSeasmart",
+        "label": "Seasmart to TCP client",
+        "type": "boolean",
+        "default": "false",
+        "description": "send NMEA2000 as seasmart to remote TCP server",
+        "category": "TCP client"
     },
     {
         "name": "wifiClient",
