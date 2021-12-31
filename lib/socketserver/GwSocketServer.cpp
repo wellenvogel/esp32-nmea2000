@@ -133,25 +133,23 @@ void GwSocketServer::loop(bool handleRead, bool handleWrite)
     }
 }
 
-bool GwSocketServer::readMessages(GwMessageFetcher *writer)
+void GwSocketServer::readMessages(GwMessageFetcher *writer)
 {
     if (!allowReceive || !clients)
-        return false;
-    bool hasMessages = false;
+        return;
     for (int i = 0; i < maxClients; i++)
     {
         writer->id = minId + i;
         if (!clients[i]->hasClient())
             continue;
-        if (clients[i]->messagesFromBuffer(writer))
-            hasMessages = true;
+        clients[i]->messagesFromBuffer(writer);
     }
-    return hasMessages;
+    return;
 }
-void GwSocketServer::sendToClients(const char *buf, int source)
+size_t GwSocketServer::sendToClients(const char *buf, int source,bool partial)
 {
     if (!clients)
-        return;
+        return 0;
     int len = strlen(buf);
     int sourceIndex = source - minId;
     for (int i = 0; i < maxClients; i++)
@@ -166,6 +164,7 @@ void GwSocketServer::sendToClients(const char *buf, int source)
             client->enqueue((uint8_t *)buf, len);
         }
     }
+    return len;
 }
 
 int GwSocketServer::numClients()

@@ -3,10 +3,11 @@
 #include "GWConfig.h"
 #include "GwLog.h"
 #include "GwBuffer.h"
+#include "GwChannelInterface.h"
 #include <memory>
 
 class GwSocketConnection;
-class GwSocketServer{
+class GwSocketServer: public GwChannelInterface{
     private:
         const GwConfigHandler *config;
         GwLog *logger;
@@ -22,9 +23,9 @@ class GwSocketServer{
         GwSocketServer(const GwConfigHandler *config,GwLog *logger,int minId);
         ~GwSocketServer();
         void begin();
-        void loop(bool handleRead=true,bool handleWrite=true);
-        void sendToClients(const char *buf,int sourceId);
+        virtual void loop(bool handleRead=true,bool handleWrite=true);
+        virtual size_t sendToClients(const char *buf,int sourceId, bool partialWrite=false);
         int numClients();
-        bool readMessages(GwMessageFetcher *writer);
+        virtual void readMessages(GwMessageFetcher *writer);
 };
 #endif

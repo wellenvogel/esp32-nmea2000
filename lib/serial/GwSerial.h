@@ -3,8 +3,9 @@
 #include "HardwareSerial.h"
 #include "GwLog.h"
 #include "GwBuffer.h"
+#include "GwChannelInterface.h"
 class GwSerialStream;
-class GwSerial{
+class GwSerial : public GwChannelInterface{
     private:
         GwBuffer *buffer;
         GwBuffer *readBuffer=NULL;
@@ -23,11 +24,11 @@ class GwSerial{
         ~GwSerial();
         int setup(int baud,int rxpin,int txpin);
         bool isInitialized();
-        size_t sendToClients(const char *buf,int sourceId,bool partial=false);
-        void loop(bool handleRead=true);
-        bool readMessages(GwMessageFetcher *writer);
+        virtual size_t sendToClients(const char *buf,int sourceId,bool partial=false);
+        virtual void loop(bool handleRead=true,bool handleWrite=true);
+        virtual void readMessages(GwMessageFetcher *writer);
         void flush();
-        Stream *getStream(bool partialWrites);
+        virtual Stream *getStream(bool partialWrites);
     friend GwSerialStream;
 };
 #endif
