@@ -3,7 +3,7 @@
 #include "GwChannelInterface.h"
 class GwTcpClient : public GwChannelInterface
 {
-    static const unsigned long CON_TIMEOUT=10;
+    static const unsigned long CON_TIMEOUT=10000;
     GwSocketConnection *connection = NULL;
     String remoteAddress;
     uint16_t port = 0;

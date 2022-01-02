@@ -56,6 +56,7 @@ void GwChannelList::begin(bool fallbackSerial){
         logger->setWriter(new GwSerialLog(usb));
         logger->prefix="GWSERIAL:";
         channel=new GwChannel(logger,"USB",USB_CHANNEL_ID);
+        channel->setImpl(usb);
         channel->begin(true,
             config->getBool(config->sendUsb),
             config->getBool(config->receiveUsb),
@@ -140,9 +141,19 @@ void GwChannelList::begin(bool fallbackSerial){
     }
 
     //tcp client
+    bool tclEnabled=config->getBool(config->tclEnabled);
     channel=new GwChannel(logger,"TCPClient",TCP_CLIENT_CHANNEL_ID);
+    if (tclEnabled){
+        client=new GwTcpClient(logger);
+        client->begin(TCP_CLIENT_CHANNEL_ID,
+            config->getString(config->remoteAddress),
+            config->getInt(config->remotePort),
+            config->getBool(config->readTCL)
+        );
+        channel->setImpl(client);
+    }
     channel->begin(
-        config->getBool(config->tclEnabled),
+        tclEnabled,
         config->getBool(config->sendTCL),
         config->getBool(config->readTCL),
         config->getString(config->tclReadFilter),
@@ -152,15 +163,7 @@ void GwChannelList::begin(bool fallbackSerial){
         false,
         false
         );
-    if (channel->isEnabled()){
-        client=new GwTcpClient(logger);
-        client->begin(TCP_CLIENT_CHANNEL_ID,
-            config->getString(config->remoteAddress),
-            config->getInt(config->remotePort),
-            channel->shouldRead()
-        );
-        channel->setImpl(client);
-    }
+    theChannels.push_back(channel);
     LOG_DEBUG(GwLog::LOG,"%s",channel->toString().c_str());  
     logger->flush();
 }

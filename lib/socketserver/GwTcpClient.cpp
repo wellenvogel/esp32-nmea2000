@@ -8,7 +8,7 @@ bool GwTcpClient::isConnected(){
 }
 void GwTcpClient::stop()
 {
-    if (connection->hasClient())
+    if (connection && connection->hasClient())
     {
         LOG_DEBUG(GwLog::DEBUG, "stopping tcp client");
         connection->stop();
@@ -17,7 +17,8 @@ void GwTcpClient::stop()
 }
 void GwTcpClient::startConnection()
 {
-    //TODO
+    LOG_DEBUG(GwLog::DEBUG,"TcpClient::startConnection to %s:%d",
+        remoteAddress.c_str(),port);
     state = C_INITIALIZED;
     error="";
     connectStart=millis();
@@ -50,15 +51,19 @@ void GwTcpClient::startConnection()
         }
         state=C_CONNECTING;
         connection->setClient(sockfd);
+        LOG_DEBUG(GwLog::DEBUG,"TcpClient connecting...");
     }
     else{
         state=C_CONNECTED;
         connection->setClient(sockfd);
+        LOG_DEBUG(GwLog::DEBUG,"TcpClient connected");
     }
 }
 void GwTcpClient::checkConnection()
 {
     unsigned long now=millis();
+    LOG_DEBUG(GwLog::DEBUG+3,"TcpClient::checkConnection state=%d, start=%ul, now=%ul",
+        (int)state,connectStart,now);
     if (! connection->hasClient()){
         state = hasConfig()?C_INITIALIZED:C_DISABLED;
     }
@@ -118,6 +123,7 @@ void GwTcpClient::checkConnection()
 GwTcpClient::GwTcpClient(GwLog *logger)
 {
     this->logger = logger;
+    this->connection=NULL;
 }
 GwTcpClient::~GwTcpClient(){
     if (connection)

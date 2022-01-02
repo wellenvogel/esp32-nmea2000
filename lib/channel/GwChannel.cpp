@@ -88,7 +88,7 @@ void GwChannel::begin(
     this->toN2k=toN2k;
     this->readActisense=readActisense;
     this->writeActisense=writeActisense;
-    if (readActisense|| writeActisense){
+    if (impl && (readActisense|| writeActisense)){
         channelStream=impl->getStream(false);
         if (! channelStream) {
             this->readActisense=false;

@@ -573,9 +573,9 @@ void setup() {
     logger.prefix="FALLBACK:";
 #endif
   userCodeHandler.startInitTasks(MIN_USER_TASK);
-  channels.begin(fallbackSerial);
-  MDNS.begin(config.getConfigItem(config.systemName)->asCString());
   gwWifi.setup();
+  MDNS.begin(config.getConfigItem(config.systemName)->asCString());
+  channels.begin(fallbackSerial);
   logger.flush();
   webserver.registerMainHandler("/api/reset", [](AsyncWebServerRequest *request)->GwRequestMessage *{
     return new ResetRequest(request->arg("_hash"));
