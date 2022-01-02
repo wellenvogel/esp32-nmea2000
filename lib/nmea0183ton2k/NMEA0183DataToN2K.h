@@ -7,7 +7,7 @@
 
 class NMEA0183DataToN2K{
     public:
-        typedef bool (*N2kSender)(const tN2kMsg &msg);
+        typedef bool (*N2kSender)(const tN2kMsg &msg,int sourceId);
     protected:
         GwLog * logger;
         GwBoatData *boatData;

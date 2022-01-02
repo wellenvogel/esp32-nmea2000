@@ -1,15 +1,17 @@
 #pragma once
 #include "GwSocketConnection.h"
-class GwTcpClient
+#include "GwChannelInterface.h"
+class GwTcpClient : public GwChannelInterface
 {
     static const unsigned long CON_TIMEOUT=10;
     GwSocketConnection *connection = NULL;
-    IPAddress remoteAddress;
+    String remoteAddress;
     uint16_t port = 0;
     unsigned long connectStart=0;
     GwLog *logger;
     int sourceId;
     bool configured=false;
+    String error;
 
 public:
     typedef enum
@@ -30,9 +32,10 @@ private:
 public:
     GwTcpClient(GwLog *logger);
     ~GwTcpClient();
-    void begin(int sourceId,IPAddress address, uint16_t port,bool allowRead);
-    void loop(bool handleRead=true,bool handleWrite=true);
-    void sendToClients(const char *buf,int sourceId);
-    bool readMessages(GwMessageFetcher *writer);
+    void begin(int sourceId,String address, uint16_t port,bool allowRead);
+    virtual void loop(bool handleRead=true,bool handleWrite=true);
+    virtual size_t sendToClients(const char *buf,int sourceId, bool partialWrite=false);
+    virtual void readMessages(GwMessageFetcher *writer);
     bool isConnected();
+    String getError(){return error;}
 };

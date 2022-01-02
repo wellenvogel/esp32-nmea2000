@@ -97,26 +97,26 @@ private:
         waypointMap[wpName]=newWp;
         return newWp.id;
     }
-    bool send(tN2kMsg &msg,String key,unsigned long minDiff){
+    bool send(tN2kMsg &msg,String key,unsigned long minDiff,int sourceId){
         unsigned long now=millis();
         unsigned long pgn=msg.PGN;
         if (key == "") key=String(msg.PGN);
         auto it=lastSends.find(key);
         if (it == lastSends.end()){
             lastSends[key]=now;
-            sender(msg);
+            sender(msg,sourceId);
             return true;
         }
         if ((it->second + minDiff) <= now){
             lastSends[key]=now;
-            sender(msg);
+            sender(msg,sourceId);
             return true;
         }
         LOG_DEBUG(GwLog::DEBUG+1,"skipped n2k message %d",msg.PGN);
         return false;
     }
-    bool send(tN2kMsg &msg, String key=""){
-        send(msg,key,minSendInterval);
+    bool send(tN2kMsg &msg, int sourceId,String key=""){
+        return send(msg,key,minSendInterval,sourceId);
     }
     bool updateDouble(GwBoatItem<double> *target,double v, int sourceId){
         if (v != NMEA0183DoubleNA){
@@ -255,7 +255,7 @@ private:
                                     (tN2kFluidType)(current.selector()),
                                     fields[0],
                                     fields[1]);
-                    send(n2kMsg, buildN2KKey(n2kMsg, current.mapping));
+                    send(n2kMsg,msg.sourceId, buildN2KKey(n2kMsg, current.mapping));
                 }
                 break;
             case XDRBAT:
@@ -263,7 +263,7 @@ private:
                 {
                     SetN2kPGN127508(n2kMsg, current.mapping.instanceId,
                                     fields[0], fields[1], fields[2]);
-                    send(n2kMsg, buildN2KKey(n2kMsg, current.mapping));
+                    send(n2kMsg,msg.sourceId, buildN2KKey(n2kMsg, current.mapping));
                 }
                 break;
             case XDRTEMP:
@@ -271,7 +271,7 @@ private:
                     SetN2kPGN130312(n2kMsg,1,current.mapping.instanceId,
                         (tN2kTempSource)(current.selector()),
                         fields[0],fields[1]);
-                    send(n2kMsg,buildN2KKey(n2kMsg,current.mapping));    
+                    send(n2kMsg,msg.sourceId,buildN2KKey(n2kMsg,current.mapping));    
                 }
                 break;
             case XDRHUMIDITY:
@@ -281,7 +281,7 @@ private:
                     fields[0],
                     fields[1]
                     );
-                    send(n2kMsg,buildN2KKey(n2kMsg,current.mapping));
+                    send(n2kMsg,msg.sourceId,buildN2KKey(n2kMsg,current.mapping));
                 }
                 break;
             case XDRPRESSURE:
@@ -289,7 +289,7 @@ private:
                     SetN2kPGN130314(n2kMsg,1,current.mapping.instanceId,
                     (tN2kPressureSource)(current.selector()),
                     fields[0]);
-                    send(n2kMsg,buildN2KKey(n2kMsg,current.mapping));
+                    send(n2kMsg,msg.sourceId,buildN2KKey(n2kMsg,current.mapping));
                 }
                 break;
             case XDRENGINE:
@@ -301,14 +301,14 @@ private:
                                         fields[0], fields[1], fields[2], fields[3], fields[4],
                                         fields[5], fields[6], fields[7], fromDouble(fields[8]), fromDouble(fields[9]),
                                         tN2kEngineDiscreteStatus1(), tN2kEngineDiscreteStatus2());
-                        send(n2kMsg, buildN2KKey(n2kMsg, current.mapping));
+                        send(n2kMsg,msg.sourceId, buildN2KKey(n2kMsg, current.mapping));
                     }
                 }
                 else{
                     if (fillFieldList(current, fields, 13,10)){
                         SetN2kPGN127488(n2kMsg,current.mapping.instanceId,
                         fields[10],fields[11],fromDouble(fields[12]));
-                        send(n2kMsg, buildN2KKey(n2kMsg, current.mapping));
+                        send(n2kMsg,msg.sourceId, buildN2KKey(n2kMsg, current.mapping));
                     }
                 }
                 break;
@@ -334,7 +334,7 @@ private:
                 mode=xteMode(*modeChar);
             }
             SetN2kXTE(n2kMsg,1,mode,false,rmb.xte);
-            send(n2kMsg);
+            send(n2kMsg,msg.sourceId);
         }
         uint8_t destinationId=getWaypointId(rmb.destID);
         uint8_t sourceId=getWaypointId(rmb.originID);
@@ -357,10 +357,10 @@ private:
                 rmb.longitude,
                 rmb.vmg
             );
-            send(n2kMsg);
+            send(n2kMsg,msg.sourceId);
             SetN2kPGN129285(n2kMsg,sourceId,1,1,true,true,"default");
             AppendN2kPGN129285(n2kMsg,destinationId,rmb.destID,rmb.latitude,rmb.longitude);
-            send(n2kMsg);
+            send(n2kMsg,msg.sourceId);
             }
     }
     void convertRMC(const SNMEA0183Msg &msg)
@@ -382,25 +382,26 @@ private:
         {
             
             SetN2kSystemTime(n2kMsg, 1, GpsDate, GpsTime);
-            send(n2kMsg);
+            send(n2kMsg,msg.sourceId);
         }
         if (UD(Latitude) &&
             UD(Longitude)){
             SetN2kLatLonRapid(n2kMsg,Latitude,Longitude);
-            send(n2kMsg);
+            send(n2kMsg,msg.sourceId);
         }
         if (UD(COG) && UD(SOG)){
             SetN2kCOGSOGRapid(n2kMsg,1,N2khr_true,COG,SOG);
-            send(n2kMsg);
+            send(n2kMsg,msg.sourceId);
         }
         if (UD(Variation)){
             SetN2kMagneticVariation(n2kMsg,1,N2kmagvar_Calc,
                 getUint32(boatData->GpsDate), Variation);
-            send(n2kMsg);    
+            send(n2kMsg,msg.sourceId);    
         }
 
     }
     void convertAIVDX(const SNMEA0183Msg &msg){
+        aisDecoder->sourceId=msg.sourceId;
         aisDecoder->handleMessage(msg.line);
     }
     void convertMWV(const SNMEA0183Msg &msg){
@@ -434,7 +435,7 @@ private:
         }
         if (shouldSend){
             SetN2kWindSpeed(n2kMsg,1,WindSpeed,WindAngle,n2kRef);  
-            send(n2kMsg,String(n2kMsg.PGN)+String((int)n2kRef));  
+            send(n2kMsg,msg.sourceId,String(n2kMsg.PGN)+String((int)n2kRef));  
         }
     }
     void convertVWR(const SNMEA0183Msg &msg)
@@ -475,7 +476,7 @@ private:
         if (shouldSend)
         {
             SetN2kWindSpeed(n2kMsg, 1, WindSpeed, WindAngle, N2kWind_Apparent);
-            send(n2kMsg,String(n2kMsg.PGN)+String((int)N2kWind_Apparent));
+            send(n2kMsg,msg.sourceId,String(n2kMsg.PGN)+String((int)N2kWind_Apparent));
         }
     }
 
@@ -519,11 +520,11 @@ private:
         if (shouldSend)
         {
             SetN2kWindSpeed(n2kMsg, 1, WindSpeed, WindAngle, N2kWind_True_North);
-            send(n2kMsg,String(n2kMsg.PGN)+String((int)N2kWind_True_North));
+            send(n2kMsg,msg.sourceId,String(n2kMsg.PGN)+String((int)N2kWind_True_North));
         }
         if (WindAngleMagnetic != NMEA0183DoubleNA && shouldSend){
             SetN2kWindSpeed(n2kMsg, 1, WindSpeed, WindAngleMagnetic, N2kWind_Magnetic);
-            send(n2kMsg,String(n2kMsg.PGN)+String((int)N2kWind_Magnetic));
+            send(n2kMsg,msg.sourceId,String(n2kMsg.PGN)+String((int)N2kWind_Magnetic));
         }
     }
 
@@ -540,7 +541,7 @@ private:
             boatData->Variation->getDataWithDefault(N2kDoubleNA),
             boatData->Deviation->getDataWithDefault(N2kDoubleNA)
         );
-        send(n2kMsg);    
+        send(n2kMsg,msg.sourceId);    
     }
     
     void convertHDT(const SNMEA0183Msg &msg){
@@ -553,7 +554,7 @@ private:
         if (! UD(Heading)) return;
         tN2kMsg n2kMsg;
         SetN2kTrueHeading(n2kMsg,1,Heading);
-        send(n2kMsg);    
+        send(n2kMsg,msg.sourceId);    
     }
     void convertHDG(const SNMEA0183Msg &msg){
         double MagneticHeading=NMEA0183DoubleNA;
@@ -584,7 +585,7 @@ private:
         UD(Deviation);
         tN2kMsg n2kMsg;
         SetN2kMagneticHeading(n2kMsg,1,MagneticHeading,Deviation,Variation);
-        send(n2kMsg);    
+        send(n2kMsg,msg.sourceId);    
     }
 
     void convertDPT(const SNMEA0183Msg &msg){
@@ -612,7 +613,7 @@ private:
         if (! boatData->DepthTransducer->update(DepthBelowTransducer)) return;
         tN2kMsg n2kMsg;
         SetN2kWaterDepth(n2kMsg,1,DepthBelowTransducer,Offset);
-        send(n2kMsg,String(n2kMsg.PGN)+String((Offset != N2kDoubleNA)?1:0));
+        send(n2kMsg,msg.sourceId,String(n2kMsg.PGN)+String((Offset != N2kDoubleNA)?1:0));
     }
     typedef enum {
         DBS,
@@ -647,7 +648,7 @@ private:
                     if (! boatData->DepthTransducer->update(Depth,msg.sourceId)) return;
                     tN2kMsg n2kMsg;
                     SetN2kWaterDepth(n2kMsg,1,Depth,N2kDoubleNA); 
-                    send(n2kMsg,String(n2kMsg.PGN)+String(0));
+                    send(n2kMsg,msg.sourceId,String(n2kMsg.PGN)+String(0));
                     return;   
                 }
                 //we can only send if we have a valid depth beloww tranducer
@@ -667,7 +668,7 @@ private:
                 }
                 tN2kMsg n2kMsg;
                 SetN2kWaterDepth(n2kMsg,1,Depth,offset);
-                send(n2kMsg,String(n2kMsg.PGN)+String((offset != N2kDoubleNA)?1:0));
+                send(n2kMsg,msg.sourceId,(n2kMsg.PGN)+String((offset != N2kDoubleNA)?1:0));
             }            
         }        
     }
@@ -694,7 +695,7 @@ private:
             tN2kMsg n2kMsg;
             if (! UD(RudderPosition)) return;
             SetN2kRudder(n2kMsg,RudderPosition);
-            send(n2kMsg);
+            send(n2kMsg,msg.sourceId);
         }
           
     }
@@ -711,7 +712,7 @@ private:
         if (MagneticHeading == NMEA0183DoubleNA) MagneticHeading=N2kDoubleNA;
         tN2kMsg n2kMsg;
         SetN2kBoatSpeed(n2kMsg,1,STW);
-        send(n2kMsg);
+        send(n2kMsg,msg.sourceId);
 
     }
     void convertVTG(const SNMEA0183Msg &msg){
@@ -727,7 +728,7 @@ private:
         tN2kMsg n2kMsg;
         //TODO: maybe use MCOG if no COG?
         SetN2kCOGSOGRapid(n2kMsg,1,N2khr_true,COG,SOG);
-        send(n2kMsg);
+        send(n2kMsg,msg.sourceId);
     }
     void convertZDA(const SNMEA0183Msg &msg){
         time_t DateTime;
@@ -751,10 +752,10 @@ private:
         tN2kMsg n2kMsg;
         if (timezoneValid){
             SetN2kLocalOffset(n2kMsg,DaysSince1970,GpsTime,Timezone);
-            send(n2kMsg);
+            send(n2kMsg,msg.sourceId);
         }
         SetN2kSystemTime(n2kMsg,1,DaysSince1970,GpsTime);
-        send(n2kMsg);
+        send(n2kMsg,msg.sourceId);
     }
     void convertGGA(const SNMEA0183Msg &msg){
         double GPSTime=NMEA0183DoubleNA;
@@ -788,7 +789,7 @@ private:
                      SatelliteCount, HDOP, boatData->PDOP->getDataWithDefault(N2kDoubleNA), 0,
                      0, N2kGNSSt_GPS, DGPSReferenceStationID,
                      DGPSAge);
-        send(n2kMsg);             
+        send(n2kMsg,msg.sourceId);             
     }
     void convertGSA(const SNMEA0183Msg &msg){
         if (msg.FieldCount() < 17)
@@ -819,7 +820,7 @@ private:
             if (!updateDouble(boatData->VDOP,VDOP,msg.sourceId)) return;
         }
         SetN2kGNSSDOPData(n2kMsg,1,rmode,mode,HDOP,VDOP,N2kDoubleNA);
-        send(n2kMsg);
+        send(n2kMsg,msg.sourceId);
     }
     void convertGSV(const SNMEA0183Msg &msg){
         if (msg.FieldCount() < 7){
@@ -867,7 +868,7 @@ private:
                 }
             }
             if (hasInfos){
-                send(n2kMsg);
+                send(n2kMsg,msg.sourceId);
             }
 
         }
@@ -885,7 +886,7 @@ private:
         if (! updateDouble(boatData->GpsTime,GLL.GPSTime,msg.sourceId)) return;
         tN2kMsg n2kMsg;
         SetN2kLatLonRapid(n2kMsg,GLL.latitude,GLL.longitude);
-        send(n2kMsg);
+        send(n2kMsg,msg.sourceId);
     }
 
     void convertROT(const SNMEA0183Msg &msg){
@@ -897,7 +898,7 @@ private:
         if (! updateDouble(boatData->ROT,ROT,msg.sourceId)) return;
         tN2kMsg n2kMsg;
         SetN2kRateOfTurn(n2kMsg,1,ROT);
-        send(n2kMsg);
+        send(n2kMsg,msg.sourceId);
     }
     void convertXTE(const SNMEA0183Msg &msg){
         if (msg.FieldCount() < 6){
@@ -916,7 +917,7 @@ private:
         tN2kMsg n2kMsg;
         tN2kXTEMode mode=xteMode(msg.Field(5)[0]);
         SetN2kXTE(n2kMsg,1,mode,false,xte);
-        send(n2kMsg);
+        send(n2kMsg,msg.sourceId);
     }
 
 //shortcut for lambda converters

@@ -26,6 +26,7 @@ class GwChannel{
     GwCounter<String> *countOut=NULL;
     GwChannelInterface *impl;
     int sourceId=0;
+    int maxSourceId=-1;
     GwChannelMessageReceiver *receiver=NULL;
     tActisenseReader *actisenseReader=NULL;
     Stream *channelStream=NULL;
@@ -34,7 +35,8 @@ class GwChannel{
     GwChannel(
         GwLog *logger,
         String name,
-        int sourceId);
+        int sourceId,
+        int maxSourceId=-1);
     void begin(
         bool enabled,
         bool nmeaOut,
@@ -48,7 +50,7 @@ class GwChannel{
     );
 
     void setImpl(GwChannelInterface *impl);
-
+    bool isOwnSource(int id);
     void enable(bool enabled){
         this->enabled=enabled;
     }
@@ -70,6 +72,6 @@ class GwChannel{
     void sendToClients(const char *buffer, int sourceId);
     typedef std::function<void(const tN2kMsg &msg, int sourceId)> N2kHandler ;
     void parseActisense(N2kHandler handler);
-    void sendActisense(const tN2kMsg &msg);
+    void sendActisense(const tN2kMsg &msg, int sourceId);
 };
 

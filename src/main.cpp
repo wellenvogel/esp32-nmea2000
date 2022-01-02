@@ -63,16 +63,9 @@ const unsigned long HEAP_REPORT_TIME=2000; //set to 0 to disable heap reporting
 #include "GwUpdate.h"
 #include "GwTcpClient.h"
 #include "GwChannel.h"
+#include "GwChannelList.h"
 
 
-//NMEA message channels
-#define N2K_CHANNEL_ID 0
-#define USB_CHANNEL_ID 1
-#define SERIAL1_CHANNEL_ID 2
-#define TCP_CLIENT_CHANNEL_ID 3
-#define MIN_TCP_CHANNEL_ID 4
-
-#define MIN_USER_TASK 200
 
 #define MAX_NMEA2000_MESSAGE_SEASMART_SIZE 500
 #define MAX_NMEA0183_MESSAGE_SIZE 150 // For AIS
@@ -112,7 +105,7 @@ bool fixedApPass=false;
 bool fixedApPass=true;
 #endif
 GwWifi gwWifi(&config,&logger,fixedApPass);
-GwSocketServer socketServer(&config,&logger,MIN_TCP_CHANNEL_ID);
+GwChannelList channels(&logger,&config);
 GwBoatData boatData(&logger);
 GwXDRMappings xdrMappings(&logger,&config);
 
@@ -130,23 +123,6 @@ GwWebServer webserver(&logger,&mainQueue,80);
 
 GwCounter<unsigned long> countNMEA2KIn("count2Kin");
 GwCounter<unsigned long> countNMEA2KOut("count2Kout");
-
-GwChannel usbChannel(&logger,"USB",USB_CHANNEL_ID);
-GwChannel tcpChannel(&logger,"TCPServer",MIN_TCP_CHANNEL_ID);
-GwChannel serialChannel(&logger,"SER",SERIAL1_CHANNEL_ID);
-GwChannel tclChannel(&logger,"TCPClient",TCP_CLIENT_CHANNEL_ID);
-
-GwChannel *allChannels[]={&usbChannel,&tcpChannel,&serialChannel,&tclChannel};
-const int numChannels=sizeof(allChannels)/sizeof(GwChannel*);
-
-GwChannel * channelFromSource(int source){
-  if (source == USB_CHANNEL_ID) return &usbChannel;
-  if (source == SERIAL1_CHANNEL_ID) return &serialChannel;
-  if (source == TCP_CLIENT_CHANNEL_ID) return &tclChannel;
-  if (source >= MIN_TCP_CHANNEL_ID && source < MIN_USER_TASK) return &tcpChannel;
-  return NULL;
-}
-
 
 unsigned long saltBase=esp_random();
 
@@ -190,58 +166,38 @@ bool checkPass(String hash){
 }
 
 GwUpdate updater(&logger,&webserver,&checkPass);
-
-
-
-//configs that we need in main
-
-
 GwConfigInterface *systemName=config.getConfigItem(config.systemName,true);
 
-bool serCanWrite=true;
-bool serCanRead=true;
 
-GwSerial *usbSerial = new GwSerial(NULL, 0, USB_CHANNEL_ID);
-GwSerial *serial1=NULL;
-
-typedef enum {
-  N2KT_MSGIN,  //from CAN
-  N2KT_MSGINT, //from internal source
-  N2KT_MSGOUT, //from converter
-  N2KT_MSGACT  //from actisense
-} N2K_MsgDirection;
-void handleN2kMessage(const tN2kMsg &n2kMsg,N2K_MsgDirection direction)
+void handleN2kMessage(const tN2kMsg &n2kMsg,int sourceId, bool isConverted=false)
 {
   logger.logDebug(GwLog::DEBUG + 1, "N2K: pgn %d, dir %d", 
-    n2kMsg.PGN,(int)direction);
-  if (direction == N2KT_MSGIN){
+    n2kMsg.PGN,sourceId);
+  if (sourceId == N2K_CHANNEL_ID){
     countNMEA2KIn.add(n2kMsg.PGN);
   }
   char buf[MAX_NMEA2000_MESSAGE_SEASMART_SIZE];
   bool messageCreated=false;
-  for (int i=0;i<numChannels;i++){
-    if (allChannels[i]->sendSeaSmart()){
+  channels.allChannels([&](GwChannel *c){
+    if (c->sendSeaSmart()){
       if (! messageCreated){
         if (N2kToSeasmart(n2kMsg, millis(), buf, MAX_NMEA2000_MESSAGE_SEASMART_SIZE) != 0) {
           messageCreated=true;
         }
       }
       if (messageCreated){
-        allChannels[i]->sendToClients(buf,N2K_CHANNEL_ID);
+        c->sendToClients(buf,sourceId);
       }
     }
-  }
+  });
   
-  if (direction != N2KT_MSGACT)
-  {
-    for (int i=0;i<numChannels;i++){
-      allChannels[i]->sendActisense(n2kMsg);
-    }
-  }
-  if (direction != N2KT_MSGOUT){
+  channels.allChannels([&](GwChannel *c){
+    c->sendActisense(n2kMsg,sourceId);
+  });
+  if (! isConverted){
     nmea0183Converter->HandleMsg(n2kMsg);
   }
-  if (direction != N2KT_MSGIN){
+  if (sourceId != N2K_CHANNEL_ID){
     countNMEA2KOut.add(n2kMsg.PGN);
     NMEA2000.SendMsg(n2kMsg);
   }
@@ -261,43 +217,10 @@ void SendNMEA0183Message(const tNMEA0183Msg &NMEA0183Msg, int sourceId,bool conv
   buf[len]=0x0d;
   buf[len+1]=0x0a;
   buf[len+2]=0;
-  for (int i=0;i< numChannels;i++){
-    allChannels[i]->sendToClients(buf,sourceId);
-  }
+  channels.allChannels([&](GwChannel *c){
+    c->sendToClients(buf,sourceId);
+  });
 }
-
-class GwSerialLog : public GwLogWriter{
-  static const size_t bufferSize=4096;
-  char *logBuffer=NULL;
-  int wp=0;
-  public:
-    GwSerialLog(){
-      logBuffer=new char[bufferSize];
-      wp=0;
-    }
-    virtual ~GwSerialLog(){}
-    virtual void write(const char *data){
-      int len=strlen(data);
-      if ((wp+len) >= (bufferSize-1)) return;
-      strncpy(logBuffer+wp,data,len);
-      wp+=len;
-      logBuffer[wp]=0;
-    }
-    virtual void flush(){
-      size_t handled=0;
-      while (handled < wp){
-        usbSerial->flush();
-        size_t rt=usbSerial->sendToClients(logBuffer+handled,-1,true);
-        handled+=rt;
-        }
-      wp=0;
-      logBuffer[0]=0;
-    }
-
-};
-
-GwSerialLog logWriter;
-
 
 class ApiImpl : public GwApi
 {
@@ -315,7 +238,7 @@ public:
   }
   virtual void sendN2kMessage(const tN2kMsg &msg,bool convert)
   {
-    handleN2kMessage(msg,convert?N2KT_MSGINT:N2KT_MSGOUT);
+    handleN2kMessage(msg,sourceId,!convert);
     
   }
   virtual void sendNMEA0183Message(const tNMEA0183Msg &msg, int sourceId,bool convert)
@@ -419,15 +342,11 @@ protected:
     GwJsonDocument status(256 + 
       countNMEA2KIn.getJsonSize()+
       countNMEA2KOut.getJsonSize() +
-      usbChannel.getJsonSize()+
-      tcpChannel.getJsonSize()+
-      serialChannel.getJsonSize()+
-      tclChannel.getJsonSize()
+      channels.getJsonSize()
       );
     status["version"] = VERSION;
     status["wifiConnected"] = gwWifi.clientConnected();
     status["clientIP"] = WiFi.localIP().toString();
-    status["numClients"] = socketServer.numClients();
     status["apIp"] = gwWifi.apIP();
     size_t bsize=2*sizeof(unsigned long)+1;
     unsigned long base=saltBase + ( millis()/1000UL & ~0x7UL);
@@ -438,10 +357,7 @@ protected:
     //nmea0183Converter->toJson(status);
     countNMEA2KIn.toJson(status);
     countNMEA2KOut.toJson(status);
-    usbChannel.toJson(status);
-    serialChannel.toJson(status);
-    tcpChannel.toJson(status);
-    tclChannel.toJson(status);
+    channels.toJson(status);
     serializeJson(status, result);
   }
 };
@@ -648,122 +564,19 @@ void setup() {
   uint8_t chipid[6];
   uint32_t id = 0;
   config.loadConfig();
-  // Init USB serial port
-  GwConfigInterface *usbBaud=config.getConfigItem(config.usbBaud,false);
-  int baud=115200;
-  if (usbBaud){
-    baud=usbBaud->asInt();
-  }
+  bool fallbackSerial=false;
 #ifdef FALLBACK_SERIAL
-  int st=-1;
-#else
-  int st=usbSerial->setup(baud,3,1); //TODO: PIN defines  
-#endif  
-  if (st < 0){
+  fallbackSerial=true;
     //falling back to old style serial for logging
     Serial.begin(baud);
     Serial.printf("fallback serial enabled, error was %d\n",st);
     logger.prefix="FALLBACK:";
-  }
-  else{
-    logger.prefix="GWSERIAL:";
-    logger.setWriter(&logWriter);
-    logger.logDebug(GwLog::LOG,"created GwSerial for USB port");
-  }  
-  logger.logDebug(GwLog::LOG,"config: %s", config.toString().c_str());
+#endif
   userCodeHandler.startInitTasks(MIN_USER_TASK);
-  #ifdef GWSERIAL_MODE
-  int serialrx=-1;
-  int serialtx=-1;
-  #ifdef GWSERIAL_TX
-  serialtx=GWSERIAL_TX;
-  #endif
-  #ifdef GWSERIAL_RX
-  serialrx=GWSERIAL_RX;
-  #endif
-  //the mode is a compile time preselection from hardware.h
-  String serialMode(F(GWSERIAL_MODE));
-  //the serial direction is from the config (only valid for mode UNI)
-  String serialDirection=config.getString(config.serialDirection);
-  //we only consider the direction if mode is UNI
-  if (serialMode != String("UNI")){
-    serialDirection=String("");
-    //if mode is UNI it depends on the selection
-    serCanRead=config.getBool(config.receiveSerial);
-    serCanWrite=config.getBool(config.sendSerial);
-  }
-  if (serialDirection == "receive" || serialDirection == "off" || serialMode == "RX") serCanWrite=false;
-  if (serialDirection == "send" || serialDirection == "off" || serialMode == "TX") serCanRead=false;
-  logger.logDebug(GwLog::DEBUG,"serial set up: mode=%s,direction=%s,rx=%d,tx=%d",
-    serialMode.c_str(),serialDirection.c_str(),serialrx,serialtx
-  );
-  if (serialtx != -1 || serialrx != -1){
-    logger.logDebug(GwLog::LOG,"creating serial interface rx=%d, tx=%d",serialrx,serialtx);
-    serial1=new GwSerial(&logger,1,SERIAL1_CHANNEL_ID,serCanRead);
-  }
-  if (serial1){
-    int rt=serial1->setup(config.getInt(config.serialBaud,115200),serialrx,serialtx);
-    logger.logDebug(GwLog::LOG,"starting serial returns %d",rt);
-    serialChannel.setImpl(serial1);
-  }
-  #endif
-  usbChannel.setImpl(usbSerial);
+  channels.begin(fallbackSerial);
   MDNS.begin(config.getConfigItem(config.systemName)->asCString());
   gwWifi.setup();
-
-  // Start TCP server
-  socketServer.begin();
-  tcpChannel.setImpl(&socketServer);
   logger.flush();
-  usbChannel.begin(true,
-    config.getBool(config.sendUsb),
-    config.getBool(config.receiveUsb),
-    config.getString(config.usbReadFilter),
-    config.getString(config.usbWriteFilter),
-    false,
-    config.getBool(config.usbToN2k),
-    config.getBool(config.usbActisense),
-    config.getBool(config.usbActSend)
-    );
-  logger.logDebug(GwLog::LOG,"%s",usbChannel.toString().c_str());  
-  tcpChannel.begin(
-    true,
-    config.getBool(config.sendTCP),
-    config.getBool(config.readTCP),
-    config.getString(config.tcpReadFilter),
-    config.getString(config.tcpWriteFilter),
-    config.getBool(config.sendSeasmart),
-    config.getBool(config.tcpToN2k),
-    false,
-    false
-  );
-  logger.logDebug(GwLog::LOG,"%s",tcpChannel.toString().c_str());
-  serialChannel.begin(
-    serCanRead || serCanWrite,
-    serCanWrite,
-    serCanRead,
-    config.getString(config.serialReadF),
-    config.getString(config.serialWriteF),
-    false,
-    config.getBool(config.serialToN2k),
-    false,
-    false
-  );
-  logger.logDebug(GwLog::LOG,"%s",serialChannel.toString().c_str());
-  tclChannel.begin(
-    config.getBool(config.tclEnabled),
-    config.getBool(config.sendTCL),
-    config.getBool(config.readTCL),
-    config.getString(config.tclReadFilter),
-    config.getString(config.tclReadFilter),
-    config.getBool(config.tclSeasmart),
-    config.getBool(config.tclToN2k),
-    false,
-    false
-  );
-  logger.logDebug(GwLog::LOG,"%s",tclChannel.toString().c_str());  
-  logger.flush();
-
   webserver.registerMainHandler("/api/reset", [](AsyncWebServerRequest *request)->GwRequestMessage *{
     return new ResetRequest(request->arg("_hash"));
   });
@@ -823,9 +636,9 @@ void setup() {
     config.getInt(config.minXdrInterval,100)
     );
 
-  toN2KConverter= NMEA0183DataToN2K::create(&logger,&boatData,[](const tN2kMsg &msg)->bool{
+  toN2KConverter= NMEA0183DataToN2K::create(&logger,&boatData,[](const tN2kMsg &msg, int sourceId)->bool{
     logger.logDebug(GwLog::DEBUG+2,"send N2K %ld",msg.PGN);
-    handleN2kMessage(msg,N2KT_MSGOUT);
+    handleN2kMessage(msg,sourceId,true);
     return true;
   },
   &xdrMappings,
@@ -881,7 +694,7 @@ void setup() {
   NMEA2000.ExtendTransmitMessages(pgns);
   NMEA2000.ExtendReceiveMessages(nmea0183Converter->handledPgns());
   NMEA2000.SetMsgHandler([](const tN2kMsg &n2kMsg){
-    handleN2kMessage(n2kMsg,N2KT_MSGIN);
+    handleN2kMessage(n2kMsg,N2K_CHANNEL_ID);
   });
   NMEA2000.Open();
   logger.logDebug(GwLog::LOG,"starting addon tasks");
@@ -899,9 +712,9 @@ void setup() {
 }  
 //*****************************************************************************
 void handleSendAndRead(bool handleRead){
-  for (int i=0;i<numChannels;i++){
-    allChannels[i]->loop(handleRead,true);
-  }
+  channels.allChannels([&](GwChannel *c){
+    c->loop(handleRead,true);
+  });
 }
 
 TimeMonitor monitor(20,0.2);
@@ -925,14 +738,14 @@ void loop() {
     }
   }
   monitor.setTime(3);
-  for (int i=0;i<numChannels;i++){
-    allChannels[i]->loop(true,false);
-  }
+  channels.allChannels([](GwChannel *c){
+    c->loop(true,false);
+  });
   //reads
   monitor.setTime(4);
-  for (int i=0;i<numChannels;i++){
-    allChannels[i]->loop(false,true);
-  }
+  channels.allChannels([](GwChannel *c){
+    c->loop(false,true);
+  });
   //writes
   monitor.setTime(5);  
   NMEA2000.ParseMessages();
@@ -950,23 +763,23 @@ void loop() {
   monitor.setTime(7);
 
   //read channels
-  for (int i=0;i<numChannels;i++){
-    allChannels[i]->readMessages([&](const char * buffer, int sourceId){
-      for (int j=0;j<numChannels;j++){
-        allChannels[j]->sendToClients(buffer,sourceId);
-        allChannels[j]->loop(false,true);
-      }
-      if (allChannels[i]->sendToN2K()){
+  channels.allChannels([](GwChannel *c){
+    c->readMessages([&](const char * buffer, int sourceId){
+      channels.allChannels([&](GwChannel *oc){
+        oc->sendToClients(buffer,sourceId);
+        oc->loop(false,true);
+      });
+      if (c->sendToN2K()){
         toN2KConverter->parseAndSend(buffer, sourceId);
       }
     });
-  }
+  });
   monitor.setTime(8);
-  for (int i=0;i<numChannels;i++){
-    allChannels[i]->parseActisense([](const tN2kMsg &msg,int source){
-      handleN2kMessage(msg,N2KT_MSGACT);
+  channels.allChannels([](GwChannel *c){
+    c->parseActisense([](const tN2kMsg &msg,int source){
+      handleN2kMessage(msg,source);
     });
-  }
+  });
   monitor.setTime(9);
 
   //handle message requests

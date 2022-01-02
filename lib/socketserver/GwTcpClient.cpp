@@ -19,15 +19,22 @@ void GwTcpClient::startConnection()
 {
     //TODO
     state = C_INITIALIZED;
+    error="";
     connectStart=millis();
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0) {
+        error="unable to create socket";
         LOG_DEBUG(GwLog::ERROR,"unable to create socket: %d", errno);
         return; 
     }
     fcntl( sockfd, F_SETFL, fcntl( sockfd, F_GETFL, 0 ) | O_NONBLOCK );
-
-    uint32_t ip_addr = this->remoteAddress;
+    IPAddress addr;
+    if (! addr.fromString(remoteAddress)){
+        error="invalid ip "+remoteAddress;
+        LOG_DEBUG(GwLog::ERROR,"%s",error.c_str());
+        return;
+    }
+    uint32_t ip_addr = addr;
     struct sockaddr_in serveraddr;
     memset((char *) &serveraddr, 0, sizeof(serveraddr));
     serveraddr.sin_family = AF_INET;
@@ -36,6 +43,7 @@ void GwTcpClient::startConnection()
     int res = lwip_connect_r(sockfd, (struct sockaddr*)&serveraddr, sizeof(serveraddr));
     if (res < 0 ) {
         if (errno != EINPROGRESS){
+            error=String("connect error ")+String(strerror(errno));
             LOG_DEBUG(GwLog::ERROR,"connect on fd %d, errno: %d, \"%s\"", sockfd, errno, strerror(errno));
             close(sockfd);
             return;
@@ -56,7 +64,7 @@ void GwTcpClient::checkConnection()
     }
     if (state == C_INITIALIZED){
         if ((now - connectStart) > CON_TIMEOUT){
-            LOG_DEBUG(GwLog::LOG,"retry connect to %s",remoteAddress.toString().c_str());
+            LOG_DEBUG(GwLog::LOG,"retry connect to %s",remoteAddress.c_str());
             startConnection();
         }
         return;
@@ -73,13 +81,15 @@ void GwTcpClient::checkConnection()
     tv.tv_usec = 0;
     int res = select(sockfd + 1, nullptr, &fdset, nullptr, &tv);
     if (res < 0) {
+        error=String("select error ")+String(strerror(errno));
         LOG_DEBUG(GwLog::ERROR,"select on fd %d, errno: %d, \"%s\"", sockfd, errno, strerror(errno));
         connection->stop();
         return;
     } else if (res == 0) {
         //still connecting
         if ((now - connectStart) >= CON_TIMEOUT){
-            LOG_DEBUG(GwLog::ERROR,"connect timeout to %s, retry",remoteAddress.toString().c_str());
+            error="connect timeout";
+            LOG_DEBUG(GwLog::ERROR,"connect timeout to %s, retry",remoteAddress.c_str());
             connection->stop();
             return;
         }
@@ -89,17 +99,19 @@ void GwTcpClient::checkConnection()
         res = getsockopt(sockfd, SOL_SOCKET, SO_ERROR, &sockerr, &len);
 
         if (res < 0) {
+            error="getsockopt failed";
             LOG_DEBUG(GwLog::ERROR,"getsockopt on fd %d, errno: %d, \"%s\"", sockfd, errno, strerror(errno));
             connection->stop();
             return;
         }
         if (sockerr != 0) {
+            error=String("socket error ")+String(strerror(sockerr));
             LOG_DEBUG(GwLog::ERROR,"socket error on fd %d, errno: %d, \"%s\"", sockfd, sockerr, strerror(sockerr));
             connection->stop();
             return;
         }
     }
-    LOG_DEBUG(GwLog::LOG,"connected to %s",remoteAddress.toString().c_str());
+    LOG_DEBUG(GwLog::LOG,"connected to %s",remoteAddress.c_str());
     state=C_CONNECTED;
 }
 
@@ -111,7 +123,7 @@ GwTcpClient::~GwTcpClient(){
     if (connection)
     delete connection;
 }
-void GwTcpClient::begin(int sourceId,IPAddress address, uint16_t port,bool allowRead)
+void GwTcpClient::begin(int sourceId,String address, uint16_t port,bool allowRead)
 {
     stop();
     this->sourceId=sourceId;
@@ -151,14 +163,18 @@ void GwTcpClient::loop(bool handleRead,bool handleWrite)
     }
 }
 
-void GwTcpClient::sendToClients(const char *buf,int sourceId){
-    if (sourceId == this->sourceId) return;
+size_t GwTcpClient::sendToClients(const char *buf,int sourceId, bool partialWrite){
+    if (sourceId == this->sourceId) return 0;
+    if (state != C_CONNECTED) return 0;
+    if (! connection->hasClient()) return 0;
+    size_t len=strlen(buf);
+    if (connection->enqueue((uint8_t*)buf,len)){
+        return len;
+    }
+    return 0;
+}
+void GwTcpClient::readMessages(GwMessageFetcher *writer){
     if (state != C_CONNECTED) return;
     if (! connection->hasClient()) return;
-    connection->enqueue((uint8_t*)buf,strlen(buf));
-}
-bool GwTcpClient::readMessages(GwMessageFetcher *writer){
-    if (state != C_CONNECTED) return false;
-    if (! connection->hasClient()) return false;
-    return connection->messagesFromBuffer(writer);
+    connection->messagesFromBuffer(writer);
 }

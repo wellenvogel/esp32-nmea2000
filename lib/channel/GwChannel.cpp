@@ -52,10 +52,12 @@ class GwChannelMessageReceiver : public GwMessageFetcher{
 
 GwChannel::GwChannel(GwLog *logger,
     String name,
-    int sourceId){
+    int sourceId,
+    int maxSourceId){
     this->logger = logger;
     this->name=name;
     this->sourceId=sourceId;
+    this->maxSourceId=sourceId;
     this->countIn=new GwCounter<String>(String("count")+name+String("in"));
     this->countOut=new GwCounter<String>(String("count")+name+String("out"));
     this->impl=NULL;
@@ -206,8 +208,16 @@ void GwChannel::parseActisense(N2kHandler handler){
     }
 }
 
-void GwChannel::sendActisense(const tN2kMsg &msg){
+void GwChannel::sendActisense(const tN2kMsg &msg, int sourceId){
     if (!enabled || ! impl || ! writeActisense || ! channelStream) return;
+    //currently actisense only for channels with a single source id
+    //so we can check it here
+    if (isOwnSource(sourceId)) return;
     canSendOut(msg.PGN);
     msg.SendInActisenseFormat(channelStream);
+}
+
+bool GwChannel::isOwnSource(int id){
+    if (maxSourceId < 0) return id == sourceId;
+    else return (id >= sourceId && id <= maxSourceId);
 }
