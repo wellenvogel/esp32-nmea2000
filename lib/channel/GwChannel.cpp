@@ -144,14 +144,12 @@ bool GwChannel::canReceive(const char *buffer){
 }
 
 int GwChannel::getJsonSize(){
-    if (! enabled) return 0;
     int rt=2;
     if (countIn) rt+=countIn->getJsonSize();
     if (countOut) rt+=countOut->getJsonSize();
     return rt;
 }
 void GwChannel::toJson(GwJsonDocument &doc){
-    if (! enabled) return;
     if (countOut) countOut->toJson(doc);
     if (countIn) countIn->toJson(doc);
 }
@@ -164,6 +162,8 @@ String GwChannel::toString(){
     rt+=String("WF:") + (writeFilter?writeFilter->toString():"[]");
     rt+=String(",")+ (toN2k?"n2k":"");
     rt+=String(",")+ (seaSmartOut?"SM":"");
+    rt+=String(",")+(readActisense?"AR":"");
+    rt+=String(",")+(writeActisense?"AW":"");
     return rt;
 }
 void GwChannel::loop(bool handleRead, bool handleWrite){

@@ -181,6 +181,10 @@ void GwChannelList::toJson(GwJsonDocument &doc){
         doc["clientCon"]=client->isConnected();
         doc["clientErr"]=client->getError();
     }
+    else{
+        doc["clientCon"]=false;
+        doc["clientErr"]="disabled";
+    }
     allChannels([&](GwChannel *c){
         c->toJson(doc);
     });
