@@ -88,7 +88,7 @@ void GwChannel::begin(
     this->toN2k=toN2k;
     this->readActisense=readActisense;
     this->writeActisense=writeActisense;
-    if (impl && (readActisense|| writeActisense)){
+    if (impl && readActisense){
         channelStream=impl->getStream(false);
         if (! channelStream) {
             this->readActisense=false;
@@ -96,10 +96,8 @@ void GwChannel::begin(
             LOG_DEBUG(GwLog::ERROR,"unable to read actisnse on %s",name.c_str());
         }
         else{
-            if (readActisense){
-                this->actisenseReader= new tActisenseReader();
-                actisenseReader->SetReadStream(channelStream);
-            }           
+            this->actisenseReader= new tActisenseReader();
+            actisenseReader->SetReadStream(channelStream);         
         }
     }
 }
@@ -129,24 +127,11 @@ void GwChannel::updateCounter(const char *msg, bool out)
         countIn->add(key);
     }
 }
-bool GwChannel::canSendOut(unsigned long pgn){
-    if (! enabled) return false;
-    if (! NMEAout) return false;
-    countOut->add(String(pgn)); 
-    return true; 
-}
-bool GwChannel::canReceive(unsigned long pgn){
-    if (!enabled) return false;
-    if (!NMEAin) return false;
-    countIn->add(String(pgn));
-    return true;
-}
 
 bool GwChannel::canSendOut(const char *buffer){
-    if (! enabled) return false;
-    if (! NMEAout) return false;
+    if (! enabled || ! impl) return false;
+    if (! NMEAout || readActisense || writeActisense) return false;
     if (writeFilter && ! writeFilter->canPass(buffer)) return false;
-    updateCounter(buffer,true);
     return true;
 }
 
@@ -195,7 +180,9 @@ void GwChannel::readMessages(GwChannel::NMEA0183Handler handler){
 void GwChannel::sendToClients(const char *buffer, int sourceId){
     if (! impl) return;
     if (canSendOut(buffer)){
-        impl->sendToClients(buffer,sourceId);
+        if(impl->sendToClients(buffer,sourceId)){
+            updateCounter(buffer,true);
+        }
     }
 }
 void GwChannel::parseActisense(N2kHandler handler){
@@ -203,7 +190,7 @@ void GwChannel::parseActisense(N2kHandler handler){
     tN2kMsg N2kMsg;
 
     while (actisenseReader->GetMessageFromStream(N2kMsg)) {
-      canReceive(N2kMsg.PGN);
+      countIn->add(String(N2kMsg.PGN));
       handler(N2kMsg,sourceId);
     }
 }
@@ -213,7 +200,7 @@ void GwChannel::sendActisense(const tN2kMsg &msg, int sourceId){
     //currently actisense only for channels with a single source id
     //so we can check it here
     if (isOwnSource(sourceId)) return;
-    canSendOut(msg.PGN);
+    countOut->add(String(msg.PGN)); 
     msg.SendInActisenseFormat(channelStream);
 }
 

@@ -67,6 +67,7 @@ void GwChannelList::begin(bool fallbackSerial){
             config->getBool(config->usbActisense),
             config->getBool(config->usbActSend)
         );
+        theChannels.push_back(channel);
         LOG_DEBUG(GwLog::LOG,"%s",channel->toString().c_str());
     }
     //TCP server

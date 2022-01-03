@@ -56,8 +56,6 @@ class GwChannel{
     }
     bool isEnabled(){return enabled;}
     bool shouldRead(){return enabled && NMEAin;}
-    bool canSendOut(unsigned long pgn);
-    bool canReceive(unsigned long pgn);
     bool canSendOut(const char *buffer);
     bool canReceive(const char *buffer);
     bool sendSeaSmart(){ return seaSmartOut;}
