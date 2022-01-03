@@ -6,6 +6,7 @@
 #include "GwLog.h"
 #include "GWConfig.h"
 #include "GwJsonDocument.h"
+#include "GwApi.h"
 
 //NMEA message channels
 #define N2K_CHANNEL_ID 0
@@ -38,6 +39,7 @@ class GwChannelList{
         void toJson(GwJsonDocument &doc);
         //single channel
         GwChannel *getChannelById(int sourceId);
+        void fillStatus(GwApi::Status &status);
 
 
 };

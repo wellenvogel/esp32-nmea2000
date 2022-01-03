@@ -281,6 +281,20 @@ public:
       }
     }
   }
+  virtual void getStatus(Status &status){
+    status.empty();
+    status.wifiApOn=gwWifi.isApActive();
+    status.wifiClientOn=gwWifi.isClientActive();
+    status.wifiClientConnected=gwWifi.clientConnected();
+    status.wifiApIp=gwWifi.apIP();
+    status.systemName=systemName->asString();
+    status.wifiApPass=config.getString(config.apPassword);
+    status.wifiClientIp=WiFi.localIP().toString();
+    status.wifiClientSSID=config.getString(config.wifiSSID);
+    status.n2kRx=countNMEA2KIn.getGlobal();
+    status.n2kTx=countNMEA2KOut.getGlobal();
+    channels.fillStatus(status);
+  }
   virtual GwBoatData *getBoatData(){
     return &boatData;
   }

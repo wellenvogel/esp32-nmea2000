@@ -71,5 +71,7 @@ class GwChannel{
     typedef std::function<void(const tN2kMsg &msg, int sourceId)> N2kHandler ;
     void parseActisense(N2kHandler handler);
     void sendActisense(const tN2kMsg &msg, int sourceId);
+    unsigned long countRx();
+    unsigned long countTx();
 };
 

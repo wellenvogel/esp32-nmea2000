@@ -208,3 +208,12 @@ bool GwChannel::isOwnSource(int id){
     if (maxSourceId < 0) return id == sourceId;
     else return (id >= sourceId && id <= maxSourceId);
 }
+
+unsigned long GwChannel::countRx(){
+    if (! countIn) return 0UL;
+    return countIn->getGlobal();
+}
+unsigned long GwChannel::countTx(){
+    if (! countOut) return 0UL;
+    return countOut->getGlobal();
+}

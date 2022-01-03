@@ -30,6 +30,52 @@ class GwApi{
                 const String & getFormat() const{
                     return format;
                 }
+        };
+
+        class Status{
+            public:
+                bool wifiApOn=false;
+                bool wifiClientOn=false;
+                bool wifiClientConnected=false;
+                String wifiApIp;
+                String systemName; //is also AP SSID
+                String wifiApPass;
+                String wifiClientIp;
+                String wifiClientSSID;
+                unsigned long usbRx=0;
+                unsigned long usbTx=0;
+                unsigned long serRx=0;
+                unsigned long serTx=0;
+                unsigned long tcpSerRx=0;
+                unsigned long tcpSerTx=0;
+                int tcpClients=0;
+                unsigned long tcpClRx=0;
+                unsigned long tcpClTx=0;
+                bool tcpClientConnected=false;
+                unsigned long n2kRx=0;
+                unsigned long n2kTx=0;
+                void empty(){
+                    wifiApOn=false;
+                    wifiClientOn=false;
+                    wifiClientConnected=false;
+                    wifiApIp=String();
+                    systemName=String(); //is also AP SSID
+                    wifiApPass=String();
+                    wifiClientIp=String();
+                    wifiClientSSID=String();
+                    usbRx=0;
+                    usbTx=0;
+                    serRx=0;
+                    serTx=0;
+                    tcpSerRx=0;
+                    tcpSerTx=0;
+                    tcpClients=0;
+                    tcpClRx=0;
+                    tcpClTx=0;
+                    tcpClientConnected=false;
+                    n2kRx=0;
+                    n2kTx=0; 
+                }
         }; 
         /**
          * thread safe methods - can directly be called from a user task
@@ -58,6 +104,11 @@ class GwApi{
          * just make sure to have the list being of appropriate size (numValues)
          */
         virtual void getBoatDataValues(int numValues,BoatValue **list)=0;
+
+        /**
+         * fill the status information
+         */
+        virtual void getStatus(Status &status);
         /**
          * not thread safe methods
          * accessing boat data must only be executed from within the main thread

@@ -20,6 +20,7 @@ template<class T> class GwCounter{
             globalFail=0;
             globalOk=0;
         }
+        unsigned long getGlobal(){return globalOk;}
         void add(T key){
             globalOk++;
             auto it=okCounter.find(key);

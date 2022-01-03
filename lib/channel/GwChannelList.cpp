@@ -191,3 +191,26 @@ GwChannel *GwChannelList::getChannelById(int sourceId){
     }
     return NULL;
 }
+
+void GwChannelList::fillStatus(GwApi::Status &status){
+    GwChannel *channel=getChannelById(USB_CHANNEL_ID);
+    if (channel){
+        status.usbRx=channel->countRx();
+        status.usbTx=channel->countTx();
+    }
+    channel=getChannelById(SERIAL1_CHANNEL_ID);
+    if (channel){
+        status.serRx=channel->countRx();
+        status.serTx=channel->countTx();
+    }
+    channel=getChannelById(MIN_TCP_CHANNEL_ID);
+    if (channel){
+        status.tcpSerRx=channel->countRx();
+        status.tcpSerTx=channel->countTx();
+    }
+    channel=getChannelById(TCP_CLIENT_CHANNEL_ID);
+    if (channel){
+        status.tcpClRx=channel->countRx();
+        status.tcpClTx=channel->countTx();
+    }
+}

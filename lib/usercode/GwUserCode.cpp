@@ -99,6 +99,10 @@ public:
         GWSYNCHRONIZED(mainLock);
         api->getBoatDataValues(num,list);
     }
+    virtual void getStatus(Status &status){
+        GWSYNCHRONIZED(mainLock);
+        api->getStatus(status);
+    }
     virtual ~TaskApi(){};
 };
 
