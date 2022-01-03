@@ -162,6 +162,14 @@ function checkAdminPass(v){
     return checkApPass(v);
 }
 
+function checkIpAddress(v,allValues,def){
+    if (allValues.tclEnabled != "true") return;
+    if (! v) return "cannot be empty";
+    if (! v.match(/[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*/)
+      && ! v.match(/.*\.local/))
+      return "must be either in the form 192.168.1.1 or xxx.local";
+}
+
 function checkXDR(v,allValues){
     if (! v) return;
     let parts=v.split(',');
