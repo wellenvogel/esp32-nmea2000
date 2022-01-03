@@ -150,6 +150,7 @@ size_t GwSocketServer::sendToClients(const char *buf, int source,bool partial)
 {
     if (!clients)
         return 0;
+    bool hasSend=false;    
     int len = strlen(buf);
     int sourceIndex = source - minId;
     for (int i = 0; i < maxClients; i++)
@@ -161,10 +162,10 @@ size_t GwSocketServer::sendToClients(const char *buf, int source,bool partial)
             continue;
         if (client->connected())
         {
-            client->enqueue((uint8_t *)buf, len);
+            if(client->enqueue((uint8_t *)buf, len)) hasSend=true;
         }
     }
-    return len;
+    return hasSend?len:0;
 }
 
 int GwSocketServer::numClients()
