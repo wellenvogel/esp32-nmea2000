@@ -459,7 +459,7 @@
         "type": "string",
         "default": "",
         "check": "checkIpAddress",
-        "description": "the IP address we connect to",
+        "description": "the IP address we connect to in the form 192.168.1.2\nor an MDNS name like ESP32NMEA2K.local",
         "category": "TCP client"
     },
     {
