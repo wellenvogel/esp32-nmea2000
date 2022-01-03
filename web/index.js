@@ -306,10 +306,10 @@ function updateMsgDetails(key, details) {
 let counters={
     count2Kin: 'NMEA2000 in',
     count2Kout: 'NMEA2000 out',
-    countTCPServerin: 'TCPserver in',
-    countTCPServerout: 'TCPserver out',
-    countTCPclientin: 'TCPclient in',
-    countTCPclientout: 'TCPclient out',
+    countTCPin: 'TCPserver in',
+    countTCPout: 'TCPserver out',
+    countTCPClientin: 'TCPclient in',
+    countTCPClientout: 'TCPclient out',
     countUSBin: 'USB in',
     countUSBout: 'USB out',
     countSERIn: 'Serial in',
@@ -1362,7 +1362,9 @@ function sourceName(v){
     if (v == 0) return "N2K";
     if (v == 1) return "USB";
     if (v == 2) return "SER";
-    if (v >= 3) return "TCP";
+    if (v == 3) return "TCPcl"
+    if (v >= 4 && v <= 20) return "TCPser";
+    if (v >= 200) return "USER";
     return "---";
 }
 let lastSelectList=[];
