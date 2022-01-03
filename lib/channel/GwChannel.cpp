@@ -130,7 +130,7 @@ void GwChannel::updateCounter(const char *msg, bool out)
 
 bool GwChannel::canSendOut(const char *buffer){
     if (! enabled || ! impl) return false;
-    if (! NMEAout || readActisense || writeActisense) return false;
+    if (! NMEAout || readActisense) return false;
     if (writeFilter && ! writeFilter->canPass(buffer)) return false;
     return true;
 }
