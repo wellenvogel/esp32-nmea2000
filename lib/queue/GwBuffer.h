@@ -22,7 +22,7 @@ typedef size_t (*GwBufferHandleFunction)(uint8_t *buffer, size_t len, void *para
 class GwBuffer{
     public:
         static const size_t TX_BUFFER_SIZE=1620; // app. 20 NMEA messages
-        static const size_t RX_BUFFER_SIZE=400;  // enough for 1 NMEA message or actisense message
+        static const size_t RX_BUFFER_SIZE=600;  // enough for 1 NMEA message or actisense message or seasmart message
         typedef enum {
             OK,
             ERROR,

@@ -68,7 +68,7 @@ const unsigned long HEAP_REPORT_TIME=2000; //set to 0 to disable heap reporting
 
 
 #define MAX_NMEA2000_MESSAGE_SEASMART_SIZE 500
-#define MAX_NMEA0183_MESSAGE_SIZE 150 // For AIS
+#define MAX_NMEA0183_MESSAGE_SIZE MAX_NMEA2000_MESSAGE_SEASMART_SIZE
 //https://curiouser.cheshireeng.com/2014/08/19/c-compile-time-assert/
 #define CASSERT(predicate, text) _impl_CASSERT_LINE(predicate,__LINE__) 
 #define _impl_PASTE(a,b) a##b
@@ -195,7 +195,7 @@ void handleN2kMessage(const tN2kMsg &n2kMsg,int sourceId, bool isConverted=false
     c->sendActisense(n2kMsg,sourceId);
   });
   if (! isConverted){
-    nmea0183Converter->HandleMsg(n2kMsg);
+    nmea0183Converter->HandleMsg(n2kMsg,sourceId);
   }
   if (sourceId != N2K_CHANNEL_ID){
     countNMEA2KOut.add(n2kMsg.PGN);
@@ -630,7 +630,7 @@ void setup() {
     [](const tNMEA0183Msg &msg, int sourceId){
       SendNMEA0183Message(msg,sourceId,false);
     }
-    , N2K_CHANNEL_ID,
+    , 
     config.getString(config.talkerId,String("GP")),
     &xdrMappings,
     config.getInt(config.minXdrInterval,100)
@@ -770,7 +770,16 @@ void loop() {
         oc->loop(false,true);
       });
       if (c->sendToN2K()){
-        toN2KConverter->parseAndSend(buffer, sourceId);
+        if (strlen(buffer) > 6 && strncmp(buffer,"$PCDIN",6) == 0){
+          tN2kMsg n2kMsg;
+          uint32_t timestamp;
+          if (SeasmartToN2k(buffer,timestamp,n2kMsg)){
+            handleN2kMessage(n2kMsg,sourceId);
+          }
+        }
+        else{
+          toN2KConverter->parseAndSend(buffer, sourceId);
+        }
       }
     });
   });

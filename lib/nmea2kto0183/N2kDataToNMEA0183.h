@@ -22,6 +22,7 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 #ifndef _N2KDATATONMEA0183_H
 #define _N2KDATATONMEA0183_H
+#include <functional>
 #include <NMEA0183.h>
 #include <NMEA2000.h>
 
@@ -34,22 +35,22 @@ class GwJsonDocument;
 class N2kDataToNMEA0183 
 {
 public:
-  using tSendNMEA0183MessageCallback = void (*)(const tNMEA0183Msg &NMEA0183Msg, int id);
+  typedef std::function<void(const tNMEA0183Msg &NMEA0183Msg,int id)> SendNMEA0183MessageCallback;
 
 protected:
   GwLog *logger;
   GwBoatData *boatData;
-  int sourceId;
+  int sourceId=0;
   char talkerId[3];
-  tSendNMEA0183MessageCallback SendNMEA0183MessageCallback;
+  SendNMEA0183MessageCallback sendNMEA0183MessageCallback;
   void SendMessage(const tNMEA0183Msg &NMEA0183Msg);
   N2kDataToNMEA0183(GwLog *logger, GwBoatData *boatData,  
-    tSendNMEA0183MessageCallback callback, int sourceId,String talkerId);
+    SendNMEA0183MessageCallback callback, String talkerId);
 
 public:
-  static N2kDataToNMEA0183* create(GwLog *logger, GwBoatData *boatData,  tSendNMEA0183MessageCallback callback, 
-    int sourceId,String talkerId, GwXDRMappings *xdrMappings,int minXdrInterval=100);
-  virtual void HandleMsg(const tN2kMsg &N2kMsg) = 0;
+  static N2kDataToNMEA0183* create(GwLog *logger, GwBoatData *boatData,  SendNMEA0183MessageCallback callback, 
+    String talkerId, GwXDRMappings *xdrMappings,int minXdrInterval=100);
+  virtual void HandleMsg(const tN2kMsg &N2kMsg, int sourceId) = 0;
   virtual void loop();
   virtual ~N2kDataToNMEA0183(){}
   virtual unsigned long* handledPgns()=0;
