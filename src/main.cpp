@@ -35,6 +35,7 @@ const unsigned long HEAP_REPORT_TIME=2000; //set to 0 to disable heap reporting
 #include <ESPAsyncWebServer.h>
 #include <Preferences.h>
 #include <ESPmDNS.h>
+#include <memory>
 #include <map>
 #include <vector>
 #include "esp_heap_caps.h"
@@ -176,7 +177,8 @@ void handleN2kMessage(const tN2kMsg &n2kMsg,int sourceId, bool isConverted=false
   if (sourceId == N2K_CHANNEL_ID){
     countNMEA2KIn.add(n2kMsg.PGN);
   }
-  char buf[MAX_NMEA2000_MESSAGE_SEASMART_SIZE];
+  char *buf=new char[MAX_NMEA2000_MESSAGE_SEASMART_SIZE];
+  std::unique_ptr<char> bufDel(buf);
   bool messageCreated=false;
   channels.allChannels([&](GwChannel *c){
     if (c->sendSeaSmart()){
@@ -207,7 +209,8 @@ void handleN2kMessage(const tN2kMsg &n2kMsg,int sourceId, bool isConverted=false
 //*****************************************************************************
 void SendNMEA0183Message(const tNMEA0183Msg &NMEA0183Msg, int sourceId,bool convert=false) {
   logger.logDebug(GwLog::DEBUG+2,"SendNMEA0183(1)");
-  char buf[MAX_NMEA0183_MESSAGE_SIZE+3];
+  char *buf=new char[MAX_NMEA0183_MESSAGE_SIZE+3];
+  std::unique_ptr<char> bufDel(buf);
   if ( !NMEA0183Msg.GetMessage(buf, MAX_NMEA0183_MESSAGE_SIZE) ) return;
   logger.logDebug(GwLog::DEBUG+2,"SendNMEA0183: %s",buf);
   if (convert){
@@ -554,7 +557,8 @@ protected:
     tNMEA0183Msg msg;
     msg.Init("XDR",config.getString(config.talkerId,String("GP")).c_str());
     msg.AddStrField(val.c_str());
-    char buf[MAX_NMEA0183_MSG_BUF_LEN];
+    char *buf=new char[MAX_NMEA0183_MSG_BUF_LEN+2];
+    std::unique_ptr<char> bufDel(buf);
     msg.GetMessage(buf,MAX_NMEA0183_MSG_BUF_LEN);
     result=buf;
   }
