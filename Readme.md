@@ -79,7 +79,7 @@ After installing the driver check with your device manager for the com port that
 Open a command prompt and change into the directory you downloaded the esptool.exe and the firmware binary.
 Flash with the command
 ```
-esptool.exe --port COM3 0x1000 xxxxx-xxxx-all.bin
+esptool.exe --port COM3 write_flash 0x1000 xxxxx-xxxx-all.bin
 ```
 Replace COM3 with the port shown in the device manager and the xxx with the name of the downloaded binary.
 If you do not want to use the command line you first need to install python3 from the [download page](https://www.python.org/downloads/windows/) - use the Windows 64 Bit installer. Install using the default settings. Afterwards download [flashtool.pyz](../../raw/master/tools/flashtool.pyz) and run it with a double click.
