@@ -3,28 +3,29 @@
 #include "GWConfig.h"
 #include "GwLog.h"
 #include "GwBuffer.h"
+#include "GwChannelInterface.h"
 #include <memory>
-#include <WiFi.h>
 
-using wiFiClientPtr = std::shared_ptr<WiFiClient>;
-class GwClient;
-using gwClientPtr = std::shared_ptr<GwClient>;
-class GwSocketServer{
+class GwSocketConnection;
+class GwSocketServer: public GwChannelInterface{
     private:
         const GwConfigHandler *config;
         GwLog *logger;
-        gwClientPtr *clients=NULL;
-        WiFiServer *server=NULL;
+        GwSocketConnection **clients=NULL;
+        int listener=-1;
+        int listenerPort=-1;
         bool allowReceive;
         int maxClients;
         int minId;
+        bool createListener();
+        int available();
     public:
         GwSocketServer(const GwConfigHandler *config,GwLog *logger,int minId);
         ~GwSocketServer();
         void begin();
-        void loop(bool handleRead=true,bool handleWrite=true);
-        void sendToClients(const char *buf,int sourceId);
+        virtual void loop(bool handleRead=true,bool handleWrite=true);
+        virtual size_t sendToClients(const char *buf,int sourceId, bool partialWrite=false);
         int numClients();
-        bool readMessages(GwMessageFetcher *writer);
+        virtual void readMessages(GwMessageFetcher *writer);
 };
 #endif

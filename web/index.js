@@ -162,6 +162,14 @@ function checkAdminPass(v){
     return checkApPass(v);
 }
 
+function checkIpAddress(v,allValues,def){
+    if (allValues.tclEnabled != "true") return;
+    if (! v) return "cannot be empty";
+    if (! v.match(/[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*/)
+      && ! v.match(/.*\.local/))
+      return "must be either in the form 192.168.1.1 or xxx.local";
+}
+
 function checkXDR(v,allValues){
     if (! v) return;
     let parts=v.split(',');
@@ -306,12 +314,14 @@ function updateMsgDetails(key, details) {
 let counters={
     count2Kin: 'NMEA2000 in',
     count2Kout: 'NMEA2000 out',
-    countTCPin: 'TCP in',
-    countTCPout: 'TCP out',
+    countTCPin: 'TCPserver in',
+    countTCPout: 'TCPserver out',
+    countTCPClientin: 'TCPclient in',
+    countTCPClientout: 'TCPclient out',
     countUSBin: 'USB in',
     countUSBout: 'USB out',
-    countSerialIn: 'Serial in',
-    countSerialOut: 'Serial out'
+    countSERIn: 'Serial in',
+    countSEROut: 'Serial out'
 }
 function showOverlay(text, isHtml) {
     let el = document.getElementById('overlayContent');
@@ -1360,7 +1370,9 @@ function sourceName(v){
     if (v == 0) return "N2K";
     if (v == 1) return "USB";
     if (v == 2) return "SER";
-    if (v >= 3) return "TCP";
+    if (v == 3) return "TCPcl"
+    if (v >= 4 && v <= 20) return "TCPser";
+    if (v >= 200) return "USER";
     return "---";
 }
 let lastSelectList=[];

@@ -96,7 +96,7 @@ size_t GwSerial::sendToClients(const char *buf,int sourceId,bool partial){
     }
     return enqueued;
 }
-void GwSerial::loop(bool handleRead){
+void GwSerial::loop(bool handleRead,bool handleWrite){
     write();
     if (! isInitialized()) return;
     if (! handleRead) return;
@@ -116,10 +116,10 @@ void GwSerial::loop(bool handleRead){
         serial->readBytes(buffer,available);
     }
 }
-bool GwSerial::readMessages(GwMessageFetcher *writer){
-    if (! isInitialized()) return false;
-    if (! allowRead) return false;
-    return writer->handleBuffer(readBuffer);
+void GwSerial::readMessages(GwMessageFetcher *writer){
+    if (! isInitialized()) return;
+    if (! allowRead) return;
+    writer->handleBuffer(readBuffer);
 }
 
 void GwSerial::flush(){

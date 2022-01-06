@@ -34,12 +34,11 @@
 
 
 N2kDataToNMEA0183::N2kDataToNMEA0183(GwLog * logger, GwBoatData *boatData, 
-  tSendNMEA0183MessageCallback callback, int id,String talkerId) 
+  SendNMEA0183MessageCallback callback, String talkerId) 
     {
-    this->SendNMEA0183MessageCallback=callback;
+    this->sendNMEA0183MessageCallback=callback;
     strncpy(this->talkerId,talkerId.c_str(),2);
-    this->talkerId[2]=0;
-    sourceId=id;   
+    this->talkerId[2]=0; 
   }
 
 
@@ -50,7 +49,7 @@ void N2kDataToNMEA0183::loop() {
 
 //*****************************************************************************
 void N2kDataToNMEA0183::SendMessage(const tNMEA0183Msg &NMEA0183Msg) {
-  if ( SendNMEA0183MessageCallback != 0 ) SendNMEA0183MessageCallback(NMEA0183Msg, sourceId);
+    sendNMEA0183MessageCallback(NMEA0183Msg, sourceId);
 }
 
 /**
@@ -148,8 +147,9 @@ private:
     virtual String handledKeys(){
         return converters.handledKeys();
     }
-    virtual void HandleMsg(const tN2kMsg &N2kMsg)
+    virtual void HandleMsg(const tN2kMsg &N2kMsg, int sourceId)
     {
+        this->sourceId=sourceId;
         String key=String(N2kMsg.PGN);
         bool rt=converters.handleMessage(key,N2kMsg,this);
         if (! rt){
@@ -1489,9 +1489,9 @@ private:
 
   public:
     N2kToNMEA0183Functions(GwLog *logger, GwBoatData *boatData, 
-        tSendNMEA0183MessageCallback callback, int sourceId,
+        SendNMEA0183MessageCallback callback,
         String talkerId, GwXDRMappings *xdrMappings, int minXdrInterval) 
-    : N2kDataToNMEA0183(logger, boatData, callback,sourceId,talkerId)
+    : N2kDataToNMEA0183(logger, boatData, callback,talkerId)
     {
         LastPosSend = 0;
         lastLoopTime = 0;
@@ -1516,9 +1516,9 @@ private:
 
 
 N2kDataToNMEA0183* N2kDataToNMEA0183::create(GwLog *logger, GwBoatData *boatData, 
-    tSendNMEA0183MessageCallback callback, int sourceId,String talkerId, GwXDRMappings *xdrMappings,
+    SendNMEA0183MessageCallback callback, String talkerId, GwXDRMappings *xdrMappings,
     int minXdrInterval){
   LOG_DEBUG(GwLog::LOG,"creating N2kToNMEA0183");    
-  return new N2kToNMEA0183Functions(logger,boatData,callback, sourceId,talkerId,xdrMappings,minXdrInterval);
+  return new N2kToNMEA0183Functions(logger,boatData,callback, talkerId,xdrMappings,minXdrInterval);
 }
 //*****************************************************************************

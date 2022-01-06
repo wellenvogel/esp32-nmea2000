@@ -29,11 +29,13 @@ uint16_t DaysSince1970 = 0;
 
 class MyAisDecoder : public AIS::AisDecoder
 {
+  public:
+    int sourceId=-1;
   private:
     NMEA0183DataToN2K::N2kSender sender;
     GwLog *logger;
     void send(const tN2kMsg &msg){
-      (*sender)(msg);
+      (*sender)(msg,sourceId);
     }
     AIS::DefaultSentenceParser parser;
   public:

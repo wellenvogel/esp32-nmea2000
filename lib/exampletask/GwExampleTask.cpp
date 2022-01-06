@@ -88,6 +88,7 @@ void exampleTask(GwApi *api){
     GwApi::BoatValue *latitude=new GwApi::BoatValue(F("Latitude"));
     GwApi::BoatValue *testValue=new GwApi::BoatValue(boatItemName);
     GwApi::BoatValue *valueList[]={longitude,latitude,testValue};
+    GwApi::Status status;
     while(true){
         delay(1000);
         /*
@@ -162,6 +163,29 @@ void exampleTask(GwApi *api){
                 LOG_DEBUG(GwLog::LOG,"%s now invalid",testValue->getName().c_str());
             }
         }
+        api->getStatus(status);
+        #define B(v) (v?"true":"false")
+        LOG_DEBUG(GwLog::LOG,"ST1:ap=%s,wc=%s,cc=%s",
+            B(status.wifiApOn),
+            B(status.wifiClientOn),
+            B(status.wifiClientConnected));
+        LOG_DEBUG(GwLog::LOG,"ST2:sn=%s,ai=%s,ap=%s,cs=%s,ci=%s",
+            status.systemName.c_str(),
+            status.wifiApIp.c_str(),
+            status.wifiApPass.c_str(),
+            status.wifiClientSSID.c_str(),
+            status.wifiClientIp.c_str());
+        LOG_DEBUG(GwLog::LOG,"ST3:ur=%ld,ut=%ld,sr=%ld,st=%ld,tr=%ld,tt=%ld,cr=%ld,ct=%ld,2r=%ld,2t=%ld",
+            status.usbRx,
+            status.usbTx,
+            status.serRx,
+            status.serTx,
+            status.tcpSerRx,
+            status.tcpSerTx,
+            status.tcpClRx,
+            status.tcpClTx,
+            status.n2kRx,
+            status.n2kTx);        
 
     }
     vTaskDelete(NULL);

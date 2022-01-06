@@ -14,7 +14,7 @@ How to build the bundled flashtool.exe (on windows)
 (2) pip install pyinstaller
 (3) pip install pyserial
 (4) in this directory:
-    pyinstaller -F flashtool.py
+    pyinstaller --clean -F flashtool.py
     will create flashtool.exe in dist
 
 

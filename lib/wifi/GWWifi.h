@@ -23,5 +23,7 @@ class GwWifi{
         bool clientConnected();
         bool connectClient();
         String apIP();
+        bool isApActive(){return apActive;}
+        bool isClientActive(){return wifiClient->asBoolean();}
 };
 #endif
