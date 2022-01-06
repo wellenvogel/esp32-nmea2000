@@ -76,13 +76,20 @@ You can find a prebuild executable in tools: [esptool.exe](tools/esptool.exe).
 Just create an empty directory on your machine, download the esptool to this directory and also download the binary (xxx-all.bin) from [releases](../../releases).
 Afterwards you need to install the driver for the serial port to connect your ESP32 board. For a modern windows the driver at [FTDI](https://ftdichip.com/drivers/d2xx-drivers/) should be working.
 After installing the driver check with your device manager for the com port that is assigned to your connected esp device.
+
 Open a command prompt and change into the directory you downloaded the esptool.exe and the firmware binary.
 Flash with the command
 ```
 esptool.exe --port COM3 write_flash 0x1000 xxxxx-xxxx-all.bin
 ```
 Replace COM3 with the port shown in the device manager and the xxx with the name of the downloaded binary.
-If you do not want to use the command line you first need to install python3 from the [download page](https://www.python.org/downloads/windows/) - use the Windows 64 Bit installer. Install using the default settings. Afterwards download [flashtool.pyz](../../raw/master/tools/flashtool.pyz) and run it with a double click.
+
+If you do not want to use the command line there is a tool with an UI that allows you to flash the initial or update firmware.
+Just download the exe for your windows system from the [ESP32N2K-Flasher Git Repository](https://github.com/wellenvogel/esp32n2k-flasher/releases/latest).
+There is no installation needed - just start the downloaded exe.
+Some Anti Virus Software may (accidently) tag this as infected. In this case you can still install the UI in two steps:
+ *  you first need to install python3 from the [download page](https://www.python.org/downloads/windows/) - use the Windows 64 Bit installer. Install using the default settings. 
+*  Afterwards download [flashtool.pyz](../../raw/master/tools/flashtool.pyz) and run it with a double click.
 
 
 Update
