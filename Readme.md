@@ -138,6 +138,15 @@ For details refer to the [example description](lib/exampletask/Readme.md).
 
 Changelog
 ---------
+[20220107](../../releases/tag/20220107)
+********
+* add a TCP client - you can connect to any source of NMEA data using IP address (or MDNS host name) and port<br>
+This way you can e.g. "chain" multiple gateways
+* add receiving of Seasmart messages.<br>
+Using this feature you can forward the data from the NMEA2000 bus via TCP to another device.
+* add some Status Info to the extension API
+* correct the display of wind direction on the data page
+
 [20211218](../../releases/tag/20211218)
 ********
 * 1st real release
