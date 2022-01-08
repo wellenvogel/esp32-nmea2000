@@ -339,7 +339,7 @@ void OBP60Task(void *param){
                 }
         }
 
-        //fetch the current values of the items that we have in itemNames
+        // Read the current bus data and copy to stucture
         api->getBoatDataValues(7,valueList);
 
         busInfo.WaterDepth.fvalue = waterdepth->value;

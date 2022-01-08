@@ -3,7 +3,7 @@
 
 #include <Arduino.h>
 
-typedef struct{
+typedef struct{               // Sub structure for bus data
   float fvalue = 0;           // Float value
   char svalue[16] = "";       // Char value
   char unit[8] = "";          // Unit
