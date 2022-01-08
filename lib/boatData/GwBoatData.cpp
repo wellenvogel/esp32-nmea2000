@@ -425,7 +425,7 @@ double formatWind(double cv)
 {
     double rt = formatCourse(cv);
     if (rt > 180)
-        rt = 180 - rt;
+        rt = (360 - rt) * -1;
     return rt;
 }
 double formatKnots(double cv)

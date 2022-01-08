@@ -17,7 +17,21 @@ void showPage(busData values){
     display.setFont(&Ubuntu_Bold8pt7b);
     display.setTextColor(GxEPD_BLACK);
     display.setCursor(0, 15);
-    display.print(" WiFi AP TCP N2K 183 ");
+    if(values.wifiApOn){
+      display.print(" AP ");
+    }
+    if(values.tcpClRx > 0 || values.tcpClTx > 0 || values.tcpSerRx > 0 || values.tcpSerTx > 0){
+      display.print("TCP ");
+    }
+    if(values.n2kRx > 0 || values.n2kTx > 0){
+      display.print("N2K ");
+    }
+    if(values.serRx > 0 || values.serTx > 0){
+      display.print("183 ");
+    }
+    if(values.usbRx > 0 || values.usbTx > 0){
+      display.print("USB ");
+    }
     if(values.gps == true && values.PDOP.valid == true && values.PDOP.fvalue <= 50){
      display.print("GPS");
     }
@@ -36,60 +50,58 @@ void showPage(busData values){
     // Date and time
     display.setFont(&Ubuntu_Bold8pt7b);
     display.setCursor(230, 15);
-    if(values.gps == true){
-      if(values.PDOP.valid == true && values.PDOP.fvalue <= 50){
+    if(values.HDOP.valid == true && values.HDOP.fvalue <= 50){
+      char newdate[16] = "";
+      if(String(values.dateformat) == "DE"){
+        display.print(values.Date.svalue);
+      }
+      if(String(values.dateformat) == "GB"){
+        values.Date.svalue[2] = '/';
+        values.Date.svalue[5] = '/';
+        display.print(values.Date.svalue);
+      }
+      if(String(values.dateformat) == "US"){
         char newdate[16] = "";
-        if(String(values.dateformat) == "DE"){
-          display.print(values.Date.svalue);
-        }
-        if(String(values.dateformat) == "GB"){
-          values.Date.svalue[2] = '/';
-          values.Date.svalue[5] = '/';
-          display.print(values.Date.svalue);
-        }
-        if(String(values.dateformat) == "US"){
-          char newdate[16] = "";
-          strcpy(newdate, values.Date.svalue);
-          newdate[0] = values.Date.svalue[3];
-          newdate[1] = values.Date.svalue[4];
-          newdate[2] = '/';
-          newdate[3] = values.Date.svalue[0];
-          newdate[4] = values.Date.svalue[1];
-          newdate[5] = '/';
-          display.print(newdate);
-        }
+        strcpy(newdate, values.Date.svalue);
+        newdate[0] = values.Date.svalue[3];
+        newdate[1] = values.Date.svalue[4];
+        newdate[2] = '/';
+        newdate[3] = values.Date.svalue[0];
+        newdate[4] = values.Date.svalue[1];
+        newdate[5] = '/';
+        display.print(newdate);
+      }
+      display.print(" ");
+      if(values.timezone == 0){
+        display.print(values.Time.svalue);
         display.print(" ");
-        if(values.timezone == 0){
-          display.print(values.Time.svalue);
-          display.print(" ");
-          display.print("UTC");
-        }
-        else{
-          char newtime[16] = "";
-          char newhour[3] = "";
-          int hour = 0;
-          strcpy(newtime, values.Time.svalue);    
-          newhour[0] = values.Time.svalue[0];
-          newhour[1] = values.Time.svalue[1];
-          hour = strtol(newhour, 0, 10);
-          if(values.timezone > 0){
-            hour += values.timezone;
-          }
-          else{
-            hour += values.timezone + 24;
-          }
-          hour %= 24;
-          sprintf(newhour, "%d", hour);
-          newtime[0] = newhour[0];
-          newtime[1] = newhour[1];
-          display.print(newtime);
-          display.print(" ");
-          display.print("LOT");
-        }
+        display.print("UTC");
       }
       else{
-        display.print("No GPS data");
+        char newtime[16] = "";
+        char newhour[3] = "";
+        int hour = 0;
+        strcpy(newtime, values.Time.svalue);    
+        newhour[0] = values.Time.svalue[0];
+        newhour[1] = values.Time.svalue[1];
+        hour = strtol(newhour, 0, 10);
+        if(values.timezone > 0){
+          hour += values.timezone;
+        }
+        else{
+          hour += values.timezone + 24;
+        }
+        hour %= 24;
+        sprintf(newhour, "%d", hour);
+        newtime[0] = newhour[0];
+        newtime[1] = newhour[1];
+        display.print(newtime);
+        display.print(" ");
+        display.print("LOT");
       }
+    }
+    else{
+      display.print("No GPS data");
     }
   }
 

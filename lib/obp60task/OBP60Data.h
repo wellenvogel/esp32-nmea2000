@@ -11,6 +11,27 @@ typedef struct{               // Sub structure for bus data
 } dataContainer;
 
 typedef struct{
+  // Gateway status infos
+  bool wifiApOn = false;
+  bool wifiClientOn = false;
+  bool wifiClientConnected = false;
+  String wifiApIp = "";
+  String systemName = "";     // is also AP SSID
+  String wifiApPass = "";
+  String wifiClientIp = "";
+  String wifiClientSSID = "";
+  unsigned long usbRx = 0;
+  unsigned long usbTx = 0;
+  unsigned long serRx = 0;
+  unsigned long serTx = 0;
+  unsigned long tcpSerRx = 0;
+  unsigned long tcpSerTx = 0;
+  int tcpClients = 0;
+  unsigned long tcpClRx = 0;
+  unsigned long tcpClTx = 0;
+  bool tcpClientConnected = false;
+  unsigned long n2kRx = 0;
+  unsigned long n2kTx = 0; 
   // OBP60 Settings
   char dateformat[3] = "GB";
   int timezone = 0;

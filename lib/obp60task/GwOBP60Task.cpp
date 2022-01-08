@@ -215,6 +215,7 @@ void OBP60Task(void *param){
 
     GwApi *api=(GwApi*)param;
     GwLog *logger=api->getLogger();
+    GwApi::Status status;
 
     bool hasPosition = false;
     
@@ -260,8 +261,9 @@ void OBP60Task(void *param){
     GwApi::BoatValue *longitude=new GwApi::BoatValue(F("Longitude"));
     GwApi::BoatValue *latitude=new GwApi::BoatValue(F("Latitude"));
     GwApi::BoatValue *waterdepth=new GwApi::BoatValue(F("WaterDepth"));
+    GwApi::BoatValue *hdop=new GwApi::BoatValue(F("HDOP"));
     GwApi::BoatValue *pdop=new GwApi::BoatValue(F("PDOP"));
-    GwApi::BoatValue *valueList[]={sog, date, time, longitude, latitude, waterdepth, pdop};
+    GwApi::BoatValue *valueList[]={sog, date, time, longitude, latitude, waterdepth, hdop, pdop};
 
     //Init E-Ink display
     display.init();                         // Initialize and clear display
@@ -283,7 +285,6 @@ void OBP60Task(void *param){
             display.fillRect(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, GxEPD_WHITE); // Draw white sreen
         }
     }
-
 
     // Task Loop
     //###############################
@@ -339,8 +340,31 @@ void OBP60Task(void *param){
                 }
         }
 
+        // Read the status values from gateway
+        api->getStatus(status);
+        busInfo.wifiApOn = status.wifiApOn;
+        busInfo.wifiClientOn = status.wifiClientOn;
+        busInfo.wifiClientConnected = status.wifiClientConnected;
+        busInfo.wifiApIp = status.wifiApIp;
+        busInfo.systemName = status.systemName;
+        busInfo.wifiApPass = status.wifiApPass;
+        busInfo.wifiClientIp = status.wifiClientIp;
+        busInfo.wifiClientSSID = status.wifiClientSSID;
+        busInfo.usbRx = status.usbRx;
+        busInfo.usbTx = status.usbTx;
+        busInfo.serRx = status.serRx;
+        busInfo.serTx = status.serTx;
+        busInfo.tcpSerRx = status.tcpSerRx;
+        busInfo.tcpSerTx = status.tcpSerTx;
+        busInfo.tcpClients = status.tcpClients;
+        busInfo.tcpClRx = status.tcpClRx;
+        busInfo.tcpClTx = status.tcpClTx;
+        busInfo.tcpClientConnected = status.tcpClientConnected;
+        busInfo.n2kRx = status.n2kRx;
+        busInfo.n2kTx = status.n2kTx;
+
         // Read the current bus data and copy to stucture
-        api->getBoatDataValues(7,valueList);
+        api->getBoatDataValues(8,valueList);
 
         busInfo.WaterDepth.fvalue = waterdepth->value;
         waterdepth->getFormat().toCharArray(busInfo.WaterDepth.unit, 8, 0);
@@ -355,6 +379,9 @@ void OBP60Task(void *param){
 
         formatValue(time).toCharArray(busInfo.Time.svalue, 16, 0);
         busInfo.Time.valid = time->valid;
+
+        busInfo.HDOP.fvalue = hdop->value;
+        busInfo.HDOP.valid = hdop->valid;
 
         busInfo.PDOP.fvalue = pdop->value;
         busInfo.PDOP.valid = pdop->valid;
