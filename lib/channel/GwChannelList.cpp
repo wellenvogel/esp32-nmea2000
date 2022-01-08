@@ -4,38 +4,50 @@
 #include "GwSocketServer.h"
 #include "GwSerial.h"
 #include "GwTcpClient.h"
-class GwSerialLog : public GwLogWriter{
-  static const size_t bufferSize=4096;
-  char *logBuffer=NULL;
-  int wp=0;
-  GwSerial *writer;
-  public:
-    GwSerialLog(GwSerial *writer){
-        this->writer=writer;
-      logBuffer=new char[bufferSize];
-      wp=0;
+class GwSerialLog : public GwLogWriter
+{
+    static const size_t bufferSize = 4096;
+    char *logBuffer = NULL;
+    int wp = 0;
+    GwSerial *writer;
+    bool disabled = false;
+
+public:
+    GwSerialLog(GwSerial *writer, bool disabled)
+    {
+        this->writer = writer;
+        this->disabled = disabled;
+        logBuffer = new char[bufferSize];
+        wp = 0;
     }
-    virtual ~GwSerialLog(){}
-    virtual void write(const char *data){
-      int len=strlen(data);
-      if ((wp+len) >= (bufferSize-1)) return;
-      strncpy(logBuffer+wp,data,len);
-      wp+=len;
-      logBuffer[wp]=0;
+    virtual ~GwSerialLog() {}
+    virtual void write(const char *data)
+    {
+        if (disabled)
+            return;
+        int len = strlen(data);
+        if ((wp + len) >= (bufferSize - 1))
+            return;
+        strncpy(logBuffer + wp, data, len);
+        wp += len;
+        logBuffer[wp] = 0;
     }
-    virtual void flush(){
-      size_t handled=0;
-      while (handled < wp){
-        writer->flush();
-        size_t rt=writer->sendToClients(logBuffer+handled,-1,true);
-        handled+=rt;
+    virtual void flush()
+    {
+        size_t handled = 0;
+        if (!disabled)
+        {
+            while (handled < wp)
+            {
+                writer->flush();
+                size_t rt = writer->sendToClients(logBuffer + handled, -1, true);
+                handled += rt;
+            }
         }
-      wp=0;
-      logBuffer[0]=0;
+        wp = 0;
+        logBuffer[0] = 0;
     }
-
 };
-
 
 GwChannelList::GwChannelList(GwLog *logger, GwConfigHandler *config){
     this->logger=logger;
@@ -53,7 +65,7 @@ void GwChannelList::begin(bool fallbackSerial){
     if (! fallbackSerial){
         GwSerial *usb=new GwSerial(NULL,0,USB_CHANNEL_ID);
         usb->setup(config->getInt(config->usbBaud),3,1);
-        logger->setWriter(new GwSerialLog(usb));
+        logger->setWriter(new GwSerialLog(usb,config->getBool(config->usbActisense)));
         logger->prefix="GWSERIAL:";
         channel=new GwChannel(logger,"USB",USB_CHANNEL_ID);
         channel->setImpl(usb);

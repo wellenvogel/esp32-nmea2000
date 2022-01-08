@@ -1224,7 +1224,7 @@ let valueFormatters = {
         f: function (v) {
             let x = parseFloat(v);
             x = x * 180.0 / Math.PI;
-            if (x > 180) x = 180 - x;
+            if (x > 180) x = -1 * (360 - x);
             return x.toFixed(0);
         },
         u: '°'
