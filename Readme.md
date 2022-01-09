@@ -138,6 +138,10 @@ For details refer to the [example description](lib/exampletask/Readme.md).
 
 Changelog
 ---------
+[20220109](../../releases/tag/20220109)
+********
+* allow to set the log level in config
+
 [20220107](../../releases/tag/20220107)
 ********
 * add a TCP client - you can connect to any source of NMEA data using IP address (or MDNS host name) and port<br>
