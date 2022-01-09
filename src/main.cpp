@@ -582,6 +582,8 @@ void setup() {
   uint8_t chipid[6];
   uint32_t id = 0;
   config.loadConfig();
+  int level=config.getInt(config.logLevel,LOGLEVEL);
+  logger.setLevel(level);
   bool fallbackSerial=false;
 #ifdef FALLBACK_SERIAL
   fallbackSerial=true;
@@ -724,8 +726,8 @@ void setup() {
     GWSYNCHRONIZED(&mainLock);
     userCodeHandler.startUserTasks(MIN_USER_TASK);
   }
-  logger.logDebug(GwLog::ERROR,"wifi AP pass: %s",config.getString(config.apPassword).c_str());
-  logger.logDebug(GwLog::ERROR,"admin pass: %s",config.getString(config.adminPassword).c_str());
+  logger.logString("wifi AP pass: %s",config.getString(config.apPassword).c_str());
+  logger.logString("admin pass: %s",config.getString(config.adminPassword).c_str());
   logger.logDebug(GwLog::LOG,"setup done");
 }  
 //*****************************************************************************

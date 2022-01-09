@@ -28,6 +28,7 @@ class GwLog{
         void logDebug(int level, const char *fmt,...);
         int isActive(int level){return level <= logLevel;};
         void flush();
+        void setLevel(int level){this->logLevel=level;}
 };
 #define LOG_DEBUG(level,...){ if (logger != NULL && logger->isActive(level)) logger->logDebug(level,__VA_ARGS__);}
 
