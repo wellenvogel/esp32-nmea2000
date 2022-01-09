@@ -7,6 +7,16 @@
 int pageNumber = 0;           // Page number for actual page
 bool first_view = true;
 bool heartbeat = false;
+unsigned long usbRxOld = 0;
+unsigned long usbTxOld = 0;
+unsigned long serRxOld = 0;
+unsigned long serTxOld = 0;
+unsigned long tcpSerRxOld = 0;
+unsigned long tcpSerTxOld = 0;
+unsigned long tcpClRxOld = 0;
+unsigned long tcpClTxOld = 0;
+unsigned long n2kRxOld = 0;
+unsigned long n2kTxOld = 0;
 
 void showPage(busData values){
   // Clear display
@@ -20,21 +30,33 @@ void showPage(busData values){
     if(values.wifiApOn){
       display.print(" AP ");
     }
-    if(values.tcpClRx > 0 || values.tcpClTx > 0 || values.tcpSerRx > 0 || values.tcpSerTx > 0){
+    // If receive new telegram data then display bus name
+    if(values.tcpClRx != tcpClRxOld || values.tcpClTx != tcpClTxOld || values.tcpSerRx != tcpSerRxOld || values.tcpSerTx != tcpSerTxOld){
       display.print("TCP ");
     }
-    if(values.n2kRx > 0 || values.n2kTx > 0){
+    if(values.n2kRx != n2kRxOld || values.n2kTx != n2kTxOld){
       display.print("N2K ");
     }
-    if(values.serRx > 0 || values.serTx > 0){
+    if(values.serRx != serRxOld || values.serTx != serTxOld){
       display.print("183 ");
     }
-    if(values.usbRx > 0 || values.usbTx > 0){
+    if(values.usbRx != usbRxOld || values.usbTx != usbTxOld){
       display.print("USB ");
     }
     if(values.gps == true && values.PDOP.valid == true && values.PDOP.fvalue <= 50){
      display.print("GPS");
     }
+    // Save old telegram counter
+    tcpClRxOld = values.tcpClRx;
+    tcpClTxOld = values.tcpClTx;
+    tcpSerRxOld = values.tcpSerRx;
+    tcpSerTxOld = values.tcpSerTx;
+    n2kRxOld = values.n2kRx;
+    n2kTxOld = values.n2kTx;
+    serRxOld = values.serRx;
+    serTxOld = values.serTx;
+    usbRxOld = values.usbRx;
+    usbTxOld = values.usbTx;
 
     // Heartbeat as dot
     display.setFont(&Ubuntu_Bold32pt7b);
