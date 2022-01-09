@@ -255,7 +255,23 @@ void OBP60Task(void *param){
     busInfo.numpages = api->getConfig()->getConfigItem(api->getConfig()->numberPages,true)->asInt();
 
     // Initializing all necessary boat data
+    GwApi::BoatValue *cog=new GwApi::BoatValue(F("COG"));
+    GwApi::BoatValue *twd=new GwApi::BoatValue(F("TWD"));
+    GwApi::BoatValue *awd=new GwApi::BoatValue(F("AWD"));
     GwApi::BoatValue *sog=new GwApi::BoatValue(F("SOG"));
+    GwApi::BoatValue *stw=new GwApi::BoatValue(F("STW"));
+    GwApi::BoatValue *tws=new GwApi::BoatValue(F("TWS"));
+    GwApi::BoatValue *aws=new GwApi::BoatValue(F("AWS"));
+    GwApi::BoatValue *maxtws=new GwApi::BoatValue(F("MaxTws"));
+    GwApi::BoatValue *maxaws=new GwApi::BoatValue(F("MaxAws"));
+    GwApi::BoatValue *awa=new GwApi::BoatValue(F("AWA"));
+    GwApi::BoatValue *heading=new GwApi::BoatValue(F("Heading"));
+    GwApi::BoatValue *mheading=new GwApi::BoatValue(F("MagneticHeading"));
+    GwApi::BoatValue *rot=new GwApi::BoatValue(F("ROT"));
+    GwApi::BoatValue *variation=new GwApi::BoatValue(F("Variation"));
+
+    //#################################################################
+
     GwApi::BoatValue *date=new GwApi::BoatValue(F("GpsDate"));
     GwApi::BoatValue *time=new GwApi::BoatValue(F("GpsTime"));
     GwApi::BoatValue *longitude=new GwApi::BoatValue(F("Longitude"));
@@ -263,7 +279,7 @@ void OBP60Task(void *param){
     GwApi::BoatValue *waterdepth=new GwApi::BoatValue(F("WaterDepth"));
     GwApi::BoatValue *hdop=new GwApi::BoatValue(F("HDOP"));
     GwApi::BoatValue *pdop=new GwApi::BoatValue(F("PDOP"));
-    GwApi::BoatValue *valueList[]={sog, date, time, longitude, latitude, waterdepth, hdop, pdop};
+    GwApi::BoatValue *valueList[]={cog, twd, awd, sog, stw, tws, aws, maxtws, maxaws, awa, heading, mheading, rot, variation, date, time, longitude, latitude, waterdepth, hdop, pdop};
 
     //Init E-Ink display
     display.init();                         // Initialize and clear display
@@ -364,15 +380,70 @@ void OBP60Task(void *param){
         busInfo.n2kTx = status.n2kTx;
 
         // Read the current bus data and copy to stucture
-        api->getBoatDataValues(8,valueList);
+        api->getBoatDataValues(20, valueList);
 
-        busInfo.WaterDepth.fvalue = waterdepth->value;
-        waterdepth->getFormat().toCharArray(busInfo.WaterDepth.unit, 8, 0);
-        busInfo.WaterDepth.valid = int(waterdepth->valid);
+        busInfo.COG.fvalue = cog->value;
+        cog->getFormat().toCharArray(busInfo.COG.unit, 8, 0);
+        busInfo.COG.valid = int(cog->valid);
+
+        busInfo.TWD.fvalue = twd->value;
+        twd->getFormat().toCharArray(busInfo.TWD.unit, 8, 0);
+        busInfo.TWD.valid = int(twd->valid);
+
+        busInfo.AWD.fvalue = awd->value;
+        awd->getFormat().toCharArray(busInfo.AWD.unit, 8, 0);
+        busInfo.AWD.valid = int(awd->valid);
 
         busInfo.SOG.fvalue = sog->value;
         sog->getFormat().toCharArray(busInfo.SOG.unit, 8, 0);
         busInfo.SOG.valid = int(sog->valid);
+
+        busInfo.STW.fvalue = stw->value;
+        stw->getFormat().toCharArray(busInfo.STW.unit, 8, 0);
+        busInfo.STW.valid = int(stw->valid);
+
+        busInfo.TWS.fvalue = tws->value;
+        tws->getFormat().toCharArray(busInfo.TWS.unit, 8, 0);
+        busInfo.TWS.valid = int(tws->valid);
+
+        busInfo.AWS.fvalue = aws->value;
+        aws->getFormat().toCharArray(busInfo.AWS.unit, 8, 0);
+        busInfo.AWS.valid = int(aws->valid);
+
+        busInfo.MaxTws.fvalue = maxtws->value;
+        maxtws->getFormat().toCharArray(busInfo.MaxTws.unit, 8, 0);
+        busInfo.MaxTws.valid = int(maxtws->valid);
+
+        busInfo.MaxAws.fvalue = maxaws->value;
+        maxaws->getFormat().toCharArray(busInfo.MaxAws.unit, 8, 0);
+        busInfo.MaxAws.valid = int(maxaws->valid);
+
+        busInfo.AWA.fvalue = awa->value;
+        awa->getFormat().toCharArray(busInfo.AWA.unit, 8, 0);
+        busInfo.AWA.valid = int(awa->valid);
+
+        busInfo.Heading.fvalue = heading->value;
+        heading->getFormat().toCharArray(busInfo.Heading.unit, 8, 0);
+        busInfo.Heading.valid = int(heading->valid);
+
+        busInfo.MagneticHeading.fvalue = mheading->value;
+        mheading->getFormat().toCharArray(busInfo.MagneticHeading.unit, 8, 0);
+        busInfo.MagneticHeading.valid = int(mheading->valid);
+
+        busInfo.ROT.fvalue = rot->value;
+        rot->getFormat().toCharArray(busInfo.ROT.unit, 8, 0);
+        busInfo.ROT.valid = int(rot->valid);
+
+        busInfo.Variation.fvalue = variation->value;
+        variation->getFormat().toCharArray(busInfo.Variation.unit, 8, 0);
+        busInfo.Variation.valid = int(variation->valid);
+
+
+        //######################################################################
+
+        busInfo.WaterDepth.fvalue = waterdepth->value;
+        waterdepth->getFormat().toCharArray(busInfo.WaterDepth.unit, 8, 0);
+        busInfo.WaterDepth.valid = int(waterdepth->valid);
 
         formatValue(date).toCharArray(busInfo.Date.svalue, 16, 0);
         busInfo.Date.valid = date->valid;
