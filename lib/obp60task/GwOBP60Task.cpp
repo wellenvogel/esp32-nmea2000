@@ -37,6 +37,7 @@
 #include "Page_2.h"                     // Page 2 VBat
 #include "Page_3.h"                     // Page 3 Depht / Speed
 #include "OBP60Pages.h"                 // Functions lib for show pages
+// new comment Adrien
 
 tNMEA0183Msg NMEA0183Msg;
 tNMEA0183 NMEA0183;
