@@ -142,6 +142,20 @@
         "category": "system"
     },
     {
+        "name":"logLevel",
+        "label": "log level",
+        "type":"list",
+        "default":"0",
+        "list": [
+            {"l":"off","v":"-1"},
+            {"l":"error","v":"0"},
+            {"l":"log","v":"1"},
+            {"l":"debug","v":"3"}
+        ],
+        "description": "log level at the USB port",
+        "category":"system"
+    },
+    {
         "name": "minXdrInterval",
         "label":"min XDR interval",
         "type": "number",
