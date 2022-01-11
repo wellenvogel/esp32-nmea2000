@@ -30,8 +30,8 @@
 #include "MFD_OBP60_400x300_sw.h"       // MFD with logo
 #include "Logo_OBP_400x300_sw.h"        // OBP Logo
 
-#include "OBP60QRWiFi.h"                // Functions lib for WiFi QR code
 #include "OBP60Data.h"                  // Data stucture
+#include "OBP60QRWiFi.h"                // Functions lib for WiFi QR code
 #include "Page_0.h"                     // Page 0 Depth
 #include "Page_1.h"                     // Page 1 Speed
 #include "Page_2.h"                     // Page 2 VBat
@@ -221,6 +221,17 @@ void OBP60Task(void *param){
     bool hasPosition = false;
     
     // Get configuration data from webside
+    // System Settings
+    api->getConfig()->getConfigItem(api->getConfig()->systemName,true)->asString().toCharArray(busInfo.systemname, 32);
+    api->getConfig()->getConfigItem(api->getConfig()->systemName,true)->asString().toCharArray(busInfo.wifissid, 32);
+    api->getConfig()->getConfigItem(api->getConfig()->apPassword,true)->asString().toCharArray(busInfo.wifipass, 32);
+    busInfo.useadminpass = api->getConfig()->getConfigItem(api->getConfig()->useAdminPass,true)->asBoolean();
+    api->getConfig()->getConfigItem(api->getConfig()->adminPassword,true)->asString().toCharArray(busInfo.adminpassword, 32);
+    api->getConfig()->getConfigItem(api->getConfig()->logLevel,true)->asString().toCharArray(busInfo.loglevel, 16);
+    // WiFi client settings
+    busInfo.wificlienton = api->getConfig()->getConfigItem(api->getConfig()->wifiClient,true)->asBoolean();
+    api->getConfig()->getConfigItem(api->getConfig()->wifiSSID,true)->asString().toCharArray(busInfo.wificlientssid, 32);
+    api->getConfig()->getConfigItem(api->getConfig()->wifiPass,true)->asString().toCharArray(busInfo.wificlientpass, 32);
     // OBP60 Settings
     bool exampleSwitch = api->getConfig()->getConfigItem(api->getConfig()->obp60Config,true)->asBoolean();
     LOG_DEBUG(GwLog::DEBUG,"example switch ist %s",exampleSwitch?"true":"false");
@@ -238,14 +249,14 @@ void OBP60Task(void *param){
     busInfo.gps = api->getConfig()->getConfigItem(api->getConfig()->useGPS,true)->asBoolean();
     busInfo.bme280 = api->getConfig()->getConfigItem(api->getConfig()->useBME280,true)->asBoolean();
     busInfo.onewire = api->getConfig()->getConfigItem(api->getConfig()->use1Wire,true)->asBoolean();
-    String powerMode = api->getConfig()->getConfigItem(api->getConfig()->powerMode,true)->asString();
+    api->getConfig()->getConfigItem(api->getConfig()->powerMode,true)->asString().toCharArray(busInfo.powermode, 16);
     busInfo.simulation = api->getConfig()->getConfigItem(api->getConfig()->useSimuData,true)->asBoolean();
     // OBP60 Display
-    String displayMode = api->getConfig()->getConfigItem(api->getConfig()->display,true)->asString();
+    api->getConfig()->getConfigItem(api->getConfig()->display,true)->asString().toCharArray(busInfo.displaymode, 16);
     busInfo.statusline = api->getConfig()->getConfigItem(api->getConfig()->statusLine,true)->asBoolean();
     busInfo.refresh = api->getConfig()->getConfigItem(api->getConfig()->refresh,true)->asBoolean();
-    String backlightMode = api->getConfig()->getConfigItem(api->getConfig()->backlight,true)->asString();
-    api->getConfig()->getConfigItem(api->getConfig()->flashLED,true)->asString().toCharArray(busInfo.flashled, 16);
+    api->getConfig()->getConfigItem(api->getConfig()->backlight,true)->asString().toCharArray(busInfo.backlight, 16);
+    api->getConfig()->getConfigItem(api->getConfig()->powerMode,true)->asString().toCharArray(busInfo.powermode, 16);
     // OBP60 Buzzer
     busInfo.buzerror = api->getConfig()->getConfigItem(api->getConfig()->buzzerError,true)->asBoolean();
     busInfo.buzgps = api->getConfig()->getConfigItem(api->getConfig()->buzzerGps,true)->asBoolean();
@@ -270,17 +281,31 @@ void OBP60Task(void *param){
     GwApi::BoatValue *mheading=new GwApi::BoatValue(F("MagneticHeading"));
     GwApi::BoatValue *rot=new GwApi::BoatValue(F("ROT"));
     GwApi::BoatValue *variation=new GwApi::BoatValue(F("Variation"));
+    GwApi::BoatValue *hdop=new GwApi::BoatValue(F("HDOP"));
+    GwApi::BoatValue *pdop=new GwApi::BoatValue(F("PDOP"));
+    GwApi::BoatValue *vdop=new GwApi::BoatValue(F("VDOP"));
+    GwApi::BoatValue *rudderpos=new GwApi::BoatValue(F("RudderPosition"));
+    GwApi::BoatValue *latitude=new GwApi::BoatValue(F("Latitude"));
+    GwApi::BoatValue *longitude=new GwApi::BoatValue(F("Longitude"));
+    GwApi::BoatValue *altitude=new GwApi::BoatValue(F("Altitude"));
+    GwApi::BoatValue *waterdepth=new GwApi::BoatValue(F("WaterDepth"));
+    GwApi::BoatValue *depthtransducer=new GwApi::BoatValue(F("DepthTransducer"));
+    GwApi::BoatValue *time=new GwApi::BoatValue(F("GpsTime"));
+    GwApi::BoatValue *date=new GwApi::BoatValue(F("GpsDate"));
+    GwApi::BoatValue *timezone=new GwApi::BoatValue(F("Timezone"));
+    GwApi::BoatValue *satinfo=new GwApi::BoatValue(F("SatInfo"));
+    GwApi::BoatValue *watertemp=new GwApi::BoatValue(F("WaterTemperature"));
+    GwApi::BoatValue *xte=new GwApi::BoatValue(F("XTE"));
+    GwApi::BoatValue *dtw=new GwApi::BoatValue(F("DTW"));
+    GwApi::BoatValue *btw=new GwApi::BoatValue(F("BTW"));
+    GwApi::BoatValue *wplatitude=new GwApi::BoatValue(F("WPLatitude"));
+    GwApi::BoatValue *wplongitude=new GwApi::BoatValue(F("WPLongitude"));
+    GwApi::BoatValue *log=new GwApi::BoatValue(F("Log"));
+    GwApi::BoatValue *triplog=new GwApi::BoatValue(F("TripLog"));
 
     //#################################################################
 
-    GwApi::BoatValue *date=new GwApi::BoatValue(F("GpsDate"));
-    GwApi::BoatValue *time=new GwApi::BoatValue(F("GpsTime"));
-    GwApi::BoatValue *longitude=new GwApi::BoatValue(F("Longitude"));
-    GwApi::BoatValue *latitude=new GwApi::BoatValue(F("Latitude"));
-    GwApi::BoatValue *waterdepth=new GwApi::BoatValue(F("WaterDepth"));
-    GwApi::BoatValue *hdop=new GwApi::BoatValue(F("HDOP"));
-    GwApi::BoatValue *pdop=new GwApi::BoatValue(F("PDOP"));
-    GwApi::BoatValue *valueList[]={cog, twd, awd, sog, stw, tws, aws, maxtws, maxaws, awa, heading, mheading, rot, variation, date, time, longitude, latitude, waterdepth, hdop, pdop};
+    GwApi::BoatValue *valueList[]={cog, twd, awd, sog, stw, tws, aws, maxtws, maxaws, awa, heading, mheading, rot, variation, hdop, pdop, vdop, rudderpos, latitude, longitude, altitude, waterdepth, depthtransducer, time, date, timezone, satinfo, watertemp, xte, dtw, btw, wplatitude, wplongitude, log, triplog};
 
     //Init E-Ink display
     display.init();                         // Initialize and clear display
@@ -289,15 +314,15 @@ void OBP60Task(void *param){
     display.fillRect(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, GxEPD_WHITE); // Draw white sreen
     display.update();                       // Full update (slow)
         
-    if(displayMode == "Logo + QR Code" || displayMode == "Logo"){
+    if(String(busInfo.displaymode) == "Logo + QR Code" || String(busInfo.displaymode) == "Logo"){
         display.drawExampleBitmap(gImage_Logo_OBP_400x300_sw, 0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, GxEPD_WHITE); // Draw start logo
 //        display.drawExampleBitmap(gImage_MFD_OBP60_400x300_sw, 0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, GxEPD_WHITE); // Draw start logo
         display.updateWindow(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, true);   // Partial update (fast)
         delay(SHOW_TIME);                                // Logo show time
         display.fillRect(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, GxEPD_WHITE); // Draw white sreen
         display.updateWindow(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, true);    // Partial update (fast)
-        if(displayMode == "Logo + QR Code"){
-            qrWiFi();                                        // Show QR code for WiFi connection
+        if(String(busInfo.displaymode) == "Logo + QR Code"){
+            qrWiFi(busInfo);                                 // Show QR code for WiFi connection
             delay(SHOW_TIME);                                // Logo show time
             display.fillRect(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, GxEPD_WHITE); // Draw white sreen
         }
@@ -312,7 +337,7 @@ void OBP60Task(void *param){
         // Backlight On/Off Subtask 100ms
         if((taskRunCounter % 10) == 0){
             // If key controled
-            if(backlightMode == "Control by Key"){
+            if(String(busInfo.backlight) == "Control by Key"){
                 if(keystatus == "6s"){
                     LOG_DEBUG(GwLog::DEBUG,"Toggle Backlight LED");
                     togglePortPin(OBP_BACKLIGHT_LED);
@@ -357,16 +382,12 @@ void OBP60Task(void *param){
                 }
         }
 
+        //######################################################################
+        
         // Read the status values from gateway
         api->getStatus(status);
         busInfo.wifiApOn = status.wifiApOn;
-        busInfo.wifiClientOn = status.wifiClientOn;
         busInfo.wifiClientConnected = status.wifiClientConnected;
-        busInfo.wifiApIp = status.wifiApIp;
-        busInfo.systemName = status.systemName;
-        busInfo.wifiApPass = status.wifiApPass;
-        busInfo.wifiClientIp = status.wifiClientIp;
-        busInfo.wifiClientSSID = status.wifiClientSSID;
         busInfo.usbRx = status.usbRx;
         busInfo.usbTx = status.usbTx;
         busInfo.serRx = status.serRx;
@@ -380,8 +401,10 @@ void OBP60Task(void *param){
         busInfo.n2kRx = status.n2kRx;
         busInfo.n2kTx = status.n2kTx;
 
+        //######################################################################
+
         // Read the current bus data and copy to stucture
-        api->getBoatDataValues(20, valueList);
+        api->getBoatDataValues(35, valueList);
 
         busInfo.COG.fvalue = cog->value;
         cog->getFormat().toCharArray(busInfo.COG.unit, 8, 0);
@@ -439,31 +462,87 @@ void OBP60Task(void *param){
         variation->getFormat().toCharArray(busInfo.Variation.unit, 8, 0);
         busInfo.Variation.valid = int(variation->valid);
 
-
-        //######################################################################
-
-        busInfo.WaterDepth.fvalue = waterdepth->value;
-        waterdepth->getFormat().toCharArray(busInfo.WaterDepth.unit, 8, 0);
-        busInfo.WaterDepth.valid = int(waterdepth->valid);
-
-        formatValue(date).toCharArray(busInfo.Date.svalue, 16, 0);
-        busInfo.Date.valid = date->valid;
-
-        formatValue(time).toCharArray(busInfo.Time.svalue, 16, 0);
-        busInfo.Time.valid = time->valid;
-
         busInfo.HDOP.fvalue = hdop->value;
         busInfo.HDOP.valid = hdop->valid;
 
         busInfo.PDOP.fvalue = pdop->value;
         busInfo.PDOP.valid = pdop->valid;
 
+        busInfo.VDOP.fvalue = vdop->value;
+        busInfo.VDOP.valid = vdop->valid;
+
+        busInfo.RudderPosition.fvalue = rudderpos->value;
+        rudderpos->getFormat().toCharArray(busInfo.RudderPosition.unit, 8, 0);
+        busInfo.RudderPosition.valid = int(rudderpos->valid);
+
+        formatValue(latitude).toCharArray(busInfo.Latitude.svalue, 16, 0);
+        busInfo.Latitude.valid = latitude->valid;
+
+        formatValue(longitude).toCharArray(busInfo.Longitude.svalue, 16, 0);
+        busInfo.Longitude.valid = longitude->valid;
+
+        busInfo.Altitude.fvalue = altitude->value;
+        altitude->getFormat().toCharArray(busInfo.Altitude.unit, 8, 0);
+        busInfo.Altitude.valid = int(altitude->valid);
+
+        busInfo.WaterDepth.fvalue = waterdepth->value;
+        waterdepth->getFormat().toCharArray(busInfo.WaterDepth.unit, 8, 0);
+        busInfo.WaterDepth.valid = int(waterdepth->valid);
+
+        busInfo.DepthTransducer.fvalue = depthtransducer->value;
+        depthtransducer->getFormat().toCharArray(busInfo.DepthTransducer.unit, 8, 0);
+        busInfo.DepthTransducer.valid = int(depthtransducer->valid);
+
+        formatValue(time).toCharArray(busInfo.Time.svalue, 16, 0);
+        busInfo.Time.valid = time->valid;
+
+        formatValue(date).toCharArray(busInfo.Date.svalue, 16, 0);
+        busInfo.Date.valid = date->valid;
+
+        busInfo.Timezone.fvalue = timezone->value;
+        busInfo.Timezone.valid = timezone->valid;
+
+        busInfo.SatInfo.fvalue = satinfo->value;
+        busInfo.SatInfo.valid = satinfo->valid;
+
+        busInfo.WaterTemperature.fvalue = watertemp->value;
+        watertemp->getFormat().toCharArray(busInfo.WaterTemperature.unit, 8, 0);
+        busInfo.WaterTemperature.valid = int(watertemp->valid);
+
+        busInfo.XTE.fvalue = xte->value;
+        xte->getFormat().toCharArray(busInfo.XTE.unit, 8, 0);
+        busInfo.XTE.valid = int(xte->valid);
+
+        busInfo.DTW.fvalue = dtw->value;
+        dtw->getFormat().toCharArray(busInfo.DTW.unit, 8, 0);
+        busInfo.DTW.valid = int(dtw->valid);
+
+        busInfo.BTW.fvalue = btw->value;
+        btw->getFormat().toCharArray(busInfo.BTW.unit, 8, 0);
+        busInfo.BTW.valid = int(btw->valid);
+
+        formatValue(wplatitude).toCharArray(busInfo.WPLatitude.svalue, 16, 0);
+        busInfo.WPLatitude.valid = wplatitude->valid;
+
+        formatValue(wplongitude).toCharArray(busInfo.WPLongitude.svalue, 16, 0);
+        busInfo.WPLongitude.valid = wplongitude->valid;
+
+        busInfo.Log.fvalue = log->value;
+        log->getFormat().toCharArray(busInfo.Log.unit, 8, 0);
+        busInfo.Log.valid = int(log->valid);
+
+        busInfo.TripLog.fvalue = triplog->value;
+        triplog->getFormat().toCharArray(busInfo.TripLog.unit, 8, 0);
+        busInfo.TripLog.valid = int(triplog->valid);
+
+        //######################################################################
+
 
         // Subtask all 500ms show pages
         if((taskRunCounter % 50) == 0  || first_view == true){
             LOG_DEBUG(GwLog::DEBUG,"Keystatus: %s", keystatus);
             LOG_DEBUG(GwLog::DEBUG,"Pagenumber: %d", pageNumber);
-            if(displayMode == "Logo + QR Code" || displayMode == "Logo" || displayMode == "White Screen"){
+            if(String(busInfo.displaymode) == "Logo + QR Code" || String(busInfo.displaymode) == "Logo" || String(busInfo.displaymode) == "White Screen"){
                 showPage(busInfo);
             }
         }

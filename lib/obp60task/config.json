@@ -282,7 +282,7 @@
         "description": "Settings for flash LED",
         "list": [
             "Off",
-            "TCP/UDP Data",
+            "Bus Data",
             "GPS Fix",
             "Limits Overrun"
         ],

@@ -12,57 +12,62 @@ typedef struct{               // Sub structure for bus data
 
 typedef struct{
   // Gateway status infos
-  bool wifiApOn = false;
-  bool wifiClientOn = false;
-  bool wifiClientConnected = false;
-  String wifiApIp = "";
-  String systemName = "";     // is also AP SSID
-  String wifiApPass = "";
-  String wifiClientIp = "";
-  String wifiClientSSID = "";
-  unsigned long usbRx = 0;
-  unsigned long usbTx = 0;
-  unsigned long serRx = 0;
-  unsigned long serTx = 0;
-  unsigned long tcpSerRx = 0;
-  unsigned long tcpSerTx = 0;
-  int tcpClients = 0;
-  unsigned long tcpClRx = 0;
-  unsigned long tcpClTx = 0;
-  bool tcpClientConnected = false;
-  unsigned long n2kRx = 0;
-  unsigned long n2kTx = 0; 
+  bool wifiApOn = false;                    // Status access point [on|off]
+  bool wifiClientConnected = false;         // Client connected [yes|no]
+  unsigned long usbRx = 0;                  // USB receive traffic
+  unsigned long usbTx = 0;                  // USB send traffic
+  unsigned long serRx = 0;                  // MNEA0183 serial receive traffic
+  unsigned long serTx = 0;                  // NMEA0183 serial send traffic
+  unsigned long tcpSerRx = 0;               // MNEA0183 TCP server receive traffic
+  unsigned long tcpSerTx = 0;               // MNEA0183 TCP server send traffic
+  int tcpClients = 0;                       // Number of connected TCP clients
+  unsigned long tcpClRx = 0;                // MNEA0183 TCP client receive traffic
+  unsigned long tcpClTx = 0;                // MNEA0183 TCP client send traffic
+  bool tcpClientConnected = false;          // Connected TCP clients
+  unsigned long n2kRx = 0;                  // NMEA2000 CAN receive traffic
+  unsigned long n2kTx = 0;                  // NMEA2000 CAN send traffic
+  // System Settings
+  char systemname[32] = "";                 // System name show on web page and mDNS name
+  char wifissid[32] = "";                   // WiFi access point SSID
+  char wifipass[32] = "";                   // WiFi access point password
+  bool useadminpass = false;                // Use admin password [on|off]
+  char adminpassword[32] = "";              // Admin password
+  char loglevel[16] = "";                   // Loglevel [off|error|log|debug]
+  // WiFi client settings
+  bool wificlienton = false;                // Is WiFi client on [on|off]
+  char wificlientssid[32] = "";             // Wifi client SSID
+  char wificlientpass[32] = "";             // Wifi client password
   // OBP60 Settings
-  char dateformat[3] = "GB";
-  int timezone = 0;
-  float draft = 0;
-  float fueltank = 0;
-  float fuelconsumption = 0;
-  float watertank = 0;
-  float wastetank = 0;
-  float batvoltage = 0;
-  char battype[16] = "Pb";
-  float batcapacity = 0;
+  char dateformat[3] = "GB";                // Date format for status line [DE|GB|US]
+  int timezone = 0;                         // Time zone [-12...+12]
+  float draft = 0;                          // Boat draft up to keel [m]
+  float fueltank = 0;                       // Fuel tank capacity [0...10m]
+  float fuelconsumption = 0;                // Fuel consumption [0...1000l/min]
+  float watertank = 0;                      // Water tank kapacity [0...5000l]
+  float wastetank = 0;                      // Waste tank kapacity [0...5000l]
+  float batvoltage = 0;                     // Battery voltage [0...1000V]
+  char battype[16] = "Pb";                  // Battery type [Pb|Gel|AGM|LiFePo4]
+  float batcapacity = 0;                    // Battery capacity [0...10000Ah]
   // OBP60 Hardware
-  bool gps = false;
-  bool bme280 = false;
-  bool onewire = false;
-  char powermode[16] = "Max Power";
-  bool simulation = false;
+  bool gps = false;                         // Internal GPS [on|off]
+  bool bme280 = false;                      // Internat BME280 [on|off]
+  bool onewire = false;                     // Internal 1Wire bus [on|off]
+  char powermode[16] = "Max Power";         // Power mode [Max Power|Only 3.3V|Only 5.0V|Min Power]
+  bool simulation = false;                  // Simulation data [on|off]
   // OBP60 Display
-  char displaymode[16] = "Logo + QR Code";
-  bool statusline = true;
-  bool refresh = false;
-  char backlight[16] = "Control by Key";
-  char flashled[16] = "Off";
+  char displaymode[16] = "Logo + QR Code";  // Dislpay mode [White Screen|Logo|Logo + QR Code|Off]
+  bool statusline = true;                   // Show status line [on|off]
+  bool refresh = false;                     // Refresh display after select a new page [on|off]
+  char backlight[16] = "Control by Key";    // Backlight mode [Off|Control by Sun|Control by Bus|Control by Time|Control by Key|On]
+  char flashled[16] = "Off";                // Flash LED mode [Off|Bus Data|GPX Fix|Limits Overrun]
   // OBP60 Buzzer
-  bool buzerror = false;
-  bool buzgps = false;
-  bool buzlimits = false;
-  char buzmode[16] = "Off";
-  int buzpower = 0;
+  bool buzerror = false;                    // Buzzer error [on|off]
+  bool buzgps = false;                      // Buzzer by GPS error [on|off]
+  bool buzlimits = false;                   // Buzzer by limit underruns and overruns [on|off]
+  char buzmode[16] = "Off";                 // Buzzer mode [Off|Short Single Beep|Lond Single Beep|Beep until Confirmation]
+  int buzpower = 0;                         // Buzzer power [0...100%]
   // OBP60 Pages
-  int numpages = 1;
+  int numpages = 1;                         // Numper of listed pages
   // Bus data
   dataContainer AWA;
   dataContainer AWD;
