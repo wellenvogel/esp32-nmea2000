@@ -10,6 +10,13 @@ Many thanks for all the great work.
 
 This project is part of [OpenBoatProjects](https://open-boat-projects.org/de/nmea2000-gateway-mit-m5stack-atom/).
 
+Important Hint
+--------------
+
+Although the term NMEA2000 is used here, the software or device is __not a certified NMEA2000 device__ as it did not pass any approval process.
+There are chances that the software / device does not follow the NMEA2000 specification at several points.
+If you connect the device to your NMEA2000 network you do this on your own risk.
+
 Goal
 ----
 Have a simple ready-to-go ESP32 binary that can be flashed onto a [M5 Atom CAN](https://docs.m5stack.com/en/atom/atom_can), potentially extended by an [Atom Tail485](https://shop.m5stack.com/collections/atom-series/products/atom-tail485?variant=32169041559642) for NMEA0183 connection and power supply.
@@ -138,6 +145,10 @@ For details refer to the [example description](lib/exampletask/Readme.md).
 
 Changelog
 ---------
+[20220112](../../releases/tag/20220112)
+*********
+* correctly send out seasmart if NMEA out is not configured
+* enable TCP keepalive on connections to reconnect on failures
 [20220109](../../releases/tag/20220109)
 ********
 * allow to set the log level in config
