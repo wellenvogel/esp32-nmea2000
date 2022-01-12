@@ -3,6 +3,7 @@
 #include <lwip/sockets.h>
 #include "GwBuffer.h"
 #include "GwSocketConnection.h"
+#include "GwSocketHelper.h"
 
 GwSocketServer::GwSocketServer(const GwConfigHandler *config, GwLog *logger, int minId)
 {
@@ -62,11 +63,13 @@ int GwSocketServer::available()
     if (client_sock >= 0)
     {
         int val = 1;
-        if (setsockopt(client_sock, SOL_SOCKET, SO_KEEPALIVE, (char *)&val, sizeof(int)) == ESP_OK)
+        if (! GwSocketHelper::setKeepAlive(client_sock,true)){
+            LOG_DEBUG(GwLog::ERROR,"unable to set keepalive, nodelay on socket");
+        }
+        else
         {
-            if (setsockopt(client_sock, IPPROTO_TCP, TCP_NODELAY, (char *)&val, sizeof(int)) == ESP_OK)
-                fcntl(client_sock, F_SETFL, O_NONBLOCK);
-                return client_sock;
+            fcntl(client_sock, F_SETFL, O_NONBLOCK);
+            return client_sock;
         }
         close(client_sock);
     }

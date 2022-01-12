@@ -1,6 +1,7 @@
 #include "GwTcpClient.h"
 #include <functional>
 #include <ESPmDNS.h>
+#include "GwSocketHelper.h"
 
 class ResolveArgs{
     public:
@@ -71,6 +72,12 @@ void GwTcpClient::startConnection()
         error="unable to create socket";
         LOG_DEBUG(GwLog::ERROR,"unable to create socket: %d", errno);
         return; 
+    }
+    if (! GwSocketHelper::setKeepAlive(sockfd,true)){
+        error="unable to set keepalive, nodelay on socket";
+        LOG_DEBUG(GwLog::ERROR,"%s",error.c_str());
+        close(sockfd);
+        return;
     }
     fcntl( sockfd, F_SETFL, fcntl( sockfd, F_GETFL, 0 ) | O_NONBLOCK );
     int res = lwip_connect_r(sockfd, (struct sockaddr*)&serveraddr, sizeof(serveraddr));
