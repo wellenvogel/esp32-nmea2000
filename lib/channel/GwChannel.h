@@ -56,7 +56,7 @@ class GwChannel{
     }
     bool isEnabled(){return enabled;}
     bool shouldRead(){return enabled && NMEAin;}
-    bool canSendOut(const char *buffer);
+    bool canSendOut(const char *buffer, bool isSeasmart);
     bool canReceive(const char *buffer);
     bool sendSeaSmart(){ return seaSmartOut;}
     bool sendToN2K(){return toN2k;}
@@ -67,7 +67,7 @@ class GwChannel{
     void loop(bool handleRead, bool handleWrite);
     typedef std::function<void(const char *buffer, int sourceid)> NMEA0183Handler;
     void readMessages(NMEA0183Handler handler);
-    void sendToClients(const char *buffer, int sourceId);
+    void sendToClients(const char *buffer, int sourceId, bool isSeasmart=false);
     typedef std::function<void(const tN2kMsg &msg, int sourceId)> N2kHandler ;
     void parseActisense(N2kHandler handler);
     void sendActisense(const tN2kMsg &msg, int sourceId);
