@@ -7,7 +7,7 @@
     #define ESP32_CAN_TX_PIN GPIO_NUM_13
     #define ESP32_CAN_RX_PIN GPIO_NUM_12
     // Bus load in 50mA steps
-    #define N2K_LOAD_LEVEL 5 (250mA max bus load with back light on)
+    #define N2K_LOAD_LEVEL 5 // 250mA max bus load with back light on
     // RS485 NMEA0183
     #define GWSERIAL_TX 26
     #define GWSERIAL_RX 14
