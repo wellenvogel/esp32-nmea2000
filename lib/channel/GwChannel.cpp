@@ -128,9 +128,11 @@ void GwChannel::updateCounter(const char *msg, bool out)
     }
 }
 
-bool GwChannel::canSendOut(const char *buffer){
+bool GwChannel::canSendOut(const char *buffer, bool isSeasmart){
     if (! enabled || ! impl) return false;
-    if (! NMEAout || readActisense) return false;
+    if (readActisense) return false;
+    if (! isSeasmart && ! NMEAout) return false;
+    if (isSeasmart && ! seaSmartOut) return false;
     if (writeFilter && ! writeFilter->canPass(buffer)) return false;
     return true;
 }
@@ -177,9 +179,9 @@ void GwChannel::readMessages(GwChannel::NMEA0183Handler handler){
     receiver->setHandler(handler);
     impl->readMessages(receiver);
 }
-void GwChannel::sendToClients(const char *buffer, int sourceId){
+void GwChannel::sendToClients(const char *buffer, int sourceId, bool isSeasmart){
     if (! impl) return;
-    if (canSendOut(buffer)){
+    if (canSendOut(buffer,isSeasmart)){
         if(impl->sendToClients(buffer,sourceId)){
             updateCounter(buffer,true);
         }

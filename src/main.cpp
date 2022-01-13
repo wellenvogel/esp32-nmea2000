@@ -177,18 +177,24 @@ void handleN2kMessage(const tN2kMsg &n2kMsg,int sourceId, bool isConverted=false
   if (sourceId == N2K_CHANNEL_ID){
     countNMEA2KIn.add(n2kMsg.PGN);
   }
-  char *buf=new char[MAX_NMEA2000_MESSAGE_SEASMART_SIZE];
+  char *buf=new char[MAX_NMEA2000_MESSAGE_SEASMART_SIZE+3];
   std::unique_ptr<char> bufDel(buf);
   bool messageCreated=false;
   channels.allChannels([&](GwChannel *c){
     if (c->sendSeaSmart()){
       if (! messageCreated){
-        if (N2kToSeasmart(n2kMsg, millis(), buf, MAX_NMEA2000_MESSAGE_SEASMART_SIZE) != 0) {
+        size_t len;
+        if ((len=N2kToSeasmart(n2kMsg, millis(), buf, MAX_NMEA2000_MESSAGE_SEASMART_SIZE)) != 0) {
+          buf[len]=0x0d;
+          len++;
+          buf[len]=0x0a;
+          len++;
+          buf[len]=0;
           messageCreated=true;
         }
       }
       if (messageCreated){
-        c->sendToClients(buf,sourceId);
+        c->sendToClients(buf,sourceId,true);
       }
     }
   });
@@ -221,7 +227,7 @@ void SendNMEA0183Message(const tNMEA0183Msg &NMEA0183Msg, int sourceId,bool conv
   buf[len+1]=0x0a;
   buf[len+2]=0;
   channels.allChannels([&](GwChannel *c){
-    c->sendToClients(buf,sourceId);
+    c->sendToClients(buf,sourceId,false);
   });
 }
 
@@ -785,12 +791,16 @@ void loop() {
   //read channels
   channels.allChannels([](GwChannel *c){
     c->readMessages([&](const char * buffer, int sourceId){
+      bool isSeasmart=false;
+      if (strlen(buffer) > 6 && strncmp(buffer,"$PCDIN",6) == 0){
+        isSeasmart=true;
+      }
       channels.allChannels([&](GwChannel *oc){
-        oc->sendToClients(buffer,sourceId);
+        oc->sendToClients(buffer,sourceId,isSeasmart);
         oc->loop(false,true);
       });
       if (c->sendToN2K()){
-        if (strlen(buffer) > 6 && strncmp(buffer,"$PCDIN",6) == 0){
+        if (isSeasmart){
           tN2kMsg n2kMsg;
           uint32_t timestamp;
           if (SeasmartToN2k(buffer,timestamp,n2kMsg)){
