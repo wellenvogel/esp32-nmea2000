@@ -180,7 +180,7 @@
          "label":"NMEA2000 out",
          "type":"boolean",
          "default":"true",
-         "description":"send out the converted data on the NMEA2000 bus",
+         "description":"send out the converted data on the NMEA2000 bus\nIf set to off the converted data will still be shown at the data tab.",
          "category":"converter"
      },
     {
