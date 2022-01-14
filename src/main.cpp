@@ -109,6 +109,7 @@ GwWifi gwWifi(&config,&logger,fixedApPass);
 GwChannelList channels(&logger,&config);
 GwBoatData boatData(&logger);
 GwXDRMappings xdrMappings(&logger,&config);
+bool sendOutN2k=true;
 
 
 int NodeAddress;  // To store last Node Address
@@ -205,7 +206,7 @@ void handleN2kMessage(const tN2kMsg &n2kMsg,int sourceId, bool isConverted=false
   if (! isConverted){
     nmea0183Converter->HandleMsg(n2kMsg,sourceId);
   }
-  if (sourceId != N2K_CHANNEL_ID){
+  if (sourceId != N2K_CHANNEL_ID && sendOutN2k){
     countNMEA2KOut.add(n2kMsg.PGN);
     NMEA2000.SendMsg(n2kMsg);
   }
@@ -603,6 +604,8 @@ void setup() {
   //maybe the user code changed the level
   level=config.getInt(config.logLevel,LOGLEVEL);
   logger.setLevel(level);
+  sendOutN2k=config.getBool(config.sendN2k,true);
+  logger.logDebug(GwLog::LOG,"send N2k=%s",(sendOutN2k?"true":"false"));
   gwWifi.setup();
   MDNS.begin(config.getConfigItem(config.systemName)->asCString());
   channels.begin(fallbackSerial);
@@ -711,17 +714,19 @@ void setup() {
   logger.flush();
   NMEA2000.SetMode(tNMEA2000::N2km_ListenAndNode, NodeAddress);
   NMEA2000.SetForwardOwnMessages(false);
-  // Set the information for other bus devices, which messages we support
-  unsigned long *pgns=toN2KConverter->handledPgns();
-  if (logger.isActive(GwLog::DEBUG)){
-    unsigned long *op=pgns;
-    while (*op != 0){
-      logger.logDebug(GwLog::DEBUG,"add transmit pgn %ld",(long)(*op));
-      logger.flush();
-      op++;
+  if (sendOutN2k){
+    // Set the information for other bus devices, which messages we support
+    unsigned long *pgns=toN2KConverter->handledPgns();
+    if (logger.isActive(GwLog::DEBUG)){
+      unsigned long *op=pgns;
+      while (*op != 0){
+        logger.logDebug(GwLog::DEBUG,"add transmit pgn %ld",(long)(*op));
+        logger.flush();
+        op++;
+      }
     }
+    NMEA2000.ExtendTransmitMessages(pgns);
   }
-  NMEA2000.ExtendTransmitMessages(pgns);
   NMEA2000.ExtendReceiveMessages(nmea0183Converter->handledPgns());
   NMEA2000.SetMsgHandler([](const tN2kMsg &n2kMsg){
     handleN2kMessage(n2kMsg,N2K_CHANNEL_ID);
