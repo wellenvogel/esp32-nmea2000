@@ -5,14 +5,20 @@
 #include "OBP60Hardware.h"
 
 void page_0(busData pvalues){
-  // Name and unit
+  // Show name
   display.setFont(&Ubuntu_Bold32pt7b);
   display.setTextColor(GxEPD_BLACK);
   display.setCursor(20, 100);
   display.print("Depth");
   display.setFont(&Ubuntu_Bold20pt7b);
   display.setCursor(270, 100);
-  display.print("m");
+  // Show unit
+  if(String(pvalues.lengthformat) == "m"){
+    display.print("m");
+  }
+  if(String(pvalues.lengthformat) == "ft"){
+    display.print("ft");
+  }
   display.setFont(&DSEG7Classic_BoldItalic60pt7b);
   display.setCursor(20, 240);
 
@@ -24,8 +30,16 @@ void page_0(busData pvalues){
     display.print(depth,1);
   }
   else{
-    if(pvalues.WaterDepth.valid == true){     // Check vor valid real data
-      depth = pvalues.WaterDepth.fvalue;      // Real bus data
+    // Check vor valid real data, display also if hold values activated
+    if(pvalues.WaterDepth.valid == true || pvalues.holdvalues == true){
+      // Unit conversion
+      if(String(pvalues.lengthformat) == "m"){
+        depth = pvalues.WaterDepth.fvalue;  // Real bus data m
+      }
+      if(String(pvalues.lengthformat) == "ft"){
+        depth = convert_m2ft(pvalues.WaterDepth.fvalue); // Bus data in ft
+      }
+      // Resolution switching
       if(depth <= 99.9){
         display.print(depth,1);
       }

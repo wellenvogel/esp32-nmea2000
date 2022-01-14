@@ -3,6 +3,10 @@
 
 #include <Arduino.h>
 
+float convert_m2ft(float inputvalue){
+  return inputvalue * 3.28084;
+}
+
 typedef struct{               // Sub structure for bus data
   float fvalue = 0;           // Float value
   char svalue[16] = "";       // Char value
@@ -38,7 +42,12 @@ typedef struct{
   char wificlientssid[32] = "";             // Wifi client SSID
   char wificlientpass[32] = "";             // Wifi client password
   // OBP60 Settings
-  char dateformat[3] = "GB";                // Date format for status line [DE|GB|US]
+  char lengthformat[16] = "";               // Length format [m|ft]
+  char distanceformat[16] = "";             // Distance format [m|km|nm]
+  char speedformat[16] = "";                // Speed format [m/s|km/h|kn]
+  char windspeedformat[16] = "";            // Speed format [m/s|km/h|kn|bft]
+  char tempformat[16] = "";                 // Temperature format [K|C|F]
+  char dateformat[3] = "";                  // Date format for status line [DE|GB|US]
   int timezone = 0;                         // Time zone [-12...+12]
   float draft = 0;                          // Boat draft up to keel [m]
   float fueltank = 0;                       // Fuel tank capacity [0...10m]
@@ -46,25 +55,26 @@ typedef struct{
   float watertank = 0;                      // Water tank kapacity [0...5000l]
   float wastetank = 0;                      // Waste tank kapacity [0...5000l]
   float batvoltage = 0;                     // Battery voltage [0...1000V]
-  char battype[16] = "Pb";                  // Battery type [Pb|Gel|AGM|LiFePo4]
+  char battype[16] = "";                    // Battery type [Pb|Gel|AGM|LiFePo4]
   float batcapacity = 0;                    // Battery capacity [0...10000Ah]
   // OBP60 Hardware
   bool gps = false;                         // Internal GPS [on|off]
   bool bme280 = false;                      // Internat BME280 [on|off]
   bool onewire = false;                     // Internal 1Wire bus [on|off]
-  char powermode[16] = "Max Power";         // Power mode [Max Power|Only 3.3V|Only 5.0V|Min Power]
+  char powermode[16] = "";                  // Power mode [Max Power|Only 3.3V|Only 5.0V|Min Power]
   bool simulation = false;                  // Simulation data [on|off]
   // OBP60 Display
-  char displaymode[16] = "Logo + QR Code";  // Dislpay mode [White Screen|Logo|Logo + QR Code|Off]
+  char displaymode[16] = "";                // Dislpay mode [White Screen|Logo|Logo + QR Code|Off]
   bool statusline = true;                   // Show status line [on|off]
   bool refresh = false;                     // Refresh display after select a new page [on|off]
-  char backlight[16] = "Control by Key";    // Backlight mode [Off|Control by Sun|Control by Bus|Control by Time|Control by Key|On]
-  char flashled[16] = "Off";                // Flash LED mode [Off|Bus Data|GPX Fix|Limits Overrun]
+  bool holdvalues = false;                  // Hold values on missing data stream [on|off]
+  char backlight[16] = "";                  // Backlight mode [Off|Control by Sun|Control by Bus|Control by Time|Control by Key|On]
+  char flashled[16] = "";                   // Flash LED mode [Off|Bus Data|GPX Fix|Limits Overrun]
   // OBP60 Buzzer
   bool buzerror = false;                    // Buzzer error [on|off]
   bool buzgps = false;                      // Buzzer by GPS error [on|off]
   bool buzlimits = false;                   // Buzzer by limit underruns and overruns [on|off]
-  char buzmode[16] = "Off";                 // Buzzer mode [Off|Short Single Beep|Lond Single Beep|Beep until Confirmation]
+  char buzmode[16] = "";                    // Buzzer mode [Off|Short Single Beep|Lond Single Beep|Beep until Confirmation]
   int buzpower = 0;                         // Buzzer power [0...100%]
   // OBP60 Pages
   int numpages = 1;                         // Numper of listed pages

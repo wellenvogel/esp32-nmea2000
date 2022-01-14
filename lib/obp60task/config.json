@@ -11,22 +11,6 @@
         }
     },
     {
-        "name": "dateFormat",
-        "label": "Date Format",
-        "type": "list",
-        "default": "GB",
-        "description": "Date format [DE|GB|US] DE: 31.12.2022, GB: 31/12/2022, US: 12/31/2022",
-        "list": [
-            "DE",
-            "GB",
-            "US"
-        ],
-        "category": "OBP60 Settings",
-        "capabilities": {
-            "obp60":"true"
-        }
-    },
-    {
         "name": "timeZone",
         "label": "Time Zone",
         "type": "number",
@@ -156,6 +140,102 @@
         }
     },
     {
+        "name": "lengthFormat",
+        "label": "Length Format",
+        "type": "list",
+        "default": "m",
+        "description": "Length format [m|ft]",
+        "list": [
+            "m",
+            "ft"
+        ],
+        "category": "OBP60 Units",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "distanceFormat",
+        "label": "Distance Format",
+        "type": "list",
+        "default": "m",
+        "description": "Distance format [m|km|nm]",
+        "list": [
+            "m",
+            "km",
+            "nm"
+        ],
+        "category": "OBP60 Units",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "speedFormat",
+        "label": "Speed Format",
+        "type": "list",
+        "default": "m/s",
+        "description": "Distance format [m/s|km/h|kn]",
+        "list": [
+            "m/s",
+            "km/h",
+            "kn"
+        ],
+        "category": "OBP60 Units",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "windspeedFormat",
+        "label": "Wind Speed Format",
+        "type": "list",
+        "default": "m/s",
+        "description": "Distance format [m/s|km/h|kn|bft]",
+        "list": [
+            "m/s",
+            "km/h",
+            "kn",
+            "bft"
+        ],
+        "category": "OBP60 Units",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "tempFormat",
+        "label": "Temperature Format",
+        "type": "list",
+        "default": "C",
+        "description": "Length format [K|°C|°F]",
+        "list": [
+            "K",
+            "C",
+            "F"
+        ],
+        "category": "OBP60 Units",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "dateFormat",
+        "label": "Date Format",
+        "type": "list",
+        "default": "GB",
+        "description": "Date format [DE|GB|US] DE: 31.12.2022, GB: 31/12/2022, US: 12/31/2022",
+        "list": [
+            "DE",
+            "GB",
+            "US"
+        ],
+        "category": "OBP60 Units",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
         "name": "useGPS",
         "label": "GPS NEO-6M",
         "type": "boolean",
@@ -235,7 +315,7 @@
     },
     {
         "name": "statusLine",
-        "label": "Status line",
+        "label": "Status Line",
         "type": "boolean",
         "default": "true",
         "description": "Show status line [on|off]",
@@ -250,6 +330,17 @@
         "type": "boolean",
         "default": "false",
         "description": "Refresh E-Ink display after each new page request [on|off]. A refresh reduce background shaddows from older pages.",
+        "category": "OBP60 Display",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "holdvalues",
+        "label": "Hold Values",
+        "type": "boolean",
+        "default": "false",
+        "description": "Hold old measuring values by missing data stream [on|off]",
         "category": "OBP60 Display",
         "capabilities": {
             "obp60":"true"
@@ -296,7 +387,7 @@
         "label": "Buzzer Error",
         "type": "boolean",
         "default": "false",
-        "description": "Settings for buzzer",
+        "description": "Sound on error",
         "category": "OBP60 Buzzer",
         "capabilities": {
             "obp60":"true"
@@ -307,7 +398,7 @@
         "label": "Buzzer GPS Fix",
         "type": "boolean",
         "default": "false",
-        "description": "Settings for buzzer",
+        "description": "Sound on missing or lost GPS fix",
         "category": "OBP60 Buzzer",
         "capabilities": {
             "obp60":"true"
@@ -318,7 +409,7 @@
         "label": "Buzzer by Limits",
         "type": "boolean",
         "default": "false",
-        "description": "Tone by limit overrun",
+        "description": "Sound on limit overrun",
         "category": "OBP60 Buzzer",
         "capabilities": {
             "obp60":"true"

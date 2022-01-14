@@ -235,6 +235,11 @@ void OBP60Task(void *param){
     // OBP60 Settings
     bool exampleSwitch = api->getConfig()->getConfigItem(api->getConfig()->obp60Config,true)->asBoolean();
     LOG_DEBUG(GwLog::DEBUG,"example switch ist %s",exampleSwitch?"true":"false");
+    api->getConfig()->getConfigItem(api->getConfig()->lengthFormat,true)->asString().toCharArray(busInfo.lengthformat, 16);
+    api->getConfig()->getConfigItem(api->getConfig()->distanceFormat,true)->asString().toCharArray(busInfo.distanceformat, 16);
+    api->getConfig()->getConfigItem(api->getConfig()->speedFormat,true)->asString().toCharArray(busInfo.speedformat, 16);
+    api->getConfig()->getConfigItem(api->getConfig()->windspeedFormat,true)->asString().toCharArray(busInfo.windspeedformat, 16);
+    api->getConfig()->getConfigItem(api->getConfig()->tempFormat,true)->asString().toCharArray(busInfo.tempformat, 16);
     api->getConfig()->getConfigItem(api->getConfig()->dateFormat,true)->asString().toCharArray(busInfo.dateformat, 3);
     busInfo.timezone = api->getConfig()->getConfigItem(api->getConfig()->timeZone,true)->asInt();
     busInfo.draft = api->getConfig()->getConfigItem(api->getConfig()->draft,true)->asString().toFloat();
@@ -255,6 +260,7 @@ void OBP60Task(void *param){
     api->getConfig()->getConfigItem(api->getConfig()->display,true)->asString().toCharArray(busInfo.displaymode, 16);
     busInfo.statusline = api->getConfig()->getConfigItem(api->getConfig()->statusLine,true)->asBoolean();
     busInfo.refresh = api->getConfig()->getConfigItem(api->getConfig()->refresh,true)->asBoolean();
+    busInfo.holdvalues = api->getConfig()->getConfigItem(api->getConfig()->holdvalues,true)->asBoolean();
     api->getConfig()->getConfigItem(api->getConfig()->backlight,true)->asString().toCharArray(busInfo.backlight, 16);
     api->getConfig()->getConfigItem(api->getConfig()->powerMode,true)->asString().toCharArray(busInfo.powermode, 16);
     // OBP60 Buzzer

@@ -1,5 +1,6 @@
-    // Other pin definititins see GwOBP60Task.h
-    
+    // General hardware definitions
+    // CAN bus pin definitions see GwOBP60Task.h
+
     // Direction pin for RS485 NMEA0183
     #define OBP_DIRECTION_PIN 27
     // SeaTalk
