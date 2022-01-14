@@ -599,6 +599,10 @@ void setup() {
     logger.prefix="FALLBACK:";
 #endif
   userCodeHandler.startInitTasks(MIN_USER_TASK);
+  config.stopChanges();
+  //maybe the user code changed the level
+  level=config.getInt(config.logLevel,LOGLEVEL);
+  logger.setLevel(level);
   gwWifi.setup();
   MDNS.begin(config.getConfigItem(config.systemName)->asCString());
   channels.begin(fallbackSerial);
@@ -682,7 +686,7 @@ void setup() {
   NMEA2000.SetProductInformation("1", // Manufacturer's Model serial code
                                  100, // Manufacturer's product code
                                  systemName->asCString(),  // Manufacturer's Model ID
-                                 VERSION,  // Manufacturer's Software version code
+                                 FIRMWARE_TYPE,  // Manufacturer's Software version code
                                  VERSION, // Manufacturer's Model version,
                                  N2K_LOAD_LEVEL,
                                  0xffff, //Version

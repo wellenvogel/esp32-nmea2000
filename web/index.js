@@ -953,17 +953,23 @@ function createConfigDefinitions(parent, capabilities, defs,includeXdr) {
             category = item.category;
         }
         let showItem=true;
-        if (item.capabilities !== undefined) {
-            for (let capability in item.capabilities) {
-                let values = item.capabilities[capability];
-                let found = false;
-                if (! (values instanceof Array)) values=[values];
-                values.forEach(function (v) {
+        let itemCapabilities=item.capabilities||{};
+        itemCapabilities['HIDE'+item.name]=null;
+        for (let capability in itemCapabilities) {
+            let values = itemCapabilities[capability];
+            let found = false;
+            if (! (values instanceof Array)) values=[values];
+            values.forEach(function (v) {
+                if ( v === null){
+                    if (capabilities[capability] === undefined) found=true;
+                }
+                else{
                     if (capabilities[capability] == v) found = true;
-                });
-                if (!found) showItem=false;
-            }
+                }
+            });
+            if (!found) showItem=false;
         }
+        
         if (showItem) {
             currentCategoryPopulated=true;
             let row = addEl('div', 'row', categoryEl);

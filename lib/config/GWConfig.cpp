@@ -114,6 +114,16 @@ int GwConfigHandler::getInt(const String name,int defaultv) const{
     if (!i) return defaultv;
     return i->asInt();
 }
+void GwConfigHandler::stopChanges(){
+    allowChanges=false;
+}
+bool GwConfigHandler::setValue(String name,String value){
+    if (! allowChanges) return false;
+    GwConfigInterface *i=getConfigItem(name,false);
+    if (!i) return false;
+    i->value=value;
+    return true;
+}
 
 void GwNmeaFilter::handleToken(String token, int index){
     switch(index){

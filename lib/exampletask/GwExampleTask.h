@@ -43,4 +43,7 @@ DECLARE_INITFUNCTION(exampleInit);
 //elements when this capability is set correctly
 DECLARE_CAPABILITY(testboard,true);
 DECLARE_CAPABILITY(testboard2,true);
+//hide some config value
+//just set HIDE + the name of the config item to true
+DECLARE_CAPABILITY(HIDEminXdrInterval,true);
 #endif
