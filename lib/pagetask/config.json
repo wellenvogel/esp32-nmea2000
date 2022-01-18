@@ -1,0 +1,39 @@
+[
+    {
+        "name": "visiblePages",
+        "label": "number of pages",
+        "type": "number",
+        "check": "checkMinMax",
+        "min": 1,
+        "max": 4,
+        "default":"1",
+        "category":"pagecommon",
+        "capabilities": {
+            "testboard":"pagetask"
+        }
+    },
+    {
+        "name": "page1type",
+        "label": "type",
+        "type": "list",
+        "default": "oneValue",
+        "description": "type of page for page 1",
+        "list":["oneValue","twoValues","threeValues","forValues","apparentWind"],
+        "category": "page1",
+        "capabilities": {
+            "testboard":"pagetask"
+        }
+    },
+    {
+        "name": "page1value1",
+        "label": "field1",
+        "type": "boatData",
+        "default": "",
+        "description": "the display for field one",
+        "category": "page1",
+        "capabilities": {
+            "testboard":"pagetask"
+        },
+        "condition":[{"page1type":"oneValue"},{"page1type":"twoValues"},{"page1type":"threeValues"},{"page1type":"forValues"}]
+    }
+]
