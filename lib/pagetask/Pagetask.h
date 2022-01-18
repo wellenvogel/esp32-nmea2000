@@ -1,7 +1,7 @@
 #pragma once
 #include "GwApi.h"
 //we only compile for some boards
-//#ifdef BOARD_PAGETASK
+#ifdef BOARD_PAGETASK
 
 #define ESP32_CAN_TX_PIN GPIO_NUM_22
 #define ESP32_CAN_RX_PIN GPIO_NUM_19
@@ -34,4 +34,4 @@ DECLARE_USERTASK_PARAM(pageTask,4000);
 DECLARE_INITFUNCTION(pageInit);
 
 DECLARE_CAPABILITY(pagetask,true);
-//#endif
+#endif

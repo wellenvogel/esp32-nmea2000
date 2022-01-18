@@ -1,8 +1,8 @@
 #include "Pagetask.h"
-#include "Pagedata.h"
 
 
 #ifdef BOARD_PAGETASK
+#include "Pagedata.h"
 
 //include all the pages here
 #include "OneValuePage.hpp"
