@@ -24,35 +24,39 @@ void keyboardTask(void *param){
     vTaskDelete(NULL);
 }
 
-#define MAXVALUES 100
-//we create a list containing all our BoatValues
-//this is the list we later use to let the api fill all the values
-//additionally we put the necessary values into the paga data - see below
-GwApi::BoatValue *allBoatValues[MAXVALUES];
-int numValues=0;
-bool addValueToList(GwApi::BoatValue *v){
-    for (int i=0;i<numValues;i++){
-        if (allBoatValues[i] == v){
-            //already in list...
-            return true;
+class BoatValueList{
+    public:
+    static const int MAXVALUES=100;
+    //we create a list containing all our BoatValues
+    //this is the list we later use to let the api fill all the values
+    //additionally we put the necessary values into the paga data - see below
+    GwApi::BoatValue *allBoatValues[MAXVALUES];
+    int numValues=0;
+    
+    bool addValueToList(GwApi::BoatValue *v){
+        for (int i=0;i<numValues;i++){
+            if (allBoatValues[i] == v){
+                //already in list...
+                return true;
+            }
         }
+        if (numValues >= MAXVALUES) return false;
+        allBoatValues[numValues]=v;
+        numValues++;
+        return true;
     }
-    if (numValues >= MAXVALUES) return false;
-    allBoatValues[numValues]=v;
-    numValues++;
-    return true;
-}
-//helper to ensure that each BoatValue is only queried once
-GwApi::BoatValue *findValueOrCreate(String name){
-    for (int i=0;i<numValues;i++){
-        if (allBoatValues[i]->getName() == name) {
-            return allBoatValues[i];
+    //helper to ensure that each BoatValue is only queried once
+    GwApi::BoatValue *findValueOrCreate(String name){
+        for (int i=0;i<numValues;i++){
+            if (allBoatValues[i]->getName() == name) {
+                return allBoatValues[i];
+            }
         }
+        GwApi::BoatValue *rt=new GwApi::BoatValue(name);
+        addValueToList(rt);
+        return rt;
     }
-    GwApi::BoatValue *rt=new GwApi::BoatValue(name);
-    addValueToList(rt);
-    return rt;
-}
+};
 
 //we want to have a list that has all our page definitions
 //this way each page can easily be added here
@@ -94,6 +98,7 @@ void pageTask(GwApi *api){
     PageData pages[MAX_PAGE_NUMBER];
     CommonData commonData;
     commonData.logger=logger;
+    BoatValueList boatValues; //all the boat values for the api query
     //commonData.distanceformat=config->getString(xxx);
     //add all necessary data to common data
 
@@ -117,7 +122,7 @@ void pageTask(GwApi *api){
        //fill in all the user defined parameters
        for (int uid=0;uid<description->userParam;uid++){
            String cfgName=prefix+String("value")+String(uid+1);
-           GwApi::BoatValue *value=findValueOrCreate(config->getString(cfgName,""));
+           GwApi::BoatValue *value=boatValues.findValueOrCreate(config->getString(cfgName,""));
            LOG_DEBUG(GwLog::DEBUG,"add user input cfg=%s,value=%s for page %d",
                 cfgName.c_str(),
                 value->getName().c_str(),
@@ -127,7 +132,7 @@ void pageTask(GwApi *api){
        }
        //now add the predefined values
        for (auto it=description->fixedParam.begin();it != description->fixedParam.end();it++){
-            GwApi::BoatValue *value=findValueOrCreate(*it);
+            GwApi::BoatValue *value=boatValues.findValueOrCreate(*it);
             LOG_DEBUG(GwLog::DEBUG,"added fixed value %s to page %d",value->getName().c_str(),i);
             pages[i].values.push_back(value); 
        }
@@ -152,7 +157,7 @@ void pageTask(GwApi *api){
             }
         }
         //refresh data from api
-        api->getBoatDataValues(numValues,allBoatValues);
+        api->getBoatDataValues(boatValues.numValues,boatValues.allBoatValues);
         api->getStatus(commonData.status);
 
         //handle the page
