@@ -2,10 +2,14 @@
 #include "Pagedata.h"
 
 
-//#ifdef BOARD_PAGETASK
+#ifdef BOARD_PAGETASK
 
 //include all the pages here
 #include "OneValuePage.hpp"
+#include "TwoValuesPage.hpp"
+#include "ThreeValuesPage.hpp"
+#include "ForValuesPage.hpp"
+#include "ApparentWindPage.hpp"
 
 void pageInit(GwApi *param){
     param->getLogger()->logDebug(GwLog::LOG,"page init running");
@@ -84,6 +88,7 @@ PageList & pageList(){
     static PageList instance;
     return instance;
 }
+//this function is called by all the registerXXX variables
 void registerPage(PageDescription *p){
     pageList().add(p);
 }
@@ -151,10 +156,11 @@ void pageTask(GwApi *api){
         //check if there is a keyboard message
         int keyboardMessage=-1;
         if (xQueueReceive(keyboardQueue,&keyboardMessage,0)){
-            LOG_DEBUG(GwLog::LOG,"new page %d",keyboardMessage);
-            if (keyboardMessage >= 0 && keyboardMessage < MAX_PAGE_NUMBER){
+            LOG_DEBUG(GwLog::LOG,"new page from keyboard %d",keyboardMessage);
+            if (keyboardMessage >= 0 && keyboardMessage < numPages){
                 currentPage=keyboardMessage;
             }
+            LOG_DEBUG(GwLog::LOG,"set pagenumber to %d",currentPage);
         }
         //refresh data from api
         api->getBoatDataValues(boatValues.numValues,boatValues.allBoatValues);
@@ -180,4 +186,4 @@ void pageTask(GwApi *api){
 
 }
 
-//#endif
+#endif

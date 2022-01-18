@@ -3,6 +3,7 @@
 void oneValuePage(CommonData &commonData, PageData &pageData){
     GwLog *logger=commonData.logger;
     GwApi::BoatValue *value=pageData.values[0];
+    if (value == NULL) return;
     LOG_DEBUG(GwLog::LOG,"drawing at oneValuePage, p=%s,v=%f",
         value->getName().c_str(),
         value->valid?value->value:-1.0

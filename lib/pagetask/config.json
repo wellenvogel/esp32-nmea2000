@@ -35,5 +35,232 @@
             "pagetask":"true"
         },
         "condition":[{"page1type":"oneValue"},{"page1type":"twoValues"},{"page1type":"threeValues"},{"page1type":"forValues"}]
+    },
+    {
+        "name": "page1value2",
+        "label": "field2",
+        "type": "boatData",
+        "default": "",
+        "description": "the display for field two",
+        "category": "page1",
+        "capabilities": {
+            "pagetask":"true"
+        },
+        "condition":[{"page1type":"twoValues"},{"page1type":"threeValues"},{"page1type":"forValues"}]
     }
+    ,
+    {
+        "name": "page1value3",
+        "label": "field3",
+        "type": "boatData",
+        "default": "",
+        "description": "the display for field 3",
+        "category": "page1",
+        "capabilities": {
+            "pagetask":"true"
+        },
+        "condition":[{"page1type":"threeValues"},{"page1type":"forValues"}]
+    }
+    ,
+    {
+        "name": "page1value4",
+        "label": "field4",
+        "type": "boatData",
+        "default": "",
+        "description": "the display for field 4",
+        "category": "page1",
+        "capabilities": {
+            "pagetask":"true"
+        },
+        "condition":[{"page1type":"forValues"}]
+    },
+    {
+        "name": "page2type",
+        "label": "type",
+        "type": "list",
+        "default": "oneValue",
+        "description": "type of page for page 1",
+        "list":["oneValue","twoValues","threeValues","forValues","apparentWind"],
+        "category": "page2",
+        "capabilities": {
+            "pagetask":"true"
+        }
+    },
+    {
+        "name": "page2value1",
+        "label": "field1",
+        "type": "boatData",
+        "default": "",
+        "description": "the display for field one",
+        "category": "page2",
+        "capabilities": {
+            "pagetask":"true"
+        },
+        "condition":[{"page2type":"oneValue"},{"page2type":"twoValues"},{"page2type":"threeValues"},{"page2type":"forValues"}]
+    },
+    {
+        "name": "page2value2",
+        "label": "field2",
+        "type": "boatData",
+        "default": "",
+        "description": "the display for field two",
+        "category": "page2",
+        "capabilities": {
+            "pagetask":"true"
+        },
+        "condition":[{"page2type":"twoValues"},{"page2type":"threeValues"},{"page2type":"forValues"}]
+    }
+    ,
+    {
+        "name": "page2value3",
+        "label": "field3",
+        "type": "boatData",
+        "default": "",
+        "description": "the display for field 3",
+        "category": "page2",
+        "capabilities": {
+            "pagetask":"true"
+        },
+        "condition":[{"page2type":"threeValues"},{"page2type":"forValues"}]
+    }
+    ,
+    {
+        "name": "page2value4",
+        "label": "field4",
+        "type": "boatData",
+        "default": "",
+        "description": "the display for field 4",
+        "category": "page2",
+        "capabilities": {
+            "pagetask":"true"
+        },
+        "condition":[{"page2type":"forValues"}]
+    }
+    ,
+    {
+        "name": "page3type",
+        "label": "type",
+        "type": "list",
+        "default": "oneValue",
+        "description": "type of page for page 1",
+        "list":["oneValue","twoValues","threeValues","forValues","apparentWind"],
+        "category": "page3",
+        "capabilities": {
+            "pagetask":"true"
+        }
+    },
+    {
+        "name": "page3value1",
+        "label": "field1",
+        "type": "boatData",
+        "default": "",
+        "description": "the display for field one",
+        "category": "page3",
+        "capabilities": {
+            "pagetask":"true"
+        },
+        "condition":[{"page3type":"oneValue"},{"page3type":"twoValues"},{"page3type":"threeValues"},{"page3type":"forValues"}]
+    },
+    {
+        "name": "page3value2",
+        "label": "field2",
+        "type": "boatData",
+        "default": "",
+        "description": "the display for field two",
+        "category": "page3",
+        "capabilities": {
+            "pagetask":"true"
+        },
+        "condition":[{"page3type":"twoValues"},{"page3type":"threeValues"},{"page3type":"forValues"}]
+    }
+    ,
+    {
+        "name": "page3value3",
+        "label": "field3",
+        "type": "boatData",
+        "default": "",
+        "description": "the display for field 3",
+        "category": "page3",
+        "capabilities": {
+            "pagetask":"true"
+        },
+        "condition":[{"page3type":"threeValues"},{"page3type":"forValues"}]
+    }
+    ,
+    {
+        "name": "page3value4",
+        "label": "field4",
+        "type": "boatData",
+        "default": "",
+        "description": "the display for field 4",
+        "category": "page3",
+        "capabilities": {
+            "pagetask":"true"
+        },
+        "condition":[{"page3type":"forValues"}]
+    }
+    ,
+    {
+        "name": "page4type",
+        "label": "type",
+        "type": "list",
+        "default": "oneValue",
+        "description": "type of page for page 1",
+        "list":["oneValue","twoValues","threeValues","forValues","apparentWind"],
+        "category": "page4",
+        "capabilities": {
+            "pagetask":"true"
+        }
+    },
+    {
+        "name": "page4value1",
+        "label": "field1",
+        "type": "boatData",
+        "default": "",
+        "description": "the display for field one",
+        "category": "page4",
+        "capabilities": {
+            "pagetask":"true"
+        },
+        "condition":[{"page4type":"oneValue"},{"page4type":"twoValues"},{"page4type":"threeValues"},{"page4type":"forValues"}]
+    },
+    {
+        "name": "page4value2",
+        "label": "field2",
+        "type": "boatData",
+        "default": "",
+        "description": "the display for field two",
+        "category": "page4",
+        "capabilities": {
+            "pagetask":"true"
+        },
+        "condition":[{"page4type":"twoValues"},{"page4type":"threeValues"},{"page4type":"forValues"}]
+    }
+    ,
+    {
+        "name": "page4value3",
+        "label": "field3",
+        "type": "boatData",
+        "default": "",
+        "description": "the display for field 3",
+        "category": "page4",
+        "capabilities": {
+            "pagetask":"true"
+        },
+        "condition":[{"page4type":"threeValues"},{"page4type":"forValues"}]
+    }
+    ,
+    {
+        "name": "page4value4",
+        "label": "field4",
+        "type": "boatData",
+        "default": "",
+        "description": "the display for field 4",
+        "category": "page4",
+        "capabilities": {
+            "pagetask":"true"
+        },
+        "condition":[{"page4type":"forValues"}]
+    }
+
 ]
