@@ -1,7 +1,11 @@
 #include "Pagetask.h"
 #include "Pagedata.h"
 
+
 //#ifdef BOARD_PAGETASK
+
+//include all the pages here
+#include "OneValuePage.hpp"
 
 void pageInit(GwApi *param){
     param->getLogger()->logDebug(GwLog::LOG,"page init running");
@@ -83,9 +87,13 @@ void pageTask(GwApi *api){
     GwLog *logger=api->getLogger();
     GwConfigHandler *config=api->getConfig();
     LOG_DEBUG(GwLog::LOG,"page task started");
+    for (auto it=pageList().pages.begin();it != pageList().pages.end();it++){
+        LOG_DEBUG(GwLog::LOG,"found registered page %s",(*it)->pageName.c_str());
+    }
     int numPages=1;
     PageData pages[MAX_PAGE_NUMBER];
     CommonData commonData;
+    commonData.logger=logger;
     //commonData.distanceformat=config->getString(xxx);
     //add all necessary data to common data
 
@@ -95,10 +103,12 @@ void pageTask(GwApi *api){
     if (numPages >= MAX_PAGE_NUMBER) numPages=MAX_PAGE_NUMBER;
     String configPrefix="page";
     for (int i=0;i< numPages;i++){
-       String prefix=configPrefix+String(i); //e.g. page1
-       String pageType=config->getString(prefix+String("type"),"");
+       String prefix=configPrefix+String(i+1); //e.g. page1
+       String configName=prefix+String("type");
+       LOG_DEBUG(GwLog::DEBUG,"asking for page config %s",configName.c_str());
+       String pageType=config->getString(configName,"");
        PageDescription *description=pageList().find(pageType);
-       if (pageType == NULL){
+       if (description == NULL){
            LOG_DEBUG(GwLog::ERROR,"page description for %s not found",pageType.c_str());
            continue;
        }
@@ -132,7 +142,7 @@ void pageTask(GwApi *api){
     LOG_DEBUG(GwLog::LOG,"pagetask: start mainloop");
     int currentPage=0;
     while (true){
-        delay(10);
+        delay(1000);
         //check if there is a keyboard message
         int keyboardMessage=-1;
         if (xQueueReceive(keyboardQueue,&keyboardMessage,0)){
@@ -141,15 +151,22 @@ void pageTask(GwApi *api){
                 currentPage=keyboardMessage;
             }
         }
+        //refresh data from api
+        api->getBoatDataValues(numValues,allBoatValues);
+        api->getStatus(commonData.status);
+
         //handle the page
         //build some header and footer using commonData
+        //....
+        //call the particular page
         String currentType=pages[currentPage].pageName;
         PageDescription *description=pageList().find(currentType);
         if (description == NULL){
-            LOG_DEBUG(GwLog::ERROR,"page %s not found",currentType.c_str());
+            LOG_DEBUG(GwLog::ERROR,"page number %d, type %s not found",currentPage, currentType.c_str());
         }
         else{
             //call the page code
+            LOG_DEBUG(GwLog::DEBUG,"calling page %d type %s",currentPage,description->pageName.c_str());
             description->function(commonData,pages[currentPage]);
         }
 

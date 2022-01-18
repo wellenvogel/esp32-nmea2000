@@ -9,7 +9,7 @@
         "default":"1",
         "category":"pagecommon",
         "capabilities": {
-            "testboard":"pagetask"
+            "pagetask":"true"
         }
     },
     {
@@ -21,7 +21,7 @@
         "list":["oneValue","twoValues","threeValues","forValues","apparentWind"],
         "category": "page1",
         "capabilities": {
-            "testboard":"pagetask"
+            "pagetask":"true"
         }
     },
     {
@@ -32,7 +32,7 @@
         "description": "the display for field one",
         "category": "page1",
         "capabilities": {
-            "testboard":"pagetask"
+            "pagetask":"true"
         },
         "condition":[{"page1type":"oneValue"},{"page1type":"twoValues"},{"page1type":"threeValues"},{"page1type":"forValues"}]
     }

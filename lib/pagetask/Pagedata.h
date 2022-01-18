@@ -1,3 +1,4 @@
+#pragma once
 #include <Arduino.h>
 #include "GwApi.h"
 #include <functional>
@@ -21,11 +22,12 @@ typedef struct{
   //...
   OutputData output;
   GwApi::Status status;
+  GwLog *logger=NULL;
 } CommonData;
 
 
 
-typedef std::function<void *(CommonData &, PageData &)> PageFunction;
+typedef std::function<void (CommonData &, PageData &)> PageFunction;
 typedef std::vector<String> StringList;
 class PageDescription;
 void registerPage(PageDescription *p);
@@ -36,9 +38,15 @@ class PageDescription{
         StringList fixedParam;
         PageFunction function;
         PageDescription(String name, PageFunction function,int userParam,StringList fixedParam){
-            this->pageName=pageName;
+            this->pageName=name;
             this->userParam=userParam;
             this->fixedParam=fixedParam;
+            this->function=function;
+            registerPage(this);
+        }
+        PageDescription(String name, PageFunction function,int userParam){
+            this->pageName=name;
+            this->userParam=userParam;
             this->function=function;
             registerPage(this);
         }
