@@ -4,12 +4,6 @@
 #ifdef BOARD_PAGETASK
 #include "Pagedata.h"
 
-//include all the pages here
-#include "OneValuePage.hpp"
-#include "TwoValuesPage.hpp"
-#include "ThreeValuesPage.hpp"
-#include "ForValuesPage.hpp"
-#include "ApparentWindPage.hpp"
 
 void pageInit(GwApi *param){
     param->getLogger()->logDebug(GwLog::LOG,"page init running");
@@ -83,20 +77,38 @@ class PageList{
         }
 };
 
-//a function to get a static instance of this class
-PageList & pageList(){
-    static PageList instance;
-    return instance;
+
+/**
+ * this function will add all the pages we know to the pagelist
+ * each page should have defined a registerXXXPage variable of type
+ * PageData that describes what it needs
+ */
+void registerAllPages(PageList &list){
+    //the next line says that this variable is defined somewhere else
+    //in our case in a separate C++ source file
+    //this way this separate source file can be compiled by it's own
+    //and has no access to any of our data except the one that we
+    //give as a parameter to the page function
+    extern PageDescription registerOneValuePage;
+    //we add the variable to our list
+    list.add(&registerOneValuePage);
+    extern PageDescription registerTwoValuesPage;
+    list.add(&registerTwoValuesPage);
+    extern PageDescription registerThreeValuesPage;
+    list.add(&registerThreeValuesPage);
+    extern PageDescription registerForValuesPage;
+    list.add(&registerForValuesPage);
+    extern PageDescription registerApparentWindPage;
+    list.add(&registerApparentWindPage);
 }
-//this function is called by all the registerXXX variables
-void registerPage(PageDescription *p){
-    pageList().add(p);
-}
+
 void pageTask(GwApi *api){
     GwLog *logger=api->getLogger();
     GwConfigHandler *config=api->getConfig();
+    PageList allPages;
+    registerAllPages(allPages);
     LOG_DEBUG(GwLog::LOG,"page task started");
-    for (auto it=pageList().pages.begin();it != pageList().pages.end();it++){
+    for (auto it=allPages.pages.begin();it != allPages.pages.end();it++){
         LOG_DEBUG(GwLog::LOG,"found registered page %s",(*it)->pageName.c_str());
     }
     int numPages=1;
@@ -117,7 +129,7 @@ void pageTask(GwApi *api){
        String configName=prefix+String("type");
        LOG_DEBUG(GwLog::DEBUG,"asking for page config %s",configName.c_str());
        String pageType=config->getString(configName,"");
-       PageDescription *description=pageList().find(pageType);
+       PageDescription *description=allPages.find(pageType);
        if (description == NULL){
            LOG_DEBUG(GwLog::ERROR,"page description for %s not found",pageType.c_str());
            continue;
@@ -171,7 +183,7 @@ void pageTask(GwApi *api){
         //....
         //call the particular page
         String currentType=pages[currentPage].pageName;
-        PageDescription *description=pageList().find(currentType);
+        PageDescription *description=allPages.find(currentType);
         if (description == NULL){
             LOG_DEBUG(GwLog::ERROR,"page number %d, type %s not found",currentPage, currentType.c_str());
         }

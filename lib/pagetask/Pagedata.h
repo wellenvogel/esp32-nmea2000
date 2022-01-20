@@ -29,8 +29,15 @@ typedef struct{
 
 typedef std::function<void (CommonData &, PageData &)> PageFunction;
 typedef std::vector<String> StringList;
-class PageDescription;
-void registerPage(PageDescription *p);
+
+/**
+ * a class that describes a page
+ * it contains the name (type)
+ * the number of expected user defined boat Values
+ * and a list of boatValue names that are fixed
+ * for each page you define a variable of this type
+ * and add this to registerAllPages in the Pagetask
+ */
 class PageDescription{
     public:
         String pageName;
@@ -42,12 +49,10 @@ class PageDescription{
             this->userParam=userParam;
             this->fixedParam=fixedParam;
             this->function=function;
-            registerPage(this);
         }
         PageDescription(String name, PageFunction function,int userParam){
             this->pageName=name;
             this->userParam=userParam;
             this->function=function;
-            registerPage(this);
         }
 };
