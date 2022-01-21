@@ -77,6 +77,11 @@ class PageList{
         }
 };
 
+class PageStruct{
+    public:
+        Page *page=NULL;
+        PageData parameters;
+};
 
 /**
  * this function will add all the pages we know to the pagelist
@@ -112,7 +117,7 @@ void pageTask(GwApi *api){
         LOG_DEBUG(GwLog::LOG,"found registered page %s",(*it)->pageName.c_str());
     }
     int numPages=1;
-    PageData pages[MAX_PAGE_NUMBER];
+    PageStruct pages[MAX_PAGE_NUMBER];
     CommonData commonData;
     commonData.logger=logger;
     BoatValueList boatValues; //all the boat values for the api query
@@ -134,7 +139,8 @@ void pageTask(GwApi *api){
            LOG_DEBUG(GwLog::ERROR,"page description for %s not found",pageType.c_str());
            continue;
        }
-       pages[i].pageName=pageType;
+       pages[i].page=description->creator(commonData);
+       pages[i].parameters.pageName=pageType;
        LOG_DEBUG(GwLog::DEBUG,"found page %s for number %d",pageType.c_str(),i);
        //fill in all the user defined parameters
        for (int uid=0;uid<description->userParam;uid++){
@@ -145,13 +151,13 @@ void pageTask(GwApi *api){
                 value->getName().c_str(),
                 i
            );
-           pages[i].values.push_back(value);
+           pages[i].parameters.values.push_back(value);
        }
        //now add the predefined values
        for (auto it=description->fixedParam.begin();it != description->fixedParam.end();it++){
             GwApi::BoatValue *value=boatValues.findValueOrCreate(*it);
             LOG_DEBUG(GwLog::DEBUG,"added fixed value %s to page %d",value->getName().c_str(),i);
-            pages[i].values.push_back(value); 
+            pages[i].parameters.values.push_back(value); 
        }
     }
     //now we have prepared the page data
@@ -162,7 +168,7 @@ void pageTask(GwApi *api){
 
     //loop
     LOG_DEBUG(GwLog::LOG,"pagetask: start mainloop");
-    int currentPage=0;
+    int pageNumber=0;
     while (true){
         delay(1000);
         //check if there is a keyboard message
@@ -170,9 +176,9 @@ void pageTask(GwApi *api){
         if (xQueueReceive(keyboardQueue,&keyboardMessage,0)){
             LOG_DEBUG(GwLog::LOG,"new page from keyboard %d",keyboardMessage);
             if (keyboardMessage >= 0 && keyboardMessage < numPages){
-                currentPage=keyboardMessage;
+                pageNumber=keyboardMessage;
             }
-            LOG_DEBUG(GwLog::LOG,"set pagenumber to %d",currentPage);
+            LOG_DEBUG(GwLog::LOG,"set pagenumber to %d",pageNumber);
         }
         //refresh data from api
         api->getBoatDataValues(boatValues.numValues,boatValues.allBoatValues);
@@ -182,15 +188,14 @@ void pageTask(GwApi *api){
         //build some header and footer using commonData
         //....
         //call the particular page
-        String currentType=pages[currentPage].pageName;
-        PageDescription *description=allPages.find(currentType);
-        if (description == NULL){
-            LOG_DEBUG(GwLog::ERROR,"page number %d, type %s not found",currentPage, currentType.c_str());
+        Page *currentPage=pages[pageNumber].page;
+        if (currentPage == NULL){
+            LOG_DEBUG(GwLog::ERROR,"page number %d not found",pageNumber);
         }
         else{
             //call the page code
-            LOG_DEBUG(GwLog::DEBUG,"calling page %d type %s",currentPage,description->pageName.c_str());
-            description->function(commonData,pages[currentPage]);
+            LOG_DEBUG(GwLog::DEBUG,"calling page %d type %s",currentPage);
+            currentPage->display(commonData,pages[pageNumber].parameters);
         }
 
     }

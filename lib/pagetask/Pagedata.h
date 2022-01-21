@@ -25,9 +25,13 @@ typedef struct{
   GwLog *logger=NULL;
 } CommonData;
 
+//a base class that all pages must inherit from
+class Page{
+  public:
+    virtual void display(CommonData &commonData, PageData &pageData)=0;
+};
 
-
-typedef std::function<void (CommonData &, PageData &)> PageFunction;
+typedef std::function<Page* (CommonData &)> PageFunction;
 typedef std::vector<String> StringList;
 
 /**
@@ -43,16 +47,16 @@ class PageDescription{
         String pageName;
         int userParam=0;
         StringList fixedParam;
-        PageFunction function;
-        PageDescription(String name, PageFunction function,int userParam,StringList fixedParam){
+        PageFunction creator;
+        PageDescription(String name, PageFunction creator,int userParam,StringList fixedParam){
             this->pageName=name;
             this->userParam=userParam;
             this->fixedParam=fixedParam;
-            this->function=function;
+            this->creator=creator;
         }
-        PageDescription(String name, PageFunction function,int userParam){
+        PageDescription(String name, PageFunction creator,int userParam){
             this->pageName=name;
             this->userParam=userParam;
-            this->function=function;
+            this->creator=creator;
         }
 };
