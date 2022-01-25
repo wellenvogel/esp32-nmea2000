@@ -10,6 +10,13 @@
  */
 void exampleInit(GwApi *api){
     api->getLogger()->logDebug(GwLog::LOG,"example init running");
+    //this example is a more or less useless example how you could set some
+    //config value to a fixed value
+    //you can only set config values within the init function
+    //you could also compute this value from some own configuration
+    //for this example it would make a lot of sense to declare a capability
+    //to hide this config item from the UI - see header file 
+    api->getConfig()->setValue(api->getConfig()->minXdrInterval,"50"); 
 }
 #define INVALID_COORD -99999
 class GetBoatDataRequest: public GwMessage{
@@ -84,6 +91,7 @@ void exampleTask(GwApi *api){
     bool hasPosition=false;
     bool hasPosition2=false;
     LOG_DEBUG(GwLog::DEBUG,"example switch ist %s",exampleSwitch?"true":"false");
+    LOG_DEBUG(GwLog::DEBUG,"minXdrInterval=%d",api->getConfig()->getInt(api->getConfig()->minXdrInterval));
     GwApi::BoatValue *longitude=new GwApi::BoatValue(F("Longitude"));
     GwApi::BoatValue *latitude=new GwApi::BoatValue(F("Latitude"));
     GwApi::BoatValue *testValue=new GwApi::BoatValue(boatItemName);

@@ -175,6 +175,14 @@
         "description": "min interval in ms between 2 NMEA 2000 records with the same PGN and the same source (> 5)",
         "category": "converter"
     },
+     {
+         "name":"sendN2k",
+         "label":"NMEA2000 out",
+         "type":"boolean",
+         "default":"true",
+         "description":"send out the converted data on the NMEA2000 bus\nIf set to off the converted data will still be shown at the data tab.",
+         "category":"converter"
+     },
     {
         "name": "usbActisense",
         "label": "USB mode",
