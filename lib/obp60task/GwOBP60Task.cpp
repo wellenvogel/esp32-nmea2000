@@ -119,7 +119,7 @@ void OBP60Init(GwApi *api){
     GwLog *logger=api->getLogger();
 
     // Define timer interrupts
-//    Timer1.attach_ms(1, underVoltageDetection);     // Maximum speed with 1ms
+    Timer1.attach_ms(1, underVoltageDetection);     // Maximum speed with 1ms
     Timer2.attach_ms(40, readKeypad);               // Timer value nust grater than 30ms
     Timer3.attach_ms(500, blinkingFlashLED); 
 
@@ -158,6 +158,17 @@ void OBP60Init(GwApi *api){
         }
         else{
             LOG_DEBUG(GwLog::DEBUG,"1Wire Mode is Off");
+        }
+
+        // Settings for NMEA0183
+        String nmea0183Mode = api->getConfig()->getConfigItem(api->getConfig()->serialDirection,true)->asString();
+        LOG_DEBUG(GwLog::DEBUG,"NMEA0183 Mode is: %s", nmea0183Mode);
+         pinMode(OBP_DIRECTION_PIN, OUTPUT);
+        if(String(nmea0183Mode) == "receive" || String(nmea0183Mode) == "off"){
+            digitalWrite(OBP_DIRECTION_PIN, false);
+        }
+        if(String(nmea0183Mode) == "send"){
+            digitalWrite(OBP_DIRECTION_PIN, true);
         }
         
         // Settings for backlight
