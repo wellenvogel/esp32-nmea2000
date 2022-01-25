@@ -114,7 +114,7 @@ void showPage(busData values){
           hour += values.timezone + 24;
         }
         hour %= 24;
-        sprintf(newhour, "%d", hour);
+        sprintf(newhour, "%02d", hour);
         newtime[0] = newhour[0];
         newtime[1] = newhour[1];
         display.print(newtime);
