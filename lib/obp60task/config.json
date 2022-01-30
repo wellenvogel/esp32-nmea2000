@@ -286,6 +286,17 @@
         }
     },
     {
+        "name": "underVoltage",
+        "label": "Undervoltage",
+        "type": "boolean",
+        "default": "false",
+        "description": "If undervoltage detection [on|off] lower than 9V then switch off the device",
+        "category": "OBP60 Hardware",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
         "name": "useSimuData",
         "label": "Simulation Data",
         "type": "boolean",
