@@ -210,7 +210,7 @@ void pageTask(GwApi *api){
                 lastPage=pageNumber;
             }
             //call the page code
-            LOG_DEBUG(GwLog::DEBUG,"calling page %d type %s");
+            LOG_DEBUG(GwLog::DEBUG,"calling page %d",pageNumber);
             currentPage->display(commonData,pages[pageNumber].parameters);
         }
 
