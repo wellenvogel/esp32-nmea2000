@@ -320,8 +320,8 @@ let counters={
     countTCPClientout: 'TCPclient out',
     countUSBin: 'USB in',
     countUSBout: 'USB out',
-    countSERIn: 'Serial in',
-    countSEROut: 'Serial out'
+    countSERin: 'Serial in',
+    countSERout: 'Serial out'
 }
 function showOverlay(text, isHtml) {
     let el = document.getElementById('overlayContent');

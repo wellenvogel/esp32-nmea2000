@@ -145,6 +145,9 @@ For details refer to the [example description](lib/exampletask/Readme.md).
 
 Changelog
 ---------
+[20220124](../../releases/tag/20220124)
+*********
+* make the serial input and output working again
 [20220114](../../releases/tag/20220114)
 *********
 * incorporate some changes from [Homberger](https://github.com/AK-Homberger/NMEA2000-AIS-Gateway) to improve AIS compatibility with Raymarine displays

@@ -102,8 +102,8 @@ void GwChannelList::begin(bool fallbackSerial){
     theChannels.push_back(channel);
 
     //serial 1
-    bool serCanRead=false;
-    bool serCanWrite=false;
+    bool serCanRead=true;
+    bool serCanWrite=true;
     int serialrx=-1;
     int serialtx=-1;
     #ifdef GWSERIAL_MODE
