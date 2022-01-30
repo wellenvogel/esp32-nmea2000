@@ -30,6 +30,8 @@ class Page{
   public:
     virtual void display(CommonData &commonData, PageData &pageData)=0;
     virtual void displayNew(CommonData &commonData, PageData &pageData){}
+    //return -1 if handled by the page
+    virtual int handleKey(int key){return key;}
 };
 
 typedef std::function<Page* (CommonData &)> PageFunction;

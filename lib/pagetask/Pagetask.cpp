@@ -13,6 +13,7 @@ typedef struct {
         int page0=0;
         QueueHandle_t queue;
     } MyData;
+
 void keyboardTask(void *param){
     MyData *data=(MyData *)param;
     int page=data->page0;
@@ -184,7 +185,12 @@ void pageTask(GwApi *api){
         int keyboardMessage=-1;
         if (xQueueReceive(allParameters.queue,&keyboardMessage,0)){
             LOG_DEBUG(GwLog::LOG,"new page from keyboard %d",keyboardMessage);
+            Page *currentPage=pages[pageNumber].page;
+            if (currentPage ){
+                keyboardMessage=currentPage->handleKey(keyboardMessage);
+            }
             if (keyboardMessage >= 0 && keyboardMessage < numPages){
+                
                 pageNumber=keyboardMessage;
             }
             LOG_DEBUG(GwLog::LOG,"set pagenumber to %d",pageNumber);
