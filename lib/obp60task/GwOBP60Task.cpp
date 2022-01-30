@@ -119,7 +119,10 @@ void OBP60Init(GwApi *api){
     GwLog *logger=api->getLogger();
 
     // Define timer interrupts
-    Timer1.attach_ms(1, underVoltageDetection);     // Maximum speed with 1ms
+    bool uvoltage = api->getConfig()->getConfigItem(api->getConfig()->underVoltage,true)->asBoolean();
+    if(uvoltage == true){
+        Timer1.attach_ms(1, underVoltageDetection);     // Maximum speed with 1ms
+    }
     Timer2.attach_ms(40, readKeypad);               // Timer value nust grater than 30ms
     Timer3.attach_ms(500, blinkingFlashLED); 
 
