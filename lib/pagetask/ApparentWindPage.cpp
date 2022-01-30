@@ -41,5 +41,6 @@ PageDescription registerApparentWindPage(
     "apparentWind",
     createPage,
     0,
-    {"AWS","AWD"}
+    {"AWS","AWD"},
+    false
 );
