@@ -9,12 +9,16 @@ void pageInit(GwApi *param){
     param->getLogger()->logDebug(GwLog::LOG,"page init running");
 }
 
+typedef struct {
+        int page0=0;
+        QueueHandle_t queue;
+    } MyData;
 void keyboardTask(void *param){
-    QueueHandle_t *queue=(QueueHandle_t*)param;
-    int page=0;
+    MyData *data=(MyData *)param;
+    int page=data->page0;
     while (true){
         //send a key event 
-        xQueueSend(*queue, &page, 0);
+        xQueueSend(data->queue, &page, 0);
         delay(10000);
         page+=1;
         if (page>=MAX_PAGE_NUMBER) page=0;
@@ -162,8 +166,10 @@ void pageTask(GwApi *api){
     }
     //now we have prepared the page data
     //we start a separate task that will fetch our keys...
-    QueueHandle_t keyboardQueue=xQueueCreate(10,sizeof(int));
-    xTaskCreate(keyboardTask,"keyboard",2000,&keyboardQueue,0,NULL);
+    MyData allParameters;
+    allParameters.page0=3;
+    allParameters.queue=xQueueCreate(10,sizeof(int));
+    xTaskCreate(keyboardTask,"keyboard",2000,&allParameters,0,NULL);
 
 
     //loop
@@ -173,7 +179,7 @@ void pageTask(GwApi *api){
         delay(1000);
         //check if there is a keyboard message
         int keyboardMessage=-1;
-        if (xQueueReceive(keyboardQueue,&keyboardMessage,0)){
+        if (xQueueReceive(allParameters.queue,&keyboardMessage,0)){
             LOG_DEBUG(GwLog::LOG,"new page from keyboard %d",keyboardMessage);
             if (keyboardMessage >= 0 && keyboardMessage < numPages){
                 pageNumber=keyboardMessage;
