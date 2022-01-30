@@ -81,6 +81,7 @@ class PageStruct{
     public:
         Page *page=NULL;
         PageData parameters;
+        PageDescription *description=NULL;
 };
 
 /**
@@ -139,6 +140,7 @@ void pageTask(GwApi *api){
            LOG_DEBUG(GwLog::ERROR,"page description for %s not found",pageType.c_str());
            continue;
        }
+       pages[i].description=description;
        pages[i].page=description->creator(commonData);
        pages[i].parameters.pageName=pageType;
        LOG_DEBUG(GwLog::DEBUG,"found page %s for number %d",pageType.c_str(),i);
@@ -169,6 +171,7 @@ void pageTask(GwApi *api){
     //loop
     LOG_DEBUG(GwLog::LOG,"pagetask: start mainloop");
     int pageNumber=0;
+    int lastPage=pageNumber;
     while (true){
         delay(1000);
         //check if there is a keyboard message
@@ -184,8 +187,11 @@ void pageTask(GwApi *api){
         api->getBoatDataValues(boatValues.numValues,boatValues.allBoatValues);
         api->getStatus(commonData.status);
 
-        //handle the page
+        //handle the pag
+        if (pages[pageNumber].description && pages[pageNumber].description->header){
+
         //build some header and footer using commonData
+        }
         //....
         //call the particular page
         Page *currentPage=pages[pageNumber].page;
@@ -193,8 +199,12 @@ void pageTask(GwApi *api){
             LOG_DEBUG(GwLog::ERROR,"page number %d not found",pageNumber);
         }
         else{
+            if (lastPage != pageNumber){
+                currentPage->displayNew(commonData,pages[pageNumber].parameters);
+                lastPage=pageNumber;
+            }
             //call the page code
-            LOG_DEBUG(GwLog::DEBUG,"calling page %d type %s",currentPage);
+            LOG_DEBUG(GwLog::DEBUG,"calling page %d type %s");
             currentPage->display(commonData,pages[pageNumber].parameters);
         }
 

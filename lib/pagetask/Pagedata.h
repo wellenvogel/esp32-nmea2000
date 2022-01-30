@@ -29,6 +29,7 @@ typedef struct{
 class Page{
   public:
     virtual void display(CommonData &commonData, PageData &pageData)=0;
+    virtual void displayNew(CommonData &commonData, PageData &pageData){}
 };
 
 typedef std::function<Page* (CommonData &)> PageFunction;
@@ -48,15 +49,18 @@ class PageDescription{
         int userParam=0;
         StringList fixedParam;
         PageFunction creator;
-        PageDescription(String name, PageFunction creator,int userParam,StringList fixedParam){
+        bool header=true;
+        PageDescription(String name, PageFunction creator,int userParam,StringList fixedParam,bool header=true){
             this->pageName=name;
             this->userParam=userParam;
             this->fixedParam=fixedParam;
             this->creator=creator;
+            this->header=header;
         }
-        PageDescription(String name, PageFunction creator,int userParam){
+        PageDescription(String name, PageFunction creator,int userParam,bool header=true){
             this->pageName=name;
             this->userParam=userParam;
             this->creator=creator;
+            this->header=header;
         }
 };
