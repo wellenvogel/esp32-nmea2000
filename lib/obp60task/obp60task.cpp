@@ -12,6 +12,7 @@
 #include <GxGDEW042T2/GxGDEW042T2.h>    // 4.2" Waveshare S/W 300 x 400 pixel
 #include <GxIO/GxIO_SPI/GxIO_SPI.h>     // GxEPD lip for SPI display communikation
 #include <GxIO/GxIO.h>                  // GxEPD lip for SPI
+#include "OBP60ExtensionPort.h"         // Functions lib for extension board
 
 // True type character sets
 #include "Ubuntu_Bold8pt7b.h"
@@ -26,9 +27,127 @@
 #include "MFD_OBP60_400x300_sw.h"       // MFD with logo
 #include "Logo_OBP_400x300_sw.h"        // OBP Logo
 
+tNMEA0183Msg NMEA0183Msg;
+tNMEA0183 NMEA0183;
 
-void OBP60Init(GwApi *param){
-    param->getLogger()->logDebug(GwLog::LOG,"obp60init running");
+// Timer Interrupts for hardware functions
+Ticker Timer1;  // Under voltage detection
+Ticker Timer2;  // Binking flash LED
+
+// Global vars
+bool initComplete = false;      // Initialization complete
+int taskRunCounter = 0;         // Task couter for loop section
+bool gps_ready = false;         // GPS initialized and ready to use
+
+
+// Hardware initialisation before start all services
+//##################################################
+void OBP60Init(GwApi *api){
+    api->getLogger()->logDebug(GwLog::LOG,"obp60init running");
+    // Define timer interrupts
+    bool uvoltage = api->getConfig()->getConfigItem(api->getConfig()->underVoltage,true)->asBoolean();
+    if(uvoltage == true){
+        Timer1.attach_ms(1, underVoltageDetection);     // Maximum speed with 1ms
+    }
+    Timer2.attach_ms(500, blinkingFlashLED); 
+
+    // Extension port MCP23017
+    // Check I2C devices MCP23017
+    Wire.begin(OBP_I2C_SDA, OBP_I2C_SCL);
+    Wire.beginTransmission(MCP23017_I2C_ADDR);
+    if (Wire.endTransmission() != 0) {
+        api->getLogger()->logDebug(GwLog::ERROR,"MCP23017 not found, check wiring");
+        initComplete = false;
+    }
+    else{ 
+        // Start communication
+        mcp.init();
+        mcp.portMode(MCP23017Port::A, 0b00110000);  //Port A, 0 = out, 1 = in
+        mcp.portMode(MCP23017Port::B, 0b11110000);  //Port B, 0 = out, 1 = in
+
+        // Extension Port A set defaults
+        setPortPin(OBP_DIGITAL_OUT1, false);    // PA0
+        setPortPin(OBP_DIGITAL_OUT2, false);    // PA1
+        setPortPin(OBP_FLASH_LED, false);       // PA2
+        setPortPin(OBP_BACKLIGHT_LED, false);   // PA3
+        setPortPin(OBP_POWER_50, true);         // PA6
+        setPortPin(OBP_POWER_33, true);         // PA7
+
+        // Extension Port B set defaults
+        setPortPin(PB0, false);     // PB0
+        setPortPin(PB1, false);     // PB1
+        setPortPin(PB2, false);     // PB2
+        setPortPin(PB3, false);     // PB3
+
+        // Settings for 1Wire
+        bool enable1Wire = api->getConfig()->getConfigItem(api->getConfig()->use1Wire,true)->asBoolean();
+        if(enable1Wire == true){
+            api->getLogger()->logDebug(GwLog::DEBUG,"1Wire Mode is On");
+        }
+        else{
+            api->getLogger()->logDebug(GwLog::DEBUG,"1Wire Mode is Off");
+        }
+
+        // Settings for NMEA0183
+        String nmea0183Mode = api->getConfig()->getConfigItem(api->getConfig()->serialDirection,true)->asString();
+        api->getLogger()->logDebug(GwLog::DEBUG,"NMEA0183 Mode is: %s", nmea0183Mode);
+         pinMode(OBP_DIRECTION_PIN, OUTPUT);
+        if(String(nmea0183Mode) == "receive" || String(nmea0183Mode) == "off"){
+            digitalWrite(OBP_DIRECTION_PIN, false);
+        }
+        if(String(nmea0183Mode) == "send"){
+            digitalWrite(OBP_DIRECTION_PIN, true);
+        }
+        
+        // Settings for backlight
+        String backlightMode = api->getConfig()->getConfigItem(api->getConfig()->backlight,true)->asString();
+        api->getLogger()->logDebug(GwLog::DEBUG,"Backlight Mode is: %s", backlightMode);
+        if(String(backlightMode) == "On"){
+            setPortPin(OBP_BACKLIGHT_LED, true);
+        }
+        if(String(backlightMode) == "Off"){
+            setPortPin(OBP_BACKLIGHT_LED, false);
+        }
+        if(String(backlightMode) == "Control by Key"){
+            setPortPin(OBP_BACKLIGHT_LED, false);
+        }
+
+        // Settings flash LED mode
+        String ledMode = api->getConfig()->getConfigItem(api->getConfig()->flashLED,true)->asString();
+        api->getLogger()->logDebug(GwLog::DEBUG,"Backlight Mode is: %s", ledMode);
+        if(String(ledMode) == "Off"){
+            blinkingLED = false;
+        }
+        if(String(ledMode) == "Limits Overrun"){
+            blinkingLED = true;
+        }
+
+        // Start serial stream and take over GPS data stream form internal GPS
+        bool gpsOn=api->getConfig()->getConfigItem(api->getConfig()->useGPS,true)->asBoolean();
+        if(gpsOn == true){
+            Serial2.begin(9600, SERIAL_8N1, OBP_GPS_TX, -1); // GPS RX unused in hardware (-1)
+            if (!Serial2) {     
+                api->getLogger()->logDebug(GwLog::ERROR,"GPS modul NEO-6M not found, check wiring");
+                gps_ready = false;
+                }
+            else{
+                api->getLogger()->logDebug(GwLog::DEBUG,"GPS modul NEO-M6 found");
+                NMEA0183.SetMessageStream(&Serial2);
+                NMEA0183.Open();
+                gps_ready = true;
+            }
+        }
+
+        // Marker for init complete
+        // Used in OBP60Task()
+        initComplete = true;
+
+        // Buzzer tone for initialization finish
+        buzPower = uint(api->getConfig()->getConfigItem(api->getConfig()->buzzerPower,true)->asInt());
+        buzzer(TONE4, buzPower, 500);
+
+    }
+
 }
 
 typedef struct {

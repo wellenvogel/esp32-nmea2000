@@ -1,5 +1,463 @@
 [
     {
+        "name": "obp60Config",
+        "label": "Logging",
+        "type": "boolean",
+        "default": "false",
+        "description": "Switch on logging of position acquired/failed",
+        "category": "OBP60 Settings",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "timeZone",
+        "label": "Time Zone",
+        "type": "number",
+        "default": "0",
+        "check": "checkMinMax",
+        "min": -12,
+        "max": 12,
+        "description": "Time zone [UTC -12...+12]",
+        "category": "OBP60 Settings",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "draft",
+        "label": "Boat Draft [m]",
+        "type": "number",
+        "default": "0",
+        "check": "checkMinMax",
+        "min": 0,
+        "max": 10,
+        "description": "The draft of the boat [0...10m]",
+        "category": "OBP60 Settings",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "fuelTank",
+        "label": "Fuel Tank [l]",
+        "type": "number",
+        "default": "0",
+        "check": "checkMinMax",
+        "min": 0,
+        "max": 5000,
+        "description": "Fuel tank capacity [0...5000l]",
+        "category": "OBP60 Settings",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "fuelConsumption",
+        "label": "Fuel Consuption [l/h]",
+        "type": "number",
+        "default": "0",
+        "check": "checkMinMax",
+        "min": 0,
+        "max": 1000,
+        "description": "Medium fuel consumption [0...1000l/h]",
+        "category": "OBP60 Settings",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "waterTank",
+        "label": "Water Tank [l]",
+        "type": "number",
+        "default": "0",
+        "check": "checkMinMax",
+        "min": 0,
+        "max": 5000,
+        "description": "Water tank capacity [0...5000l]",
+        "category": "OBP60 Settings",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "wasteTank",
+        "label": "Waste Tank [l]",
+        "type": "number",
+        "default": "0",
+        "check": "checkMinMax",
+        "min": 0,
+        "max": 5000,
+        "description": "Water tank capacity [0...5000l]",
+        "category": "OBP60 Settings",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "batteryVoltage",
+        "label": "Battery Voltage [V]",
+        "type": "number",
+        "default": "12",
+        "check": "checkMinMax",
+        "min": 0,
+        "max": 1000,
+        "description": "Fuel tank capacity [0...1000V]",
+        "category": "OBP60 Settings",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "batteryType",
+        "label": "Battery Type",
+        "type": "list",
+        "default": "Pb",
+        "description": "Type of battery",
+        "list": [
+            "Pb",
+            "Gel",
+            "AGM",
+            "LiFePo4"
+        ],
+        "category": "OBP60 Settings",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "batteryCapacity",
+        "label": "Battery Capacity [Ah]",
+        "type": "number",
+        "default": "0",
+        "check": "checkMinMax",
+        "min": 0,
+        "max": 10000,
+        "description": "Fuel tank capacity [0...10000Ah]",
+        "category": "OBP60 Settings",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "lengthFormat",
+        "label": "Length Format",
+        "type": "list",
+        "default": "m",
+        "description": "Length format [m|ft]",
+        "list": [
+            "m",
+            "ft"
+        ],
+        "category": "OBP60 Units",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "distanceFormat",
+        "label": "Distance Format",
+        "type": "list",
+        "default": "m",
+        "description": "Distance format [m|km|nm]",
+        "list": [
+            "m",
+            "km",
+            "nm"
+        ],
+        "category": "OBP60 Units",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "speedFormat",
+        "label": "Speed Format",
+        "type": "list",
+        "default": "m/s",
+        "description": "Distance format [m/s|km/h|kn]",
+        "list": [
+            "m/s",
+            "km/h",
+            "kn"
+        ],
+        "category": "OBP60 Units",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "windspeedFormat",
+        "label": "Wind Speed Format",
+        "type": "list",
+        "default": "m/s",
+        "description": "Distance format [m/s|km/h|kn|bft]",
+        "list": [
+            "m/s",
+            "km/h",
+            "kn",
+            "bft"
+        ],
+        "category": "OBP60 Units",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "tempFormat",
+        "label": "Temperature Format",
+        "type": "list",
+        "default": "C",
+        "description": "Length format [K|°C|°F]",
+        "list": [
+            "K",
+            "C",
+            "F"
+        ],
+        "category": "OBP60 Units",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "dateFormat",
+        "label": "Date Format",
+        "type": "list",
+        "default": "GB",
+        "description": "Date format [DE|GB|US] DE: 31.12.2022, GB: 31/12/2022, US: 12/31/2022",
+        "list": [
+            "DE",
+            "GB",
+            "US"
+        ],
+        "category": "OBP60 Units",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "useGPS",
+        "label": "GPS NEO-6M",
+        "type": "boolean",
+        "default": "false",
+        "description": "Using internal GPS modul NEO-6M",
+        "category": "OBP60 Hardware",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "useBME280",
+        "label": "BME280",
+        "type": "boolean",
+        "default": "false",
+        "description": "Using internal BME280 modul",
+        "category": "OBP60 Hardware",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "use1Wire",
+        "label": "1Wire",
+        "type": "boolean",
+        "default": "false",
+        "description": "Using external 1Wirew devices (DS18B20)",
+        "category": "OBP60 Hardware",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "powerMode",
+        "label": "Power Mode",
+        "type": "list",
+        "default": "Max Power",
+        "description": "Settings for power mode",
+        "list": [
+            "Max Power",
+            "Only 3.3V",
+            "Only 5.0V",
+            "Min Power"
+        ],
+        "category": "OBP60 Hardware",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "underVoltage",
+        "label": "Undervoltage",
+        "type": "boolean",
+        "default": "false",
+        "description": "If undervoltage detection [on|off] lower than 9V then switch off the device",
+        "category": "OBP60 Hardware",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "useSimuData",
+        "label": "Simulation Data",
+        "type": "boolean",
+        "default": "false",
+        "description": "Can use for simulation data by missing bus data.",
+        "category": "OBP60 Hardware",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "display",
+        "label": "Display Mode",
+        "type": "list",
+        "default": "Logo + QR Code",
+        "description": "Settings for display mode",
+        "list": [
+            "White Screen",
+            "Logo",
+            "Logo + QR Code",
+            "Off"
+        ],
+        "category": "OBP60 Display",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "statusLine",
+        "label": "Status Line",
+        "type": "boolean",
+        "default": "true",
+        "description": "Show status line [on|off]",
+        "category": "OBP60 Display",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "refresh",
+        "label": "Refresh",
+        "type": "boolean",
+        "default": "false",
+        "description": "Refresh E-Ink display after each new page request [on|off]. A refresh reduce background shaddows from older pages.",
+        "category": "OBP60 Display",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "holdvalues",
+        "label": "Hold Values",
+        "type": "boolean",
+        "default": "false",
+        "description": "Hold old measuring values by missing data stream [on|off]",
+        "category": "OBP60 Display",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "backlight",
+        "label": "Backlight Mode",
+        "type": "list",
+        "default": "Off",
+        "description": "Settings for display mode",
+        "list": [
+            "Off",
+            "Control by Sun",
+            "Control by Bus",
+            "Control by Time",
+            "Control by Key",
+            "On"
+        ],
+        "category": "OBP60 Display",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "flashLED",
+        "label": "Flash LED Mode",
+        "type": "list",
+        "default": "Off",
+        "description": "Settings for flash LED",
+        "list": [
+            "Off",
+            "Bus Data",
+            "GPS Fix",
+            "Limits Overrun"
+        ],
+        "category": "OBP60 Display",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "buzzerError",
+        "label": "Buzzer Error",
+        "type": "boolean",
+        "default": "false",
+        "description": "Sound on error",
+        "category": "OBP60 Buzzer",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "buzzerGps",
+        "label": "Buzzer GPS Fix",
+        "type": "boolean",
+        "default": "false",
+        "description": "Sound on missing or lost GPS fix",
+        "category": "OBP60 Buzzer",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "buzzerLim",
+        "label": "Buzzer by Limits",
+        "type": "boolean",
+        "default": "false",
+        "description": "Sound on limit overrun",
+        "category": "OBP60 Buzzer",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "buzzerMode",
+        "label": "Buzzer Mode",
+        "type": "list",
+        "default": "Off",
+        "description": "Settings for Buzzer Mode",
+        "list": [
+            "Off",
+            "Short Single Beep",
+            "Longer Single Beep",
+            "Beep until Confirmation"
+        ],
+        "category": "OBP60 Buzzer",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "buzzerPower",
+        "label": "Buzzer Power [%]",
+        "type": "number",
+        "default": "50",
+        "check": "checkMinMax",
+        "min": 0,
+        "max": 100,
+        "description": "Buzzer Loudness [0...100%]",
+        "category": "OBP60 Buzzer",
+        "capabilities": {
+            "obp60":"true"
+        }
+      },
+      {
         "name": "visiblePages",
         "label": "number of pages",
         "type": "number",
@@ -7,260 +465,249 @@
         "min": 1,
         "max": 4,
         "default":"1",
-        "category":"pagecommon",
+        "category":"OBP60 Pages",
         "capabilities": {
-            "pagetask":"true"
+            "obp60":"true"
         }
     },
     {
         "name": "page1type",
-        "label": "type",
+        "label": "Type",
         "type": "list",
         "default": "oneValue",
-        "description": "type of page for page 1",
+        "description": "Type of page for page 1",
         "list":["oneValue","twoValues","threeValues","forValues","apparentWind"],
-        "category": "page1",
+        "category": "OBP60 Page 1",
         "capabilities": {
-            "pagetask":"true"
+            "obp60":"true"
         }
     },
     {
         "name": "page1value1",
-        "label": "field1",
+        "label": "Field 1 ",
         "type": "boatData",
         "default": "",
-        "description": "the display for field one",
-        "category": "page1",
+        "description": "The display for field one",
+        "category": "OBP60 Page 1",
         "capabilities": {
-            "pagetask":"true"
+            "obp60":"true"
         },
         "condition":[{"page1type":"oneValue"},{"page1type":"twoValues"},{"page1type":"threeValues"},{"page1type":"forValues"}]
     },
     {
         "name": "page1value2",
-        "label": "field2",
+        "label": "Field 2",
         "type": "boatData",
         "default": "",
-        "description": "the display for field two",
-        "category": "page1",
+        "description": "The display for field two",
+        "category": "OBP60 Page 1",
         "capabilities": {
-            "pagetask":"true"
+            "obp60":"true"
         },
         "condition":[{"page1type":"twoValues"},{"page1type":"threeValues"},{"page1type":"forValues"}]
-    }
-    ,
+    },
     {
         "name": "page1value3",
-        "label": "field3",
+        "label": "Field 3",
         "type": "boatData",
         "default": "",
-        "description": "the display for field 3",
-        "category": "page1",
+        "description": "The display for field 3",
+        "category": "OBP60 Page 1",
         "capabilities": {
-            "pagetask":"true"
+            "obp60":"true"
         },
         "condition":[{"page1type":"threeValues"},{"page1type":"forValues"}]
-    }
-    ,
+    },
     {
         "name": "page1value4",
-        "label": "field4",
+        "label": "Field 4",
         "type": "boatData",
         "default": "",
-        "description": "the display for field 4",
-        "category": "page1",
+        "description": "The display for field 4",
+        "category": "OBP60 Page 1",
         "capabilities": {
-            "pagetask":"true"
+            "obp60":"true"
         },
         "condition":[{"page1type":"forValues"}]
     },
     {
         "name": "page2type",
-        "label": "type",
+        "label": "Type",
         "type": "list",
         "default": "oneValue",
-        "description": "type of page for page 1",
+        "description": "Type of page for page 2",
         "list":["oneValue","twoValues","threeValues","forValues","apparentWind"],
-        "category": "page2",
+        "category": "OBP60 Page 2",
         "capabilities": {
-            "pagetask":"true"
+            "obp60":"true"
         }
     },
     {
         "name": "page2value1",
-        "label": "field1",
+        "label": "Field 1",
         "type": "boatData",
         "default": "",
-        "description": "the display for field one",
-        "category": "page2",
+        "description": "The display for field one",
+        "category": "OBP60 Page 2",
         "capabilities": {
-            "pagetask":"true"
+            "obp60":"true"
         },
         "condition":[{"page2type":"oneValue"},{"page2type":"twoValues"},{"page2type":"threeValues"},{"page2type":"forValues"}]
     },
     {
         "name": "page2value2",
-        "label": "field2",
+        "label": "Field 2",
         "type": "boatData",
         "default": "",
-        "description": "the display for field two",
-        "category": "page2",
+        "description": "The display for field two",
+        "category": "OBP60 Page 2",
         "capabilities": {
-            "pagetask":"true"
+            "obp60":"true"
         },
         "condition":[{"page2type":"twoValues"},{"page2type":"threeValues"},{"page2type":"forValues"}]
-    }
-    ,
+    },
     {
         "name": "page2value3",
-        "label": "field3",
+        "label": "Field 3",
         "type": "boatData",
         "default": "",
-        "description": "the display for field 3",
-        "category": "page2",
+        "description": "The display for field 3",
+        "category": "OBP60 Page 2",
         "capabilities": {
-            "pagetask":"true"
+            "obp60":"true"
         },
         "condition":[{"page2type":"threeValues"},{"page2type":"forValues"}]
-    }
-    ,
+    },
     {
         "name": "page2value4",
-        "label": "field4",
+        "label": "Field 4",
         "type": "boatData",
         "default": "",
-        "description": "the display for field 4",
-        "category": "page2",
+        "description": "The display for field 4",
+        "category": "OBP60 Page 2",
         "capabilities": {
-            "pagetask":"true"
+            "obp60":"true"
         },
         "condition":[{"page2type":"forValues"}]
-    }
-    ,
+    },
     {
         "name": "page3type",
-        "label": "type",
+        "label": "Type",
         "type": "list",
         "default": "oneValue",
-        "description": "type of page for page 1",
+        "description": "Type of page for page 3",
         "list":["oneValue","twoValues","threeValues","forValues","apparentWind"],
-        "category": "page3",
+        "category": "OBP60 Page 3",
         "capabilities": {
-            "pagetask":"true"
+            "obp60":"true"
         }
     },
     {
         "name": "page3value1",
-        "label": "field1",
+        "label": "Field 1",
         "type": "boatData",
         "default": "",
-        "description": "the display for field one",
-        "category": "page3",
+        "description": "The display for field one",
+        "category": "OBP60 Page 3",
         "capabilities": {
-            "pagetask":"true"
+            "obp60":"true"
         },
         "condition":[{"page3type":"oneValue"},{"page3type":"twoValues"},{"page3type":"threeValues"},{"page3type":"forValues"}]
     },
     {
         "name": "page3value2",
-        "label": "field2",
+        "label": "Field 2",
         "type": "boatData",
         "default": "",
-        "description": "the display for field two",
-        "category": "page3",
+        "description": "The display for field two",
+        "category": "OBP60 Page 3",
         "capabilities": {
-            "pagetask":"true"
+            "obp60":"true"
         },
         "condition":[{"page3type":"twoValues"},{"page3type":"threeValues"},{"page3type":"forValues"}]
-    }
-    ,
+    },
     {
         "name": "page3value3",
-        "label": "field3",
+        "label": "Field 3",
         "type": "boatData",
         "default": "",
-        "description": "the display for field 3",
-        "category": "page3",
+        "description": "The display for field 3",
+        "category": "OBP60 Page 3",
         "capabilities": {
-            "pagetask":"true"
+            "obp60":"true"
         },
         "condition":[{"page3type":"threeValues"},{"page3type":"forValues"}]
-    }
-    ,
+    },
     {
         "name": "page3value4",
-        "label": "field4",
+        "label": "Field 4",
         "type": "boatData",
         "default": "",
-        "description": "the display for field 4",
-        "category": "page3",
+        "description": "The display for field 4",
+        "category": "OBP60 Page 3",
         "capabilities": {
-            "pagetask":"true"
+            "obp60":"true"
         },
         "condition":[{"page3type":"forValues"}]
-    }
-    ,
+    },
     {
         "name": "page4type",
-        "label": "type",
+        "label": "Type",
         "type": "list",
         "default": "oneValue",
-        "description": "type of page for page 1",
+        "description": "Type of page for page 4",
         "list":["oneValue","twoValues","threeValues","forValues","apparentWind"],
-        "category": "page4",
+        "category": "OBP60 Page 4",
         "capabilities": {
-            "pagetask":"true"
+            "obp60":"true"
         }
     },
     {
         "name": "page4value1",
-        "label": "field1",
+        "label": "Field 1",
         "type": "boatData",
         "default": "",
-        "description": "the display for field one",
-        "category": "page4",
+        "description": "The display for field one",
+        "category": "OBP60 Page 4",
         "capabilities": {
-            "pagetask":"true"
+            "obp60":"true"
         },
         "condition":[{"page4type":"oneValue"},{"page4type":"twoValues"},{"page4type":"threeValues"},{"page4type":"forValues"}]
     },
     {
         "name": "page4value2",
-        "label": "field2",
+        "label": "Field 2",
         "type": "boatData",
         "default": "",
-        "description": "the display for field two",
-        "category": "page4",
+        "description": "The display for field two",
+        "category": "OBP60 Page 4",
         "capabilities": {
-            "pagetask":"true"
+            "obp60":"true"
         },
         "condition":[{"page4type":"twoValues"},{"page4type":"threeValues"},{"page4type":"forValues"}]
-    }
-    ,
+    },
     {
         "name": "page4value3",
-        "label": "field3",
+        "label": "Field 3",
         "type": "boatData",
         "default": "",
-        "description": "the display for field 3",
-        "category": "page4",
+        "description": "The display for field 3",
+        "category": "OBP60 Page 4",
         "capabilities": {
-            "pagetask":"true"
+            "obp60":"true"
         },
         "condition":[{"page4type":"threeValues"},{"page4type":"forValues"}]
-    }
-    ,
+    },
     {
         "name": "page4value4",
-        "label": "field4",
+        "label": "Field 4",
         "type": "boatData",
         "default": "",
-        "description": "the display for field 4",
-        "category": "page4",
+        "description": "The display for field 4",
+        "category": "OBP60 Page 4",
         "capabilities": {
-            "pagetask":"true"
+            "obp60":"true"
         },
         "condition":[{"page4type":"forValues"}]
     }
-
 ]
