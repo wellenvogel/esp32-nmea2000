@@ -27,6 +27,8 @@
 #include "MFD_OBP60_400x300_sw.h"       // MFD with logo
 #include "Logo_OBP_400x300_sw.h"        // OBP Logo
 
+#include "OBP60QRWiFi.h"                // Functions lib for WiFi QR code
+
 tNMEA0183Msg NMEA0183Msg;
 tNMEA0183 NMEA0183;
 
@@ -40,7 +42,7 @@ int taskRunCounter = 0;         // Task couter for loop section
 bool gps_ready = false;         // GPS initialized and ready to use
 
 
-// Hardware initialisation before start all services
+// Hardware initialization before start all services
 //##################################################
 void OBP60Init(GwApi *api){
     api->getLogger()->logDebug(GwLog::LOG,"obp60init running");
@@ -254,6 +256,8 @@ void registerAllPages(PageList &list){
     list.add(&registerPageApparentWind);
 }
 
+// OBP60 Task
+//#######################################
 void OBP60Task(GwApi *api){
     GwLog *logger=api->getLogger();
     GwConfigHandler *config=api->getConfig();
@@ -263,6 +267,33 @@ void OBP60Task(GwApi *api){
     for (auto it=allPages.pages.begin();it != allPages.pages.end();it++){
         LOG_DEBUG(GwLog::LOG,"found registered page %s",(*it)->pageName.c_str());
     }
+    
+    // Init E-Ink display
+    display.init();                         // Initialize and clear display
+    display.setTextColor(GxEPD_BLACK);      // Set display color
+    display.setRotation(0);                 // Set display orientation (horizontal)
+    display.fillRect(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, GxEPD_WHITE); // Draw white sreen
+    display.update();                       // Full update (slow)
+        
+     String displaymode = api->getConfig()->getConfigItem(api->getConfig()->display,true)->asString();
+    if(String(displaymode) == "Logo + QR Code" || String(displaymode) == "Logo"){
+        display.drawExampleBitmap(gImage_Logo_OBP_400x300_sw, 0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, GxEPD_WHITE); // Draw start logo
+//        display.drawExampleBitmap(gImage_MFD_OBP60_400x300_sw, 0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, GxEPD_WHITE); // Draw start logo
+        display.updateWindow(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, true);   // Partial update (fast)
+        delay(SHOW_TIME);                                // Logo show time
+        display.fillRect(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, GxEPD_WHITE); // Draw white sreen
+        display.updateWindow(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, true);    // Partial update (fast)
+        if(String(displaymode) == "Logo + QR Code"){
+            String systemname = api->getConfig()->getConfigItem(api->getConfig()->systemName,true)->asString();
+            String wifipass = api->getConfig()->getConfigItem(api->getConfig()->apPassword,true)->asString();
+            bool refreshmode = api->getConfig()->getConfigItem(api->getConfig()->refresh,true)->asBoolean();
+            qrWiFi(systemname, wifipass, refreshmode);       // Show QR code for WiFi connection
+            delay(SHOW_TIME);                                // Logo show time
+            display.fillRect(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, GxEPD_WHITE); // Draw white sreen
+        }
+    }
+    
+    // Init pages
     int numPages=1;
     PageStruct pages[MAX_PAGE_NUMBER];
     CommonData commonData;
@@ -316,7 +347,8 @@ void OBP60Task(GwApi *api){
     xTaskCreate(keyboardTask,"keyboard",2000,&allParameters,0,NULL);
 
 
-    //loop
+    // Task Loop
+    //###############################
     LOG_DEBUG(GwLog::LOG,"obp60task: start mainloop");
     int pageNumber=0;
     int lastPage=pageNumber;
