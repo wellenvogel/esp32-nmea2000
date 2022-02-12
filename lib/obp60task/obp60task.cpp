@@ -2,6 +2,7 @@
 #include "obp60task.h"
 #include "Pagedata.h"
 #include "OBP60Hardware.h"              // PIN definitions
+
 #include <Ticker.h>                     // Timer Lib for timer interrupts
 #include <Wire.h>                       // I2C connections
 #include <MCP23017.h>                   // MCP23017 extension Port
@@ -13,6 +14,7 @@
 #include <GxIO/GxIO_SPI/GxIO_SPI.h>     // GxEPD lip for SPI display communikation
 #include <GxIO/GxIO.h>                  // GxEPD lip for SPI
 #include "OBP60ExtensionPort.h"         // Functions lib for extension board
+#include "OBP60Keypad.h"                // Functions lib for keypad
 
 // True type character sets
 #include "Ubuntu_Bold8pt7b.h"
@@ -157,14 +159,21 @@ typedef struct {
         QueueHandle_t queue;
     } MyData;
 
+// Keyboard Task
+//#######################################
 void keyboardTask(void *param){
     MyData *data=(MyData *)param;
     int page=data->page0;
+    // Loop for keyboard task
     while (true){
         //send a key event 
         xQueueSend(data->queue, &page, 0);
+/*        
         delay(10000);
         page+=1;
+*/        
+        readKeypad();
+        delay(20);
         if (page>=MAX_PAGE_NUMBER) page=0;
     }
     vTaskDelete(NULL);
