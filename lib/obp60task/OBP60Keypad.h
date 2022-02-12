@@ -16,23 +16,17 @@ int keyposition[9] = {0, 3, 5, 7, 8, 6, 4, 2, 1};   // Position of key in raw da
 int keypad[9];          // Raw data array from TTP229
 int key;                // Value of key [0|1], 0 = touched, 1 = not touched
 int keycode = 0;        // Keycode of pressed key [0...8], 0 = nothing touched
-int keycode2 = 0;        // Keycode of very short pressed key [0...8], 0 = nothing touched
-String keystatus = "0"; // Status of key (0 = processed, 1s...8s, 1l...8l, left, right unprocessed)
+int keycode2 = 0;       // Keycode of very short pressed key [0...8], 0 = nothing touched
+int keystatus = 0;      // Status of key [0...11], 0 = processed, 1...8 = key 1..8, 9 = right swipe , 10 = left swipe, 11 keys disabled
 int keycodeold = 0;     // Old keycode
 int keycodeold2 = 0;    // Old keycode for short pressed key
-bool keyoff = false;    // Key switch off
-int swipedelay = 500;   // Delay after swipe in [ms]
+bool keyoff = false;    // Disable all keys
 int keydelay = 250;     // Delay after key pressed in  [ms]
 bool keylock = false;   // Key lock after pressed key is valid (repeat protection by conginous pressing)
-int repeatnum;          // Actual number of key detections for a pressed key
-int shortpress = 5;     // number of key detections after that the key is valid (n * 40ms) for short pessing
-int longpress = 25;     // number of key detections after that the key is valid (n * 40ms) for long pessing
-int swipedir = 0;       // Swipe direction 0 = nothing, -1 = left, +1 = right
-
 long starttime = 0;     // Start time point for pressed key
 
 
-String readKeypad() {
+int readKeypad() {
   noInterrupts();
   pinMode(TTP_SDO, INPUT);
   pinMode(TTP_SCL, OUTPUT);
@@ -70,7 +64,6 @@ String readKeypad() {
     }
     // Detect a very short keynumber (10ms)
     if (millis() > starttime + 10 && keycode == keycodeold && keylock == true) {
-      keystatus = String(keycode) + "vs";
       // Process only valid keys
       if(keycode == 1 || keycode == 6){
         keycode2 = keycode;
@@ -87,7 +80,7 @@ String readKeypad() {
     }
     // Detect a short keynumber (200ms)
     if (keyoff == false && millis() > starttime + 200 && keycode == keycodeold && keylock == true) {
-      keystatus = String(keycode) + "s";
+      keystatus = keycode;
       keycode = 0;
       keycodeold = 0;
       keycode2 = 0;
@@ -110,10 +103,10 @@ String readKeypad() {
 
     keyoff = !keyoff;
     if(keyoff == true){
-      keystatus = "off";
+      keystatus = 11;
     }
     else{
-      keystatus = "on";
+      keystatus = 0;
     }
   }
 
@@ -124,8 +117,7 @@ String readKeypad() {
     keycodeold = 0;
     keycode2 = 0;
     keycodeold2 = 0;
-    swipedir = 1;
-    keystatus = "r";
+    keystatus = 9;
     buzzer(TONE3, buzPower, 150);
     buzzer(TONE4, buzPower, 150);
   }
@@ -137,8 +129,7 @@ String readKeypad() {
     keycodeold = 0;
     keycode2 = 0;
     keycodeold2 = 0;
-    swipedir = -1;
-    keystatus = "l";
+    keystatus = 10;
     buzzer(TONE4, buzPower, 150);
     buzzer(TONE3, buzPower, 150);
   }

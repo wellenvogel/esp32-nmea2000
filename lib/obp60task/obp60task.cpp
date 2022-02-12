@@ -164,6 +164,7 @@ typedef struct {
 void keyboardTask(void *param){
     MyData *data=(MyData *)param;
     int page=data->page0;
+
     // Loop for keyboard task
     while (true){
         //send a key event 
@@ -173,8 +174,17 @@ void keyboardTask(void *param){
         page+=1;
 */        
         readKeypad();
-        delay(20);
-        if (page>=MAX_PAGE_NUMBER) page=0;
+        delay(20);      // TP229-BSF working in 8 key mode with 64Hz update rate (15.6ms)
+        if(keystatus == 9){
+           page+=1;
+           keystatus = 0; 
+        }
+        if(keystatus == 10){
+            page-=1;
+            keystatus = 0;
+        }
+        if(page >= MAX_PAGE_NUMBER) page = 0;
+        if(page < 0) page = MAX_PAGE_NUMBER - 1;
     }
     vTaskDelete(NULL);
 }
