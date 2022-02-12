@@ -17,7 +17,6 @@ int keypad[9];          // Raw data array from TTP229
 int key;                // Value of key [0|1], 0 = touched, 1 = not touched
 int keycode = 0;        // Keycode of pressed key [0...8], 0 = nothing touched
 int keycode2 = 0;       // Keycode of very short pressed key [0...8], 0 = nothing touched
-int keystatus = 0;      // Status of key [0...11], 0 = processed, 1...8 = key 1..8, 9 = right swipe , 10 = left swipe, 11 keys disabled
 int keycodeold = 0;     // Old keycode
 int keycodeold2 = 0;    // Old keycode for short pressed key
 bool keyoff = false;    // Disable all keys
@@ -27,6 +26,8 @@ long starttime = 0;     // Start time point for pressed key
 
 
 int readKeypad() {
+  int keystatus = 0;      // Status of key [0...11], 0 = processed, 1...8 = key 1..8, 9 = right swipe , 10 = left swipe, 11 keys disabled
+
   noInterrupts();
   pinMode(TTP_SDO, INPUT);
   pinMode(TTP_SCL, OUTPUT);

@@ -14,7 +14,7 @@
 #include <GxIO/GxIO_SPI/GxIO_SPI.h>     // GxEPD lip for SPI display communikation
 #include <GxIO/GxIO.h>                  // GxEPD lip for SPI
 #include "OBP60ExtensionPort.h"         // Functions lib for extension board
-#include "OBP60Keypad.h"                // Functions lib for keypad
+#include "OBP60Keypad.h"                // Functions for keypad
 
 // True type character sets
 #include "Ubuntu_Bold8pt7b.h"
@@ -157,34 +157,28 @@ void OBP60Init(GwApi *api){
 typedef struct {
         int page0=0;
         QueueHandle_t queue;
+        GwLog* logger = NULL;
     } MyData;
 
 // Keyboard Task
 //#######################################
+int readKeypad();
+
 void keyboardTask(void *param){
     MyData *data=(MyData *)param;
-    int page=data->page0;
+    int keycode = 0;
+    data->logger->logDebug(GwLog::LOG,"Start keyboard task");
 
     // Loop for keyboard task
     while (true){
-        //send a key event 
-        xQueueSend(data->queue, &page, 0);
-/*        
-        delay(10000);
-        page+=1;
-*/        
-        readKeypad();
+        keycode = readKeypad();
+        //send a key event
+        if(keycode != 0){
+            xQueueSend(data->queue, &keycode, 0);
+            data->logger->logDebug(GwLog::LOG,"Send keycode: %d", keycode);
+        }
+
         delay(20);      // TP229-BSF working in 8 key mode with 64Hz update rate (15.6ms)
-        if(keystatus == 9){
-           page+=1;
-           keystatus = 0; 
-        }
-        if(keystatus == 10){
-            page-=1;
-            keystatus = 0;
-        }
-        if(page >= MAX_PAGE_NUMBER) page = 0;
-        if(page < 0) page = MAX_PAGE_NUMBER - 1;
     }
     vTaskDelete(NULL);
 }
@@ -325,6 +319,7 @@ void OBP60Task(GwApi *api){
     numPages=config->getInt(config->visiblePages,1);
     if (numPages < 1) numPages=1;
     if (numPages >= MAX_PAGE_NUMBER) numPages=MAX_PAGE_NUMBER;
+    LOG_DEBUG(GwLog::LOG,"Number of pages %d",numPages);
     String configPrefix="page";
     for (int i=0;i< numPages;i++){
        String prefix=configPrefix+String(i+1); //e.g. page1
@@ -361,6 +356,7 @@ void OBP60Task(GwApi *api){
     //now we have prepared the page data
     //we start a separate task that will fetch our keys...
     MyData allParameters;
+    allParameters.logger=api->getLogger();
     allParameters.page0=3;
     allParameters.queue=xQueueCreate(10,sizeof(int));
     xTaskCreate(keyboardTask,"keyboard",2000,&allParameters,0,NULL);
@@ -374,16 +370,29 @@ void OBP60Task(GwApi *api){
     while (true){
         delay(1000);
         //check if there is a keyboard message
-        int keyboardMessage=-1;
+        int keyboardMessage=0;
         if (xQueueReceive(allParameters.queue,&keyboardMessage,0)){
-            LOG_DEBUG(GwLog::LOG,"new page from keyboard %d",keyboardMessage);
+            LOG_DEBUG(GwLog::LOG,"new key from keyboard %d",keyboardMessage);
+            
             Page *currentPage=pages[pageNumber].page;
             if (currentPage ){
                 keyboardMessage=currentPage->handleKey(keyboardMessage);
             }
-            if (keyboardMessage >= 0 && keyboardMessage < numPages){
-                
-                pageNumber=keyboardMessage;
+            if (keyboardMessage > 0)
+            {
+                // Decoding all key codes
+                if (keyboardMessage == 9)
+                {
+                    pageNumber++;
+                    if (pageNumber >= numPages)
+                        pageNumber = 0;
+                }
+                if (keyboardMessage == 10)
+                {
+                    pageNumber--;
+                    if (pageNumber < 0)
+                        pageNumber = numPages - 1;
+                }
             }
             LOG_DEBUG(GwLog::LOG,"set pagenumber to %d",pageNumber);
         }
