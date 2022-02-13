@@ -13,14 +13,6 @@ typedef struct{
 } PageData;
 
 typedef struct{
-
-}OutputData;
-
-typedef struct{
-  String distanceformat="m";
-  String lengthformat="m";
-  //...
-  OutputData output;
   GwApi::Status status;
   GwLog *logger=NULL;
   GwConfigHandler *config=NULL;
@@ -29,7 +21,7 @@ typedef struct{
 //a base class that all pages must inherit from
 class Page{
   public:
-    virtual void display(CommonData &commonData, PageData &pageData)=0;
+    virtual void displayPage(CommonData &commonData, PageData &pageData)=0;
     virtual void displayNew(CommonData &commonData, PageData &pageData){}
     //return -1 if handled by the page
     virtual int handleKey(int key){return key;}

@@ -7,7 +7,7 @@ public:
         comon.logger->logDebug(GwLog::LOG,"created PageTwoValue");
         //add some initialization code here
     }
-    virtual void display(CommonData &commonData, PageData &pageData)
+    virtual void displayPage(CommonData &commonData, PageData &pageData)
     {
         GwLog *logger = commonData.logger;
         for (int i = 0; i < 2; i++)

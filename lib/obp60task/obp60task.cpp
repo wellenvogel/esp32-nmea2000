@@ -14,12 +14,7 @@
 #include "OBP60Keypad.h"                // Functions for keypad
 
 // True type character sets
-#include "Ubuntu_Bold8pt7b.h"
-#include "Ubuntu_Bold20pt7b.h"
-#include "Ubuntu_Bold32pt7b.h"
-#include "DSEG7Classic-BoldItalic16pt7b.h"
-#include "DSEG7Classic-BoldItalic42pt7b.h"
-#include "DSEG7Classic-BoldItalic60pt7b.h"
+// See OBP60ExtensionPort.h
 
 // Pictures
 //#include GxEPD_BitmapExamples         // Example picture
@@ -62,23 +57,7 @@ void OBP60Init(GwApi *api){
     }
     else{ 
         // Start communication
-        mcp.init();
-        mcp.portMode(MCP23017Port::A, 0b00110000);  //Port A, 0 = out, 1 = in
-        mcp.portMode(MCP23017Port::B, 0b11110000);  //Port B, 0 = out, 1 = in
-
-        // Extension Port A set defaults
-        setPortPin(OBP_DIGITAL_OUT1, false);    // PA0
-        setPortPin(OBP_DIGITAL_OUT2, false);    // PA1
-        setPortPin(OBP_FLASH_LED, false);       // PA2
-        setPortPin(OBP_BACKLIGHT_LED, false);   // PA3
-        setPortPin(OBP_POWER_50, true);         // PA6
-        setPortPin(OBP_POWER_33, true);         // PA7
-
-        // Extension Port B set defaults
-        setPortPin(PB0, false);     // PB0
-        setPortPin(PB1, false);     // PB1
-        setPortPin(PB2, false);     // PB2
-        setPortPin(PB3, false);     // PB3
+        MCP23017Init();
 
         // Settings for 1Wire
         bool enable1Wire = api->getConfig()->getConfigItem(api->getConfig()->use1Wire,true)->asBoolean();
@@ -144,8 +123,8 @@ void OBP60Init(GwApi *api){
         initComplete = true;
 
         // Buzzer tone for initialization finish
-//Todo        buzPower = uint(api->getConfig()->getConfigItem(api->getConfig()->buzzerPower,true)->asInt());
-        buzzer(TONE4, buzPower, 500);
+        setBuzzerPower(uint(api->getConfig()->getConfigItem(api->getConfig()->buzzerPower,true)->asInt()));
+        buzzer(TONE4, 500);
 
     }
 
@@ -402,12 +381,15 @@ void OBP60Task(GwApi *api){
         if (pages[pageNumber].description && pages[pageNumber].description->header){
 
         //build some header and footer using commonData
+
+
         }
         //....
         //call the particular page
         Page *currentPage=pages[pageNumber].page;
         if (currentPage == NULL){
             LOG_DEBUG(GwLog::ERROR,"page number %d not found",pageNumber);
+            // Error handling for missing page
         }
         else{
             if (lastPage != pageNumber){
@@ -416,7 +398,7 @@ void OBP60Task(GwApi *api){
             }
             //call the page code
             LOG_DEBUG(GwLog::DEBUG,"calling page %d",pageNumber);
-            currentPage->display(commonData,pages[pageNumber].parameters);
+            currentPage->displayPage(commonData,pages[pageNumber].parameters);
         }
 
     }

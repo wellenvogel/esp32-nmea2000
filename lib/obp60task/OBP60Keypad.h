@@ -86,7 +86,7 @@ int readKeypad() {
       keycodeold = 0;
       keycode2 = 0;
       keycodeold2 = 0;
-      buzzer(TONE4, buzPower, 100);
+      buzzer(TONE4, 100);
       keylock = false;
       delay(keydelay);
     }
@@ -98,7 +98,7 @@ int readKeypad() {
     keycodeold = 0;
     keycode2 = 0;
     keycodeold2 = 0;
-    buzzer(TONE4, buzPower, 1000);
+    buzzer(TONE4, 1000);
     keylock = false;
     delay(keydelay);
 
@@ -119,8 +119,8 @@ int readKeypad() {
     keycode2 = 0;
     keycodeold2 = 0;
     keystatus = 9;
-    buzzer(TONE3, buzPower, 150);
-    buzzer(TONE4, buzPower, 150);
+    buzzer(TONE3, 150);
+    buzzer(TONE4, 150);
   }
 
   // Detect swipe left
@@ -131,8 +131,8 @@ int readKeypad() {
     keycode2 = 0;
     keycodeold2 = 0;
     keystatus = 10;
-    buzzer(TONE4, buzPower, 150);
-    buzzer(TONE3, buzPower, 150);
+    buzzer(TONE4, 150);
+    buzzer(TONE3, 150);
   }
 
   // Reset keylock after release

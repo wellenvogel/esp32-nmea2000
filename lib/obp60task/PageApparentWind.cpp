@@ -1,4 +1,5 @@
 #include "Pagedata.h"
+#include "OBP60ExtensionPort.h"
 
 class PageApparentWind : public Page
 {
@@ -17,13 +18,14 @@ public:
         return key;
     }
 
-    virtual void display(CommonData &commonData, PageData &pageData)
+    virtual void displayPage(CommonData &commonData, PageData &pageData)
     {
         GwLog *logger = commonData.logger;
 
         GwConfigHandler *config = commonData.config;
         String test = config->getString(config->lengthFormat);
         
+        display.setFont(&Ubuntu_Bold8pt7b);
 
         dummy++;
         for (int i = 0; i < 2; i++)

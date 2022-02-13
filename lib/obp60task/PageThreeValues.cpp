@@ -3,7 +3,7 @@
 class PageThreeValues : public Page
 {
 public:
-    virtual void display(CommonData &commonData, PageData &pageData)
+    virtual void displayPage(CommonData &commonData, PageData &pageData)
     {
         GwLog *logger = commonData.logger;
         for (int i = 0; i < 3; i++)

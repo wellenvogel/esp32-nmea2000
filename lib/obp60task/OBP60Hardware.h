@@ -34,8 +34,8 @@
     // Buzzer
     #define OBP_BUZZER 19
     #define TONE1 1500          // 1500Hz
-    #define TONE2 2000          // 2000Hz
-    #define TONE3 3000          // 3000Hz
+    #define TONE2 2500          // 2500Hz
+    #define TONE3 3500          // 3500Hz
     #define TONE4 4000          // 4000Hz
     // Analog Input
     #define OBP_ANALOG0 34      // Voltage power supplay
