@@ -28,14 +28,14 @@ long starttime = 0;     // Start time point for pressed key
 int readKeypad() {
   int keystatus = 0;      // Status of key [0...11], 0 = processed, 1...8 = key 1..8, 9 = right swipe , 10 = left swipe, 11 keys disabled
 
-  noInterrupts();
   pinMode(TTP_SDO, INPUT);
   pinMode(TTP_SCL, OUTPUT);
   keycode = 0;
   // Read key code from raw data
   for (int i = 0; i < 9; i++) {
       digitalWrite(TTP_SCL, LOW);
-      delay(0);  // 0ms clock
+//      delay(1);  // 0ms clock
+      delayMicroseconds(100);
       keypad[i] = digitalRead(TTP_SDO);
       if(i > 0){
           // Invert keypad
@@ -48,9 +48,9 @@ int readKeypad() {
           keycode += key * i;
       }
       digitalWrite(TTP_SCL, HIGH);
-      delay(0);   // 0ms clock
+//      delay(1);   // 0ms clock
+       delayMicroseconds(100);
   }
-  interrupts();
   // Remapping keycode
   keycode = keyposition[keycode];
 

@@ -10,9 +10,6 @@
 #include <NMEA0183Msg.h>
 #include <NMEA0183Messages.h>
 #include <GxEPD.h>                      // GxEPD lib for E-Ink displays
-#include <GxGDEW042T2/GxGDEW042T2.h>    // 4.2" Waveshare S/W 300 x 400 pixel
-#include <GxIO/GxIO_SPI/GxIO_SPI.h>     // GxEPD lip for SPI display communikation
-#include <GxIO/GxIO.h>                  // GxEPD lip for SPI
 #include "OBP60ExtensionPort.h"         // Functions lib for extension board
 #include "OBP60Keypad.h"                // Functions for keypad
 
@@ -120,10 +117,10 @@ void OBP60Init(GwApi *api){
         String ledMode = api->getConfig()->getConfigItem(api->getConfig()->flashLED,true)->asString();
         api->getLogger()->logDebug(GwLog::DEBUG,"Backlight Mode is: %s", ledMode);
         if(String(ledMode) == "Off"){
-            blinkingLED = false;
+            setBlinkingLED(false);
         }
         if(String(ledMode) == "Limits Overrun"){
-            blinkingLED = true;
+            setBlinkingLED(true);
         }
 
         // Start serial stream and take over GPS data stream form internal GPS
@@ -147,7 +144,7 @@ void OBP60Init(GwApi *api){
         initComplete = true;
 
         // Buzzer tone for initialization finish
-        buzPower = uint(api->getConfig()->getConfigItem(api->getConfig()->buzzerPower,true)->asInt());
+//Todo        buzPower = uint(api->getConfig()->getConfigItem(api->getConfig()->buzzerPower,true)->asInt());
         buzzer(TONE4, buzPower, 500);
 
     }
@@ -311,6 +308,7 @@ void OBP60Task(GwApi *api){
     PageStruct pages[MAX_PAGE_NUMBER];
     CommonData commonData;
     commonData.logger=logger;
+    commonData.config=config;
     BoatValueList boatValues; //all the boat values for the api query
     //commonData.distanceformat=config->getString(xxx);
     //add all necessary data to common data
@@ -359,7 +357,7 @@ void OBP60Task(GwApi *api){
     allParameters.logger=api->getLogger();
     allParameters.page0=3;
     allParameters.queue=xQueueCreate(10,sizeof(int));
-    xTaskCreate(keyboardTask,"keyboard",2000,&allParameters,0,NULL);
+    xTaskCreate(keyboardTask,"keyboard",2000,&allParameters,configMAX_PRIORITIES-1,NULL);
 
 
     // Task Loop

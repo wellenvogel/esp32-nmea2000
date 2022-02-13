@@ -23,6 +23,7 @@ typedef struct{
   OutputData output;
   GwApi::Status status;
   GwLog *logger=NULL;
+  GwConfigHandler *config=NULL;
 } CommonData;
 
 //a base class that all pages must inherit from

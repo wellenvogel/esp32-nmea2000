@@ -9,9 +9,22 @@ public:
         common.logger->logDebug(GwLog::LOG,"created PageApparentWind");
         dummy=1;
     }
+    virtual int handleKey(int key){
+        if(key == 3){
+            dummy++;
+            return 0; // Commit the key
+        }
+        return key;
+    }
+
     virtual void display(CommonData &commonData, PageData &pageData)
     {
         GwLog *logger = commonData.logger;
+
+        GwConfigHandler *config = commonData.config;
+        String test = config->getString(config->lengthFormat);
+        
+
         dummy++;
         for (int i = 0; i < 2; i++)
         {
