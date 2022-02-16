@@ -2,6 +2,7 @@
 #include "OBP60Hardware.h"
 #include "OBP60ExtensionPort.h"
 
+// Please dont forget to declarate the fonts in OBP60ExtensionPort.h
 #include "Ubuntu_Bold8pt7b.h"
 #include "Ubuntu_Bold20pt7b.h"
 #include "Ubuntu_Bold32pt7b.h"

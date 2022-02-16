@@ -6,10 +6,11 @@ class PageOneValue : public Page{
     virtual void displayPage(CommonData &commonData, PageData &pageData){
         GwConfigHandler *config = commonData.config;
         GwLog *logger=commonData.logger;
-
+        
         // Get config data
         String lengthformat = config->getString(config->lengthFormat);
         bool simulation = config->getBool(config->useSimuData);
+        String displaycolor = config->getString(config->displaycolor);
         bool holdvalues = config->getBool(config->holdvalues);
         
         // Get boat values
@@ -21,17 +22,30 @@ class PageOneValue : public Page{
 
         // Logging boat values
         if (value == NULL) return;
-        LOG_DEBUG(GwLog::LOG,"drawing at PageOneValue, p=%s, v=%f", name1, value1);
+        LOG_DEBUG(GwLog::LOG,"Drawing at PageOneValue, p=%s, v=%f", name1, value1);
 
         // Draw page
         //***********************************************************
 
-        // Clear display
-        display.fillRect(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, GxEPD_WHITE);   // Draw white sreen
+        // Clear display, set background color and text color
+        int textcolor = GxEPD_BLACK;
+        int pixelcolor = GxEPD_BLACK;
+        int bgcolor = GxEPD_WHITE;
+        if(displaycolor == "Normal"){
+            textcolor = GxEPD_BLACK;
+            pixelcolor = GxEPD_BLACK;
+            bgcolor = GxEPD_WHITE;
+        }
+        else{
+            textcolor = GxEPD_WHITE;
+            pixelcolor = GxEPD_WHITE;
+            bgcolor = GxEPD_BLACK;
+        }
+        display.fillRect(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, bgcolor);   // Draw white sreen
+        display.setTextColor(textcolor);
 
         // Show name
         display.setFont(&Ubuntu_Bold32pt7b);
-        display.setTextColor(GxEPD_BLACK);
         display.setCursor(20, 100);
         display.print(name1);                           // Page name
         display.setFont(&Ubuntu_Bold20pt7b);
@@ -77,11 +91,8 @@ class PageOneValue : public Page{
 
         // Key Layout
         display.setFont(&Ubuntu_Bold8pt7b);
-        display.setTextColor(GxEPD_BLACK);
-        display.setCursor(0, 290);
-        display.print(" [  <  ]");
-        display.setCursor(290, 290);
-        display.print("[  >  ]");
+        display.setCursor(115, 290);
+        display.print(" [  <<<<<<      >>>>>>  ]");
         display.setCursor(343, 290);
         display.print("[ILUM]");
 

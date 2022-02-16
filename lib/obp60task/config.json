@@ -325,6 +325,21 @@
         }
     },
     {
+        "name": "displaycolor",
+        "label": "Display Color",
+        "type": "list",
+        "default": "Normal",
+        "description": "If display color inverse then is background black and all other white",
+        "list": [
+            "Normal",
+            "Inverse"
+        ],
+        "category": "OBP60 Display",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
         "name": "statusLine",
         "label": "Status Line",
         "type": "boolean",

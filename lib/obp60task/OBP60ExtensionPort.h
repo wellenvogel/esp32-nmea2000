@@ -8,10 +8,13 @@
 #include <GxIO/GxIO_SPI/GxIO_SPI.h>     // GxEPD lip for SPI display communikation
 #include <GxIO/GxIO.h>                  // GxEPD lip for SPI
 
+// Extension port
 void MCP23017Init();
 
-// SPI pin definitions for E-Ink display
-extern GxEPD_Class display;
+// E-Ink display
+extern GxEPD_Class display;                     // E-Ink display functions
+
+// Fonts declarations for display
 extern const GFXfont Ubuntu_Bold8pt7b;
 extern const GFXfont Ubuntu_Bold20pt7b;
 extern const GFXfont Ubuntu_Bold32pt7b;
@@ -19,17 +22,17 @@ extern const GFXfont DSEG7Classic_BoldItalic16pt7b;
 extern const GFXfont DSEG7Classic_BoldItalic42pt7b;
 extern const GFXfont DSEG7Classic_BoldItalic60pt7b;
 
-void setPortPin(uint pin, bool value);
+// Gloabl functions
+void setPortPin(uint pin, bool value);          // Set port pin for extension port
 
-void togglePortPin(uint pin);
+void togglePortPin(uint pin);                   // Toggle extension port pin
 
-void blinkingFlashLED();
+void blinkingFlashLED();                        // Blinking function for LED on extension port
+void setBlinkingLED(bool on);                   // Set blinking LED active
 
-void buzzer(uint frequency, uint duration);
-void setBuzzerPower(uint power);
+void buzzer(uint frequency, uint duration);     // Buzzer function
+void setBuzzerPower(uint power);                // Set buzzer power
 
-void underVoltageDetection();
-
-void setBlinkingLED(bool on);
+void underVoltageDetection();                   // Function for 12V undervoltage detection
 
 #endif

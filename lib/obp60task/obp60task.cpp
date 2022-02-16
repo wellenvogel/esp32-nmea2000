@@ -13,8 +13,8 @@
 #include "OBP60ExtensionPort.h"         // Functions lib for extension board
 #include "OBP60Keypad.h"                // Functions for keypad
 
-// True type character sets
-// See OBP60ExtensionPort.h
+// True type character sets includes
+// See OBP60ExtensionPort.cpp
 
 // Pictures
 //#include GxEPD_BitmapExamples         // Example picture
@@ -258,27 +258,50 @@ void OBP60Task(GwApi *api){
     }
     
     // Init E-Ink display
+    String displaymode = api->getConfig()->getConfigItem(api->getConfig()->display,true)->asString();
+    String displaycolor = api->getConfig()->getConfigItem(api->getConfig()->displaycolor,true)->asString();
+    String systemname = api->getConfig()->getConfigItem(api->getConfig()->systemName,true)->asString();
+    String wifipass = api->getConfig()->getConfigItem(api->getConfig()->apPassword,true)->asString();
+    bool refreshmode = api->getConfig()->getConfigItem(api->getConfig()->refresh,true)->asBoolean();
+    int textcolor = GxEPD_BLACK;
+    int pixelcolor = GxEPD_BLACK;
+    int bgcolor = GxEPD_WHITE;
+
     display.init();                         // Initialize and clear display
-    display.setTextColor(GxEPD_BLACK);      // Set display color
     display.setRotation(0);                 // Set display orientation (horizontal)
-    display.fillRect(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, GxEPD_WHITE); // Draw white sreen
+    if(displaycolor == "Normal"){
+        textcolor = GxEPD_BLACK;
+        pixelcolor = GxEPD_BLACK;
+        bgcolor = GxEPD_WHITE;
+    }
+    else{
+        textcolor = GxEPD_WHITE;
+        pixelcolor = GxEPD_WHITE;
+        bgcolor = GxEPD_BLACK;
+    }
+    display.fillRect(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, bgcolor); // Draw white sreen
+    display.setTextColor(textcolor);        // Set display color
     display.update();                       // Full update (slow)
         
-     String displaymode = api->getConfig()->getConfigItem(api->getConfig()->display,true)->asString();
     if(String(displaymode) == "Logo + QR Code" || String(displaymode) == "Logo"){
-        display.drawExampleBitmap(gImage_Logo_OBP_400x300_sw, 0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, GxEPD_WHITE); // Draw start logo
-//        display.drawExampleBitmap(gImage_MFD_OBP60_400x300_sw, 0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, GxEPD_WHITE); // Draw start logo
+        display.drawBitmap(gImage_Logo_OBP_400x300_sw, 0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, pixelcolor); // Draw start logo
         display.updateWindow(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, true);   // Partial update (fast)
         delay(SHOW_TIME);                                // Logo show time
-        display.fillRect(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, GxEPD_WHITE); // Draw white sreen
-        display.updateWindow(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, true);    // Partial update (fast)
+        display.fillRect(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, bgcolor); // Draw white sreen
+        if(refreshmode == true){
+            display.fillRect(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, bgcolor); // Draw white sreen
+            display.updateWindow(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, true);    // Needs partial update before full update to refresh the frame buffer
+            display.update(); // Full update
+        }
+        else{
+            display.updateWindow(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, true);    // Partial update (fast)
+        }
         if(String(displaymode) == "Logo + QR Code"){
-            String systemname = api->getConfig()->getConfigItem(api->getConfig()->systemName,true)->asString();
-            String wifipass = api->getConfig()->getConfigItem(api->getConfig()->apPassword,true)->asString();
-            bool refreshmode = api->getConfig()->getConfigItem(api->getConfig()->refresh,true)->asBoolean();
-            qrWiFi(systemname, wifipass, refreshmode);       // Show QR code for WiFi connection
-            delay(SHOW_TIME);                                // Logo show time
-            display.fillRect(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, GxEPD_WHITE); // Draw white sreen
+            qrWiFi(systemname, wifipass, displaycolor);  // Show QR code for WiFi connection
+            delay(SHOW_TIME);                            // Logo show time
+            display.fillRect(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, bgcolor); // Draw white sreen
+            display.updateWindow(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, true);    // Needs partial update before full update to refresh the frame buffer
+            display.update(); // Full update
         }
     }
     
@@ -344,63 +367,92 @@ void OBP60Task(GwApi *api){
     LOG_DEBUG(GwLog::LOG,"obp60task: start mainloop");
     int pageNumber=0;
     int lastPage=pageNumber;
+    long starttime0 = millis();     // Mainloop
+    long starttime1 = millis();     // Full disolay refresh
     while (true){
-        delay(1000);
-        //check if there is a keyboard message
-        int keyboardMessage=0;
-        if (xQueueReceive(allParameters.queue,&keyboardMessage,0)){
-            LOG_DEBUG(GwLog::LOG,"new key from keyboard %d",keyboardMessage);
-            
+        if(millis() > starttime0 + 100){
+            starttime0 = millis();
+            //check if there is a keyboard message
+            int keyboardMessage=0;
+            while (xQueueReceive(allParameters.queue,&keyboardMessage,0)){
+                LOG_DEBUG(GwLog::LOG,"new key from keyboard %d",keyboardMessage);
+                
+                Page *currentPage=pages[pageNumber].page;
+                if (currentPage ){
+                    keyboardMessage=currentPage->handleKey(keyboardMessage);
+                }
+                if (keyboardMessage > 0)
+                {
+                    // Decoding all key codes
+                    // #6 Backlight on if key controled
+                    String backlight = api->getConfig()->getConfigItem(api->getConfig()->backlight,true)->asString();
+                    if(String(backlight) == "Control by Key"){
+                        if(keyboardMessage == 6){
+                            LOG_DEBUG(GwLog::LOG,"Toggle Backlight LED");
+                            togglePortPin(OBP_BACKLIGHT_LED);
+                        }
+                    }
+                    // #9 Swipe right
+                    if (keyboardMessage == 9)
+                    {
+                        pageNumber++;
+                        if (pageNumber >= numPages)
+                            pageNumber = 0;
+                    }
+                    // #10 Swipe left
+                    if (keyboardMessage == 10)
+                    {
+                        pageNumber--;
+                        if (pageNumber < 0)
+                            pageNumber = numPages - 1;
+                    }             
+                    // #9 or #10 Refresh display befor start a new page if reshresh is enabled
+                    bool refreshmode = api->getConfig()->getConfigItem(api->getConfig()->refresh,true)->asBoolean();
+                    if(refreshmode == true && (keyboardMessage == 9 || keyboardMessage == 10)){
+                        display.fillRect(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, GxEPD_WHITE); // Draw white sreen
+                        display.updateWindow(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, true);    // Needs partial update before full update to refresh the frame buffer
+                        display.update(); // Full update
+                    }
+                }
+                LOG_DEBUG(GwLog::LOG,"set pagenumber to %d",pageNumber);
+            }
+
+            // Subtask E-Ink full refresh
+            if(millis() > starttime1 + FULL_REFRESH_TIME * 1000){
+                LOG_DEBUG(GwLog::DEBUG,"E-Ink full refresh");
+                display.update(); // Full update
+                starttime1 = millis();
+            }
+
+            //refresh data from api
+            api->getBoatDataValues(boatValues.numValues,boatValues.allBoatValues);
+            api->getStatus(commonData.status);
+
+            //handle the pag
+            if (pages[pageNumber].description && pages[pageNumber].description->header){
+
+            //build some header and footer using commonData
+
+
+            }
+            //....
+            //call the particular page
             Page *currentPage=pages[pageNumber].page;
-            if (currentPage ){
-                keyboardMessage=currentPage->handleKey(keyboardMessage);
+            if (currentPage == NULL){
+                LOG_DEBUG(GwLog::ERROR,"page number %d not found",pageNumber);
+                // Error handling for missing page
             }
-            if (keyboardMessage > 0)
-            {
-                // Decoding all key codes
-                if (keyboardMessage == 9)
-                {
-                    pageNumber++;
-                    if (pageNumber >= numPages)
-                        pageNumber = 0;
+            else{
+                if (lastPage != pageNumber){
+                    currentPage->displayNew(commonData,pages[pageNumber].parameters);
+                    lastPage=pageNumber;
                 }
-                if (keyboardMessage == 10)
-                {
-                    pageNumber--;
-                    if (pageNumber < 0)
-                        pageNumber = numPages - 1;
-                }
+                //call the page code
+                LOG_DEBUG(GwLog::DEBUG,"calling page %d",pageNumber);
+                currentPage->displayPage(commonData,pages[pageNumber].parameters);
             }
-            LOG_DEBUG(GwLog::LOG,"set pagenumber to %d",pageNumber);
-        }
-        //refresh data from api
-        api->getBoatDataValues(boatValues.numValues,boatValues.allBoatValues);
-        api->getStatus(commonData.status);
-
-        //handle the pag
-        if (pages[pageNumber].description && pages[pageNumber].description->header){
-
-        //build some header and footer using commonData
-
 
         }
-        //....
-        //call the particular page
-        Page *currentPage=pages[pageNumber].page;
-        if (currentPage == NULL){
-            LOG_DEBUG(GwLog::ERROR,"page number %d not found",pageNumber);
-            // Error handling for missing page
-        }
-        else{
-            if (lastPage != pageNumber){
-                currentPage->displayNew(commonData,pages[pageNumber].parameters);
-                lastPage=pageNumber;
-            }
-            //call the page code
-            LOG_DEBUG(GwLog::DEBUG,"calling page %d",pageNumber);
-            currentPage->displayPage(commonData,pages[pageNumber].parameters);
-        }
-
     }
     vTaskDelete(NULL);
 

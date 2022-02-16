@@ -4,7 +4,22 @@
 #include <Arduino.h>
 #include "qrcode.h"
   
-void qrWiFi(String ssid, String passwd, bool refreshmode){
+void qrWiFi(String ssid, String passwd, String displaycolor){
+  // Set display color
+  int textcolor = GxEPD_BLACK;
+  int pixelcolor = GxEPD_BLACK;
+  int bgcolor = GxEPD_WHITE;
+  if(displaycolor == "Normal"){
+      textcolor = GxEPD_BLACK;
+      pixelcolor = GxEPD_BLACK;
+      bgcolor = GxEPD_WHITE;
+  }
+  else{
+      textcolor = GxEPD_WHITE;
+      pixelcolor = GxEPD_WHITE;
+      bgcolor = GxEPD_BLACK;
+  }
+
   // Set start point and pixel size
   int16_t box_x = 100;      // X offset
   int16_t box_y = 30;       // Y offset
@@ -24,9 +39,9 @@ void qrWiFi(String ssid, String passwd, bool refreshmode){
     // Each horizontal module
     for (uint8_t x = 0; x < qrcode.size; x++) {
       if(qrcode_getModule(&qrcode, x, y)){
-        display.fillRect(box_x, box_y, box_s, box_s, GxEPD_BLACK);
+        display.fillRect(box_x, box_y, box_s, box_s, pixelcolor);
       } else {
-        display.fillRect(box_x, box_y, box_s, box_s, GxEPD_WHITE);
+        display.fillRect(box_x, box_y, box_s, box_s, bgcolor);
       }
       box_x = box_x + box_s;
     }
@@ -34,15 +49,10 @@ void qrWiFi(String ssid, String passwd, bool refreshmode){
     box_x = init_x;
   }
   display.setFont(&Ubuntu_Bold32pt7b);
-  display.setTextColor(GxEPD_BLACK);
+  display.setTextColor(textcolor);
   display.setCursor(140, 285);
   display.print("WiFi");
-  if(refreshmode == true){
-    display.update();       // Full update (slow)
-  }
-  else{
-    display.updateWindow(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, true);   // Partial update (fast)
-  }
+  display.updateWindow(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, true);   // Partial update (fast)
 }
 
 #endif
