@@ -39,7 +39,9 @@ bool gps_ready = false;         // GPS initialized and ready to use
 // Hardware initialization before start all services
 //##################################################
 void OBP60Init(GwApi *api){
+    GwLog *logger = api->getLogger();
     api->getLogger()->logDebug(GwLog::LOG,"obp60init running");
+
     // Define timer interrupts
     bool uvoltage = api->getConfig()->getConfigItem(api->getConfig()->underVoltage,true)->asBoolean();
     if(uvoltage == true){
@@ -56,7 +58,7 @@ void OBP60Init(GwApi *api){
         initComplete = false;
     }
     else{ 
-        // Start communication
+        // Init extension port
         MCP23017Init();
 
         // Settings for 1Wire
@@ -243,6 +245,8 @@ void registerAllPages(PageList &list){
     list.add(&registerPageForValues);
     extern PageDescription registerPageApparentWind;
     list.add(&registerPageApparentWind);
+    extern PageDescription registerPageVoltage;
+    list.add(&registerPageVoltage);
 }
 
 // OBP60 Task
@@ -368,11 +372,33 @@ void OBP60Task(GwApi *api){
     int pageNumber=0;
     int lastPage=pageNumber;
     long starttime0 = millis();     // Mainloop
-    long starttime1 = millis();     // Full disolay refresh
+    long starttime1 = millis();     // Full display refresh
     while (true){
         if(millis() > starttime0 + 100){
             starttime0 = millis();
-            //check if there is a keyboard message
+
+            // Send NMEA0183 GPS data on several bus systems
+            bool gps = api->getConfig()->getConfigItem(api->getConfig()->useGPS,true)->asBoolean();
+            if(gps == true){   // If config enabled
+                    if(gps_ready = true){
+                        tNMEA0183Msg NMEA0183Msg;
+                        while(NMEA0183.GetMessage(NMEA0183Msg)){
+                            api->sendNMEA0183Message(NMEA0183Msg);
+                        }
+                    }
+            }
+/*
+            // LED on by GPS fix
+            String gpsFix = api->getConfig()->getConfigItem(api->getConfig()->flashLED,true)->asString();
+            GwApi::BoatValue *pdop=new GwApi::BoatValue(F("PDOP"));
+            if(String(gpsFix) == "GPS Fix" && pdop->valid == true && int(pdop->value) <= 50){
+                setPortPin(OBP_FLASH_LED, true);
+            }
+           if(String(gpsFix) == "GPS Fix" && pdop->valid == true && int(pdop->value) > 50){
+                setPortPin(OBP_FLASH_LED, false);
+            }
+*/
+            // Check the keyboard message
             int keyboardMessage=0;
             while (xQueueReceive(allParameters.queue,&keyboardMessage,0)){
                 LOG_DEBUG(GwLog::LOG,"new key from keyboard %d",keyboardMessage);
@@ -428,7 +454,7 @@ void OBP60Task(GwApi *api){
             api->getBoatDataValues(boatValues.numValues,boatValues.allBoatValues);
             api->getStatus(commonData.status);
 
-            //handle the pag
+            //handle the page
             if (pages[pageNumber].description && pages[pageNumber].description->header){
 
             //build some header and footer using commonData
