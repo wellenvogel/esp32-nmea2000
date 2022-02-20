@@ -59,3 +59,13 @@ class PageDescription{
             this->header=header;
         }
 };
+
+// Structure for formated boat values
+typedef struct{
+  String svalue;
+  String unit;
+} FormatedData;
+
+
+// Formater for boat values
+FormatedData formatValue(GwApi::BoatValue *value);

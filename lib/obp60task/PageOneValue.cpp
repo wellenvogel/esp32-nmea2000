@@ -14,14 +14,15 @@ class PageOneValue : public Page{
         bool holdvalues = config->getBool(config->holdvalues);
         
         // Get boat values
-        GwApi::BoatValue *value=pageData.values[0];
-        String name1 = value->getName().c_str();
-        double value1 = value->value;
-        bool valid1 = value->valid;
-        String format1 = value->getFormat().c_str();
+        GwApi::BoatValue *bvalue=pageData.values[0];    // First element in list (only one value by PageOneValue)
+        String name1 = bvalue->getName().c_str();       // Value name
+        double value1 = bvalue->value;                  // Value as double in SI unit
+        String svalue1 = formatValue(bvalue).svalue;    // Formatted value as string including unit conversion and switching decimal places
+        String unit1 = formatValue(bvalue).unit;        // Unit of value
+        bool valid1 = bvalue->valid;                    // Valid flag of value
 
         // Logging boat values
-        if (value == NULL) return;
+        if (bvalue == NULL) return;
         LOG_DEBUG(GwLog::LOG,"Drawing at PageOneValue, p=%s, v=%f", name1, value1);
 
         // Draw page
@@ -48,17 +49,21 @@ class PageOneValue : public Page{
         display.setFont(&Ubuntu_Bold32pt7b);
         display.setCursor(20, 100);
         display.print(name1);                           // Page name
+
+        // Show unit
         display.setFont(&Ubuntu_Bold20pt7b);
-        display.setCursor(270, 100);
-        // Show unit        
-        if(String(lengthformat) == "m"){
-            display.print("m");
+        display.setCursor(270, 100);              
+        display.print(unit1);
+
+        // Switch font if format latitude or longitude
+        if(bvalue->getFormat() == "formatLatitude" || bvalue->getFormat() == "formatLongitude"){
+            display.setFont(&Ubuntu_Bold20pt7b);
+            display.setCursor(20, 180);
         }
-        if(String(lengthformat) == "ft"){
-            display.print("ft");
-        }      
-        display.setFont(&DSEG7Classic_BoldItalic60pt7b);
-        display.setCursor(20, 240);
+        else{
+            display.setFont(&DSEG7Classic_BoldItalic60pt7b);
+            display.setCursor(20, 240);
+        }
 
         // Reading bus data or using simulation data
         if(simulation == true){
@@ -67,26 +72,7 @@ class PageOneValue : public Page{
             display.print(value1,1);
         }
         else{
-            // Check vor valid real data, display also if hold values activated
-            if(valid1 == true || holdvalues == true){
-                // Unit conversion
-                if(String(lengthformat) == "m"){
-                    value1 = value1;                    // Real bus data m
-                }
-                if(String(lengthformat) == "ft"){
-                    value1 = value1 * 3.28084;          // Bus data in ft
-                }
-                // Resolution switching
-                if(value1 <= 99.9){
-                    display.print(value1,1);
-                }
-                else{
-                    display.print(value1,0);
-                }
-            }
-            else{
-            display.print("---");                       // Missing bus data
-            }  
+            display.print(svalue1);                     // Real value as formated string  
         }
 
         // Key Layout
@@ -112,7 +98,8 @@ static Page* createPage(CommonData &common){return new PageOneValue();}
  * this will be number of BoatValue pointers in pageData.values
  */
 PageDescription registerPageOneValue(
-    "oneValue",
-    createPage,
-    1
+    "oneValue",     // Name of page
+    createPage,     // Action
+    1,              // Number of bus values depends on selection in Web configuration
+    true            // Show display header on/off
 );

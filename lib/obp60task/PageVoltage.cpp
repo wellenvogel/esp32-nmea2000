@@ -37,18 +37,19 @@ public:
         bool valid1 = true;
 
         // Optical warning by limit violation
+        bool activViolation = false;
         if(String(flashLED) == "Limit Violation"){
-            if(String(batType) == "Pb" && (value1 < 10.0 || value1 > 14.5)){
+            // Limits for Pb battery
+            if(activViolation == false && String(batType) == "Pb" && (value1 < 10.0 || value1 > 14.5)){
                 setPortPin(OBP_FLASH_LED, true);
+                activViolation = true;
             }
-            else{
+            if(activViolation == true && String(batType) == "Pb" && !(value1 < 10.0 || value1 > 14.5)){
                 setPortPin(OBP_FLASH_LED, false);
-            }
+                activViolation = false;
+            }      
         }
-        else{
-            setPortPin(OBP_FLASH_LED, false);
-        }
-
+        
         // Logging voltage value
         if (value1 == NULL) return;
         LOG_DEBUG(GwLog::LOG,"Drawing at PageVoltage, p=%s, v=%f", name1, value1);
@@ -132,9 +133,9 @@ static Page *createPage(CommonData &common){
  * and will will provide the names of the fixed values we need
  */
 PageDescription registerPageVoltage(
-    "Voltage",
-    createPage,
-    0,
-    {},
-    true
+    "Voltage",      // Name of page
+    createPage,     // Action
+    0,              // Number of bus values depends on selection in Web configuration
+    {},             // Names of bus values undepends on selection in Web configuration (refer GwBoatData.h)
+    true            // Show display header on/off
 );
