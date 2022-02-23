@@ -44,11 +44,8 @@ void MCP23017Init()
 }
 
 void setPortPin(uint pin, bool value){
-
-    if(pin <=7){
-    
-        outA &= ~(1 << pin);     // Clear bit
-    
+    if(pin <=7){    
+        outA &= ~(1 << pin);     // Clear bit    
         outA |= (value << pin);  // Set bit
         mcp.writeRegister(MCP23017Register::GPIO_A, outA);
     }
@@ -73,14 +70,9 @@ void togglePortPin(uint pin){
 }
 
 void blinkingFlashLED(){
-    noInterrupts();
     if(blinkingLED == true){
         togglePortPin(OBP_FLASH_LED);
-    }
-    else{
-        setPortPin(OBP_FLASH_LED, false);
-    }     
-    interrupts();
+    }    
 }
 
 void setBlinkingLED(bool on){

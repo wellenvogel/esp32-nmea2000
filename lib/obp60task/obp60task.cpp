@@ -100,9 +100,6 @@ void OBP60Init(GwApi *api){
         if(String(ledMode) == "Off"){
             setBlinkingLED(false);
         }
-        if(String(ledMode) == "Limits Overrun"){
-            setBlinkingLED(true);
-        }
 
         // Start serial stream and take over GPS data stream form internal GPS
         bool gpsOn=api->getConfig()->getConfigItem(api->getConfig()->useGPS,true)->asBoolean();
@@ -373,31 +370,35 @@ void OBP60Task(GwApi *api){
     int lastPage=pageNumber;
     long starttime0 = millis();     // Mainloop
     long starttime1 = millis();     // Full display refresh
+    long starttime3 = millis();     // GPS data
     while (true){
         if(millis() > starttime0 + 100){
             starttime0 = millis();
 
-            // Send NMEA0183 GPS data on several bus systems
-            bool gps = api->getConfig()->getConfigItem(api->getConfig()->useGPS,true)->asBoolean();
-            if(gps == true){   // If config enabled
+            // Send NMEA0183 GPS data on several bus systems all 1000ms
+            if(millis() > starttime3 + 1000){
+                bool gps = api->getConfig()->getConfigItem(api->getConfig()->useGPS,true)->asBoolean();
+                if(gps == true){   // If config enabled
                     if(gps_ready = true){
                         tNMEA0183Msg NMEA0183Msg;
                         while(NMEA0183.GetMessage(NMEA0183Msg)){
                             api->sendNMEA0183Message(NMEA0183Msg);
                         }
                     }
+                }
             }
-/*
-            // LED on by GPS fix
+
+            // If GPS fix then LED on (HDOP)
             String gpsFix = api->getConfig()->getConfigItem(api->getConfig()->flashLED,true)->asString();
-            GwApi::BoatValue *pdop=new GwApi::BoatValue(F("PDOP"));
-            if(String(gpsFix) == "GPS Fix" && pdop->valid == true && int(pdop->value) <= 50){
+            GwApi::BoatValue *hdop;
+            hdop = boatValues.findValueOrCreate("HDOP");
+            if(String(gpsFix) == "GPS Fix" && hdop->valid == true && int(hdop->value) <= 50){
                 setPortPin(OBP_FLASH_LED, true);
             }
-           if(String(gpsFix) == "GPS Fix" && pdop->valid == true && int(pdop->value) > 50){
+            if(String(gpsFix) == "GPS Fix" && ((hdop->valid == true && int(hdop->value) > 50) || hdop->valid == false)){
                 setPortPin(OBP_FLASH_LED, false);
             }
-*/
+
             // Check the keyboard message
             int keyboardMessage=0;
             while (xQueueReceive(allParameters.queue,&keyboardMessage,0)){

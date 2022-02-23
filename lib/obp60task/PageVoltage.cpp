@@ -37,16 +37,14 @@ public:
         bool valid1 = true;
 
         // Optical warning by limit violation
-        bool activViolation = false;
         if(String(flashLED) == "Limit Violation"){
             // Limits for Pb battery
-            if(activViolation == false && String(batType) == "Pb" && (value1 < 10.0 || value1 > 14.5)){
-                setPortPin(OBP_FLASH_LED, true);
-                activViolation = true;
+            if(String(batType) == "Pb" && (value1 < 10.0 || value1 > 14.5)){
+                setBlinkingLED(true);
             }
-            if(activViolation == true && String(batType) == "Pb" && !(value1 < 10.0 || value1 > 14.5)){
+            if(String(batType) == "Pb" && (value1 >= 10.0 && value1 <= 14.5)){
+                setBlinkingLED(false);
                 setPortPin(OBP_FLASH_LED, false);
-                activViolation = false;
             }      
         }
         
@@ -78,14 +76,15 @@ public:
         display.setFont(&Ubuntu_Bold32pt7b);
         display.setCursor(20, 100);
         display.print(name1);                           // Page name
+        
+        // Show unit
         display.setFont(&Ubuntu_Bold20pt7b);
         display.setCursor(270, 100);
-        // Show unit
         display.print("V");        
-        display.setFont(&DSEG7Classic_BoldItalic60pt7b);
-        display.setCursor(20, 240);
 
         // Reading bus data or using simulation data
+        display.setFont(&DSEG7Classic_BoldItalic60pt7b);
+        display.setCursor(20, 240);
         if(simulation == true){
             value1 = batVoltage;
             value1 += float(random(0, 5)) / 10;         // Simulation data

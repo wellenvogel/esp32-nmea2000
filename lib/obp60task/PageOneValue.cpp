@@ -12,6 +12,7 @@ class PageOneValue : public Page{
         bool simulation = config->getBool(config->useSimuData);
         String displaycolor = config->getString(config->displaycolor);
         bool holdvalues = config->getBool(config->holdvalues);
+        String flashLED = config->getString(config->flashLED);
         
         // Get boat values
         GwApi::BoatValue *bvalue=pageData.values[0];    // First element in list (only one value by PageOneValue)
@@ -19,7 +20,12 @@ class PageOneValue : public Page{
         double value1 = bvalue->value;                  // Value as double in SI unit
         String svalue1 = formatValue(bvalue).svalue;    // Formatted value as string including unit conversion and switching decimal places
         String unit1 = formatValue(bvalue).unit;        // Unit of value
-        bool valid1 = bvalue->valid;                    // Valid flag of value
+
+        // Optical warning by limit violation
+        if(String(flashLED) == "Limit Violation"){
+            setBlinkingLED(false);
+            setPortPin(OBP_FLASH_LED, false); 
+        }
 
         // Logging boat values
         if (bvalue == NULL) return;
@@ -55,10 +61,14 @@ class PageOneValue : public Page{
         display.setCursor(270, 100);              
         display.print(unit1);
 
-        // Switch font if format latitude or longitude
+        // Switch font if format for any values
         if(bvalue->getFormat() == "formatLatitude" || bvalue->getFormat() == "formatLongitude"){
             display.setFont(&Ubuntu_Bold20pt7b);
             display.setCursor(20, 180);
+        }
+        else if(bvalue->getFormat() == "formatTime" || bvalue->getFormat() == "formatDate"){
+            display.setFont(&Ubuntu_Bold32pt7b);
+            display.setCursor(20, 200);
         }
         else{
             display.setFont(&DSEG7Classic_BoldItalic60pt7b);

@@ -8,8 +8,17 @@
 // different unit convertion
 
 FormatedData formatValue(GwApi::BoatValue *value){
+//    GwApi *api;
     FormatedData result;
-
+/*
+    // Load configuration values
+    String lengthFormat = api->getConfig()->getConfigItem(api->getConfig()->lengthFormat,true)->asString();         // [m|ft]
+    String distanceFormat = api->getConfig()->getConfigItem(api->getConfig()->distanceFormat,true)->asString();     // [m|km|nm]
+    String speedFormat = api->getConfig()->getConfigItem(api->getConfig()->speedFormat,true)->asString();           // [m/s|km/h|kn]
+    String windspeedFormat = api->getConfig()->getConfigItem(api->getConfig()->windspeedFormat,true)->asString();   // [m/s|km/h|kn|bft]
+    String tempFormat = api->getConfig()->getConfigItem(api->getConfig()->tempFormat,true)->asString();             // [K|°C|°F]
+    String dateFormat = api->getConfig()->getConfigItem(api->getConfig()->dateFormat,true)->asString();             // [DE|GB|US]
+*/
     if (! value->valid){
         result.svalue = "---";
         result.unit = "";
@@ -22,8 +31,18 @@ FormatedData formatValue(GwApi::BoatValue *value){
         time_t tv=tNMEA0183Msg::daysToTime_t(value->value);
         tmElements_t parts;
         tNMEA0183Msg::breakTime(tv,parts);
-        snprintf(buffer,bsize,"%04d/%02d/%02d",parts.tm_year+1900,parts.tm_mon+1,parts.tm_mday);
-        result.unit = "";
+/*        
+        if(String(dateFormat) == "DE"){
+            snprintf(buffer,bsize,"%02d.%02d.%04d",parts.tm_mday,parts.tm_mon+1,parts.tm_year+1900);
+        }
+        if(String(dateFormat) == "GB"){
+            snprintf(buffer,bsize,"%02d/%02d/%04d",parts.tm_mday,parts.tm_mon+1,parts.tm_year+1900);
+        }
+        if(String(dateFormat) == "US"){
+            snprintf(buffer,bsize,"%02d/%02d/%04d",parts.tm_mon+1,parts.tm_mday,parts.tm_year+1900);
+        }
+*/
+    snprintf(buffer,bsize,"%02d.%02d.%04d",parts.tm_mday,parts.tm_mon+1,parts.tm_year+1900);        
     }
     else if(value->getFormat() == "formatTime"){
         double inthr;
