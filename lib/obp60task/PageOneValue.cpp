@@ -13,15 +13,17 @@ class PageOneValue : public Page{
         String displaycolor = config->getString(config->displaycolor);
         bool holdvalues = config->getBool(config->holdvalues);
         String flashLED = config->getString(config->flashLED);
+        String backlightMode = config->getString(config->backlight);
         
         // Get boat values
         GwApi::BoatValue *bvalue=pageData.values[0];    // First element in list (only one value by PageOneValue)
         String name1 = bvalue->getName().c_str();       // Value name
+        name1 = name1.substring(0, 6);                  // String length limit for value name
         double value1 = bvalue->value;                  // Value as double in SI unit
-        String svalue1 = formatValue(bvalue).svalue;    // Formatted value as string including unit conversion and switching decimal places
-        String unit1 = formatValue(bvalue).unit;        // Unit of value
+        String svalue1 = formatValue(bvalue, commonData).svalue;    // Formatted value as string including unit conversion and switching decimal places
+        String unit1 = formatValue(bvalue, commonData).unit;        // Unit of value
 
-        // Optical warning by limit violation
+        // Optical warning by limit violation (unused)
         if(String(flashLED) == "Limit Violation"){
             setBlinkingLED(false);
             setPortPin(OBP_FLASH_LED, false); 
@@ -89,8 +91,10 @@ class PageOneValue : public Page{
         display.setFont(&Ubuntu_Bold8pt7b);
         display.setCursor(115, 290);
         display.print(" [  <<<<<<      >>>>>>  ]");
-        display.setCursor(343, 290);
-        display.print("[ILUM]");
+        if(String(backlightMode) == "Control by Key"){
+            display.setCursor(343, 290);
+            display.print("[ILUM]");
+        }
 
         // Update display
         display.updateWindow(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, true);    // Partial update (fast)

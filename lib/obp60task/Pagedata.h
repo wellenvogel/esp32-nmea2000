@@ -68,4 +68,4 @@ typedef struct{
 
 
 // Formater for boat values
-FormatedData formatValue(GwApi::BoatValue *value);
+FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata);

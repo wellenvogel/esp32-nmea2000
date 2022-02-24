@@ -365,6 +365,9 @@ void OBP60Task(GwApi *api){
 
     // Task Loop
     //###############################
+    GwApi::BoatValue *hdop = boatValues.findValueOrCreate("HDOP");  // Load HDOP
+    String gpsFix = api->getConfig()->getConfigItem(api->getConfig()->flashLED,true)->asString();
+
     LOG_DEBUG(GwLog::LOG,"obp60task: start mainloop");
     int pageNumber=0;
     int lastPage=pageNumber;
@@ -389,9 +392,6 @@ void OBP60Task(GwApi *api){
             }
 
             // If GPS fix then LED on (HDOP)
-            String gpsFix = api->getConfig()->getConfigItem(api->getConfig()->flashLED,true)->asString();
-            GwApi::BoatValue *hdop;
-            hdop = boatValues.findValueOrCreate("HDOP");
             if(String(gpsFix) == "GPS Fix" && hdop->valid == true && int(hdop->value) <= 50){
                 setPortPin(OBP_FLASH_LED, true);
             }
@@ -457,12 +457,12 @@ void OBP60Task(GwApi *api){
 
             //handle the page
             if (pages[pageNumber].description && pages[pageNumber].description->header){
-
             //build some header and footer using commonData
-
-
+            display.setFont(&Ubuntu_Bold32pt7b);
+            display.setCursor(20, 100);
+            display.print("Hallo");
             }
-            //....
+            
             //call the particular page
             Page *currentPage=pages[pageNumber].page;
             if (currentPage == NULL){
