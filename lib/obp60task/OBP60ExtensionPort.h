@@ -33,6 +33,6 @@ void setBlinkingLED(bool on);                   // Set blinking LED active
 void buzzer(uint frequency, uint duration);     // Buzzer function
 void setBuzzerPower(uint power);                // Set buzzer power
 
-void underVoltageDetection();                   // Function for 12V undervoltage detection
+// void underVoltageDetection();                   // Function for 12V undervoltage detection
 
 #endif

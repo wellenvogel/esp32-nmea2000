@@ -42,7 +42,7 @@
     #define OBP_ANALOG1 36      // Analog In 1
     #define OBP_ANALOG2 39      // Analog In 2
     #define MIN_VOLTAGE 9.0     // Min voltage for under voltage detection (then goto deep sleep)
-    #define POWER_FAIL_TIME 2   // Accept min voltage until 2 x 1ms (for under voltage gaps by engine start)
+    #define POWER_FAIL_TIME 2   // in [ms] Accept min voltage until 2 x 1ms (for under voltage gaps by engine start)
     // Extension Port MCP23017
     #define MCP23017_I2C_ADDR 0x20  // Addr. 0 is 0x20
     // Extension Port PA

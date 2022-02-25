@@ -20,21 +20,57 @@
 //#include GxEPD_BitmapExamples         // Example picture
 #include "MFD_OBP60_400x300_sw.h"       // MFD with logo
 #include "Logo_OBP_400x300_sw.h"        // OBP Logo
-
 #include "OBP60QRWiFi.h"                // Functions lib for WiFi QR code
-
-tNMEA0183Msg NMEA0183Msg;
-tNMEA0183 NMEA0183;
-
+/*
 // Timer Interrupts for hardware functions
 Ticker Timer1;  // Under voltage detection
 Ticker Timer2;  // Binking flash LED
+*/
+tNMEA0183Msg NMEA0183Msg;
+tNMEA0183 NMEA0183;
 
 // Global vars
 bool initComplete = false;      // Initialization complete
 int taskRunCounter = 0;         // Task couter for loop section
 bool gps_ready = false;         // GPS initialized and ready to use
 
+// Timer Interrupts for hardware functions
+void underVoltageDetection();
+Ticker Timer1(underVoltageDetection, 1);     // Start Timer1 with maximum speed with 1ms
+Ticker Timer2(blinkingFlashLED, 500);
+
+void underVoltageDetection(){
+    float actVoltage = (float(analogRead(OBP_ANALOG0)) * 3.3 / 4096 + 0.17) * 20;   // V = 1/20 * Vin
+    long starttime;
+    static bool undervoltage = false;
+
+    if(actVoltage < MIN_VOLTAGE){
+        if(undervoltage == false){
+            starttime = millis();
+            undervoltage = true;
+        }
+        if(millis() > starttime + POWER_FAIL_TIME){
+            Timer1.stop();                          // Stop Timer1
+            setPortPin(OBP_BACKLIGHT_LED, false);   // Backlight Off
+            setPortPin(OBP_FLASH_LED, false);       // Flash LED Off
+            buzzer(TONE4, 20);                      // Buzzer tone 4kHz 20% 20ms
+            setPortPin(OBP_POWER_50, false);        // Power rail 5.0V Off
+            setPortPin(OBP_POWER_33, false);        // Power rail 3.3V Off
+            // Shutdown EInk display
+            display.fillRect(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, GxEPD_WHITE); // Draw white sreen
+//            display.updateWindow(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, false); // Partial update
+            display.update();
+    //        display._sleep();                       // Display shut dow
+            // Stop system
+            while(true){
+                esp_deep_sleep_start();             // Deep Sleep without weakup. Weakup only after power cycle (restart).
+            }
+        }
+    }
+    else{
+        undervoltage = false;
+    }
+}
 
 // Hardware initialization before start all services
 //##################################################
@@ -42,12 +78,12 @@ void OBP60Init(GwApi *api){
     GwLog *logger = api->getLogger();
     api->getLogger()->logDebug(GwLog::LOG,"obp60init running");
 
-    // Define timer interrupts
+    // Start timer interrupts
     bool uvoltage = api->getConfig()->getConfigItem(api->getConfig()->underVoltage,true)->asBoolean();
     if(uvoltage == true){
-        Timer1.attach_ms(1, underVoltageDetection);     // Maximum speed with 1ms
+        Timer1.start();     // Start Timer1 for undervoltage detection
     }
-    Timer2.attach_ms(500, blinkingFlashLED); 
+    Timer2.start();         // Start Timer2 for blinking LED
 
     // Extension port MCP23017
     // Check I2C devices MCP23017
@@ -365,28 +401,39 @@ void OBP60Task(GwApi *api){
 
     // Task Loop
     //###############################
-    GwApi::BoatValue *hdop = boatValues.findValueOrCreate("HDOP");  // Load HDOP
+
+    // Configuration values for main loop
     String gpsFix = api->getConfig()->getConfigItem(api->getConfig()->flashLED,true)->asString();
+    bool gps = api->getConfig()->getConfigItem(api->getConfig()->useGPS,true)->asBoolean();
+    String backlight = api->getConfig()->getConfigItem(api->getConfig()->backlight,true)->asString();
+    // refreshmode defined in init section
+    // displaycolor defined in init section
+    // textcolor defined in init section
+    // pixelcolor defined in init section
+    // bgcolor defined in init section
+
+    // Boat values for main loop
+    GwApi::BoatValue *hdop = boatValues.findValueOrCreate("HDOP");  // Load HDOP
 
     LOG_DEBUG(GwLog::LOG,"obp60task: start mainloop");
     int pageNumber=0;
     int lastPage=pageNumber;
     long starttime0 = millis();     // Mainloop
     long starttime1 = millis();     // Full display refresh
-    long starttime3 = millis();     // GPS data
+    long starttime2 = millis();     // Display update
+
     while (true){
+        Timer1.update();            // Update for Timer1
+        Timer2.update();            // Update for Timer2
         if(millis() > starttime0 + 100){
             starttime0 = millis();
 
             // Send NMEA0183 GPS data on several bus systems all 1000ms
-            if(millis() > starttime3 + 1000){
-                bool gps = api->getConfig()->getConfigItem(api->getConfig()->useGPS,true)->asBoolean();
-                if(gps == true){   // If config enabled
-                    if(gps_ready = true){
-                        tNMEA0183Msg NMEA0183Msg;
-                        while(NMEA0183.GetMessage(NMEA0183Msg)){
-                            api->sendNMEA0183Message(NMEA0183Msg);
-                        }
+            if(gps == true){   // If config enabled
+                if(gps_ready = true){
+                    tNMEA0183Msg NMEA0183Msg;
+                    while(NMEA0183.GetMessage(NMEA0183Msg)){
+                        api->sendNMEA0183Message(NMEA0183Msg);
                     }
                 }
             }
@@ -412,7 +459,6 @@ void OBP60Task(GwApi *api){
                 {
                     // Decoding all key codes
                     // #6 Backlight on if key controled
-                    String backlight = api->getConfig()->getConfigItem(api->getConfig()->backlight,true)->asString();
                     if(String(backlight) == "Control by Key"){
                         if(keyboardMessage == 6){
                             LOG_DEBUG(GwLog::LOG,"Toggle Backlight LED");
@@ -434,7 +480,6 @@ void OBP60Task(GwApi *api){
                             pageNumber = numPages - 1;
                     }             
                     // #9 or #10 Refresh display befor start a new page if reshresh is enabled
-                    bool refreshmode = api->getConfig()->getConfigItem(api->getConfig()->refresh,true)->asBoolean();
                     if(refreshmode == true && (keyboardMessage == 9 || keyboardMessage == 10)){
                         display.fillRect(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, GxEPD_WHITE); // Draw white sreen
                         display.updateWindow(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, true);    // Needs partial update before full update to refresh the frame buffer
@@ -446,37 +491,43 @@ void OBP60Task(GwApi *api){
 
             // Subtask E-Ink full refresh
             if(millis() > starttime1 + FULL_REFRESH_TIME * 1000){
+                starttime1 = millis();
                 LOG_DEBUG(GwLog::DEBUG,"E-Ink full refresh");
                 display.update(); // Full update
-                starttime1 = millis();
             }
 
-            //refresh data from api
-            api->getBoatDataValues(boatValues.numValues,boatValues.allBoatValues);
-            api->getStatus(commonData.status);
+            // Refresh display data
+            if(millis() > starttime2 + 1000){
+                starttime2 = millis();
+                //refresh data from api
+                api->getBoatDataValues(boatValues.numValues,boatValues.allBoatValues);
+                api->getStatus(commonData.status);
 
-            //handle the page
-            if (pages[pageNumber].description && pages[pageNumber].description->header){
-            //build some header and footer using commonData
-            display.setFont(&Ubuntu_Bold32pt7b);
-            display.setCursor(20, 100);
-            display.print("Hallo");
-            }
-            
-            //call the particular page
-            Page *currentPage=pages[pageNumber].page;
-            if (currentPage == NULL){
-                LOG_DEBUG(GwLog::ERROR,"page number %d not found",pageNumber);
-                // Error handling for missing page
-            }
-            else{
-                if (lastPage != pageNumber){
-                    currentPage->displayNew(commonData,pages[pageNumber].parameters);
-                    lastPage=pageNumber;
+                // Show header if enabled
+                display.fillRect(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, bgcolor);   // Clear sreen
+                if (pages[pageNumber].description && pages[pageNumber].description->header){
+                    //build some header and footer using commonData
+                    display.setTextColor(textcolor);
+                    display.setFont(&Ubuntu_Bold8pt7b);
+                    display.setCursor(0, 15);
+                    display.print("AP TCP GPS");
                 }
-                //call the page code
-                LOG_DEBUG(GwLog::DEBUG,"calling page %d",pageNumber);
-                currentPage->displayPage(commonData,pages[pageNumber].parameters);
+                
+                // Call the particular page
+                Page *currentPage=pages[pageNumber].page;
+                if (currentPage == NULL){
+                    LOG_DEBUG(GwLog::ERROR,"page number %d not found",pageNumber);
+                    // Error handling for missing page
+                }
+                else{
+                    if (lastPage != pageNumber){
+                        currentPage->displayNew(commonData,pages[pageNumber].parameters);
+                        lastPage=pageNumber;
+                    }
+                    //call the page code
+                    LOG_DEBUG(GwLog::DEBUG,"calling page %d",pageNumber);
+                    currentPage->displayPage(commonData,pages[pageNumber].parameters);
+                }
             }
 
         }

@@ -50,8 +50,7 @@ class PageOneValue : public Page{
             pixelcolor = GxEPD_WHITE;
             bgcolor = GxEPD_BLACK;
         }
-        display.fillRect(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, bgcolor);   // Draw white sreen
-        display.setTextColor(textcolor);
+        // Clear display in obp60task.cpp in main loop
 
         // Show name
         display.setFont(&Ubuntu_Bold32pt7b);

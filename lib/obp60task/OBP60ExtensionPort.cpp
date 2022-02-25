@@ -104,29 +104,37 @@ void setBuzzerPower(uint power){
     buzzerpower = power;
 }
 
+/*
 void underVoltageDetection(){
-    noInterrupts();
-    float actVoltage = (float(analogRead(OBP_ANALOG0)) * 3.3 / 4096 + 0.17) * 20;   // Vin = 1/20 
+    float actVoltage = (float(analogRead(OBP_ANALOG0)) * 3.3 / 4096 + 0.17) * 20;   // V = 1/20 * Vin
+    long starttime;
+    static bool undervoltage = false;
+
     if(actVoltage < MIN_VOLTAGE){
-        uvDuration ++;
+        if(undervoltage == false){
+            starttime = millis();
+            undervoltage = true;
+        }
+        if(millis() > starttime + POWER_FAIL_TIME){
+//            Timer1.detach();                        // Stop Timer1
+            setPortPin(OBP_BACKLIGHT_LED, false);   // Backlight Off
+            setPortPin(OBP_FLASH_LED, false);       // Flash LED Off
+            buzzer(TONE4, 20);                      // Buzzer tone 4kHz 20% 20ms
+            // Shutdown EInk display
+            display.fillRect(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, GxEPD_WHITE); // Draw white sreen
+            display.updateWindow(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, false); // Partial update
+            setPortPin(OBP_POWER_50, false);        // Power rail 5.0V Off
+            setPortPin(OBP_POWER_33, false);        // Power rail 3.3V Off
+    //        display._sleep();                       // Display shut dow
+            // Stop system
+            while(true){
+                esp_deep_sleep_start();             // Deep Sleep without weakup. Weakup only after power cycle (restart).
+            }
+        }
     }
     else{
-        uvDuration = 0;
+        undervoltage = false;
     }
-    if(uvDuration > POWER_FAIL_TIME){
-        setPortPin(OBP_BACKLIGHT_LED, false);   // Backlight Off
-        setPortPin(OBP_FLASH_LED, false);       // Flash LED Off
-        buzzer(TONE4, 20);                      // Buzzer tone 4kHz 20% 20ms
-        setPortPin(OBP_POWER_50, false);        // Power rail 5.0V Off
-        setPortPin(OBP_POWER_33, false);        // Power rail 3.3V Off
-        // Shutdown EInk display
-        display.fillRect(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, GxEPD_WHITE); // Draw white sreen
-        display.updateWindow(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, false); // Partial update
- //       display._sleep();                       // Display shut dow
-        // Stop system
-        while(true){
-            esp_deep_sleep_start();             // Deep Sleep without weakup. Weakup only after power cycle (restart).
-        }
-    }    
-    interrupts();
+
 }
+*/

@@ -30,6 +30,7 @@ public:
         String flashLED = config->getString(config->flashLED);
         int batVoltage = config->getInt(config->batteryVoltage);
         String batType = config->getString(config->batteryType);
+        String backlightMode = config->getString(config->backlight);
         
         // Get voltage value
         String name1 = "VBat";
@@ -39,10 +40,10 @@ public:
         // Optical warning by limit violation
         if(String(flashLED) == "Limit Violation"){
             // Limits for Pb battery
-            if(String(batType) == "Pb" && (value1 < 10.0 || value1 > 14.5)){
+            if(String(batType) == "Pb" && (value1 < 11.0 || value1 > 14.5)){
                 setBlinkingLED(true);
             }
-            if(String(batType) == "Pb" && (value1 >= 10.0 && value1 <= 14.5)){
+            if(String(batType) == "Pb" && (value1 >= 11.0 && value1 <= 14.5)){
                 setBlinkingLED(false);
                 setPortPin(OBP_FLASH_LED, false);
             }      
@@ -69,8 +70,7 @@ public:
             pixelcolor = GxEPD_WHITE;
             bgcolor = GxEPD_BLACK;
         }
-        display.fillRect(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, bgcolor);   // Draw white sreen
-        display.setTextColor(textcolor);
+        //Clear display in obp60task.cpp in main loop
 
         // Show name
         display.setFont(&Ubuntu_Bold32pt7b);
@@ -113,8 +113,10 @@ public:
         display.setFont(&Ubuntu_Bold8pt7b);
         display.setCursor(115, 290);
         display.print(" [  <<<<<<      >>>>>>  ]");
-        display.setCursor(343, 290);
-        display.print("[ILUM]");
+        if(String(backlightMode) == "Control by Key"){
+            display.setCursor(343, 290);
+            display.print("[ILUM]");
+        }
 
         // Update display
         display.updateWindow(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, true);    // Partial update (fast)

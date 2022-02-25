@@ -20,7 +20,6 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
 
     if (! value->valid){
         result.svalue = "---";
-        result.unit = "";
         return result;
     }
     static const int bsize = 30;
@@ -166,14 +165,14 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
     else if (value->getFormat() == "formatDop"){
         double dop = value->value;
         result.unit = "m";
+        if(dop > 99.9){
+            dop = 99.9;
+        }
         if(dop < 10){
             snprintf(buffer,bsize,"%2.1f",dop);
         }
         if(dop >= 10 && dop < 100){
             snprintf(buffer,bsize,"%2.1f",dop);
-        }
-        if(dop >= 100){
-            snprintf(buffer,bsize,"%3.0f",dop);
         }
     }
     else if (value->getFormat() == "formatLatitude"){
