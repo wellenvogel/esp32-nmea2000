@@ -76,15 +76,8 @@ class PageOneValue : public Page{
             display.setCursor(20, 240);
         }
 
-        // Reading bus data or using simulation data
-        if(simulation == true){
-            value1 = 84;
-            value1 += float(random(0, 120)) / 10;       // Simulation data
-            display.print(value1,1);
-        }
-        else{
-            display.print(svalue1);                     // Real value as formated string  
-        }
+        // Show bus data or using simulation data
+        display.print(svalue1);                                         // Real value as formated string  
 
         // Key Layout
         display.setFont(&Ubuntu_Bold8pt7b);

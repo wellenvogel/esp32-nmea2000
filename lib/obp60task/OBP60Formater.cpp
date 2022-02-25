@@ -17,41 +17,38 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
     String windspeedFormat = commondata.config->getString(commondata.config->windspeedFormat);  // [m/s|km/h|kn|bft]
     String tempFormat = commondata.config->getString(commondata.config->tempFormat);            // [K|°C|°F]
     String dateFormat = commondata.config->getString(commondata.config->dateFormat);            // [DE|GB|US]
+    bool usesimudata = commondata.config->getBool(commondata.config->useSimuData);              // [on|off]
 
-    if (! value->valid){
+    // If boat value not valid
+    if (! value->valid && !usesimudata){
         result.svalue = "---";
         return result;
     }
     static const int bsize = 30;
     char buffer[bsize+1];
     buffer[0]=0;
+    //########################################################
     if (value->getFormat() == "formatDate"){
         time_t tv=tNMEA0183Msg::daysToTime_t(value->value);
         tmElements_t parts;
-        tNMEA0183Msg::breakTime(tv,parts);        
-        if(String(dateFormat) == "DE"){
-            snprintf(buffer,bsize,"%02d.%02d.%04d",parts.tm_mday,parts.tm_mon+1,parts.tm_year+1900);
-        }
-        else if(String(dateFormat) == "GB"){
-            snprintf(buffer,bsize,"%02d/%02d/%04d",parts.tm_mday,parts.tm_mon+1,parts.tm_year+1900);
-        }
-        else if(String(dateFormat) == "US"){
-            snprintf(buffer,bsize,"%02d/%02d/%04d",parts.tm_mon+1,parts.tm_mday,parts.tm_year+1900);
+        tNMEA0183Msg::breakTime(tv,parts);
+        if(usesimudata == false) { 
+            if(String(dateFormat) == "DE"){
+                snprintf(buffer,bsize,"%02d.%02d.%04d",parts.tm_mday,parts.tm_mon+1,parts.tm_year+1900);
+            }
+            else if(String(dateFormat) == "GB"){
+                snprintf(buffer,bsize,"%02d/%02d/%04d",parts.tm_mday,parts.tm_mon+1,parts.tm_year+1900);
+            }
+            else if(String(dateFormat) == "US"){
+                snprintf(buffer,bsize,"%02d/%02d/%04d",parts.tm_mon+1,parts.tm_mday,parts.tm_year+1900);
+            }
+            else{
+                snprintf(buffer,bsize,"%02d.%02d.%04d",parts.tm_mday,parts.tm_mon+1,parts.tm_year+1900);  
+            }
         }
         else{
-            snprintf(buffer,bsize,"%02d.%02d.%04d",parts.tm_mday,parts.tm_mon+1,parts.tm_year+1900);  
-        }        
-    }
-    else if(value->getFormat() == "formatTime"){
-        double inthr;
-        double intmin;
-        double intsec;
-        double val;
-        val=modf(value->value/3600.0,&inthr);
-        inthr += timeZone; 
-        val=modf(val*3600.0/60.0,&intmin);
-        modf(val*60.0,&intsec);
-        snprintf(buffer,bsize,"%02.0f:%02.0f:%02.0f",inthr,intmin,intsec);
+            snprintf(buffer,bsize,"01.01.2022"); 
+        }
         if(timeZone == 0){
             result.unit = "UTC";
         }
@@ -59,14 +56,56 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
             result.unit = "LOT";
         }
     }
-    else if (value->getFormat() == "formatFixed0"){
-        snprintf(buffer,bsize,"%.0f",value->value);
-         result.unit = "";
+    //########################################################
+    else if(value->getFormat() == "formatTime"){
+        double inthr;
+        double intmin;
+        double intsec;
+        double val;
+        if(usesimudata == false) {    
+            val=modf(value->value/3600.0,&inthr);
+            inthr += timeZone; 
+            val=modf(val*3600.0/60.0,&intmin);
+            modf(val*60.0,&intsec);
+            snprintf(buffer,bsize,"%02.0f:%02.0f:%02.0f",inthr,intmin,intsec);
+        }
+        else{
+            static long sec;
+            static long lasttime;
+            if(millis() > lasttime + 990){
+                sec ++;
+            }
+            sec = sec % 60;
+            snprintf(buffer,bsize,"11:36:%02i", int(sec));
+            lasttime = millis();
+        }
+        if(timeZone == 0){
+            result.unit = "UTC";
+        }
+        else{
+            result.unit = "LOT";
+        }
     }
+    //########################################################
+    else if (value->getFormat() == "formatFixed0"){
+        if(usesimudata == false) {
+            snprintf(buffer,bsize,"%.0f",value->value);
+        }
+        else{
+            snprintf(buffer,bsize,"%.0f", 8.0 + float(random(0, 10)) / 10.0);
+        }
+        result.unit = "";
+    }
+    //########################################################
     else if (value->getFormat() == "formatCourse"){
-        double course = value->value;
+        double course = 0;
+        if(usesimudata == false) {
+            course = value->value;
+        }
+        else{
+            course = 2.53 + float(random(0, 10) / 100.0);
+        }    
         course = course * 57.2958;      // Unit conversion form rad to deg
-        result.unit = "Deg";
         if(course < 10){
             snprintf(buffer,bsize,"%2.1f",course);
         }
@@ -76,9 +115,17 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
         if(course >= 100){
             snprintf(buffer,bsize,"%3.0f",course);
         }
+        result.unit = "Deg";
     }
+    //########################################################
     else if (value->getFormat() == "formatKnots" || value->getFormat() == "formatWind"){
-        double speed = value->value;
+        double speed = 0;
+        if(usesimudata == false) {
+            speed = value->value;
+        }
+        else{
+            speed = 4.0 + float(random(0, 40));
+        }
         if(String(speedFormat) == "km/h" || String(windspeedFormat) == "km/h"){
         speed = speed * 3.6;        // Unit conversion form m/s to km/h
             result.unit = "m/s";
@@ -148,8 +195,15 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
             }
         }
     }
+    //########################################################
     else if (value->getFormat() == "formatRot"){
-        double rotation = value->value;
+        double rotation = 0;
+        if(usesimudata == false) {
+            rotation = value->value;
+        }
+        else{
+            rotation = 0.04 + float(random(0, 10)) / 100.0;
+        }
         rotation = rotation * 57.2958;      // Unit conversion form rad/s to deg/s
         result.unit = "deg/s";
         if(rotation < 10){
@@ -162,8 +216,15 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
             snprintf(buffer,bsize,"%3.0f",rotation);
         }
     }
+    //########################################################
     else if (value->getFormat() == "formatDop"){
-        double dop = value->value;
+        double dop = 0;
+        if(usesimudata == false) {
+            dop = value->value;
+        }
+        else{
+            dop = 2.0 + float(random(0, 40)) / 10.0;
+        }
         result.unit = "m";
         if(dop > 99.9){
             dop = 99.9;
@@ -175,48 +236,67 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
             snprintf(buffer,bsize,"%2.1f",dop);
         }
     }
+    //########################################################
     else if (value->getFormat() == "formatLatitude"){
-        double lat = value->value;
-        String latitude = "";
-        String latdir = "";
-        float degree = int(lat);
-        float minute = (lat - degree) * 60;
-        float secound = (minute - int(minute)) * 60;
-        if(lat > 0){
-            latdir = "N";
+        if(usesimudata == false) {
+            double lat = value->value;
+            String latitude = "";
+            String latdir = "";
+            float degree = int(lat);
+            float minute = (lat - degree) * 60;
+            float secound = (minute - int(minute)) * 60;
+            if(lat > 0){
+                latdir = "N";
+            }
+            else{
+                latdir = "S";
+            }
+            latitude = String(degree,0) + "\" " + String(minute,0) + "' " + String(secound, 4) + " " + latdir;
+            result.unit = "";
+            strcpy(buffer, latitude.c_str());
         }
         else{
-            latdir = "S";
+            snprintf(buffer,bsize," 51\" 35' %2.4f", 2.0 + float(random(0, 1000)) / 1000.0);
         }
-        latitude = String(degree,0) + "\" " + String(minute,0) + "' " + String(secound, 4) + " " + latdir;
-        result.unit = "";
-        strcpy(buffer, latitude.c_str());
     }
+    //########################################################
     else if (value->getFormat() == "formatLongitude"){
-        double lon = value->value;
-        String longitude = "";
-        String londir = "";
-        float degree = int(lon);
-        float minute = (lon - degree) * 60;
-        float secound = (minute - int(minute)) * 60;
-        if(lon > 0){
-            londir = "E";
+        if(usesimudata == false) {
+            double lon = value->value;
+            String longitude = "";
+            String londir = "";
+            float degree = int(lon);
+            float minute = (lon - degree) * 60;
+            float secound = (minute - int(minute)) * 60;
+            if(lon > 0){
+                londir = "E";
+            }
+            else{
+                londir = "W";
+            }
+            longitude = String(degree,0) + "\" " + String(minute,0) + "' " + String(secound, 4) + " " + londir;
+            result.unit = "";
+            strcpy(buffer, longitude.c_str());
         }
         else{
-            londir = "W";
+            snprintf(buffer,bsize," 15\" 06' %2.4f", 9.0 + float(random(0, 1000)) / 1000.0);
         }
-        longitude = String(degree,0) + "\" " + String(minute,0) + "' " + String(secound, 4) + " " + londir;
-        result.unit = "";
-        strcpy(buffer, longitude.c_str());
     }
+    //########################################################
     else if (value->getFormat() == "formatDepth"){
-        double depth = value->value;
+        double depth = 0;
+        if(usesimudata == false) {
+            depth = value->value;
+        }
+        else{
+            depth = 18.0 + float(random(0, 100)) / 10.0;
+        }
         if(String(lengthFormat) == "ft"){
             depth = depth * 3.28084;
             result.unit = "ft";
         }
         else{
-             result.unit = "m";
+            result.unit = "m";
         }
         if(depth < 10){
             snprintf(buffer,bsize,"%2.1f",depth);
@@ -228,8 +308,15 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
             snprintf(buffer,bsize,"%3.0f",depth);
         }
     }
+    //########################################################
     else if (value->getFormat() == "kelvinToC"){
-        double temp = value->value;
+        double temp = 0;
+        if(usesimudata == false) {
+            temp = value->value;
+        }
+        else{
+            temp = 296.0 + float(random(0, 10)) / 10.0;
+        }
         if(String(tempFormat) == "°C"){
             temp = temp - 273.15;
             result.unit = "C";
@@ -251,8 +338,15 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
             snprintf(buffer,bsize,"%3.0f",temp);
         }
     }
+    //########################################################
     else if (value->getFormat() == "mtr2nm"){
-        double distance = value->value;
+        double distance = 0;
+        if(usesimudata == false) {
+            distance = value->value;
+        }
+        else{
+            distance = 2960.0 + float(random(0, 10));
+        }
         if(String(distanceFormat) == "km"){
             distance = distance * 0.001;
             result.unit = "km";
@@ -261,8 +355,7 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
             distance = distance * 0.000539957;
             result.unit = "nm";
         }
-        else{
-            distance = distance * 0.000539957;
+        else{;
             result.unit = "m";
         }
         if(distance < 10){
