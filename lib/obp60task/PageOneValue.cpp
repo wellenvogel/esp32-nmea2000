@@ -6,7 +6,10 @@ class PageOneValue : public Page{
     virtual void displayPage(CommonData &commonData, PageData &pageData){
         GwConfigHandler *config = commonData.config;
         GwLog *logger=commonData.logger;
-        
+
+        static String svalue1old = "";
+        static String unit1old = "";
+
         // Get config data
         String lengthformat = config->getString(config->lengthFormat);
         bool simulation = config->getBool(config->useSimuData);
@@ -16,12 +19,13 @@ class PageOneValue : public Page{
         String backlightMode = config->getString(config->backlight);
         
         // Get boat values
-        GwApi::BoatValue *bvalue=pageData.values[0];    // First element in list (only one value by PageOneValue)
-        String name1 = bvalue->getName().c_str();       // Value name
+        GwApi::BoatValue *bvalue1 = pageData.values[0]; // First element in list (only one value by PageOneValue)
+        String name1 = bvalue1->getName().c_str();      // Value name
         name1 = name1.substring(0, 6);                  // String length limit for value name
-        double value1 = bvalue->value;                  // Value as double in SI unit
-        String svalue1 = formatValue(bvalue, commonData).svalue;    // Formatted value as string including unit conversion and switching decimal places
-        String unit1 = formatValue(bvalue, commonData).unit;        // Unit of value
+        double value1 = bvalue1->value;                 // Value as double in SI unit
+        bool valid1 = bvalue1->valid;                   // Valid information 
+        String svalue1 = formatValue(bvalue1, commonData).svalue;    // Formatted value as string including unit conversion and switching decimal places
+        String unit1 = formatValue(bvalue1, commonData).unit;        // Unit of value
 
         // Optical warning by limit violation (unused)
         if(String(flashLED) == "Limit Violation"){
@@ -30,13 +34,13 @@ class PageOneValue : public Page{
         }
 
         // Logging boat values
-        if (bvalue == NULL) return;
+        if (bvalue1 == NULL) return;
         LOG_DEBUG(GwLog::LOG,"Drawing at PageOneValue, p=%s, v=%f", name1, value1);
 
         // Draw page
         //***********************************************************
 
-        // Clear display, set background color and text color
+        // Set background color and text color
         int textcolor = GxEPD_BLACK;
         int pixelcolor = GxEPD_BLACK;
         int bgcolor = GxEPD_WHITE;
@@ -50,7 +54,7 @@ class PageOneValue : public Page{
             pixelcolor = GxEPD_WHITE;
             bgcolor = GxEPD_BLACK;
         }
-        // Clear display in obp60task.cpp in main loop
+        // Clear display by call in obp60task.cpp in main loop
 
         // Show name
         display.setFont(&Ubuntu_Bold32pt7b);
@@ -59,15 +63,20 @@ class PageOneValue : public Page{
 
         // Show unit
         display.setFont(&Ubuntu_Bold20pt7b);
-        display.setCursor(270, 100);              
-        display.print(unit1);
+        display.setCursor(270, 100);
+        if(holdvalues == false){
+            display.print(unit1);                       // Unit
+        }
+        else{
+            display.print(unit1old);
+        }
 
         // Switch font if format for any values
-        if(bvalue->getFormat() == "formatLatitude" || bvalue->getFormat() == "formatLongitude"){
+        if(bvalue1->getFormat() == "formatLatitude" || bvalue1->getFormat() == "formatLongitude"){
             display.setFont(&Ubuntu_Bold20pt7b);
             display.setCursor(20, 180);
         }
-        else if(bvalue->getFormat() == "formatTime" || bvalue->getFormat() == "formatDate"){
+        else if(bvalue1->getFormat() == "formatTime" || bvalue1->getFormat() == "formatDate"){
             display.setFont(&Ubuntu_Bold32pt7b);
             display.setCursor(20, 200);
         }
@@ -77,12 +86,26 @@ class PageOneValue : public Page{
         }
 
         // Show bus data or using simulation data
-        display.print(svalue1);                                         // Real value as formated string  
+        if(holdvalues == false){
+            display.print(svalue1);                                     // Real value as formated string
+        }
+        else{
+            display.print(svalue1old);                                  // Old value as formated string
+        }
+        if(valid1 == true){
+            svalue1old = svalue1;                                       // Save the old value
+            unit1old = unit1;                                           // Save the old unit
+        }
 
         // Key Layout
         display.setFont(&Ubuntu_Bold8pt7b);
         display.setCursor(115, 290);
-        display.print(" [  <<<<<<      >>>>>>  ]");
+        if(commonData.keylock == false){
+            display.print(" [  <<<<<<      >>>>>>  ]");
+        }
+        else{
+            display.print(" [    Keylock active    ]");
+        }
         if(String(backlightMode) == "Control by Key"){
             display.setCursor(343, 290);
             display.print("[ILUM]");

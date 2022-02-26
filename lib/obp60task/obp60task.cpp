@@ -21,11 +21,7 @@
 #include "MFD_OBP60_400x300_sw.h"       // MFD with logo
 #include "Logo_OBP_400x300_sw.h"        // OBP Logo
 #include "OBP60QRWiFi.h"                // Functions lib for WiFi QR code
-/*
-// Timer Interrupts for hardware functions
-Ticker Timer1;  // Under voltage detection
-Ticker Timer2;  // Binking flash LED
-*/
+
 tNMEA0183Msg NMEA0183Msg;
 tNMEA0183 NMEA0183;
 
@@ -39,6 +35,7 @@ void underVoltageDetection();
 Ticker Timer1(underVoltageDetection, 1);     // Start Timer1 with maximum speed with 1ms
 Ticker Timer2(blinkingFlashLED, 500);
 
+// Undervoltage function for shutdown display
 void underVoltageDetection(){
     float actVoltage = (float(analogRead(OBP_ANALOG0)) * 3.3 / 4096 + 0.17) * 20;   // V = 1/20 * Vin
     long starttime;
@@ -413,7 +410,9 @@ void OBP60Task(GwApi *api){
     // bgcolor defined in init section
 
     // Boat values for main loop
-    GwApi::BoatValue *hdop = boatValues.findValueOrCreate("HDOP");  // Load HDOP
+    GwApi::BoatValue *hdop = boatValues.findValueOrCreate("HDOP");      // Load HDOP
+    GwApi::BoatValue *date = boatValues.findValueOrCreate("GpsDate");   // Load GpsDate
+    GwApi::BoatValue *time = boatValues.findValueOrCreate("GpsTime");   // Load GpsTime
 
     LOG_DEBUG(GwLog::LOG,"obp60task: start mainloop");
     int pageNumber=0;
@@ -485,6 +484,13 @@ void OBP60Task(GwApi *api){
                         display.updateWindow(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, true);    // Needs partial update before full update to refresh the frame buffer
                         display.update(); // Full update
                     }
+                    // #11 Keylock
+/*                    
+                    if (keyboardMessage == 11)
+                    {
+                        commonData.keylock = !commonData.keylock;   // Toggle keylock
+                    }
+*/                    
                 }
                 LOG_DEBUG(GwLog::LOG,"set pagenumber to %d",pageNumber);
             }
@@ -504,13 +510,10 @@ void OBP60Task(GwApi *api){
                 api->getStatus(commonData.status);
 
                 // Show header if enabled
-                display.fillRect(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, bgcolor);   // Clear sreen
+                display.fillRect(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, bgcolor);   // Clear display
                 if (pages[pageNumber].description && pages[pageNumber].description->header){
                     //build some header and footer using commonData
-                    display.setTextColor(textcolor);
-                    display.setFont(&Ubuntu_Bold8pt7b);
-                    display.setCursor(0, 15);
-                    display.print("AP TCP GPS");
+                    displayHeader(commonData, hdop, date, time);
                 }
                 
                 // Call the particular page

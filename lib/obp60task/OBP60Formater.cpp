@@ -205,15 +205,18 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
             rotation = 0.04 + float(random(0, 10)) / 100.0;
         }
         rotation = rotation * 57.2958;      // Unit conversion form rad/s to deg/s
-        result.unit = "deg/s";
-        if(rotation < 10){
-            snprintf(buffer,bsize,"%2.1f",rotation);
+        result.unit = "Deg/s";
+        if(rotation < -100){
+            rotation = -99;
         }
-        if(rotation >= 10 && rotation < 100){
-            snprintf(buffer,bsize,"%2.1f",rotation);
+        if(rotation > 100){
+            rotation = 99;
         }
-        if(rotation >= 100){
-            snprintf(buffer,bsize,"%3.0f",rotation);
+        if(rotation > -10 && rotation < 10){
+            snprintf(buffer,bsize,"%1.1f",rotation);
+        }
+        if(rotation <= -10 || rotation >= 10){
+            snprintf(buffer,bsize,"%2.0f",rotation);
         }
     }
     //########################################################

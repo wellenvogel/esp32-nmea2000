@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include "Pagedata.h"
 #include "OBP60Hardware.h"
 #include "OBP60ExtensionPort.h"
 
@@ -104,37 +105,85 @@ void setBuzzerPower(uint power){
     buzzerpower = power;
 }
 
-/*
-void underVoltageDetection(){
-    float actVoltage = (float(analogRead(OBP_ANALOG0)) * 3.3 / 4096 + 0.17) * 20;   // V = 1/20 * Vin
-    long starttime;
-    static bool undervoltage = false;
+void displayHeader(CommonData &commonData, GwApi::BoatValue *hdop, GwApi::BoatValue *date, GwApi::BoatValue *time){
 
-    if(actVoltage < MIN_VOLTAGE){
-        if(undervoltage == false){
-            starttime = millis();
-            undervoltage = true;
+    static bool heartbeat = false;
+    static unsigned long usbRxOld = 0;
+    static unsigned long usbTxOld = 0;
+    static unsigned long serRxOld = 0;
+    static unsigned long serTxOld = 0;
+    static unsigned long tcpSerRxOld = 0;
+    static unsigned long tcpSerTxOld = 0;
+    static unsigned long tcpClRxOld = 0;
+    static unsigned long tcpClTxOld = 0;
+    static unsigned long n2kRxOld = 0;
+    static unsigned long n2kTxOld = 0;
+
+    // Show status info
+    display.setFont(&Ubuntu_Bold8pt7b);
+    display.setTextColor(GxEPD_BLACK);
+    display.setCursor(0, 15);
+    if(commonData.status.wifiApOn){
+      display.print(" AP ");
+    }
+    // If receive new telegram data then display bus name
+    if(commonData.status.tcpClRx != tcpClRxOld || commonData.status.tcpClTx != tcpClTxOld || commonData.status.tcpSerRx != tcpSerRxOld || commonData.status.tcpSerTx != tcpSerTxOld){
+      display.print("TCP ");
+    }
+    if(commonData.status.n2kRx != n2kRxOld || commonData.status.n2kTx != n2kTxOld){
+      display.print("N2K ");
+    }
+    if(commonData.status.serRx != serRxOld || commonData.status.serTx != serTxOld){
+      display.print("183 ");
+    }
+    if(commonData.status.usbRx != usbRxOld || commonData.status.usbTx != usbTxOld){
+      display.print("USB ");
+    }
+    if(commonData.config->getBool(commonData.config->useGPS) == true && hdop->valid == true && hdop->value <= 50){
+     display.print("GPS");
+    }
+    // Save old telegram counter
+    tcpClRxOld = commonData.status.tcpClRx;
+    tcpClTxOld = commonData.status.tcpClTx;
+    tcpSerRxOld = commonData.status.tcpSerRx;
+    tcpSerTxOld = commonData.status.tcpSerTx;
+    n2kRxOld = commonData.status.n2kRx;
+    n2kTxOld = commonData.status.n2kTx;
+    serRxOld = commonData.status.serRx;
+    serTxOld = commonData.status.serTx;
+    usbRxOld = commonData.status.usbRx;
+    usbTxOld = commonData.status.usbTx;
+
+    // Heartbeat as dot
+    display.setFont(&Ubuntu_Bold32pt7b);
+    display.setCursor(205, 14);
+    if(heartbeat == true){
+      display.print(".");
+    }
+    else{
+      display.print(" ");
+    }
+    heartbeat = !heartbeat; 
+
+    // Date and time
+    display.setFont(&Ubuntu_Bold8pt7b);
+    display.setCursor(230, 15);
+    if(hdop->valid == true && hdop->value <= 50){
+        String acttime = formatValue(time, commonData).svalue;
+        acttime = acttime.substring(0, 5);
+        String actdate = formatValue(date, commonData).svalue;
+        display.print(acttime);
+        display.print(" ");
+        display.print(actdate);
+        display.print(" ");
+        if(commonData.config->getInt(commonData.config->timeZone) == 0){
+            display.print("UTC");
         }
-        if(millis() > starttime + POWER_FAIL_TIME){
-//            Timer1.detach();                        // Stop Timer1
-            setPortPin(OBP_BACKLIGHT_LED, false);   // Backlight Off
-            setPortPin(OBP_FLASH_LED, false);       // Flash LED Off
-            buzzer(TONE4, 20);                      // Buzzer tone 4kHz 20% 20ms
-            // Shutdown EInk display
-            display.fillRect(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, GxEPD_WHITE); // Draw white sreen
-            display.updateWindow(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, false); // Partial update
-            setPortPin(OBP_POWER_50, false);        // Power rail 5.0V Off
-            setPortPin(OBP_POWER_33, false);        // Power rail 3.3V Off
-    //        display._sleep();                       // Display shut dow
-            // Stop system
-            while(true){
-                esp_deep_sleep_start();             // Deep Sleep without weakup. Weakup only after power cycle (restart).
-            }
+        else{
+            display.print("LOT");
         }
     }
     else{
-        undervoltage = false;
+      display.print("No GPS data");
     }
-
 }
-*/

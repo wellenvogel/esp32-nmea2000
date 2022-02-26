@@ -97,12 +97,13 @@
     {
         "name": "batteryVoltage",
         "label": "Battery Voltage [V]",
-        "type": "number",
-        "default": "12",
-        "check": "checkMinMax",
-        "min": 0,
-        "max": 1000,
-        "description": "Fuel tank capacity [0...1000V]",
+        "type": "list",
+        "default": "12V",
+        "description": "Battery Voltage [12V|24V]",
+        "list": [
+            "12V",
+            "24V"
+        ],
         "category": "OBP60 Settings",
         "capabilities": {
             "obp60":"true"
@@ -376,7 +377,7 @@
         "name": "backlight",
         "label": "Backlight Mode",
         "type": "list",
-        "default": "Off",
+        "default": "Control by Key",
         "description": "Settings for display mode",
         "list": [
             "Off",
@@ -479,7 +480,7 @@
         "check": "checkMinMax",
         "min": 1,
         "max": 4,
-        "default":"1",
+        "default":"4",
         "category":"OBP60 Pages",
         "capabilities": {
             "obp60":"true"
@@ -555,7 +556,8 @@
         "category": "OBP60 Page 2",
         "capabilities": {
             "obp60":"true"
-        }
+        },
+        "condition":[{"visiblePages":"2"},{"visiblePages":"3"},{"visiblePages":"4"}]
     },
     {
         "name": "page2value1",
@@ -615,7 +617,8 @@
         "category": "OBP60 Page 3",
         "capabilities": {
             "obp60":"true"
-        }
+        },
+        "condition":[{"visiblePages":"3"},{"visiblePages":"4"}]
     },
     {
         "name": "page3value1",
@@ -675,7 +678,8 @@
         "category": "OBP60 Page 4",
         "capabilities": {
             "obp60":"true"
-        }
+        },
+        "condition":[{"visiblePages":"4"}]
     },
     {
         "name": "page4value1",

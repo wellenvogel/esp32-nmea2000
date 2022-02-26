@@ -28,7 +28,7 @@ public:
         String displaycolor = config->getString(config->displaycolor);
         bool holdvalues = config->getBool(config->holdvalues);
         String flashLED = config->getString(config->flashLED);
-        int batVoltage = config->getInt(config->batteryVoltage);
+        String batVoltage = config->getString(config->batteryVoltage);
         String batType = config->getString(config->batteryType);
         String backlightMode = config->getString(config->backlight);
         
@@ -86,7 +86,12 @@ public:
         display.setFont(&DSEG7Classic_BoldItalic60pt7b);
         display.setCursor(20, 240);
         if(simulation == true){
-            value1 = batVoltage;
+            if(batVoltage == "12V"){
+                value1 = 12.0;
+            }
+            if(batVoltage == "24V"){
+                value1 = 24.0;
+            }
             value1 += float(random(0, 5)) / 10;         // Simulation data
             display.print(value1,1);
         }
