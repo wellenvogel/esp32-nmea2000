@@ -3,17 +3,16 @@
 
 class PageVoltage : public Page
 {
-    int dummy=0; //an example on how you would maintain some status
-                 //for a page
+bool keylock = false;               // Keylock
+
 public:
     PageVoltage(CommonData &common){
-        common.logger->logDebug(GwLog::LOG,"created PageApparentWind");
-        dummy=1;
+        common.logger->logDebug(GwLog::LOG,"Show PageVoltage");
     }
     virtual int handleKey(int key){
-        if(key == 3){
-            dummy++;
-            return 0; // Commit the key
+        if(key == 11){              // Code for keylock
+            keylock = !keylock;     // Toggle keylock
+            return 0;               // Commit the key
         }
         return key;
     }
@@ -117,8 +116,13 @@ public:
         // Key Layout
         display.setFont(&Ubuntu_Bold8pt7b);
         display.setCursor(115, 290);
-        display.print(" [  <<<<<<      >>>>>>  ]");
-        if(String(backlightMode) == "Control by Key"){
+        if(keylock == false){
+            display.print(" [  <<<<<<      >>>>>>  ]");
+        }
+        else{
+            display.print(" [    Keylock active    ]");
+        }
+        if(String(backlightMode) == "Control by Key"){                  // Key for illumination
             display.setCursor(343, 290);
             display.print("[ILUM]");
         }

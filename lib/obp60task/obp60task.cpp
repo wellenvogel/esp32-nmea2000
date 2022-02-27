@@ -50,14 +50,13 @@ void underVoltageDetection(){
             Timer1.stop();                          // Stop Timer1
             setPortPin(OBP_BACKLIGHT_LED, false);   // Backlight Off
             setPortPin(OBP_FLASH_LED, false);       // Flash LED Off
-            buzzer(TONE4, 20);                      // Buzzer tone 4kHz 20% 20ms
-            setPortPin(OBP_POWER_50, false);        // Power rail 5.0V Off
             setPortPin(OBP_POWER_33, false);        // Power rail 3.3V Off
+            buzzer(TONE4, 20);                      // Buzzer tone 4kHz 20ms
+            setPortPin(OBP_POWER_50, false);        // Power rail 5.0V Off
             // Shutdown EInk display
             display.fillRect(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, GxEPD_WHITE); // Draw white sreen
-//            display.updateWindow(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, false); // Partial update
+            display.updateWindow(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, false); // Partial update
             display.update();
-    //        display._sleep();                       // Display shut dow
             // Stop system
             while(true){
                 esp_deep_sleep_start();             // Deep Sleep without weakup. Weakup only after power cycle (restart).
@@ -483,14 +482,7 @@ void OBP60Task(GwApi *api){
                         display.fillRect(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, GxEPD_WHITE); // Draw white sreen
                         display.updateWindow(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, true);    // Needs partial update before full update to refresh the frame buffer
                         display.update(); // Full update
-                    }
-                    // #11 Keylock
-/*                    
-                    if (keyboardMessage == 11)
-                    {
-                        commonData.keylock = !commonData.keylock;   // Toggle keylock
-                    }
-*/                    
+                    }                 
                 }
                 LOG_DEBUG(GwLog::LOG,"set pagenumber to %d",pageNumber);
             }

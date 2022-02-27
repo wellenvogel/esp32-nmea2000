@@ -2,7 +2,21 @@
 #include "OBP60ExtensionPort.h"
 
 class PageOneValue : public Page{
+    bool keylock = false;               // Keylock
+
     public:
+    PageOneValue(CommonData &common){
+        common.logger->logDebug(GwLog::LOG,"Show PageOneValue");
+    }
+
+    virtual int handleKey(int key){
+        if(key == 11){                  // Code for keylock
+            keylock = !keylock;         // Toggle keylock
+            return 0;                   // Commit the key
+        }
+        return key;
+    }
+
     virtual void displayPage(CommonData &commonData, PageData &pageData){
         GwConfigHandler *config = commonData.config;
         GwLog *logger=commonData.logger;
@@ -85,7 +99,7 @@ class PageOneValue : public Page{
             display.setCursor(20, 240);
         }
 
-        // Show bus data or using simulation data
+        // Show bus data
         if(holdvalues == false){
             display.print(svalue1);                                     // Real value as formated string
         }
@@ -100,15 +114,15 @@ class PageOneValue : public Page{
         // Key Layout
         display.setFont(&Ubuntu_Bold8pt7b);
         display.setCursor(115, 290);
-        if(commonData.keylock == false){
+        if(keylock == false){
             display.print(" [  <<<<<<      >>>>>>  ]");
+            if(String(backlightMode) == "Control by Key"){              // Key for illumination
+                display.setCursor(343, 290);
+                display.print("[ILUM]");
+            }
         }
         else{
             display.print(" [    Keylock active    ]");
-        }
-        if(String(backlightMode) == "Control by Key"){
-            display.setCursor(343, 290);
-            display.print("[ILUM]");
         }
 
         // Update display
@@ -117,7 +131,9 @@ class PageOneValue : public Page{
     };
 };
 
-static Page* createPage(CommonData &common){return new PageOneValue();}
+static Page* createPage(CommonData &common){
+    return new PageOneValue(common);
+}
 
 /**
  * with the code below we make this page known to the PageTask
@@ -127,7 +143,7 @@ static Page* createPage(CommonData &common){return new PageOneValue();}
  * this will be number of BoatValue pointers in pageData.values
  */
 PageDescription registerPageOneValue(
-    "oneValue",     // Name of page
+    "oneValue",     // Page name
     createPage,     // Action
     1,              // Number of bus values depends on selection in Web configuration
     true            // Show display header on/off

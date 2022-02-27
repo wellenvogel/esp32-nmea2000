@@ -97,7 +97,7 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
         result.unit = "";
     }
     //########################################################
-    else if (value->getFormat() == "formatCourse"){
+    else if (value->getFormat() == "formatCourse" || value->getFormat() == "formatWind"){
         double course = 0;
         if(usesimudata == false) {
             course = value->value;
@@ -118,7 +118,7 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
         result.unit = "Deg";
     }
     //########################################################
-    else if (value->getFormat() == "formatKnots" || value->getFormat() == "formatWind"){
+    else if (value->getFormat() == "formatKnots"){
         double speed = 0;
         if(usesimudata == false) {
             speed = value->value;

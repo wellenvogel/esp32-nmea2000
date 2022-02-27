@@ -101,14 +101,8 @@ int readKeypad() {
     buzzer(TONE4, 1000);
     keylock = false;
     delay(keydelay);
-
     keyoff = !keyoff;
-    if(keyoff == true){
-      keystatus = 11;
-    }
-    else{
-      keystatus = 0;
-    }
+    keystatus = 11;
   }
 
   // Detect swipe right

@@ -16,7 +16,6 @@ typedef struct{
   GwApi::Status status;
   GwLog *logger=NULL;
   GwConfigHandler *config=NULL;
-  bool keylock = false;
 } CommonData;
 
 //a base class that all pages must inherit from
