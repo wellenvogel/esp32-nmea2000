@@ -72,16 +72,19 @@ public:
         //Clear display in obp60task.cpp in main loop
 
         // Show name
+        display.setTextColor(textcolor);
         display.setFont(&Ubuntu_Bold32pt7b);
         display.setCursor(20, 100);
         display.print(name1);                           // Page name
         
         // Show unit
+        display.setTextColor(textcolor);
         display.setFont(&Ubuntu_Bold20pt7b);
         display.setCursor(270, 100);
         display.print("V");        
 
         // Reading bus data or using simulation data
+        display.setTextColor(textcolor);
         display.setFont(&DSEG7Classic_BoldItalic60pt7b);
         display.setCursor(20, 240);
         if(simulation == true){
@@ -114,17 +117,18 @@ public:
         }
 
         // Key Layout
+        display.setTextColor(textcolor);
         display.setFont(&Ubuntu_Bold8pt7b);
         display.setCursor(115, 290);
         if(keylock == false){
             display.print(" [  <<<<<<      >>>>>>  ]");
+            if(String(backlightMode) == "Control by Key"){                  // Key for illumination
+                display.setCursor(343, 290);
+                display.print("[ILUM]");
+            }
         }
         else{
             display.print(" [    Keylock active    ]");
-        }
-        if(String(backlightMode) == "Control by Key"){                  // Key for illumination
-            display.setCursor(343, 290);
-            display.print("[ILUM]");
         }
 
         // Update display

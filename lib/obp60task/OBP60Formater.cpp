@@ -126,11 +126,11 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
         else{
             speed = 4.0 + float(random(0, 40));
         }
-        if(String(speedFormat) == "km/h" || String(windspeedFormat) == "km/h"){
+        if((String(speedFormat) == "km/h" || String(windspeedFormat) == "km/h") && String(windspeedFormat) != "bft"){
         speed = speed * 3.6;        // Unit conversion form m/s to km/h
             result.unit = "m/s";
         }
-        else if(String(speedFormat) == "kn" || String(windspeedFormat) == "kn"){
+        else if((String(speedFormat) == "kn" || String(windspeedFormat) == "kn") && String(windspeedFormat) != "bft"){
             speed = speed * 1.94384;      // Unit conversion form m/s to kn
             result.unit = "kn";
         }

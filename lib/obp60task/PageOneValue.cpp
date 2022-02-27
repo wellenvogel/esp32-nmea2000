@@ -71,11 +71,13 @@ class PageOneValue : public Page{
         // Clear display by call in obp60task.cpp in main loop
 
         // Show name
+        display.setTextColor(textcolor);
         display.setFont(&Ubuntu_Bold32pt7b);
         display.setCursor(20, 100);
         display.print(name1);                           // Page name
 
         // Show unit
+        display.setTextColor(textcolor);
         display.setFont(&Ubuntu_Bold20pt7b);
         display.setCursor(270, 100);
         if(holdvalues == false){
@@ -112,6 +114,7 @@ class PageOneValue : public Page{
         }
 
         // Key Layout
+        display.setTextColor(textcolor);
         display.setFont(&Ubuntu_Bold8pt7b);
         display.setCursor(115, 290);
         if(keylock == false){

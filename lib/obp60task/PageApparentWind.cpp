@@ -105,6 +105,7 @@ public:
         // Clear display by call in obp60task.cpp in main loop
 
         // Show values AWS
+        display.setTextColor(textcolor);
         display.setFont(&Ubuntu_Bold20pt7b);
         display.setCursor(20, 50);
         if(holdvalues == false){
@@ -123,6 +124,7 @@ public:
         }
 
         // Show values AWD
+        display.setTextColor(textcolor);
         display.setFont(&Ubuntu_Bold20pt7b);
         display.setCursor(20, 260);
         if(holdvalues == false){
@@ -162,6 +164,7 @@ public:
         display.drawLine(x1, y1, x2, y2, pixelcolor);
 
         // Key Layout
+        display.setTextColor(textcolor);
         display.setFont(&Ubuntu_Bold8pt7b);
         display.setCursor(115, 290);
         if(keylock == false){

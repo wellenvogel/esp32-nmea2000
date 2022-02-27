@@ -118,10 +118,18 @@ void displayHeader(CommonData &commonData, GwApi::BoatValue *hdop, GwApi::BoatVa
     static unsigned long tcpClTxOld = 0;
     static unsigned long n2kRxOld = 0;
     static unsigned long n2kTxOld = 0;
+    int textcolor = GxEPD_BLACK;
+
+    if(commonData.config->getString(commonData.config->displaycolor) == "Normal"){
+        textcolor = GxEPD_BLACK;
+    }
+    else{
+        textcolor = GxEPD_WHITE;
+    }
 
     // Show status info
+    display.setTextColor(textcolor);
     display.setFont(&Ubuntu_Bold8pt7b);
-    display.setTextColor(GxEPD_BLACK);
     display.setCursor(0, 15);
     if(commonData.status.wifiApOn){
       display.print(" AP ");
@@ -155,6 +163,7 @@ void displayHeader(CommonData &commonData, GwApi::BoatValue *hdop, GwApi::BoatVa
     usbTxOld = commonData.status.usbTx;
 
     // Heartbeat as dot
+    display.setTextColor(textcolor);
     display.setFont(&Ubuntu_Bold32pt7b);
     display.setCursor(205, 14);
     if(heartbeat == true){
@@ -166,6 +175,7 @@ void displayHeader(CommonData &commonData, GwApi::BoatValue *hdop, GwApi::BoatVa
     heartbeat = !heartbeat; 
 
     // Date and time
+    display.setTextColor(textcolor);
     display.setFont(&Ubuntu_Bold8pt7b);
     display.setCursor(230, 15);
     if(hdop->valid == true && hdop->value <= 50){
