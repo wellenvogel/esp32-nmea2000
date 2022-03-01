@@ -6,7 +6,9 @@
 #include <Ticker.h>                     // Timer Lib for timer interrupts
 #include <Wire.h>                       // I2C connections
 #include <MCP23017.h>                   // MCP23017 extension Port
-#include <NMEA0183.h>
+#include <N2kTypes.h>                   // NMEA2000
+#include <N2kMessages.h>
+#include <NMEA0183.h>                   // NMEA0183
 #include <NMEA0183Msg.h>
 #include <NMEA0183Messages.h>
 #include <GxEPD.h>                      // GxEPD lib for E-Ink displays
@@ -285,6 +287,9 @@ void OBP60Task(GwApi *api){
     GwConfigHandler *config=api->getConfig();
     PageList allPages;
     registerAllPages(allPages);
+
+    tN2kMsg N2kMsg;
+
     LOG_DEBUG(GwLog::LOG,"obp60task started");
     for (auto it=allPages.pages.begin();it != allPages.pages.end();it++){
         LOG_DEBUG(GwLog::LOG,"found registered page %s",(*it)->pageName.c_str());
@@ -413,12 +418,18 @@ void OBP60Task(GwApi *api){
     GwApi::BoatValue *date = boatValues.findValueOrCreate("GpsDate");   // Load GpsDate
     GwApi::BoatValue *time = boatValues.findValueOrCreate("GpsTime");   // Load GpsTime
 
+    // Internal sensor values
+    double batteryVoltage = 0;
+
     LOG_DEBUG(GwLog::LOG,"obp60task: start mainloop");
     int pageNumber=0;
     int lastPage=pageNumber;
+    long firststart = millis();     // First start
     long starttime0 = millis();     // Mainloop
-    long starttime1 = millis();     // Full display refresh
-    long starttime2 = millis();     // Display update
+    long starttime1 = millis();     // Full display refresh for the first 5 min (more often as normal)
+    long starttime2 = millis();     // Full display refresh after 5 min
+    long starttime3 = millis();     // Display update all 1s
+
 
     while (true){
         Timer1.update();            // Update for Timer1
@@ -487,16 +498,31 @@ void OBP60Task(GwApi *api){
                 LOG_DEBUG(GwLog::LOG,"set pagenumber to %d",pageNumber);
             }
 
-            // Subtask E-Ink full refresh
-            if(millis() > starttime1 + FULL_REFRESH_TIME * 1000){
+            // Subtask E-Ink full refresh all 1 min for the first 5min after power on or restart
+            // This needs for a better display contrast after power on in cold or warm environments
+            if(millis() < firststart + (5 * 60 * 1000) && millis() > starttime1 + (60 * 1000)){
                 starttime1 = millis();
+                LOG_DEBUG(GwLog::DEBUG,"E-Ink full refresh first 5 min");
+                display.update(); // Full update
+            }
+
+            // Subtask E-Ink full refresh
+            if(millis() > starttime2 + FULL_REFRESH_TIME * 1000){
+                starttime2 = millis();
                 LOG_DEBUG(GwLog::DEBUG,"E-Ink full refresh");
                 display.update(); // Full update
             }
 
-            // Refresh display data
-            if(millis() > starttime2 + 1000){
-                starttime2 = millis();
+            // Send supplay voltage value
+            if(millis() > starttime3 + 1000){
+                batteryVoltage = (float(analogRead(OBP_ANALOG0)) * 3.3 / 4096 + 0.17) * 20;   // Vin = 1/20 
+                SetN2kDCBatStatus(N2kMsg, 0, batteryVoltage, N2kDoubleNA, N2kDoubleNA, 1);
+                api->sendN2kMessage(N2kMsg);
+            }
+
+            // Refresh display data all 1s
+            if(millis() > starttime3 + 1000){
+                starttime3 = millis();
                 //refresh data from api
                 api->getBoatDataValues(boatValues.numValues,boatValues.allBoatValues);
                 api->getStatus(commonData.status);

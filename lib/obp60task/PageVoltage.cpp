@@ -39,13 +39,37 @@ public:
         // Optical warning by limit violation
         if(String(flashLED) == "Limit Violation"){
             // Limits for Pb battery
-            if(String(batType) == "Pb" && (value1 < 11.0 || value1 > 14.5)){
+            if(String(batType) == "Pb" && (value1 < 11.8 || value1 > 14.8)){
                 setBlinkingLED(true);
             }
-            if(String(batType) == "Pb" && (value1 >= 11.0 && value1 <= 14.5)){
+            if(String(batType) == "Pb" && (value1 >= 11.8 && value1 <= 14.8)){
                 setBlinkingLED(false);
                 setPortPin(OBP_FLASH_LED, false);
-            }      
+            }
+            // Limits for Gel battery
+            if(String(batType) == "Gel" && (value1 < 11.8 || value1 > 14.4)){
+                setBlinkingLED(true);
+            }
+            if(String(batType) == "Gel" && (value1 >= 11.8 && value1 <= 14.4)){
+                setBlinkingLED(false);
+                setPortPin(OBP_FLASH_LED, false);
+            }
+            // Limits for AGM battery
+            if(String(batType) == "AGM" && (value1 < 11.8 || value1 > 14.7)){
+                setBlinkingLED(true);
+            }
+            if(String(batType) == "AGM" && (value1 >= 11.8 && value1 <= 14.7)){
+                setBlinkingLED(false);
+                setPortPin(OBP_FLASH_LED, false);
+            }
+            // Limits for LiFePo4 battery
+            if(String(batType) == "LiFePo4" && (value1 < 12.0 || value1 > 14.6)){
+                setBlinkingLED(true);
+            }
+            if(String(batType) == "LiFePo4" && (value1 >= 12.0 && value1 <= 14.6)){
+                setBlinkingLED(false);
+                setPortPin(OBP_FLASH_LED, false);
+            }
         }
         
         // Logging voltage value
@@ -81,7 +105,13 @@ public:
         display.setTextColor(textcolor);
         display.setFont(&Ubuntu_Bold20pt7b);
         display.setCursor(270, 100);
-        display.print("V");        
+        display.print("V");
+
+        // Show batery type
+        display.setTextColor(textcolor);
+        display.setFont(&Ubuntu_Bold8pt7b);
+        display.setCursor(295, 100);
+        display.print(batType);
 
         // Reading bus data or using simulation data
         display.setTextColor(textcolor);
