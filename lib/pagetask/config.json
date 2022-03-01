@@ -34,7 +34,7 @@
         "capabilities": {
             "pagetask":"true"
         },
-        "condition":[{"page1type":"oneValue"},{"page1type":"twoValues"},{"page1type":"threeValues"},{"page1type":"forValues"}]
+        "condition":[{"page1type":["oneValue","twoValues","threeValues","forValues"]}]
     },
     {
         "name": "page1value2",
@@ -46,7 +46,7 @@
         "capabilities": {
             "pagetask":"true"
         },
-        "condition":[{"page1type":"twoValues"},{"page1type":"threeValues"},{"page1type":"forValues"}]
+        "condition":{"page1type":["twoValues","threeValues","forValues"]}
     }
     ,
     {
@@ -59,7 +59,7 @@
         "capabilities": {
             "pagetask":"true"
         },
-        "condition":[{"page1type":"threeValues"},{"page1type":"forValues"}]
+        "condition":{"page1type":["threeValues","forValues"]}
     }
     ,
     {
@@ -72,7 +72,7 @@
         "capabilities": {
             "pagetask":"true"
         },
-        "condition":[{"page1type":"forValues"}]
+        "condition":{"page1type":"forValues"}
     },
     {
         "name": "page2type",
@@ -96,7 +96,7 @@
         "capabilities": {
             "pagetask":"true"
         },
-        "condition":[{"page2type":"oneValue"},{"page2type":"twoValues"},{"page2type":"threeValues"},{"page2type":"forValues"}]
+        "condition":{"page2type":["oneValue","twoValues","threeValues","forValues"]}
     },
     {
         "name": "page2value2",
@@ -108,7 +108,7 @@
         "capabilities": {
             "pagetask":"true"
         },
-        "condition":[{"page2type":"twoValues"},{"page2type":"threeValues"},{"page2type":"forValues"}]
+        "condition":{"page2type":["twoValues","threeValues","page2type","forValues"]}
     }
     ,
     {
@@ -121,7 +121,7 @@
         "capabilities": {
             "pagetask":"true"
         },
-        "condition":[{"page2type":"threeValues"},{"page2type":"forValues"}]
+        "condition":{"page2type":["threeValues","forValues"]}
     }
     ,
     {
@@ -134,7 +134,7 @@
         "capabilities": {
             "pagetask":"true"
         },
-        "condition":[{"page2type":"forValues"}]
+        "condition":{"page2type":"forValues"}
     }
     ,
     {
@@ -159,7 +159,7 @@
         "capabilities": {
             "pagetask":"true"
         },
-        "condition":[{"page3type":"oneValue"},{"page3type":"twoValues"},{"page3type":"threeValues"},{"page3type":"forValues"}]
+        "condition":{"page3type":["oneValue","twoValues","threeValues","forValues"]}
     },
     {
         "name": "page3value2",
@@ -171,7 +171,7 @@
         "capabilities": {
             "pagetask":"true"
         },
-        "condition":[{"page3type":"twoValues"},{"page3type":"threeValues"},{"page3type":"forValues"}]
+        "condition":{"page3type":["twoValues","threeValues","forValues"]}
     }
     ,
     {
@@ -184,7 +184,7 @@
         "capabilities": {
             "pagetask":"true"
         },
-        "condition":[{"page3type":"threeValues"},{"page3type":"forValues"}]
+        "condition":{"page3type":["threeValues","forValues"]}
     }
     ,
     {
@@ -197,7 +197,7 @@
         "capabilities": {
             "pagetask":"true"
         },
-        "condition":[{"page3type":"forValues"}]
+        "condition":{"page3type":"forValues"}
     }
     ,
     {
@@ -222,7 +222,7 @@
         "capabilities": {
             "pagetask":"true"
         },
-        "condition":[{"page4type":"oneValue"},{"page4type":"twoValues"},{"page4type":"threeValues"},{"page4type":"forValues"}]
+        "condition":{"page4type":["oneValue","twoValues","threeValues","forValues"]}
     },
     {
         "name": "page4value2",
@@ -234,7 +234,7 @@
         "capabilities": {
             "pagetask":"true"
         },
-        "condition":[{"page4type":"twoValues"},{"page4type":"threeValues"},{"page4type":"forValues"}]
+        "condition":{"page4type":["twoValues","threeValues","forValues"]}
     }
     ,
     {
@@ -247,7 +247,7 @@
         "capabilities": {
             "pagetask":"true"
         },
-        "condition":[{"page4type":"threeValues"},{"page4type":"forValues"}]
+        "condition":{"page4type":["threeValues","forValues"]}
     }
     ,
     {
@@ -260,7 +260,7 @@
         "capabilities": {
             "pagetask":"true"
         },
-        "condition":[{"page4type":"forValues"}]
+        "condition":{"page4type":"forValues"}
     }
 
 ]
