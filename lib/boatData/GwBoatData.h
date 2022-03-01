@@ -172,7 +172,6 @@ class GwBoatData{
 
     GWBOATDATA(double,COG,4000,formatCourse)
     GWBOATDATA(double,TWD,4000,formatCourse)
-    //GWBOATDATA(double,AWD,4000,formatCourse)
     GWBOATDATA(double,SOG,4000,formatKnots)
     GWBOATDATA(double,STW,4000,formatKnots)
     GWBOATDATA(double,TWS,4000,formatKnots)
@@ -197,8 +196,8 @@ class GwBoatData{
     GWBOATDATA(double,GPST,4000,formatTime) //GpsTime
     GWBOATDATA(double,WTemp,4000,kelvinToC)
     GWBOATDATA(double,XTE,4000,formatXte)
-    GWBOATDATA(double,DTW,4000,mtr2nm)
-    GWBOATDATA(double,BTW,4000,formatCourse)
+    GWBOATDATA(double,DTW,4000,mtr2nm) //distance wp
+    GWBOATDATA(double,BTW,4000,formatCourse) //bearing wp
     GWBOATDATA(double,WPLat,4000,formatLatitude)
     GWBOATDATA(double,WPLon,4000,formatLongitude)
     GWBOATDATA(uint32_t,Log,16000,mtr2nm)
