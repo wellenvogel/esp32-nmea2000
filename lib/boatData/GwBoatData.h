@@ -160,7 +160,7 @@ public:
     virtual ~GwBoatItemNameProvider() {}
 };
 #define GWBOATDATA(type,name,time,fmt)  \
-    GWSC(_##name); \
+    static constexpr const __FlashStringHelper* _##name=F(#name); \
     GwBoatItem<type> *name=new GwBoatItem<type>(F(#name),GwBoatItemBase::fmt,time,&values) ;
 #define GWSPECBOATDATA(clazz,name,time,fmt)  \
     clazz *name=new clazz(F(#name),GwBoatItemBase::fmt,time,&values) ;
