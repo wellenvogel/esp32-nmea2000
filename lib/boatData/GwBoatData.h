@@ -172,7 +172,7 @@ class GwBoatData{
 
     GWBOATDATA(double,COG,4000,formatCourse)
     GWBOATDATA(double,TWD,4000,formatCourse)
-    GWBOATDATA(double,AWD,4000,formatCourse)
+    //GWBOATDATA(double,AWD,4000,formatCourse)
     GWBOATDATA(double,SOG,4000,formatKnots)
     GWBOATDATA(double,STW,4000,formatKnots)
     GWBOATDATA(double,TWS,4000,formatKnots)
@@ -180,31 +180,31 @@ class GwBoatData{
     GWBOATDATA(double,MaxTws,0,formatKnots)
     GWBOATDATA(double,MaxAws,0,formatKnots)
     GWBOATDATA(double,AWA,4000,formatWind)
-    GWBOATDATA(double,Heading,4000,formatCourse) //true
-    GWBOATDATA(double,MagneticHeading,4000,formatCourse)
+    GWBOATDATA(double,HDG,4000,formatCourse) //true heading
+    GWBOATDATA(double,MHDG,4000,formatCourse) //magnetic heading
     GWBOATDATA(double,ROT,4000,formatRot)
-    GWBOATDATA(double,Variation,4000,formatCourse)
-    GWBOATDATA(double,Deviation,4000,formatCourse)
+    GWBOATDATA(double,VAR,4000,formatCourse) //Variation
+    GWBOATDATA(double,DEV,4000,formatCourse) //Deviation
     GWBOATDATA(double,HDOP,4000,formatDop)
     GWBOATDATA(double,PDOP,4000,formatDop)
     GWBOATDATA(double,VDOP,4000,formatDop)
-    GWBOATDATA(double,RudderPosition,4000,formatCourse)
-    GWBOATDATA(double,Latitude,4000,formatLatitude)
-    GWBOATDATA(double,Longitude,4000,formatLongitude)
-    GWBOATDATA(double,Altitude,4000,formatFixed0)
-    GWBOATDATA(double,WaterDepth,4000,formatDepth)
-    GWBOATDATA(double,DepthTransducer,4000,formatDepth)
-    GWBOATDATA(double,GpsTime,4000,formatTime)
-    GWBOATDATA(double,WaterTemperature,4000,kelvinToC)
+    GWBOATDATA(double,RPOS,4000,formatCourse) //RudderPosition
+    GWBOATDATA(double,LAT,4000,formatLatitude)
+    GWBOATDATA(double,LON,4000,formatLongitude)
+    GWBOATDATA(double,ALT,4000,formatFixed0) //altitude
+    GWBOATDATA(double,DBS,4000,formatDepth) //waterDepth (below surface)
+    GWBOATDATA(double,DBT,4000,formatDepth) //DepthTransducer
+    GWBOATDATA(double,GPST,4000,formatTime) //GpsTime
+    GWBOATDATA(double,WTemp,4000,kelvinToC)
     GWBOATDATA(double,XTE,4000,formatXte)
     GWBOATDATA(double,DTW,4000,mtr2nm)
     GWBOATDATA(double,BTW,4000,formatCourse)
-    GWBOATDATA(double,WPLatitude,4000,formatLatitude)
-    GWBOATDATA(double,WPLongitude,4000,formatLongitude)
+    GWBOATDATA(double,WPLat,4000,formatLatitude)
+    GWBOATDATA(double,WPLon,4000,formatLongitude)
     GWBOATDATA(uint32_t,Log,16000,mtr2nm)
     GWBOATDATA(uint32_t,TripLog,16000,mtr2nm)
-    GWBOATDATA(uint32_t,GpsDate,4000,formatDate)
-    GWBOATDATA(int16_t,Timezone,8000,formatFixed0)
+    GWBOATDATA(uint32_t,GPSD,4000,formatDate) //Date
+    GWBOATDATA(int16_t,TZ,8000,formatFixed0)
     GWSPECBOATDATA(GwBoatDataSatList,SatInfo,GwSatInfoList::lifeTime,formatFixed0);
     public:
         GwBoatData(GwLog *logger);
