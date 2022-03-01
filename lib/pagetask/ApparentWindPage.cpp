@@ -41,6 +41,6 @@ PageDescription registerApparentWindPage(
     "apparentWind",
     createPage,
     0,
-    {"AWS","AWD"},
+    {GwBoatData::_AWA,GwBoatData::_AWS},
     false
 );

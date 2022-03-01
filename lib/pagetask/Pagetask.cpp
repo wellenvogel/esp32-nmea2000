@@ -131,7 +131,7 @@ void pageTask(GwApi *api){
     //add all necessary data to common data
 
     //fill the page data from config
-    numPages=config->getInt(config->visiblePages,1);
+    numPages=config->getInt(GwConfigHandler::visiblePages,1);
     if (numPages < 1) numPages=1;
     if (numPages >= MAX_PAGE_NUMBER) numPages=MAX_PAGE_NUMBER;
     String configPrefix="page";
