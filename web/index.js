@@ -391,12 +391,19 @@ function checkCondition(element){
     let condition=getConditions(name);
     if (! condition) return;
     let visible=false;
+    if (! condition instanceof Array) condition=[condition];
     condition.forEach(function(cel){
         let lvis=true;
         for (let k in cel){
             let item=document.querySelector('[name='+k+']');
             if (item){
-                if (item.value != cel[k]) lvis=false;
+                let compare=cel[k];
+                if (compare instanceof Array){
+                    if (compare.indexOf(item.value) < 0) lvis=false;
+                }
+                else{
+                    if (item.value != cel[k]) lvis=false;
+                }
             }
         }
         if (lvis) visible=true;
