@@ -340,8 +340,8 @@ private:
         uint8_t sourceId=getWaypointId(rmb.originID);
         if (boatData->DTW->update(rmb.dtw,msg.sourceId)
             && boatData->BTW->update(rmb.btw,msg.sourceId)
-            && boatData->WPLatitude->update(rmb.latitude,msg.sourceId)
-            && boatData->WPLongitude->update(rmb.longitude,msg.sourceId)
+            && boatData->WPLat->update(rmb.latitude,msg.sourceId)
+            && boatData->WPLon->update(rmb.longitude,msg.sourceId)
             ){
             SetN2kNavigationInfo(n2kMsg,1,rmb.dtw,N2khr_true,
                 false,
@@ -365,37 +365,37 @@ private:
     }
     void convertRMC(const SNMEA0183Msg &msg)
     {
-        double GpsTime=0, Latitude=0, Longitude=0, COG=0, SOG=0, Variation=0;
-        unsigned long GpsDate=0;
+        double GPST=0, LAT=0, LON=0, COG=0, SOG=0, VAR=0;
+        unsigned long GPSD=0;
         time_t DateTime;
         char status;
-        if (!NMEA0183ParseRMC_nc(msg, GpsTime, status, Latitude, Longitude, COG, SOG, GpsDate, Variation, &DateTime))
+        if (!NMEA0183ParseRMC_nc(msg, GPST, status, LAT, LON, COG, SOG, GPSD, VAR, &DateTime))
         {
             LOG_DEBUG(GwLog::DEBUG, "failed to parse RMC %s", msg.line);
             return;
         }
         tN2kMsg n2kMsg;
         if (
-            UD(GpsTime) &&
-            UI(GpsDate)
+            UD(GPST) &&
+            UI(GPSD)
         )
         {
             
-            SetN2kSystemTime(n2kMsg, 1, GpsDate, GpsTime);
+            SetN2kSystemTime(n2kMsg, 1, GPSD, GPST);
             send(n2kMsg,msg.sourceId);
         }
-        if (UD(Latitude) &&
-            UD(Longitude)){
-            SetN2kLatLonRapid(n2kMsg,Latitude,Longitude);
+        if (UD(LAT) &&
+            UD(LON)){
+            SetN2kLatLonRapid(n2kMsg,LAT,LON);
             send(n2kMsg,msg.sourceId);
         }
         if (UD(COG) && UD(SOG)){
             SetN2kCOGSOGRapid(n2kMsg,1,N2khr_true,COG,SOG);
             send(n2kMsg,msg.sourceId);
         }
-        if (UD(Variation)){
+        if (UD(VAR)){
             SetN2kMagneticVariation(n2kMsg,1,N2kmagvar_Calc,
-                getUint32(boatData->GpsDate), Variation);
+                getUint32(boatData->GPSD), VAR);
             send(n2kMsg,msg.sourceId);    
         }
 
@@ -529,62 +529,62 @@ private:
     }
 
     void convertHDM(const SNMEA0183Msg &msg){
-        double MagneticHeading=NMEA0183DoubleNA;
-        if (!NMEA0183ParseHDM_nc(msg, MagneticHeading))
+        double MHDG=NMEA0183DoubleNA;
+        if (!NMEA0183ParseHDM_nc(msg, MHDG))
         {
             LOG_DEBUG(GwLog::DEBUG, "failed to parse HDM %s", msg.line);
             return;
         }
-        if (! UD(MagneticHeading)) return;
+        if (! UD(MHDG)) return;
         tN2kMsg n2kMsg;
-        SetN2kMagneticHeading(n2kMsg,1,MagneticHeading,
-            boatData->Variation->getDataWithDefault(N2kDoubleNA),
-            boatData->Deviation->getDataWithDefault(N2kDoubleNA)
+        SetN2kMagneticHeading(n2kMsg,1,MHDG,
+            boatData->VAR->getDataWithDefault(N2kDoubleNA),
+            boatData->DEV->getDataWithDefault(N2kDoubleNA)
         );
         send(n2kMsg,msg.sourceId);    
     }
     
     void convertHDT(const SNMEA0183Msg &msg){
-        double Heading=NMEA0183DoubleNA;
-        if (!NMEA0183ParseHDT_nc(msg, Heading))
+        double HDG=NMEA0183DoubleNA;
+        if (!NMEA0183ParseHDT_nc(msg, HDG))
         {
             LOG_DEBUG(GwLog::DEBUG, "failed to parse HDT %s", msg.line);
             return;
         }
-        if (! UD(Heading)) return;
+        if (! UD(HDG)) return;
         tN2kMsg n2kMsg;
-        SetN2kTrueHeading(n2kMsg,1,Heading);
+        SetN2kTrueHeading(n2kMsg,1,HDG);
         send(n2kMsg,msg.sourceId);    
     }
     void convertHDG(const SNMEA0183Msg &msg){
-        double MagneticHeading=NMEA0183DoubleNA;
-        double Variation=NMEA0183DoubleNA;
-        double Deviation=NMEA0183DoubleNA;
+        double MHDG=NMEA0183DoubleNA;
+        double VAR=NMEA0183DoubleNA;
+        double DEV=NMEA0183DoubleNA;
         if (msg.FieldCount() < 5)
         {
             LOG_DEBUG(GwLog::DEBUG, "failed to parse HDG %s", msg.line);
             return;
         }
         if (msg.FieldLen(0)>0){
-            MagneticHeading=formatDegToRad(atof(msg.Field(0)));
+            MHDG=formatDegToRad(atof(msg.Field(0)));
         }
         else{
             return;
         }
         if (msg.FieldLen(1)>0){
-            Deviation=formatDegToRad(atof(msg.Field(1)));
-            if (msg.Field(2)[0] == 'W') Deviation=-Deviation;
+            DEV=formatDegToRad(atof(msg.Field(1)));
+            if (msg.Field(2)[0] == 'W') DEV=-DEV;
         }
         if (msg.FieldLen(3)>0){
-            Variation=formatDegToRad(atof(msg.Field(3)));
-            if (msg.Field(4)[0] == 'W') Variation=-Variation;
+            VAR=formatDegToRad(atof(msg.Field(3)));
+            if (msg.Field(4)[0] == 'W') VAR=-VAR;
         }
 
-        if (! UD(MagneticHeading)) return;
-        UD(Variation);
-        UD(Deviation);
+        if (! UD(MHDG)) return;
+        UD(VAR);
+        UD(DEV);
         tN2kMsg n2kMsg;
-        SetN2kMagneticHeading(n2kMsg,1,MagneticHeading,Deviation,Variation);
+        SetN2kMagneticHeading(n2kMsg,1,MHDG,DEV,VAR);
         send(n2kMsg,msg.sourceId);    
     }
 
@@ -607,10 +607,10 @@ private:
         }
         //offset == 0? SK does not allow this
         if (Offset != NMEA0183DoubleNA && Offset>=0 ){
-            if (! boatData->WaterDepth->update(DepthBelowTransducer+Offset)) return;
+            if (! boatData->DBS->update(DepthBelowTransducer+Offset)) return;
         }
         if (Offset == NMEA0183DoubleNA) Offset=N2kDoubleNA;
-        if (! boatData->DepthTransducer->update(DepthBelowTransducer)) return;
+        if (! boatData->DBT->update(DepthBelowTransducer)) return;
         tN2kMsg n2kMsg;
         SetN2kWaterDepth(n2kMsg,1,DepthBelowTransducer,Offset);
         send(n2kMsg,msg.sourceId,String(n2kMsg.PGN)+String((Offset != N2kDoubleNA)?1:0));
@@ -645,7 +645,7 @@ private:
                         continue;            
                 }
                 if (dt == DBT){
-                    if (! boatData->DepthTransducer->update(Depth,msg.sourceId)) return;
+                    if (! boatData->DBT->update(Depth,msg.sourceId)) return;
                     tN2kMsg n2kMsg;
                     SetN2kWaterDepth(n2kMsg,1,Depth,N2kDoubleNA); 
                     send(n2kMsg,msg.sourceId,String(n2kMsg.PGN)+String(0));
@@ -653,8 +653,8 @@ private:
                 }
                 //we can only send if we have a valid depth beloww tranducer
                 //to compute the offset
-                if (! boatData->DepthTransducer->isValid()) return;
-                double offset=Depth-boatData->DepthTransducer->getData();
+                if (! boatData->DBT->isValid()) return;
+                double offset=Depth-boatData->DBT->getData();
                 if (offset >= 0 && dt == DBT){
                     logger->logDebug(GwLog::DEBUG, "strange DBK - more depth then transducer %s", msg.line);    
                     return;
@@ -664,7 +664,7 @@ private:
                     return;
                 }
                 if (dt == DBS){
-                    if (! boatData->WaterDepth->update(Depth,msg.sourceId)) return;
+                    if (! boatData->DBS->update(Depth,msg.sourceId)) return;
                 }
                 tN2kMsg n2kMsg;
                 SetN2kWaterDepth(n2kMsg,1,Depth,offset);
@@ -683,7 +683,7 @@ private:
     }
 
     void convertRSA(const SNMEA0183Msg &msg){
-        double RudderPosition=NMEA0183DoubleNA;
+        double RPOS=NMEA0183DoubleNA;
         if (msg.FieldCount() < 4)
         {
             LOG_DEBUG(GwLog::DEBUG, "failed to parse RSA %s", msg.line);
@@ -691,10 +691,10 @@ private:
         }
         if (msg.FieldLen(0)>0){
             if (msg.Field(1)[0] != 'A') return;
-            RudderPosition=degToRad*atof(msg.Field(0));
+            RPOS=degToRad*atof(msg.Field(0));
             tN2kMsg n2kMsg;
-            if (! UD(RudderPosition)) return;
-            SetN2kRudder(n2kMsg,RudderPosition);
+            if (! UD(RPOS)) return;
+            SetN2kRudder(n2kMsg,RPOS);
             send(n2kMsg,msg.sourceId);
         }
           
@@ -708,7 +708,7 @@ private:
             return;
         }
         if (! updateDouble(boatData->STW,STW,msg.sourceId)) return;
-        if (! updateDouble(boatData->Heading,TrueHeading,msg.sourceId)) return;
+        if (! updateDouble(boatData->HDG,TrueHeading,msg.sourceId)) return;
         if (MagneticHeading == NMEA0183DoubleNA) MagneticHeading=N2kDoubleNA;
         tN2kMsg n2kMsg;
         SetN2kBoatSpeed(n2kMsg,1,STW);
@@ -741,12 +741,12 @@ private:
         tmElements_t parts;
         tNMEA0183Msg::breakTime(DateTime,parts);
         double GpsTime=parts.tm_sec+60*parts.tm_min+3600*parts.tm_hour;
-        if (! boatData->GpsDate->update(DaysSince1970,msg.sourceId)) return;
-        if (! boatData->GpsTime->update(GpsTime,msg.sourceId)) return;
+        if (! boatData->GPSD->update(DaysSince1970,msg.sourceId)) return;
+        if (! boatData->GPST->update(GpsTime,msg.sourceId)) return;
         bool timezoneValid=false;
         if (msg.FieldLen(4) > 0 && msg.FieldLen(5)>0){
             Timezone=Timezone/60; //N2K has offset in minutes
-            if (! boatData->Timezone->update(Timezone,msg.sourceId)) return;
+            if (! boatData->TZ->update(Timezone,msg.sourceId)) return;
             timezoneValid=true;
         }
         tN2kMsg n2kMsg;
@@ -774,16 +774,16 @@ private:
             LOG_DEBUG(GwLog::DEBUG, "failed to parse GGA %s", msg.line);
             return;   
         }
-        if (! updateDouble(boatData->GpsTime,GPSTime,msg.sourceId)) return;
-        if (! updateDouble(boatData->Latitude,Latitude,msg.sourceId)) return;        
-        if (! updateDouble(boatData->Longitude,Longitude,msg.sourceId)) return;    
-        if (! updateDouble(boatData->Altitude,Altitude,msg.sourceId)) return;
+        if (! updateDouble(boatData->GPST,GPSTime,msg.sourceId)) return;
+        if (! updateDouble(boatData->LAT,Latitude,msg.sourceId)) return;        
+        if (! updateDouble(boatData->LON,Longitude,msg.sourceId)) return;    
+        if (! updateDouble(boatData->ALT,Altitude,msg.sourceId)) return;
         if (! updateDouble(boatData->HDOP,HDOP,msg.sourceId)) return;    
-        if (! boatData->GpsDate->isValid()) return;
+        if (! boatData->GPSD->isValid()) return;
         tN2kMsg n2kMsg;
         tN2kGNSSmethod method=N2kGNSSm_noGNSS;
         if (GPSQualityIndicator <=5 ) method= (tN2kGNSSmethod)GPSQualityIndicator;
-        SetN2kGNSS(n2kMsg,1, boatData->GpsDate->getData(),
+        SetN2kGNSS(n2kMsg,1, boatData->GPSD->getData(),
              GPSTime, Latitude, Longitude, Altitude,
                      N2kGNSSt_GPS, method,
                      SatelliteCount, HDOP, boatData->PDOP->getDataWithDefault(N2kDoubleNA), 0,
@@ -881,9 +881,9 @@ private:
             return;
         }
         if (GLL.status != 'A') return;
-        if (! updateDouble(boatData->Latitude,GLL.latitude,msg.sourceId)) return;
-        if (! updateDouble(boatData->Longitude,GLL.longitude,msg.sourceId)) return;
-        if (! updateDouble(boatData->GpsTime,GLL.GPSTime,msg.sourceId)) return;
+        if (! updateDouble(boatData->LAT,GLL.latitude,msg.sourceId)) return;
+        if (! updateDouble(boatData->LON,GLL.longitude,msg.sourceId)) return;
+        if (! updateDouble(boatData->GPST,GLL.GPSTime,msg.sourceId)) return;
         tN2kMsg n2kMsg;
         SetN2kLatLonRapid(n2kMsg,GLL.latitude,GLL.longitude);
         send(n2kMsg,msg.sourceId);
