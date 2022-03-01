@@ -42,8 +42,8 @@ class GetBoatDataRequest: public GwMessage{
               so be sure to use a value that never will be a valid one
               alternatively you can check using the isValid() method at each boatData item
               */
-            latitude=api->getBoatData()->Latitude->getDataWithDefault(INVALID_COORD);
-            longitude=api->getBoatData()->Longitude->getDataWithDefault(INVALID_COORD);
+            latitude=api->getBoatData()->LAT->getDataWithDefault(INVALID_COORD);
+            longitude=api->getBoatData()->LON->getDataWithDefault(INVALID_COORD);
         };
 };
 
@@ -52,13 +52,13 @@ String formatValue(GwApi::BoatValue *value){
     static const int bsize=30;
     char buffer[bsize+1];
     buffer[0]=0;
-    if (value->getFormat() == "formatDate"){
+    if (value->getFormat() == GwBoatItemBase::formatDate){
         time_t tv=tNMEA0183Msg::daysToTime_t(value->value);
         tmElements_t parts;
         tNMEA0183Msg::breakTime(tv,parts);
         snprintf(buffer,bsize,"%04d/%02d/%02d",parts.tm_year+1900,parts.tm_mon+1,parts.tm_mday);
     }
-    else if(value->getFormat() == "formatTime"){
+    else if(value->getFormat() == GwBoatItemBase::formatTime){
         double inthr;
         double intmin;
         double intsec;
@@ -68,7 +68,7 @@ String formatValue(GwApi::BoatValue *value){
         modf(val*60.0,&intsec);
         snprintf(buffer,bsize,"%02.0f:%02.0f:%02.0f",inthr,intmin,intsec);
     }
-    else if (value->getFormat() == "formatFixed0"){
+    else if (value->getFormat() == GwBoatItemBase::formatFixed0){
         snprintf(buffer,bsize,"%.0f",value->value);
     }
     else{
@@ -90,10 +90,10 @@ void exampleTask(GwApi *api){
     //------
     bool hasPosition=false;
     bool hasPosition2=false;
-    LOG_DEBUG(GwLog::DEBUG,"example switch ist %s",exampleSwitch?"true":"false");
-    LOG_DEBUG(GwLog::DEBUG,"minXdrInterval=%d",api->getConfig()->getInt(api->getConfig()->minXdrInterval));
-    GwApi::BoatValue *longitude=new GwApi::BoatValue(F("Longitude"));
-    GwApi::BoatValue *latitude=new GwApi::BoatValue(F("Latitude"));
+    LOG_DEBUG(GwLog::LOG,"example switch is %s",exampleSwitch?"true":"false");
+    LOG_DEBUG(GwLog::LOG,"minXdrInterval=%d",api->getConfig()->getInt(api->getConfig()->minXdrInterval));
+    GwApi::BoatValue *longitude=new GwApi::BoatValue(GwBoatData::_LON);
+    GwApi::BoatValue *latitude=new GwApi::BoatValue(GwBoatData::_LAT);
     GwApi::BoatValue *testValue=new GwApi::BoatValue(boatItemName);
     GwApi::BoatValue *valueList[]={longitude,latitude,testValue};
     GwApi::Status status;
