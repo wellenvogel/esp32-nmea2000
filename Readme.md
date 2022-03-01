@@ -145,6 +145,15 @@ For details refer to the [example description](lib/exampletask/Readme.md).
 
 Changelog
 ---------
+[20220301](../../releases/tag/20220301)
+*********
+* change [boat data names to shorter ones](../../issues/17) 
+* correct [bug with boatData config items](../../issues/16)
+* allow for shorter conditions in config items (use arrays of allowed values for "or" condition)
+* add some static variables at BoatData to reference the known items (see [exampletask](lib/exampletask/GwExampleTask.cpp#L95))
+* make the known config names static members of GwConfigHandler
+* remove unused AWD boat data item
+
 [20220124](../../releases/tag/20220124)
 *********
 * make the serial input and output working again
