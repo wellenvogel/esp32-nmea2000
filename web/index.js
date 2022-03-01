@@ -121,7 +121,12 @@ function resetForm(ev) {
                             }
                         }
                     }
-                    el.value = v;
+                    if (el.tagName === 'SELECT') {
+                        setSelect(el,v);
+                    }
+                    else{
+                        el.value = v;
+                    }
                     el.setAttribute('data-loaded', v);
                     let changeEvent = new Event('change');
                     el.dispatchEvent(changeEvent);
@@ -459,14 +464,30 @@ function createInput(configItem, frame,clazz) {
     return el;
 }
 
-function updateSelectList(item,slist){
-    item.innerHTML='';
+function setSelect(item,value){
+    if (!item) return;
+    item.value=value;
+    if (item.value !== value){
+        //missing option with his value
+        let o=addEl('option',undefined,item,value);
+        o.setAttribute('value',value);
+        item.value=value;
+    }
+}
+
+function updateSelectList(item,slist,opt_keepValue){
     let idx=0;
+    let value;
+    if (opt_keepValue) value=item.value;
+    item.innerHTML='';
     slist.forEach(function (sitem) {
         let sitemEl = addEl('option','',item,sitem.l);
         sitemEl.setAttribute('value', sitem.v !== undefined?sitem.v:idx);
         idx++;
     })
+    if (value !== undefined){
+        setSelect(item,value);
+    }
 }
 function getXdrCategories(){
     let rt=[];
@@ -1462,7 +1483,7 @@ function updateDashboard(data) {
     }
     if (selectChanged){
         forEl('.boatDataSelect',function(el){
-            updateSelectList(el,selectList);
+            updateSelectList(el,selectList,true);
         });
     }
 }
