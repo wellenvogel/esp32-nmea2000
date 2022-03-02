@@ -1073,6 +1073,10 @@ function createConfigDefinitions(parent, capabilities, defs,includeXdr) {
 function loadConfigDefinitions() {
     getJson("api/capabilities")
         .then(function (capabilities) {
+            if (capabilities.HELP_URL){
+                let el=document.getElementById('helpButton');
+                if (el) el.setAttribute('data-url',capabilities.HELP_URL);
+            }
             getJson("config.json")
                 .then(function (defs) {
                     getJson("xdrconfig.json")
@@ -1191,7 +1195,11 @@ function converterInfo() {
 }
 function handleTab(el) {
     let activeName = el.getAttribute('data-page');
-    if (!activeName) return;
+    if (!activeName) {
+        let extUrl= el.getAttribute('data-url');
+        if (! extUrl) return;
+        window.open(extUrl,el.getAttribute('data-window')||'_');
+    }
     let activeTab = document.getElementById(activeName);
     if (!activeTab) return;
     let all = document.querySelectorAll('.tabPage');
