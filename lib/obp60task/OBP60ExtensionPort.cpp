@@ -1,4 +1,6 @@
 #include <Arduino.h>
+#include <Wire.h>
+#include <MCP23017.h>
 #include "Pagedata.h"
 #include "OBP60Hardware.h"
 #include "OBP60ExtensionPort.h"
