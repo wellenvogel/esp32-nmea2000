@@ -415,8 +415,8 @@ void OBP60Task(GwApi *api){
 
     // Boat values for main loop
     GwApi::BoatValue *hdop = boatValues.findValueOrCreate("HDOP");      // Load HDOP
-    GwApi::BoatValue *date = boatValues.findValueOrCreate("GpsDate");   // Load GpsDate
-    GwApi::BoatValue *time = boatValues.findValueOrCreate("GpsTime");   // Load GpsTime
+    GwApi::BoatValue *date = boatValues.findValueOrCreate("GPSD");      // Load GpsDate
+    GwApi::BoatValue *time = boatValues.findValueOrCreate("GPST");      // Load GpsTime
 
     // Internal sensor values
     double batteryVoltage = 0;
