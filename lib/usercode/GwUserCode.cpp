@@ -41,7 +41,8 @@ class GwUserCapability{
 #define DECLARE_USERTASK(task) GwUserTaskDef __##task##__(task,#task);
 #define DECLARE_USERTASK_PARAM(task,...) GwUserTaskDef __##task##__(task,#task,__VA_ARGS__);
 #define DECLARE_INITFUNCTION(task) GwInitTask __Init##task##__(task,#task);
-#define DECLARE_CAPABILITY(name,value) GwUserCapability __CAP##name##__(#name,#value); 
+#define DECLARE_CAPABILITY(name,value) GwUserCapability __CAP##name##__(#name,#value);
+#define DECLARE_STRING_CAPABILITY(name,value) GwUserCapability __CAP##name##__(#name,value); 
 #include "GwApi.h"
 #include "GwUserTasks.h"
 class TaskApi : public GwApi

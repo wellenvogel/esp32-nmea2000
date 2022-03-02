@@ -129,4 +129,7 @@ class GwApi{
 #ifndef DECLARE_CAPABILITY
 #define DECLARE_CAPABILITY(name,value)
 #endif
+#ifndef DECLARE_STRING_CAPABILITY
+#define DECLARE_STRING_CAPABILITY(name,value)
+#endif
 #endif

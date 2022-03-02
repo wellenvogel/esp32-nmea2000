@@ -182,22 +182,22 @@ private:
         //if we have no variation we send either HDM or HDT
         if (ParseN2kHeading(N2kMsg, SID, Heading, _Deviation, Variation, ref))
         {
-            updateDouble(boatData->Variation,Variation);
-            updateDouble(boatData->Deviation,_Deviation);
+            updateDouble(boatData->VAR,Variation);
+            updateDouble(boatData->DEV,_Deviation);
             if (N2kIsNA(Variation)){
                 //maybe we still have a valid variation
-                Variation=boatData->Variation->getDataWithDefault(N2kDoubleNA);
+                Variation=boatData->VAR->getDataWithDefault(N2kDoubleNA);
             }
             if (N2kIsNA(Variation)){
                 //no variation
                 if (ref == N2khr_magnetic){
-                    updateDouble(boatData->MagneticHeading,Heading);
+                    updateDouble(boatData->MHDG,Heading);
                     if (NMEA0183SetHDM(NMEA0183Msg,Heading,talkerId)){
                         SendMessage(NMEA0183Msg);
                     }    
                 }
                 if (ref == N2khr_true){
-                    updateDouble(boatData->Heading,Heading);
+                    updateDouble(boatData->HDG,Heading);
                     if (NMEA0183SetHDT(NMEA0183Msg,Heading,talkerId)){
                         SendMessage(NMEA0183Msg);
                     }
@@ -212,8 +212,8 @@ private:
                 if (ref == N2khr_true){
                     MagneticHeading=Heading-Variation;
                 }
-                updateDouble(boatData->MagneticHeading,MagneticHeading);
-                updateDouble(boatData->Heading,Heading);
+                updateDouble(boatData->MHDG,MagneticHeading);
+                updateDouble(boatData->HDG,Heading);
                 if (!N2kIsNA(MagneticHeading)){
                     if (NMEA0183SetHDG(NMEA0183Msg, MagneticHeading,_Deviation, 
                         Variation,talkerId))
@@ -240,9 +240,9 @@ private:
         uint16_t DaysSince1970;
         double Variation;
         ParseN2kMagneticVariation(N2kMsg, SID, Source, DaysSince1970, Variation);
-        updateDouble(boatData->Variation, Variation);
+        updateDouble(boatData->VAR, Variation);
         if (DaysSince1970 != N2kUInt16NA && DaysSince1970 != 0)
-            boatData->GpsDate->update(DaysSince1970,sourceId);
+            boatData->GPSD->update(DaysSince1970,sourceId);
     }
 
     //*****************************************************************************
@@ -258,8 +258,8 @@ private:
             tNMEA0183Msg NMEA0183Msg;
             updateDouble(boatData->STW, WaterReferenced);
             unsigned long now = millis();
-            double MagneticHeading = (boatData->Heading->isValid(now) && boatData->Variation->isValid(now)) ? boatData->Heading->getData() + boatData->Variation->getData() : NMEA0183DoubleNA;
-            if (NMEA0183SetVHW(NMEA0183Msg, boatData->Heading->getDataWithDefault(NMEA0183DoubleNA), MagneticHeading, WaterReferenced,talkerId))
+            double MagneticHeading = (boatData->HDG->isValid(now) && boatData->VAR->isValid(now)) ? boatData->HDG->getData() + boatData->VAR->getData() : NMEA0183DoubleNA;
+            if (NMEA0183SetVHW(NMEA0183Msg, boatData->HDG->getDataWithDefault(NMEA0183DoubleNA), MagneticHeading, WaterReferenced,talkerId))
             {
                 SendMessage(NMEA0183Msg);
             }
@@ -278,8 +278,8 @@ private:
         {
 
             WaterDepth = DepthBelowTransducer + Offset;
-            updateDouble(boatData->WaterDepth, WaterDepth);
-            updateDouble(boatData->DepthTransducer,DepthBelowTransducer);
+            updateDouble(boatData->DBS, WaterDepth);
+            updateDouble(boatData->DBT,DepthBelowTransducer);
             tNMEA0183Msg NMEA0183Msg;
             if (NMEA0183SetDPT(NMEA0183Msg, DepthBelowTransducer, Offset,talkerId))
             {
@@ -299,8 +299,8 @@ private:
         double Longitude;
         if (ParseN2kPGN129025(N2kMsg, Latitude, Longitude))
         {
-            updateDouble(boatData->Latitude, Latitude);
-            updateDouble(boatData->Longitude, Longitude);
+            updateDouble(boatData->LAT, Latitude);
+            updateDouble(boatData->LON, Longitude);
         }
     }
 
@@ -316,13 +316,13 @@ private:
         {
             updateDouble(boatData->COG, COG);
             updateDouble(boatData->SOG, SOG);
-            double MCOG = (!N2kIsNA(COG) && boatData->Variation->isValid()) ? COG - boatData->Variation->getData() : NMEA0183DoubleNA;
+            double MCOG = (!N2kIsNA(COG) && boatData->VAR->isValid()) ? COG - boatData->VAR->getData() : NMEA0183DoubleNA;
             if (HeadingReference == N2khr_magnetic)
             {
                 MCOG = COG;
-                if (boatData->Variation->isValid())
+                if (boatData->VAR->isValid())
                 {
-                    COG -= boatData->Variation->getData();
+                    COG -= boatData->VAR->getData();
                     updateDouble(boatData->COG, COG);
                 }
             }
@@ -382,14 +382,14 @@ private:
                          nSatellites, HDOP, PDOP, GeoidalSeparation,
                          nReferenceStations, ReferenceStationType, ReferenceSationID, AgeOfCorrection))
         {
-            updateDouble(boatData->Latitude, Latitude);
-            updateDouble(boatData->Longitude, Longitude);
-            updateDouble(boatData->Altitude, Altitude);
-            updateDouble(boatData->GpsTime, GpsTime);
+            updateDouble(boatData->LAT, Latitude);
+            updateDouble(boatData->LON, Longitude);
+            updateDouble(boatData->ALT, Altitude);
+            updateDouble(boatData->GPST, GpsTime);
             updateDouble(boatData->HDOP,HDOP);
             updateDouble(boatData->PDOP,PDOP);
             if (DaysSince1970 != N2kUInt16NA && DaysSince1970 != 0)
-                boatData->GpsDate->update(DaysSince1970,sourceId);
+                boatData->GPSD->update(DaysSince1970,sourceId);
             int quality=0;
             if ((int)GNSSmethod <= 5) quality=(int)GNSSmethod;
             tNMEA0183AISMsg nmeaMsg;
@@ -518,8 +518,8 @@ private:
                                    boatData->TWS->getDataWithDefault(NMEA0183DoubleNA),talkerId))
                     SendMessage(NMEA0183Msg);
                 double magnetic = boatData->TWD->getData();
-                if (boatData->Variation->isValid())
-                    magnetic -= boatData->Variation->getData();
+                if (boatData->VAR->isValid())
+                    magnetic -= boatData->VAR->getData();
                 if (!NMEA0183Msg.Init("MWD", talkerId))
                     return;
                 if (!NMEA0183Msg.AddDoubleField(formatCourse(boatData->TWD->getData())))
@@ -548,20 +548,20 @@ private:
     {
         long now = millis();
         if (NextRMCSend <= millis() && 
-          boatData->Latitude->isValid(now) && 
-          boatData->Latitude->getLastSource() == sourceId
+          boatData->LAT->isValid(now) && 
+          boatData->LAT->getLastSource() == sourceId
           )
         {
             tNMEA0183Msg NMEA0183Msg;
             if (NMEA0183SetRMC(NMEA0183Msg,
 
-                               boatData->GpsTime->getDataWithDefault(NMEA0183DoubleNA),
-                               boatData->Latitude->getDataWithDefault(NMEA0183DoubleNA),
-                               boatData->Longitude->getDataWithDefault(NMEA0183DoubleNA),
+                               boatData->GPST->getDataWithDefault(NMEA0183DoubleNA),
+                               boatData->LAT->getDataWithDefault(NMEA0183DoubleNA),
+                               boatData->LON->getDataWithDefault(NMEA0183DoubleNA),
                                boatData->COG->getDataWithDefault(NMEA0183DoubleNA),
                                boatData->SOG->getDataWithDefault(NMEA0183DoubleNA),
-                               boatData->GpsDate->getDataWithDefault(NMEA0183UInt32NA),
-                               boatData->Variation->getDataWithDefault(NMEA0183DoubleNA),
+                               boatData->GPSD->getDataWithDefault(NMEA0183UInt32NA),
+                               boatData->VAR->getDataWithDefault(NMEA0183DoubleNA),
                                talkerId))
             {
                 SendMessage(NMEA0183Msg);
@@ -583,7 +583,7 @@ private:
             if (TripLog != N2kUInt32NA)
                 boatData->TripLog->update(TripLog,sourceId);
             if (DaysSince1970 != N2kUInt16NA && DaysSince1970 != 0)
-                boatData->GpsDate->update(DaysSince1970,sourceId);
+                boatData->GPSD->update(DaysSince1970,sourceId);
             tNMEA0183Msg NMEA0183Msg;
 
             if (!NMEA0183Msg.Init("VLW", talkerId))
@@ -613,7 +613,7 @@ private:
         if (ParseN2kRudder(N2kMsg, RudderPosition, Instance, RudderDirectionOrder, AngleOrder))
         {
 
-            updateDouble(boatData->RudderPosition, RudderPosition);
+            updateDouble(boatData->RPOS, RudderPosition);
             if (Instance != 0)
                 return;
 
@@ -1003,26 +1003,26 @@ private:
             LOG_DEBUG(GwLog::DEBUG,"unable to parse PGN %d",msg.PGN);
             return;
         }
-        updateDouble(boatData->GpsTime,GpsTime);
-        if (DaysSince1970 != N2kUInt16NA) boatData->GpsDate->update(DaysSince1970,sourceId);
-        if (boatData->GpsDate->isValid() && boatData->GpsTime->isValid()){
+        updateDouble(boatData->GPST,GpsTime);
+        if (DaysSince1970 != N2kUInt16NA) boatData->GPSD->update(DaysSince1970,sourceId);
+        if (boatData->GPSD->isValid() && boatData->GPST->isValid()){
             tNMEA0183Msg nmeaMsg;
             nmeaMsg.Init("ZDA",talkerId);
             char utc[7];
-            double seconds=boatData->GpsTime->getData();
+            double seconds=boatData->GPST->getData();
             int hours=floor(seconds/3600.0);
             int minutes=floor(seconds/60) - hours *60;
             int sec=floor(seconds)-60*minutes-3600*hours;
             snprintf(utc,7,"%02d%02d%02d",hours,minutes,sec);
             nmeaMsg.AddStrField(utc);
             tmElements_t timeParts;
-            tNMEA0183Msg::breakTime(tNMEA0183Msg::daysToTime_t(boatData->GpsDate->getData()),timeParts);
+            tNMEA0183Msg::breakTime(tNMEA0183Msg::daysToTime_t(boatData->GPSD->getData()),timeParts);
             nmeaMsg.AddUInt32Field(tNMEA0183Msg::GetDay(timeParts));
             nmeaMsg.AddUInt32Field(tNMEA0183Msg::GetMonth(timeParts));
             nmeaMsg.AddUInt32Field(tNMEA0183Msg::GetYear(timeParts));
-            if (boatData->Timezone->isValid()){
-                int hours=boatData->Timezone->getData()/60;
-                int minutes=boatData->Timezone->getData() - 60 *hours;
+            if (boatData->TZ->isValid()){
+                int hours=boatData->TZ->getData()/60;
+                int minutes=boatData->TZ->getData() - 60 *hours;
                 nmeaMsg.AddDoubleField(hours,1,"%02.0f");
                 nmeaMsg.AddDoubleField(minutes,1,"%02.0f");
             }
@@ -1042,9 +1042,9 @@ private:
             LOG_DEBUG(GwLog::DEBUG,"unable to parse PGN %d",msg.PGN);
             return;
         }
-        updateDouble(boatData->GpsTime,GpsTime);
-        if (DaysSince1970 != N2kUInt16NA) boatData->GpsDate->update(DaysSince1970,sourceId);
-        if (LocalOffset != N2kInt16NA) boatData->Timezone->update(LocalOffset,sourceId);
+        updateDouble(boatData->GPST,GpsTime);
+        if (DaysSince1970 != N2kUInt16NA) boatData->GPSD->update(DaysSince1970,sourceId);
+        if (LocalOffset != N2kInt16NA) boatData->TZ->update(LocalOffset,sourceId);
     }
     void HandleROT(const tN2kMsg &msg){
         unsigned char SID=0;
@@ -1137,17 +1137,17 @@ private:
             return;
         }
         if (BearingReference == N2khr_magnetic){
-            if (! boatData->Variation->isValid()){
+            if (! boatData->VAR->isValid()){
                 LOG_DEBUG(GwLog::DEBUG,"missing variation to compute true heading for %d ", msg.PGN);
                 return;   
             }
-            BearingPositionToDestinationWaypoint-=boatData->Variation->getData();
+            BearingPositionToDestinationWaypoint-=boatData->VAR->getData();
 
         }
         if (! updateDouble(boatData->DTW,DistanceToWaypoint)) return;
         if (! updateDouble(boatData->BTW,BearingPositionToDestinationWaypoint)) return;
-        if (! updateDouble(boatData->WPLatitude,DestinationLatitude)) return;
-        if (! updateDouble(boatData->WPLongitude,DestinationLongitude)) return;
+        if (! updateDouble(boatData->WPLat,DestinationLatitude)) return;
+        if (! updateDouble(boatData->WPLon,DestinationLongitude)) return;
         tNMEA0183Msg nmeaMsg;
         if (! nmeaMsg.Init("RMB",talkerId)) return;
         if (! nmeaMsg.AddStrField("A")) return;
@@ -1242,7 +1242,7 @@ private:
         double WaterTemperature;
         if (ParseN2kPGN130310(N2kMsg, SID, WaterTemperature, OutsideAmbientAirTemperature, AtmosphericPressure))
         {
-            updateDouble(boatData->WaterTemperature, WaterTemperature);
+            updateDouble(boatData->WTemp, WaterTemperature);
             tNMEA0183Msg NMEA0183Msg;
 
             if (!NMEA0183Msg.Init("MTW", talkerId))
