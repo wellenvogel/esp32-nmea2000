@@ -372,8 +372,16 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
         }
     }
     else{
-        snprintf(buffer,bsize,"%3.0f",value->value);
-         result.unit = "";
+        if(value->value < 10){
+            snprintf(buffer,bsize,"%2.1f",value->value);
+        }
+        if(value->value >= 10 && value->value < 100){
+            snprintf(buffer,bsize,"%3.1f",value->value);
+        }
+        if(value->value >= 100){
+            snprintf(buffer,bsize,"%3.0f",value->value);
+        }
+        result.unit = "";
     }
     buffer[bsize]=0;
     result.svalue = String(buffer);
