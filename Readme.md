@@ -145,6 +145,13 @@ For details refer to the [example description](lib/exampletask/Readme.md).
 
 Changelog
 ---------
+[20220302](../../releases/tag/20220302)
+*********
+* add export and import of config data.<br>
+  HINT: **passwords are not included**
+* add a HELP tab that points to this description<br>
+  The url can be changed using the HELP_URL capability
+    
 [20220301](../../releases/tag/20220301)
 *********
 * change [boat data names to shorter ones](../../issues/17) 
