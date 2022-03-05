@@ -270,8 +270,8 @@ void registerAllPages(PageList &list){
     list.add(&registerPageOneValue);
     extern PageDescription registerPageTwoValues;
     list.add(&registerPageTwoValues);
-    extern PageDescription registerPageThreeValuese;
-    list.add(&registerPageThreeValuese);
+    extern PageDescription registerPageThreeValues;
+    list.add(&registerPageThreeValues);
     extern PageDescription registerPageForValues;
     list.add(&registerPageForValues);
     extern PageDescription registerPageApparentWind;

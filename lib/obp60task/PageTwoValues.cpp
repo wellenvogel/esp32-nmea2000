@@ -93,7 +93,7 @@ class PageTwoValues : public Page
 
         // Show unit
         display.setTextColor(textcolor);
-        display.setFont(&Ubuntu_Bold16pt7b);
+        display.setFont(&Ubuntu_Bold12pt7b);
         display.setCursor(20, 130);
         if(holdvalues == false){
             display.print(unit1);                       // Unit
@@ -131,7 +131,7 @@ class PageTwoValues : public Page
         // ############### Horizontal Line ################
 
         // Horizontal line 3 pix
-        display.fillRect(0, 145, 400, 3, GxEPD_BLACK); // Draw white sreen
+        display.fillRect(0, 145, 400, 3, GxEPD_BLACK);
 
         // ############### Value 2 ################
 
@@ -143,7 +143,7 @@ class PageTwoValues : public Page
 
         // Show unit
         display.setTextColor(textcolor);
-        display.setFont(&Ubuntu_Bold16pt7b);
+        display.setFont(&Ubuntu_Bold12pt7b);
         display.setCursor(20, 240);
         if(holdvalues == false){
             display.print(unit2);                       // Unit
