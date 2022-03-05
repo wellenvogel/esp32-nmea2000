@@ -21,6 +21,7 @@ class PageOneValue : public Page{
         GwConfigHandler *config = commonData.config;
         GwLog *logger=commonData.logger;
 
+        // Old values for hold function
         static String svalue1old = "";
         static String unit1old = "";
 
@@ -49,7 +50,7 @@ class PageOneValue : public Page{
 
         // Logging boat values
         if (bvalue1 == NULL) return;
-        LOG_DEBUG(GwLog::LOG,"Drawing at PageOneValue, p=%s, v=%f", name1, value1);
+        LOG_DEBUG(GwLog::LOG,"Drawing at PageOneValue, %s: %f", name1, value1);
 
         // Draw page
         //***********************************************************
