@@ -143,7 +143,7 @@ class PageThreeValues : public Page
         // ############### Horizontal Line ################
 
         // Horizontal line 3 pix
-        display.fillRect(0, 105, 400, 3, GxEPD_BLACK);
+        display.fillRect(0, 105, 400, 3, pixelcolor);
 
         // ############### Value 2 ################
 
@@ -193,7 +193,7 @@ class PageThreeValues : public Page
         // ############### Horizontal Line ################
 
         // Horizontal line 3 pix
-        display.fillRect(0, 195, 400, 3, GxEPD_BLACK);
+        display.fillRect(0, 195, 400, 3, pixelcolor);
 
         // ############### Value 3 ################
 
@@ -235,7 +235,7 @@ class PageThreeValues : public Page
         else{
             display.print(svalue3old);                                  // Old value as formated string
         }
-        if(valid2 == true){
+        if(valid3 == true){
             svalue3old = svalue3;                                       // Save the old value
             unit3old = unit3;                                           // Save the old unit
         }

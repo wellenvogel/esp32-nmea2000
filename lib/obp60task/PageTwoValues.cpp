@@ -131,7 +131,7 @@ class PageTwoValues : public Page
         // ############### Horizontal Line ################
 
         // Horizontal line 3 pix
-        display.fillRect(0, 145, 400, 3, GxEPD_BLACK);
+        display.fillRect(0, 145, 400, 3, pixelcolor);
 
         // ############### Value 2 ################
 
