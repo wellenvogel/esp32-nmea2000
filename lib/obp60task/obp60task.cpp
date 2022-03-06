@@ -278,6 +278,8 @@ void registerAllPages(PageList &list){
     list.add(&registerPageApparentWind);
     extern PageDescription registerPageVoltage;
     list.add(&registerPageVoltage);
+    extern PageDescription registerPageDST810;
+    list.add(&registerPageDST810);
 }
 
 // OBP60 Task

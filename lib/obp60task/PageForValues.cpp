@@ -7,7 +7,7 @@ class PageForValues : public Page
 
     public:
     PageForValues(CommonData &comon){
-        comon.logger->logDebug(GwLog::LOG,"created ThreeTwoValue");
+        comon.logger->logDebug(GwLog::LOG,"Show PageForValues");
     }
 
     virtual int handleKey(int key){
@@ -85,7 +85,7 @@ class PageForValues : public Page
 
         // Logging boat values
         if (bvalue1 == NULL) return;
-        LOG_DEBUG(GwLog::LOG,"Drawing at PageTwoValues, %s: %f, %s: %f, %s: %f, %s: %f", name1, value1, name2, value2, name3, value3, name4, value4);
+        LOG_DEBUG(GwLog::LOG,"Drawing at PageForValues, %s: %f, %s: %f, %s: %f, %s: %f", name1, value1, name2, value2, name3, value3, name4, value4);
 
         // Draw page
         //***********************************************************

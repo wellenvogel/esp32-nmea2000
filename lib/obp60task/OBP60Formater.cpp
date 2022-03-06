@@ -320,11 +320,11 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
         else{
             temp = 296.0 + float(random(0, 10)) / 10.0;
         }
-        if(String(tempFormat) == "°C"){
+        if(String(tempFormat) == "C"){
             temp = temp - 273.15;
             result.unit = "C";
         }
-        else if(String(tempFormat) == "°F"){
+        else if(String(tempFormat) == "F"){
             temp = temp - 459.67;
             result.unit = "F";
         }

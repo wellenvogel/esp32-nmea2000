@@ -1,13 +1,13 @@
 #include "Pagedata.h"
 #include "OBP60ExtensionPort.h"
 
-class PageTwoValues : public Page
+class PageDST810 : public Page
 {
     bool keylock = false;               // Keylock
 
     public:
-    PageTwoValues(CommonData &comon){
-        comon.logger->logDebug(GwLog::LOG,"Show PageTwoValue");
+    PageDST810(CommonData &comon){
+        comon.logger->logDebug(GwLog::LOG,"Show PageDST810");
     }
 
     virtual int handleKey(int key){
@@ -27,11 +27,16 @@ class PageTwoValues : public Page
         static String unit1old = "";
         static String svalue2old = "";
         static String unit2old = "";
+        static String svalue3old = "";
+        static String unit3old = "";
+        static String svalue4old = "";
+        static String unit4old = "";
 
         // Get config data
         String lengthformat = config->getString(config->lengthFormat);
         bool simulation = config->getBool(config->useSimuData);
         String displaycolor = config->getString(config->displaycolor);
+        bool refresh = config->getBool(config->refresh);
         bool holdvalues = config->getBool(config->holdvalues);
         String flashLED = config->getString(config->flashLED);
         String backlightMode = config->getString(config->backlight);
@@ -54,6 +59,24 @@ class PageTwoValues : public Page
         String svalue2 = formatValue(bvalue2, commonData).svalue;    // Formatted value as string including unit conversion and switching decimal places
         String unit2 = formatValue(bvalue2, commonData).unit;        // Unit of value
 
+        // Get boat values #3
+        GwApi::BoatValue *bvalue3 = pageData.values[2]; // Second element in list (only one value by PageOneValue)
+        String name3 = bvalue3->getName().c_str();      // Value name
+        name3 = name3.substring(0, 6);                  // String length limit for value name
+        double value3 = bvalue3->value;                 // Value as double in SI unit
+        bool valid3 = bvalue3->valid;                   // Valid information 
+        String svalue3 = formatValue(bvalue3, commonData).svalue;    // Formatted value as string including unit conversion and switching decimal places
+        String unit3 = formatValue(bvalue3, commonData).unit;        // Unit of value
+
+        // Get boat values #4
+        GwApi::BoatValue *bvalue4 = pageData.values[3]; // Second element in list (only one value by PageOneValue)
+        String name4 = bvalue4->getName().c_str();      // Value name
+        name4 = name4.substring(0, 6);                  // String length limit for value name
+        double value4 = bvalue4->value;                 // Value as double in SI unit
+        bool valid4 = bvalue4->valid;                   // Valid information 
+        String svalue4 = formatValue(bvalue4, commonData).svalue;    // Formatted value as string including unit conversion and switching decimal places
+        String unit4 = formatValue(bvalue4, commonData).unit;        // Unit of value
+
         // Optical warning by limit violation (unused)
         if(String(flashLED) == "Limit Violation"){
             setBlinkingLED(false);
@@ -62,7 +85,7 @@ class PageTwoValues : public Page
 
         // Logging boat values
         if (bvalue1 == NULL) return;
-        LOG_DEBUG(GwLog::LOG,"Drawing at PageTwoValues, %s: %f, %s: %f", name1, value1, name2, value2);
+        LOG_DEBUG(GwLog::LOG,"Drawing at PageDST810, %s: %f, %s: %f, %s: %f, %s: %f", name1, value1, name2, value2, name3, value3, name4, value4);
 
         // Draw page
         //***********************************************************
@@ -88,13 +111,13 @@ class PageTwoValues : public Page
         // Show name
         display.setTextColor(textcolor);
         display.setFont(&Ubuntu_Bold20pt7b);
-        display.setCursor(20, 80);
-        display.print(name1);                           // Page name
+        display.setCursor(20, 55);
+        display.print("Depth");                         // Page name
 
         // Show unit
         display.setTextColor(textcolor);
         display.setFont(&Ubuntu_Bold12pt7b);
-        display.setCursor(20, 130);
+        display.setCursor(20, 90);
         if(holdvalues == false){
             display.print(unit1);                       // Unit
         }
@@ -105,15 +128,15 @@ class PageTwoValues : public Page
         // Switch font if format for any values
         if(bvalue1->getFormat() == "formatLatitude" || bvalue1->getFormat() == "formatLongitude"){
             display.setFont(&Ubuntu_Bold20pt7b);
-            display.setCursor(50, 130);
+            display.setCursor(50, 90);
         }
         else if(bvalue1->getFormat() == "formatTime" || bvalue1->getFormat() == "formatDate"){
             display.setFont(&Ubuntu_Bold20pt7b);
-            display.setCursor(170, 105);
+            display.setCursor(170, 68);
         }
         else{
-            display.setFont(&DSEG7Classic_BoldItalic42pt7b);
-            display.setCursor(180, 130);
+            display.setFont(&DSEG7Classic_BoldItalic30pt7b);
+            display.setCursor(180, 90);
         }
 
         // Show bus data
@@ -131,20 +154,20 @@ class PageTwoValues : public Page
         // ############### Horizontal Line ################
 
         // Horizontal line 3 pix
-        display.fillRect(0, 145, 400, 3, pixelcolor);
+        display.fillRect(0, 105, 400, 3, pixelcolor);
 
         // ############### Value 2 ################
 
         // Show name
         display.setTextColor(textcolor);
         display.setFont(&Ubuntu_Bold20pt7b);
-        display.setCursor(20, 190);
-        display.print(name2);                           // Page name
+        display.setCursor(20, 145);
+        display.print("Speed");                         // Page name
 
         // Show unit
         display.setTextColor(textcolor);
         display.setFont(&Ubuntu_Bold12pt7b);
-        display.setCursor(20, 240);
+        display.setCursor(20, 180);
         if(holdvalues == false){
             display.print(unit2);                       // Unit
         }
@@ -155,15 +178,15 @@ class PageTwoValues : public Page
         // Switch font if format for any values
         if(bvalue2->getFormat() == "formatLatitude" || bvalue2->getFormat() == "formatLongitude"){
             display.setFont(&Ubuntu_Bold20pt7b);
-            display.setCursor(50, 240);
+            display.setCursor(50, 180);
         }
         else if(bvalue2->getFormat() == "formatTime" || bvalue2->getFormat() == "formatDate"){
             display.setFont(&Ubuntu_Bold20pt7b);
-            display.setCursor(170, 215);
+            display.setCursor(170, 158);
         }
         else{
-            display.setFont(&DSEG7Classic_BoldItalic42pt7b);
-            display.setCursor(180, 240);
+            display.setFont(&DSEG7Classic_BoldItalic30pt7b);
+            display.setCursor(180, 180);
         }
 
         // Show bus data
@@ -176,6 +199,106 @@ class PageTwoValues : public Page
         if(valid2 == true){
             svalue2old = svalue2;                                       // Save the old value
             unit2old = unit2;                                           // Save the old unit
+        }
+
+        // ############### Horizontal Line ################
+
+        // Horizontal line 3 pix
+        display.fillRect(0, 195, 400, 3, pixelcolor);
+
+        // ############### Value 3 ################
+
+        // Show name
+        display.setTextColor(textcolor);
+        display.setFont(&Ubuntu_Bold12pt7b);
+        display.setCursor(20, 220);
+        display.print("Log");                           // Page name
+
+        // Show unit
+        display.setTextColor(textcolor);
+        display.setFont(&Ubuntu_Bold8pt7b);
+        display.setCursor(20, 240);
+        if(holdvalues == false){
+            display.print(unit3);                       // Unit
+        }
+        else{
+            display.print(unit3old);
+        }
+
+        // Switch font if format for any values
+        if(bvalue3->getFormat() == "formatLatitude" || bvalue3->getFormat() == "formatLongitude"){
+            display.setFont(&Ubuntu_Bold20pt7b);
+            display.setCursor(50, 270);
+        }
+        else if(bvalue3->getFormat() == "formatTime" || bvalue3->getFormat() == "formatDate"){
+            display.setFont(&Ubuntu_Bold20pt7b);
+            display.setCursor(140, 248);
+        }
+        else{
+            display.setFont(&DSEG7Classic_BoldItalic20pt7b);
+            display.setCursor(80, 270);
+        }
+
+        // Show bus data
+        if(holdvalues == false){
+            display.print(svalue3);                                     // Real value as formated string
+        }
+        else{
+            display.print(svalue3old);                                  // Old value as formated string
+        }
+        if(valid3 == true){
+            svalue3old = svalue3;                                       // Save the old value
+            unit3old = unit3;                                           // Save the old unit
+        }
+
+        // ############### Vertical Line ################
+
+        // Vertical line 3 pix
+        display.fillRect(200, 195, 3, 75, pixelcolor);
+
+        // ############### Value 4 ################
+
+        // Show name
+        display.setTextColor(textcolor);
+        display.setFont(&Ubuntu_Bold12pt7b);
+        display.setCursor(220, 220);
+        display.print("Temp");                           // Page name
+
+        // Show unit
+        display.setTextColor(textcolor);
+        display.setFont(&Ubuntu_Bold8pt7b);
+        display.setCursor(220, 240);
+        if(holdvalues == false){
+            display.print(unit4);                       // Unit
+        }
+        else{
+            display.print(unit4old);
+        }
+
+        // Switch font if format for any values
+        if(bvalue4->getFormat() == "formatLatitude" || bvalue4->getFormat() == "formatLongitude"){
+            display.setFont(&Ubuntu_Bold12pt7b);
+            display.setCursor(120, 259);
+        }
+        else if(bvalue4->getFormat() == "formatTime" || bvalue4->getFormat() == "formatDate"){
+            display.setFont(&Ubuntu_Bold12pt7b);
+            display.setCursor(150, 259);
+        }
+        else{
+            display.setFont(&DSEG7Classic_BoldItalic20pt7b);
+            display.setCursor(280, 270);
+        }
+
+        // Show bus data
+        if(holdvalues == false){
+            display.print(svalue4);                                     // Real value as formated string
+        }
+        else{
+            display.print(svalue4old);                                  // Old value as formated string
+        }
+        if(valid4 == true){
+            svalue4old = svalue4;                                       // Save the old value
+            unit4old = unit4;                                           // Save the old unit
         }
 
 
@@ -203,18 +326,18 @@ class PageTwoValues : public Page
 };
 
 static Page *createPage(CommonData &common){
-    return new PageTwoValues(common);
-}
-/**
+    return new PageDST810(common);
+}/**
  * with the code below we make this page known to the PageTask
  * we give it a type (name) that can be selected in the config
  * we define which function is to be called
  * and we provide the number of user parameters we expect
  * this will be number of BoatValue pointers in pageData.values
  */
-PageDescription registerPageTwoValues(
-    "twoValues",    // Page name
-    createPage,     // Action
-    2,              // Number of bus values depends on selection in Web configuration
-    true            // Show display header on/off
+PageDescription registerPageDST810(
+    "DST810",           // Page name
+    createPage,         // Action
+    0,                  // Number of bus values depends on selection in Web configuration
+    {"DBT","STW","Log","WTemp"},      // Bus values we need in the page
+    true                // Show display header on/off
 );
