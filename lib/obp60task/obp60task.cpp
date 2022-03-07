@@ -274,6 +274,8 @@ void registerAllPages(PageList &list){
     list.add(&registerPageThreeValues);
     extern PageDescription registerPageForValues;
     list.add(&registerPageForValues);
+    extern PageDescription registerPageForValues2;
+    list.add(&registerPageForValues2);
     extern PageDescription registerPageApparentWind;
     list.add(&registerPageApparentWind);
     extern PageDescription registerPageVoltage;

@@ -106,6 +106,9 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
             course = 2.53 + float(random(0, 10) / 100.0);
         }    
         course = course * 57.2958;      // Unit conversion form rad to deg
+
+        snprintf(buffer,bsize,"%03.0f",course);
+/*
         if(course < 10){
             snprintf(buffer,bsize,"%2.1f",course);
         }
@@ -115,6 +118,7 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
         if(course >= 100){
             snprintf(buffer,bsize,"%3.0f",course);
         }
+*/
         result.unit = "Deg";
     }
     //########################################################

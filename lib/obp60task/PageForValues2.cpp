@@ -1,13 +1,13 @@
 #include "Pagedata.h"
 #include "OBP60ExtensionPort.h"
 
-class PageDST810 : public Page
+class PageForValues2 : public Page
 {
     bool keylock = false;               // Keylock
 
     public:
-    PageDST810(CommonData &comon){
-        comon.logger->logDebug(GwLog::LOG,"Show PageDST810");
+    PageForValues2(CommonData &comon){
+        comon.logger->logDebug(GwLog::LOG,"Show PageForValues2");
     }
 
     virtual int handleKey(int key){
@@ -85,7 +85,7 @@ class PageDST810 : public Page
 
         // Logging boat values
         if (bvalue1 == NULL) return;
-        LOG_DEBUG(GwLog::LOG,"Drawing at PageDST810, %s: %f, %s: %f, %s: %f, %s: %f", name1, value1, name2, value2, name3, value3, name4, value4);
+        LOG_DEBUG(GwLog::LOG,"Drawing at PageForValues2, %s: %f, %s: %f, %s: %f, %s: %f", name1, value1, name2, value2, name3, value3, name4, value4);
 
         // Draw page
         //***********************************************************
@@ -112,7 +112,7 @@ class PageDST810 : public Page
         display.setTextColor(textcolor);
         display.setFont(&Ubuntu_Bold20pt7b);
         display.setCursor(20, 55);
-        display.print("Depth");                         // Page name
+        display.print(name1);                           // Page name
 
         // Show unit
         display.setTextColor(textcolor);
@@ -125,9 +125,19 @@ class PageDST810 : public Page
             display.print(unit1old);
         }
 
-        // Set font
-        display.setFont(&DSEG7Classic_BoldItalic30pt7b);
-        display.setCursor(180, 90);
+        // Switch font if format for any values
+        if(bvalue1->getFormat() == "formatLatitude" || bvalue1->getFormat() == "formatLongitude"){
+            display.setFont(&Ubuntu_Bold12pt7b);
+            display.setCursor(100, 90);
+        }
+        else if(bvalue1->getFormat() == "formatTime" || bvalue1->getFormat() == "formatDate"){
+            display.setFont(&Ubuntu_Bold12pt7b);
+            display.setCursor(180, 77);
+        }
+        else{
+            display.setFont(&DSEG7Classic_BoldItalic30pt7b);
+            display.setCursor(180, 90);
+        }
 
         // Show bus data
         if(holdvalues == false){
@@ -152,7 +162,7 @@ class PageDST810 : public Page
         display.setTextColor(textcolor);
         display.setFont(&Ubuntu_Bold20pt7b);
         display.setCursor(20, 145);
-        display.print("Speed");                         // Page name
+        display.print(name2);                           // Page name
 
         // Show unit
         display.setTextColor(textcolor);
@@ -165,9 +175,19 @@ class PageDST810 : public Page
             display.print(unit2old);
         }
 
-        // Setfont
-        display.setFont(&DSEG7Classic_BoldItalic30pt7b);
-        display.setCursor(180, 180);
+        // Switch font if format for any values
+        if(bvalue2->getFormat() == "formatLatitude" || bvalue2->getFormat() == "formatLongitude"){
+            display.setFont(&Ubuntu_Bold12pt7b);
+            display.setCursor(100, 180);
+        }
+        else if(bvalue2->getFormat() == "formatTime" || bvalue2->getFormat() == "formatDate"){
+            display.setFont(&Ubuntu_Bold12pt7b);
+            display.setCursor(180, 158);
+        }
+        else{
+            display.setFont(&DSEG7Classic_BoldItalic30pt7b);
+            display.setCursor(180, 180);
+        }
 
         // Show bus data
         if(holdvalues == false){
@@ -192,7 +212,7 @@ class PageDST810 : public Page
         display.setTextColor(textcolor);
         display.setFont(&Ubuntu_Bold12pt7b);
         display.setCursor(20, 220);
-        display.print("Log");                           // Page name
+        display.print(name3);                           // Page name
 
         // Show unit
         display.setTextColor(textcolor);
@@ -205,9 +225,19 @@ class PageDST810 : public Page
             display.print(unit3old);
         }
 
-        // Set font
-        display.setFont(&DSEG7Classic_BoldItalic20pt7b);
-        display.setCursor(80, 270);
+        // Switch font if format for any values
+        if(bvalue3->getFormat() == "formatLatitude" || bvalue3->getFormat() == "formatLongitude"){
+            display.setFont(&Ubuntu_Bold8pt7b);
+            display.setCursor(50, 240);
+        }
+        else if(bvalue3->getFormat() == "formatTime" || bvalue3->getFormat() == "formatDate"){
+            display.setFont(&Ubuntu_Bold8pt7b);
+            display.setCursor(100, 240);
+        }
+        else{
+            display.setFont(&DSEG7Classic_BoldItalic20pt7b);
+            display.setCursor(80, 270);
+        }
 
         // Show bus data
         if(holdvalues == false){
@@ -232,7 +262,7 @@ class PageDST810 : public Page
         display.setTextColor(textcolor);
         display.setFont(&Ubuntu_Bold12pt7b);
         display.setCursor(220, 220);
-        display.print("Temp");                           // Page name
+        display.print(name4);                           // Page name
 
         // Show unit
         display.setTextColor(textcolor);
@@ -245,9 +275,19 @@ class PageDST810 : public Page
             display.print(unit4old);
         }
 
-        // Set font
-        display.setFont(&DSEG7Classic_BoldItalic20pt7b);
-        display.setCursor(280, 270);
+        // Switch font if format for any values
+        if(bvalue4->getFormat() == "formatLatitude" || bvalue4->getFormat() == "formatLongitude"){
+            display.setFont(&Ubuntu_Bold8pt7b);
+            display.setCursor(250, 240);
+        }
+        else if(bvalue4->getFormat() == "formatTime" || bvalue4->getFormat() == "formatDate"){
+            display.setFont(&Ubuntu_Bold8pt7b);
+            display.setCursor(300, 240);
+        }
+        else{
+            display.setFont(&DSEG7Classic_BoldItalic20pt7b);
+            display.setCursor(280, 270);
+        }
 
         // Show bus data
         if(holdvalues == false){
@@ -286,7 +326,7 @@ class PageDST810 : public Page
 };
 
 static Page *createPage(CommonData &common){
-    return new PageDST810(common);
+    return new PageForValues2(common);
 }/**
  * with the code below we make this page known to the PageTask
  * we give it a type (name) that can be selected in the config
@@ -294,10 +334,9 @@ static Page *createPage(CommonData &common){
  * and we provide the number of user parameters we expect
  * this will be number of BoatValue pointers in pageData.values
  */
-PageDescription registerPageDST810(
-    "DST810",           // Page name
+PageDescription registerPageForValues2(
+    "forValues2",        // Page name
     createPage,         // Action
-    0,                  // Number of bus values depends on selection in Web configuration
-    {"DBT","STW","Log","WTemp"},      // Bus values we need in the page
+    4,                  // Number of bus values depends on selection in Web configuration
     true                // Show display header on/off
 );

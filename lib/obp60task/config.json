@@ -492,7 +492,7 @@
         "type": "list",
         "default": "Voltage",
         "description": "Type of page for page 1",
-        "list":["oneValue","twoValues","threeValues","forValues","apparentWind","Voltage","DST810"],
+        "list":["oneValue","twoValues","threeValues","forValues","forValues2","apparentWind","Voltage","DST810"],
         "category": "OBP60 Page 1",
         "capabilities": {
             "obp60":"true"
@@ -508,7 +508,7 @@
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"page1type":"oneValue"},{"page1type":"twoValues"},{"page1type":"threeValues"},{"page1type":"forValues"}]
+        "condition":[{"page1type":"oneValue"},{"page1type":"twoValues"},{"page1type":"threeValues"},{"page1type":"forValues"},{"page1type":"forValues2"}]
     },
     {
         "name": "page1value2",
@@ -520,7 +520,7 @@
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"page1type":"twoValues"},{"page1type":"threeValues"},{"page1type":"forValues"}]
+        "condition":[{"page1type":"twoValues"},{"page1type":"threeValues"},{"page1type":"forValues"},{"page1type":"forValues2"}]
     },
     {
         "name": "page1value3",
@@ -532,7 +532,7 @@
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"page1type":"threeValues"},{"page1type":"forValues"}]
+        "condition":[{"page1type":"threeValues"},{"page1type":"forValues"},{"page1type":"forValues2"}]
     },
     {
         "name": "page1value4",
@@ -544,7 +544,7 @@
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"page1type":"forValues"}]
+        "condition":[{"page1type":"forValues"},{"page1type":"forValues2"}]
     },
     {
         "name": "page2type",
@@ -552,7 +552,7 @@
         "type": "list",
         "default": "apparantWind",
         "description": "Type of page for page 2",
-        "list":["oneValue","twoValues","threeValues","forValues","apparentWind","Voltage","DST810"],
+        "list":["oneValue","twoValues","threeValues","forValues","forValues2","apparentWind","Voltage","DST810"],
         "category": "OBP60 Page 2",
         "capabilities": {
             "obp60":"true"
@@ -569,7 +569,7 @@
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"page2type":"oneValue"},{"page2type":"twoValues"},{"page2type":"threeValues"},{"page2type":"forValues"}]
+        "condition":[{"page2type":"oneValue"},{"page2type":"twoValues"},{"page2type":"threeValues"},{"page2type":"forValues"},{"page2type":"forValues2"}]
     },
     {
         "name": "page2value2",
@@ -581,7 +581,7 @@
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"page2type":"twoValues"},{"page2type":"threeValues"},{"page2type":"forValues"}]
+        "condition":[{"page2type":"twoValues"},{"page2type":"threeValues"},{"page2type":"forValues"},{"page2type":"forValues2"}]
     },
     {
         "name": "page2value3",
@@ -593,7 +593,7 @@
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"page2type":"threeValues"},{"page2type":"forValues"}]
+        "condition":[{"page2type":"threeValues"},{"page2type":"forValues"},{"page2type":"forValues2"}]
     },
     {
         "name": "page2value4",
@@ -605,7 +605,7 @@
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"page2type":"forValues"}]
+        "condition":[{"page2type":"forValues"},{"page2type":"forValues2"}]
     },
     {
         "name": "page3type",
@@ -613,7 +613,7 @@
         "type": "list",
         "default": "oneValue",
         "description": "Type of page for page 3",
-        "list":["oneValue","twoValues","threeValues","forValues","apparentWind","Voltage","DST810"],
+        "list":["oneValue","twoValues","threeValues","forValues","forValues2","apparentWind","Voltage","DST810"],
         "category": "OBP60 Page 3",
         "capabilities": {
             "obp60":"true"
@@ -630,7 +630,7 @@
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"page3type":"oneValue"},{"page3type":"twoValues"},{"page3type":"threeValues"},{"page3type":"forValues"}]
+        "condition":[{"page3type":"oneValue"},{"page3type":"twoValues"},{"page3type":"threeValues"},{"page3type":"forValues"},{"page3type":"forValues2"}]
     },
     {
         "name": "page3value2",
@@ -642,7 +642,7 @@
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"page3type":"twoValues"},{"page3type":"threeValues"},{"page3type":"forValues"}]
+        "condition":[{"page3type":"twoValues"},{"page3type":"threeValues"},{"page3type":"forValues"},{"page3type":"forValues2"}]
     },
     {
         "name": "page3value3",
@@ -654,7 +654,7 @@
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"page3type":"threeValues"},{"page3type":"forValues"}]
+        "condition":[{"page3type":"threeValues"},{"page3type":"forValues"},{"page3type":"forValues2"}]
     },
     {
         "name": "page3value4",
@@ -666,7 +666,7 @@
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"page3type":"forValues"}]
+        "condition":[{"page3type":"forValues"},{"page3type":"forValues2"}]
     },
     {
         "name": "page4type",
@@ -674,7 +674,7 @@
         "type": "list",
         "default": "oneValue",
         "description": "Type of page for page 4",
-        "list":["oneValue","twoValues","threeValues","forValues","apparentWind","Voltage","DST810"],
+        "list":["oneValue","twoValues","threeValues","forValues","forValues2","apparentWind","Voltage","DST810"],
         "category": "OBP60 Page 4",
         "capabilities": {
             "obp60":"true"
@@ -691,7 +691,7 @@
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"page4type":"oneValue"},{"page4type":"twoValues"},{"page4type":"threeValues"},{"page4type":"forValues"}]
+        "condition":[{"page4type":"oneValue"},{"page4type":"twoValues"},{"page4type":"threeValues"},{"page4type":"forValues"},{"page4type":"forValues2"}]
     },
     {
         "name": "page4value2",
@@ -703,7 +703,7 @@
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"page4type":"twoValues"},{"page4type":"threeValues"},{"page4type":"forValues"}]
+        "condition":[{"page4type":"twoValues"},{"page4type":"threeValues"},{"page4type":"forValues"},{"page4type":"forValues2"}]
     },
     {
         "name": "page4value3",
@@ -715,7 +715,7 @@
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"page4type":"threeValues"},{"page4type":"forValues"}]
+        "condition":[{"page4type":"threeValues"},{"page4type":"forValues"},{"page4type":"forValues2"}]
     },
     {
         "name": "page4value4",
@@ -727,6 +727,6 @@
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"page4type":"forValues"}]
+        "condition":[{"page4type":"forValues"},{"page4type":"forValues2"}]
     }
 ]
