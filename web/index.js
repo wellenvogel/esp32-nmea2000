@@ -857,15 +857,18 @@ function showXdrHelp(){
         showOverlay(helpContent.innerHTML,true);
     }
 }
-function formatDate(d){
+function formatDateForFilename(usePrefix,d){
+    let rt="";
+    if (usePrefix){
+        let fwt=document.querySelector('.status-fwtype');
+        if (fwt) rt=fwt.textContent;
+    }
     if (! d) d=new Date();
-    let rt=""+d.getFullYear();
-    let v=d.getMonth();
-    if (v < 10) rt+="0"+v;
-    else rt+=v;
-    v=d.getDate();
-    if (v < 10) rt+="0"+v;
-    else rt+=v;
+    [d.getFullYear(),d.getMonth(),d.getDate(),d.getHours(),d.getMinutes(),d.getSeconds()]
+        .forEach(function(v){
+            if (v < 10) rt+="0"+v;
+            else rt+=""+v;
+        })
     return rt;
 }
 function downloadData(data,name){
@@ -879,7 +882,7 @@ function downloadData(data,name){
 function exportConfig(){
     let data=getAllConfigs(true);
     if (! data) return;
-    downloadData(data,"config"+formatDate()+".json");
+    downloadData(data,formatDateForFilename(true)+".json");
 }
 function exportXdr(){
     let data={};
@@ -893,7 +896,7 @@ function exportXdr(){
         }
         data[name]=value;
     })
-    downloadData(data,"xdr"+formatDate()+".json");
+    downloadData(data,"xdr"+formatDateForFilename(true)+".json");
 }
 function importJson(opt_keyPattern){
     let clazz='importJson';
@@ -926,7 +929,12 @@ function importJson(opt_keyPattern){
                     for (let k in idata){
                         let del=document.querySelector('input[name='+k+']');
                         if (del){
-                            del.value=idata[k];
+                            if (del.tagName === 'SELECT'){
+                                setSelect(del,idata[k]);
+                            }
+                            else{
+                                del.value=idata[k];
+                            }
                             let ev=new Event('change');
                             del.dispatchEvent(ev);
                         }
