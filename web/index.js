@@ -918,7 +918,7 @@ function importJson(opt_keyPattern){
                             alert("file contains invalid key "+k);
                             return;
                         }
-                        let del=document.querySelector('input[name='+k+']');
+                        let del=document.querySelector('[name='+k+']');
                         if (del){
                             hasOverwrites=true;
                         }        
@@ -927,7 +927,7 @@ function importJson(opt_keyPattern){
                         if (!confirm("overwrite existing data?")) return;
                     }
                     for (let k in idata){
-                        let del=document.querySelector('input[name='+k+']');
+                        let del=document.querySelector('[name='+k+']');
                         if (del){
                             if (del.tagName === 'SELECT'){
                                 setSelect(del,idata[k]);
