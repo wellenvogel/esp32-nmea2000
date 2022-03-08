@@ -145,6 +145,12 @@ For details refer to the [example description](lib/exampletask/Readme.md).
 
 Changelog
 ---------
+[20220308](../../releases/tag/20220308)
+*********
+* correctly handle select fields when importing the config
+* better names for config save [#26](../../issues/26)
+* remove -e in ci build [#30](../../issues/30)
+
 [20220302](../../releases/tag/20220302)
 *********
 * add export and import of config data.<br>
