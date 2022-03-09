@@ -160,7 +160,6 @@ public:
         y1 = y0 + sin(value2) * lp * 0.6;
         x2 = x0 + cos(value2) * lp;
         y2 = y0 + sin(value2) * lp;
-
         display.drawLine(x1, y1, x2, y2, pixelcolor);
 
         // Key Layout
