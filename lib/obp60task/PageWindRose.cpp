@@ -69,6 +69,10 @@ public:
         bool valid1 = bvalue1->valid;                   // Valid information 
         String svalue1 = formatValue(bvalue1, commonData).svalue;    // Formatted value as string including unit conversion and switching decimal places
         String unit1 = formatValue(bvalue1, commonData).unit;        // Unit of value
+        if(valid1 == true){
+            svalue1old = svalue1;   	                // Save old value
+            unit1old = unit1;                           // Save old unit
+        }
 
         // Get boat values for AWD
         GwApi::BoatValue *bvalue2 = pageData.values[1]; // First element in list (only one value by PageOneValue)
@@ -78,6 +82,10 @@ public:
         bool valid2 = bvalue2->valid;                   // Valid information 
         String svalue2 = formatValue(bvalue2, commonData).svalue;    // Formatted value as string including unit conversion and switching decimal places
         String unit2 = formatValue(bvalue2, commonData).unit;        // Unit of value
+        if(valid2 == true){
+            svalue2old = svalue2;   	                // Save old value
+            unit2old = unit2;                           // Save old unit
+        }
 
         // Get boat values #3
         GwApi::BoatValue *bvalue3 = pageData.values[2]; // Second element in list (only one value by PageOneValue)
@@ -87,6 +95,10 @@ public:
         bool valid3 = bvalue3->valid;                   // Valid information 
         String svalue3 = formatValue(bvalue3, commonData).svalue;    // Formatted value as string including unit conversion and switching decimal places
         String unit3 = formatValue(bvalue3, commonData).unit;        // Unit of value
+        if(valid3 == true){
+            svalue3old = svalue3;   	                // Save old value
+            unit3old = unit3;                           // Save old unit
+        }
 
         // Get boat values #4
         GwApi::BoatValue *bvalue4 = pageData.values[3]; // Second element in list (only one value by PageOneValue)
@@ -96,6 +108,10 @@ public:
         bool valid4 = bvalue4->valid;                   // Valid information 
         String svalue4 = formatValue(bvalue4, commonData).svalue;    // Formatted value as string including unit conversion and switching decimal places
         String unit4 = formatValue(bvalue4, commonData).unit;        // Unit of value
+        if(valid4 == true){
+            svalue4old = svalue4;   	                // Save old value
+            unit4old = unit4;                           // Save old unit
+        }
 
         // Optical warning by limit violation (unused)
         if(String(flashLED) == "Limit Violation"){
@@ -143,14 +159,14 @@ public:
         else{
             display.setFont(&DSEG7Classic_BoldItalic20pt7b);
             display.setCursor(10, 65);
-            display.print(svalue1);                     // Value
+            display.print(svalue1old);                     // Value
             display.setFont(&Ubuntu_Bold12pt7b);
             display.setCursor(10, 95);
             display.print(name1);                       // Name
             display.setFont(&Ubuntu_Bold8pt7b);
             display.setCursor(10, 115);
             display.print(" ");
-            display.print(unit1);                       // Unit
+            display.print(unit1old);                       // Unit
         }
 
         // Horizintal separator left
@@ -173,14 +189,14 @@ public:
         else{
             display.setFont(&DSEG7Classic_BoldItalic20pt7b);
             display.setCursor(10, 270);
-            display.print(svalue2);                     // Value
+            display.print(svalue2old);                     // Value
             display.setFont(&Ubuntu_Bold12pt7b);
             display.setCursor(10, 220);
             display.print(name2);                       // Name
             display.setFont(&Ubuntu_Bold8pt7b);
             display.setCursor(10, 190);
             display.print(" ");
-            display.print(unit2);                       // Unit
+            display.print(unit2old);                       // Unit
         }
 
         // Show values TWD
@@ -200,14 +216,14 @@ public:
         else{
             display.setFont(&DSEG7Classic_BoldItalic20pt7b);
             display.setCursor(295, 65);
-            display.print(svalue3);                     // Value
+            display.print(svalue3old);                     // Value
             display.setFont(&Ubuntu_Bold12pt7b);
             display.setCursor(335, 95);
             display.print(name3);                       // Name
             display.setFont(&Ubuntu_Bold8pt7b);
             display.setCursor(335, 115);
             display.print(" ");
-            display.print(unit3);                       // Unit
+            display.print(unit3old);                       // Unit
         }
 
         // Horizintal separator right
@@ -230,14 +246,14 @@ public:
         else{
             display.setFont(&DSEG7Classic_BoldItalic20pt7b);
             display.setCursor(295, 270);
-            display.print(svalue4);                     // Value
+            display.print(svalue4old);                     // Value
             display.setFont(&Ubuntu_Bold12pt7b);
             display.setCursor(335, 220);
             display.print(name4);                       // Name
             display.setFont(&Ubuntu_Bold8pt7b);
             display.setCursor(335, 190);
             display.print(" ");
-            display.print(unit4);                       // Unit
+            display.print(unit4old);                       // Unit
         }
 
 //*******************************************************************************************
@@ -308,28 +324,30 @@ public:
         }
 
         // Draw wind pointer
-        float sinx=sin(value2);     // Wind direction
-        float cosx=cos(value2);
-        // Normal pointer
-        // Pointer as triangle with center base 2*width
         float startwidth = 8;       // Start width of pointer
-        float xx1 = -startwidth;
-        float xx2 = startwidth;
-        float yy1 = -startwidth;
-        float yy2 = -(rWindGraphic-15); 
-        display.fillTriangle(200+(int)(cosx*xx1-sinx*yy1),150+(int)(sinx*xx1+cosx*yy1),
-            200+(int)(cosx*xx2-sinx*yy1),150+(int)(sinx*xx2+cosx*yy1),
-            200+(int)(cosx*0-sinx*yy2),150+(int)(sinx*0+cosx*yy2),pixelcolor);   
-        // Inverted pointer
-        // Pointer as triangle with center base 2*width
-        float endwidth = 2;         // End width of pointer
-        float ix1 = endwidth;
-        float ix2 = -endwidth;
-        float iy1 = -(rWindGraphic-15);
-        float iy2 = -endwidth;
-        display.fillTriangle(200+(int)(cosx*ix1-sinx*iy1),150+(int)(sinx*ix1+cosx*iy1),
-            200+(int)(cosx*ix2-sinx*iy1),150+(int)(sinx*ix2+cosx*iy1),
-            200+(int)(cosx*0-sinx*iy2),150+(int)(sinx*0+cosx*iy2),pixelcolor);
+        if(valid2 == true || holdvalues == true){
+            float sinx=sin(value1);     // Wind direction
+            float cosx=cos(value1);
+            // Normal pointer
+            // Pointer as triangle with center base 2*width
+            float xx1 = -startwidth;
+            float xx2 = startwidth;
+            float yy1 = -startwidth;
+            float yy2 = -(rWindGraphic-15); 
+            display.fillTriangle(200+(int)(cosx*xx1-sinx*yy1),150+(int)(sinx*xx1+cosx*yy1),
+                200+(int)(cosx*xx2-sinx*yy1),150+(int)(sinx*xx2+cosx*yy1),
+                200+(int)(cosx*0-sinx*yy2),150+(int)(sinx*0+cosx*yy2),pixelcolor);   
+            // Inverted pointer
+            // Pointer as triangle with center base 2*width
+            float endwidth = 2;         // End width of pointer
+            float ix1 = endwidth;
+            float ix2 = -endwidth;
+            float iy1 = -(rWindGraphic-15);
+            float iy2 = -endwidth;
+            display.fillTriangle(200+(int)(cosx*ix1-sinx*iy1),150+(int)(sinx*ix1+cosx*iy1),
+                200+(int)(cosx*ix2-sinx*iy1),150+(int)(sinx*ix2+cosx*iy1),
+                200+(int)(cosx*0-sinx*iy2),150+(int)(sinx*0+cosx*iy2),pixelcolor);
+        }
 
         // Center circle
         display.fillCircle(200, 150, startwidth + 4, pixelcolor);
