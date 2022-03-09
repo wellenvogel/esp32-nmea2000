@@ -366,16 +366,16 @@ private:
         tN2kGNSStype GNSStype;
         tN2kGNSSmethod GNSSmethod;
         unsigned char nSatellites;
-        double HDOP;
-        double PDOP;
-        double GeoidalSeparation;
+        double HDOP=N2kDoubleNA;
+        double PDOP=N2kDoubleNA;
+        double GeoidalSeparation=N2kDoubleNA;
         unsigned char nReferenceStations;
         tN2kGNSStype ReferenceStationType;
         uint16_t ReferenceSationID;
-        double AgeOfCorrection;
-        double Latitude;
-        double Longitude;
-        double Altitude;
+        double AgeOfCorrection=N2kDoubleNA;
+        double Latitude=N2kDoubleNA;
+        double Longitude=N2kDoubleNA;
+        double Altitude=N2kDoubleNA;
         uint16_t DaysSince1970;
         double GpsTime;
         if (ParseN2kGNSS(N2kMsg, SID, DaysSince1970, GpsTime, Latitude, Longitude, Altitude, GNSStype, GNSSmethod,
@@ -403,7 +403,7 @@ private:
     void HandleDop(const tN2kMsg &msg){
         double HDOP=N2kDoubleNA;
         double VDOP=N2kDoubleNA;
-        double TDOP;
+        double TDOP=N2kDoubleNA;
         tN2kGNSSDOPmode DesiredMode; 
         tN2kGNSSDOPmode ActualMode;
         unsigned char SID;
@@ -477,7 +477,7 @@ private:
         tNMEA0183WindReference NMEA0183Reference = NMEA0183Wind_True;
 
         double x, y;
-        double WindAngle, WindSpeed;
+        double WindAngle=N2kDoubleNA, WindSpeed=N2kDoubleNA;
 
         if (ParseN2kWindSpeed(N2kMsg, SID, WindSpeed, WindAngle, WindReference))
         {
@@ -574,7 +574,7 @@ private:
     void HandleLog(const tN2kMsg &N2kMsg)
     {
         uint16_t DaysSince1970;
-        double GpsTime;
+        double GpsTime=N2kDoubleNA;
         uint32_t Log, TripLog;
         if (ParseN2kDistanceLog(N2kMsg, DaysSince1970, GpsTime, Log, TripLog))
         {
@@ -607,8 +607,8 @@ private:
 
         unsigned char Instance;
         tN2kRudderDirectionOrder RudderDirectionOrder;
-        double AngleOrder;
-        double RudderPosition;
+        double AngleOrder=N2kDoubleNA;
+        double RudderPosition=N2kDoubleNA;
 
         if (ParseN2kRudder(N2kMsg, RudderPosition, Instance, RudderDirectionOrder, AngleOrder))
         {
@@ -642,15 +642,15 @@ private:
         unsigned char SID;
         tN2kAISRepeat _Repeat;
         uint32_t _UserID; // MMSI
-        double _Latitude;
-        double _Longitude;
+        double _Latitude =N2kDoubleNA;
+        double _Longitude=N2kDoubleNA;
         bool _Accuracy;
         bool _RAIM;
         uint8_t _Seconds;
-        double _COG;
-        double _SOG;
-        double _Heading;
-        double _ROT;
+        double _COG=N2kDoubleNA;
+        double _SOG=N2kDoubleNA;
+        double _Heading=N2kDoubleNA;
+        double _ROT=N2kDoubleNA;
         tN2kAISNavStatus _NavStatus;
 
         uint8_t _MessageType = 1;
@@ -729,13 +729,13 @@ private:
         char _Callsign[8];
         char _Name[21];
         uint8_t _VesselType;
-        double _Length;
-        double _Beam;
-        double _PosRefStbd;
-        double _PosRefBow;
+        double _Length=N2kDoubleNA;
+        double _Beam=N2kDoubleNA;
+        double _PosRefStbd=N2kDoubleNA;
+        double _PosRefBow=N2kDoubleNA;
         uint16_t _ETAdate;
-        double _ETAtime;
-        double _Draught;
+        double _ETAtime=N2kDoubleNA;
+        double _Draught=N2kDoubleNA;
         char _Destination[21];
         tN2kAISVersion _AISversion;
         tN2kGNSStype _GNSStype;
@@ -838,14 +838,14 @@ private:
         uint8_t _MessageID;
         tN2kAISRepeat _Repeat;
         uint32_t _UserID; // MMSI
-        double _Latitude;
-        double _Longitude;
+        double _Latitude=N2kDoubleNA;
+        double _Longitude=N2kDoubleNA;
         bool _Accuracy;
         bool _RAIM;
         uint8_t _Seconds;
-        double _COG;
-        double _SOG;
-        double _Heading;
+        double _COG=N2kDoubleNA;
+        double _SOG=N2kDoubleNA;
+        double _Heading=N2kDoubleNA;
         tN2kAISUnit _Unit;
         bool _Display, _DSC, _Band, _Msg22, _State;
         tN2kAISMode _Mode;
@@ -913,10 +913,10 @@ private:
         char _Callsign[8];
         char _Vendor[4];
         uint8_t _VesselType;
-        double _Length;
-        double _Beam;
-        double _PosRefStbd;
-        double _PosRefBow;
+        double _Length=N2kDoubleNA;
+        double _Beam=N2kDoubleNA;
+        double _PosRefStbd=N2kDoubleNA;
+        double _PosRefBow=N2kDoubleNA;
 
         if (ParseN2kPGN129810(N2kMsg, _MessageID, _Repeat, _UserID, _VesselType, _Vendor, _Callsign,
                               _Length, _Beam, _PosRefStbd, _PosRefBow, _MothershipID))
@@ -1237,9 +1237,9 @@ private:
     {
 
         unsigned char SID=-1;
-        double OutsideAmbientAirTemperature;
-        double AtmosphericPressure;
-        double WaterTemperature;
+        double OutsideAmbientAirTemperature=N2kDoubleNA;
+        double AtmosphericPressure=N2kDoubleNA;
+        double WaterTemperature=N2kDoubleNA;
         if (ParseN2kPGN130310(N2kMsg, SID, WaterTemperature, OutsideAmbientAirTemperature, AtmosphericPressure))
         {
             updateDouble(boatData->WTemp, WaterTemperature);
@@ -1354,7 +1354,7 @@ private:
         unsigned char SID=-1;
         unsigned char PressureInstance=0;
         tN2kPressureSource PressureSource;
-        double ActualPressure;
+        double ActualPressure=N2kDoubleNA;
         if (! ParseN2kPGN130314(msg,SID, PressureInstance,
                        PressureSource, ActualPressure)){
             LOG_DEBUG(GwLog::DEBUG,"unable to parse PGN %d",msg.PGN);
@@ -1369,6 +1369,7 @@ private:
     void Handle127489(const tN2kMsg &msg){
         unsigned char instance=-1;
         double values[8];
+        for (int i=0;i<8;i++) values[i]=N2kDoubleNA;
         int8_t ivalues[2];
         if (! ParseN2kPGN127489(msg,instance,
             values[0],values[1],values[2],values[3],values[4],values[5],
@@ -1390,7 +1391,7 @@ private:
     }
     void Handle127488(const tN2kMsg &msg){
         unsigned char instance=-1;
-        double speed,pressure;
+        double speed=N2kDoubleNA,pressure=N2kDoubleNA;
         int8_t tilt;
         if (! ParseN2kPGN127488(msg,instance,
             speed,pressure,tilt)){
