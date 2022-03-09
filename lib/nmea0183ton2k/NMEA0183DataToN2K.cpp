@@ -44,9 +44,92 @@ class SNMEA0183Msg : public tNMEA0183Msg{
                 buf[5]=0;
                 return String(buf);
             }
+            char fromHex(char v){
+                if (v >= '0' && v <= '9') return v-'0';
+                if (v >= 'A' && v <= 'F') return v-'A'+10;
+                if (v >= 'a' && v <= 'f') return v-'a'+10;
+                return 0;
+            }
+            bool SetMessageCor(const char *buf)
+            {
+                unsigned char csMsg;
+                int i = 0;
+                uint8_t iData = 0;
+                bool result = false;
 
-    };
-    
+                Clear();
+                _MessageTime = millis();
+
+                if (buf[i] != '$' && buf[i] != '!')
+                    return result; // Invalid message
+                Prefix = buf[i];
+                i++; // Pass start prefix
+
+                //  Serial.println(buf);
+                // Set sender
+                for (; iData < 2 && buf[i] != 0; i++, iData++)
+                {
+                    CheckSum ^= buf[i];
+                    Data[iData] = buf[i];
+                }
+
+                if (buf[i] == 0)
+                {
+                    Clear();
+                    return result;
+                } // Invalid message
+
+                Data[iData] = 0;
+                iData++; // null termination for sender
+                // Set message code. Read until next comma
+                for (; buf[i] != ',' && buf[i] != 0 && iData < MAX_NMEA0183_MSG_LEN; i++, iData++)
+                {
+                    CheckSum ^= buf[i];
+                    Data[iData] = buf[i];
+                }
+                if (buf[i] != ',')
+                {
+                    Clear();
+                    return result;
+                } // No separation after message code -> invalid message
+
+                // Set the data and calculate checksum. Read until '*'
+                for (; buf[i] != '*' && buf[i] != 0 && iData < MAX_NMEA0183_MSG_LEN; i++, iData++)
+                {
+                    CheckSum ^= buf[i];
+                    Data[iData] = buf[i];
+                    if (buf[i] == ',')
+                    {                                    // New field
+                        Data[iData] = 0;                 // null termination for previous field
+                        Fields[_FieldCount] = iData + 1; // Set start of field
+                        _FieldCount++;
+                    }
+                }
+
+                if (buf[i] != '*')
+                {
+                    Clear();
+                    return false;
+                }                // No checksum -> invalid message
+                Data[iData] = 0; // null termination for previous field
+                i++;             // Pass '*';
+                csMsg = fromHex(buf[i])<< 4;
+                i++;
+                csMsg |= fromHex(buf[i]);
+
+                if (csMsg == CheckSum)
+                {
+                    result = true;
+                }
+                else
+                {
+                    Clear();
+                }
+
+                return result;
+            }
+};
+
 class NMEA0183DataToN2KFunctions : public NMEA0183DataToN2K
 {
 private:   
@@ -1008,7 +1091,7 @@ public:
         LOG_DEBUG(GwLog::DEBUG + 1, "NMEA0183DataToN2K[%d] parsing %s", sourceId, buffer)
         SNMEA0183Msg msg(buffer,sourceId);
         if (! msg.isAis){
-            if (!msg.SetMessage(buffer))
+            if (!msg.SetMessageCor(buffer))
             {
                 LOG_DEBUG(GwLog::DEBUG, "NMEA0183DataToN2K[%d] invalid message %s", sourceId, buffer)
                 return false;
