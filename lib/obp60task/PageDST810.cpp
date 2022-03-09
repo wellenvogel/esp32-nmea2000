@@ -105,7 +105,7 @@ class PageDST810 : public Page
             bgcolor = GxEPD_BLACK;
         }
         // Clear display by call in obp60task.cpp in main loop
-
+        
         // ############### Value 1 ################
 
         // Show name

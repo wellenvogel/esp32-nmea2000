@@ -107,18 +107,8 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
         }    
         course = course * 57.2958;      // Unit conversion form rad to deg
 
+        // Format 3 numbers with prefix zero
         snprintf(buffer,bsize,"%03.0f",course);
-/*
-        if(course < 10){
-            snprintf(buffer,bsize,"%2.1f",course);
-        }
-        if(course >= 10 && course < 100){
-            snprintf(buffer,bsize,"%2.1f",course);
-        }
-        if(course >= 100){
-            snprintf(buffer,bsize,"%3.0f",course);
-        }
-*/
         result.unit = "Deg";
     }
     //########################################################
@@ -249,21 +239,20 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
             double lat = value->value;
             String latitude = "";
             String latdir = "";
-            float degree = int(lat);
-            float minute = (lat - degree) * 60;
-            float secound = (minute - int(minute)) * 60;
+            float degree = abs(int(lat));
+            float minute = abs((lat - int(lat)) * 60);
             if(lat > 0){
                 latdir = "N";
             }
             else{
                 latdir = "S";
             }
-            latitude = String(degree,0) + "\" " + String(minute,0) + "' " + String(secound, 4) + " " + latdir;
+            latitude = String(degree,0) + "\" " + String(minute,4) + "' " + latdir;
             result.unit = "";
             strcpy(buffer, latitude.c_str());
         }
         else{
-            snprintf(buffer,bsize," 51\" 35' %2.4f", 2.0 + float(random(0, 1000)) / 1000.0);
+            snprintf(buffer,bsize," 51\" %2.4f' N", 35.0 + float(random(0, 10)) / 10000.0);
         }
     }
     //########################################################
@@ -272,21 +261,20 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
             double lon = value->value;
             String longitude = "";
             String londir = "";
-            float degree = int(lon);
-            float minute = (lon - degree) * 60;
-            float secound = (minute - int(minute)) * 60;
+            float degree = abs(int(lon));
+            float minute = abs((lon - int(lon)) * 60);
             if(lon > 0){
                 londir = "E";
             }
             else{
                 londir = "W";
             }
-            longitude = String(degree,0) + "\" " + String(minute,0) + "' " + String(secound, 4) + " " + londir;
+            longitude = String(degree,0) + "\" " + String(minute,4) + "' " + londir;
             result.unit = "";
             strcpy(buffer, longitude.c_str());
         }
         else{
-            snprintf(buffer,bsize," 15\" 06' %2.4f", 9.0 + float(random(0, 1000)) / 1000.0);
+            snprintf(buffer,bsize," 15\" %2.4f'", 6.0 + float(random(0, 10)) / 100000.0);
         }
     }
     //########################################################
