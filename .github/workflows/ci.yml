@@ -21,5 +21,5 @@ jobs:
           pip install -U platformio
       - name: Build
         run: |
-          pio run -e m5stack-atom
+          pio run
          
