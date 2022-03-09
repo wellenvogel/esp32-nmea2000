@@ -284,6 +284,8 @@ void registerAllPages(PageList &list){
     list.add(&registerPageVoltage);
     extern PageDescription registerPageDST810;
     list.add(&registerPageDST810);
+    extern PageDescription registerPageClock;
+    list.add(&registerPageClock);
 }
 
 // OBP60 Task

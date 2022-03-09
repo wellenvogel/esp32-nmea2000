@@ -492,7 +492,7 @@
         "type": "list",
         "default": "Voltage",
         "description": "Type of page for page 1",
-        "list":["oneValue","twoValues","threeValues","forValues","forValues2","apparentWind","WindRose","Voltage","DST810"],
+        "list":["oneValue","twoValues","threeValues","forValues","forValues2","apparentWind","WindRose","Voltage","DST810","Clock"],
         "category": "OBP60 Page 1",
         "capabilities": {
             "obp60":"true"
@@ -552,7 +552,7 @@
         "type": "list",
         "default": "apparantWind",
         "description": "Type of page for page 2",
-        "list":["oneValue","twoValues","threeValues","forValues","forValues2","apparentWind","WindRose","Voltage","DST810"],
+        "list":["oneValue","twoValues","threeValues","forValues","forValues2","apparentWind","WindRose","Voltage","DST810","Clock"],
         "category": "OBP60 Page 2",
         "capabilities": {
             "obp60":"true"
@@ -613,7 +613,7 @@
         "type": "list",
         "default": "oneValue",
         "description": "Type of page for page 3",
-        "list":["oneValue","twoValues","threeValues","forValues","forValues2","apparentWind","WindRose","Voltage","DST810"],
+        "list":["oneValue","twoValues","threeValues","forValues","forValues2","apparentWind","WindRose","Voltage","DST810","Clock"],
         "category": "OBP60 Page 3",
         "capabilities": {
             "obp60":"true"
@@ -674,7 +674,7 @@
         "type": "list",
         "default": "oneValue",
         "description": "Type of page for page 4",
-        "list":["oneValue","twoValues","threeValues","forValues","forValues2","apparentWind","WindRose","Voltage","DST810"],
+        "list":["oneValue","twoValues","threeValues","forValues","forValues2","apparentWind","WindRose","Voltage","DST810","Clock"],
         "category": "OBP60 Page 4",
         "capabilities": {
             "obp60":"true"
