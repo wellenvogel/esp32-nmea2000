@@ -430,12 +430,13 @@ void OBP60Task(GwApi *api){
     LOG_DEBUG(GwLog::LOG,"obp60task: start mainloop");
     int pageNumber=0;
     int lastPage=pageNumber;
+    bool delayedDisplayUpdate = false;  // If select a new pages then make a delayed full display update
     long firststart = millis();     // First start
     long starttime0 = millis();     // Mainloop
     long starttime1 = millis();     // Full display refresh for the first 5 min (more often as normal)
     long starttime2 = millis();     // Full display refresh after 5 min
     long starttime3 = millis();     // Display update all 1s
-
+    long starttime4 = millis();     // Delayed display update after 5s when select a new page
 
     while (true){
         Timer1.update();            // Update for Timer1
@@ -499,9 +500,20 @@ void OBP60Task(GwApi *api){
                         display.fillRect(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, GxEPD_WHITE); // Draw white sreen
                         display.updateWindow(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, true);    // Needs partial update before full update to refresh the frame buffer
                         display.update(); // Full update
+                    }
+                    // #9 or #10 Refresh display after a new page after 5s waiting time and if refresh is disabled
+                    if(refreshmode == false && (keyboardMessage == 9 || keyboardMessage == 10)){
+                        starttime4 = millis();
+                        delayedDisplayUpdate = true;
                     }                 
                 }
                 LOG_DEBUG(GwLog::LOG,"set pagenumber to %d",pageNumber);
+            }
+
+            // Full display update afer a new selected page and 5s wait time
+            if(millis() > starttime4 + 5000 && delayedDisplayUpdate == true){
+                display.update(); // Full update
+                delayedDisplayUpdate = false;
             }
 
             // Subtask E-Ink full refresh all 1 min for the first 5min after power on or restart
