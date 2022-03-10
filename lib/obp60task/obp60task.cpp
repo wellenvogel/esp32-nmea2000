@@ -286,6 +286,8 @@ void registerAllPages(PageList &list){
     list.add(&registerPageDST810);
     extern PageDescription registerPageClock;
     list.add(&registerPageClock);
+    extern PageDescription registerPageWhite;
+    list.add(&registerPageWhite);
 }
 
 // OBP60 Task
