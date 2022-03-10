@@ -117,7 +117,7 @@
         "check": "checkApPass",
         "description": "set the password for the Wifi access point",
         "category": "system",
-        "condition":{"apPwChange":"true"}
+        "capabilities":{"apPwChange":["true"]}
     },
     {
         "name": "useAdminPass",
