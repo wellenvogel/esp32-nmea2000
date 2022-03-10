@@ -17,8 +17,8 @@
         "default": "0",
         "check": "checkMinMax",
         "min": -12,
-        "max": 12,
-        "description": "Time zone [UTC -12...+12]",
+        "max": 14,
+        "description": "Time zone [UTC -12...+14]",
         "category": "OBP60 Settings",
         "capabilities": {
             "obp60":"true"
@@ -238,32 +238,47 @@
     },
     {
         "name": "useGPS",
-        "label": "GPS NEO-6M",
-        "type": "boolean",
-        "default": "false",
-        "description": "Using internal GPS modul NEO-6M",
+        "label": "GPS Sensor",
+        "type": "list",
+        "default": "off",
+        "description": "Using internal GPS modul NEO-6M or NEO-M8N",
+        "list": [
+            "off",
+            "NEO-6M",
+            "NEO-M8N"
+        ],
         "category": "OBP60 Hardware",
         "capabilities": {
             "obp60":"true"
         }
     },
     {
-        "name": "useBME280",
-        "label": "BME280",
-        "type": "boolean",
-        "default": "false",
-        "description": "Using internal BME280 modul",
+        "name": "useEnvSensor",
+        "label": "Env. Sensor",
+        "type": "list",
+        "default": "off",
+        "description": "Using internal or external environment sensors BME280, BMP280 or SHT21",
+        "list": [
+            "off",
+            "BME280",
+            "BMP280",
+            "SHT21"
+        ],
         "category": "OBP60 Hardware",
         "capabilities": {
             "obp60":"true"
         }
     },
     {
-        "name": "use1Wire",
-        "label": "1Wire",
+        "name": "useTempSensor",
+        "label": "Temp. Sensor",
         "type": "boolean",
-        "default": "false",
+        "default": "off",
         "description": "Using external 1Wirew devices (DS18B20)",
+        "list": [
+            "off",
+            "DS18B20"
+        ],
         "category": "OBP60 Hardware",
         "capabilities": {
             "obp60":"true"
@@ -492,7 +507,7 @@
         "type": "list",
         "default": "Voltage",
         "description": "Type of page for page 1",
-        "list":["oneValue","twoValues","threeValues","forValues","forValues2","apparentWind","WindRose","Voltage","DST810","Clock","WhitePage"],
+        "list":["oneValue","twoValues","threeValues","forValues","forValues2","apparentWind","WindRose","Voltage","DST810","Clock","WhitePage","BME280"],
         "category": "OBP60 Page 1",
         "capabilities": {
             "obp60":"true"
@@ -552,7 +567,7 @@
         "type": "list",
         "default": "apparantWind",
         "description": "Type of page for page 2",
-        "list":["oneValue","twoValues","threeValues","forValues","forValues2","apparentWind","WindRose","Voltage","DST810","Clock","WhitePage"],
+        "list":["oneValue","twoValues","threeValues","forValues","forValues2","apparentWind","WindRose","Voltage","DST810","Clock","WhitePage","BME280"],
         "category": "OBP60 Page 2",
         "capabilities": {
             "obp60":"true"
@@ -613,7 +628,7 @@
         "type": "list",
         "default": "oneValue",
         "description": "Type of page for page 3",
-        "list":["oneValue","twoValues","threeValues","forValues","forValues2","apparentWind","WindRose","Voltage","DST810","Clock","WhitePage"],
+        "list":["oneValue","twoValues","threeValues","forValues","forValues2","apparentWind","WindRose","Voltage","DST810","Clock","WhitePage","BME280"],
         "category": "OBP60 Page 3",
         "capabilities": {
             "obp60":"true"
@@ -674,7 +689,7 @@
         "type": "list",
         "default": "oneValue",
         "description": "Type of page for page 4",
-        "list":["oneValue","twoValues","threeValues","forValues","forValues2","apparentWind","WindRose","Voltage","DST810","Clock","WhitePage"],
+        "list":["oneValue","twoValues","threeValues","forValues","forValues2","apparentWind","WindRose","Voltage","DST810","Clock","WhitePage","BME280"],
         "category": "OBP60 Page 4",
         "capabilities": {
             "obp60":"true"

@@ -13,9 +13,31 @@ typedef struct{
 } PageData;
 
 typedef struct{
+  double batteryVoltage = 0;
+  double batteryCurrent = 0;
+  double batteryPower = 0;
+  double solarVoltage = 0;
+  double solarCurrent = 0;
+  double solarPower = 0;
+  double generatorVoltage = 0;
+  double generatorCurrent = 0;
+  double generatorPower = 0;
+  double airTemperature = 21.3;
+  double airHumidity = 43.2;
+  double airPressure = 1018.8;
+  double onewireTemp1 = 0;
+  double onewireTemp2 = 0;
+  double onewireTemp3 = 0;
+  double onewireTemp4 = 0;
+  double onewireTemp5 = 0; 
+  double onewireTemp6 = 0;
+} SensorData;
+
+typedef struct{
   GwApi::Status status;
   GwLog *logger=NULL;
   GwConfigHandler *config=NULL;
+  SensorData data;
 } CommonData;
 
 //a base class that all pages must inherit from

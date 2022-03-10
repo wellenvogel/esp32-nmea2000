@@ -6,6 +6,10 @@
 #include <Ticker.h>                     // Timer Lib for timer interrupts
 #include <Wire.h>                       // I2C connections
 #include <MCP23017.h>                   // MCP23017 extension Port
+#include <Adafruit_Sensor.h>            // Adafruit Lib for sensors
+#include <Adafruit_BME280.h>            // Adafruit Lib for BME280
+#include <Adafruit_BMP280.h>            // Adafruit Lib for BMP280
+#include <HTU21D.h>                     // Lib for SHT21/HTU21
 #include <N2kTypes.h>                   // NMEA2000
 #include <N2kMessages.h>
 #include <NMEA0183.h>                   // NMEA0183
@@ -27,10 +31,20 @@
 tNMEA0183Msg NMEA0183Msg;
 tNMEA0183 NMEA0183;
 
+Adafruit_BME280 bme280;                 // Evironment sensor BME280
+Adafruit_BMP280 bmp280;                 // Evironment sensor BMEP280
+HTU21D  sht21(HTU21D_RES_RH12_TEMP14);  // Environment sensor SHT21 identical to HTU21
+
 // Global vars
 bool initComplete = false;      // Initialization complete
 int taskRunCounter = 0;         // Task couter for loop section
 bool gps_ready = false;         // GPS initialized and ready to use
+bool BME280_ready = false;      // BME280 initialized and ready to use
+bool BMP280_ready = false;      // BMP20 initialized and ready to use
+bool SHT21_ready = false;       // SHT21 initialized and ready to use
+double airhumidity = 0;         // Air Humitity value from environment sensor
+double airtemperature = 0;      // Air Temperature value from environment sensor
+double airpressure = 0;         // Ais pressure value from environment sensor
 
 // Timer Interrupts for hardware functions
 void underVoltageDetection();
@@ -95,15 +109,6 @@ void OBP60Init(GwApi *api){
         // Init extension port
         MCP23017Init();
 
-        // Settings for 1Wire
-        bool enable1Wire = api->getConfig()->getConfigItem(api->getConfig()->use1Wire,true)->asBoolean();
-        if(enable1Wire == true){
-            api->getLogger()->logDebug(GwLog::DEBUG,"1Wire Mode is On");
-        }
-        else{
-            api->getLogger()->logDebug(GwLog::DEBUG,"1Wire Mode is Off");
-        }
-
         // Settings for NMEA0183
         String nmea0183Mode = api->getConfig()->getConfigItem(api->getConfig()->serialDirection,true)->asString();
         api->getLogger()->logDebug(GwLog::DEBUG,"NMEA0183 Mode is: %s", nmea0183Mode);
@@ -136,8 +141,8 @@ void OBP60Init(GwApi *api){
         }
 
         // Start serial stream and take over GPS data stream form internal GPS
-        bool gpsOn=api->getConfig()->getConfigItem(api->getConfig()->useGPS,true)->asBoolean();
-        if(gpsOn == true){
+        String gpsOn=api->getConfig()->getConfigItem(api->getConfig()->useGPS,true)->asString();
+        if(String(gpsOn) == "NEO-6M"){
             Serial2.begin(9600, SERIAL_8N1, OBP_GPS_TX, -1); // GPS RX unused in hardware (-1)
             if (!Serial2) {     
                 api->getLogger()->logDebug(GwLog::ERROR,"GPS modul NEO-6M not found, check wiring");
@@ -145,6 +150,19 @@ void OBP60Init(GwApi *api){
                 }
             else{
                 api->getLogger()->logDebug(GwLog::DEBUG,"GPS modul NEO-M6 found");
+                NMEA0183.SetMessageStream(&Serial2);
+                NMEA0183.Open();
+                gps_ready = true;
+            }
+        }
+        if(String(gpsOn) == "NEO-M8N"){
+            Serial2.begin(9600, SERIAL_8N1, OBP_GPS_TX, -1); // GPS RX unused in hardware (-1)
+            if (!Serial2) {     
+                api->getLogger()->logDebug(GwLog::ERROR,"GPS modul NEO-M8N not found, check wiring");
+                gps_ready = false;
+                }
+            else{
+                api->getLogger()->logDebug(GwLog::DEBUG,"GPS modul NEO-M8N found");
                 NMEA0183.SetMessageStream(&Serial2);
                 NMEA0183.Open();
                 gps_ready = true;
@@ -160,6 +178,54 @@ void OBP60Init(GwApi *api){
         buzzer(TONE4, 500);
 
     }
+
+    // Settings for temperature sensors
+    String tempSensor = api->getConfig()->getConfigItem(api->getConfig()->useTempSensor,true)->asString();
+    if(String(tempSensor) == "DS18B20"){
+        api->getLogger()->logDebug(GwLog::DEBUG,"1Wire Mode is On");
+    }
+    else{
+        api->getLogger()->logDebug(GwLog::DEBUG,"1Wire Mode is Off");
+    }
+    
+    // Settings for environment sensors on I2C bus
+    String envSensors=api->getConfig()->getConfigItem(api->getConfig()->useEnvSensor,true)->asString();
+
+    if(String(envSensors) == "BME280"){
+        if (!bme280.begin(BME280_I2C_ADDR)) {
+            api->getLogger()->logDebug(GwLog::ERROR,"Modul BME280 not found, check wiring");
+        }
+        else{
+            api->getLogger()->logDebug(GwLog::DEBUG,"Modul BME280 found");
+            airtemperature = bme280.readTemperature();
+            airpressure = bme280.readPressure()/100;
+            airhumidity = bme280.readHumidity();
+            BME280_ready = true;
+        }
+    }
+    else if(String(envSensors) == "BMP280"){
+        if (!bmp280.begin(BMP280_I2C_ADDR)) {
+            api->getLogger()->logDebug(GwLog::ERROR,"Modul BMP280 not found, check wiring");
+        }
+        else{
+            api->getLogger()->logDebug(GwLog::DEBUG,"Modul BMP280 found");
+            airtemperature = bmp280.readTemperature();
+            airpressure  =bmp280.readPressure()/100;
+            BMP280_ready = true;
+        }
+    }
+    else if(String(envSensors) == "SHT21"){
+        if (!sht21.begin()) {
+            api->getLogger()->logDebug(GwLog::ERROR,"Modul SHT21 not found, check wiring");
+        }
+        else{
+            api->getLogger()->logDebug(GwLog::DEBUG,"Modul SHT21 found");
+            airhumidity = sht21.readCompensatedHumidity();
+            airtemperature = sht21.readTemperature();
+            SHT21_ready = true;
+        }
+    }
+    
 
 }
 
@@ -288,6 +354,8 @@ void registerAllPages(PageList &list){
     list.add(&registerPageClock);
     extern PageDescription registerPageWhite;
     list.add(&registerPageWhite);
+    extern PageDescription registerPageBME280;
+    list.add(&registerPageBME280);
 }
 
 // OBP60 Task
@@ -415,7 +483,7 @@ void OBP60Task(GwApi *api){
 
     // Configuration values for main loop
     String gpsFix = api->getConfig()->getConfigItem(api->getConfig()->flashLED,true)->asString();
-    bool gps = api->getConfig()->getConfigItem(api->getConfig()->useGPS,true)->asBoolean();
+    String gps = api->getConfig()->getConfigItem(api->getConfig()->useGPS,true)->asString();
     String backlight = api->getConfig()->getConfigItem(api->getConfig()->backlight,true)->asString();
     // refreshmode defined in init section
     // displaycolor defined in init section
@@ -441,6 +509,8 @@ void OBP60Task(GwApi *api){
     long starttime2 = millis();     // Full display refresh after 5 min
     long starttime3 = millis();     // Display update all 1s
     long starttime4 = millis();     // Delayed display update after 2s when select a new page
+    long starttime5 = millis();     // Voltage update all 1s
+    long starttime6 = millis();     // Environment sensor update all 1s
 
     while (true){
         Timer1.update();            // Update for Timer1
@@ -449,7 +519,7 @@ void OBP60Task(GwApi *api){
             starttime0 = millis();
 
             // Send NMEA0183 GPS data on several bus systems all 1000ms
-            if(gps == true){   // If config enabled
+            if(String(gps) == "NEO-6M" || String(gps) == "NEO-M8N"){   // If config enabled
                 if(gps_ready = true){
                     tNMEA0183Msg NMEA0183Msg;
                     while(NMEA0183.GetMessage(NMEA0183Msg)){
@@ -489,15 +559,17 @@ void OBP60Task(GwApi *api){
                     if (keyboardMessage == 9)
                     {
                         pageNumber++;
-                        if (pageNumber >= numPages)
+                        if (pageNumber >= numPages){
                             pageNumber = 0;
+                        }
                     }
                     // #10 Swipe left
                     if (keyboardMessage == 10)
                     {
                         pageNumber--;
-                        if (pageNumber < 0)
+                        if (pageNumber < 0){
                             pageNumber = numPages - 1;
+                        }
                     }
 /*                                
                     // #9 or #10 Refresh display befor start a new page if reshresh is enabled
@@ -538,10 +610,59 @@ void OBP60Task(GwApi *api){
             }
 
             // Send supplay voltage value
-            if(millis() > starttime3 + 1000){
-                batteryVoltage = (float(analogRead(OBP_ANALOG0)) * 3.3 / 4096 + 0.17) * 20;   // Vin = 1/20 
+            if(millis() > starttime5 + 1000){
+                starttime5 = millis();
+                batteryVoltage = (float(analogRead(OBP_ANALOG0)) * 3.3 / 4096 + 0.17) * 20;   // Vin = 1/20
+                commonData.data.batteryVoltage = batteryVoltage;   // Data take over to page
+                // Send to NMEA200 bus 
                 SetN2kDCBatStatus(N2kMsg, 0, batteryVoltage, N2kDoubleNA, N2kDoubleNA, 1);
                 api->sendN2kMessage(N2kMsg);
+            }
+
+            // Send data from environment sensor
+            if(millis() > starttime6 + 1000){
+                starttime6 = millis();
+                unsigned char TempSource = 2;       // Inside temperature
+                unsigned char PressureSource = 0;   // Atmospheric pressure
+                unsigned char HumiditySource=0;     // Inside humidity
+                LOG_DEBUG(GwLog::LOG,"Ready status BME280 %d", BME280_ready);
+                if(BME280_ready == true){
+                    airtemperature = bme280.readTemperature();
+                    commonData.data.airTemperature = airtemperature;   // Data take over to page
+                    airpressure = bme280.readPressure()/100;
+                    commonData.data.airPressure = airpressure;         // Data take over to page
+                    airhumidity = bme280.readHumidity();
+                    commonData.data.airHumidity = airhumidity;         // Data take over to page
+                    // Send to NMEA200 bus
+                    SetN2kPGN130312(N2kMsg, 0, 0,(tN2kTempSource) TempSource, CToKelvin(airtemperature), N2kDoubleNA);
+                    api->sendN2kMessage(N2kMsg);
+                    SetN2kPGN130313(N2kMsg, 0, 0,(tN2kHumiditySource) HumiditySource, airhumidity, N2kDoubleNA);
+                    api->sendN2kMessage(N2kMsg);
+                    SetN2kPGN130314(N2kMsg, 0, 0, (tN2kPressureSource) mBarToPascal(PressureSource), airpressure);
+                    api->sendN2kMessage(N2kMsg);
+                }
+                else if(BMP280_ready == true){
+                    airtemperature = bmp280.readTemperature();
+                    commonData.data.airTemperature = airtemperature;   // Data take over to page
+                    airpressure  =bmp280.readPressure()/100;
+                    commonData.data.airPressure = airpressure;         // Data take over to page
+                    // Send to NMEA200 bus
+                    SetN2kPGN130312(N2kMsg, 0, 0,(tN2kTempSource) TempSource, CToKelvin(airtemperature), N2kDoubleNA);
+                    api->sendN2kMessage(N2kMsg);
+                    SetN2kPGN130314(N2kMsg, 0, 0, (tN2kPressureSource) mBarToPascal(PressureSource), airpressure);
+                    api->sendN2kMessage(N2kMsg);
+                }
+                else if(BME280_ready == true){
+                    airhumidity = sht21.readCompensatedHumidity();
+                    commonData.data.airHumidity = airhumidity;         // Data take over to page
+                    airtemperature = sht21.readTemperature();
+                    commonData.data.airTemperature = airtemperature;   // Data take over to page
+                    // Send to NMEA200 bus
+                    SetN2kPGN130312(N2kMsg, 0, 0,(tN2kTempSource) TempSource, CToKelvin(airtemperature), N2kDoubleNA);
+                    api->sendN2kMessage(N2kMsg);
+                    SetN2kPGN130313(N2kMsg, 0, 0,(tN2kHumiditySource) HumiditySource, airhumidity, N2kDoubleNA);
+                    api->sendN2kMessage(N2kMsg);
+                }                
             }
 
             // Refresh display data all 1s
