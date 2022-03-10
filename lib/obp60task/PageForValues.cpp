@@ -307,9 +307,9 @@ class PageForValues : public Page
         // Key Layout
         display.setTextColor(textcolor);
         display.setFont(&Ubuntu_Bold8pt7b);
-        display.setCursor(115, 290);
+        display.setCursor(130, 290);
         if(keylock == false){
-            display.print(" [  <<<<<<      >>>>>>  ]");
+            display.print("[  <<<<  " + String(commonData.data.actpage) + "/" + String(commonData.data.maxpage) + "  >>>>  ]");
             if(String(backlightMode) == "Control by Key"){              // Key for illumination
                 display.setCursor(343, 290);
                 display.print("[ILUM]");

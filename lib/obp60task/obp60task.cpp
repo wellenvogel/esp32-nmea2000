@@ -502,6 +502,8 @@ void OBP60Task(GwApi *api){
     LOG_DEBUG(GwLog::LOG,"obp60task: start mainloop");
     int pageNumber=0;
     int lastPage=pageNumber;
+    commonData.data.actpage = pageNumber + 1;
+    commonData.data.maxpage = numPages;
     bool delayedDisplayUpdate = false;  // If select a new pages then make a delayed full display update
     long firststart = millis();     // First start
     long starttime0 = millis();     // Mainloop
@@ -562,6 +564,8 @@ void OBP60Task(GwApi *api){
                         if (pageNumber >= numPages){
                             pageNumber = 0;
                         }
+                        commonData.data.actpage = pageNumber + 1;
+                        commonData.data.maxpage = numPages;
                     }
                     // #10 Swipe left
                     if (keyboardMessage == 10)
@@ -570,6 +574,8 @@ void OBP60Task(GwApi *api){
                         if (pageNumber < 0){
                             pageNumber = numPages - 1;
                         }
+                        commonData.data.actpage = pageNumber + 1;
+                        commonData.data.maxpage = numPages;
                     }
 /*                                
                     // #9 or #10 Refresh display befor start a new page if reshresh is enabled

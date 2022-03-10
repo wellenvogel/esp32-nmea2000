@@ -13,6 +13,8 @@ typedef struct{
 } PageData;
 
 typedef struct{
+  int actpage = 0;
+  int maxpage = 0;
   double batteryVoltage = 0;
   double batteryCurrent = 0;
   double batteryPower = 0;
