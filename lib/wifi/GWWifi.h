@@ -17,6 +17,7 @@ class GwWifi{
         bool fixedApPass=true;
         bool clientIsConnected=false;
     public:
+        const char *AP_password = "esp32nmea2k"; 
         GwWifi(const GwConfigHandler *config,GwLog *log, bool fixedApPass=true);
         void setup();
         void loop();
