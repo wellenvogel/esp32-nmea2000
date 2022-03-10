@@ -1,6 +1,5 @@
 #include "GWWifi.h"
 
-const char *AP_password = "esp32nmea2k"; 
 
 GwWifi::GwWifi(const GwConfigHandler *config,GwLog *log, bool fixedApPass){
     this->config=config;

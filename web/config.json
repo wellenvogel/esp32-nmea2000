@@ -116,7 +116,8 @@
         "default": "esp32nmea2k",
         "check": "checkApPass",
         "description": "set the password for the Wifi access point",
-        "category": "system"
+        "category": "system",
+        "condition":{"apPwChange":"true"}
     },
     {
         "name": "useAdminPass",

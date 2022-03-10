@@ -103,7 +103,11 @@ GwConfigHandler config(&logger);
 #ifdef GWBUTTON_PIN
 bool fixedApPass=false;
 #else
+#ifdef FORCE_AP_PWCHANGE
+bool fixedApPass=false;
+#else
 bool fixedApPass=true;
+#endif
 #endif
 GwWifi gwWifi(&config,&logger,fixedApPass);
 GwChannelList channels(&logger,&config);
@@ -420,6 +424,7 @@ class CapabilitiesRequest : public GwRequestMessage{
       #ifdef GWBUTTON_PIN
       json["hardwareReset"]="true";
       #endif
+      json["apPwChange"] = fixedApPass?"false":"true";
       serializeJson(json,result);
     }  
 };
@@ -473,6 +478,7 @@ protected:
     for (StringMap::iterator it = args.begin(); it != args.end(); it++)
     {
       if (it->first.indexOf("_")>= 0) continue;
+      if (it->first == GwConfigDefinitions::apPassword && fixedApPass) continue;
       bool rt = config.updateValue(it->first, it->second);
       if (!rt)
       {
@@ -741,7 +747,7 @@ void setup() {
     GWSYNCHRONIZED(&mainLock);
     userCodeHandler.startUserTasks(MIN_USER_TASK);
   }
-  logger.logString("wifi AP pass: %s",config.getString(config.apPassword).c_str());
+  logger.logString("wifi AP pass: %s",fixedApPass? gwWifi.AP_password:config.getString(config.apPassword).c_str());
   logger.logString("admin pass: %s",config.getString(config.adminPassword).c_str());
   logger.logDebug(GwLog::LOG,"setup done");
 }  
