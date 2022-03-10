@@ -11,6 +11,8 @@
 #define GWSERIAL_TX 26
 #define GWSERIAL_RX 14
 #define GWSERIAL_MODE "UNI"
+// Allowed to set a new password for access point
+#define FORCE_AP_PWCHANGE
 
 // Init OBP60 Task
 void OBP60Init(GwApi *param);

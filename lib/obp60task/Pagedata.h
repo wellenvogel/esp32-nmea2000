@@ -22,9 +22,9 @@ typedef struct{
   double generatorVoltage = 0;
   double generatorCurrent = 0;
   double generatorPower = 0;
-  double airTemperature = 21.3;
-  double airHumidity = 43.2;
-  double airPressure = 1018.8;
+  double airTemperature = 0;
+  double airHumidity = 0;
+  double airPressure = 0;
   double onewireTemp1 = 0;
   double onewireTemp2 = 0;
   double onewireTemp3 = 0;

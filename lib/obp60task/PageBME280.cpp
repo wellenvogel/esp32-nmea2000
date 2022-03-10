@@ -25,6 +25,9 @@ class PageBME280 : public Page
         double value1 = 0;
         double value2 = 0;
         double value3 = 0;
+        String svalue1 = "";
+        String svalue2 = "";
+        String svalue3 = "";
 
         // Get config data
         String tempformat = config->getString(config->tempFormat);
@@ -32,6 +35,7 @@ class PageBME280 : public Page
         String displaycolor = config->getString(config->displaycolor);
         String flashLED = config->getString(config->flashLED);
         String backlightMode = config->getString(config->backlight);
+        String useenvsensor = config->getString(config->useEnvSensor);
         
         // Get sensor values #1
         String name1 = "Temp";                          // Value name
@@ -42,7 +46,13 @@ class PageBME280 : public Page
         else{
             value1 = 23.0 + float(random(0, 10)) / 10.0;
         }
-        String svalue1 = String(value1, 1);             // Formatted value as string including unit conversion and switching decimal places
+        // Display data when sensor activated
+        if(String(useenvsensor) == "BME280"){
+            svalue1 = String(value1, 1);                // Formatted value as string including unit conversion and switching decimal places
+        }
+        else{
+            svalue1 = "---";
+        }
         String unit1 = "Deg C";                         // Unit of value
 
         // Get sensor values #2
@@ -54,7 +64,13 @@ class PageBME280 : public Page
         else{
             value2 = 43 + float(random(0, 4));
         }
-        String svalue2 = String(value2, 0);             // Formatted value as string including unit conversion and switching decimal places
+        // Display data when sensor activated
+        if(String(useenvsensor) == "BME280"){
+            svalue2 = String(value2, 0);                // Formatted value as string including unit conversion and switching decimal places
+        }
+        else{
+            svalue2 = "---";
+        }
         String unit2 = "%";                             // Unit of value
 
         // Get sensor values #3
@@ -66,7 +82,13 @@ class PageBME280 : public Page
         else{
             value3 = 1006 + float(random(0, 5));
         }
-        String svalue3 = String(value3, 0);             // Formatted value as string including unit conversion and switching decimal places
+        // Display data when sensor activated
+        if(String(useenvsensor) == "BME280"){
+            svalue3 = String(value3, 0);                // Formatted value as string including unit conversion and switching decimal places
+        }
+        else{
+            svalue3 = "---";
+        }
         String unit3 = "mBar";                          // Unit of value
 
         // Optical warning by limit violation (unused)
