@@ -4,7 +4,6 @@
 class PageClock : public Page
 {
 bool keylock = false;               // Keylock
-int16_t lp = 80;                    // Pointer length
 
 public:
     PageClock(CommonData &common){
@@ -31,6 +30,9 @@ public:
         static String svalue2old = "";
         static String unit2old = "";
 
+        double value1 = 0;
+        double value2 = 0;
+
         // Get config data
         String lengthformat = config->getString(config->lengthFormat);
         bool simulation = config->getBool(config->useSimuData);
@@ -44,7 +46,12 @@ public:
         GwApi::BoatValue *bvalue1 = pageData.values[0]; // First element in list (only one value by PageOneValue)
         String name1 = bvalue1->getName().c_str();      // Value name
         name1 = name1.substring(0, 6);                  // String length limit for value name
-        double value1 = bvalue1->value;                 // Value as double in SI unit
+        if(simulation == false){
+            value1 = bvalue1->value;                    // Value as double in SI unit
+        }
+        else{
+            value1 = 38160;                             // Simulation data for time value 11:36 in seconds
+        }                                               // Other simulation data see OBP60Formater.cpp
         bool valid1 = bvalue1->valid;                   // Valid information 
         String svalue1 = formatValue(bvalue1, commonData).svalue;    // Formatted value as string including unit conversion and switching decimal places
         String unit1 = formatValue(bvalue1, commonData).unit;        // Unit of value
@@ -57,7 +64,7 @@ public:
         GwApi::BoatValue *bvalue2 = pageData.values[1]; // First element in list (only one value by PageOneValue)
         String name2 = bvalue2->getName().c_str();      // Value name
         name2 = name2.substring(0, 6);                  // String length limit for value name
-        double value2 = bvalue2->value;                 // Value as double in SI unit
+        value2 = bvalue2->value;                        // Value as double in SI unit
         bool valid2 = bvalue2->valid;                   // Valid information 
         String svalue2 = formatValue(bvalue2, commonData).svalue;    // Formatted value as string including unit conversion and switching decimal places
         String unit2 = formatValue(bvalue2, commonData).unit;        // Unit of value
@@ -104,11 +111,6 @@ public:
             display.setFont(&Ubuntu_Bold12pt7b);
             display.setCursor(10, 95);
             display.print("Date");                      // Name
-
-            display.setFont(&Ubuntu_Bold12pt7b);
-            display.setCursor(185, 100);
-            display.print(" ");
-            display.print(unit2);                       // Unit
         }
         else{
             display.setFont(&Ubuntu_Bold8pt7b);
@@ -117,11 +119,6 @@ public:
             display.setFont(&Ubuntu_Bold12pt7b);
             display.setCursor(10, 95);
             display.print("Date");                       // Name
-
-            display.setFont(&Ubuntu_Bold12pt7b);
-            display.setCursor(185, 100);
-            display.print(" ");
-            display.print(unit2old);                       // Unit
         }
 
         // Horizintal separator left
@@ -189,8 +186,8 @@ public:
 
 //*******************************************************************************************
         
-        // Draw wind rose
-        int rWindGraphic = 110;     // Radius of grafic instrument
+        // Draw clock
+        int rWindGraphic = 110;     // Radius of clock
         float pi = 3.141592;
 
         display.fillCircle(200, 150, rWindGraphic + 10, pixelcolor);    // Outer circle
@@ -252,6 +249,19 @@ public:
             }
         }
 
+        // Print Unit in clock
+        display.setTextColor(textcolor);
+        if(holdvalues == false){
+            display.setFont(&Ubuntu_Bold12pt7b);
+            display.setCursor(175, 110);
+            display.print(unit2);                       // Unit
+        }
+        else{
+            display.setFont(&Ubuntu_Bold12pt7b);
+            display.setCursor(175, 110);
+            display.print(unit2old);                    // Unit
+        }
+
         // Clock values
         double hour = 0;
         double minute = 0;
@@ -262,7 +272,7 @@ public:
 
         // Draw hour pointer
         float startwidth = 8;       // Start width of pointer
-        if(valid1 == true || holdvalues == true){
+        if(valid1 == true || holdvalues == true || simulation == true){
             float sinx=sin(hour * 30.0 * pi / 180);     // Hour
             float cosx=cos(hour * 30.0 * pi / 180);
             // Normal pointer
@@ -288,7 +298,7 @@ public:
 
         // Draw minute pointer
         startwidth = 8;       // Start width of pointer
-        if(valid1 == true || holdvalues == true){
+        if(valid1 == true || holdvalues == true || simulation == true){
             float sinx=sin(minute * 6.0 * pi / 180);     // Minute
             float cosx=cos(minute * 6.0 * pi / 180);
             // Normal pointer
