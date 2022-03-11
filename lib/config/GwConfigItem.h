@@ -7,11 +7,23 @@ class GwConfigHandler;
 class GwConfigInterface{
     private:
         String name;
-        String initialValue;
+        const char * initialValue;
         String value;
         bool secret=false;
+        String changedValue;
+        bool hasChangedValue=false;
+        void updateValue(String value)
+        {
+            hasChangedValue = false;
+            if (value != this->value)
+            {
+                changedValue = value;
+                hasChangedValue = true;
+            }
+        }
+
     public:
-        GwConfigInterface(const String &name, const String initialValue, bool secret=false){
+        GwConfigInterface(const String &name, const char * initialValue, bool secret=false){
             this->name=name;
             this->initialValue=initialValue;
             this->value=initialValue;

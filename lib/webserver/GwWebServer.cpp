@@ -68,7 +68,7 @@ GwWebServer::~GwWebServer(){
 }
 void GwWebServer::handleAsyncWebRequest(AsyncWebServerRequest *request, GwRequestMessage *msg)
 {
-  GwRequestQueue::MessageSendStatus st=queue->sendAndWait(msg,500);      
+  GwRequestQueue::MessageSendStatus st=queue->sendAndWait(msg,msg->getTimeout());      
   if (st == GwRequestQueue::MSG_ERR)
   {
     msg->unref(); //our
