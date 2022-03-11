@@ -9,6 +9,8 @@
 FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
     FormatedData result;
 
+    static int dayoffset = 0;
+
     // Load configuration values
     int timeZone = commondata.config->getInt(commondata.config->timeZone);                      // [UTC -12...+12]
     String lengthFormat = commondata.config->getString(commondata.config->lengthFormat);        // [m|ft]
@@ -31,7 +33,7 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
     time_t tv = 0;
     if (value->getFormat() == "formatDate"){
         tmElements_t parts;
-        time_t tv=tNMEA0183Msg::daysToTime_t(value->value);
+        time_t tv=tNMEA0183Msg::daysToTime_t(value->value + dayoffset);
         tNMEA0183Msg::breakTime(tv,parts);
         if(usesimudata == false) { 
             if(String(dateFormat) == "DE"){
@@ -59,11 +61,12 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
     }
     //########################################################
     else if(value->getFormat() == "formatTime"){
-        double timeInSeconds;
-        double inthr;
-        double intmin;
-        double intsec;
-        double val;
+        double timeInSeconds = 0;
+        double utcTime = 0;
+        double inthr = 0;
+        double intmin = 0;
+        double intsec = 0;
+        double val = 0;
 
         if(timeZone > 0){
             timeInSeconds = value->value + timeZone * 3600;
@@ -72,6 +75,24 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
         else{
             timeInSeconds = value->value + timeZone * 3600 + 86400;     // Add one day
             timeInSeconds = int(timeInSeconds) % 86400;                 // Reduce to one day (86400s)
+        }
+
+        // Changing day depends on time offset
+        utcTime = value->value;
+        if(timeZone + (utcTime/3600) > 24 && timeZone > 0){
+            dayoffset = 1;
+        }
+        else{
+            dayoffset = 0;
+        }
+        if(timeZone == 0){
+            dayoffset = 0;
+        }
+        if(timeZone + (utcTime/3600) > 24 && timeZone < 0){
+            dayoffset = 0;
+        }
+        else{
+            dayoffset = -1;
         }
 
 

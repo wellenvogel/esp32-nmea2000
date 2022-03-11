@@ -16,7 +16,7 @@
         "type": "number",
         "default": "0",
         "check": "checkMinMax",
-        "min": -12,
+        "min": -18,
         "max": 14,
         "description": "Time zone [UTC -12...+14]",
         "category": "OBP60 Settings",
