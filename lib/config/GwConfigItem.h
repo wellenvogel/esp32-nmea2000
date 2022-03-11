@@ -12,21 +12,16 @@ class GwConfigInterface{
         bool secret=false;
         String changedValue;
         bool hasChangedValue=false;
-        void updateValue(String value,bool cmpDefault=false){
-            hasChangedValue=false;
-            if (cmpDefault){
-                if (value != initialValue) {
-                    changedValue=value;
-                    hasChangedValue=true;
-                }    
+        void updateValue(String value)
+        {
+            hasChangedValue = false;
+            if (value != this->value)
+            {
+                changedValue = value;
+                hasChangedValue = true;
             }
-            else{
-                if (value != this->value) {
-                    changedValue=value;
-                    hasChangedValue=true;
-                }
-            }
-        }    
+        }
+
     public:
         GwConfigInterface(const String &name, const char * initialValue, bool secret=false){
             this->name=name;

@@ -91,7 +91,7 @@ bool GwConfigHandler::updateValue(String name, String value){
 bool GwConfigHandler::reset(bool save){
     LOG_DEBUG(GwLog::LOG,"reset config");
     for (int i=0;i<getNumConfig();i++){
-        configs[i]->updateValue(configs[i]->getDefault(),true);
+        configs[i]->updateValue(configs[i]->getDefault());
     }
     if (!save) return true;
     return saveConfig();
