@@ -460,7 +460,7 @@ class SetConfigRequest : public GwRequestMessage
 public:
   SetConfigRequest() : GwRequestMessage(F("application/json"),F("setConfig")){};
   StringMap args;
-
+  virtual int getTimeout(){return 4000;}
 protected:
   virtual void processRequest()
   {
@@ -475,6 +475,10 @@ protected:
       result=JSON_INVALID_PASS;
       return;
     }
+    logger.logDebug(GwLog::DEBUG,"Heap free=%ld, minFree=%ld",
+          (long)xPortGetFreeHeapSize(),
+          (long)xPortGetMinimumEverFreeHeapSize()
+      );
     for (StringMap::iterator it = args.begin(); it != args.end(); it++)
     {
       if (it->first.indexOf("_")>= 0) continue;
@@ -489,12 +493,19 @@ protected:
         error += it->second;
         error += ",";
       }
+      logger.flush();
     }
     if (ok)
     {
       result = JSON_OK;
       logger.logDebug(GwLog::ERROR,"update config and restart");
       config.saveConfig();
+      logger.flush();
+      logger.logDebug(GwLog::DEBUG,"Heap free=%ld, minFree=%ld",
+          (long)xPortGetFreeHeapSize(),
+          (long)xPortGetMinimumEverFreeHeapSize()
+      );
+      logger.flush();
       delayedRestart();
     }
     else
@@ -632,13 +643,11 @@ void setup() {
   webserver.registerMainHandler("/api/setConfig",
                               [](AsyncWebServerRequest *request)->GwRequestMessage *
                               {
-                                StringMap args;
+                                SetConfigRequest *msg = new SetConfigRequest();
                                 for (int i = 0; i < request->args(); i++)
                                 {
-                                  args[request->argName(i)] = request->arg(i);
+                                  msg->args[request->argName(i)] = request->arg(i);
                                 }
-                                SetConfigRequest *msg = new SetConfigRequest();
-                                msg->args = args;
                                 return msg;
                               });
   webserver.registerMainHandler("/api/resetConfig", [](AsyncWebServerRequest *request)->GwRequestMessage *

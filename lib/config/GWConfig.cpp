@@ -66,13 +66,10 @@ bool GwConfigHandler::loadConfig(){
 bool GwConfigHandler::saveConfig(){
     prefs.begin(PREF_NAME,false);
     for (int i=0;i<getNumConfig();i++){
-        String val=configs[i]->asString();
-        auto it=changedValues.find(configs[i]->getName());
-        if (it != changedValues.end()){
-            val=it->second;
+        if (configs[i]->hasChangedValue){
+            LOG_DEBUG(GwLog::LOG,"saving %s=%s",configs[i]->getName().c_str(),configs[i]->changedValue.c_str());
+            prefs.putString(configs[i]->getName().c_str(),configs[i]->changedValue);
         }
-        LOG_DEBUG(GwLog::LOG,"saving %s=%s",configs[i]->getName().c_str(),val.c_str());
-        prefs.putString(configs[i]->getName().c_str(),val);
     }
     prefs.end();
     LOG_DEBUG(GwLog::LOG,"saved config");
@@ -87,14 +84,14 @@ bool GwConfigHandler::updateValue(String name, String value){
     }
     else{
         LOG_DEBUG(GwLog::LOG,"update config %s=>%s",name.c_str(),i->isSecret()?"***":value.c_str());
-        changedValues[name]=value;
+        i->updateValue(value);
     }
     return true;
 }
 bool GwConfigHandler::reset(bool save){
     LOG_DEBUG(GwLog::LOG,"reset config");
     for (int i=0;i<getNumConfig();i++){
-        changedValues[configs[i]->getName()]=configs[i]->getDefault();
+        configs[i]->updateValue(configs[i]->getDefault(),true);
     }
     if (!save) return true;
     return saveConfig();

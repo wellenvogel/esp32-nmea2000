@@ -13,7 +13,6 @@ class GwConfigHandler: public GwConfigDefinitions{
         Preferences prefs;
         GwLog *logger;
         typedef std::map<String,String> StringMap;
-        StringMap changedValues;
         boolean allowChanges=true;
     public:
         public:
