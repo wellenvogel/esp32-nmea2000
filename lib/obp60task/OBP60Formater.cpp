@@ -28,9 +28,10 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
     char buffer[bsize+1];
     buffer[0]=0;
     //########################################################
+    time_t tv = 0;
     if (value->getFormat() == "formatDate"){
-        time_t tv=tNMEA0183Msg::daysToTime_t(value->value);
         tmElements_t parts;
+        time_t tv=tNMEA0183Msg::daysToTime_t(value->value);
         tNMEA0183Msg::breakTime(tv,parts);
         if(usesimudata == false) { 
             if(String(dateFormat) == "DE"){
@@ -58,13 +59,24 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
     }
     //########################################################
     else if(value->getFormat() == "formatTime"){
+        double timeInSeconds;
         double inthr;
         double intmin;
         double intsec;
         double val;
+
+        if(timeZone > 0){
+            timeInSeconds = value->value + timeZone * 3600;
+            timeInSeconds = int(timeInSeconds) % 86400;                 // Reduce to one day (86400s)
+        }
+        else{
+            timeInSeconds = value->value + timeZone * 3600 + 86400;     // Add one day
+            timeInSeconds = int(timeInSeconds) % 86400;                 // Reduce to one day (86400s)
+        }
+
+
         if(usesimudata == false) {    
-            val=modf(value->value/3600.0,&inthr);
-            inthr += timeZone; 
+            val=modf(timeInSeconds/3600.0,&inthr);
             val=modf(val*3600.0/60.0,&intmin);
             modf(val*60.0,&intsec);
             snprintf(buffer,bsize,"%02.0f:%02.0f:%02.0f",inthr,intmin,intsec);
