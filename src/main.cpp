@@ -458,18 +458,21 @@ protected:
 class SetConfigRequest : public GwRequestMessage
 {
 public:
-  SetConfigRequest() : GwRequestMessage(F("application/json"),F("setConfig")){};
-  StringMap args;
+  //we rely on the message living not longer then the request
+  AsyncWebServerRequest *request;
+  SetConfigRequest(AsyncWebServerRequest *rq) : GwRequestMessage(F("application/json"),F("setConfig")),
+    request(rq)
+  {};
   virtual int getTimeout(){return 4000;}
 protected:
   virtual void processRequest()
   {
     bool ok = true;
+    const char * hashArg="_hash";
     String error;
     String hash;
-    auto it=args.find("_hash");
-    if (it != args.end()){
-      hash=it->second;
+    if (request->hasArg(hashArg)){
+      hash=request->arg(hashArg);
     }
     if (! checkPass(hash)){
       result=JSON_INVALID_PASS;
@@ -479,18 +482,19 @@ protected:
           (long)xPortGetFreeHeapSize(),
           (long)xPortGetMinimumEverFreeHeapSize()
       );
-    for (StringMap::iterator it = args.begin(); it != args.end(); it++)
-    {
-      if (it->first.indexOf("_")>= 0) continue;
-      if (it->first == GwConfigDefinitions::apPassword && fixedApPass) continue;
-      bool rt = config.updateValue(it->first, it->second);
+    for (int i = 0; i < request->args(); i++){
+      String name=request->argName(i);
+      String value=request->arg(i);                                  
+      if (name.indexOf("_")>= 0) continue;
+      if (name == GwConfigDefinitions::apPassword && fixedApPass) continue;
+      bool rt = config.updateValue(name, value);
       if (!rt)
       {
-        logger.logDebug(GwLog::ERROR,"ERR: unable to update %s to %s", it->first.c_str(), it->second.c_str());
+        logger.logDebug(GwLog::ERROR,"ERR: unable to update %s to %s", name.c_str(), value.c_str());
         ok = false;
-        error += it->first;
+        error += name;
         error += "=";
-        error += it->second;
+        error += value;
         error += ",";
       }
       logger.flush();
@@ -523,6 +527,7 @@ public:
   ResetConfigRequest(String hash) : GwRequestMessage(F("application/json"),F("resetConfig")){
     this->hash=hash;
   };
+  virtual int getTimeout(){return 4000;}
 
 protected:
   virtual void processRequest()
@@ -643,11 +648,7 @@ void setup() {
   webserver.registerMainHandler("/api/setConfig",
                               [](AsyncWebServerRequest *request)->GwRequestMessage *
                               {
-                                SetConfigRequest *msg = new SetConfigRequest();
-                                for (int i = 0; i < request->args(); i++)
-                                {
-                                  msg->args[request->argName(i)] = request->arg(i);
-                                }
+                                SetConfigRequest *msg = new SetConfigRequest(request);
                                 return msg;
                               });
   webserver.registerMainHandler("/api/resetConfig", [](AsyncWebServerRequest *request)->GwRequestMessage *
