@@ -121,7 +121,12 @@ function resetForm(ev) {
                             }
                         }
                     }
-                    el.value = v;
+                    if (el.tagName === 'SELECT') {
+                        setSelect(el,v);
+                    }
+                    else{
+                        el.value = v;
+                    }
                     el.setAttribute('data-loaded', v);
                     let changeEvent = new Event('change');
                     el.dispatchEvent(changeEvent);
@@ -199,39 +204,46 @@ function checkXDR(v,allValues){
         }
     }
 }
+function getAllConfigs(omitPass) {
+    let values = document.querySelectorAll('.configForm select , .configForm input');
+    let allValues = {};
+    for (let i = 0; i < values.length; i++) {
+        let v = values[i];
+        let name = v.getAttribute('name');
+        if (!name) continue;
+        if (name.indexOf("_") >= 0) continue;
+        let def = getConfigDefition(name);
+        if (def.type === 'password' && ( v.value == '' || omitPass)) {
+            continue;
+        }
+        let check = v.getAttribute('data-check');
+        if (check) {
+            if (typeof (self[check]) === 'function') {
+                let res = self[check](v.value, allValues, getConfigDefition(name));
+                if (res) {
+                    let value = v.value;
+                    if (v.type === 'password') value = "******";
+                    alert("invalid config for " + v.getAttribute('name') + "(" + value + "):\n" + res);
+                    return;
+                }
+            }
+        }
+        allValues[name] = v.value;
+    }
+    return allValues;
+}
 function changeConfig() {
     ensurePass()
         .then(function (pass) {
             let newAdminPass;
             let url = "/api/setConfig?_hash="+encodeURIComponent(pass)+"&";
-            let values = document.querySelectorAll('.configForm select , .configForm input');
-            let allValues = {};
-            for (let i = 0; i < values.length; i++) {
-                let v = values[i];
-                let name = v.getAttribute('name');
-                if (!name) continue;
-                if (name.indexOf("_") >= 0) continue;
-                let def = getConfigDefition(name);
-                if (def.type === 'password' && v.value == '') {
-                    continue;
-                }
-                let check = v.getAttribute('data-check');
-                if (check) {
-                    if (typeof (self[check]) === 'function') {
-                        let res = self[check](v.value, allValues, getConfigDefition(name));
-                        if (res) {
-                            let value = v.value;
-                            if (v.type === 'password') value = "******";
-                            alert("invalid config for " + v.getAttribute('name') + "(" + value + "):\n" + res);
-                            return;
-                        }
-                    }
-                }
+            let allValues=getAllConfigs();
+            if (!allValues) return;
+            for (let name in allValues){
                 if (name == 'adminPassword'){
-                    newAdminPass=v.value;
+                    newAdminPass=allValues[name];
                 }
-                allValues[name] = v.value;
-                url += name + "=" + encodeURIComponent(v.value) + "&";
+                url += name + "=" + encodeURIComponent(allValues[name]) + "&";
             }
             getJson(url)
                 .then(function (status) {
@@ -249,7 +261,7 @@ function changeConfig() {
                     }
                 })
         })
-        .catch(function (e) { alert("Invalid password"); })
+        .catch(function (e) { alert(e); })
 }
 function factoryReset() {
     ensurePass()
@@ -386,12 +398,19 @@ function checkCondition(element){
     let condition=getConditions(name);
     if (! condition) return;
     let visible=false;
+    if (! condition instanceof Array) condition=[condition];
     condition.forEach(function(cel){
         let lvis=true;
         for (let k in cel){
             let item=document.querySelector('[name='+k+']');
             if (item){
-                if (item.value != cel[k]) lvis=false;
+                let compare=cel[k];
+                if (compare instanceof Array){
+                    if (compare.indexOf(item.value) < 0) lvis=false;
+                }
+                else{
+                    if (item.value != cel[k]) lvis=false;
+                }
             }
         }
         if (lvis) visible=true;
@@ -459,14 +478,30 @@ function createInput(configItem, frame,clazz) {
     return el;
 }
 
-function updateSelectList(item,slist){
-    item.innerHTML='';
+function setSelect(item,value){
+    if (!item) return;
+    item.value=value;
+    if (item.value !== value){
+        //missing option with his value
+        let o=addEl('option',undefined,item,value);
+        o.setAttribute('value',value);
+        item.value=value;
+    }
+}
+
+function updateSelectList(item,slist,opt_keepValue){
     let idx=0;
+    let value;
+    if (opt_keepValue) value=item.value;
+    item.innerHTML='';
     slist.forEach(function (sitem) {
         let sitemEl = addEl('option','',item,sitem.l);
         sitemEl.setAttribute('value', sitem.v !== undefined?sitem.v:idx);
         idx++;
     })
+    if (value !== undefined){
+        setSelect(item,value);
+    }
 }
 function getXdrCategories(){
     let rt=[];
@@ -822,16 +857,32 @@ function showXdrHelp(){
         showOverlay(helpContent.innerHTML,true);
     }
 }
-function formatDate(d){
+function formatDateForFilename(usePrefix,d){
+    let rt="";
+    if (usePrefix){
+        let fwt=document.querySelector('.status-fwtype');
+        if (fwt) rt=fwt.textContent;
+    }
     if (! d) d=new Date();
-    let rt=""+d.getFullYear();
-    let v=d.getMonth();
-    if (v < 10) rt+="0"+v;
-    else rt+=v;
-    v=d.getDate();
-    if (v < 10) rt+="0"+v;
-    else rt+=v;
+    [d.getFullYear(),d.getMonth(),d.getDate(),d.getHours(),d.getMinutes(),d.getSeconds()]
+        .forEach(function(v){
+            if (v < 10) rt+="0"+v;
+            else rt+=""+v;
+        })
     return rt;
+}
+function downloadData(data,name){
+    let url="data:application/octet-stream,"+encodeURIComponent(JSON.stringify(data,undefined,2));
+    let target=document.getElementById('downloadXdr');
+    if (! target) return;
+    target.setAttribute('href',url);
+    target.setAttribute('download',name);
+    target.click();
+}
+function exportConfig(){
+    let data=getAllConfigs(true);
+    if (! data) return;
+    downloadData(data,formatDateForFilename(true)+".json");
 }
 function exportXdr(){
     let data={};
@@ -845,18 +896,14 @@ function exportXdr(){
         }
         data[name]=value;
     })
-    let url="data:application/octet-stream,"+encodeURIComponent(JSON.stringify(data,undefined,2));
-    let target=document.getElementById('downloadXdr');
-    if (! target) return;
-    target.setAttribute('href',url);
-    target.setAttribute('download',"xdr"+formatDate()+".json");
-    target.click();
+    downloadData(data,"xdr"+formatDateForFilename(true)+".json");
 }
-function importXdr(){
-    forEl('.uploadXdr',function(ul){
+function importJson(opt_keyPattern){
+    let clazz='importJson';
+    forEl('.'+clazz,function(ul){
         ul.remove();
     });
-    let ip=addEl('input','uploadXdr',document.body);
+    let ip=addEl('input',clazz,document.body);
     ip.setAttribute('type','file');
     ip.addEventListener('change',function(ev){
         if (ip.files.length > 0){
@@ -867,11 +914,11 @@ function importXdr(){
                     let idata=JSON.parse(reader.result);
                     let hasOverwrites=false;
                     for (let k in idata){
-                        if (! k.match(/^XDR[0-9][0-9]*/)){
+                        if (opt_keyPattern && ! k.match(opt_keyPattern)){
                             alert("file contains invalid key "+k);
                             return;
                         }
-                        let del=document.querySelector('input[name='+k+']');
+                        let del=document.querySelector('[name='+k+']');
                         if (del){
                             hasOverwrites=true;
                         }        
@@ -880,9 +927,14 @@ function importXdr(){
                         if (!confirm("overwrite existing data?")) return;
                     }
                     for (let k in idata){
-                        let del=document.querySelector('input[name='+k+']');
+                        let del=document.querySelector('[name='+k+']');
                         if (del){
-                            del.value=idata[k];
+                            if (del.tagName === 'SELECT'){
+                                setSelect(del,idata[k]);
+                            }
+                            else{
+                                del.value=idata[k];
+                            }
                             let ev=new Event('change');
                             del.dispatchEvent(ev);
                         }
@@ -897,6 +949,12 @@ function importXdr(){
         ip.remove();
     });
     ip.click(); 
+}
+function importXdr(){
+    importJson(new RegExp(/^XDR[0-9][0-9]*/));
+}
+function importConfig(){
+    importJson();
 }
 function toggleClass(el,id,classList){
     let nc=classList[id];
@@ -1023,6 +1081,10 @@ function createConfigDefinitions(parent, capabilities, defs,includeXdr) {
 function loadConfigDefinitions() {
     getJson("api/capabilities")
         .then(function (capabilities) {
+            if (capabilities.HELP_URL){
+                let el=document.getElementById('helpButton');
+                if (el) el.setAttribute('data-url',capabilities.HELP_URL);
+            }
             getJson("config.json")
                 .then(function (defs) {
                     getJson("xdrconfig.json")
@@ -1141,7 +1203,11 @@ function converterInfo() {
 }
 function handleTab(el) {
     let activeName = el.getAttribute('data-page');
-    if (!activeName) return;
+    if (!activeName) {
+        let extUrl= el.getAttribute('data-url');
+        if (! extUrl) return;
+        window.open(extUrl,el.getAttribute('data-window')||'_');
+    }
     let activeTab = document.getElementById(activeName);
     if (!activeTab) return;
     let all = document.querySelectorAll('.tabPage');
@@ -1462,7 +1528,7 @@ function updateDashboard(data) {
     }
     if (selectChanged){
         forEl('.boatDataSelect',function(el){
-            updateSelectList(el,selectList);
+            updateSelectList(el,selectList,true);
         });
     }
 }

@@ -6,9 +6,17 @@
     // SeaTalk
     #define OBP_SEATALK_TX 2
     #define OBP_SEATALK_RX 15
-    // I2C (MCP23017)
+    // I2C (MCP23017, BME280, BMP280, SHT21)
     #define OBP_I2C_SDA 21
     #define OBP_I2C_SCL 22
+    // Extension Port MCP23017
+    #define MCP23017_I2C_ADDR 0x20  // Addr. 0 is 0x20
+    // BME280
+    #define BME280_I2C_ADDR 0x76    // Addr. 0x76
+    // BMP280
+    #define BMP280_I2C_ADDR 0x77    // Addr. 0x77
+    // SHT21
+    #define SHT21_I2C_ADDR 0x40     // Addr. 0x40
     // SPI (E-Ink display, Extern Bus)
     #define OBP_SPI_CS 5
     #define OBP_SPI_DC 17
@@ -34,17 +42,15 @@
     // Buzzer
     #define OBP_BUZZER 19
     #define TONE1 1500          // 1500Hz
-    #define TONE2 2000          // 200Hz
-    #define TONE3 3000          // 3000Hz
+    #define TONE2 2500          // 2500Hz
+    #define TONE3 3500          // 3500Hz
     #define TONE4 4000          // 4000Hz
     // Analog Input
     #define OBP_ANALOG0 34      // Voltage power supplay
     #define OBP_ANALOG1 36      // Analog In 1
     #define OBP_ANALOG2 39      // Analog In 2
     #define MIN_VOLTAGE 9.0     // Min voltage for under voltage detection (then goto deep sleep)
-    #define POWER_FAIL_TIME 2   // Accept min voltage until 2 x 1ms (for under voltage gaps by engine start)
-    // Extension Port MCP23017
-    #define MCP23017_I2C_ADDR 0x20  // Addr. 0 is 0x20
+    #define POWER_FAIL_TIME 2   // in [ms] Accept min voltage until 2 x 1ms (for under voltage gaps by engine start)
     // Extension Port PA
     #define PA0 0               // Digital Out 1
     #define PA1 1               // Digital Out 2

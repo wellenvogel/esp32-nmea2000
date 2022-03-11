@@ -15,8 +15,11 @@ Files
     This file is completely optional.
     You only need this if you want to
     extend the base configuration - we add a dummy library here and define one additional build environment (board)
-   * [GwExampleTask.h](GwExampleTask.h) the name of this include must match the name of the directory (ignoring case) with a "gw" in front. This file includes our special hardware definitions and registers our task at the core (DECLARE_USERTASK in the code). Optionally it can define some capabilities (using DECLARE_CAPABILITY) that can be used in the config UI (see below).
-   Avoid including headers from other libraries in this file as this could interfere with the main code. Just only include them in your .cpp files (or in other headers).
+   * [GwExampleTask.h](GwExampleTask.h) the name of this include must match the name of the directory (ignoring case) with a "gw" in front. This file includes our special hardware definitions and registers our task at the core (DECLARE_USERTASK in the code). Avoid including headers from other libraries in this file as this could interfere with the main code. Just only include them in your .cpp files (or in other headers).
+   Optionally it can define some capabilities (using DECLARE_CAPABILITY) that can be used in the config UI (see below)
+   There are some special capabilities you can set:
+     *  HIDEsomeName: will hide the configItem "someName"
+     *  HELP_URL: will set the url that is loaded when clicking the HELP tab (user DECLARE_STRING_CAPABILITY)
    * [GwExampleTaks.cpp](GwExampleTask.cpp) includes the implementation of our task. This tasks runs in an own thread - see the comments in the code.
    We can have as many cpp (and header files) as we need to structure our code.  
    * [config.json](config.json)<br>
