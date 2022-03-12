@@ -485,6 +485,7 @@ void OBP60Task(GwApi *api){
     String gpsFix = api->getConfig()->getConfigItem(api->getConfig()->flashLED,true)->asString();
     String gps = api->getConfig()->getConfigItem(api->getConfig()->useGPS,true)->asString();
     String backlight = api->getConfig()->getConfigItem(api->getConfig()->backlight,true)->asString();
+    String envsensor = api->getConfig()->getConfigItem(api->getConfig()->useEnvSensor,true)->asString();
     // refreshmode defined in init section
     // displaycolor defined in init section
     // textcolor defined in init section
@@ -634,7 +635,7 @@ void OBP60Task(GwApi *api){
                 unsigned char PressureSource = 0;   // Atmospheric pressure
                 unsigned char HumiditySource=0;     // Inside humidity
                 LOG_DEBUG(GwLog::LOG,"Ready status BME280 %d", BME280_ready);
-                if(BME280_ready == true){
+                if(envsensor == "BME280" && BME280_ready == true){
                     airtemperature = bme280.readTemperature();
                     commonData.data.airTemperature = airtemperature;   // Data take over to page
                     airpressure = bme280.readPressure()/100;
@@ -642,34 +643,48 @@ void OBP60Task(GwApi *api){
                     airhumidity = bme280.readHumidity();
                     commonData.data.airHumidity = airhumidity;         // Data take over to page
                     // Send to NMEA200 bus
-                    SetN2kPGN130312(N2kMsg, 0, 0,(tN2kTempSource) TempSource, CToKelvin(airtemperature), N2kDoubleNA);
-                    api->sendN2kMessage(N2kMsg);
-                    SetN2kPGN130313(N2kMsg, 0, 0,(tN2kHumiditySource) HumiditySource, airhumidity, N2kDoubleNA);
-                    api->sendN2kMessage(N2kMsg);
-                    SetN2kPGN130314(N2kMsg, 0, 0, (tN2kPressureSource) mBarToPascal(PressureSource), airpressure);
-                    api->sendN2kMessage(N2kMsg);
+                    if(!isnan(airtemperature)){
+                        SetN2kPGN130312(N2kMsg, 0, 0,(tN2kTempSource) TempSource, CToKelvin(airtemperature), N2kDoubleNA);
+                        api->sendN2kMessage(N2kMsg);
+                    }
+                    if(!isnan(airhumidity)){
+                        SetN2kPGN130313(N2kMsg, 0, 0,(tN2kHumiditySource) HumiditySource, airhumidity, N2kDoubleNA);
+                        api->sendN2kMessage(N2kMsg);
+                    }
+                    if(!isnan(airpressure)){
+                        SetN2kPGN130314(N2kMsg, 0, 0, (tN2kPressureSource) mBarToPascal(PressureSource), airpressure);
+                        api->sendN2kMessage(N2kMsg);
+                    }
                 }
-                else if(BMP280_ready == true){
+                else if(envsensor == "BMP280" && BMP280_ready == true){
                     airtemperature = bmp280.readTemperature();
                     commonData.data.airTemperature = airtemperature;   // Data take over to page
                     airpressure  =bmp280.readPressure()/100;
                     commonData.data.airPressure = airpressure;         // Data take over to page
                     // Send to NMEA200 bus
-                    SetN2kPGN130312(N2kMsg, 0, 0,(tN2kTempSource) TempSource, CToKelvin(airtemperature), N2kDoubleNA);
-                    api->sendN2kMessage(N2kMsg);
-                    SetN2kPGN130314(N2kMsg, 0, 0, (tN2kPressureSource) mBarToPascal(PressureSource), airpressure);
-                    api->sendN2kMessage(N2kMsg);
+                    if(!isnan(airtemperature)){
+                        SetN2kPGN130312(N2kMsg, 0, 0,(tN2kTempSource) TempSource, CToKelvin(airtemperature), N2kDoubleNA);
+                        api->sendN2kMessage(N2kMsg);
+                    }
+                    if(!isnan(airpressure)){
+                        SetN2kPGN130314(N2kMsg, 0, 0, (tN2kPressureSource) mBarToPascal(PressureSource), airpressure);
+                        api->sendN2kMessage(N2kMsg);
+                    }
                 }
-                else if(BME280_ready == true){
+                else if(envsensor == "SHT21" && BME280_ready == true){
                     airhumidity = sht21.readCompensatedHumidity();
                     commonData.data.airHumidity = airhumidity;         // Data take over to page
                     airtemperature = sht21.readTemperature();
                     commonData.data.airTemperature = airtemperature;   // Data take over to page
                     // Send to NMEA200 bus
-                    SetN2kPGN130312(N2kMsg, 0, 0,(tN2kTempSource) TempSource, CToKelvin(airtemperature), N2kDoubleNA);
-                    api->sendN2kMessage(N2kMsg);
-                    SetN2kPGN130313(N2kMsg, 0, 0,(tN2kHumiditySource) HumiditySource, airhumidity, N2kDoubleNA);
-                    api->sendN2kMessage(N2kMsg);
+                    if(!isnan(airtemperature)){
+                        SetN2kPGN130312(N2kMsg, 0, 0,(tN2kTempSource) TempSource, CToKelvin(airtemperature), N2kDoubleNA);
+                        api->sendN2kMessage(N2kMsg);
+                    }
+                    if(!isnan(airhumidity)){
+                        SetN2kPGN130313(N2kMsg, 0, 0,(tN2kHumiditySource) HumiditySource, airhumidity, N2kDoubleNA);
+                        api->sendN2kMessage(N2kMsg);
+                    }
                 }                
             }
 
