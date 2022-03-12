@@ -114,7 +114,7 @@
         "label": "Battery Type",
         "type": "list",
         "default": "Pb",
-        "description": "Type of battery",
+        "description": "Type of battery [Pb|Gel|AGM|LiFePo4]",
         "list": [
             "Pb",
             "Gel",
@@ -134,7 +134,7 @@
         "check": "checkMinMax",
         "min": 0,
         "max": 10000,
-        "description": "Fuel tank capacity [0...10000Ah]",
+        "description": "Battery capacity [0...10000Ah]",
         "category": "OBP60 Settings",
         "capabilities": {
             "obp60":"true"
