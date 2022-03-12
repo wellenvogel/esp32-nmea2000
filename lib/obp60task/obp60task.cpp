@@ -54,7 +54,7 @@ Ticker Timer2(blinkingFlashLED, 500);
 // Undervoltage function for shutdown display
 void underVoltageDetection(){
     float actVoltage = (float(analogRead(OBP_ANALOG0)) * 3.3 / 4096 + 0.17) * 20;   // V = 1/20 * Vin
-    long starttime;
+    long starttime = 0;
     static bool undervoltage = false;
 
     if(actVoltage < MIN_VOLTAGE){
@@ -504,13 +504,15 @@ void OBP60Task(GwApi *api){
     int lastPage=pageNumber;
     commonData.data.actpage = pageNumber + 1;
     commonData.data.maxpage = numPages;
+    commonData.time = boatValues.findValueOrCreate("GPST");      // Load GpsTime
+    commonData.date = boatValues.findValueOrCreate("GPSD");      // Load GpsTime
     bool delayedDisplayUpdate = false;  // If select a new pages then make a delayed full display update
     long firststart = millis();     // First start
     long starttime0 = millis();     // Mainloop
     long starttime1 = millis();     // Full display refresh for the first 5 min (more often as normal)
     long starttime2 = millis();     // Full display refresh after 5 min
     long starttime3 = millis();     // Display update all 1s
-    long starttime4 = millis();     // Delayed display update after 2s when select a new page
+    long starttime4 = millis();     // Delayed display update after 4s when select a new page
     long starttime5 = millis();     // Voltage update all 1s
     long starttime6 = millis();     // Environment sensor update all 1s
 
@@ -522,7 +524,7 @@ void OBP60Task(GwApi *api){
 
             // Send NMEA0183 GPS data on several bus systems all 1000ms
             if(String(gps) == "NEO-6M" || String(gps) == "NEO-M8N"){   // If config enabled
-                if(gps_ready = true){
+                if(gps_ready == true){
                     tNMEA0183Msg NMEA0183Msg;
                     while(NMEA0183.GetMessage(NMEA0183Msg)){
                         api->sendNMEA0183Message(NMEA0183Msg);
@@ -585,7 +587,7 @@ void OBP60Task(GwApi *api){
                         display.update(); // Full update
                     }
 */                    
-                    // #9 or #10 Refresh display after a new page after 2s waiting time and if refresh is disabled
+                    // #9 or #10 Refresh display after a new page after 4s waiting time and if refresh is disabled
                     if(refreshmode == true && (keyboardMessage == 9 || keyboardMessage == 10)){
                         starttime4 = millis();
                         delayedDisplayUpdate = true;
@@ -594,8 +596,8 @@ void OBP60Task(GwApi *api){
                 LOG_DEBUG(GwLog::LOG,"set pagenumber to %d",pageNumber);
             }
 
-            // Full display update afer a new selected page and 2s wait time
-            if(millis() > starttime4 + 2000 && delayedDisplayUpdate == true){
+            // Full display update afer a new selected page and 4s wait time
+            if(millis() > starttime4 + 4000 && delayedDisplayUpdate == true){
                 display.update(); // Full update
                 delayedDisplayUpdate = false;
             }

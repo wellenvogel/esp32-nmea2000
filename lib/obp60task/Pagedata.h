@@ -40,6 +40,8 @@ typedef struct{
   GwLog *logger=NULL;
   GwConfigHandler *config=NULL;
   SensorData data;
+  GwApi::BoatValue *time=NULL;
+  GwApi::BoatValue *date=NULL;
 } CommonData;
 
 //a base class that all pages must inherit from
