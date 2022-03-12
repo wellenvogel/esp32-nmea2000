@@ -30,10 +30,29 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
     char buffer[bsize+1];
     buffer[0]=0;
     //########################################################
-    time_t tv = 0;
     if (value->getFormat() == "formatDate"){
+
+        double utctime = commondata.time->value;   // UTC time in secounds of the day (GPS or bus data)
+
+        //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/*
+        time_t now;
+        char strftime_buf[64];
+        struct tm timeinfo;
+
+        time(&now);
+        // Set timezone to China Standard Time
+        setenv("TZ", "CST-8", 1);
+        tzset();
+        localtime_r(&now, &timeinfo);
+
+        strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
+*/
+        //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
         tmElements_t parts;
         time_t tv=tNMEA0183Msg::daysToTime_t(value->value + dayoffset);
+
         tNMEA0183Msg::breakTime(tv,parts);
         if(usesimudata == false) { 
             if(String(dateFormat) == "DE"){
@@ -76,7 +95,7 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
             timeInSeconds = value->value + timeZone * 3600 + 86400;     // Add one day
             timeInSeconds = int(timeInSeconds) % 86400;                 // Reduce to one day (86400s)
         }
-
+/*
         // Changing day depends on time offset
         utcTime = value->value;
         if(timeZone + (utcTime/3600) > 24 && timeZone > 0){
@@ -94,7 +113,7 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
         else{
             dayoffset = -1;
         }
-
+*/
 
         if(usesimudata == false) {    
             val=modf(timeInSeconds/3600.0,&inthr);
