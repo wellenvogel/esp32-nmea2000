@@ -26,7 +26,7 @@
     #define OBP_SPI_DIN 23
     #define SHOW_TIME 6000        // Show time for logo and WiFi QR code
     #define FULL_REFRESH_TIME 600 // Refresh cycle time in [s][600...3600] for full display update (very important healcy function)
-    #define MAX_PAGE_NUMBER 4     // Max number of pages for show data
+    #define MAX_PAGE_NUMBER 10    // Max number of pages for show data
     #define FONT1 "Ubuntu_Bold8pt7b"
     #define FONT2 "Ubuntu_Bold24pt7b"
     #define FONT3 "Ubuntu_Bold32pt7b"
