@@ -356,6 +356,8 @@ void registerAllPages(PageList &list){
     list.add(&registerPageWhite);
     extern PageDescription registerPageBME280;
     list.add(&registerPageBME280);
+    extern PageDescription registerPageRudderPosition;
+    list.add(&registerPageRudderPosition);
 }
 
 // OBP60 Task
@@ -533,12 +535,13 @@ void OBP60Task(GwApi *api){
                 }
             }
 
-            // If GPS fix then LED on (HDOP)
+            // If GPS fix then LED off (HDOP)
             if(String(gpsFix) == "GPS Fix" && hdop->valid == true && int(hdop->value) <= 50){
-                setPortPin(OBP_FLASH_LED, true);
-            }
-            if(String(gpsFix) == "GPS Fix" && ((hdop->valid == true && int(hdop->value) > 50) || hdop->valid == false)){
                 setPortPin(OBP_FLASH_LED, false);
+            }
+            // Ifmissing GPS fix then LED on
+            if(String(gpsFix) == "GPS Fix" && ((hdop->valid == true && int(hdop->value) > 50) || hdop->valid == false)){
+                setPortPin(OBP_FLASH_LED, true);
             }
 
             // Check the keyboard message
@@ -623,9 +626,11 @@ void OBP60Task(GwApi *api){
                 starttime5 = millis();
                 batteryVoltage = (float(analogRead(OBP_ANALOG0)) * 3.3 / 4096 + 0.17) * 20;   // Vin = 1/20
                 commonData.data.batteryVoltage = batteryVoltage;   // Data take over to page
-                // Send to NMEA200 bus 
-                SetN2kDCBatStatus(N2kMsg, 0, batteryVoltage, N2kDoubleNA, N2kDoubleNA, 1);
-                api->sendN2kMessage(N2kMsg);
+                // Send to NMEA200 bus
+                if(!isnan(batteryVoltage)){
+                    SetN2kDCBatStatus(N2kMsg, 0, batteryVoltage, N2kDoubleNA, N2kDoubleNA, 1);
+                    api->sendN2kMessage(N2kMsg);
+                }
             }
 
             // Send data from environment sensor

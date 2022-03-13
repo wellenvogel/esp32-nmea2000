@@ -4,7 +4,6 @@
 #include <functional>
 #include <vector>
 
-#define MAX_PAGE_NUMBER 4
 typedef std::vector<GwApi::BoatValue *> ValueList;
 typedef struct{
   String pageName;

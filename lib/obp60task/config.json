@@ -496,7 +496,7 @@
         "type": "list",
         "default": "Voltage",
         "description": "Type of page for page 1",
-        "list":["oneValue","twoValues","threeValues","forValues","forValues2","apparentWind","WindRose","Voltage","DST810","Clock","WhitePage","BME280"],
+        "list":["oneValue","twoValues","threeValues","forValues","forValues2","apparentWind","WindRose","Voltage","DST810","Clock","WhitePage","BME280","RudderPosition"],
         "category": "OBP60 Page 1",
         "capabilities": {
             "obp60":"true"
@@ -556,7 +556,7 @@
         "type": "list",
         "default": "apparentWind",
         "description": "Type of page for page 2",
-        "list":["oneValue","twoValues","threeValues","forValues","forValues2","apparentWind","WindRose","Voltage","DST810","Clock","WhitePage","BME280"],
+        "list":["oneValue","twoValues","threeValues","forValues","forValues2","apparentWind","WindRose","Voltage","DST810","Clock","WhitePage","BME280","RudderPosition"],
         "category": "OBP60 Page 2",
         "capabilities": {
             "obp60":"true"
@@ -617,7 +617,7 @@
         "type": "list",
         "default": "oneValue",
         "description": "Type of page for page 3",
-        "list":["oneValue","twoValues","threeValues","forValues","forValues2","apparentWind","WindRose","Voltage","DST810","Clock","WhitePage","BME280"],
+        "list":["oneValue","twoValues","threeValues","forValues","forValues2","apparentWind","WindRose","Voltage","DST810","Clock","WhitePage","BME280","RudderPosition"],
         "category": "OBP60 Page 3",
         "capabilities": {
             "obp60":"true"
@@ -678,7 +678,7 @@
         "type": "list",
         "default": "oneValue",
         "description": "Type of page for page 4",
-        "list":["oneValue","twoValues","threeValues","forValues","forValues2","apparentWind","WindRose","Voltage","DST810","Clock","WhitePage","BME280"],
+        "list":["oneValue","twoValues","threeValues","forValues","forValues2","apparentWind","WindRose","Voltage","DST810","Clock","WhitePage","BME280","RudderPosition"],
         "category": "OBP60 Page 4",
         "capabilities": {
             "obp60":"true"
@@ -739,7 +739,7 @@
         "type": "list",
         "default": "oneValue",
         "description": "Type of page for page 5",
-        "list":["oneValue","twoValues","threeValues","forValues","forValues2","apparentWind","WindRose","Voltage","DST810","Clock","WhitePage","BME280"],
+        "list":["oneValue","twoValues","threeValues","forValues","forValues2","apparentWind","WindRose","Voltage","DST810","Clock","WhitePage","BME280","RudderPosition"],
         "category": "OBP60 Page 5",
         "capabilities": {
             "obp60":"true"
@@ -800,7 +800,7 @@
         "type": "list",
         "default": "oneValue",
         "description": "Type of page for page 6",
-        "list":["oneValue","twoValues","threeValues","forValues","forValues2","apparentWind","WindRose","Voltage","DST810","Clock","WhitePage","BME280"],
+        "list":["oneValue","twoValues","threeValues","forValues","forValues2","apparentWind","WindRose","Voltage","DST810","Clock","WhitePage","BME280","RudderPosition"],
         "category": "OBP60 Page 6",
         "capabilities": {
             "obp60":"true"
@@ -861,7 +861,7 @@
         "type": "list",
         "default": "oneValue",
         "description": "Type of page for page 7",
-        "list":["oneValue","twoValues","threeValues","forValues","forValues2","apparentWind","WindRose","Voltage","DST810","Clock","WhitePage","BME280"],
+        "list":["oneValue","twoValues","threeValues","forValues","forValues2","apparentWind","WindRose","Voltage","DST810","Clock","WhitePage","BME280","RudderPosition"],
         "category": "OBP60 Page 7",
         "capabilities": {
             "obp60":"true"
@@ -922,7 +922,7 @@
         "type": "list",
         "default": "oneValue",
         "description": "Type of page for page 8",
-        "list":["oneValue","twoValues","threeValues","forValues","forValues2","apparentWind","WindRose","Voltage","DST810","Clock","WhitePage","BME280"],
+        "list":["oneValue","twoValues","threeValues","forValues","forValues2","apparentWind","WindRose","Voltage","DST810","Clock","WhitePage","BME280","RudderPosition"],
         "category": "OBP60 Page 8",
         "capabilities": {
             "obp60":"true"
@@ -983,7 +983,7 @@
         "type": "list",
         "default": "oneValue",
         "description": "Type of page for page 9",
-        "list":["oneValue","twoValues","threeValues","forValues","forValues2","apparentWind","WindRose","Voltage","DST810","Clock","WhitePage","BME280"],
+        "list":["oneValue","twoValues","threeValues","forValues","forValues2","apparentWind","WindRose","Voltage","DST810","Clock","WhitePage","BME280","RudderPosition"],
         "category": "OBP60 Page 9",
         "capabilities": {
             "obp60":"true"
@@ -1044,7 +1044,7 @@
         "type": "list",
         "default": "oneValue",
         "description": "Type of page for page 10",
-        "list":["oneValue","twoValues","threeValues","forValues","forValues2","apparentWind","WindRose","Voltage","DST810","Clock","WhitePage","BME280"],
+        "list":["oneValue","twoValues","threeValues","forValues","forValues2","apparentWind","WindRose","Voltage","DST810","Clock","WhitePage","BME280","RudderPosition"],
         "category": "OBP60 Page 10",
         "capabilities": {
             "obp60":"true"
