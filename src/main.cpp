@@ -286,6 +286,11 @@ public:
           double newValue=item->getDoubleValue();
           if (newValue != list[i]->value) list[i]->changed=true;
           list[i]->value=newValue;
+          int newSource=item->getLastSource();
+          if (newSource != list[i]->source){
+            list[i]->source=newSource;
+            list[i]->changed=true;
+          }
         }
         list[i]->setFormat(item->getFormat());
       }
