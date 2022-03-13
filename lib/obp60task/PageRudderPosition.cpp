@@ -102,87 +102,6 @@ public:
         }
         // Clear display by call in obp60task.cpp in main loop
 
-        // Show values GPS date
-        display.setTextColor(textcolor);
-        if(holdvalues == false){
-            display.setFont(&Ubuntu_Bold8pt7b);
-            display.setCursor(10, 65);
-            display.print(svalue2);                     // Value
-            display.setFont(&Ubuntu_Bold12pt7b);
-            display.setCursor(10, 95);
-            display.print("Date");                      // Name
-        }
-        else{
-            display.setFont(&Ubuntu_Bold8pt7b);
-            display.setCursor(10, 65);
-            display.print(svalue2old);                     // Value
-            display.setFont(&Ubuntu_Bold12pt7b);
-            display.setCursor(10, 95);
-            display.print("Date");                       // Name
-        }
-
-        // Horizintal separator left
-        display.fillRect(0, 149, 60, 3, pixelcolor);
-
-        // Show values GPS time
-        display.setTextColor(textcolor);
-        if(holdvalues == false){
-            display.setFont(&Ubuntu_Bold8pt7b);
-            display.setCursor(10, 250);
-            display.print(svalue1);                     // Value
-            display.setFont(&Ubuntu_Bold12pt7b);
-            display.setCursor(10, 220);
-            display.print("Time");                       // Name
-        }
-        else{
-            display.setFont(&Ubuntu_Bold8pt7b);
-            display.setCursor(10, 250);
-            display.print(svalue1old);                     // Value
-            display.setFont(&Ubuntu_Bold12pt7b);
-            display.setCursor(10, 220);
-            display.print("Time");                       // Name
-        }
-
-        // Show values sunrise
-        display.setTextColor(textcolor);
-        if(holdvalues == false){
-            display.setFont(&Ubuntu_Bold8pt7b);
-            display.setCursor(335, 65);
-            display.print("06:32");                     // Value
-            display.setFont(&Ubuntu_Bold12pt7b);
-            display.setCursor(335, 95);
-            display.print("SunR");                       // Name
-        }
-        else{
-            display.setFont(&Ubuntu_Bold8pt7b);
-            display.setCursor(335, 65);
-            display.print("06:32");                     // Value
-            display.setFont(&Ubuntu_Bold12pt7b);
-            display.setCursor(335, 95);
-            display.print("SunR");                       // Name
-        }
-
-        // Horizintal separator right
-        display.fillRect(340, 149, 80, 3, pixelcolor);
-
-        // Show values sunset
-        display.setTextColor(textcolor);
-        if(holdvalues == false){
-            display.setFont(&Ubuntu_Bold8pt7b);
-            display.setCursor(335, 250);
-            display.print("18:22");                     // Value
-            display.setFont(&Ubuntu_Bold12pt7b);
-            display.setCursor(335, 220);
-            display.print("SunS");                       // Name
-        }
-        else{
-            display.setFont(&Ubuntu_Bold8pt7b);
-            display.setCursor(335, 250);
-            display.print("18:22");                     // Value
-            display.setFont(&Ubuntu_Bold12pt7b);
-            display.setCursor(335, 220);
-            display.print("SunS");                       // Name
-        }
 
 //*******************************************************************************************
         
@@ -191,28 +110,29 @@ public:
         float pi = 3.141592;
 
         display.fillCircle(200, 150, rWindGraphic + 10, pixelcolor);    // Outer circle
-        display.fillCircle(200, 150, rWindGraphic + 7, bgcolor);        // Outer circle     
+        display.fillCircle(200, 150, rWindGraphic + 7, bgcolor);        // Outer circle
+        display.fillRect(0, 30, 400, 122, bgcolor);                      // Delete half top circle
 
-        for(int i=0; i<360; i=i+10)
+        for(int i=90; i<=270; i=i+10)
         {
             // Scaling values
             float x = 200 + (rWindGraphic-30)*sin(i/180.0*pi);  //  x-coordinate dots
             float y = 150 - (rWindGraphic-30)*cos(i/180.0*pi);  //  y-coordinate cots 
-            const char *ii;
+            const char *ii = "";
             switch (i)
             {
-            case 0: ii="12"; break;
+            case 0: ii=""; break;
             case 30 : ii=""; break;
             case 60 : ii=""; break;
-            case 90 : ii="3"; break;
-            case 120 : ii=""; break;
-            case 150 : ii=""; break;
-            case 180 : ii="6"; break;
-            case 210 : ii=""; break;
-            case 240 : ii=""; break;
-            case 270 : ii="9"; break;
-            case 300 : ii=""; break;
-            case 330 : ii=""; break;
+            case 90 : ii="45"; break;
+            case 120 : ii="30"; break;
+            case 150 : ii="15"; break;
+            case 180 : ii="0"; break;
+            case 210 : ii="15"; break;
+            case 240 : ii="30"; break;
+            case 270 : ii="45"; break;
+            case 300 : ii="0"; break;
+            case 330 : ii="0"; break;
             default: break;
             }
 
@@ -222,7 +142,7 @@ public:
             display.getTextBounds(ii, int(x), int(y), &x1, &y1, &w, &h); // Calc width of new string
             display.setCursor(x-w/2, y+h/2);
             if(i % 30 == 0){
-                display.setFont(&Ubuntu_Bold12pt7b);
+                display.setFont(&Ubuntu_Bold8pt7b);
                 display.print(ii);
             }
 
@@ -290,32 +210,6 @@ public:
             float ix1 = endwidth;
             float ix2 = -endwidth;
             float iy1 = -(rWindGraphic * 0.5);
-            float iy2 = -endwidth;
-            display.fillTriangle(200+(int)(cosx*ix1-sinx*iy1),150+(int)(sinx*ix1+cosx*iy1),
-                200+(int)(cosx*ix2-sinx*iy1),150+(int)(sinx*ix2+cosx*iy1),
-                200+(int)(cosx*0-sinx*iy2),150+(int)(sinx*0+cosx*iy2),pixelcolor);
-        }
-
-        // Draw minute pointer
-        startwidth = 8;       // Start width of pointer
-        if(valid1 == true || holdvalues == true || simulation == true){
-            float sinx=sin(minute * 6.0 * pi / 180);     // Minute
-            float cosx=cos(minute * 6.0 * pi / 180);
-            // Normal pointer
-            // Pointer as triangle with center base 2*width
-            float xx1 = -startwidth;
-            float xx2 = startwidth;
-            float yy1 = -startwidth;
-            float yy2 = -(rWindGraphic - 15); 
-            display.fillTriangle(200+(int)(cosx*xx1-sinx*yy1),150+(int)(sinx*xx1+cosx*yy1),
-                200+(int)(cosx*xx2-sinx*yy1),150+(int)(sinx*xx2+cosx*yy1),
-                200+(int)(cosx*0-sinx*yy2),150+(int)(sinx*0+cosx*yy2),pixelcolor);   
-            // Inverted pointer
-            // Pointer as triangle with center base 2*width
-            float endwidth = 2;         // End width of pointer
-            float ix1 = endwidth;
-            float ix2 = -endwidth;
-            float iy1 = -(rWindGraphic - 15);
             float iy2 = -endwidth;
             display.fillTriangle(200+(int)(cosx*ix1-sinx*iy1),150+(int)(sinx*ix1+cosx*iy1),
                 200+(int)(cosx*ix2-sinx*iy1),150+(int)(sinx*ix2+cosx*iy1),
