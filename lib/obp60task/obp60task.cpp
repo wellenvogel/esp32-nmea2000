@@ -28,8 +28,12 @@
 #include "Logo_OBP_400x300_sw.h"        // OBP Logo
 #include "OBP60QRWiFi.h"                // Functions lib for WiFi QR code
 
+#include "ObpNmea0183.h"
+#include "GwNmea0183Msg.h"
+
 tNMEA0183Msg NMEA0183Msg;
-tNMEA0183 NMEA0183;
+ObpNmea0183 NMEA0183;                   // Fixed Lib for NMEA0183
+// tNMEA0183 NMEA0183;                  // Old lib with problems for NMEA0183
 
 Adafruit_BME280 bme280;                 // Evironment sensor BME280
 Adafruit_BMP280 bmp280;                 // Evironment sensor BMEP280
@@ -520,6 +524,7 @@ void OBP60Task(GwApi *api){
     long starttime6 = millis();     // Environment sensor update all 1s
 
     while (true){
+        delay(10);                  // Fixed the problem with NMEA0183 and GPS sentences
         Timer1.update();            // Update for Timer1
         Timer2.update();            // Update for Timer2
         if(millis() > starttime0 + 100){
