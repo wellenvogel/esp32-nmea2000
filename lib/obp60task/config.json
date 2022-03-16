@@ -251,6 +251,9 @@
             "off",
             "BME280",
             "BMP280",
+            "BMP180",
+            "BMP085",
+            "HTU21",
             "SHT21"
         ],
         "category": "OBP60 Hardware",
