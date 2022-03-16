@@ -25,13 +25,9 @@ public:
         GwConfigHandler *config = commonData.config;
         GwLog *logger=commonData.logger;
 
-        static String svalue1old = "";
         static String unit1old = "";
-        static String svalue2old = "";
-        static String unit2old = "";
-
-        double value1 = 0;
-        double value2 = 0;
+        double value1 = 0.1;
+        double value1old = 0.1;
 
         // Get config data
         String lengthformat = config->getString(config->lengthFormat);
@@ -42,35 +38,17 @@ public:
         String backlightMode = config->getString(config->backlight);
         int timezone = config->getInt(config->timeZone);
 
-        // Get boat values for GPS time
-        GwApi::BoatValue *bvalue1 = pageData.values[0]; // First element in list (only one value by PageOneValue)
+        // Get boat values for rudder position
+        GwApi::BoatValue *bvalue1 = pageData.values[0]; // First element in list
         String name1 = bvalue1->getName().c_str();      // Value name
         name1 = name1.substring(0, 6);                  // String length limit for value name
-        if(simulation == false){
-            value1 = bvalue1->value;                    // Value as double in SI unit
-        }
-        else{
-            value1 = 38160;                             // Simulation data for time value 11:36 in seconds
-        }                                               // Other simulation data see OBP60Formater.cpp
+        value1 = bvalue1->value;                        // Raw value without unit convertion
         bool valid1 = bvalue1->valid;                   // Valid information 
         String svalue1 = formatValue(bvalue1, commonData).svalue;    // Formatted value as string including unit conversion and switching decimal places
         String unit1 = formatValue(bvalue1, commonData).unit;        // Unit of value
         if(valid1 == true){
-            svalue1old = svalue1;   	                // Save old value
+            value1old = value1;   	                    // Save old value
             unit1old = unit1;                           // Save old unit
-        }
-
-        // Get boat values for GPS date
-        GwApi::BoatValue *bvalue2 = pageData.values[1]; // First element in list (only one value by PageOneValue)
-        String name2 = bvalue2->getName().c_str();      // Value name
-        name2 = name2.substring(0, 6);                  // String length limit for value name
-        value2 = bvalue2->value;                        // Value as double in SI unit
-        bool valid2 = bvalue2->valid;                   // Valid information 
-        String svalue2 = formatValue(bvalue2, commonData).svalue;    // Formatted value as string including unit conversion and switching decimal places
-        String unit2 = formatValue(bvalue2, commonData).unit;        // Unit of value
-        if(valid2 == true){
-            svalue2old = svalue2;   	                // Save old value
-            unit2old = unit2;                           // Save old unit
         }
 
         // Optical warning by limit violation (unused)
@@ -81,7 +59,7 @@ public:
 
         // Logging boat values
         if (bvalue1 == NULL) return;
-        LOG_DEBUG(GwLog::LOG,"Drawing at PageRudderPosition, %s:%f,  %s:%f", name1, value1, name2, value2);
+        LOG_DEBUG(GwLog::LOG,"Drawing at PageRudderPosition, %s:%f", name1, value1);
 
         // Draw page
         //***********************************************************
@@ -118,12 +96,12 @@ public:
             // Scaling values
             float x = 200 + (rWindGraphic-30)*sin(i/180.0*pi);  //  x-coordinate dots
             float y = 150 - (rWindGraphic-30)*cos(i/180.0*pi);  //  y-coordinate cots 
-            const char *ii = "";
+            const char *ii = " ";
             switch (i)
             {
-            case 0: ii=""; break;
-            case 30 : ii=""; break;
-            case 60 : ii=""; break;
+            case 0: ii=" "; break;      // Use a blank for a empty scale value
+            case 30 : ii=" "; break;
+            case 60 : ii=" "; break;
             case 90 : ii="45"; break;
             case 120 : ii="30"; break;
             case 150 : ii="15"; break;
@@ -131,8 +109,8 @@ public:
             case 210 : ii="15"; break;
             case 240 : ii="30"; break;
             case 270 : ii="45"; break;
-            case 300 : ii="0"; break;
-            case 330 : ii="0"; break;
+            case 300 : ii=" "; break;
+            case 330 : ii=" "; break;
             default: break;
             }
 
@@ -167,34 +145,41 @@ public:
                         200+(int)(cosx*xx1-sinx*yy2),150+(int)(sinx*xx1+cosx*yy2),
                         200+(int)(cosx*xx2-sinx*yy2),150+(int)(sinx*xx2+cosx*yy2),pixelcolor);  
             }
+
         }
 
-        // Print Unit in RudderPosition
+        // Print label
         display.setTextColor(textcolor);
+        display.setFont(&Ubuntu_Bold16pt7b);
+        display.setCursor(80, 70);
+        display.print("Rudder Position");               // Label
+
+        // Print Unit in RudderPosition
         if(holdvalues == false){
             display.setFont(&Ubuntu_Bold12pt7b);
             display.setCursor(175, 110);
-            display.print(unit2);                       // Unit
+            display.print(unit1);                       // Unit
         }
         else{
             display.setFont(&Ubuntu_Bold12pt7b);
             display.setCursor(175, 110);
-            display.print(unit2old);                    // Unit
+            display.print(unit1old);                    // Unit
         }
 
-        // RudderPosition values
-        double hour = 0;
-        double minute = 0;
-        hour = (value1 / 3600.0);
-        if(hour > 12) hour = hour - 12.0;
-        hour = hour + timezone;
-        minute = (hour - int(hour)) * 3600.0 / 60.0;
+        // Calculate rudder position
+        if(holdvalues == true && valid1 == false){
+            value1 = 2 * pi - ((value1old * 2) + pi);
+        }
+        else{
+            value1 = 2 * pi - ((value1 * 2) + pi);
+        }
 
-        // Draw hour pointer
+        // Draw rudder position pointer
         float startwidth = 8;       // Start width of pointer
+
         if(valid1 == true || holdvalues == true || simulation == true){
-            float sinx=sin(hour * 30.0 * pi / 180);     // Hour
-            float cosx=cos(hour * 30.0 * pi / 180);
+            float sinx=sin(value1);
+            float cosx=cos(value1);
             // Normal pointer
             // Pointer as triangle with center base 2*width
             float xx1 = -startwidth;
@@ -253,9 +238,9 @@ static Page *createPage(CommonData &common){
  * and will will provide the names of the fixed values we need
  */
 PageDescription registerPageRudderPosition(
-    "RudderPosition",         // Page name
+    "RudderPosition",   // Page name
     createPage,         // Action
     0,                  // Number of bus values depends on selection in Web configuration
-    {"GPST", "GPSD"},    // Bus values we need in the page
+    {"RPOS"},           // Bus values we need in the page
     true                // Show display header on/off
 );
