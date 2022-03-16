@@ -9,6 +9,7 @@
 #include <Adafruit_Sensor.h>            // Adafruit Lib for sensors
 #include <Adafruit_BME280.h>            // Adafruit Lib for BME280
 #include <Adafruit_BMP280.h>            // Adafruit Lib for BMP280
+#include <Adafruit_BMP085.h>            // Adafruit Lib for BMP085 and BMP180
 #include <HTU21D.h>                     // Lib for SHT21/HTU21
 #include <N2kTypes.h>                   // NMEA2000
 #include <N2kMessages.h>
@@ -36,15 +37,17 @@ ObpNmea0183 NMEA0183;                   // Fixed Lib for NMEA0183
 // tNMEA0183 NMEA0183;                  // Old lib with problems for NMEA0183
 
 Adafruit_BME280 bme280;                 // Evironment sensor BME280
-Adafruit_BMP280 bmp280;                 // Evironment sensor BMEP280
-HTU21D  sht21(HTU21D_RES_RH12_TEMP14);  // Environment sensor SHT21 identical to HTU21
+Adafruit_BMP280 bmp280;                 // Evironment sensor BMP280
+Adafruit_BMP085 bmp085;                 //Evironment sensor BMP085 and BMP180
+HTU21D  sht21(HTU21D_RES_RH12_TEMP14);  // Environment sensor SHT21 and HTU21
 
 // Global vars
 bool initComplete = false;      // Initialization complete
 int taskRunCounter = 0;         // Task couter for loop section
 bool gps_ready = false;         // GPS initialized and ready to use
 bool BME280_ready = false;      // BME280 initialized and ready to use
-bool BMP280_ready = false;      // BMP20 initialized and ready to use
+bool BMP280_ready = false;      // BMP280 initialized and ready to use
+bool BMP180_ready = false;      // BMP180 initialized and ready to use
 bool SHT21_ready = false;       // SHT21 initialized and ready to use
 double airhumidity = 0;         // Air Humitity value from environment sensor
 double airtemperature = 0;      // Air Temperature value from environment sensor
@@ -218,12 +221,23 @@ void OBP60Init(GwApi *api){
             BMP280_ready = true;
         }
     }
-    else if(String(envSensors) == "SHT21"){
-        if (!sht21.begin()) {
-            api->getLogger()->logDebug(GwLog::ERROR,"Modul SHT21 not found, check wiring");
+    else if(String(envSensors) == "BMP085" || String(envSensors) == "BMP180"){
+        if (!bmp085.begin()) {
+            api->getLogger()->logDebug(GwLog::ERROR,"Modul BMP085/BMP180 not found, check wiring");
         }
         else{
-            api->getLogger()->logDebug(GwLog::DEBUG,"Modul SHT21 found");
+            api->getLogger()->logDebug(GwLog::DEBUG,"Modul BMP085/BMP180 found");
+            airtemperature = bmp085.readTemperature();
+            airpressure  =bmp085.readPressure()/100;
+            BMP180_ready = true;
+        }
+    }
+    else if(String(envSensors) == "HTU21" || String(envSensors) == "SHT21"){
+        if (!sht21.begin()) {
+            api->getLogger()->logDebug(GwLog::ERROR,"Modul HTU21/SHT21 not found, check wiring");
+        }
+        else{
+            api->getLogger()->logDebug(GwLog::DEBUG,"Modul HTU21/SHT21 found");
             airhumidity = sht21.readCompensatedHumidity();
             airtemperature = sht21.readTemperature();
             SHT21_ready = true;
@@ -681,7 +695,22 @@ void OBP60Task(GwApi *api){
                         api->sendN2kMessage(N2kMsg);
                     }
                 }
-                else if(envsensor == "SHT21" && BME280_ready == true){
+                else if((envsensor == "BMP085" || envsensor == "BMP180") && BMP180_ready == true){
+                    airtemperature = bmp085.readTemperature();
+                    commonData.data.airTemperature = airtemperature;   // Data take over to page
+                    airpressure  =bmp085.readPressure()/100;
+                    commonData.data.airPressure = airpressure;         // Data take over to page
+                    // Send to NMEA200 bus
+                    if(!isnan(airtemperature)){
+                        SetN2kPGN130312(N2kMsg, 0, 0,(tN2kTempSource) TempSource, CToKelvin(airtemperature), N2kDoubleNA);
+                        api->sendN2kMessage(N2kMsg);
+                    }
+                    if(!isnan(airpressure)){
+                        SetN2kPGN130314(N2kMsg, 0, 0, (tN2kPressureSource) mBarToPascal(PressureSource), airpressure);
+                        api->sendN2kMessage(N2kMsg);
+                    }
+                }
+                else if((envsensor == "SHT21" || envsensor == "HTU21") && SHT21_ready == true){
                     airhumidity = sht21.readCompensatedHumidity();
                     commonData.data.airHumidity = airhumidity;         // Data take over to page
                     airtemperature = sht21.readTemperature();
