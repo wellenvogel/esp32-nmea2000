@@ -246,7 +246,7 @@
         "label": "Env. Sensor",
         "type": "list",
         "default": "off",
-        "description": "Use internal or external environment sensor [off|BME280|BMP280|SHT21]",
+        "description": "Use internal or external environment sensor via I2C bus[off|BME280|BMP280|SHT21]",
         "list": [
             "off",
             "BME280",
@@ -256,6 +256,51 @@
             "HTU21",
             "SHT21"
         ],
+        "category": "OBP60 Hardware",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "useRotSensor",
+        "label": "Rot. Sensor",
+        "type": "list",
+        "default": "off",
+        "description": "Use external rotation sensor via I2C bus[off|AS5600]",
+        "list": [
+            "off",
+            "AS5600"
+        ],
+        "category": "OBP60 Hardware",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "rotFunction",
+        "label": "Rot. Function",
+        "type": "list",
+        "default": "off",
+        "description": "Function for rotation sensor [off|Rudder|Mast]",
+        "list": [
+            "off",
+            "Rudder",
+            "Mast"
+        ],
+        "category": "OBP60 Hardware",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "rotOffset",
+        "label": "Rot. Offset",
+        "type": "number",
+        "default": "0",
+        "check": "checkMinMax",
+        "min": -180,
+        "max": 180,
+        "description": "Offset for rotation sensor [-180°...+180°]",
         "category": "OBP60 Hardware",
         "capabilities": {
             "obp60":"true"

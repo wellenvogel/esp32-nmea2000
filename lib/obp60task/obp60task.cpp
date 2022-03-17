@@ -29,12 +29,11 @@
 #include "Logo_OBP_400x300_sw.h"        // OBP Logo
 #include "OBP60QRWiFi.h"                // Functions lib for WiFi QR code
 
-#include "ObpNmea0183.h"
-#include "GwNmea0183Msg.h"
+#include "ObpNmea0183.h"                // Bugfix lib for NMEA0183
+#include "GwNmea0183Msg.h"              // Bugfix lib for NMEA0183
 
-tNMEA0183Msg NMEA0183Msg;
-ObpNmea0183 NMEA0183;                   // Fixed Lib for NMEA0183
-// tNMEA0183 NMEA0183;                  // Old lib with problems for NMEA0183
+ObpNmea0183 NMEA0183;                   // Use new Lib for NMEA0183
+// tNMEA0183 NMEA0183;                  // Use old lib with problems for NMEA0183
 
 Adafruit_BME280 bme280;                 // Evironment sensor BME280
 Adafruit_BMP280 bmp280;                 // Evironment sensor BMP280
@@ -55,8 +54,8 @@ double airpressure = 0;         // Ais pressure value from environment sensor
 
 // Timer Interrupts for hardware functions
 void underVoltageDetection();
-Ticker Timer1(underVoltageDetection, 1);     // Start Timer1 with maximum speed with 1ms
-Ticker Timer2(blinkingFlashLED, 500);
+Ticker Timer1(underVoltageDetection, 1);    // Start Timer1 with maximum speed with 1ms
+Ticker Timer2(blinkingFlashLED, 500);       // Satrt Timer2 for flash LED all 500ms
 
 // Undervoltage function for shutdown display
 void underVoltageDetection(){
@@ -94,7 +93,6 @@ void underVoltageDetection(){
 // Hardware initialization before start all services
 //##################################################
 void OBP60Init(GwApi *api){
-    GwLog *logger = api->getLogger();
     api->getLogger()->logDebug(GwLog::LOG,"obp60init running");
 
     // Start timer interrupts
@@ -547,8 +545,8 @@ void OBP60Task(GwApi *api){
             // Send NMEA0183 GPS data on several bus systems all 1000ms
             if(String(gps) == "NEO-6M" || String(gps) == "NEO-M8N"){   // If config enabled
                 if(gps_ready == true){
-                    tNMEA0183Msg NMEA0183Msg;
-                    while(NMEA0183.GetMessage(NMEA0183Msg)){
+                    SNMEA0183Msg NMEA0183Msg;
+                    while(NMEA0183.GetMessageCor(NMEA0183Msg)){
                         api->sendNMEA0183Message(NMEA0183Msg);
                     }
                 }
