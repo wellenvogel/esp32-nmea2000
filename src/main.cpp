@@ -14,6 +14,7 @@
 #include "GwAppInfo.h"
 // #define GW_MESSAGE_DEBUG_ENABLED
 //#define FALLBACK_SERIAL
+//#define CAN_ESP_DEBUG
 const unsigned long HEAP_REPORT_TIME=2000; //set to 0 to disable heap reporting
 #include <Arduino.h>
 #include "GwApi.h"
@@ -27,7 +28,6 @@ const unsigned long HEAP_REPORT_TIME=2000; //set to 0 to disable heap reporting
 #define N2K_CERTIFICATION_LEVEL 0xff
 #endif
 
-#include <NMEA2000_CAN.h>  // This will automatically choose right CAN library and create suitable NMEA2000 object
 #include <ActisenseReader.h>
 #include <Seasmart.h>
 #include <N2kMessages.h>
@@ -66,6 +66,17 @@ const unsigned long HEAP_REPORT_TIME=2000; //set to 0 to disable heap reporting
 #include "GwChannel.h"
 #include "GwChannelList.h"
 
+#include <NMEA2000_esp32.h>       // forked from https://github.com/ttlappalainen/NMEA2000_esp32
+#ifdef FALLBACK_SERIAL
+  #ifdef CAN_ESP_DEBUG
+    #define CDBS &Serial
+  #else
+    #define CDBS NULL
+  #endif
+  tNMEA2000 &NMEA2000=*(new tNMEA2000_esp32(ESP32_CAN_TX_PIN,ESP32_CAN_RX_PIN,CDBS));
+#else
+  tNMEA2000 &NMEA2000=*(new tNMEA2000_esp32());
+#endif
 
 
 #define MAX_NMEA2000_MESSAGE_SEASMART_SIZE 500
@@ -212,7 +223,12 @@ void handleN2kMessage(const tN2kMsg &n2kMsg,int sourceId, bool isConverted=false
   }
   if (sourceId != N2K_CHANNEL_ID && sendOutN2k){
     countNMEA2KOut.add(n2kMsg.PGN);
-    NMEA2000.SendMsg(n2kMsg);
+    if (NMEA2000.SendMsg(n2kMsg)){
+      countNMEA2KOut.add(n2kMsg.PGN);
+    }
+    else{
+      countNMEA2KOut.addFail(n2kMsg.PGN);
+    }
   }
 };
 
@@ -622,8 +638,8 @@ void setup() {
 #ifdef FALLBACK_SERIAL
   fallbackSerial=true;
     //falling back to old style serial for logging
-    Serial.begin(baud);
-    Serial.printf("fallback serial enabled, error was %d\n",st);
+    Serial.begin(115200);
+    Serial.printf("fallback serial enabled\n");
     logger.prefix="FALLBACK:";
 #endif
   userCodeHandler.startInitTasks(MIN_USER_TASK);
