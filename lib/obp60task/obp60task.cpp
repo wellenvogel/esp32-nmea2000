@@ -11,6 +11,7 @@
 #include <Adafruit_BMP280.h>            // Adafruit Lib for BMP280
 #include <Adafruit_BMP085.h>            // Adafruit Lib for BMP085 and BMP180
 #include <HTU21D.h>                     // Lib for SHT21/HTU21
+#include <AS5600.h>                     // Lib for AS5600 magnetic rotation sensor
 #include <N2kTypes.h>                   // NMEA2000
 #include <N2kMessages.h>
 #include <NMEA0183.h>                   // NMEA0183
@@ -39,6 +40,7 @@ Adafruit_BME280 bme280;                 // Evironment sensor BME280
 Adafruit_BMP280 bmp280;                 // Evironment sensor BMP280
 Adafruit_BMP085 bmp085;                 //Evironment sensor BMP085 and BMP180
 HTU21D  sht21(HTU21D_RES_RH12_TEMP14);  // Environment sensor SHT21 and HTU21
+AMS_5600 as5600;                        // Magnetic rotation sensor
 
 // Global vars
 bool initComplete = false;      // Initialization complete
@@ -48,9 +50,13 @@ bool BME280_ready = false;      // BME280 initialized and ready to use
 bool BMP280_ready = false;      // BMP280 initialized and ready to use
 bool BMP180_ready = false;      // BMP180 initialized and ready to use
 bool SHT21_ready = false;       // SHT21 initialized and ready to use
+bool AS5600_ready = false;      // AS5600 initialized and ready to use
+
 double airhumidity = 0;         // Air Humitity value from environment sensor
 double airtemperature = 0;      // Air Temperature value from environment sensor
-double airpressure = 0;         // Ais pressure value from environment sensor
+double airpressure = 0;         // Air pressure value from environment sensor
+double rotationangle = 0;       // Rotaion sensor angle
+double magnitude = 0;           // Rotation sensor magnetic magnitude in [mT]
 
 // Timer Interrupts for hardware functions
 void underVoltageDetection();
@@ -241,7 +247,21 @@ void OBP60Init(GwApi *api){
             SHT21_ready = true;
         }
     }
+
+    // Settings for rotation sensors on I2C bus
+    String rotSensor=api->getConfig()->getConfigItem(api->getConfig()->useRotSensor,true)->asString();
     
+    if(String(rotSensor) == "AS5600"){
+        if (as5600.detectMagnet() == 0) {
+            api->getLogger()->logDebug(GwLog::ERROR,"Modul AS5600 not found, check wiring");
+        }
+        else{
+            api->getLogger()->logDebug(GwLog::DEBUG,"Modul AS5600 found");
+            rotationangle = as5600.getRawAngle() * 0.087;   // 0...4095 segments = 0.087 degree
+            magnitude = as5600.getMagnitude();              // Magnetic magnitude in [mT]
+            AS5600_ready = true;
+        }
+    }
 
 }
 
@@ -504,6 +524,8 @@ void OBP60Task(GwApi *api){
     String gps = api->getConfig()->getConfigItem(api->getConfig()->useGPS,true)->asString();
     String backlight = api->getConfig()->getConfigItem(api->getConfig()->backlight,true)->asString();
     String envsensor = api->getConfig()->getConfigItem(api->getConfig()->useEnvSensor,true)->asString();
+    String rotsensor = api->getConfig()->getConfigItem(api->getConfig()->useRotSensor,true)->asString();
+
     // refreshmode defined in init section
     // displaycolor defined in init section
     // textcolor defined in init section
@@ -534,6 +556,7 @@ void OBP60Task(GwApi *api){
     long starttime4 = millis();     // Delayed display update after 4s when select a new page
     long starttime5 = millis();     // Voltage update all 1s
     long starttime6 = millis();     // Environment sensor update all 1s
+    long starttime7 = millis();     // Rotation sensor update all 100ms
 
     while (true){
         delay(10);                  // Fixed the problem with NMEA0183 and GPS sentences
@@ -638,7 +661,7 @@ void OBP60Task(GwApi *api){
                 display.update(); // Full update
             }
 
-            // Send supplay voltage value
+            // Send supplay voltage value all 1s
             if(millis() > starttime5 + 1000){
                 starttime5 = millis();
                 batteryVoltage = (float(analogRead(OBP_ANALOG0)) * 3.3 / 4096 + 0.17) * 20;   // Vin = 1/20
@@ -650,7 +673,7 @@ void OBP60Task(GwApi *api){
                 }
             }
 
-            // Send data from environment sensor
+            // Send data from environment sensor all 1s
             if(millis() > starttime6 + 1000){
                 starttime6 = millis();
                 unsigned char TempSource = 2;       // Inside temperature
@@ -723,6 +746,20 @@ void OBP60Task(GwApi *api){
                         api->sendN2kMessage(N2kMsg);
                     }
                 }                
+            }
+
+            // Send rotation angle all 100ms
+            if(millis() > starttime7 + 100){
+            starttime7 = millis();
+                if(String(rotsensor) == "AS5600" && AS5600_ready == true){
+                    rotationangle = as5600.getRawAngle() * 0.087;       // 0...4095 segments = 0.087 degree
+                    commonData.data.rotationAngle = rotationangle;      // Data take over to page
+                    // Send to NMEA200 bus
+                    if(!isnan(rotationangle)){
+                        SetN2kRudder(N2kMsg, rotationangle, 0, N2kRDO_NoDirectionOrder, N2kDoubleNA);
+                        api->sendN2kMessage(N2kMsg);
+                    }
+                }    
             }
 
             // Refresh display data all 1s

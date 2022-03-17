@@ -32,6 +32,7 @@ typedef struct{
   double onewireTemp4 = 0;
   double onewireTemp5 = 0; 
   double onewireTemp6 = 0;
+  int rotationAngle = 0;
 } SensorData;
 
 typedef struct{
