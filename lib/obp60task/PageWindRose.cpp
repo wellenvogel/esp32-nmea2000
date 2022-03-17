@@ -37,7 +37,7 @@ public:
 
         // Get config data
         String lengthformat = config->getString(config->lengthFormat);
-        bool simulation = config->getBool(config->useSimuData);
+        // bool simulation = config->getBool(config->useSimuData);
         String displaycolor = config->getString(config->displaycolor);
         bool holdvalues = config->getBool(config->holdvalues);
         String flashLED = config->getString(config->flashLED);
@@ -254,7 +254,7 @@ public:
             // Scaling values
             float x = 200 + (rWindGraphic-30)*sin(i/180.0*pi);  //  x-coordinate dots
             float y = 150 - (rWindGraphic-30)*cos(i/180.0*pi);  //  y-coordinate cots 
-            const char *ii;
+            const char *ii = "";
             switch (i)
             {
             case 0: ii="0"; break;

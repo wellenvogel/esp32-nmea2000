@@ -36,7 +36,6 @@ public:
         bool holdvalues = config->getBool(config->holdvalues);
         String flashLED = config->getString(config->flashLED);
         String backlightMode = config->getString(config->backlight);
-        int timezone = config->getInt(config->timeZone);
 
         // Get boat values for rudder position
         GwApi::BoatValue *bvalue1 = pageData.values[0]; // First element in list

@@ -51,7 +51,7 @@ public:
 
         // Get config data
         String lengthformat = config->getString(config->lengthFormat);
-        bool simulation = config->getBool(config->useSimuData);
+        // bool simulation = config->getBool(config->useSimuData);
         String displaycolor = config->getString(config->displaycolor);
         bool holdvalues = config->getBool(config->holdvalues);
         String flashLED = config->getString(config->flashLED);
@@ -62,7 +62,7 @@ public:
         String name1 = bvalue1->getName().c_str();      // Value name
         name1 = name1.substring(0, 6);                  // String length limit for value name
         double value1 = bvalue1->value;                 // Value as double in SI unit
-        bool valid1 = bvalue1->valid;                   // Valid information 
+        // bool valid1 = bvalue1->valid;                   // Valid information 
         String svalue1 = formatValue(bvalue1, commonData).svalue;    // Formatted value as string including unit conversion and switching decimal places
         String unit1 = formatValue(bvalue1, commonData).unit;        // Unit of value
 
@@ -71,7 +71,7 @@ public:
         String name2 = bvalue2->getName().c_str();      // Value name
         name2 = name2.substring(0, 6);                  // String length limit for value name
         double value2 = bvalue2->value;                 // Value as double in SI unit
-        bool valid2 = bvalue2->valid;                   // Valid information 
+        // bool valid2 = bvalue2->valid;                   // Valid information 
         String svalue2 = formatValue(bvalue2, commonData).svalue;    // Formatted value as string including unit conversion and switching decimal places
         String unit2 = formatValue(bvalue2, commonData).unit;        // Unit of value
 

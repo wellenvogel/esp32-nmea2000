@@ -198,7 +198,7 @@ public:
             // Scaling values
             float x = 200 + (rWindGraphic-30)*sin(i/180.0*pi);  //  x-coordinate dots
             float y = 150 - (rWindGraphic-30)*cos(i/180.0*pi);  //  y-coordinate cots 
-            const char *ii;
+            const char *ii = "";
             switch (i)
             {
             case 0: ii="12"; break;

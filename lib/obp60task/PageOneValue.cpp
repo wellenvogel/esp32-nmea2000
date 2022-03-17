@@ -27,7 +27,7 @@ class PageOneValue : public Page{
 
         // Get config data
         String lengthformat = config->getString(config->lengthFormat);
-        bool simulation = config->getBool(config->useSimuData);
+        // bool simulation = config->getBool(config->useSimuData);
         String displaycolor = config->getString(config->displaycolor);
         bool holdvalues = config->getBool(config->holdvalues);
         String flashLED = config->getString(config->flashLED);
