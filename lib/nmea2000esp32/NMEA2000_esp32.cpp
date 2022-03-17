@@ -373,7 +373,6 @@ void tNMEA2000_esp32::InterruptHandler() {
       recoveryStarted=0;
     }
     if (errCountTxInternal >= 2 *CAN_MAX_TX_RETRY){
-        errCancelTransmit++;    
         MODULE_CAN->CMR.B.AT=1; // abort transmission
         (void)MODULE_CAN->SR.U;
         errCountTxInternal=0;
