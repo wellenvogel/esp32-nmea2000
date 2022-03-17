@@ -32,6 +32,11 @@ can.h library, which may cause even naming problem.
 #include "soc/dport_reg.h"
 #include "NMEA2000_esp32.h"
 
+//time to reinit CAN bus if the queue is full for that time
+#define SEND_CANCEL_TIME 2000 
+//reinit CAN bis if nothing send/received within this time
+#define RECEIVE_REINIT_TIME 60000
+
 bool tNMEA2000_esp32::CanInUse=false;
 tNMEA2000_esp32 *pNMEA2000_esp32=0;
 
@@ -48,20 +53,38 @@ tNMEA2000_esp32::tNMEA2000_esp32(gpio_num_t _TxPin,
     RxQueue(NULL), TxQueue(NULL) {
       debugStream=dbg;
 }
-
 //*****************************************************************************
 bool tNMEA2000_esp32::CANSendFrame(unsigned long id, unsigned char len, const unsigned char *buf, bool /*wait_sent*/) {
-  if ( uxQueueSpacesAvailable(TxQueue)==0 ) return false; // can not send to queue
-
   tCANFrame frame;
+  unsigned long now=millis();
+  if ( uxQueueSpacesAvailable(TxQueue)==0 ) {
+    if (lastSend && (lastSend + SEND_CANCEL_TIME) < now){
+        ECDEBUG("CanSendFrame Aborting and emptying queue\n");
+        while (xQueueReceive(TxQueue,&frame,0)){}
+        errReinit++;
+        CAN_init(false);
+        if ( uxQueueSpacesAvailable(TxQueue)==0 ) return false;
+    }
+    else{
+      ECDEBUG("CanSendFrame queue full\n");
+      return false; // can not send to queue
+    }
+  }
+  lastSend=now;
   frame.id=id;
   frame.len=len>8?8:len;
   memcpy(frame.buf,buf,len);
-  ECDEBUG("CanSendFrame Error TX %d\n",MODULE_CAN->TXERR.U);
+  CheckBusOff();
+  ECDEBUG("CanSendFrame IntrCnt  %d\n",cntIntr);
+  ECDEBUG("CanSendFrame Error TX/RX %d/%d\n",MODULE_CAN->TXERR.U,MODULE_CAN->RXERR.U);
   ECDEBUG("CanSendFrame Error Overrun %d\n",errOverrun);
   ECDEBUG("CanSendFrame Error Arbitration %d\n",errArb);
   ECDEBUG("CanSendFrame Error Bus %d\n",errBus);
   ECDEBUG("CanSendFrame Error Recovery %d\n",errRecovery);
+  ECDEBUG("CanSendFrame ErrorCount %d\n",errCountTxInternal);
+  ECDEBUG("CanSendFrame ErrorCancel %d\n",errCancelTransmit);
+  ECDEBUG("CanSendFrame ErrorReinit %d\n",errReinit);
+  ECDEBUG("CanSendFrame busOff=%d, errPassive=%d\n",MODULE_CAN->SR.B.BS,MODULE_CAN->SR.B.ES)
   xQueueSendToBack(TxQueue,&frame,0);  // Add frame to queue
   if ( MODULE_CAN->SR.B.TBS==0 ) {
     ECDEBUG("CanSendFrame: wait for ISR to send %d\n",frame.id);
@@ -72,6 +95,7 @@ bool tNMEA2000_esp32::CANSendFrame(unsigned long id, unsigned char len, const un
     xQueueReceive(TxQueue,&frame,0);
     ECDEBUG("CanSendFrame: send direct %d\n",frame.id);
     CAN_send_frame(frame);
+    //return MODULE_CAN->TXERR.U < 127;
   }
 
   return true;
@@ -108,20 +132,28 @@ bool tNMEA2000_esp32::CANOpen() {
 bool tNMEA2000_esp32::CANGetFrame(unsigned long &id, unsigned char &len, unsigned char *buf) {
   bool HasFrame=false;
   tCANFrame frame;
-
+  CheckBusOff();
+  unsigned long now=millis();
     //receive next CAN frame from queue
     if ( xQueueReceive(RxQueue,&frame, 0)==pdTRUE ) {
       HasFrame=true;
       id=frame.id;
       len=frame.len;
       memcpy(buf,frame.buf,frame.len);
+      lastReceive=now;
+    }
+    else{
+      if (lastReceive != 0 && (lastReceive + RECEIVE_REINIT_TIME) < now && (lastSend + RECEIVE_REINIT_TIME) < now){
+        ECDEBUG("Noting received within %d ms, reinit",RECEIVE_REINIT_TIME);
+        CAN_init(false);
+      }
     }
 
     return HasFrame;
 }
 
 //*****************************************************************************
-void tNMEA2000_esp32::CAN_init() {
+void tNMEA2000_esp32::CAN_init(bool installIsr) {
 
 	//Time quantum
 	double __tq;
@@ -199,7 +231,7 @@ void tNMEA2000_esp32::CAN_init() {
     (void)MODULE_CAN->IR.U;
 
     //install CAN ISR
-    esp_intr_alloc(ETS_CAN_INTR_SOURCE,0,ESP32Can1Interrupt,NULL,NULL);
+    if (installIsr) esp_intr_alloc(ETS_CAN_INTR_SOURCE,0,ESP32Can1Interrupt,NULL,NULL);
 
     //configure TX pin
     // We do late configure, since some initialization above caused CAN Tx flash
@@ -262,26 +294,42 @@ void tNMEA2000_esp32::CAN_send_frame(tCANFrame &frame) {
   // Transmit frame
   MODULE_CAN->CMR.B.TR=1;
 }
-static int tx_error_count=0;
 #define CAN_MAX_TX_RETRY 12
-
+#define RECOVERY_RETRY_MS 1000
 void tNMEA2000_esp32::CAN_bus_off_recovery(){
-  MODULE_CAN->MOD.B.RM = 1;
+  unsigned long now=millis();
+  if (recoveryStarted && (recoveryStarted + RECOVERY_RETRY_MS) > now ) return;
+  ECDEBUG("CAN_bus_off_recovery started\n");
+  recoveryStarted=now;
+  errRecovery++;
+  MODULE_CAN->CMR.B.AT=1; // abort transmission
+  (void)MODULE_CAN->SR.U;
   MODULE_CAN->TXERR.U = 127; 
   MODULE_CAN->RXERR.U = 0; 
   MODULE_CAN->MOD.B.RM = 0;
 }
 
+void tNMEA2000_esp32::CheckBusOff(){
+  //should we really recover here?
+    if (MODULE_CAN->SR.B.BS){
+        ECDEBUG("Bus off detected, trying recovery\n");      
+        CAN_bus_off_recovery();
+    }
+
+}
+
 //*****************************************************************************
 void tNMEA2000_esp32::InterruptHandler() {
 	//Interrupt flag buffer
+  cntIntr++;
 	uint32_t interrupt;
 
     // Read interrupt status and clear flags
     interrupt = (MODULE_CAN->IR.U & 0xff);
 
     // Handle TX complete interrupt
-    if ((interrupt & __CAN_IRQ_TX) != 0) {
+    //see http://uglyduck.vajn.icu/PDF/wireless/Espressif/ESP32/Eco_and_Workarounds_for_Bugs_in_ESP32.pdf, 3.13.4
+    if ((interrupt & __CAN_IRQ_TX) != 0 || MODULE_CAN->SR.B.TBS) {  
       tCANFrame frame;
       if ( (xQueueReceiveFromISR(TxQueue,&frame,NULL)==pdTRUE) ) {
         CAN_send_frame(frame);
@@ -314,32 +362,22 @@ void tNMEA2000_esp32::InterruptHandler() {
     if (interrupt & __CAN_IRQ_ARB_LOST ) {                      //0x40
         errArb++;
         (void)MODULE_CAN->ALC.U; // must be read to re-enable interrupt
-        tx_error_count++;
+        errCountTxInternal++;
     }
     if (interrupt & __CAN_IRQ_BUS_ERR ) {                       //0x80
         errBus++;
         (void)MODULE_CAN->ECC.U; // must be read to re-enable interrupt
-        tx_error_count+=2;
+        errCountTxInternal+=2;
     }
-    if (tx_error_count>=2*CAN_MAX_TX_RETRY || MODULE_CAN->SR.B.ES) {
+    if (MODULE_CAN->TXERR.U == 0){
+      recoveryStarted=0;
+    }
+    if (errCountTxInternal >= 2 *CAN_MAX_TX_RETRY){
+        errCancelTransmit++;    
         MODULE_CAN->CMR.B.AT=1; // abort transmission
-        (void)MODULE_CAN->SR.U; // read SR after write to CMR to settle register changes
-        tx_error_count=0;
-        if (MODULE_CAN->SR.B.ES) {
-          errRecovery++;
-          CAN_bus_off_recovery();
-        }
-        return;
+        (void)MODULE_CAN->SR.U;
+        errCountTxInternal=0;
     }
-    //should we really recover here?
-    if (MODULE_CAN->SR.B.BS){
-        MODULE_CAN->CMR.B.AT=1; // abort transmission
-        (void)MODULE_CAN->SR.U; // read SR after write to CMR to settle register changes
-        tx_error_count=0;
-        errRecovery++;
-        CAN_bus_off_recovery();
-    }
-
 }
 
 //*****************************************************************************

@@ -74,12 +74,20 @@ protected:
   int             errArb=0;
   int             errBus=0;
   int             errRecovery=0;
+  int             errCountTxInternal=0;
+  int             errCancelTransmit=0;
+  int             errReinit=0;
+  unsigned long   recoveryStarted=0;
+  unsigned long   lastSend=0;
+  unsigned long   lastReceive=0;
+  int             cntIntr=0;
 
 protected:
   void CAN_read_frame(); // Read frame to queue within interrupt
   void CAN_send_frame(tCANFrame &frame); // Send frame
-  void CAN_init();
+  void CAN_init(bool installIsr=true);
   void CAN_bus_off_recovery(); //recover from bus off
+  void CheckBusOff();
 
 protected:
   bool CANSendFrame(unsigned long id, unsigned char len, const unsigned char *buf, bool wait_sent=true);
