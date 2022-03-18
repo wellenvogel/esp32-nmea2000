@@ -154,7 +154,7 @@ public:
         display.setFont(&Ubuntu_Bold12pt7b);
         display.setCursor(175, 110);
         display.print(unit1);                           // Unit
-
+/*
         // Angle limits to +/-45°
         if(value1 < (-PI / 4)){
             value1 = -PI / 4;
@@ -165,7 +165,7 @@ public:
 
         // Calculate keel position
         value1 = (value1 * 2) + PI;
-
+*/
         // Draw keel position pointer
         float startwidth = 8;       // Start width of pointer
 
