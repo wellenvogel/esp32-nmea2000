@@ -1,3 +1,5 @@
+#ifdef BOARD_NODEMCU32S_OBP60
+
 #include "Pagedata.h"
 #include "OBP60ExtensionPort.h"
 
@@ -300,3 +302,5 @@ PageDescription registerPageDST810(
     {"DBT","STW","Log","WTemp"},      // Bus values we need in the page
     true                // Show display header on/off
 );
+
+#endif

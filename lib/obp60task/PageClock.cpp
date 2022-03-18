@@ -1,3 +1,5 @@
+#ifdef BOARD_NODEMCU32S_OBP60
+
 #include "Pagedata.h"
 #include "OBP60ExtensionPort.h"
 
@@ -187,17 +189,17 @@ public:
 //*******************************************************************************************
         
         // Draw clock
-        int rWindGraphic = 110;     // Radius of clock
+        int rInstrument = 110;     // Radius of clock
         float pi = 3.141592;
 
-        display.fillCircle(200, 150, rWindGraphic + 10, pixelcolor);    // Outer circle
-        display.fillCircle(200, 150, rWindGraphic + 7, bgcolor);        // Outer circle     
+        display.fillCircle(200, 150, rInstrument + 10, pixelcolor);    // Outer circle
+        display.fillCircle(200, 150, rInstrument + 7, bgcolor);        // Outer circle     
 
         for(int i=0; i<360; i=i+10)
         {
             // Scaling values
-            float x = 200 + (rWindGraphic-30)*sin(i/180.0*pi);  //  x-coordinate dots
-            float y = 150 - (rWindGraphic-30)*cos(i/180.0*pi);  //  y-coordinate cots 
+            float x = 200 + (rInstrument-30)*sin(i/180.0*pi);  //  x-coordinate dots
+            float y = 150 - (rInstrument-30)*cos(i/180.0*pi);  //  y-coordinate cots 
             const char *ii = "";
             switch (i)
             {
@@ -227,8 +229,8 @@ public:
             }
 
             // Draw sub scale with dots
-            float x1c = 200 + rWindGraphic*sin(i/180.0*pi);
-            float y1c = 150 - rWindGraphic*cos(i/180.0*pi);
+            float x1c = 200 + rInstrument*sin(i/180.0*pi);
+            float y1c = 150 - rInstrument*cos(i/180.0*pi);
             display.fillCircle((int)x1c, (int)y1c, 2, pixelcolor);
             float sinx=sin(i/180.0*pi);
             float cosx=cos(i/180.0*pi); 
@@ -238,8 +240,8 @@ public:
                 float dx=2;   // Line thickness = 2*dx+1
                 float xx1 = -dx;
                 float xx2 = +dx;
-                float yy1 =  -(rWindGraphic-10);
-                float yy2 =  -(rWindGraphic+10);
+                float yy1 =  -(rInstrument-10);
+                float yy2 =  -(rInstrument+10);
                 display.fillTriangle(200+(int)(cosx*xx1-sinx*yy1),150+(int)(sinx*xx1+cosx*yy1),
                         200+(int)(cosx*xx2-sinx*yy1),150+(int)(sinx*xx2+cosx*yy1),
                         200+(int)(cosx*xx1-sinx*yy2),150+(int)(sinx*xx1+cosx*yy2),pixelcolor);
@@ -280,7 +282,7 @@ public:
             float xx1 = -startwidth;
             float xx2 = startwidth;
             float yy1 = -startwidth;
-            float yy2 = -(rWindGraphic * 0.5); 
+            float yy2 = -(rInstrument * 0.5); 
             display.fillTriangle(200+(int)(cosx*xx1-sinx*yy1),150+(int)(sinx*xx1+cosx*yy1),
                 200+(int)(cosx*xx2-sinx*yy1),150+(int)(sinx*xx2+cosx*yy1),
                 200+(int)(cosx*0-sinx*yy2),150+(int)(sinx*0+cosx*yy2),pixelcolor);   
@@ -289,7 +291,7 @@ public:
             float endwidth = 2;         // End width of pointer
             float ix1 = endwidth;
             float ix2 = -endwidth;
-            float iy1 = -(rWindGraphic * 0.5);
+            float iy1 = -(rInstrument * 0.5);
             float iy2 = -endwidth;
             display.fillTriangle(200+(int)(cosx*ix1-sinx*iy1),150+(int)(sinx*ix1+cosx*iy1),
                 200+(int)(cosx*ix2-sinx*iy1),150+(int)(sinx*ix2+cosx*iy1),
@@ -306,7 +308,7 @@ public:
             float xx1 = -startwidth;
             float xx2 = startwidth;
             float yy1 = -startwidth;
-            float yy2 = -(rWindGraphic - 15); 
+            float yy2 = -(rInstrument - 15); 
             display.fillTriangle(200+(int)(cosx*xx1-sinx*yy1),150+(int)(sinx*xx1+cosx*yy1),
                 200+(int)(cosx*xx2-sinx*yy1),150+(int)(sinx*xx2+cosx*yy1),
                 200+(int)(cosx*0-sinx*yy2),150+(int)(sinx*0+cosx*yy2),pixelcolor);   
@@ -315,7 +317,7 @@ public:
             float endwidth = 2;         // End width of pointer
             float ix1 = endwidth;
             float ix2 = -endwidth;
-            float iy1 = -(rWindGraphic - 15);
+            float iy1 = -(rInstrument - 15);
             float iy2 = -endwidth;
             display.fillTriangle(200+(int)(cosx*ix1-sinx*iy1),150+(int)(sinx*ix1+cosx*iy1),
                 200+(int)(cosx*ix2-sinx*iy1),150+(int)(sinx*ix2+cosx*iy1),
@@ -365,3 +367,5 @@ PageDescription registerPageClock(
     {"GPST", "GPSD"},    // Bus values we need in the page
     true                // Show display header on/off
 );
+
+#endif

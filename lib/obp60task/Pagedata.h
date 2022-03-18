@@ -32,7 +32,8 @@ typedef struct{
   double onewireTemp4 = 0;
   double onewireTemp5 = 0; 
   double onewireTemp6 = 0;
-  int rotationAngle = 0;
+  double rotationAngle = 0;       // Rotation angle in radiant
+  bool validRotAngle = false;     // Valid flag for magnet present
 } SensorData;
 
 typedef struct{

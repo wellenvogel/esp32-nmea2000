@@ -1,3 +1,5 @@
+#ifdef BOARD_NODEMCU32S_OBP60
+
 #include "Pagedata.h"
 #include "OBP60ExtensionPort.h"
 
@@ -339,3 +341,5 @@ PageDescription registerPageForValues(
     4,              // Number of bus values depends on selection in Web configuration
     true            // Show display header on/off
 );
+
+#endif

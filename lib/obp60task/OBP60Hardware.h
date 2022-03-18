@@ -14,11 +14,13 @@
     // BME280
     #define BME280_I2C_ADDR 0x76    // Addr. 0x76 (0x77)
     // BMP280
-    #define BMP280_I2C_ADDR 0x77    // Addr. 0x77
+    #define BMP280_I2C_ADDR 0x76    // Addr. 0x76 (0x77)
     // BMP085 / BMP180
-    #define BMP280_I2C_ADDR 0x77    // Addr. 0x77 (fix)
+    #define BMP180_I2C_ADDR 0x77    // Addr. 0x77 (fix)
     // SHT21 / HUT21
     #define SHT21_I2C_ADDR 0x40     // Addr. 0x40 (fix)
+    // AS5600
+    #define AS5600_I2C_ADDR 0x36    // Addr. 0x36 (fix)
     // SPI (E-Ink display, Extern Bus)
     #define OBP_SPI_CS 5
     #define OBP_SPI_DC 17

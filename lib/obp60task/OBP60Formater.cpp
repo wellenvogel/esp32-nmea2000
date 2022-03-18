@@ -1,3 +1,5 @@
+#ifdef BOARD_NODEMCU32S_OBP60
+
 #include <Arduino.h>
 #include "GwApi.h"
 #include "Pagedata.h"
@@ -431,3 +433,5 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
     result.svalue = String(buffer);
     return result;
 }
+
+#endif

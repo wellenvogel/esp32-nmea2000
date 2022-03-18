@@ -1,3 +1,5 @@
+#ifdef BOARD_NODEMCU32S_OBP60
+
 #include <Arduino.h>
 #include "Pagedata.h"
 #include "OBP60Hardware.h"
@@ -201,3 +203,5 @@ void displayHeader(CommonData &commonData, GwApi::BoatValue *hdop, GwApi::BoatVa
       display.print("No GPS data");
     }
 }
+
+#endif

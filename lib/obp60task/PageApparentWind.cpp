@@ -1,3 +1,5 @@
+#ifdef BOARD_NODEMCU32S_OBP60
+
 #include "Pagedata.h"
 #include "OBP60ExtensionPort.h"
 
@@ -200,3 +202,5 @@ PageDescription registerPageApparentWind(
     {"AWS","AWA"},      // Bus values we need in the page
     true                // Show display header on/off
 );
+
+#endif

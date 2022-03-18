@@ -1,3 +1,5 @@
+#ifdef BOARD_NODEMCU32S_OBP60
+
 #include "Pagedata.h"
 #include "OBP60ExtensionPort.h"
 
@@ -183,3 +185,5 @@ PageDescription registerPageVoltage(
     {},             // Names of bus values undepends on selection in Web configuration (refer GwBoatData.h)
     true            // Show display header on/off
 );
+
+#endif

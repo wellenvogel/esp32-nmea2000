@@ -252,7 +252,8 @@ void OBP60Init(GwApi *api){
     String rotSensor=api->getConfig()->getConfigItem(api->getConfig()->useRotSensor,true)->asString();
     
     if(String(rotSensor) == "AS5600"){
-        if (as5600.detectMagnet() == 0) {
+         Wire.beginTransmission(AS5600_I2C_ADDR);
+        if (Wire.endTransmission() != 0) {
             api->getLogger()->logDebug(GwLog::ERROR,"Modul AS5600 not found, check wiring");
         }
         else{
@@ -394,6 +395,8 @@ void registerAllPages(PageList &list){
     list.add(&registerPageBME280);
     extern PageDescription registerPageRudderPosition;
     list.add(&registerPageRudderPosition);
+    extern PageDescription registerPageKeelPosition;
+    list.add(&registerPageKeelPosition);
 }
 
 // OBP60 Task
@@ -525,6 +528,8 @@ void OBP60Task(GwApi *api){
     String backlight = api->getConfig()->getConfigItem(api->getConfig()->backlight,true)->asString();
     String envsensor = api->getConfig()->getConfigItem(api->getConfig()->useEnvSensor,true)->asString();
     String rotsensor = api->getConfig()->getConfigItem(api->getConfig()->useRotSensor,true)->asString();
+    String rotfunction = api->getConfig()->getConfigItem(api->getConfig()->rotFunction,true)->asString();
+    int rotoffset = api->getConfig()->getConfigItem(api->getConfig()->rotOffset,true)->asInt();
 
     // refreshmode defined in init section
     // displaycolor defined in init section
@@ -576,11 +581,11 @@ void OBP60Task(GwApi *api){
             }
 
             // If GPS fix then LED off (HDOP)
-            if(String(gpsFix) == "GPS Fix" && hdop->valid == true && int(hdop->value) <= 50){
+            if(String(gpsFix) == "GPS Fix Lost" && hdop->valid == true && int(hdop->value) <= 50){
                 setPortPin(OBP_FLASH_LED, false);
             }
             // Ifmissing GPS fix then LED on
-            if(String(gpsFix) == "GPS Fix" && ((hdop->valid == true && int(hdop->value) > 50) || hdop->valid == false)){
+            if(String(gpsFix) == "GPS Fix Lost" && ((hdop->valid == true && int(hdop->value) > 50) || hdop->valid == false)){
                 setPortPin(OBP_FLASH_LED, true);
             }
 
@@ -748,17 +753,50 @@ void OBP60Task(GwApi *api){
                 }                
             }
 
-            // Send rotation angle all 100ms
-            if(millis() > starttime7 + 100){
+            // Send rotation angle all 1000ms
+            if(millis() > starttime7 + 1000){
             starttime7 = millis();
-                if(String(rotsensor) == "AS5600" && AS5600_ready == true){
+                if(String(rotsensor) == "AS5600" && AS5600_ready == true && as5600.detectMagnet() == 1){
                     rotationangle = as5600.getRawAngle() * 0.087;       // 0...4095 segments = 0.087 degree
-                    commonData.data.rotationAngle = rotationangle;      // Data take over to page
-                    // Send to NMEA200 bus
-                    if(!isnan(rotationangle)){
-                        SetN2kRudder(N2kMsg, rotationangle, 0, N2kRDO_NoDirectionOrder, N2kDoubleNA);
+                    // Offset correction
+                    if(rotoffset >= 0){
+                        rotationangle = rotationangle + rotoffset;
+                        rotationangle = int(rotationangle) % 360;
+                    }
+                    else{
+                        rotationangle = rotationangle + 360 + rotoffset;
+                        rotationangle = int(rotationangle) % 360;
+                    }
+                    commonData.data.rotationAngle = DegToRad(rotationangle); // Data take over to page
+                    commonData.data.validRotAngle = true;               // Valid true, magnet present
+                    // Send to NMEA200 bus as rudder angle values
+                    if(!isnan(rotationangle) && String(rotfunction) == "Rudder"){
+                        double rudder = rotationangle - 180;            // Center position is 180°
+                        // Rudder limits to +/-45°
+                        if(rudder < -45){
+                            rudder = -45;
+                        }
+                        if(rudder > 45){
+                            rudder = 45;
+                        }
+                        SetN2kRudder(N2kMsg, DegToRad(rudder), 0, N2kRDO_NoDirectionOrder, PI);
                         api->sendN2kMessage(N2kMsg);
                     }
+                    // Send to NMEA200 bus as wind angle values
+                    if(!isnan(rotationangle) && String(rotfunction) == "Wind"){
+                        SetN2kWindSpeed(N2kMsg, 1, 0, DegToRad(rotationangle), N2kWind_Apprent);
+                        api->sendN2kMessage(N2kMsg);
+                    }
+                    // Send to NMEA200 bus as trim angle values in [%]
+                    if(!isnan(rotationangle) && (String(rotfunction) == "Mast" || String(rotfunction) == "Keel" || String(rotfunction) == "Trim" || String(rotfunction) == "Boom")){
+                        int trim = rotationangle * 100 / 360;           // 0...360° -> 0...100%
+                        SetN2kTrimTab(N2kMsg, trim, trim);
+                        api->sendN2kMessage(N2kMsg);
+                    }
+                }
+                else{
+                    commonData.data.rotationAngle = 0;      // Center position 0°
+                    commonData.data.validRotAngle = false;  // Valid false, magnet missing
                 }    
             }
 

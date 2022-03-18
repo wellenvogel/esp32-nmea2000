@@ -1,3 +1,4 @@
+#ifdef BOARD_NODEMCU32S_OBP60
 
 /****************************************************
   AMS 5600 class for Arduino platform
@@ -458,3 +459,5 @@ void AMS_5600::writeOneByte(int adr_in, int dat_in)
 }
 
 /**********  END OF AMS 5600 CALSS *****************/
+
+#endif
