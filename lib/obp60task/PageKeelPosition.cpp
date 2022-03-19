@@ -37,17 +37,18 @@ public:
         bool holdvalues = config->getBool(config->holdvalues);
         String flashLED = config->getString(config->flashLED);
         String backlightMode = config->getString(config->backlight);
+        String rotsensor = config->getString(config->useRotSensor);
+        String rotfunction = config->getString(config->rotFunction);
 
         // Get boat values for Keel position
-        GwApi::BoatValue *bvalue1 = pageData.values[0]; // First element in list
-        if(simulation == false){
-            value1 = commonData.data.rotationAngle;     // Raw value without unit convertion
+        bool valid1 = commonData.data.validRotAngle;    // Valid information 
+        if(simulation == false && rotsensor == "AS5600" && rotfunction == "Keel"){
+            value1 = commonData.data.rotationAngle; // Raw value without unit convertion
         }
         else{
             value1 = (170 + float(random(0, 40)) / 10.0) * 2 * PI / 360; // Simulation data in radiant
         }
 
-        bool valid1 = commonData.data.validRotAngle;    // Valid information 
         String unit1 = "Deg";                           // Unit of value
         if(valid1 == true){
             value1old = value1;   	                    // Save old value
@@ -60,7 +61,6 @@ public:
         }
 
         // Logging boat values
-        if (bvalue1 == NULL) return;
         LOG_DEBUG(GwLog::LOG,"Drawing at PageKeelPosition, Keel:%f", value1);
 
         // Draw page
@@ -168,7 +168,7 @@ public:
         // Draw keel position pointer
         float startwidth = 8;       // Start width of pointer
 
-        if(valid1 == true || holdvalues == true || simulation == true){
+        if(rotsensor == "AS5600" && rotfunction == "Keel" && (valid1 == true || holdvalues == true || simulation == true)){
             float sinx=sin(value1);
             float cosx=cos(value1);
             // Normal pointer
@@ -207,10 +207,18 @@ public:
         display.setCursor(100, 70);
         display.print("Keel Position");                 // Label
 
-        // Print Unit of keel position
+        if(rotsensor == "AS5600" && rotfunction == "Keel" && (valid1 == true || holdvalues == true || simulation == true)){
+            // Print Unit of keel position
         display.setFont(&Ubuntu_Bold12pt7b);
         display.setCursor(175, 110);
         display.print(unit1);                           // Unit
+        }
+        else{
+            // Print Unit of keel position
+        display.setFont(&Ubuntu_Bold8pt7b);
+        display.setCursor(145, 110);
+        display.print("No sensor data");                // Info missing sensor
+        }
 
 //*******************************************************************************************
         // Key Layout
@@ -246,10 +254,10 @@ static Page *createPage(CommonData &common){
  */
 PageDescription registerPageKeelPosition(
     "KeelPosition",   // Page name
-    createPage,         // Action
-    0,                  // Number of bus values depends on selection in Web configuration
-    {"RPOS"},           // Bus values we need in the page
-    true                // Show display header on/off
+    createPage,       // Action
+    0,                // Number of bus values depends on selection in Web configuration
+    {},               // Bus values we need in the page
+    true              // Show display header on/off
 );
 
 #endif
