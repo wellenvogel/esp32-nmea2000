@@ -40,7 +40,13 @@ public:
 
         // Get boat values for Keel position
         GwApi::BoatValue *bvalue1 = pageData.values[0]; // First element in list
-        value1 = commonData.data.rotationAngle;         // Raw value without unit convertion
+        if(simulation == false){
+            value1 = commonData.data.rotationAngle;     // Raw value without unit convertion
+        }
+        else{
+            value1 = (170 + float(random(0, 40)) / 10.0) * 2 * PI / 360; // Simulation data in radiant
+        }
+
         bool valid1 = commonData.data.validRotAngle;    // Valid information 
         String unit1 = "Deg";                           // Unit of value
         if(valid1 == true){
@@ -144,28 +150,21 @@ public:
 
         }
 
-        // Print label
-        display.setTextColor(textcolor);
-        display.setFont(&Ubuntu_Bold16pt7b);
-        display.setCursor(100, 70);
-        display.print("Keel Position");                 // Label
-
-        // Print Unit of keel position
-        display.setFont(&Ubuntu_Bold12pt7b);
-        display.setCursor(175, 110);
-        display.print(unit1);                           // Unit
-/*
-        // Angle limits to +/-45°
-        if(value1 < (-PI / 4)){
-            value1 = -PI / 4;
+        // Angle limits to +/-45° (Attention: 180° offset!)
+        if(value1 < (3 * PI / 4)){
+            value1 = 3 * PI / 4;
         }
-        if(value1 > (PI / 4)){
-            value1 = PI / 4;
+        if(value1 > (5 * PI / 4)){
+            value1 = 5 * PI / 4;
+        }
+        
+        if(holdvalues == true && valid1 == false){
+            value1 = value1old;
         }
 
         // Calculate keel position
         value1 = (value1 * 2) + PI;
-*/
+
         // Draw keel position pointer
         float startwidth = 8;       // Start width of pointer
 
@@ -197,10 +196,21 @@ public:
         }
 
         // Center circle
-        display.fillCircle(200, 150, startwidth + 22, bgcolor);
-        display.fillCircle(200, 150, startwidth + 20, pixelcolor);
-        display.fillRect(200 - 30, 150 - 30, 2 * 30, 30, bgcolor);       // Delete half top circle
+        display.fillCircle(200, 140, startwidth + 22, bgcolor);
+        display.fillCircle(200, 140, startwidth + 20, pixelcolor);      // Boat circle
+        display.fillRect(200 - 30, 140 - 30, 2 * 30, 30, bgcolor);      // Delete half top of boat circle
+        display.fillRect(150, 150, 100, 4, pixelcolor);                 // Water line
 
+        // Print label
+        display.setTextColor(textcolor);
+        display.setFont(&Ubuntu_Bold16pt7b);
+        display.setCursor(100, 70);
+        display.print("Keel Position");                 // Label
+
+        // Print Unit of keel position
+        display.setFont(&Ubuntu_Bold12pt7b);
+        display.setCursor(175, 110);
+        display.print(unit1);                           // Unit
 
 //*******************************************************************************************
         // Key Layout

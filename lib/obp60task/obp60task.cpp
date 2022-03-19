@@ -564,9 +564,11 @@ void OBP60Task(GwApi *api){
     long starttime7 = millis();     // Rotation sensor update all 100ms
 
     while (true){
-        delay(10);                  // Fixed the problem with NMEA0183 and GPS sentences
+        delay(100);                 // Fix the problem with NMEA0183 and GPS sentences
         Timer1.update();            // Update for Timer1
         Timer2.update();            // Update for Timer2
+        LOG_DEBUG(GwLog::LOG,"Loop");
+
         if(millis() > starttime0 + 100){
             starttime0 = millis();
 
@@ -635,7 +637,7 @@ void OBP60Task(GwApi *api){
                         display.updateWindow(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, true);    // Needs partial update before full update to refresh the frame buffer
                         display.update(); // Full update
                     }
-*/                    
+*/                   
                     // #9 or #10 Refresh display after a new page after 4s waiting time and if refresh is disabled
                     if(refreshmode == true && (keyboardMessage == 9 || keyboardMessage == 10)){
                         starttime4 = millis();
@@ -679,7 +681,7 @@ void OBP60Task(GwApi *api){
             }
 
             // Send data from environment sensor all 1s
-            if(millis() > starttime6 + 1000){
+            if(millis() > starttime6 + 2000){
                 starttime6 = millis();
                 unsigned char TempSource = 2;       // Inside temperature
                 unsigned char PressureSource = 0;   // Atmospheric pressure
@@ -754,8 +756,9 @@ void OBP60Task(GwApi *api){
             }
 
             // Send rotation angle all 1000ms
-            if(millis() > starttime7 + 1000){
-            starttime7 = millis();
+            if(millis() > starttime7 + 500){
+                starttime7 = millis();
+                LOG_DEBUG(GwLog::LOG,"Rotation sensor");
                 if(String(rotsensor) == "AS5600" && AS5600_ready == true && as5600.detectMagnet() == 1){
                     rotationangle = as5600.getRawAngle() * 0.087;       // 0...4095 segments = 0.087 degree
                     // Offset correction
@@ -830,7 +833,6 @@ void OBP60Task(GwApi *api){
                     currentPage->displayPage(commonData,pages[pageNumber].parameters);
                 }
             }
-
         }
     }
     vTaskDelete(NULL);
