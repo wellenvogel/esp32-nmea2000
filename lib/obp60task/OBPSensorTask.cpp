@@ -250,7 +250,6 @@ void sensorTask(void *param){
                 unsigned char TempSource = 2;       // Inside temperature
                 unsigned char PressureSource = 0;   // Atmospheric pressure
                 unsigned char HumiditySource=0;     // Inside humidity
-                LOG_DEBUG(GwLog::LOG,"Ready status BME280 %d", BME280_ready);
                 if(envsensor == "BME280" && BME280_ready == true){
                     sensors.airTemperature = bme280.readTemperature();
                     sensors.airPressure = bme280.readPressure()/100;
@@ -313,7 +312,6 @@ void sensorTask(void *param){
             // Send rotation angle all 1000ms
             if(millis() > starttime7 + 500){
                 starttime7 = millis();
-                LOG_DEBUG(GwLog::LOG,"Rotation sensor");
                 double rotationAngle=0;
                 if(String(rotsensor) == "AS5600" && AS5600_ready == true && as5600.detectMagnet() == 1){
                     rotationAngle = as5600.getRawAngle() * 0.087;       // 0...4095 segments = 0.087 degree
@@ -350,8 +348,8 @@ void sensorTask(void *param){
                         SetN2kTrimTab(N2kMsg, trim, trim);
                         api->sendN2kMessage(N2kMsg);
                     }
-                    sensors.rotationAngle = DegToRad(rotationAngle); // Data take over to page
-                    sensors.validRotAngle = true;               // Valid true, magnet present
+                    sensors.rotationAngle = DegToRad(rotationAngle);    // Data take over to page
+                    sensors.validRotAngle = true;                       // Valid true, magnet present
                 }
                 else{
                     sensors.rotationAngle = 0;      // Center position 0°

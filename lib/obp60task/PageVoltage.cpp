@@ -76,7 +76,7 @@ public:
         
         // Logging voltage value
         if (value1 == NULL) return;
-        LOG_DEBUG(GwLog::LOG,"Drawing at PageVoltage, p=%s, v=%f", name1, value1);
+        LOG_DEBUG(GwLog::LOG,"Drawing at PageVoltage, Type:%s %s:=%f", batType, name1, value1);
 
         // Draw page
         //***********************************************************
