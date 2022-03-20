@@ -145,6 +145,15 @@ For details refer to the [example description](lib/exampletask/Readme.md).
 
 Changelog
 ---------
+[20220320](../../releases/tag/20220320)
+*********
+* accept lowercase characters in NMEA0183 checksum [#33](../../issues/33)
+* only show apPassword in UI if change is allowed [#34](../../issues/34)
+* optimize memory usage for set config values
+* add a source field to GwApi::BoatValue
+* make NMEA0183 messages robust against to much fields
+* reset the can bus driver if the queue remains full for 2s (avoid problems if initially no other device is at the bus)
+
 [20220308](../../releases/tag/20220308)
 *********
 * correctly handle select fields when importing the config
