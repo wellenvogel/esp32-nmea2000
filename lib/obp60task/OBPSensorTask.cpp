@@ -211,11 +211,11 @@ void sensorTask(void *param){
     tN2kMsg N2kMsg;
     shared->setSensorData(sensors); //set initially read values
 
-    // Sensor task loop runs with 10ms
+    // Sensor task loop runs with 100ms
     //####################################################################################
 
     while (true){
-        delay(10);
+        delay(100);                 // Loop time 100ms
         Timer1.update();            // Update for Timer1
         Timer2.update();            // Update for Timer2
         if (millis() > starttime0 + 100)
