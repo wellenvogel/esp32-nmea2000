@@ -14,7 +14,7 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
     static int dayoffset = 0;
 
     // Load configuration values
-    int timeZone = commondata.config->getInt(commondata.config->timeZone);                      // [UTC -12...+12]
+    int timeZone = commondata.config->getInt(commondata.config->timeZone);                      // [UTC -12...+14]
     String lengthFormat = commondata.config->getString(commondata.config->lengthFormat);        // [m|ft]
     String distanceFormat = commondata.config->getString(commondata.config->distanceFormat);    // [m|km|nm]
     String speedFormat = commondata.config->getString(commondata.config->speedFormat);          // [m/s|km/h|kn]

@@ -35,7 +35,7 @@ public:
         
         // Get voltage value
         String name1 = "VBat";
-        double value1 = (float(analogRead(OBP_ANALOG0)) * 3.3 / 4096 + 0.17) * 20;   // Vin = 1/20 
+        double value1 = commonData.data.batteryVoltage;     // Live supplay voltage
         bool valid1 = true;
 
         // Optical warning by limit violation
