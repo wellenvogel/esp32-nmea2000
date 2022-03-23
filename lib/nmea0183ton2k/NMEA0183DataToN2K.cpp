@@ -350,6 +350,10 @@ private:
             LOG_DEBUG(GwLog::DEBUG, "failed to parse RMC %s", msg.line);
             return;
         }
+        if (status != 'A' && status != 'a'){
+            LOG_DEBUG(GwLog::DEBUG, "invalid status %c for RMC %s",status, msg.line);
+            return;
+        }
         tN2kMsg n2kMsg;
         if (
             UD(GPST) &&
@@ -748,6 +752,10 @@ private:
                       GPSQualityIndicator, SatelliteCount, HDOP, Altitude,GeoidalSeparation,
                       DGPSAge, DGPSReferenceStationID)){
             LOG_DEBUG(GwLog::DEBUG, "failed to parse GGA %s", msg.line);
+            return;   
+        }
+        if (GPSQualityIndicator == 0){
+            LOG_DEBUG(GwLog::DEBUG, "quality 0 (no fix) for GGA %s", msg.line);
             return;   
         }
         if (! updateDouble(boatData->GPST,GPSTime,msg.sourceId)) return;
