@@ -4,7 +4,8 @@
 #include <Adafruit_BMP280.h>            // Adafruit Lib for BMP280
 #include <Adafruit_BMP085.h>            // Adafruit Lib for BMP085 and BMP180
 #include <HTU21D.h>                     // Lib for SHT21/HTU21
-#include <AS5600.h>
+#include <AS5600.h>                     // Lib for magnetic rotation sensor AS5600
+#include "INA226.h"                     // Lib for power management IC INA226
 #include <Ticker.h>                     // Timer Lib for timer interrupts       
 #include "OBPSensorTask.h"
 #include "OBP60Hardware.h"
@@ -67,6 +68,7 @@ void sensorTask(void *param){
     Adafruit_BMP085 bmp085;         // Evironment sensor BMP085 and BMP180
     HTU21D sht21(HTU21D_RES_RH12_TEMP14); // Environment sensor SHT21 and HTU21
     AMS_5600 as5600;                // Rotation sensor AS5600
+    INA226 ina226_1(INA226_I2C_ADDR1);// Power management IC INA226
 
     // Init sensor stuff
     bool gps_ready = false;         // GPS initialized and ready to use
@@ -75,6 +77,7 @@ void sensorTask(void *param){
     bool BMP180_ready = false;      // BMP180 initialized and ready to use
     bool SHT21_ready = false;       // SHT21 initialized and ready to use
     bool AS5600_ready = false;      // AS5600 initialized and ready to use
+    bool INA226_1_ready = false;    // INA226_1 initialized and ready to use
 
     // Start timer interrupts
     bool uvoltage = api->getConfig()->getConfigItem(api->getConfig()->underVoltage,true)->asBoolean();
@@ -85,7 +88,7 @@ void sensorTask(void *param){
 
     // Settings for NMEA0183
     String nmea0183Mode = api->getConfig()->getConfigItem(api->getConfig()->serialDirection, true)->asString();
-    api->getLogger()->logDebug(GwLog::DEBUG, "NMEA0183 Mode is: %s", nmea0183Mode);
+    api->getLogger()->logDebug(GwLog::LOG, "NMEA0183 Mode is: %s", nmea0183Mode);
     pinMode(OBP_DIRECTION_PIN, OUTPUT);
     if (String(nmea0183Mode) == "receive" || String(nmea0183Mode) == "off")
     {
@@ -105,7 +108,7 @@ void sensorTask(void *param){
                 gps_ready = false;
                 }
             else{
-                api->getLogger()->logDebug(GwLog::DEBUG,"GPS modul NEO-M6 found");
+                api->getLogger()->logDebug(GwLog::LOG,"GPS modul NEO-M6 found");
                 NMEA0183.SetMessageStream(&Serial2);
                 NMEA0183.Open();
                 gps_ready = true;
@@ -118,7 +121,7 @@ void sensorTask(void *param){
                 gps_ready = false;
                 }
             else{
-                api->getLogger()->logDebug(GwLog::DEBUG,"GPS modul NEO-M8N found");
+                api->getLogger()->logDebug(GwLog::LOG,"GPS modul NEO-M8N found");
                 NMEA0183.SetMessageStream(&Serial2);
                 NMEA0183.Open();
                 gps_ready = true;
@@ -128,10 +131,10 @@ void sensorTask(void *param){
     // Settings for temperature sensors
     String tempSensor = api->getConfig()->getConfigItem(api->getConfig()->useTempSensor,true)->asString();
     if(String(tempSensor) == "DS18B20"){
-        api->getLogger()->logDebug(GwLog::DEBUG,"1Wire Mode is On");
+        api->getLogger()->logDebug(GwLog::LOG,"1Wire Mode is On");
     }
     else{
-        api->getLogger()->logDebug(GwLog::DEBUG,"1Wire Mode is Off");
+        api->getLogger()->logDebug(GwLog::LOG,"1Wire Mode is Off");
     }
     
     // Settings for environment sensors on I2C bus
@@ -142,7 +145,7 @@ void sensorTask(void *param){
             api->getLogger()->logDebug(GwLog::ERROR,"Modul BME280 not found, check wiring");
         }
         else{
-            api->getLogger()->logDebug(GwLog::DEBUG,"Modul BME280 found");
+            api->getLogger()->logDebug(GwLog::LOG,"Modul BME280 found");
             sensors.airTemperature = bme280.readTemperature();
             sensors.airPressure = bme280.readPressure()/100;
             sensors.airHumidity = bme280.readHumidity();
@@ -154,7 +157,7 @@ void sensorTask(void *param){
             api->getLogger()->logDebug(GwLog::ERROR,"Modul BMP280 not found, check wiring");
         }
         else{
-            api->getLogger()->logDebug(GwLog::DEBUG,"Modul BMP280 found");
+            api->getLogger()->logDebug(GwLog::LOG,"Modul BMP280 found");
             sensors.airTemperature = bmp280.readTemperature();
             sensors.airPressure  =bmp280.readPressure()/100;
             BMP280_ready = true;
@@ -165,7 +168,7 @@ void sensorTask(void *param){
             api->getLogger()->logDebug(GwLog::ERROR,"Modul BMP085/BMP180 not found, check wiring");
         }
         else{
-            api->getLogger()->logDebug(GwLog::DEBUG,"Modul BMP085/BMP180 found");
+            api->getLogger()->logDebug(GwLog::LOG,"Modul BMP085/BMP180 found");
             sensors.airTemperature = bmp085.readTemperature();
             sensors.airPressure  =bmp085.readPressure()/100;
             BMP180_ready = true;
@@ -176,38 +179,63 @@ void sensorTask(void *param){
             api->getLogger()->logDebug(GwLog::ERROR,"Modul HTU21/SHT21 not found, check wiring");
         }
         else{
-            api->getLogger()->logDebug(GwLog::DEBUG,"Modul HTU21/SHT21 found");
+            api->getLogger()->logDebug(GwLog::LOG,"Modul HTU21/SHT21 found");
             sensors.airHumidity = sht21.readCompensatedHumidity();
             sensors.airTemperature = sht21.readTemperature();
             SHT21_ready = true;
         }
     }
 
-    // Settings for rotation sensors on I2C bus
+    // Settings for rotation sensors AS5600 on I2C bus
     String envsensor = api->getConfig()->getConfigItem(api->getConfig()->useEnvSensor, true)->asString();
     String rotsensor = api->getConfig()->getConfigItem(api->getConfig()->useRotSensor, true)->asString();
     String rotfunction = api->getConfig()->getConfigItem(api->getConfig()->rotFunction, true)->asString();
     String rotSensor=api->getConfig()->getConfigItem(api->getConfig()->useRotSensor,true)->asString();
     
     if(String(rotSensor) == "AS5600"){
-         Wire.beginTransmission(AS5600_I2C_ADDR);
+        Wire.beginTransmission(AS5600_I2C_ADDR);
         if (Wire.endTransmission() != 0) {
             api->getLogger()->logDebug(GwLog::ERROR,"Modul AS5600 not found, check wiring");
         }
         else{
-            api->getLogger()->logDebug(GwLog::DEBUG,"Modul AS5600 found");
+            api->getLogger()->logDebug(GwLog::LOG,"Modul AS5600 found");
             sensors.rotationAngle = DegToRad(as5600.getRawAngle() * 0.087);   // 0...4095 segments = 0.087 degree
             //sensors.magnitude = as5600.getMagnitude();              // Magnetic magnitude in [mT]
             AS5600_ready = true;
         }
     }
 
+    // Settings for power amangement sensors INA226 #1 on I2C bus
+    String powsensor1 = api->getConfig()->getConfigItem(api->getConfig()->usePowSensor1, true)->asString();
+    String shunt1 = api->getConfig()->getConfigItem(api->getConfig()->shunt1, true)->asString();
+
+    float shuntResistor = 1.0;  // Default value for shunt resistor
+    float current = 10.0;       // Default value for max. current
+    
+    if(String(powsensor1) == "INA226"){
+        if (!ina226_1.begin()){
+            api->getLogger()->logDebug(GwLog::ERROR,"Modul 1 INA226 not found, check wiring");
+        }
+        else{
+            api->getLogger()->logDebug(GwLog::LOG,"Modul 1 INA226 found");
+            shuntResistor = 0.075 / float(shunt1.toInt());  // Calculate shunt resisitor for max. shunt voltage 75mV
+            current = float(shunt1.toInt());
+            api->getLogger()->logDebug(GwLog::LOG,"Calibation INA226, Imax:%3.0fA Rs:%7.5fOhm Us:0.075V", current, shuntResistor);
+            ina226_1.setMaxCurrentShunt(current, shuntResistor);
+            sensors.batteryVoltage = ina226_1.getBusVoltage();
+            sensors.batteryCurrent = ina226_1.getCurrent();
+            sensors.batteryPower = ina226_1.getPower();
+            INA226_1_ready = true;
+        }
+    }
 
     int rotoffset = api->getConfig()->getConfigItem(api->getConfig()->rotOffset,true)->asInt();
-    long starttime0 = millis(); 
+    long starttime0 = millis();     // GPS update all 1s
     long starttime5 = millis();     // Voltage update all 1s
     long starttime6 = millis();     // Environment sensor update all 1s
-    long starttime7 = millis();     // Rotation sensor update all 100ms
+    long starttime7 = millis();     // Rotation sensor update all 500ms
+    long starttime8 = millis();     // Power management sensor update all 1s
+
     tN2kMsg N2kMsg;
     shared->setSensorData(sensors); //set initially read values
 
@@ -218,7 +246,7 @@ void sensorTask(void *param){
         delay(100);                 // Loop time 100ms
         Timer1.update();            // Update for Timer1
         Timer2.update();            // Update for Timer2
-        if (millis() > starttime0 + 100)
+        if (millis() > starttime0 + 1000)
         {
             starttime0 = millis();
             // Send NMEA0183 GPS data on several bus systems all 1000ms
@@ -309,7 +337,7 @@ void sensorTask(void *param){
                 }                
             }
 
-            // Send rotation angle all 1000ms
+            // Send rotation angle all 500ms
             if(millis() > starttime7 + 500){
                 starttime7 = millis();
                 double rotationAngle=0;

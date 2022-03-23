@@ -262,11 +262,116 @@
         }
     },
     {
+        "name": "usePowSensor1",
+        "label": "Pow. Sensor 1",
+        "type": "list",
+        "default": "off",
+        "description": "Use external power management sensor via I2C bus [off|INA219|INA226|]",
+        "list": [
+            "off",
+            "INA219",
+            "INA226"
+        ],
+        "category": "OBP60 Hardware",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "shunt1",
+        "label": "Shunt Sensor 1",
+        "type": "list",
+        "default": "10",
+        "description": "Shunt current value [10A|50A|100A|200A|300A|500A]",
+        "list": [
+            "10",
+            "50",
+            "100",
+            "200",
+            "300",
+            "500"
+        ],
+        "category": "OBP60 Hardware",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "usePowSensor2",
+        "label": "Pow. Sensor 2",
+        "type": "list",
+        "default": "off",
+        "description": "Use external power management sensor via I2C bus [off|INA219|INA226|]",
+        "list": [
+            "off",
+            "INA219",
+            "INA226"
+        ],
+        "category": "OBP60 Hardware",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "shunt2",
+        "label": "Shunt Sensor 2",
+        "type": "list",
+        "default": "10",
+        "description": "Shunt current value [10A|50A|100A|200A|300A|500A]",
+        "list": [
+            "10",
+            "50",
+            "100",
+            "200",
+            "300",
+            "500"
+        ],
+        "category": "OBP60 Hardware",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "usePowSensor3",
+        "label": "Pow. Sensor 3",
+        "type": "list",
+        "default": "off",
+        "description": "Use external power management sensor via I2C bus [off|INA219|INA226|]",
+        "list": [
+            "off",
+            "INA219",
+            "INA226"
+        ],
+        "category": "OBP60 Hardware",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "shunt3",
+        "label": "Shunt Sensor 3",
+        "type": "list",
+        "default": "10",
+        "description": "Shunt current value [10A|50A|100A|200A|300A|500A]",
+        "list": [
+            "10",
+            "50",
+            "100",
+            "200",
+            "300",
+            "500"
+        ],
+        "category": "OBP60 Hardware",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
         "name": "useRotSensor",
         "label": "Rot. Sensor",
         "type": "list",
         "default": "off",
-        "description": "Use external rotation sensor via I2C bus[off|AS5600]",
+        "description": "Use external rotation sensor via I2C bus [off|AS5600]",
         "list": [
             "off",
             "AS5600"
