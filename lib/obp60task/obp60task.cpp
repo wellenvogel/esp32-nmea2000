@@ -425,6 +425,7 @@ void OBP60Task(GwApi *api){
                     // #9 or #10 Refresh display after a new page after 4s waiting time and if refresh is disabled
                     if(refreshmode == true && (keyboardMessage == 9 || keyboardMessage == 10)){
                         starttime4 = millis();
+                        starttime2 = millis();      // Reset the timer for full display update
                         delayedDisplayUpdate = true;
                     }                 
                 }
