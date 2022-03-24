@@ -263,7 +263,7 @@
     },
     {
         "name": "usePowSensor1",
-        "label": "Bat. Sensor 1",
+        "label": "Battery Sensor",
         "type": "list",
         "default": "off",
         "description": "Use external power management sensor via I2C bus for battery [off|INA219|INA226|]",
@@ -279,7 +279,7 @@
     },
     {
         "name": "shunt1",
-        "label": "Shunt Sensor 1",
+        "label": "Battery Shunt",
         "type": "list",
         "default": "10",
         "description": "Shunt current value [10A|50A|100A|200A|300A|400A|500A]",
@@ -299,7 +299,7 @@
     },
     {
         "name": "usePowSensor2",
-        "label": "Solar Sensor 2",
+        "label": "Solar Sensor",
         "type": "list",
         "default": "off",
         "description": "Use external power management sensor via I2C bus for solar panels [off|INA219|INA226|]",
@@ -315,7 +315,7 @@
     },
     {
         "name": "shunt2",
-        "label": "Shunt Sensor 2",
+        "label": "Solar Shunt",
         "type": "list",
         "default": "10",
         "description": "Shunt current value [10A|50A|100A|200A|300A|400A|500A]",
@@ -335,7 +335,7 @@
     },
     {
         "name": "usePowSensor3",
-        "label": "Gen. Sensor 3",
+        "label": "Gen. Sensor",
         "type": "list",
         "default": "off",
         "description": "Use external power management sensor via I2C bus for generator [off|INA219|INA226|]",
@@ -351,7 +351,7 @@
     },
     {
         "name": "shunt3",
-        "label": "Shunt Sensor 3",
+        "label": "Gen. Sensor",
         "type": "list",
         "default": "10",
         "description": "Shunt current value [10A|50A|100A|200A|300A|400A|500A]",
