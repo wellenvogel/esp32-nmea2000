@@ -42,7 +42,8 @@ public:
         bool holdvalues = config->getBool(config->holdvalues);
         String flashLED = config->getString(config->flashLED);
         String backlightMode = config->getString(config->backlight);
-        int timezone = config->getInt(config->timeZone);
+        String stimezone = config->getString(config->timeZone);
+        double timezone = stimezone.toDouble();
 
         // Get boat values for GPS time
         GwApi::BoatValue *bvalue1 = pageData.values[0]; // First element in list (only one value by PageOneValue)
@@ -267,11 +268,13 @@ public:
         // Clock values
         double hour = 0;
         double minute = 0;
+        value1 = value1 + int(timezone*3600);
+        if (value1 > 86400) {value1 = value1 - 86400;}
+        if (value1 < 0) {value1 = value1 + 86400;}
         hour = (value1 / 3600.0);
         if(hour > 12) hour = hour - 12.0;
-        hour = hour + timezone;
         minute = (hour - int(hour)) * 3600.0 / 60.0;
-
+        LOG_DEBUG(GwLog::DEBUG,"... PageClock, value1: %f hour: %f minute:%f", value1, hour, minute);
         // Draw hour pointer
         float startwidth = 8;       // Start width of pointer
         if(valid1 == true || holdvalues == true || simulation == true){

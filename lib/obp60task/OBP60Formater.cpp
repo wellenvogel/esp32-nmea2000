@@ -9,6 +9,7 @@
 // hold values by missing data
 
 FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
+    GwLog *logger = commondata.logger;
     FormatedData result;
 
     static int dayoffset = 0;
@@ -33,28 +34,15 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
     buffer[0]=0;
     //########################################################
     if (value->getFormat() == "formatDate"){
+        
+        int dayoffset = 0;
+        if (commondata.time->value + int(timeZone*3600) > 86400) {dayoffset = 1;}
+        if (commondata.time->value + int(timeZone*3600) < 0) {dayoffset = -1;}
 
-        double utctime = commondata.time->value;   // UTC time in secounds of the day (GPS or bus data)
-
-        //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/*
-        time_t now;
-        char strftime_buf[64];
-        struct tm timeinfo;
-
-        time(&now);
-        // Set timezone to China Standard Time
-        setenv("TZ", "CST-8", 1);
-        tzset();
-        localtime_r(&now, &timeinfo);
-
-        strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
-*/
-        //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        LOG_DEBUG(GwLog::DEBUG,"... formatDate value->value: %f tz: %f dayoffset: %d", value->value, timeZone, dayoffset);
 
         tmElements_t parts;
         time_t tv=tNMEA0183Msg::daysToTime_t(value->value + dayoffset);
-
         tNMEA0183Msg::breakTime(tv,parts);
         if(usesimudata == false) { 
             if(String(dateFormat) == "DE"){
@@ -83,41 +71,16 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
     //########################################################
     else if(value->getFormat() == "formatTime"){
         double timeInSeconds = 0;
-        double utcTime = 0;
         double inthr = 0;
         double intmin = 0;
         double intsec = 0;
         double val = 0;
 
-        if(timeZone > 0){
-            timeInSeconds = value->value + timeZone * 3600;
-            timeInSeconds = int(timeInSeconds) % 86400;                 // Reduce to one day (86400s)
-        }
-        else{
-            timeInSeconds = value->value + timeZone * 3600 + 86400;     // Add one day
-            timeInSeconds = int(timeInSeconds) % 86400;                 // Reduce to one day (86400s)
-        }
-/*
-        // Changing day depends on time offset
-        utcTime = value->value;
-        if(timeZone + (utcTime/3600) > 24 && timeZone > 0){
-            dayoffset = 1;
-        }
-        else{
-            dayoffset = 0;
-        }
-        if(timeZone == 0){
-            dayoffset = 0;
-        }
-        if(timeZone + (utcTime/3600) > 24 && timeZone < 0){
-            dayoffset = 0;
-        }
-        else{
-            dayoffset = -1;
-        }
-*/
-
-        if(usesimudata == false) {    
+        timeInSeconds = value->value + int(timeZone * 3600);
+        if (timeInSeconds > 86400) {timeInSeconds = timeInSeconds - 86400;}
+        if (timeInSeconds <  0) {timeInSeconds = timeInSeconds + 86400;}
+        LOG_DEBUG(GwLog::DEBUG,"... formatTime value: %f tz: %f corrected timeInSeconds: %f ", value->value, timeZone, timeInSeconds);
+        if(usesimudata == false) {
             val=modf(timeInSeconds/3600.0,&inthr);
             val=modf(val*3600.0/60.0,&intmin);
             modf(val*60.0,&intsec);

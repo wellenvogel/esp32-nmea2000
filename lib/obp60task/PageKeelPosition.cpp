@@ -46,6 +46,9 @@ public:
             value1 = commonData.data.rotationAngle; // Raw value without unit convertion
         }
         else{
+            value1 = 0;
+        }
+        if(simulation == true){
             value1 = (170 + float(random(0, 40)) / 10.0) * 2 * PI / 360; // Simulation data in radiant
         }
 
