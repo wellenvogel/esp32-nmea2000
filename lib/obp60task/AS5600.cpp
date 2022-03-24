@@ -377,10 +377,14 @@ int AMS_5600::readOneByte(int in_adr)
   Wire.write(in_adr);
   Wire.endTransmission();
   Wire.requestFrom(_ams5600_Address, (uint8_t) 1);
+/*
   while (Wire.available() == 0)
     ;
   retVal = Wire.read();
-
+*/
+  if(Wire.available() >= 1){
+    retVal = Wire.read();
+  }
   return retVal;
 }
 
@@ -416,11 +420,20 @@ word AMS_5600::readTwoBytesTogether(int addr_in)
   Wire.write(addr_in);
   Wire.endTransmission();
   Wire.requestFrom(_ams5600_Address, (uint8_t) 2);
+/*
   while (Wire.available() < 2)
     ;
   
   int highByte = Wire.read();
   int lowByte  = Wire.read();
+*/
+  int highByte = 0;
+  int lowByte  = 0;
+  
+  if (Wire.available() >= 2){
+      highByte = Wire.read();
+      lowByte  = Wire.read();
+  }
 
   // in case newer version of IC used the same address to
   //    store something else, get only the 3 bits

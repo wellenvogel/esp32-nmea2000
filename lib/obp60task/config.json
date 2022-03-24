@@ -263,10 +263,10 @@
     },
     {
         "name": "usePowSensor1",
-        "label": "Pow. Sensor 1",
+        "label": "Bat. Sensor 1",
         "type": "list",
         "default": "off",
-        "description": "Use external power management sensor via I2C bus [off|INA219|INA226|]",
+        "description": "Use external power management sensor via I2C bus for battery [off|INA219|INA226|]",
         "list": [
             "off",
             "INA219",
@@ -282,13 +282,14 @@
         "label": "Shunt Sensor 1",
         "type": "list",
         "default": "10",
-        "description": "Shunt current value [10A|50A|100A|200A|300A|500A]",
+        "description": "Shunt current value [10A|50A|100A|200A|300A|400A|500A]",
         "list": [
             "10",
             "50",
             "100",
             "200",
             "300",
+            "400",
             "500"
         ],
         "category": "OBP60 Hardware",
@@ -298,10 +299,10 @@
     },
     {
         "name": "usePowSensor2",
-        "label": "Pow. Sensor 2",
+        "label": "Solar Sensor 2",
         "type": "list",
         "default": "off",
-        "description": "Use external power management sensor via I2C bus [off|INA219|INA226|]",
+        "description": "Use external power management sensor via I2C bus for solar panels [off|INA219|INA226|]",
         "list": [
             "off",
             "INA219",
@@ -317,13 +318,14 @@
         "label": "Shunt Sensor 2",
         "type": "list",
         "default": "10",
-        "description": "Shunt current value [10A|50A|100A|200A|300A|500A]",
+        "description": "Shunt current value [10A|50A|100A|200A|300A|400A|500A]",
         "list": [
             "10",
             "50",
             "100",
             "200",
             "300",
+            "400",
             "500"
         ],
         "category": "OBP60 Hardware",
@@ -333,10 +335,10 @@
     },
     {
         "name": "usePowSensor3",
-        "label": "Pow. Sensor 3",
+        "label": "Gen. Sensor 3",
         "type": "list",
         "default": "off",
-        "description": "Use external power management sensor via I2C bus [off|INA219|INA226|]",
+        "description": "Use external power management sensor via I2C bus for generator [off|INA219|INA226|]",
         "list": [
             "off",
             "INA219",
@@ -352,13 +354,14 @@
         "label": "Shunt Sensor 3",
         "type": "list",
         "default": "10",
-        "description": "Shunt current value [10A|50A|100A|200A|300A|500A]",
+        "description": "Shunt current value [10A|50A|100A|200A|300A|400A|500A]",
         "list": [
             "10",
             "50",
             "100",
             "200",
             "300",
+            "400",
             "500"
         ],
         "category": "OBP60 Hardware",

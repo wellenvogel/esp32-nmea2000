@@ -22,11 +22,10 @@
     // AS5600
     #define AS5600_I2C_ADDR 0x36    // Addr. 0x36 (fix)
     // INA226
-    #define SHUNT_VOLTAGE 0.75      // 75mV by max. current
-    #define INA226_I2C_ADDR1 0x40    // Addr. 0x40 (fix)
-    #define INA226_I2C_ADDR2 0x41    // Addr. 0x41 (fix)
-    #define INA226_I2C_ADDR3 0x44    // Addr. 0x44 (fix)
-    #define INA226_I2C_ADDR4 0x45    // Addr. 0x45 (fix)
+    #define SHUNT_VOLTAGE 0.075     // Shunt voltage in V by max. current (75mV)
+    #define INA226_I2C_ADDR1 0x41   // Addr. 0x41 (fix A0 = 5V, A1 = GND) for battery
+    #define INA226_I2C_ADDR2 0x44   // Addr. 0x44 (fix A0 = GND, A1 = 5V) for solar panels
+    #define INA226_I2C_ADDR3 0x45   // Addr. 0x45 (fix A0 = 5V, A1 = 5V) for generator
     // SPI (E-Ink display, Extern Bus)
     #define OBP_SPI_CS 5
     #define OBP_SPI_DC 17

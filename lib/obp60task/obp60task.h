@@ -20,7 +20,7 @@ DECLARE_INITFUNCTION(OBP60Init);
 
 // OBP60 Task
 void OBP60Task(GwApi *param);
-DECLARE_USERTASK_PARAM(OBP60Task, 10000)    // Need 10k RAM as stack size
+DECLARE_USERTASK_PARAM(OBP60Task, 15000)    // Need 15k RAM as stack size
 DECLARE_CAPABILITY(obp60,true);
 
 #endif

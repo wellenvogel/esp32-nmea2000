@@ -68,7 +68,7 @@ void sensorTask(void *param){
     Adafruit_BMP085 bmp085;         // Evironment sensor BMP085 and BMP180
     HTU21D sht21(HTU21D_RES_RH12_TEMP14); // Environment sensor SHT21 and HTU21
     AMS_5600 as5600;                // Rotation sensor AS5600
-    INA226 ina226_1(INA226_I2C_ADDR1);// Power management IC INA226
+    INA226 ina226_1(INA226_I2C_ADDR1);// Power management sensor INA226
 
     // Init sensor stuff
     bool gps_ready = false;         // GPS initialized and ready to use
@@ -211,6 +211,7 @@ void sensorTask(void *param){
 
     float shuntResistor = 1.0;  // Default value for shunt resistor
     float current = 10.0;       // Default value for max. current
+    float corrFactor = 1;       // Correction factor for fix calibration
     
     if(String(powsensor1) == "INA226"){
         if (!ina226_1.begin()){
@@ -218,13 +219,15 @@ void sensorTask(void *param){
         }
         else{
             api->getLogger()->logDebug(GwLog::LOG,"Modul 1 INA226 found");
-            shuntResistor = 0.075 / float(shunt1.toInt());  // Calculate shunt resisitor for max. shunt voltage 75mV
+            shuntResistor = SHUNT_VOLTAGE / float(shunt1.toInt());  // Calculate shunt resisitor for max. shunt voltage 75mV
             current = float(shunt1.toInt());
-            api->getLogger()->logDebug(GwLog::LOG,"Calibation INA226, Imax:%3.0fA Rs:%7.5fOhm Us:0.075V", current, shuntResistor);
-            ina226_1.setMaxCurrentShunt(current, shuntResistor);
+            api->getLogger()->logDebug(GwLog::LOG,"Calibation INA226, Imax:%3.0fA Rs:%7.5fOhm Us:%5.3f", current, shuntResistor, SHUNT_VOLTAGE);
+//            ina226_1.setMaxCurrentShunt(current, shuntResistor);
+            ina226_1.setMaxCurrentShunt(10, 0.01);  // Calibration with fix values (because the original values outer range)
+            corrFactor = (current / 10) * (0.001 / shuntResistor) / (current / 100); // correction factor for fix calibration
             sensors.batteryVoltage = ina226_1.getBusVoltage();
-            sensors.batteryCurrent = ina226_1.getCurrent();
-            sensors.batteryPower = ina226_1.getPower();
+            sensors.batteryCurrent = ina226_1.getCurrent() * corrFactor;
+            sensors.batteryPower = ina226_1.getPower() * corrFactor;
             INA226_1_ready = true;
         }
     }
@@ -262,128 +265,144 @@ void sensorTask(void *param){
         }
         // Read sensors and set values in sensor data
         // Send supplay voltage value all 1s
-            if(millis() > starttime5 + 1000){
-                starttime5 = millis();
-                sensors.batteryVoltage = (float(analogRead(OBP_ANALOG0)) * 3.3 / 4096 + 0.17) * 20;   // Vin = 1/20
+        if(millis() > starttime5 + 1000 && String(powsensor1) == "off"){
+            starttime5 = millis();
+            sensors.batteryVoltage = (float(analogRead(OBP_ANALOG0)) * 3.3 / 4096 + 0.17) * 20;   // Vin = 1/20
+            // Send to NMEA200 bus
+            if(!isnan(sensors.batteryVoltage)){
+                SetN2kDCBatStatus(N2kMsg, 0, sensors.batteryVoltage, N2kDoubleNA, N2kDoubleNA, 1);
+                api->sendN2kMessage(N2kMsg);
+            }
+        }
+
+        // Send data from environment sensor all 1s
+        if(millis() > starttime6 + 2000){
+            starttime6 = millis();
+            unsigned char TempSource = 2;       // Inside temperature
+            unsigned char PressureSource = 0;   // Atmospheric pressure
+            unsigned char HumiditySource=0;     // Inside humidity
+            if(envsensor == "BME280" && BME280_ready == true){
+                sensors.airTemperature = bme280.readTemperature();
+                sensors.airPressure = bme280.readPressure()/100;
+                sensors.airHumidity = bme280.readHumidity();
                 // Send to NMEA200 bus
-                if(!isnan(sensors.batteryVoltage)){
-                    SetN2kDCBatStatus(N2kMsg, 0, sensors.batteryVoltage, N2kDoubleNA, N2kDoubleNA, 1);
+                if(!isnan(sensors.airTemperature)){
+                    SetN2kPGN130312(N2kMsg, 0, 0,(tN2kTempSource) TempSource, CToKelvin(sensors.airTemperature), N2kDoubleNA);
+                    api->sendN2kMessage(N2kMsg);
+                }
+                if(!isnan(sensors.airHumidity)){
+                    SetN2kPGN130313(N2kMsg, 0, 0,(tN2kHumiditySource) HumiditySource, sensors.airHumidity, N2kDoubleNA);
+                    api->sendN2kMessage(N2kMsg);
+                }
+                if(!isnan(sensors.airPressure)){
+                    SetN2kPGN130314(N2kMsg, 0, 0, (tN2kPressureSource) mBarToPascal(PressureSource), sensors.airPressure);
                     api->sendN2kMessage(N2kMsg);
                 }
             }
-
-            // Send data from environment sensor all 1s
-            if(millis() > starttime6 + 2000){
-                starttime6 = millis();
-                unsigned char TempSource = 2;       // Inside temperature
-                unsigned char PressureSource = 0;   // Atmospheric pressure
-                unsigned char HumiditySource=0;     // Inside humidity
-                if(envsensor == "BME280" && BME280_ready == true){
-                    sensors.airTemperature = bme280.readTemperature();
-                    sensors.airPressure = bme280.readPressure()/100;
-                    sensors.airHumidity = bme280.readHumidity();
-                    // Send to NMEA200 bus
-                    if(!isnan(sensors.airTemperature)){
-                        SetN2kPGN130312(N2kMsg, 0, 0,(tN2kTempSource) TempSource, CToKelvin(sensors.airTemperature), N2kDoubleNA);
-                        api->sendN2kMessage(N2kMsg);
-                    }
-                    if(!isnan(sensors.airHumidity)){
-                        SetN2kPGN130313(N2kMsg, 0, 0,(tN2kHumiditySource) HumiditySource, sensors.airHumidity, N2kDoubleNA);
-                        api->sendN2kMessage(N2kMsg);
-                    }
-                    if(!isnan(sensors.airPressure)){
-                        SetN2kPGN130314(N2kMsg, 0, 0, (tN2kPressureSource) mBarToPascal(PressureSource), sensors.airPressure);
-                        api->sendN2kMessage(N2kMsg);
-                    }
+            else if(envsensor == "BMP280" && BMP280_ready == true){
+                sensors.airTemperature = bmp280.readTemperature();
+                sensors.airPressure  =bmp280.readPressure()/100;
+                // Send to NMEA200 bus
+                if(!isnan(sensors.airTemperature)){
+                    SetN2kPGN130312(N2kMsg, 0, 0,(tN2kTempSource) TempSource, CToKelvin(sensors.airTemperature), N2kDoubleNA);
+                    api->sendN2kMessage(N2kMsg);
                 }
-                else if(envsensor == "BMP280" && BMP280_ready == true){
-                    sensors.airTemperature = bmp280.readTemperature();
-                    sensors.airPressure  =bmp280.readPressure()/100;
-                    // Send to NMEA200 bus
-                    if(!isnan(sensors.airTemperature)){
-                        SetN2kPGN130312(N2kMsg, 0, 0,(tN2kTempSource) TempSource, CToKelvin(sensors.airTemperature), N2kDoubleNA);
-                        api->sendN2kMessage(N2kMsg);
-                    }
-                    if(!isnan(sensors.airPressure)){
-                        SetN2kPGN130314(N2kMsg, 0, 0, (tN2kPressureSource) mBarToPascal(PressureSource), sensors.airPressure);
-                        api->sendN2kMessage(N2kMsg);
-                    }
+                if(!isnan(sensors.airPressure)){
+                    SetN2kPGN130314(N2kMsg, 0, 0, (tN2kPressureSource) mBarToPascal(PressureSource), sensors.airPressure);
+                    api->sendN2kMessage(N2kMsg);
                 }
-                else if((envsensor == "BMP085" || envsensor == "BMP180") && BMP180_ready == true){
-                    sensors.airTemperature = bmp085.readTemperature();
-                    sensors.airPressure  =bmp085.readPressure()/100;
-                    // Send to NMEA200 bus
-                    if(!isnan(sensors.airTemperature)){
-                        SetN2kPGN130312(N2kMsg, 0, 0,(tN2kTempSource) TempSource, CToKelvin(sensors.airTemperature), N2kDoubleNA);
-                        api->sendN2kMessage(N2kMsg);
-                    }
-                    if(!isnan(sensors.airPressure)){
-                        SetN2kPGN130314(N2kMsg, 0, 0, (tN2kPressureSource) mBarToPascal(PressureSource), sensors.airPressure);
-                        api->sendN2kMessage(N2kMsg);
-                    }
-                }
-                else if((envsensor == "SHT21" || envsensor == "HTU21") && SHT21_ready == true){
-                    sensors.airHumidity = sht21.readCompensatedHumidity();
-                    sensors.airHumidity = sht21.readTemperature();
-                    // Send to NMEA200 bus
-                    if(!isnan(sensors.airTemperature)){
-                        SetN2kPGN130312(N2kMsg, 0, 0,(tN2kTempSource) TempSource, CToKelvin(sensors.airTemperature), N2kDoubleNA);
-                        api->sendN2kMessage(N2kMsg);
-                    }
-                    if(!isnan(sensors.airHumidity)){
-                        SetN2kPGN130313(N2kMsg, 0, 0,(tN2kHumiditySource) HumiditySource, sensors.airHumidity, N2kDoubleNA);
-                        api->sendN2kMessage(N2kMsg);
-                    }
-                }                
             }
+            else if((envsensor == "BMP085" || envsensor == "BMP180") && BMP180_ready == true){
+                sensors.airTemperature = bmp085.readTemperature();
+                sensors.airPressure  =bmp085.readPressure()/100;
+                // Send to NMEA200 bus
+                if(!isnan(sensors.airTemperature)){
+                    SetN2kPGN130312(N2kMsg, 0, 0,(tN2kTempSource) TempSource, CToKelvin(sensors.airTemperature), N2kDoubleNA);
+                    api->sendN2kMessage(N2kMsg);
+                }
+                if(!isnan(sensors.airPressure)){
+                    SetN2kPGN130314(N2kMsg, 0, 0, (tN2kPressureSource) mBarToPascal(PressureSource), sensors.airPressure);
+                    api->sendN2kMessage(N2kMsg);
+                }
+            }
+            else if((envsensor == "SHT21" || envsensor == "HTU21") && SHT21_ready == true){
+                sensors.airHumidity = sht21.readCompensatedHumidity();
+                sensors.airHumidity = sht21.readTemperature();
+                // Send to NMEA200 bus
+                if(!isnan(sensors.airTemperature)){
+                    SetN2kPGN130312(N2kMsg, 0, 0,(tN2kTempSource) TempSource, CToKelvin(sensors.airTemperature), N2kDoubleNA);
+                    api->sendN2kMessage(N2kMsg);
+                }
+                if(!isnan(sensors.airHumidity)){
+                    SetN2kPGN130313(N2kMsg, 0, 0,(tN2kHumiditySource) HumiditySource, sensors.airHumidity, N2kDoubleNA);
+                    api->sendN2kMessage(N2kMsg);
+                }
+            }                
+        }
 
-            // Send rotation angle all 500ms
-            if(millis() > starttime7 + 500){
-                starttime7 = millis();
-                double rotationAngle=0;
-                if(String(rotsensor) == "AS5600" && AS5600_ready == true && as5600.detectMagnet() == 1){
-                    rotationAngle = as5600.getRawAngle() * 0.087;       // 0...4095 segments = 0.087 degree
-                    // Offset correction
-                    if(rotoffset >= 0){
-                        rotationAngle = rotationAngle + rotoffset;
-                        rotationAngle = int(rotationAngle) % 360;
-                    }
-                    else{
-                        rotationAngle = rotationAngle + 360 + rotoffset;
-                        rotationAngle = int(rotationAngle) % 360;
-                    }
-                    // Send to NMEA200 bus as rudder angle values
-                    if(!isnan(rotationAngle) && String(rotfunction) == "Rudder"){
-                        double rudder = rotationAngle - 180;            // Center position is 180°
-                        // Rudder limits to +/-45°
-                        if(rudder < -45){
-                            rudder = -45;
-                        }
-                        if(rudder > 45){
-                            rudder = 45;
-                        }
-                        SetN2kRudder(N2kMsg, DegToRad(rudder), 0, N2kRDO_NoDirectionOrder, PI);
-                        api->sendN2kMessage(N2kMsg);
-                    }
-                    // Send to NMEA200 bus as wind angle values
-                    if(!isnan(rotationAngle) && String(rotfunction) == "Wind"){
-                        SetN2kWindSpeed(N2kMsg, 1, 0, DegToRad(rotationAngle), N2kWind_Apprent);
-                        api->sendN2kMessage(N2kMsg);
-                    }
-                    // Send to NMEA200 bus as trim angle values in [%]
-                    if(!isnan(rotationAngle) && (String(rotfunction) == "Mast" || String(rotfunction) == "Keel" || String(rotfunction) == "Trim" || String(rotfunction) == "Boom")){
-                        int trim = rotationAngle * 100 / 360;           // 0...360° -> 0...100%
-                        SetN2kTrimTab(N2kMsg, trim, trim);
-                        api->sendN2kMessage(N2kMsg);
-                    }
-                    sensors.rotationAngle = DegToRad(rotationAngle);    // Data take over to page
-                    sensors.validRotAngle = true;                       // Valid true, magnet present
+        // Send rotation angle all 500ms
+        if(millis() > starttime7 + 500){
+            starttime7 = millis();
+            double rotationAngle=0;
+            if(String(rotsensor) == "AS5600" && AS5600_ready == true && as5600.detectMagnet() == 1){
+                rotationAngle = as5600.getRawAngle() * 0.087;       // 0...4095 segments = 0.087 degree
+                // Offset correction
+                if(rotoffset >= 0){
+                    rotationAngle = rotationAngle + rotoffset;
+                    rotationAngle = int(rotationAngle) % 360;
                 }
                 else{
-                    sensors.rotationAngle = 0;      // Center position 0°
-                    sensors.validRotAngle = false;  // Valid false, magnet missing
-                }    
+                    rotationAngle = rotationAngle + 360 + rotoffset;
+                    rotationAngle = int(rotationAngle) % 360;
+                }
+                // Send to NMEA200 bus as rudder angle values
+                if(!isnan(rotationAngle) && String(rotfunction) == "Rudder"){
+                    double rudder = rotationAngle - 180;            // Center position is 180°
+                    // Rudder limits to +/-45°
+                    if(rudder < -45){
+                        rudder = -45;
+                    }
+                    if(rudder > 45){
+                        rudder = 45;
+                    }
+                    SetN2kRudder(N2kMsg, DegToRad(rudder), 0, N2kRDO_NoDirectionOrder, PI);
+                    api->sendN2kMessage(N2kMsg);
+                }
+                // Send to NMEA200 bus as wind angle values
+                if(!isnan(rotationAngle) && String(rotfunction) == "Wind"){
+                    SetN2kWindSpeed(N2kMsg, 1, 0, DegToRad(rotationAngle), N2kWind_Apprent);
+                    api->sendN2kMessage(N2kMsg);
+                }
+                // Send to NMEA200 bus as trim angle values in [%]
+                if(!isnan(rotationAngle) && (String(rotfunction) == "Mast" || String(rotfunction) == "Keel" || String(rotfunction) == "Trim" || String(rotfunction) == "Boom")){
+                    int trim = rotationAngle * 100 / 360;           // 0...360° -> 0...100%
+                    SetN2kTrimTab(N2kMsg, trim, trim);
+                    api->sendN2kMessage(N2kMsg);
+                }
+                sensors.rotationAngle = DegToRad(rotationAngle);    // Data take over to page
+                sensors.validRotAngle = true;                       // Valid true, magnet present
             }
+            else{
+                sensors.rotationAngle = 0;      // Center position 0°
+                sensors.validRotAngle = false;  // Valid false, magnet missing
+            }    
+        }
+
+        // Send power management value all 1s
+        if(millis() > starttime8 + 1000 && (String(powsensor1) == "INA219" || String(powsensor1) == "INA226")){
+            starttime8 = millis();
+            if(String(powsensor1) == "INA226" && INA226_1_ready == true){
+                sensors.batteryVoltage = ina226_1.getBusVoltage();
+                sensors.batteryCurrent = ina226_1.getCurrent() * corrFactor;
+                sensors.batteryPower = ina226_1.getPower() * corrFactor;
+            }
+            // Send battery data to NMEA200 bus
+            if(!isnan(sensors.batteryVoltage) && !isnan(sensors.batteryCurrent)){
+//                SetN2kDCBatStatus(N2kMsg, 0, sensors.batteryVoltage, sensors.batteryCurrent, N2kDoubleNA, 1);
+                SetN2kDCBatStatus(N2kMsg, 0, sensors.batteryVoltage, sensors.batteryCurrent, sensors.batteryPower, 1);
+                api->sendN2kMessage(N2kMsg);
+            }
+        }
 
         shared->setSensorData(sensors);
     }
