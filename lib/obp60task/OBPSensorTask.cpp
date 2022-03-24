@@ -398,8 +398,8 @@ void sensorTask(void *param){
             }
             // Send battery data to NMEA200 bus
             if(!isnan(sensors.batteryVoltage) && !isnan(sensors.batteryCurrent)){
-//                SetN2kDCBatStatus(N2kMsg, 0, sensors.batteryVoltage, sensors.batteryCurrent, N2kDoubleNA, 1);
-                SetN2kDCBatStatus(N2kMsg, 0, sensors.batteryVoltage, sensors.batteryCurrent, sensors.batteryPower, 1);
+                SetN2kDCBatStatus(N2kMsg, 0, sensors.batteryVoltage, sensors.batteryCurrent, N2kDoubleNA, 1);
+//                SetN2kDCBatStatus(N2kMsg, 0, sensors.batteryVoltage, sensors.batteryCurrent, sensors.batteryPower, 1);
                 api->sendN2kMessage(N2kMsg);
             }
         }
