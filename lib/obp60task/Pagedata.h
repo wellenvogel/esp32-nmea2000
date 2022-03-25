@@ -17,6 +17,15 @@ typedef struct{
   double batteryVoltage = 0;
   double batteryCurrent = 0;
   double batteryPower = 0;
+  double batteryVoltage10 = 0;
+  double batteryCurrent10 = 0;
+  double batteryPower10 = 0;
+  double batteryVoltage60 = 0;
+  double batteryCurrent60 = 0;
+  double batteryPower60 = 0;
+  double batteryVoltage300 = 0;
+  double batteryCurrent300 = 0;
+  double batteryPower300 = 0;
   double solarVoltage = 0;
   double solarCurrent = 0;
   double solarPower = 0;

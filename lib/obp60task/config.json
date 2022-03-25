@@ -351,7 +351,7 @@
     },
     {
         "name": "shunt3",
-        "label": "Gen. Sensor",
+        "label": "Gen. Shunt",
         "type": "list",
         "default": "10",
         "description": "Shunt current value [10A|50A|100A|200A|300A|400A|500A]",

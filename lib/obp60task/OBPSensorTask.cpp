@@ -12,7 +12,8 @@
 #include "N2kMessages.h"
 #include "NMEA0183.h"
 #include "ObpNmea0183.h"
-#include "OBP60ExtensionPort.h"  
+#include "OBP60ExtensionPort.h"
+#include "movingAvg.h"                  // Lib for moving average building
 
 // Timer Interrupts for hardware functions
 void underVoltageDetection();
@@ -78,6 +79,15 @@ void sensorTask(void *param){
     bool SHT21_ready = false;       // SHT21 initialized and ready to use
     bool AS5600_ready = false;      // AS5600 initialized and ready to use
     bool INA226_1_ready = false;    // INA226_1 initialized and ready to use
+
+    // Create integer arrays for average building
+    int avgsize = 300;
+    constexpr int arrayBatV{300};
+    constexpr int arrayBatC{300};
+    movingAvg batV(arrayBatV);
+    movingAvg batC(arrayBatC);
+    batV.begin();
+    batC.begin();
 
     // Start timer interrupts
     bool uvoltage = api->getConfig()->getConfigItem(api->getConfig()->underVoltage,true)->asBoolean();
@@ -210,7 +220,7 @@ void sensorTask(void *param){
     String shunt1 = api->getConfig()->getConfigItem(api->getConfig()->shunt1, true)->asString();
 
     float shuntResistor = 1.0;  // Default value for shunt resistor
-    float current = 10.0;       // Default value for max. current
+    float maxCurrent = 10.0;    // Default value for max. current
     float corrFactor = 1;       // Correction factor for fix calibration
     
     if(String(powsensor1) == "INA226"){
@@ -220,14 +230,19 @@ void sensorTask(void *param){
         else{
             api->getLogger()->logDebug(GwLog::LOG,"Modul 1 INA226 found");
             shuntResistor = SHUNT_VOLTAGE / float(shunt1.toInt());  // Calculate shunt resisitor for max. shunt voltage 75mV
-            current = float(shunt1.toInt());
-            api->getLogger()->logDebug(GwLog::LOG,"Calibation INA226, Imax:%3.0fA Rs:%7.5fOhm Us:%5.3f", current, shuntResistor, SHUNT_VOLTAGE);
-//            ina226_1.setMaxCurrentShunt(current, shuntResistor);
+            maxCurrent = float(shunt1.toInt());
+            api->getLogger()->logDebug(GwLog::LOG,"Calibation INA226, Imax:%3.0fA Rs:%7.5fOhm Us:%5.3f", maxCurrent, shuntResistor, SHUNT_VOLTAGE);
+//            ina226_1.setMaxCurrentShunt(maxCurrent, shuntResistor);
             ina226_1.setMaxCurrentShunt(10, 0.01);  // Calibration with fix values (because the original values outer range)
-            corrFactor = (current / 10) * (0.001 / shuntResistor) / (current / 100); // correction factor for fix calibration
+            corrFactor = (maxCurrent / 10) * (0.001 / shuntResistor) / (maxCurrent / 100); // Correction factor for fix calibration
             sensors.batteryVoltage = ina226_1.getBusVoltage();
             sensors.batteryCurrent = ina226_1.getCurrent() * corrFactor;
             sensors.batteryPower = ina226_1.getPower() * corrFactor;
+            // Fill average arrays with start values
+            for (int i=1; i<=avgsize+1; ++i) {
+                batV.reading(int(sensors.batteryVoltage * 100));
+                batC.reading(int(sensors.batteryCurrent * 10));
+            }
             INA226_1_ready = true;
         }
     }
@@ -394,12 +409,30 @@ void sensorTask(void *param){
             if(String(powsensor1) == "INA226" && INA226_1_ready == true){
                 sensors.batteryVoltage = ina226_1.getBusVoltage();
                 sensors.batteryCurrent = ina226_1.getCurrent() * corrFactor;
-                sensors.batteryPower = ina226_1.getPower() * corrFactor;
+                // Eliminates bit jitter by zero current values
+                float factor = maxCurrent / 100;
+                if(sensors.batteryCurrent >= (-0.015 * factor) && sensors.batteryCurrent <= (0.015 * factor)){
+                    sensors.batteryCurrent = 0;
+                }
+                // Save actual values in average arrays as integer values
+                batV.reading(int(sensors.batteryVoltage * 100));
+                batC.reading(int(sensors.batteryCurrent * 10));
+                // Calculate the average values for different time lines from integer values
+                sensors.batteryVoltage10 = batV.getAvg(10) / 100.0;
+                sensors.batteryVoltage60 = batV.getAvg(60) / 100.0;
+                sensors.batteryVoltage300 = batV.getAvg(300) / 100.0;
+                sensors.batteryCurrent10 = batC.getAvg(10) / 10.0;
+                sensors.batteryCurrent60 = batC.getAvg(60) / 10.0;
+                sensors.batteryCurrent300 = batC.getAvg(300) / 10.0;
+                sensors.batteryPower10 = sensors.batteryVoltage10 * sensors.batteryCurrent10;
+                sensors.batteryPower60 = sensors.batteryVoltage60 * sensors.batteryCurrent60;
+                sensors.batteryPower300 = sensors.batteryVoltage300 * sensors.batteryCurrent300;
+//                sensors.batteryPower = ina226_1.getPower() * corrFactor;  // Real value
+                sensors.batteryPower = sensors.batteryVoltage * sensors.batteryCurrent;  // Calculated power value (more stable)
             }
-            // Send battery data to NMEA200 bus
+            // Send battery live data to NMEA200 bus
             if(!isnan(sensors.batteryVoltage) && !isnan(sensors.batteryCurrent)){
                 SetN2kDCBatStatus(N2kMsg, 0, sensors.batteryVoltage, sensors.batteryCurrent, N2kDoubleNA, 1);
-//                SetN2kDCBatStatus(N2kMsg, 0, sensors.batteryVoltage, sensors.batteryCurrent, sensors.batteryPower, 1);
                 api->sendN2kMessage(N2kMsg);
             }
         }
