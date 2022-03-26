@@ -81,9 +81,9 @@ void sensorTask(void *param){
     bool INA226_1_ready = false;    // INA226_1 initialized and ready to use
 
     // Create integer arrays for average building
-    int avgsize = 300;
-    constexpr int arrayBatV{300};
-    constexpr int arrayBatC{300};
+    const int avgsize = 300;
+    constexpr int arrayBatV{avgsize};
+    constexpr int arrayBatC{avgsize};
     movingAvg batV(arrayBatV);
     movingAvg batC(arrayBatC);
     batV.begin();

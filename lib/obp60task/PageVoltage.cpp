@@ -2,19 +2,38 @@
 
 #include "Pagedata.h"
 #include "OBP60ExtensionPort.h"
+#include "movingAvg.h"              // Lib for moving average building
 
 class PageVoltage : public Page
 {
+bool init = false;                  // Marker for init done
 bool keylock = false;               // Keylock
+int average = 0;                    // Average type [0...3], 0=off, 1=10s, 2=60s, 3=300s
+bool trend = true;                  // Trend indicator [0|1], 0=off, 1=on
+double raw = 0;
 
 public:
     PageVoltage(CommonData &common){
         common.logger->logDebug(GwLog::LOG,"Show PageVoltage");
     }
     virtual int handleKey(int key){
-        if(key == 11){              // Code for keylock
-            keylock = !keylock;     // Toggle keylock
-            return 0;               // Commit the key
+         // Change average
+        if(key == 1){
+            average ++;
+            average = average % 4;      // Modulo 4
+            return 0;                   // Commit the key
+        }
+
+        // Trend indicator
+        if(key == 5){
+            trend = !trend;
+            return 0;                   // Commit the key
+        }
+
+        // Code for keylock
+        if(key == 11){
+            keylock = !keylock;         // Toggle keylock
+            return 0;                   // Commit the key
         }
         return key;
     }
@@ -32,10 +51,43 @@ public:
         String batVoltage = config->getString(config->batteryVoltage);
         String batType = config->getString(config->batteryType);
         String backlightMode = config->getString(config->backlight);
+
+        double value1 = 0;
+        double valueTrend = 0;  // Average over 10 values
         
         // Get voltage value
         String name1 = "VBat";
-        double value1 = commonData.data.batteryVoltage;     // Live supplay voltage
+
+        // Create trend value
+        if(init == false){          // Load start values for first page run
+            valueTrend = commonData.data.batteryVoltage10;
+            init = true;
+        }
+        else{                       // Reading trend value
+            valueTrend = commonData.data.batteryVoltage10;
+        }
+
+        // Get raw value for trend indicator
+        raw = commonData.data.batteryVoltage;        // Live data
+
+        // Switch average values
+        switch (average) {
+            case 0:
+                value1 = commonData.data.batteryVoltage;        // Live data
+                break;
+            case 1:
+                value1 = commonData.data.batteryVoltage10;      // Average 10s
+                break;
+            case 2:
+                value1 = commonData.data.batteryVoltage60;      // Average 60s
+                break;
+            case 3:
+                value1 = commonData.data.batteryVoltage300;     // Average 300s
+                break;
+            default:
+                    value1 = commonData.data.batteryVoltage;       // Default
+                break;
+        }
         bool valid1 = true;
 
         // Optical warning by limit violation
@@ -101,8 +153,8 @@ public:
         display.setTextColor(textcolor);
         display.setFont(&Ubuntu_Bold32pt7b);
         display.setCursor(20, 100);
-        display.print(name1);                           // Page name
-        
+        display.print(name1);                           // Value name
+
         // Show unit
         display.setTextColor(textcolor);
         display.setFont(&Ubuntu_Bold20pt7b);
@@ -114,6 +166,28 @@ public:
         display.setFont(&Ubuntu_Bold8pt7b);
         display.setCursor(295, 100);
         display.print(batType);
+
+        // Show average settings
+        display.setTextColor(textcolor);
+        display.setFont(&Ubuntu_Bold8pt7b);
+        display.setCursor(320, 100);
+        switch (average) {
+            case 0:
+                display.print("Avg: 1s");
+                break;
+            case 1:
+                display.print("Avg: 10s");
+                break;
+            case 2:
+                display.print("Avg: 60s");
+                break;
+            case 3:
+                display.print("Avg: 300s");
+                break;
+            default:
+                display.print("Avg: 1s");
+                break;
+        } 
 
         // Reading bus data or using simulation data
         display.setTextColor(textcolor);
@@ -148,18 +222,44 @@ public:
             }  
         }
 
+        // Trend indicator
+        display.setTextColor(textcolor);
+        display.setFont(&Ubuntu_Bold32pt7b);
+        if(trend == true){
+            display.setCursor(310, 240);
+            display.print("      ");
+            if(int(raw * 10) > int(valueTrend * 10)){
+                display.setCursor(310, 240);
+                display.print("+  ");
+            }
+            if(int(raw * 10) < int(valueTrend * 10)){
+                display.setCursor(310, 240);
+                display.print("-  ");
+            }
+        }
+        else{
+            display.setCursor(310, 240);
+            display.print("      ");
+        }
+
+
         // Key Layout
         display.setTextColor(textcolor);
         display.setFont(&Ubuntu_Bold8pt7b);
-        display.setCursor(130, 290);
         if(keylock == false){
+            display.setCursor(10, 290);
+            display.print("[AVG]");
+            display.setCursor(130, 290);
             display.print("[  <<<<  " + String(commonData.data.actpage) + "/" + String(commonData.data.maxpage) + "  >>>>  ]");
-            if(String(backlightMode) == "Control by Key"){                  // Key for illumination
+            display.setCursor(293, 290);
+                display.print("[TRD]");
+            if(String(backlightMode) == "Control by Key"){              // Key for illumination
                 display.setCursor(343, 290);
                 display.print("[ILUM]");
             }
         }
         else{
+            display.setCursor(130, 290);
             display.print(" [    Keylock active    ]");
         }
 

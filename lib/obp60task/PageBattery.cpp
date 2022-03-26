@@ -54,12 +54,12 @@ class PageBattery : public Page
         bool simulation = config->getBool(config->useSimuData);
         
         // Get voltage value
-        String name1 = "BatVolt";                       // Value name
+        String name1 = "VBat";                       // Value name
         if(String(powsensor1) == "INA219" || String(powsensor1) == "INA226"){
             // Switch average values
             switch (average) {
                 case 0:
-                    value1 = commonData.data.batteryVoltage;        // Real data
+                    value1 = commonData.data.batteryVoltage;        // Live data
                     break;
                 case 1:
                     value1 = commonData.data.batteryVoltage10;      // Average 10s
@@ -84,11 +84,11 @@ class PageBattery : public Page
         String unit1 = "V";                             // Unit of value
 
         // Get current value
-        String name2 = "BatCurr";                       // Value name
+        String name2 = "IBat";                       // Value name
         if(String(powsensor1) == "INA219" || String(powsensor1) == "INA226"){
             switch (average) {
                 case 0:
-                    value2 = commonData.data.batteryCurrent;        // Real data
+                    value2 = commonData.data.batteryCurrent;        // Live data
                     break;
                 case 1:
                     value2 = commonData.data.batteryCurrent10;      // Average 10s
@@ -113,11 +113,11 @@ class PageBattery : public Page
         String unit2 = "A";                             // Unit of value
 
         // Get power value
-        String name3 = "BatPow";                         // Value name
+        String name3 = "PBat";                         // Value name
         if(String(powsensor1) == "INA219" || String(powsensor1) == "INA226"){
             switch (average) {
                 case 0:
-                    value3 = commonData.data.batteryPower;        // Real data
+                    value3 = commonData.data.batteryPower;        // Live data
                     break;
                 case 1:
                     value3 = commonData.data.batteryPower10;      // Average 10s

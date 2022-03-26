@@ -341,15 +341,16 @@ public:
         // Key Layout
         display.setTextColor(textcolor);
         display.setFont(&Ubuntu_Bold8pt7b);
-        display.setCursor(130, 290);
         if(keylock == false){
+            display.setCursor(130, 290);
             display.print("[  <<<<  " + String(commonData.data.actpage) + "/" + String(commonData.data.maxpage) + "  >>>>  ]");
-            if(String(backlightMode) == "Control by Key"){              // Key for illumination
+            if(String(backlightMode) == "Control by Key"){                  // Key for illumination
                 display.setCursor(343, 290);
                 display.print("[ILUM]");
             }
         }
         else{
+            display.setCursor(130, 290);
             display.print(" [    Keylock active    ]");
         }
 
