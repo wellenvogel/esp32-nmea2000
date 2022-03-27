@@ -782,7 +782,10 @@ private:
             return;
         }
         int fixMode=atoi(msg.Field(1));
-
+        if (fixMode != 2 && fixMode != 3){
+            LOG_DEBUG(GwLog::DEBUG,"no fix in GSA, mode=%d",fixMode);
+            return;
+        }
         tN2kMsg n2kMsg;
         tN2kGNSSDOPmode mode=N2kGNSSdm_Unavailable;
         if (fixMode >= 0 && fixMode <=3) mode=(tN2kGNSSDOPmode)fixMode;
