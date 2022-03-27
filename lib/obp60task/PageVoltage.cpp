@@ -85,7 +85,7 @@ public:
                 value1 = commonData.data.batteryVoltage300;     // Average 300s
                 break;
             default:
-                    value1 = commonData.data.batteryVoltage;       // Default
+                value1 = commonData.data.batteryVoltage;        // Default
                 break;
         }
         bool valid1 = true;

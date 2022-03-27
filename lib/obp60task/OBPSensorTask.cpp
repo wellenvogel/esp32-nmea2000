@@ -283,6 +283,12 @@ void sensorTask(void *param){
         if(millis() > starttime5 + 1000 && String(powsensor1) == "off"){
             starttime5 = millis();
             sensors.batteryVoltage = (float(analogRead(OBP_ANALOG0)) * 3.3 / 4096 + 0.17) * 20;   // Vin = 1/20
+            // Save new data in average array
+            batV.reading(int(sensors.batteryVoltage * 100));
+            // Calculate the average values for different time lines from integer values
+            sensors.batteryVoltage10 = batV.getAvg(10) / 100.0;
+            sensors.batteryVoltage60 = batV.getAvg(60) / 100.0;
+            sensors.batteryVoltage300 = batV.getAvg(300) / 100.0;
             // Send to NMEA200 bus
             if(!isnan(sensors.batteryVoltage)){
                 SetN2kDCBatStatus(N2kMsg, 0, sensors.batteryVoltage, N2kDoubleNA, N2kDoubleNA, 1);
