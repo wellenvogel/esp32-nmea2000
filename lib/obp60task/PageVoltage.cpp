@@ -93,42 +93,42 @@ public:
         // Optical warning by limit violation
         if(String(flashLED) == "Limit Violation"){
             // Limits for Pb battery
-            if(String(batType) == "Pb" && (value1 < 11.8 || value1 > 14.8)){
+            if(String(batType) == "Pb" && (raw < 11.8 || raw > 14.8)){
                 setBlinkingLED(true);
             }
-            if(String(batType) == "Pb" && (value1 >= 11.8 && value1 <= 14.8)){
+            if(String(batType) == "Pb" && (raw >= 11.8 && raw <= 14.8)){
                 setBlinkingLED(false);
                 setPortPin(OBP_FLASH_LED, false);
             }
             // Limits for Gel battery
-            if(String(batType) == "Gel" && (value1 < 11.8 || value1 > 14.4)){
+            if(String(batType) == "Gel" && (raw < 11.8 || raw > 14.4)){
                 setBlinkingLED(true);
             }
-            if(String(batType) == "Gel" && (value1 >= 11.8 && value1 <= 14.4)){
+            if(String(batType) == "Gel" && (raw >= 11.8 && raw <= 14.4)){
                 setBlinkingLED(false);
                 setPortPin(OBP_FLASH_LED, false);
             }
             // Limits for AGM battery
-            if(String(batType) == "AGM" && (value1 < 11.8 || value1 > 14.7)){
+            if(String(batType) == "AGM" && (raw < 11.8 || raw > 14.7)){
                 setBlinkingLED(true);
             }
-            if(String(batType) == "AGM" && (value1 >= 11.8 && value1 <= 14.7)){
+            if(String(batType) == "AGM" && (raw >= 11.8 && raw <= 14.7)){
                 setBlinkingLED(false);
                 setPortPin(OBP_FLASH_LED, false);
             }
             // Limits for LiFePo4 battery
-            if(String(batType) == "LiFePo4" && (value1 < 12.0 || value1 > 14.6)){
+            if(String(batType) == "LiFePo4" && (raw < 12.0 || raw > 14.6)){
                 setBlinkingLED(true);
             }
-            if(String(batType) == "LiFePo4" && (value1 >= 12.0 && value1 <= 14.6)){
+            if(String(batType) == "LiFePo4" && (raw >= 12.0 && raw <= 14.6)){
                 setBlinkingLED(false);
                 setPortPin(OBP_FLASH_LED, false);
             }
         }
         
         // Logging voltage value
-        if (value1 == NULL) return;
-        LOG_DEBUG(GwLog::LOG,"Drawing at PageVoltage, Type:%s %s:=%f", batType, name1, value1);
+        if (raw == NULL) return;
+        LOG_DEBUG(GwLog::LOG,"Drawing at PageVoltage, Type:%s %s:=%f", batType, name1, raw);
 
         // Draw page
         //***********************************************************
