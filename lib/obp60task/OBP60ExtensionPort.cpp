@@ -111,6 +111,16 @@ void setBuzzerPower(uint power){
     buzzerpower = power;
 }
 
+// Show a triangle for trend direction high (x, y is the left edge)
+void displayTrendHigh(int16_t x, int16_t y, uint16_t size, uint16_t color){
+    display.fillTriangle(x, y, x+size*2, y, x+size, y-size*2, color);
+}
+
+// Show a triangle for trend direction low (x, y is the left edge)
+void displayTrendLow(int16_t x, int16_t y, uint16_t size, uint16_t color){
+    display.fillTriangle(x, y, x+size*2, y, x+size, y+size*2, color);
+}
+
 void displayHeader(CommonData &commonData, GwApi::BoatValue *hdop, GwApi::BoatValue *date, GwApi::BoatValue *time){
 
     static bool heartbeat = false;

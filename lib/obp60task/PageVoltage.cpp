@@ -223,23 +223,20 @@ public:
         }
 
         // Trend indicator
-        display.setTextColor(textcolor);
-        display.setFont(&Ubuntu_Bold32pt7b);
+        // Show trend indicator
         if(trend == true){
-            display.setCursor(310, 240);
-            display.print("      ");
+            display.fillRect(310, 240, 40, 120, bgcolor);   // Clear area
+            display.fillRect(315, 183, 35, 4, textcolor);   // Draw separator
             if(int(raw * 10) > int(valueTrend * 10)){
-                display.setCursor(310, 240);
-                display.print("+  ");
+                displayTrendHigh(320, 174, 11, textcolor);  // Show high indicator
             }
             if(int(raw * 10) < int(valueTrend * 10)){
-                display.setCursor(310, 240);
-                display.print("-  ");
+                displayTrendLow(320, 195, 11, textcolor);   // Show low indicator
             }
         }
+        // No trend indicator
         else{
-            display.setCursor(310, 240);
-            display.print("      ");
+            display.fillRect(310, 240, 40, 120, bgcolor);   // Clear area
         }
 
 

@@ -37,6 +37,9 @@ void setBlinkingLED(bool on);                   // Set blinking LED active
 void buzzer(uint frequency, uint duration);     // Buzzer function
 void setBuzzerPower(uint power);                // Set buzzer power
 
+void displayTrendHigh(int16_t x, int16_t y, uint16_t size, uint16_t color);
+void displayTrendLow(int16_t x, int16_t y, uint16_t size, uint16_t color);
+
 void displayHeader(CommonData &commonData, GwApi::BoatValue *hdop, GwApi::BoatValue *date, GwApi::BoatValue *time); // Draw display header
 
 #endif
