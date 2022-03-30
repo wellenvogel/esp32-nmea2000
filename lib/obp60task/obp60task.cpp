@@ -207,6 +207,8 @@ void registerAllPages(PageList &list){
     list.add(&registerPageKeelPosition);
     extern PageDescription registerPageBattery;
     list.add(&registerPageBattery);
+    extern PageDescription registerPageBattery2;
+    list.add(&registerPageBattery2);
 }
 
 // OBP60 Task
