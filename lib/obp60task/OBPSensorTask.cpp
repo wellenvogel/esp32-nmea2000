@@ -4,8 +4,8 @@
 #include <Adafruit_BMP280.h>            // Adafruit Lib for BMP280
 #include <Adafruit_BMP085.h>            // Adafruit Lib for BMP085 and BMP180
 #include <HTU21D.h>                     // Lib for SHT21/HTU21
-#include <AS5600.h>                     // Lib for magnetic rotation sensor AS5600
-#include "INA226.h"                     // Lib for power management IC INA226
+#include "AS5600.h"                     // Lib for magnetic rotation sensor AS5600
+#include <INA226.h>                     // Lib for power management IC INA226
 #include <Ticker.h>                     // Timer Lib for timer interrupts       
 #include "OBPSensorTask.h"
 #include "OBP60Hardware.h"
@@ -14,6 +14,7 @@
 #include "ObpNmea0183.h"
 #include "OBP60ExtensionPort.h"
 #include "movingAvg.h"                  // Lib for moving average building
+#include "SunRise.h"                    // Lib for sunrise and sunset calculation
 
 // Timer Interrupts for hardware functions
 void underVoltageDetection();
@@ -51,6 +52,58 @@ void underVoltageDetection(){
     else{
         undervoltage = false;
     }
+}
+
+SensorData calcSunsetSunrise(double time, double date, double latitude, double longitude, int timezone){
+    SensorData returnset;
+    SunRise sr;
+    int secPerHour = 3600;
+    int secPerYear = 86400;
+    sr.hasRise = false;
+    sr.hasSet = false;
+    time_t sunR = 0;
+    time_t sunS = 0;
+    int inthrSR = 0;
+    int intminSR = 0;
+    int inthrSS = 0;
+    int intminSS = 0;
+    static const int bsize = 6;
+    char buffer[bsize+1];
+    buffer[0]=0;
+    String sSunR = " --- ";
+    String sSunS = " --- ";
+
+    // Calculate local time
+    time_t t = (date * secPerYear) + (time + int(timezone * secPerHour));
+
+//    api->getLogger()->logDebug(GwLog::DEBUG,"... PageClock: Lat %f, Lon  %f, at: %d, next SR: %d (%s), next SS: %d (%s)", latitude, longitude, t, sunR, sSunR, sunS, sSunS);
+
+    if (!isnan(time) && !isnan(date) && !isnan(latitude) && !isnan(longitude) && !isnan(timezone)) {             
+        sr.calculate(latitude, longitude, t);       // LAT, LON, EPOCH
+        // Sunrise
+        if (sr.hasRise) {
+            sunR = (sr.riseTime + int(timezone * secPerHour) + 30) % secPerYear; // add 30 seconds: round to minutes
+            inthrSR = int (sunR / secPerHour);
+            intminSR = int((sunR - inthrSR * secPerHour)/60);
+            snprintf(buffer,bsize,"%02d:%02d", inthrSR, intminSR);
+            sSunR = String(buffer);
+        }
+        // Sunset
+        if (sr.hasSet)  {
+            sunS = (sr.setTime  + int(timezone * secPerHour) + 30) % secPerYear; // add 30 seconds: round to minutes
+            inthrSS = int (sunS / secPerHour);
+            intminSS = int((sunS - inthrSS * secPerHour)/60);
+            snprintf(buffer,bsize,"%02d:%02d", inthrSS, intminSS);
+            sSunS = String(buffer);        
+        }
+    }
+    // Return values
+    returnset.sunsetHour = inthrSS;
+    returnset.sunsetMinute = intminSS;
+    returnset.sunriseHour = inthrSR;
+    returnset.sunriseMinute = intminSR;
+//    api->getLogger()->logDebug(GwLog::DEBUG,"... PageClock: at t: %d, hasRise: %d, next SR: %d '%s', hasSet: %d, next SS: %d '%s'\n", t, sr.hasRise, sr.riseTime, sSunR, sr.hasSet, sr.setTime, sSunS);
+    return returnset;
 }
 
 // Initialization for all sensors (RS232, I2C, 1Wire, IOs)
@@ -96,6 +149,16 @@ void sensorTask(void *param){
     }
     Timer2.start();         // Start Timer2 for blinking LED
 
+    // Calculate sunset and sunrise at start time
+    double actTime = 0;
+    double actDate = 0;
+    double actLatitude = 53.23;
+    double actLongitude = 9.16;
+    int actTimeZone = api->getConfig()->getConfigItem(api->getConfig()->timeZone, true)->asInt();
+//    GwApi::BoatValue *date = boatValues.findValueOrCreate("GPSD");      // Load GpsDate
+//    GwApi::BoatValue *time = boatValues.findValueOrCreate("GPST");      // Load GpsTime
+    sensors = calcSunsetSunrise(actTime, actDate, actLatitude, actLongitude, actTimeZone); // copy sunrise and sunset to sensor data
+    
     // Settings for NMEA0183
     String nmea0183Mode = api->getConfig()->getConfigItem(api->getConfig()->serialDirection, true)->asString();
     api->getLogger()->logDebug(GwLog::LOG, "NMEA0183 Mode is: %s", nmea0183Mode);

@@ -43,6 +43,10 @@ typedef struct{
   double onewireTemp6 = 0;
   double rotationAngle = 0;       // Rotation angle in radiant
   bool validRotAngle = false;     // Valid flag for magnet present
+  int sunsetHour = 0;
+  int sunsetMinute = 0;
+  int sunriseHour = 0;
+  int sunriseMinute = 0;
 } SensorData;
 
 typedef struct{

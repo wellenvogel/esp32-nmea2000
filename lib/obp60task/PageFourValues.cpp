@@ -3,13 +3,13 @@
 #include "Pagedata.h"
 #include "OBP60ExtensionPort.h"
 
-class PageForValues : public Page
+class PageFourValues : public Page
 {
     bool keylock = false;               // Keylock
 
     public:
-    PageForValues(CommonData &comon){
-        comon.logger->logDebug(GwLog::LOG,"Show PageForValues");
+    PageFourValues(CommonData &comon){
+        comon.logger->logDebug(GwLog::LOG,"Show PageFourValues");
     }
 
     virtual int handleKey(int key){
@@ -86,7 +86,7 @@ class PageForValues : public Page
 
         // Logging boat values
         if (bvalue1 == NULL) return;
-        LOG_DEBUG(GwLog::LOG,"Drawing at PageForValues, %s: %f, %s: %f, %s: %f, %s: %f", name1, value1, name2, value2, name3, value3, name4, value4);
+        LOG_DEBUG(GwLog::LOG,"Drawing at PageFourValues, %s: %f, %s: %f, %s: %f, %s: %f", name1, value1, name2, value2, name3, value3, name4, value4);
 
         // Draw page
         //***********************************************************
@@ -328,7 +328,7 @@ class PageForValues : public Page
 };
 
 static Page *createPage(CommonData &common){
-    return new PageForValues(common);
+    return new PageFourValues(common);
 }/**
  * with the code below we make this page known to the PageTask
  * we give it a type (name) that can be selected in the config
@@ -336,8 +336,8 @@ static Page *createPage(CommonData &common){
  * and we provide the number of user parameters we expect
  * this will be number of BoatValue pointers in pageData.values
  */
-PageDescription registerPageForValues(
-    "forValues",    // Page name
+PageDescription registerPageFourValues(
+    "FourValues",    // Page name
     createPage,     // Action
     4,              // Number of bus values depends on selection in Web configuration
     true            // Show display header on/off

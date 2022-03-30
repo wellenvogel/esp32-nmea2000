@@ -11,7 +11,6 @@
 FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
     GwLog *logger = commondata.logger;
     FormatedData result;
-
     static int dayoffset = 0;
 
     // Load configuration values
