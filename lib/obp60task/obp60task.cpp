@@ -378,11 +378,11 @@ void OBP60Task(GwApi *api){
             commonData.data.maxpage = numPages;
             
             // If GPS fix then LED off (HDOP)
-            if(String(gpsFix) == "GPS Fix Lost" && hdop->valid == true && int(hdop->value) <= 50){
+            if(String(gpsFix) == "GPS Fix Lost" && date->valid == true){
                 setPortPin(OBP_FLASH_LED, false);
             }
             // Ifmissing GPS fix then LED on
-            if(String(gpsFix) == "GPS Fix Lost" && ((hdop->valid == true && int(hdop->value) > 50) || hdop->valid == false)){
+            if(String(gpsFix) == "GPS Fix Lost" && date->valid == false){
                 setPortPin(OBP_FLASH_LED, true);
             }
 
@@ -469,7 +469,7 @@ void OBP60Task(GwApi *api){
                 display.fillRect(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, bgcolor);   // Clear display
                 if (pages[pageNumber].description && pages[pageNumber].description->header){
                     //build some header and footer using commonData
-                    displayHeader(commonData, hdop, date, time);
+                    displayHeader(commonData, date, time);
                 }
                 
                 // Call the particular page
