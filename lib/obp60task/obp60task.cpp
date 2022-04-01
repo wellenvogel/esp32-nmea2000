@@ -391,13 +391,13 @@ void OBP60Task(GwApi *api){
                 setPortPin(OBP_FLASH_LED, true);
             }
 
-            // Back light with sun control
+            // Back light with sun control: turn on if no valid data for safety reasons
             if(String(backlight) == "Control by Sun"){
-                if(time->valid == true && date->valid == true && lat->valid == true && lon->valid == true){
-                    setPortPin(OBP_BACKLIGHT_LED, sunControl(time->value, date->value, lat->value, lon->value, tz.toDouble()));
+                if(time->valid == false || date->valid == false || lat->valid == false || lon->valid == false){
+                setPortPin(OBP_BACKLIGHT_LED, true);
                 }
             }
-
+            
             // Check the keyboard message
             int keyboardMessage=0;
             while (xQueueReceive(allParameters.queue,&keyboardMessage,0)){
@@ -454,10 +454,8 @@ void OBP60Task(GwApi *api){
                 if(time->valid == true && date->valid == true && lat->valid == true && lon->valid == true){
                     commonData.data = calcSunsetSunrise(time->value , date->value, lat->value, lon->value, tz.toDouble());
                     // Backlight with sun control
-                    if(String(backlight) == "Control by Sun"){
-                        if(time->valid == true && date->valid == true && lat->valid == true && lon->valid == true){
-                            setPortPin(OBP_BACKLIGHT_LED, sunControl(time->value, date->value, lat->value, lon->value, tz.toDouble()));
-                        }
+                    if(String(backlight) == "Control by Sun"){                       
+                       setPortPin(OBP_BACKLIGHT_LED, commonData.data.sunDown);
                     }
                 }
             }

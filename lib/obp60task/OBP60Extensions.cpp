@@ -233,13 +233,14 @@ SensorData calcSunsetSunrise(double time, double date, double latitude, double l
     int intminSR = 0;
     int inthrSS = 0;
     int intminSS = 0;
+    bool sunDown = true;
 
-    // Calculate local time
-    time_t t = (date * secPerYear) + (time + int(timezone * secPerHour));
 
-//    api->getLogger()->logDebug(GwLog::DEBUG,"... PageClock: Lat %f, Lon  %f, at: %d, next SR: %d (%s), next SS: %d (%s)", latitude, longitude, t, sunR, sSunR, sunS, sSunS);
+//    api->getLogger()->logDebug(GwLog::DEBUG,"... calcSun: Lat %f, Lon  %f, at: %d, next SR: %d (%s), next SS: %d (%s)", latitude, longitude, t, sunR, sSunR, sunS, sSunS);
 
-    if (!isnan(time) && !isnan(date) && !isnan(latitude) && !isnan(longitude) && !isnan(timezone)) {             
+    if (!isnan(time) && !isnan(date) && !isnan(latitude) && !isnan(longitude) && !isnan(timezone)) {
+        // Calculate local time
+        time_t t = (date * secPerYear) + (time + int(timezone * secPerHour));    
         sr.calculate(latitude, longitude, t);       // LAT, LON, EPOCH
         // Sunrise
         if (sr.hasRise) {
@@ -253,48 +254,20 @@ SensorData calcSunsetSunrise(double time, double date, double latitude, double l
             inthrSS = int (sunS / secPerHour);
             intminSS = int((sunS - inthrSS * secPerHour)/60);      
         }
+        // Sun control (return value by sun on sky = false, sun down = true)
+        if ((t >= (sr.riseTime + int(timezone * secPerHour))) && (t <= (sr.setTime + int(timezone * secPerHour))))      
+             sunDown = false; 
+        else sunDown = true;
     }
     // Return values
     returnset.sunsetHour = inthrSS;
     returnset.sunsetMinute = intminSS;
     returnset.sunriseHour = inthrSR;
     returnset.sunriseMinute = intminSR;
+    returnset.sunDown = sunDown;
 
-//    api->getLogger()->logDebug(GwLog::DEBUG,"... PageClock: at t: %d, hasRise: %d, next SR: %d '%s', hasSet: %d, next SS: %d '%s'\n", t, sr.hasRise, sr.riseTime, sSunR, sr.hasSet, sr.setTime, sSunS);
+//    api->getLogger()->logDebug(GwLog::DEBUG,"... calcSun: at t: %d, hasRise: %d, next SR: %d '%s', hasSet: %d, next SS: %d '%s'\n", t, sr.hasRise, sr.riseTime, sSunR, sr.hasSet, sr.setTime, sSunS);
     return returnset;
-}
-
-// Sun control (return valu by sun on sky = false, sun down = true)
-bool sunControl(double time, double date, double latitude, double longitude, double timezone){
-    SunRise sr;
-    int secPerHour = 3600;
-    int secPerYear = 86400;
-    sr.hasRise = false;
-    sr.hasSet = false;
-    time_t sunR = 0;
-    time_t sunS = 0;
-
-    // Calculate local time
-    time_t t = (date * secPerYear) + (time + int(timezone * secPerHour));
-
-    if (!isnan(time) && !isnan(date) && !isnan(latitude) && !isnan(longitude) && !isnan(timezone)) {             
-        sr.calculate(latitude, longitude, t);       // LAT, LON, EPOCH
-        // Sunrise
-        if (sr.hasRise) {
-            sunR = (sr.riseTime + int(timezone * secPerHour) + 30); // add 30 seconds: round to minutes
-        }
-        // Sunset
-        if (sr.hasSet)  {
-            sunS = (sr.setTime  + int(timezone * secPerHour) + 30); // add 30 seconds: round to minutes   
-        }
-    }
-    // Return values (sun on sky = false, sun down = true)
-    if(t > sunR && t < sunS){
-        return false;
-    }
-    else{
-        return true;
-    }
 }
 
 #endif
