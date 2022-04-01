@@ -42,4 +42,6 @@ void displayTrendLow(int16_t x, int16_t y, uint16_t size, uint16_t color);
 
 void displayHeader(CommonData &commonData, GwApi::BoatValue *date, GwApi::BoatValue *time); // Draw display header
 
+SensorData calcSunsetSunrise(double time, double date, double latitude, double longitude, double timezone); // Calulate sunset and sunrise
+
 #endif

@@ -1,7 +1,7 @@
 #ifdef BOARD_NODEMCU32S_OBP60
 
 #include "Pagedata.h"
-#include "OBP60ExtensionPort.h"
+#include "OBP60Extensions.h"
 
 class PageClock : public Page
 {
@@ -147,45 +147,39 @@ public:
         }
 
         // Show values sunrise
-        display.setTextColor(textcolor);
-        if(holdvalues == false){
-            display.setFont(&Ubuntu_Bold8pt7b);
-            display.setCursor(335, 65);
-            display.print("06:32");                     // Value
-            display.setFont(&Ubuntu_Bold12pt7b);
-            display.setCursor(335, 95);
-            display.print("SunR");                       // Name
+        String sunrise = "";
+        if(valid1 == true && valid2 == true){
+            sunrise = String(commonData.data.sunriseHour) + ":" + String(commonData.data.sunriseMinute);
         }
         else{
-            display.setFont(&Ubuntu_Bold8pt7b);
-            display.setCursor(335, 65);
-            display.print("06:32");                     // Value
-            display.setFont(&Ubuntu_Bold12pt7b);
-            display.setCursor(335, 95);
-            display.print("SunR");                       // Name
+            sunrise = "---";
         }
+        display.setTextColor(textcolor);
+        display.setFont(&Ubuntu_Bold8pt7b);
+        display.setCursor(335, 65);
+        display.print(sunrise);                         // Value
+        display.setFont(&Ubuntu_Bold12pt7b);
+        display.setCursor(335, 95);
+        display.print("SunR");                          // Name
 
         // Horizintal separator right
         display.fillRect(340, 149, 80, 3, pixelcolor);
 
         // Show values sunset
-        display.setTextColor(textcolor);
-        if(holdvalues == false){
-            display.setFont(&Ubuntu_Bold8pt7b);
-            display.setCursor(335, 250);
-            display.print("18:22");                     // Value
-            display.setFont(&Ubuntu_Bold12pt7b);
-            display.setCursor(335, 220);
-            display.print("SunS");                       // Name
+         String sunset = "";
+        if(valid1 == true && valid2 == true){
+            sunset= String(commonData.data.sunsetHour) + ":" + String(commonData.data.sunsetMinute);
         }
         else{
-            display.setFont(&Ubuntu_Bold8pt7b);
-            display.setCursor(335, 250);
-            display.print("18:22");                     // Value
-            display.setFont(&Ubuntu_Bold12pt7b);
-            display.setCursor(335, 220);
-            display.print("SunS");                       // Name
+            sunset = "---";
         }
+        display.setTextColor(textcolor);
+        display.setFont(&Ubuntu_Bold8pt7b);
+        display.setCursor(335, 250);
+        display.print(sunset);                         // Value
+        display.setFont(&Ubuntu_Bold12pt7b);
+        display.setCursor(335, 220);
+        display.print("SunS");                          // Name
 
 //*******************************************************************************************
         

@@ -1,9 +1,10 @@
 #ifdef BOARD_NODEMCU32S_OBP60
 
 #include <Arduino.h>
+#include "SunRise.h"                    // Lib for sunrise and sunset calculation
 #include "Pagedata.h"
 #include "OBP60Hardware.h"
-#include "OBP60ExtensionPort.h"
+#include "OBP60Extensions.h"
 
 // Please dont forget to declarate the fonts in OBP60ExtensionPort.h
 #include "Ubuntu_Bold8pt7b.h"
@@ -121,6 +122,7 @@ void displayTrendLow(int16_t x, int16_t y, uint16_t size, uint16_t color){
     display.fillTriangle(x, y, x+size*2, y, x+size, y+size*2, color);
 }
 
+// Show header informations
 void displayHeader(CommonData &commonData, GwApi::BoatValue *date, GwApi::BoatValue *time){
 
     static bool heartbeat = false;
@@ -215,6 +217,51 @@ void displayHeader(CommonData &commonData, GwApi::BoatValue *date, GwApi::BoatVa
         display.print("No GPS data");
         }
     }
+}
+
+// Sunset und sunrise calculation
+SensorData calcSunsetSunrise(double time, double date, double latitude, double longitude, double timezone){
+    SensorData returnset;
+    SunRise sr;
+    int secPerHour = 3600;
+    int secPerYear = 86400;
+    sr.hasRise = false;
+    sr.hasSet = false;
+    time_t sunR = 0;
+    time_t sunS = 0;
+    int inthrSR = 0;
+    int intminSR = 0;
+    int inthrSS = 0;
+    int intminSS = 0;
+
+    // Calculate local time
+    time_t t = (date * secPerYear) + (time + int(timezone * secPerHour));
+
+//    api->getLogger()->logDebug(GwLog::DEBUG,"... PageClock: Lat %f, Lon  %f, at: %d, next SR: %d (%s), next SS: %d (%s)", latitude, longitude, t, sunR, sSunR, sunS, sSunS);
+
+    if (!isnan(time) && !isnan(date) && !isnan(latitude) && !isnan(longitude) && !isnan(timezone)) {             
+        sr.calculate(latitude, longitude, t);       // LAT, LON, EPOCH
+        // Sunrise
+        if (sr.hasRise) {
+            sunR = (sr.riseTime + int(timezone * secPerHour) + 30) % secPerYear; // add 30 seconds: round to minutes
+            inthrSR = int (sunR / secPerHour);
+            intminSR = int((sunR - inthrSR * secPerHour)/60);
+        }
+        // Sunset
+        if (sr.hasSet)  {
+            sunS = (sr.setTime  + int(timezone * secPerHour) + 30) % secPerYear; // add 30 seconds: round to minutes
+            inthrSS = int (sunS / secPerHour);
+            intminSS = int((sunS - inthrSS * secPerHour)/60);      
+        }
+    }
+    // Return values
+    returnset.sunsetHour = inthrSS;
+    returnset.sunsetMinute = intminSS;
+    returnset.sunriseHour = inthrSR;
+    returnset.sunriseMinute = intminSR;
+
+//    api->getLogger()->logDebug(GwLog::DEBUG,"... PageClock: at t: %d, hasRise: %d, next SR: %d '%s', hasSet: %d, next SS: %d '%s'\n", t, sr.hasRise, sr.riseTime, sSunR, sr.hasSet, sr.setTime, sSunS);
+    return returnset;
 }
 
 #endif

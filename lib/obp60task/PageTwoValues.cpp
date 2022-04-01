@@ -1,7 +1,7 @@
 #ifdef BOARD_NODEMCU32S_OBP60
 
 #include "Pagedata.h"
-#include "OBP60ExtensionPort.h"
+#include "OBP60Extensions.h"
 
 class PageTwoValues : public Page
 {

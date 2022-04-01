@@ -12,9 +12,8 @@
 #include "N2kMessages.h"
 #include "NMEA0183.h"
 #include "ObpNmea0183.h"
-#include "OBP60ExtensionPort.h"
+#include "OBP60Extensions.h"
 #include "movingAvg.h"                  // Lib for moving average building
-#include "SunRise.h"                    // Lib for sunrise and sunset calculation
 
 // Timer Interrupts for hardware functions
 void underVoltageDetection();
@@ -53,50 +52,6 @@ void underVoltageDetection(){
         undervoltage = false;
     }
 }
-/*
-SensorData calcSunsetSunrise(double time, double date, double latitude, double longitude, int timezone){
-    SensorData returnset;
-    SunRise sr;
-    int secPerHour = 3600;
-    int secPerYear = 86400;
-    sr.hasRise = false;
-    sr.hasSet = false;
-    time_t sunR = 0;
-    time_t sunS = 0;
-    int inthrSR = 0;
-    int intminSR = 0;
-    int inthrSS = 0;
-    int intminSS = 0;
-
-    // Calculate local time
-    time_t t = (date * secPerYear) + (time + int(timezone * secPerHour));
-
-//    api->getLogger()->logDebug(GwLog::DEBUG,"... PageClock: Lat %f, Lon  %f, at: %d, next SR: %d (%s), next SS: %d (%s)", latitude, longitude, t, sunR, sSunR, sunS, sSunS);
-
-    if (!isnan(time) && !isnan(date) && !isnan(latitude) && !isnan(longitude) && !isnan(timezone)) {             
-        sr.calculate(latitude, longitude, t);       // LAT, LON, EPOCH
-        // Sunrise
-        if (sr.hasRise) {
-            sunR = (sr.riseTime + int(timezone * secPerHour) + 30) % secPerYear; // add 30 seconds: round to minutes
-            inthrSR = int (sunR / secPerHour);
-            intminSR = int((sunR - inthrSR * secPerHour)/60);
-        }
-        // Sunset
-        if (sr.hasSet)  {
-            sunS = (sr.setTime  + int(timezone * secPerHour) + 30) % secPerYear; // add 30 seconds: round to minutes
-            inthrSS = int (sunS / secPerHour);
-            intminSS = int((sunS - inthrSS * secPerHour)/60);      
-        }
-    }
-    // Return values
-    returnset.sunsetHour = inthrSS;
-    returnset.sunsetMinute = intminSS;
-    returnset.sunriseHour = inthrSR;
-    returnset.sunriseMinute = intminSR;
-//    api->getLogger()->logDebug(GwLog::DEBUG,"... PageClock: at t: %d, hasRise: %d, next SR: %d '%s', hasSet: %d, next SS: %d '%s'\n", t, sr.hasRise, sr.riseTime, sSunR, sr.hasSet, sr.setTime, sSunS);
-    return returnset;
-}
-*/
 
 // Initialization for all sensors (RS232, I2C, 1Wire, IOs)
 //####################################################################################
@@ -140,17 +95,7 @@ void sensorTask(void *param){
         Timer1.start();     // Start Timer1 for undervoltage detection
     }
     Timer2.start();         // Start Timer2 for blinking LED
-/*
-    // Calculate sunset and sunrise at start time
-    double actTime = 0;
-    double actDate = 0;
-    double actLatitude = 53.23;
-    double actLongitude = 9.16;
-    int actTimeZone = api->getConfig()->getConfigItem(api->getConfig()->timeZone, true)->asInt();
-//    GwApi::BoatValue *date = boatValues.findValueOrCreate("GPSD");      // Load GpsDate
-//    GwApi::BoatValue *time = boatValues.findValueOrCreate("GPST");      // Load GpsTime
-    sensors = calcSunsetSunrise(actTime, actDate, actLatitude, actLongitude, actTimeZone); // copy sunrise and sunset to sensor data
-*/    
+   
     // Settings for NMEA0183
     String nmea0183Mode = api->getConfig()->getConfigItem(api->getConfig()->serialDirection, true)->asString();
     api->getLogger()->logDebug(GwLog::LOG, "NMEA0183 Mode is: %s", nmea0183Mode);
@@ -285,7 +230,7 @@ void sensorTask(void *param){
         else{
             api->getLogger()->logDebug(GwLog::LOG,"Modul 1 INA226 found");
             shuntResistor = SHUNT_VOLTAGE / float(shunt1.toInt());  // Calculate shunt resisitor for max. shunt voltage 75mV
-            maxCurrent = float(shunt1.toInt());
+            maxCurrent = shunt1.toFloat();
             api->getLogger()->logDebug(GwLog::LOG,"Calibation INA226, Imax:%3.0fA Rs:%7.5fOhm Us:%5.3f", maxCurrent, shuntResistor, SHUNT_VOLTAGE);
 //            ina226_1.setMaxCurrentShunt(maxCurrent, shuntResistor);
             ina226_1.setMaxCurrentShunt(10, 0.01);  // Calibration with fix values (because the original values outer range)

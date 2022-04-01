@@ -10,7 +10,7 @@
 #include <NMEA0183Msg.h>
 #include <NMEA0183Messages.h>
 #include <GxEPD.h>                      // GxEPD lib for E-Ink displays
-#include "OBP60ExtensionPort.h"         // Functions lib for extension board
+#include "OBP60Extensions.h"         // Functions lib for extension board
 #include "OBP60Keypad.h"                // Functions for keypad
 
 // True type character sets includes
@@ -63,6 +63,7 @@ void OBP60Init(GwApi *api){
         if(String(ledMode) == "Off"){
             setBlinkingLED(false);
         }
+
         // Marker for init complete
         // Used in OBP60Task()
         initComplete = true;
@@ -338,6 +339,8 @@ void OBP60Task(GwApi *api){
     // Configuration values for main loop
     String gpsFix = api->getConfig()->getConfigItem(api->getConfig()->flashLED,true)->asString();
     String backlight = api->getConfig()->getConfigItem(api->getConfig()->backlight,true)->asString();
+    String gpsOn=api->getConfig()->getConfigItem(api->getConfig()->useGPS,true)->asString();
+    String tz = api->getConfig()->getConfigItem(api->getConfig()->timeZone,true)->asString();
 
     // refreshmode defined in init section
     // displaycolor defined in init section
@@ -346,9 +349,10 @@ void OBP60Task(GwApi *api){
     // bgcolor defined in init section
 
     // Boat values for main loop
-    GwApi::BoatValue *hdop = boatValues.findValueOrCreate("HDOP");      // Load HDOP
     GwApi::BoatValue *date = boatValues.findValueOrCreate("GPSD");      // Load GpsDate
     GwApi::BoatValue *time = boatValues.findValueOrCreate("GPST");      // Load GpsTime
+    GwApi::BoatValue *lat = boatValues.findValueOrCreate("LAT");        // Load GpsLatitude
+    GwApi::BoatValue *lon = boatValues.findValueOrCreate("LON");        // Load GpsLongitude
 
     LOG_DEBUG(GwLog::LOG,"obp60task: start mainloop");
     int pageNumber=0;
@@ -363,6 +367,7 @@ void OBP60Task(GwApi *api){
     long starttime2 = millis();     // Full display refresh after 5 min
     long starttime3 = millis();     // Display update all 1s
     long starttime4 = millis();     // Delayed display update after 4s when select a new page
+    long starttime5 = millis();     // Calculate sunrise and sunset all 1s
 
     
     // Main loop runs with 100ms
@@ -436,6 +441,14 @@ void OBP60Task(GwApi *api){
                 LOG_DEBUG(GwLog::LOG,"set pagenumber to %d",pageNumber);
             }
 
+            // Calculate sunrise and sunset all 1s
+            if(millis() > starttime5 + 1000){
+                starttime5 = millis();
+                if(time->valid == true && date->valid == true && lat->valid == true && lon->valid == true){
+                    commonData.data = calcSunsetSunrise(time->value , date->value, lat->value, lon->value, tz.toDouble());
+                }
+            }
+            
             // Full display update afer a new selected page and 4s wait time
             if(millis() > starttime4 + 4000 && delayedDisplayUpdate == true){
                 display.update(); // Full update
