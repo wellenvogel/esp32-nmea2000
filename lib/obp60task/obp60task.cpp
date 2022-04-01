@@ -391,6 +391,13 @@ void OBP60Task(GwApi *api){
                 setPortPin(OBP_FLASH_LED, true);
             }
 
+            // Back light with sun control
+            if(String(backlight) == "Control by Sun"){
+                if(time->valid == true && date->valid == true && lat->valid == true && lon->valid == true){
+                    setPortPin(OBP_BACKLIGHT_LED, sunControl(time->value, date->value, lat->value, lon->value, tz.toDouble()));
+                }
+            }
+
             // Check the keyboard message
             int keyboardMessage=0;
             while (xQueueReceive(allParameters.queue,&keyboardMessage,0)){
@@ -441,11 +448,17 @@ void OBP60Task(GwApi *api){
                 LOG_DEBUG(GwLog::LOG,"set pagenumber to %d",pageNumber);
             }
 
-            // Calculate sunrise and sunset all 1s
+            // Calculate sunrise, sunset and backlight control with sun status all 1s
             if(millis() > starttime5 + 1000){
                 starttime5 = millis();
                 if(time->valid == true && date->valid == true && lat->valid == true && lon->valid == true){
                     commonData.data = calcSunsetSunrise(time->value , date->value, lat->value, lon->value, tz.toDouble());
+                    // Backlight with sun control
+                    if(String(backlight) == "Control by Sun"){
+                        if(time->valid == true && date->valid == true && lat->valid == true && lon->valid == true){
+                            setPortPin(OBP_BACKLIGHT_LED, sunControl(time->value, date->value, lat->value, lon->value, tz.toDouble()));
+                        }
+                    }
                 }
             }
             
