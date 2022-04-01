@@ -53,7 +53,7 @@ void underVoltageDetection(){
         undervoltage = false;
     }
 }
-
+/*
 SensorData calcSunsetSunrise(double time, double date, double latitude, double longitude, int timezone){
     SensorData returnset;
     SunRise sr;
@@ -67,11 +67,6 @@ SensorData calcSunsetSunrise(double time, double date, double latitude, double l
     int intminSR = 0;
     int inthrSS = 0;
     int intminSS = 0;
-    static const int bsize = 6;
-    char buffer[bsize+1];
-    buffer[0]=0;
-    String sSunR = " --- ";
-    String sSunS = " --- ";
 
     // Calculate local time
     time_t t = (date * secPerYear) + (time + int(timezone * secPerHour));
@@ -85,16 +80,12 @@ SensorData calcSunsetSunrise(double time, double date, double latitude, double l
             sunR = (sr.riseTime + int(timezone * secPerHour) + 30) % secPerYear; // add 30 seconds: round to minutes
             inthrSR = int (sunR / secPerHour);
             intminSR = int((sunR - inthrSR * secPerHour)/60);
-            snprintf(buffer,bsize,"%02d:%02d", inthrSR, intminSR);
-            sSunR = String(buffer);
         }
         // Sunset
         if (sr.hasSet)  {
             sunS = (sr.setTime  + int(timezone * secPerHour) + 30) % secPerYear; // add 30 seconds: round to minutes
             inthrSS = int (sunS / secPerHour);
-            intminSS = int((sunS - inthrSS * secPerHour)/60);
-            snprintf(buffer,bsize,"%02d:%02d", inthrSS, intminSS);
-            sSunS = String(buffer);        
+            intminSS = int((sunS - inthrSS * secPerHour)/60);      
         }
     }
     // Return values
@@ -105,6 +96,7 @@ SensorData calcSunsetSunrise(double time, double date, double latitude, double l
 //    api->getLogger()->logDebug(GwLog::DEBUG,"... PageClock: at t: %d, hasRise: %d, next SR: %d '%s', hasSet: %d, next SS: %d '%s'\n", t, sr.hasRise, sr.riseTime, sSunR, sr.hasSet, sr.setTime, sSunS);
     return returnset;
 }
+*/
 
 // Initialization for all sensors (RS232, I2C, 1Wire, IOs)
 //####################################################################################
@@ -148,7 +140,7 @@ void sensorTask(void *param){
         Timer1.start();     // Start Timer1 for undervoltage detection
     }
     Timer2.start();         // Start Timer2 for blinking LED
-
+/*
     // Calculate sunset and sunrise at start time
     double actTime = 0;
     double actDate = 0;
@@ -158,7 +150,7 @@ void sensorTask(void *param){
 //    GwApi::BoatValue *date = boatValues.findValueOrCreate("GPSD");      // Load GpsDate
 //    GwApi::BoatValue *time = boatValues.findValueOrCreate("GPST");      // Load GpsTime
     sensors = calcSunsetSunrise(actTime, actDate, actLatitude, actLongitude, actTimeZone); // copy sunrise and sunset to sensor data
-    
+*/    
     // Settings for NMEA0183
     String nmea0183Mode = api->getConfig()->getConfigItem(api->getConfig()->serialDirection, true)->asString();
     api->getLogger()->logDebug(GwLog::LOG, "NMEA0183 Mode is: %s", nmea0183Mode);

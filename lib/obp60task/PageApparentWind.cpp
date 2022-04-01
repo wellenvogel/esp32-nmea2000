@@ -197,7 +197,7 @@ static Page *createPage(CommonData &common){
  * and will will provide the names of the fixed values we need
  */
 PageDescription registerPageApparentWind(
-    "apparentWind",     // Page name
+    "ApparentWind",     // Page name
     createPage,         // Action
     0,                  // Number of bus values depends on selection in Web configuration
     {"AWS","AWA"},      // Bus values we need in the page

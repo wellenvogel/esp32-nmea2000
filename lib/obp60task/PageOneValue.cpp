@@ -150,7 +150,7 @@ static Page* createPage(CommonData &common){
  * this will be number of BoatValue pointers in pageData.values
  */
 PageDescription registerPageOneValue(
-    "oneValue",     // Page name
+    "OneValue",     // Page name
     createPage,     // Action
     1,              // Number of bus values depends on selection in Web configuration
     true            // Show display header on/off
