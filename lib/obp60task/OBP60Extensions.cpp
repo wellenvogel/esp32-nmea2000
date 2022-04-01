@@ -237,8 +237,6 @@ SensorData calcSunsetSunrise(double time, double date, double latitude, double l
     // Calculate local time
     time_t t = (date * secPerYear) + (time + int(timezone * secPerHour));
 
-//    api->getLogger()->logDebug(GwLog::DEBUG,"... PageClock: Lat %f, Lon  %f, at: %d, next SR: %d (%s), next SS: %d (%s)", latitude, longitude, t, sunR, sSunR, sunS, sSunS);
-
     if (!isnan(time) && !isnan(date) && !isnan(latitude) && !isnan(longitude) && !isnan(timezone)) {             
         sr.calculate(latitude, longitude, t);       // LAT, LON, EPOCH
         // Sunrise
@@ -259,42 +257,8 @@ SensorData calcSunsetSunrise(double time, double date, double latitude, double l
     returnset.sunsetMinute = intminSS;
     returnset.sunriseHour = inthrSR;
     returnset.sunriseMinute = intminSR;
-
-//    api->getLogger()->logDebug(GwLog::DEBUG,"... PageClock: at t: %d, hasRise: %d, next SR: %d '%s', hasSet: %d, next SS: %d '%s'\n", t, sr.hasRise, sr.riseTime, sSunR, sr.hasSet, sr.setTime, sSunS);
+    returnset.sunControl = false;
     return returnset;
-}
-
-// Sun control (return valu by sun on sky = false, sun down = true)
-bool sunControl(double time, double date, double latitude, double longitude, double timezone){
-    SunRise sr;
-    int secPerHour = 3600;
-    int secPerYear = 86400;
-    sr.hasRise = false;
-    sr.hasSet = false;
-    time_t sunR = 0;
-    time_t sunS = 0;
-
-    // Calculate local time
-    time_t t = (date * secPerYear) + (time + int(timezone * secPerHour));
-
-    if (!isnan(time) && !isnan(date) && !isnan(latitude) && !isnan(longitude) && !isnan(timezone)) {             
-        sr.calculate(latitude, longitude, t);       // LAT, LON, EPOCH
-        // Sunrise
-        if (sr.hasRise) {
-            sunR = (sr.riseTime + int(timezone * secPerHour) + 30); // add 30 seconds: round to minutes
-        }
-        // Sunset
-        if (sr.hasSet)  {
-            sunS = (sr.setTime  + int(timezone * secPerHour) + 30); // add 30 seconds: round to minutes   
-        }
-    }
-    // Return values (sun on sky = false, sun down = true)
-    if(t > sunR && t < sunS){
-        return false;
-    }
-    else{
-        return true;
-    }
 }
 
 #endif

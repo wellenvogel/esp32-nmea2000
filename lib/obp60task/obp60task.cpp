@@ -394,7 +394,7 @@ void OBP60Task(GwApi *api){
             // Back light with sun control
             if(String(backlight) == "Control by Sun"){
                 if(time->valid == true && date->valid == true && lat->valid == true && lon->valid == true){
-                    setPortPin(OBP_BACKLIGHT_LED, sunControl(time->value, date->value, lat->value, lon->value, tz.toDouble()));
+                    setPortPin(OBP_BACKLIGHT_LED, commonData.data.sunControl);
                 }
             }
 
@@ -456,7 +456,7 @@ void OBP60Task(GwApi *api){
                     // Backlight with sun control
                     if(String(backlight) == "Control by Sun"){
                         if(time->valid == true && date->valid == true && lat->valid == true && lon->valid == true){
-                            setPortPin(OBP_BACKLIGHT_LED, sunControl(time->value, date->value, lat->value, lon->value, tz.toDouble()));
+                            setPortPin(OBP_BACKLIGHT_LED, commonData.data.sunControl);
                         }
                     }
                 }
