@@ -204,7 +204,7 @@ public:
             display.print(value1,1);
         }
         else{
-            // Check vor valid real data, display also if hold values activated
+            // Check for valid real data, display also if hold values activated
             if(valid1 == true || holdvalues == true){
                 // Resolution switching
                 if(value1 < 10){

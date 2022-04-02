@@ -2,96 +2,138 @@
 
 #include "Pagedata.h"
 #include "OBP60Extensions.h"
+#include "movingAvg.h"              // Lib for moving average building
 
 class PageBattery2 : public Page
 {
-    bool keylock = false;               // Keylock
+bool init = false;                  // Marker for init done
+bool keylock = false;               // Keylock
+int average = 0;                    // Average type [0...3], 0=off, 1=10s, 2=60s, 3=300s
+bool trend = true;                  // Trend indicator [0|1], 0=off, 1=on
+double raw = 0;
 
-    public:
-    PageBattery2(CommonData &comon){
-        comon.logger->logDebug(GwLog::LOG,"Show PageBattery2");
+public:
+    PageBattery2(CommonData &common){
+        common.logger->logDebug(GwLog::LOG,"Show PageBattery2");
     }
-
     virtual int handleKey(int key){
-        if(key == 11){                  // Code for keylock
+         // Change average
+        if(key == 1){
+            average ++;
+            average = average % 4;      // Modulo 4
+            return 0;                   // Commit the key
+        }
+
+        // Trend indicator
+        if(key == 5){
+            trend = !trend;
+            return 0;                   // Commit the key
+        }
+
+        // Code for keylock
+        if(key == 11){
             keylock = !keylock;         // Toggle keylock
             return 0;                   // Commit the key
         }
         return key;
     }
 
-    virtual void displayPage(CommonData &commonData, PageData &pageData){
+    virtual void displayPage(CommonData &commonData, PageData &pageData)
+    {
         GwConfigHandler *config = commonData.config;
         GwLog *logger=commonData.logger;
-
-        // Old values for hold function
-        static String svalue1old = "";
-        static String unit1old = "";
-        static String svalue2old = "";
-        static String unit2old = "";
-        static String svalue3old = "";
-        static String unit3old = "";
-        static String svalue4old = "";
-        static String unit4old = "";
-
+        
         // Get config data
-        String lengthformat = config->getString(config->lengthFormat);
-        // bool simulation = config->getBool(config->useSimuData);
+        bool simulation = config->getBool(config->useSimuData);
         String displaycolor = config->getString(config->displaycolor);
         bool holdvalues = config->getBool(config->holdvalues);
         String flashLED = config->getString(config->flashLED);
+        String batVoltage = config->getString(config->batteryVoltage);
+        String batType = config->getString(config->batteryType);
         String backlightMode = config->getString(config->backlight);
+
+        double value1 = 0;
+        double valueTrend = 0;  // Average over 10 values
         
-        // Get boat values #1
-        GwApi::BoatValue *bvalue1 = pageData.values[0]; // First element in list (only one value by PageOneValue)
-        String name1 = bvalue1->getName().c_str();      // Value name
-        name1 = name1.substring(0, 6);                  // String length limit for value name
-        double value1 = bvalue1->value;                 // Value as double in SI unit
-        bool valid1 = bvalue1->valid;                   // Valid information 
-        String svalue1 = formatValue(bvalue1, commonData).svalue;    // Formatted value as string including unit conversion and switching decimal places
-        String unit1 = formatValue(bvalue1, commonData).unit;        // Unit of value
+        // Get voltage value
+        String name1 = "VBat";
 
-        // Get boat values #2
-        GwApi::BoatValue *bvalue2 = pageData.values[1]; // Second element in list (only one value by PageOneValue)
-        String name2 = bvalue2->getName().c_str();      // Value name
-        name2 = name2.substring(0, 6);                  // String length limit for value name
-        double value2 = bvalue2->value;                 // Value as double in SI unit
-        bool valid2 = bvalue2->valid;                   // Valid information 
-        String svalue2 = formatValue(bvalue2, commonData).svalue;    // Formatted value as string including unit conversion and switching decimal places
-        String unit2 = formatValue(bvalue2, commonData).unit;        // Unit of value
-
-        // Get boat values #3
-        GwApi::BoatValue *bvalue3 = pageData.values[2]; // Second element in list (only one value by PageOneValue)
-        String name3 = bvalue3->getName().c_str();      // Value name
-        name3 = name3.substring(0, 6);                  // String length limit for value name
-        double value3 = bvalue3->value;                 // Value as double in SI unit
-        bool valid3 = bvalue3->valid;                   // Valid information 
-        String svalue3 = formatValue(bvalue3, commonData).svalue;    // Formatted value as string including unit conversion and switching decimal places
-        String unit3 = formatValue(bvalue3, commonData).unit;        // Unit of value
-
-        // Get boat values #4
-        GwApi::BoatValue *bvalue4 = pageData.values[3]; // Second element in list (only one value by PageOneValue)
-        String name4 = bvalue4->getName().c_str();      // Value name
-        name4 = name4.substring(0, 6);                  // String length limit for value name
-        double value4 = bvalue4->value;                 // Value as double in SI unit
-        bool valid4 = bvalue4->valid;                   // Valid information 
-        String svalue4 = formatValue(bvalue4, commonData).svalue;    // Formatted value as string including unit conversion and switching decimal places
-        String unit4 = formatValue(bvalue4, commonData).unit;        // Unit of value
-
-        // Optical warning by limit violation (unused)
-        if(String(flashLED) == "Limit Violation"){
-            setBlinkingLED(false);
-            setPortPin(OBP_FLASH_LED, false); 
+        // Create trend value
+        if(init == false){          // Load start values for first page run
+            valueTrend = commonData.data.batteryVoltage10;
+            init = true;
+        }
+        else{                       // Reading trend value
+            valueTrend = commonData.data.batteryVoltage10;
         }
 
-        // Logging boat values
-        if (bvalue1 == NULL) return;
-        LOG_DEBUG(GwLog::LOG,"Drawing at PageBattery2, %s: %f, %s: %f, %s: %f, %s: %f", name1, value1, name2, value2, name3, value3, name4, value4);
+        // Get raw value for trend indicator
+        raw = commonData.data.batteryVoltage;        // Live data
+
+        // Switch average values
+        switch (average) {
+            case 0:
+                value1 = commonData.data.batteryVoltage;        // Live data
+                break;
+            case 1:
+                value1 = commonData.data.batteryVoltage10;      // Average 10s
+                break;
+            case 2:
+                value1 = commonData.data.batteryVoltage60;      // Average 60s
+                break;
+            case 3:
+                value1 = commonData.data.batteryVoltage300;     // Average 300s
+                break;
+            default:
+                value1 = commonData.data.batteryVoltage;        // Default
+                break;
+        }
+        bool valid1 = true;
+
+        // Optical warning by limit violation
+        if(String(flashLED) == "Limit Violation"){
+            // Limits for Pb battery
+            if(String(batType) == "Pb" && (raw < 11.8 || raw > 14.8)){
+                setBlinkingLED(true);
+            }
+            if(String(batType) == "Pb" && (raw >= 11.8 && raw <= 14.8)){
+                setBlinkingLED(false);
+                setPortPin(OBP_FLASH_LED, false);
+            }
+            // Limits for Gel battery
+            if(String(batType) == "Gel" && (raw < 11.8 || raw > 14.4)){
+                setBlinkingLED(true);
+            }
+            if(String(batType) == "Gel" && (raw >= 11.8 && raw <= 14.4)){
+                setBlinkingLED(false);
+                setPortPin(OBP_FLASH_LED, false);
+            }
+            // Limits for AGM battery
+            if(String(batType) == "AGM" && (raw < 11.8 || raw > 14.7)){
+                setBlinkingLED(true);
+            }
+            if(String(batType) == "AGM" && (raw >= 11.8 && raw <= 14.7)){
+                setBlinkingLED(false);
+                setPortPin(OBP_FLASH_LED, false);
+            }
+            // Limits for LiFePo4 battery
+            if(String(batType) == "LiFePo4" && (raw < 12.0 || raw > 14.6)){
+                setBlinkingLED(true);
+            }
+            if(String(batType) == "LiFePo4" && (raw >= 12.0 && raw <= 14.6)){
+                setBlinkingLED(false);
+                setPortPin(OBP_FLASH_LED, false);
+            }
+        }
+        
+        // Logging voltage value
+        if (raw == NULL) return;
+        LOG_DEBUG(GwLog::LOG,"Drawing at PageBattery2, Type:%s %s:=%f", batType, name1, raw);
 
         // Draw page
         //***********************************************************
 
-        // Set background color and text color
+        // Clear display, set background color and text color
         int textcolor = GxEPD_BLACK;
         int pixelcolor = GxEPD_BLACK;
         int bgcolor = GxEPD_WHITE;
@@ -105,213 +147,97 @@ class PageBattery2 : public Page
             pixelcolor = GxEPD_WHITE;
             bgcolor = GxEPD_BLACK;
         }
-        // Clear display by call in obp60task.cpp in main loop
+        // Clear display in obp60task.cpp in main loop
 
-        // ############### Value 1 ################
+        // Show battery
+        int xb = 150;   // X position
+        int yb = 80;    // Y position
+        int t = 4;      // Line thickness
+        // Battery corpus 100x80
+        display.fillRect(xb, yb, 100, 80, pixelcolor);
+        display.fillRect(xb+t, yb+t, 100-(2*t), 80-(2*t), bgcolor);
+        // Plus pol 20x15
+        int xp = 170;
+        int yp = 69;
+        display.fillRect(xp, yp, 20, 15, pixelcolor);
+        display.fillRect(xp+t, yp+t, 20-(2*t), 15-(2*t), bgcolor);
+        // Minus pol 20x15
+        int xm = 210;
+        int ym = 69;
+        display.fillRect(xm, ym, 20, 15, pixelcolor);
+        display.fillRect(xm+t, ym+t, 20-(2*t), 15-(2*t), bgcolor);
 
-        // Show name
-        display.setTextColor(textcolor);
-        display.setFont(&Ubuntu_Bold16pt7b);
-        display.setCursor(20, 45);
-        display.print(name1);                           // Page name
 
-        // Show unit
-        display.setTextColor(textcolor);
-        display.setFont(&Ubuntu_Bold8pt7b);
-        display.setCursor(20, 65);
-        if(holdvalues == false){
-            display.print(unit1);                       // Unit
-        }
-        else{
-            display.print(unit1old);
-        }
-
-        // Switch font if format for any values
-        if(bvalue1->getFormat() == "formatLatitude" || bvalue1->getFormat() == "formatLongitude"){
-            display.setFont(&Ubuntu_Bold12pt7b);
-            display.setCursor(120, 55);
-        }
-        else if(bvalue1->getFormat() == "formatTime" || bvalue1->getFormat() == "formatDate"){
-            display.setFont(&Ubuntu_Bold12pt7b);
-            display.setCursor(150, 58);
-        }
-        else{
-            display.setFont(&DSEG7Classic_BoldItalic20pt7b);
-            display.setCursor(180, 65);
-        }
-
-        // Show bus data
-        if(holdvalues == false){
-            display.print(svalue1);                                     // Real value as formated string
-        }
-        else{
-            display.print(svalue1old);                                  // Old value as formated string
-        }
-        if(valid1 == true){
-            svalue1old = svalue1;                                       // Save the old value
-            unit1old = unit1;                                           // Save the old unit
-        }
-
-        // ############### Horizontal Line ################
-
-        // Horizontal line 3 pix
-        display.fillRect(0, 80, 400, 3, pixelcolor);
-
-        // ############### Value 2 ################
-
-        // Show name
-        display.setTextColor(textcolor);
-        display.setFont(&Ubuntu_Bold16pt7b);
-        display.setCursor(20, 113);
-        display.print(name2);                           // Page name
-
-        // Show unit
+        // Show batery type
         display.setTextColor(textcolor);
         display.setFont(&Ubuntu_Bold8pt7b);
-        display.setCursor(20, 133);
-        if(holdvalues == false){
-            display.print(unit2);                       // Unit
-        }
-        else{
-            display.print(unit2old);
-        }
+        display.setCursor(295, 100);
+        display.print(batType);
 
-        // Switch font if format for any values
-        if(bvalue2->getFormat() == "formatLatitude" || bvalue2->getFormat() == "formatLongitude"){
-            display.setFont(&Ubuntu_Bold12pt7b);
-            display.setCursor(120, 123);
-        }
-        else if(bvalue2->getFormat() == "formatTime" || bvalue2->getFormat() == "formatDate"){
-            display.setFont(&Ubuntu_Bold12pt7b);
-            display.setCursor(150, 123);
-        }
-        else{
-            display.setFont(&DSEG7Classic_BoldItalic20pt7b);
-            display.setCursor(180, 133);
-        }
-
-        // Show bus data
-        if(holdvalues == false){
-            display.print(svalue2);                                     // Real value as formated string
-        }
-        else{
-            display.print(svalue2old);                                  // Old value as formated string
-        }
-        if(valid2 == true){
-            svalue2old = svalue2;                                       // Save the old value
-            unit2old = unit2;                                           // Save the old unit
-        }
-
-        // ############### Horizontal Line ################
-
-        // Horizontal line 3 pix
-        display.fillRect(0, 146, 400, 3, pixelcolor);
-
-        // ############### Value 3 ################
-
-        // Show name
-        display.setTextColor(textcolor);
-        display.setFont(&Ubuntu_Bold16pt7b);
-        display.setCursor(20, 181);
-        display.print(name3);                           // Page name
-
-        // Show unit
+        // Show average settings
         display.setTextColor(textcolor);
         display.setFont(&Ubuntu_Bold8pt7b);
-        display.setCursor(20, 201);
-        if(holdvalues == false){
-            display.print(unit3);                       // Unit
-        }
-        else{
-            display.print(unit3old);
-        }
+        display.setCursor(320, 100);
+        switch (average) {
+            case 0:
+                display.print("Avg: 1s");
+                break;
+            case 1:
+                display.print("Avg: 10s");
+                break;
+            case 2:
+                display.print("Avg: 60s");
+                break;
+            case 3:
+                display.print("Avg: 300s");
+                break;
+            default:
+                display.print("Avg: 1s");
+                break;
+        } 
 
-        // Switch font if format for any values
-        if(bvalue3->getFormat() == "formatLatitude" || bvalue3->getFormat() == "formatLongitude"){
-            display.setFont(&Ubuntu_Bold12pt7b);
-            display.setCursor(120, 191);
-        }
-        else if(bvalue3->getFormat() == "formatTime" || bvalue3->getFormat() == "formatDate"){
-            display.setFont(&Ubuntu_Bold12pt7b);
-            display.setCursor(150, 191);
-        }
-        else{
-            display.setFont(&DSEG7Classic_BoldItalic20pt7b);
-            display.setCursor(180, 201);
-        }
-
-        // Show bus data
-        if(holdvalues == false){
-            display.print(svalue3);                                     // Real value as formated string
-        }
-        else{
-            display.print(svalue3old);                                  // Old value as formated string
-        }
-        if(valid3 == true){
-            svalue3old = svalue3;                                       // Save the old value
-            unit3old = unit3;                                           // Save the old unit
-        }
-
-        // ############### Horizontal Line ################
-
-        // Horizontal line 3 pix
-        display.fillRect(0, 214, 400, 3, pixelcolor);
-
-        // ############### Value 4 ################
-
-        // Show name
+        // Reading bus data or using simulation data
         display.setTextColor(textcolor);
-        display.setFont(&Ubuntu_Bold16pt7b);
-        display.setCursor(20, 249);
-        display.print(name4);                           // Page name
-
-        // Show unit
-        display.setTextColor(textcolor);
-        display.setFont(&Ubuntu_Bold8pt7b);
-        display.setCursor(20, 269);
-        if(holdvalues == false){
-            display.print(unit4);                       // Unit
+        display.setFont(&DSEG7Classic_BoldItalic20pt7b);
+        display.setCursor(20, 240);
+        if(simulation == true){
+            if(batVoltage == "12V"){
+                value1 = 12.0;
+            }
+            if(batVoltage == "24V"){
+                value1 = 24.0;
+            }
+            value1 += float(random(0, 5)) / 10;         // Simulation data
+            display.print(value1,1);
         }
         else{
-            display.print(unit4old);
+            // Check for valid real data, display also if hold values activated
+            if(valid1 == true || holdvalues == true){
+                // Resolution switching
+                if(value1 < 10){
+                    display.print(value1,2);
+                }
+                if(value1 >= 10 && value1 < 100){
+                    display.print(value1,1);
+                }
+                if(value1 >= 100){
+                    display.print(value1,0);
+                }
+            }
+            else{
+            display.print("---");                       // Missing bus data
+            }  
         }
-
-        // Switch font if format for any values
-        if(bvalue4->getFormat() == "formatLatitude" || bvalue4->getFormat() == "formatLongitude"){
-            display.setFont(&Ubuntu_Bold12pt7b);
-            display.setCursor(120, 259);
-        }
-        else if(bvalue4->getFormat() == "formatTime" || bvalue4->getFormat() == "formatDate"){
-            display.setFont(&Ubuntu_Bold12pt7b);
-            display.setCursor(150, 259);
-        }
-        else{
-            display.setFont(&DSEG7Classic_BoldItalic20pt7b);
-            display.setCursor(180, 269);
-        }
-
-        // Show bus data
-        if(holdvalues == false){
-            display.print(svalue4);                                     // Real value as formated string
-        }
-        else{
-            display.print(svalue4old);                                  // Old value as formated string
-        }
-        if(valid4 == true){
-            svalue4old = svalue4;                                       // Save the old value
-            unit4old = unit4;                                           // Save the old unit
-        }
-
-
-        // ############### Key Layout ################
 
         // Key Layout
         display.setTextColor(textcolor);
         display.setFont(&Ubuntu_Bold8pt7b);
         if(keylock == false){
+            display.setCursor(10, 290);
+            display.print("[AVG]");
             display.setCursor(130, 290);
             display.print("[  <<<<  " + String(commonData.data.actpage) + "/" + String(commonData.data.maxpage) + "  >>>>  ]");
-            if(String(backlightMode) == "Control by Key"){                  // Key for illumination
+            if(String(backlightMode) == "Control by Key"){              // Key for illumination
                 display.setCursor(343, 290);
                 display.print("[ILUM]");
             }
@@ -323,21 +249,21 @@ class PageBattery2 : public Page
 
         // Update display
         display.updateWindow(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, true);    // Partial update (fast)
-
     };
 };
 
 static Page *createPage(CommonData &common){
     return new PageBattery2(common);
-}/**
+}
+/**
  * with the code below we make this page known to the PageTask
  * we give it a type (name) that can be selected in the config
  * we define which function is to be called
- * and we provide the number of user parameters we expect
- * this will be number of BoatValue pointers in pageData.values
+ * and we provide the number of user parameters we expect (0 here)
+ * and will will provide the names of the fixed values we need
  */
 PageDescription registerPageBattery2(
-    "Battery2",     // Page name
+    "Battery2",      // Name of page
     createPage,     // Action
     0,              // Number of bus values depends on selection in Web configuration
     {},             // Names of bus values undepends on selection in Web configuration (refer GwBoatData.h)
