@@ -390,19 +390,7 @@ void OBP60Task(GwApi *api){
             if(String(gpsFix) == "GPS Fix Lost" && date->valid == false){
                 setPortPin(OBP_FLASH_LED, true);
             }
-
-            // Back light with sun control: turn on if no valid data for safety reasons
-            if(String(backlight) == "Control by Sun"){
-<<<<<<< HEAD
-                if(time->valid == true && date->valid == true && lat->valid == true && lon->valid == true){
-                    setPortPin(OBP_BACKLIGHT_LED, commonData.data.sunControl);
-=======
-                if(time->valid == false || date->valid == false || lat->valid == false || lon->valid == false){
-                setPortPin(OBP_BACKLIGHT_LED, true);
->>>>>>> sunset
-                }
-            }
-            
+         
             // Check the keyboard message
             int keyboardMessage=0;
             while (xQueueReceive(allParameters.queue,&keyboardMessage,0)){
@@ -457,17 +445,10 @@ void OBP60Task(GwApi *api){
             if(millis() > starttime5 + 1000){
                 starttime5 = millis();
                 if(time->valid == true && date->valid == true && lat->valid == true && lon->valid == true){
-                    commonData.data = calcSunsetSunrise(time->value , date->value, lat->value, lon->value, tz.toDouble());
+                    commonData.data = calcSunsetSunrise(api, time->value , date->value, lat->value, lon->value, tz.toDouble());
                     // Backlight with sun control
-<<<<<<< HEAD
-                    if(String(backlight) == "Control by Sun"){
-                        if(time->valid == true && date->valid == true && lat->valid == true && lon->valid == true){
-                            setPortPin(OBP_BACKLIGHT_LED, commonData.data.sunControl);
-                        }
-=======
                     if(String(backlight) == "Control by Sun"){                       
                        setPortPin(OBP_BACKLIGHT_LED, commonData.data.sunDown);
->>>>>>> sunset
                     }
                 }
             }

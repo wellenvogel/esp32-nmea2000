@@ -220,31 +220,28 @@ void displayHeader(CommonData &commonData, GwApi::BoatValue *date, GwApi::BoatVa
 }
 
 // Sunset und sunrise calculation
-SensorData calcSunsetSunrise(double time, double date, double latitude, double longitude, double timezone){
+SensorData calcSunsetSunrise(GwApi *api, double time, double date, double latitude, double longitude, double timezone){
+    GwLog *logger=api->getLogger();
     SensorData returnset;
     SunRise sr;
     int secPerHour = 3600;
     int secPerYear = 86400;
     sr.hasRise = false;
     sr.hasSet = false;
+    time_t t = 0;
     time_t sunR = 0;
     time_t sunS = 0;
     int inthrSR = 0;
     int intminSR = 0;
     int inthrSS = 0;
     int intminSS = 0;
-    bool sunDown = true;
+    bool sunDown = false;
 
-
-<<<<<<< HEAD
-    if (!isnan(time) && !isnan(date) && !isnan(latitude) && !isnan(longitude) && !isnan(timezone)) {             
-=======
-//    api->getLogger()->logDebug(GwLog::DEBUG,"... calcSun: Lat %f, Lon  %f, at: %d, next SR: %d (%s), next SS: %d (%s)", latitude, longitude, t, sunR, sSunR, sunS, sSunS);
+    api->getLogger()->logDebug(GwLog::DEBUG,"... calcSun: Lat %f, Lon  %f, at: %d, next SR: %d, next SS: %d", latitude, longitude, t, sunR, sunS);
 
     if (!isnan(time) && !isnan(date) && !isnan(latitude) && !isnan(longitude) && !isnan(timezone)) {
         // Calculate local time
-        time_t t = (date * secPerYear) + (time + int(timezone * secPerHour));    
->>>>>>> sunset
+        t = (date * secPerYear) + (time + int(timezone * secPerHour));    
         sr.calculate(latitude, longitude, t);       // LAT, LON, EPOCH
         // Sunrise
         if (sr.hasRise) {
@@ -268,13 +265,9 @@ SensorData calcSunsetSunrise(double time, double date, double latitude, double l
     returnset.sunsetMinute = intminSS;
     returnset.sunriseHour = inthrSR;
     returnset.sunriseMinute = intminSR;
-<<<<<<< HEAD
-    returnset.sunControl = false;
-=======
     returnset.sunDown = sunDown;
 
-//    api->getLogger()->logDebug(GwLog::DEBUG,"... calcSun: at t: %d, hasRise: %d, next SR: %d '%s', hasSet: %d, next SS: %d '%s'\n", t, sr.hasRise, sr.riseTime, sSunR, sr.hasSet, sr.setTime, sSunS);
->>>>>>> sunset
+    api->getLogger()->logDebug(GwLog::DEBUG,"... calcSun: at t: %d, hasRise: %d, next SR: %d, hasSet: %d, next SS: %d\n", t, sr.hasRise, sr.riseTime, sr.hasSet, sr.setTime);
     return returnset;
 }
 
