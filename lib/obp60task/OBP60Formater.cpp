@@ -14,7 +14,9 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
     static int dayoffset = 0;
 
     // Load configuration values
-    int timeZone = commondata.config->getInt(commondata.config->timeZone);                      // [UTC -12...+14]
+
+    String stimeZone = commondata.config->getString(commondata.config->timeZone);               // [UTC -14.00...+12.00]
+    double timeZone = stimeZone.toDouble();
     String lengthFormat = commondata.config->getString(commondata.config->lengthFormat);        // [m|ft]
     String distanceFormat = commondata.config->getString(commondata.config->distanceFormat);    // [m|km|nm]
     String speedFormat = commondata.config->getString(commondata.config->speedFormat);          // [m/s|km/h|kn]
@@ -28,6 +30,8 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
         result.svalue = "---";
         return result;
     }
+    
+    LOG_DEBUG(GwLog::DEBUG,"formatValue init: getFormat: %s date->value: %f time->value: %f", value->getFormat(), commondata.date->value, commondata.time->value);
     static const int bsize = 30;
     char buffer[bsize+1];
     buffer[0]=0;

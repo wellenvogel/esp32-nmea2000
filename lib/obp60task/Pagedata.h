@@ -47,7 +47,11 @@ typedef struct{
   int sunsetMinute = 0;
   int sunriseHour = 0;
   int sunriseMinute = 0;
+<<<<<<< HEAD
   bool sunControl = false;        // (sun on sky = false, sun down = true)
+=======
+  bool sunDown = true;
+>>>>>>> sunset
 } SensorData;
 
 typedef struct{

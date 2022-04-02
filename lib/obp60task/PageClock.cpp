@@ -147,13 +147,11 @@ public:
         }
 
         // Show values sunrise
-        String sunrise = "";
+        String sunrise = "---";
         if(valid1 == true && valid2 == true){
-            sunrise = String(commonData.data.sunriseHour) + ":" + String(commonData.data.sunriseMinute);
+            sunrise = String(commonData.data.sunriseHour) + ":" + String(commonData.data.sunriseMinute + 100).substring(1);
         }
-        else{
-            sunrise = "---";
-        }
+
         display.setTextColor(textcolor);
         display.setFont(&Ubuntu_Bold8pt7b);
         display.setCursor(335, 65);
@@ -166,13 +164,13 @@ public:
         display.fillRect(340, 149, 80, 3, pixelcolor);
 
         // Show values sunset
-         String sunset = "";
+        String sunset = "---";
         if(valid1 == true && valid2 == true){
-            sunset= String(commonData.data.sunsetHour) + ":" + String(commonData.data.sunsetMinute);
+            sunset = String(commonData.data.sunsetHour) + ":" +  String(commonData.data.sunsetMinute + 100).substring(1);
         }
-        else{
-            sunset = "---";
-        }
+
+        LOG_DEBUG(GwLog::LOG,"sunrise: .%s., sunset: .%s.", String(commonData.data.sunriseMinute + 100), String(commonData.data.sunsetMinute + 100));
+
         display.setTextColor(textcolor);
         display.setFont(&Ubuntu_Bold8pt7b);
         display.setCursor(335, 250);
