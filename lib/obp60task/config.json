@@ -122,8 +122,36 @@
         "default": "0.0",
         "check": "checkMinMax",
         "min": 0.0,
+        "max": 999.0,
+        "description": "Battery capacity [0...999Ah]",
+        "category": "OBP60 Settings",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "solarPower",
+        "label": "Solar Power [W]",
+        "type": "number",
+        "default": "0.0",
+        "check": "checkMinMax",
+        "min": 0.0,
         "max": 10000.0,
-        "description": "Battery capacity [0...10000Ah]",
+        "description": "Solar power [0...10000W]",
+        "category": "OBP60 Settings",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "genPower",
+        "label": "Genarator Power [W]",
+        "type": "number",
+        "default": "0.0",
+        "check": "checkMinMax",
+        "min": 0.0,
+        "max": 10000.0,
+        "description": "Generator power [0...10000W]",
         "category": "OBP60 Settings",
         "capabilities": {
             "obp60":"true"
@@ -672,7 +700,7 @@
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"page1type":"OneValue"},{"page1type":"TwoValue"},{"page1type":"ThreeValue"},{"page1type":"FourValues"},{"page1type":"FourValues2"}]
+        "condition":[{"page1type":"OneValue"},{"page1type":"TwoValues"},{"page1type":"ThreeValues"},{"page1type":"FourValues"},{"page1type":"FourValues2"}]
     },
     {
         "name": "page1value2",
@@ -684,7 +712,7 @@
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"page1type":"TwoValue"},{"page1type":"ThreeValue"},{"page1type":"FourValues"},{"page1type":"FourValues2"}]
+        "condition":[{"page1type":"TwoValues"},{"page1type":"ThreeValues"},{"page1type":"FourValues"},{"page1type":"FourValues2"}]
     },
     {
         "name": "page1value3",
@@ -696,7 +724,7 @@
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"page1type":"ThreeValue"},{"page1type":"FourValues"},{"page1type":"FourValues2"}]
+        "condition":[{"page1type":"ThreeValues"},{"page1type":"FourValues"},{"page1type":"FourValues2"}]
     },
     {
         "name": "page1value4",
@@ -733,7 +761,7 @@
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"page2type":"OneValue"},{"page2type":"TwoValue"},{"page2type":"ThreeValue"},{"page2type":"FourValues"},{"page2type":"FourValues2"}]
+        "condition":[{"page2type":"OneValue"},{"page2type":"TwoValues"},{"page2type":"ThreeValues"},{"page2type":"FourValues"},{"page2type":"FourValues2"}]
     },
     {
         "name": "page2value2",
@@ -745,7 +773,7 @@
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"page2type":"TwoValue"},{"page2type":"ThreeValue"},{"page2type":"FourValues"},{"page2type":"FourValues2"}]
+        "condition":[{"page2type":"TwoValues"},{"page2type":"ThreeValues"},{"page2type":"FourValues"},{"page2type":"FourValues2"}]
     },
     {
         "name": "page2value3",
@@ -757,7 +785,7 @@
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"page2type":"ThreeValue"},{"page2type":"FourValues"},{"page2type":"FourValues2"}]
+        "condition":[{"page2type":"ThreeValues"},{"page2type":"FourValues"},{"page2type":"FourValues2"}]
     },
     {
         "name": "page2value4",
@@ -794,7 +822,7 @@
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"page3type":"OneValue"},{"page3type":"TwoValue"},{"page3type":"ThreeValue"},{"page3type":"FourValues"},{"page3type":"FourValues2"}]
+        "condition":[{"page3type":"OneValue"},{"page3type":"TwoValues"},{"page3type":"ThreeValues"},{"page3type":"FourValues"},{"page3type":"FourValues2"}]
     },
     {
         "name": "page3value2",
@@ -806,7 +834,7 @@
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"page3type":"TwoValue"},{"page3type":"ThreeValue"},{"page3type":"FourValues"},{"page3type":"FourValues2"}]
+        "condition":[{"page3type":"TwoValues"},{"page3type":"ThreeValues"},{"page3type":"FourValues"},{"page3type":"FourValues2"}]
     },
     {
         "name": "page3value3",
@@ -818,7 +846,7 @@
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"page3type":"ThreeValue"},{"page3type":"FourValues"},{"page3type":"FourValues2"}]
+        "condition":[{"page3type":"ThreeValues"},{"page3type":"FourValues"},{"page3type":"FourValues2"}]
     },
     {
         "name": "page3value4",
@@ -855,7 +883,7 @@
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"page4type":"OneValue"},{"page4type":"TwoValue"},{"page4type":"ThreeValue"},{"page4type":"FourValues"},{"page4type":"FourValues2"}]
+        "condition":[{"page4type":"OneValue"},{"page4type":"TwoValues"},{"page4type":"ThreeValues"},{"page4type":"FourValues"},{"page4type":"FourValues2"}]
     },
     {
         "name": "page4value2",
@@ -867,7 +895,7 @@
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"page4type":"TwoValue"},{"page4type":"ThreeValue"},{"page4type":"FourValues"},{"page4type":"FourValues2"}]
+        "condition":[{"page4type":"TwoValues"},{"page4type":"ThreeValues"},{"page4type":"FourValues"},{"page4type":"FourValues2"}]
     },
     {
         "name": "page4value3",
@@ -879,7 +907,7 @@
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"page4type":"ThreeValue"},{"page4type":"FourValues"},{"page4type":"FourValues2"}]
+        "condition":[{"page4type":"ThreeValues"},{"page4type":"FourValues"},{"page4type":"FourValues2"}]
     },
     {
         "name": "page4value4",
@@ -916,7 +944,7 @@
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"page5type":"OneValue"},{"page5type":"TwoValue"},{"page5type":"ThreeValue"},{"page5type":"FourValues"},{"page5type":"FourValues2"}]
+        "condition":[{"page5type":"OneValue"},{"page5type":"TwoValues"},{"page5type":"ThreeValues"},{"page5type":"FourValues"},{"page5type":"FourValues2"}]
     },
     {
         "name": "page5value2",
@@ -928,7 +956,7 @@
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"page5type":"TwoValue"},{"page5type":"ThreeValue"},{"page5type":"FourValues"},{"page5type":"FourValues2"}]
+        "condition":[{"page5type":"TwoValues"},{"page5type":"ThreeValues"},{"page5type":"FourValues"},{"page5type":"FourValues2"}]
     },
     {
         "name": "page5value3",
@@ -940,7 +968,7 @@
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"page5type":"ThreeValue"},{"page5type":"FourValues"},{"page5type":"FourValues2"}]
+        "condition":[{"page5type":"ThreeValues"},{"page5type":"FourValues"},{"page5type":"FourValues2"}]
     },
     {
         "name": "page5value4",
@@ -977,7 +1005,7 @@
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"page6type":"OneValue"},{"page6type":"TwoValue"},{"page6type":"ThreeValue"},{"page6type":"FourValues"},{"page6type":"FourValues2"}]
+        "condition":[{"page6type":"OneValue"},{"page6type":"TwoValues"},{"page6type":"ThreeValues"},{"page6type":"FourValues"},{"page6type":"FourValues2"}]
     },
     {
         "name": "page6value2",
@@ -989,7 +1017,7 @@
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"page6type":"TwoValue"},{"page6type":"ThreeValue"},{"page6type":"FourValues"},{"page6type":"FourValues2"}]
+        "condition":[{"page6type":"TwoValues"},{"page6type":"ThreeValues"},{"page6type":"FourValues"},{"page6type":"FourValues2"}]
     },
     {
         "name": "page6value3",
@@ -1001,7 +1029,7 @@
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"page6type":"ThreeValue"},{"page6type":"FourValues"},{"page6type":"FourValues2"}]
+        "condition":[{"page6type":"ThreeValues"},{"page6type":"FourValues"},{"page6type":"FourValues2"}]
     },
     {
         "name": "page6value4",
@@ -1038,7 +1066,7 @@
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"page7type":"OneValue"},{"page7type":"TwoValue"},{"page7type":"ThreeValue"},{"page7type":"FourValues"},{"page7type":"FourValues2"}]
+        "condition":[{"page7type":"OneValue"},{"page7type":"TwoValues"},{"page7type":"ThreeValues"},{"page7type":"FourValues"},{"page7type":"FourValues2"}]
     },
     {
         "name": "page7value2",
@@ -1050,7 +1078,7 @@
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"page7type":"TwoValue"},{"page7type":"ThreeValue"},{"page7type":"FourValues"},{"page7type":"FourValues2"}]
+        "condition":[{"page7type":"TwoValues"},{"page7type":"ThreeValues"},{"page7type":"FourValues"},{"page7type":"FourValues2"}]
     },
     {
         "name": "page7value3",
@@ -1062,7 +1090,7 @@
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"page7type":"ThreeValue"},{"page7type":"FourValues"},{"page7type":"FourValues2"}]
+        "condition":[{"page7type":"ThreeValues"},{"page7type":"FourValues"},{"page7type":"FourValues2"}]
     },
     {
         "name": "page7value4",
@@ -1099,7 +1127,7 @@
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"page8type":"OneValue"},{"page8type":"TwoValue"},{"page8type":"ThreeValue"},{"page8type":"FourValues"},{"page8type":"FourValues2"}]
+        "condition":[{"page8type":"OneValue"},{"page8type":"TwoValues"},{"page8type":"ThreeValues"},{"page8type":"FourValues"},{"page8type":"FourValues2"}]
     },
     {
         "name": "page8value2",
@@ -1111,7 +1139,7 @@
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"page8type":"TwoValue"},{"page8type":"ThreeValue"},{"page8type":"FourValues"},{"page8type":"FourValues2"}]
+        "condition":[{"page8type":"TwoValues"},{"page8type":"ThreeValues"},{"page8type":"FourValues"},{"page8type":"FourValues2"}]
     },
     {
         "name": "page8value3",
@@ -1123,7 +1151,7 @@
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"page8type":"ThreeValue"},{"page8type":"FourValues"},{"page8type":"FourValues2"}]
+        "condition":[{"page8type":"ThreeValues"},{"page8type":"FourValues"},{"page8type":"FourValues2"}]
     },
     {
         "name": "page8value4",
@@ -1160,7 +1188,7 @@
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"page9type":"OneValue"},{"page9type":"TwoValue"},{"page9type":"ThreeValue"},{"page9type":"FourValues"},{"page9type":"FourValues2"}]
+        "condition":[{"page9type":"OneValue"},{"page9type":"TwoValues"},{"page9type":"ThreeValues"},{"page9type":"FourValues"},{"page9type":"FourValues2"}]
     },
     {
         "name": "page9value2",
@@ -1172,7 +1200,7 @@
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"page9type":"TwoValue"},{"page9type":"ThreeValue"},{"page9type":"FourValues"},{"page9type":"FourValues2"}]
+        "condition":[{"page9type":"TwoValues"},{"page9type":"ThreeValues"},{"page9type":"FourValues"},{"page9type":"FourValues2"}]
     },
     {
         "name": "page9value3",
@@ -1184,7 +1212,7 @@
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"page9type":"ThreeValue"},{"page9type":"FourValues"},{"page9type":"FourValues2"}]
+        "condition":[{"page9type":"ThreeValues"},{"page9type":"FourValues"},{"page9type":"FourValues2"}]
     },
     {
         "name": "page9value4",
@@ -1221,7 +1249,7 @@
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"page10type":"OneValue"},{"page10type":"TwoValue"},{"page10type":"ThreeValue"},{"page10type":"FourValues"},{"page10type":"FourValues2"}]
+        "condition":[{"page10type":"OneValue"},{"page10type":"TwoValues"},{"page10type":"ThreeValues"},{"page10type":"FourValues"},{"page10type":"FourValues2"}]
     },
     {
         "name": "page10value2",
@@ -1233,7 +1261,7 @@
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"page10type":"TwoValue"},{"page10type":"ThreeValue"},{"page10type":"FourValues"},{"page10type":"FourValues2"}]
+        "condition":[{"page10type":"TwoValues"},{"page10type":"ThreeValues"},{"page10type":"FourValues"},{"page10type":"FourValues2"}]
     },
     {
         "name": "page10value3",
@@ -1245,7 +1273,7 @@
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"page10type":"ThreeValue"},{"page10type":"FourValues"},{"page10type":"FourValues2"}]
+        "condition":[{"page10type":"ThreeValues"},{"page10type":"FourValues"},{"page10type":"FourValues2"}]
     },
     {
         "name": "page10value4",

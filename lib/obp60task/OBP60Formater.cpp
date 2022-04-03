@@ -31,7 +31,7 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
         return result;
     }
     
-    LOG_DEBUG(GwLog::DEBUG,"formatValue init: getFormat: %s date->value: %f time->value: %f", value->getFormat(), commondata.date->value, commondata.time->value);
+//    LOG_DEBUG(GwLog::DEBUG,"formatValue init: getFormat: %s date->value: %f time->value: %f", value->getFormat(), commondata.date->value, commondata.time->value);
     static const int bsize = 30;
     char buffer[bsize+1];
     buffer[0]=0;
@@ -42,7 +42,7 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
         if (commondata.time->value + int(timeZone*3600) > 86400) {dayoffset = 1;}
         if (commondata.time->value + int(timeZone*3600) < 0) {dayoffset = -1;}
 
-        LOG_DEBUG(GwLog::DEBUG,"... formatDate value->value: %f tz: %f dayoffset: %d", value->value, timeZone, dayoffset);
+//        LOG_DEBUG(GwLog::DEBUG,"... formatDate value->value: %f tz: %f dayoffset: %d", value->value, timeZone, dayoffset);
 
         tmElements_t parts;
         time_t tv=tNMEA0183Msg::daysToTime_t(value->value + dayoffset);
@@ -82,7 +82,7 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
         timeInSeconds = value->value + int(timeZone * 3600);
         if (timeInSeconds > 86400) {timeInSeconds = timeInSeconds - 86400;}
         if (timeInSeconds <  0) {timeInSeconds = timeInSeconds + 86400;}
-        LOG_DEBUG(GwLog::DEBUG,"... formatTime value: %f tz: %f corrected timeInSeconds: %f ", value->value, timeZone, timeInSeconds);
+//        LOG_DEBUG(GwLog::DEBUG,"... formatTime value: %f tz: %f corrected timeInSeconds: %f ", value->value, timeZone, timeInSeconds);
         if(usesimudata == false) {
             val=modf(timeInSeconds/3600.0,&inthr);
             val=modf(val*3600.0/60.0,&intmin);

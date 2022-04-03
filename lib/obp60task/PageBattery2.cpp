@@ -49,10 +49,13 @@ public:
         bool holdvalues = config->getBool(config->holdvalues);
         String flashLED = config->getString(config->flashLED);
         String batVoltage = config->getString(config->batteryVoltage);
+        int batCapacity = config->getInt(config->batteryCapacity);
         String batType = config->getString(config->batteryType);
         String backlightMode = config->getString(config->backlight);
 
-        double value1 = 0;
+        double value1 = 0;  // Battery voltage
+        double value2 = 0;  // Battery current
+        double value3 = 0;  // Battery power consumption
         double valueTrend = 0;  // Average over 10 values
         
         // Get voltage value
@@ -74,18 +77,28 @@ public:
         switch (average) {
             case 0:
                 value1 = commonData.data.batteryVoltage;        // Live data
+                value2 = commonData.data.batteryCurrent;
+                value3 = commonData.data.batteryPower;
                 break;
             case 1:
                 value1 = commonData.data.batteryVoltage10;      // Average 10s
+                value2 = commonData.data.batteryCurrent10;
+                value3 = commonData.data.batteryPower10;
                 break;
             case 2:
                 value1 = commonData.data.batteryVoltage60;      // Average 60s
+                value2 = commonData.data.batteryCurrent60;
+                value3 = commonData.data.batteryPower60;
                 break;
             case 3:
                 value1 = commonData.data.batteryVoltage300;     // Average 300s
+                value2 = commonData.data.batteryCurrent300;
+                value3 = commonData.data.batteryPower300;
                 break;
             default:
                 value1 = commonData.data.batteryVoltage;        // Default
+                value2 = commonData.data.batteryCurrent;
+                value3 = commonData.data.batteryPower;
                 break;
         }
         bool valid1 = true;
@@ -149,35 +162,45 @@ public:
         }
         // Clear display in obp60task.cpp in main loop
 
-        // Show battery
-        int xb = 150;   // X position
-        int yb = 80;    // Y position
-        int t = 4;      // Line thickness
-        // Battery corpus 100x80
-        display.fillRect(xb, yb, 100, 80, pixelcolor);
-        display.fillRect(xb+t, yb+t, 100-(2*t), 80-(2*t), bgcolor);
-        // Plus pol 20x15
-        int xp = 170;
-        int yp = 69;
-        display.fillRect(xp, yp, 20, 15, pixelcolor);
-        display.fillRect(xp+t, yp+t, 20-(2*t), 15-(2*t), bgcolor);
-        // Minus pol 20x15
-        int xm = 210;
-        int ym = 69;
-        display.fillRect(xm, ym, 20, 15, pixelcolor);
-        display.fillRect(xm+t, ym+t, 20-(2*t), 15-(2*t), bgcolor);
+        // Show name
+        display.setTextColor(textcolor);
+        display.setFont(&Ubuntu_Bold20pt7b);
+        display.setCursor(10, 65);
+        display.print("Bat.");
 
-
-        // Show batery type
+         // Show batery type
         display.setTextColor(textcolor);
         display.setFont(&Ubuntu_Bold8pt7b);
-        display.setCursor(295, 100);
+        display.setCursor(90, 65);
         display.print(batType);
+
+        // Show voltage type
+        display.setTextColor(textcolor);
+        display.setFont(&DSEG7Classic_BoldItalic20pt7b);
+        display.setCursor(10, 140);
+        int bvoltage = 0;
+        if(String(batVoltage) == "12V") bvoltage = 12;
+        else bvoltage = 24;
+        display.print(bvoltage);
+        display.setFont(&Ubuntu_Bold16pt7b);
+        display.print("V");
+
+        // Show batery capacity
+        display.setTextColor(textcolor);
+        display.setFont(&DSEG7Classic_BoldItalic20pt7b);
+        display.setCursor(10, 200);
+        display.print(batCapacity);
+        display.setFont(&Ubuntu_Bold16pt7b);
+        display.print("Ah");
+
+        // Show battery with fill level
+        static int level = 0;
+        batteryGraphic(150, 45, level, pixelcolor, bgcolor);
 
         // Show average settings
         display.setTextColor(textcolor);
         display.setFont(&Ubuntu_Bold8pt7b);
-        display.setCursor(320, 100);
+        display.setCursor(150, 145);
         switch (average) {
             case 0:
                 display.print("Avg: 1s");
@@ -196,10 +219,28 @@ public:
                 break;
         } 
 
+        // Show fill level in percent
+        display.setTextColor(textcolor);
+        display.setFont(&DSEG7Classic_BoldItalic20pt7b);
+        display.setCursor(150, 200);
+        display.print(level);
+        display.setFont(&Ubuntu_Bold16pt7b);
+        display.print("%");
+        level += 1;
+        level = level % 100;
+
+        // Show time to full discharge
+        display.setTextColor(textcolor);
+        display.setFont(&DSEG7Classic_BoldItalic20pt7b);
+        display.setCursor(150, 260);
+        display.print(8.3, 1);
+        display.setFont(&Ubuntu_Bold16pt7b);
+        display.print("h");
+
         // Reading bus data or using simulation data
         display.setTextColor(textcolor);
         display.setFont(&DSEG7Classic_BoldItalic20pt7b);
-        display.setCursor(20, 240);
+        display.setCursor(260, 140);
         if(simulation == true){
             if(batVoltage == "12V"){
                 value1 = 12.0;
@@ -226,8 +267,26 @@ public:
             }
             else{
             display.print("---");                       // Missing bus data
-            }  
+            }
         }
+        display.setFont(&Ubuntu_Bold16pt7b);
+        display.print("V");
+
+        // Show actual current in A
+        display.setTextColor(textcolor);
+        display.setFont(&DSEG7Classic_BoldItalic20pt7b);
+        display.setCursor(260, 200);
+        display.print(value2, 1);
+        display.setFont(&Ubuntu_Bold16pt7b);
+        display.print("A");
+
+        // Show actual consumption in W
+        display.setTextColor(textcolor);
+        display.setFont(&DSEG7Classic_BoldItalic20pt7b);
+        display.setCursor(260, 260);
+        display.print(value3, 1);
+        display.setFont(&Ubuntu_Bold16pt7b);
+        display.print("W");
 
         // Key Layout
         display.setTextColor(textcolor);

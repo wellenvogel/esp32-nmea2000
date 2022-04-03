@@ -413,7 +413,15 @@ void sensorTask(void *param){
         if(millis() > starttime8 + 1000 && (String(powsensor1) == "INA219" || String(powsensor1) == "INA226")){
             starttime8 = millis();
             if(String(powsensor1) == "INA226" && INA226_1_ready == true){
-                sensors.batteryVoltage = ina226_1.getBusVoltage();
+                double voltage = ina226_1.getBusVoltage();
+                // Limiter for voltage average building
+                if(voltage < -30){
+                    voltage = -30;
+                }
+                if(voltage > 30){
+                    voltage = 30;
+                }
+                sensors.batteryVoltage = voltage;
                 sensors.batteryCurrent = ina226_1.getCurrent() * corrFactor;
                 // Eliminates bit jitter by zero current values
                 float factor = maxCurrent / 100;

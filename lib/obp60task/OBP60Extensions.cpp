@@ -237,7 +237,7 @@ SensorData calcSunsetSunrise(GwApi *api, double time, double date, double latitu
     int intminSS = 0;
     bool sunDown = false;
 
-    api->getLogger()->logDebug(GwLog::DEBUG,"... calcSun: Lat %f, Lon  %f, at: %d, next SR: %d, next SS: %d", latitude, longitude, t, sunR, sunS);
+//    api->getLogger()->logDebug(GwLog::DEBUG,"... calcSun: Lat %f, Lon  %f, at: %d, next SR: %d, next SS: %d", latitude, longitude, t, sunR, sunS);
 
     if (!isnan(time) && !isnan(date) && !isnan(latitude) && !isnan(longitude) && !isnan(timezone)) {
         // Calculate local time
@@ -267,8 +267,39 @@ SensorData calcSunsetSunrise(GwApi *api, double time, double date, double latitu
     returnset.sunriseMinute = intminSR;
     returnset.sunDown = sunDown;
 
-    api->getLogger()->logDebug(GwLog::DEBUG,"... calcSun: at t: %d, hasRise: %d, next SR: %d, hasSet: %d, next SS: %d\n", t, sr.hasRise, sr.riseTime, sr.hasSet, sr.setTime);
+//    api->getLogger()->logDebug(GwLog::DEBUG,"... calcSun: at t: %d, hasRise: %d, next SR: %d, hasSet: %d, next SS: %d\n", t, sr.hasRise, sr.riseTime, sr.hasSet, sr.setTime);
     return returnset;
+}
+
+// Battery graphic with fill level
+void batteryGraphic(uint x, uint y, float percent, int pcolor, int bcolor){
+    // Show battery
+        int xb = x;     // X position
+        int yb = y;     // Y position
+        int t = 4;      // Line thickness
+        // Percent limits
+        if(percent < 0){
+            percent = 0;
+        }
+         if(percent > 99){
+            percent = 99;
+        }
+        // Battery corpus 100x80 with fill level
+        int level = int((100.0 - percent) * (80-(2*t)) / 100.0);
+        display.fillRect(xb, yb, 100, 80, pcolor);
+        if(percent < 99){
+            display.fillRect(xb+t, yb+t, 100-(2*t), level, bcolor);
+        }
+        // Plus pol 20x15
+        int xp = xb + 20;
+        int yp = yb - 15 + t;
+        display.fillRect(xp, yp, 20, 15, pcolor);
+        display.fillRect(xp+t, yp+t, 20-(2*t), 15-(2*t), bcolor);
+        // Minus pol 20x15
+        int xm = xb + 60;
+        int ym = yb -15 + t;
+        display.fillRect(xm, ym, 20, 15, pcolor);
+        display.fillRect(xm+t, ym+t, 20-(2*t), 15-(2*t), bcolor);
 }
 
 #endif
