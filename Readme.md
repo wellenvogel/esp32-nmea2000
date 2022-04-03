@@ -145,6 +145,12 @@ For details refer to the [example description](lib/exampletask/Readme.md).
 
 Changelog
 ---------
+[20220403](../../releases/tag/20220403)
+*********
+* add support for PGN 127257 pitch/roll/yaw
+* only convert RMC and GGA if valid status [#38](../../issues/38)
+* only send 129539 if GSA fix mode is 2 or 3 [#39](../../issues/39)
+
 [20220320](../../releases/tag/20220320)
 *********
 * accept lowercase characters in NMEA0183 checksum [#33](../../issues/33)
