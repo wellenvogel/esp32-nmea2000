@@ -221,6 +221,7 @@ void displayHeader(CommonData &commonData, GwApi::BoatValue *date, GwApi::BoatVa
 
 // Sunset und sunrise calculation
 SensorData calcSunsetSunrise(GwApi *api, double time, double date, double latitude, double longitude, double timezone){
+/*
     GwLog *logger=api->getLogger();
     SensorData returnset;
     SunRise sr;
@@ -267,6 +268,7 @@ SensorData calcSunsetSunrise(GwApi *api, double time, double date, double latitu
     returnset.sunriseMinute = intminSR;
     returnset.sunDown = sunDown;
     return returnset;
+*/
 }
 
 // Battery graphic with fill level
