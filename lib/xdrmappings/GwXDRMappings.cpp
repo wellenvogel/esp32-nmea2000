@@ -53,6 +53,7 @@ GwXDRType *types[] = {
     new GwXDRType(GwXDRType::FLOW, "R", "I", ps2ph, ph2ps),
     new GwXDRType(GwXDRType::GENERIC, "G", ""),
     new GwXDRType(GwXDRType::DISPLACEMENT, "A", "P"),
+    new GwXDRType(GwXDRType::DISPLACEMENTD, "A", "D",DegToRad,RadToDeg),
     new GwXDRType(GwXDRType::RPM,"T","R"),
     //important to have 2x NULL!
     NULL,
@@ -121,7 +122,7 @@ bool GwXDRMappingDef::handleToken(String tok, int index, GwXDRMappingDef *def)
     case 0:
         //category
         i = tok.toInt();
-        if (i < XDRTEMP || i > XDRENGINE)
+        if (i < XDRTEMP || i > XDRATTITUDE)
             return false;
         def->category = (GwXDRCategory)i;
         return true;

@@ -323,5 +323,14 @@
             {"l":"EngineBoostPressure","t":0},
             {"l":"EngineTiltTrim","t":10}
         ]
+    },
+    "Attitude":{
+        "d":"127257",
+        "id":11,
+        "fields":[
+            {"l":"Yaw","t":12},
+            {"l":"Pitch","t":12},
+            {"l":"Roll","t":12}
+        ]
     }
 }

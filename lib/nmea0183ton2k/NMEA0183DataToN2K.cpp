@@ -288,6 +288,11 @@ private:
                     }
                 }
                 break;
+            case XDRATTITUDE:
+                if (fillFieldList(current,fields,3)){
+                    SetN2kPGN127257(n2kMsg,current.mapping.instanceId,fields[0],fields[1],fields[2]);
+                    send(n2kMsg,msg.sourceId,buildN2KKey(n2kMsg,current.mapping));
+                }    
             default:
                 continue;
             }
@@ -976,9 +981,9 @@ private:
         converters.registerConverter(
             129283UL,
             String(F("XTE")), &NMEA0183DataToN2KFunctions::convertXTE);         
-        unsigned long *xdrpgns=new unsigned long[7]{127505UL,127508UL,130312UL,130313UL,130314UL,127489UL,127488UL};    
+        unsigned long *xdrpgns=new unsigned long[8]{127505UL,127508UL,130312UL,130313UL,130314UL,127489UL,127488UL,127257UL};    
         converters.registerConverter(
-            7,
+            8,
             xdrpgns,
             F("XDR"), &NMEA0183DataToN2KFunctions::convertXDR);
         unsigned long *aispgns=new unsigned long[7]{129810UL,129809UL,129040UL,129039UL,129802UL,129794UL,129038UL};
