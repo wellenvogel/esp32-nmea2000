@@ -237,11 +237,11 @@ SensorData calcSunsetSunrise(GwApi *api, double time, double date, double latitu
     int intminSS = 0;
     bool sunDown = false;
 
-//    api->getLogger()->logDebug(GwLog::DEBUG,"... calcSun: Lat %f, Lon  %f, at: %d, next SR: %d, next SS: %d", latitude, longitude, t, sunR, sunS);
-
     if (!isnan(time) && !isnan(date) && !isnan(latitude) && !isnan(longitude) && !isnan(timezone)) {
-        // Calculate local time
-        t = (date * secPerYear) + (time + int(timezone * secPerHour));    
+        
+        // Calculate local epoch
+        t = (date * secPerYear) + time;    
+        // api->getLogger()->logDebug(GwLog::DEBUG,"... calcSun: Lat %f, Lon  %f, at: %d ", latitude, longitude, t);
         sr.calculate(latitude, longitude, t);       // LAT, LON, EPOCH
         // Sunrise
         if (sr.hasRise) {
@@ -256,7 +256,7 @@ SensorData calcSunsetSunrise(GwApi *api, double time, double date, double latitu
             intminSS = int((sunS - inthrSS * secPerHour)/60);      
         }
         // Sun control (return value by sun on sky = false, sun down = true)
-        if ((t >= (sr.riseTime + int(timezone * secPerHour))) && (t <= (sr.setTime + int(timezone * secPerHour))))      
+        if ((t >= sr.riseTime) && (t <= sr.setTime))      
              sunDown = false; 
         else sunDown = true;
     }
@@ -266,8 +266,6 @@ SensorData calcSunsetSunrise(GwApi *api, double time, double date, double latitu
     returnset.sunriseHour = inthrSR;
     returnset.sunriseMinute = intminSR;
     returnset.sunDown = sunDown;
-
-//    api->getLogger()->logDebug(GwLog::DEBUG,"... calcSun: at t: %d, hasRise: %d, next SR: %d, hasSet: %d, next SS: %d\n", t, sr.hasRise, sr.riseTime, sr.hasSet, sr.setTime);
     return returnset;
 }
 

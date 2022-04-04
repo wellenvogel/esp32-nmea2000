@@ -169,8 +169,6 @@ public:
             sunset = String(commonData.data.sunsetHour) + ":" +  String(commonData.data.sunsetMinute + 100).substring(1);
         }
 
-        LOG_DEBUG(GwLog::LOG,"sunrise: .%s., sunset: .%s.", String(commonData.data.sunriseMinute + 100), String(commonData.data.sunsetMinute + 100));
-
         display.setTextColor(textcolor);
         display.setFont(&Ubuntu_Bold8pt7b);
         display.setCursor(335, 250);
