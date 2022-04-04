@@ -149,7 +149,7 @@ public:
         // Show values sunrise
         String sunrise = "---";
         if(valid1 == true && valid2 == true){
-            sunrise = String(commonData.data.sunriseHour) + ":" + String(commonData.data.sunriseMinute + 100).substring(1);
+            sunrise = String(commonData.sundata.sunriseHour) + ":" + String(commonData.sundata.sunriseMinute + 100).substring(1);
         }
 
         display.setTextColor(textcolor);
@@ -166,7 +166,7 @@ public:
         // Show values sunset
         String sunset = "---";
         if(valid1 == true && valid2 == true){
-            sunset = String(commonData.data.sunsetHour) + ":" +  String(commonData.data.sunsetMinute + 100).substring(1);
+            sunset = String(commonData.sundata.sunsetHour) + ":" +  String(commonData.sundata.sunsetMinute + 100).substring(1);
         }
 
         display.setTextColor(textcolor);

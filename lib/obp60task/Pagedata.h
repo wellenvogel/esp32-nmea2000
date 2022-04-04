@@ -51,10 +51,19 @@ typedef struct{
 } SensorData;
 
 typedef struct{
+  int sunsetHour = 0;
+  int sunsetMinute = 0;
+  int sunriseHour = 0;
+  int sunriseMinute = 0;
+  bool sunDown = true;
+} SunData;
+
+typedef struct{
   GwApi::Status status;
   GwLog *logger=NULL;
   GwConfigHandler *config=NULL;
   SensorData data;
+  SunData sundata;
   GwApi::BoatValue *time=NULL;
   GwApi::BoatValue *date=NULL;
 } CommonData;

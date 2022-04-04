@@ -445,10 +445,11 @@ void OBP60Task(GwApi *api){
             if(millis() > starttime5 + 1000){
                 starttime5 = millis();
                 if(time->valid == true && date->valid == true && lat->valid == true && lon->valid == true){
-                    commonData.data = calcSunsetSunrise(api, time->value , date->value, lat->value, lon->value, tz.toDouble());
+                    // Provide sundata to all pages
+                    commonData.sundata = calcSunsetSunrise(api, time->value , date->value, lat->value, lon->value, tz.toDouble());
                     // Backlight with sun control
                     if(String(backlight) == "Control by Sun"){                       
-                       setPortPin(OBP_BACKLIGHT_LED, commonData.data.sunDown);
+                       setPortPin(OBP_BACKLIGHT_LED, commonData.sundata.sunDown);
                     }
                 }
             }
