@@ -42,6 +42,14 @@ public:
     {
         GwConfigHandler *config = commonData.config;
         GwLog *logger=commonData.logger;
+
+        // Polynominal coefficients second order for battery energy level calculation
+        // index 0 = Pb, 1 = Gel, 2 = AGM, 3 = LiFePo4
+        float x0[4] = {+3082.5178, +1656.1571, +1316.8766, +14986.9336};    // Offset
+        float x1[4] = {-603.7478, -351.6503, -298.1454, -2432.1985};        // X
+        float x2[4] = {+29.0340, +17.9000, +15.8196, +98.6132};             // X²
+        int batPercentage = 0;      // Battery level
+        float batRange = 0;         // Range in hours
         
         // Get config data
         bool simulation = config->getBool(config->useSimuData);
@@ -52,6 +60,7 @@ public:
         int batCapacity = config->getInt(config->batteryCapacity);
         String batType = config->getString(config->batteryType);
         String backlightMode = config->getString(config->backlight);
+        String powerSensor = config->getString(config->usePowSensor1);
 
         double value1 = 0;  // Battery voltage
         double value2 = 0;  // Battery current
@@ -102,6 +111,29 @@ public:
                 break;
         }
         bool valid1 = true;
+
+        // Battery energy level calculation
+        if(String(batType) == "Pb"){
+            batPercentage = (value1 * value1 * x2[0]) + (value1 * x1[0]) + x0[0];
+        }
+        if(String(batType) == "Gel"){
+            batPercentage = (value1 * value1 * x2[1]) + (value1 * x1[1]) + x0[1];
+        }
+        if(String(batType) == "AGM"){
+            batPercentage = (value1 * value1 * x2[2]) + (value1 * x1[2]) + x0[2];
+        }
+        if(String(batType) == "LiFePo4"){
+            batPercentage = (value1 * value1 * x2[3]) + (value1 * x1[3]) + x0[3];
+        }
+        // Limits for battery level
+        if(batPercentage < 0) batPercentage = 0;
+        if(batPercentage > 99) batPercentage = 99;
+
+        // Battery range calculation
+        batRange = batCapacity * batPercentage / 100 / value2;
+        // Limits for battery range
+        if(batRange < 0) batRange = 0;
+        if(batRange > 99) batRange = 99;
 
         // Optical warning by limit violation
         if(String(flashLED) == "Limit Violation"){
@@ -189,13 +221,21 @@ public:
         display.setTextColor(textcolor);
         display.setFont(&DSEG7Classic_BoldItalic20pt7b);
         display.setCursor(10, 200);
-        display.print(batCapacity);
+        if(batCapacity <= 999) display.print(batCapacity, 0);
+        if(batCapacity > 999) display.print(float(batCapacity/1000.0), 1);
         display.setFont(&Ubuntu_Bold16pt7b);
-        display.print("Ah");
+        if(batCapacity <= 999) display.print("Ah");
+        if(batCapacity > 999) display.print("kAh");
+
+        // Show info
+        display.setFont(&Ubuntu_Bold8pt7b);
+        display.setCursor(10, 235);
+        display.print("Installed");
+        display.setCursor(10, 255);
+        display.print("Battery Type");
 
         // Show battery with fill level
-        static int level = 0;
-        batteryGraphic(150, 45, level, pixelcolor, bgcolor);
+        batteryGraphic(150, 45, batPercentage, pixelcolor, bgcolor);
 
         // Show average settings
         display.setTextColor(textcolor);
@@ -223,17 +263,19 @@ public:
         display.setTextColor(textcolor);
         display.setFont(&DSEG7Classic_BoldItalic20pt7b);
         display.setCursor(150, 200);
-        display.print(level);
+        display.print(batPercentage);
         display.setFont(&Ubuntu_Bold16pt7b);
         display.print("%");
-        level += 1;
-        level = level % 100;
 
         // Show time to full discharge
         display.setTextColor(textcolor);
         display.setFont(&DSEG7Classic_BoldItalic20pt7b);
         display.setCursor(150, 260);
-        display.print(8.3, 1);
+        if(powerSensor == "INA219" || powerSensor == "INA226"){
+            if(batRange < 9.9) display.print(batRange, 1);
+            else display.print(batRange, 0);
+        }
+        else  display.print("--");
         display.setFont(&Ubuntu_Bold16pt7b);
         display.print("h");
 
@@ -255,15 +297,9 @@ public:
             // Check for valid real data, display also if hold values activated
             if(valid1 == true || holdvalues == true){
                 // Resolution switching
-                if(value1 < 10){
-                    display.print(value1,2);
-                }
-                if(value1 >= 10 && value1 < 100){
-                    display.print(value1,1);
-                }
-                if(value1 >= 100){
-                    display.print(value1,0);
-                }
+                if(value1 <= 9.9) display.print(value1, 2);
+                if(value1 > 9.9 && value1 <= 99.9)display.print(value1, 1);
+                if(value1 > 99.9) display.print(value1, 0);
             }
             else{
             display.print("---");                       // Missing bus data
@@ -276,7 +312,12 @@ public:
         display.setTextColor(textcolor);
         display.setFont(&DSEG7Classic_BoldItalic20pt7b);
         display.setCursor(260, 200);
-        display.print(value2, 1);
+        if(powerSensor == "INA219" || powerSensor == "INA226"){
+            if(value2 <= 9.9) display.print(value2, 2);
+            if(value2 > 9.9 && value2 <= 99.9)display.print(value2, 1);
+            if(value2 > 99.9) display.print(value2, 0);
+        }
+        else  display.print("---");
         display.setFont(&Ubuntu_Bold16pt7b);
         display.print("A");
 
@@ -284,7 +325,12 @@ public:
         display.setTextColor(textcolor);
         display.setFont(&DSEG7Classic_BoldItalic20pt7b);
         display.setCursor(260, 260);
-        display.print(value3, 1);
+         if(powerSensor == "INA219" || powerSensor == "INA226"){
+            if(value3 <= 9.9) display.print(value3, 2);
+            if(value3 > 9.9 && value3 <= 99.9)display.print(value3, 1);
+            if(value3 > 99.9) display.print(value3, 0);
+        }
+        else  display.print("---");
         display.setFont(&Ubuntu_Bold16pt7b);
         display.print("W");
 
