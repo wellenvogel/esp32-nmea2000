@@ -231,11 +231,6 @@ SunData calcSunsetSunrise(GwApi *api, double time, double date, double latitude,
     time_t t = 0;
     time_t sunR = 0;
     time_t sunS = 0;
-    int inthrSR = 0;
-    int intminSR = 0;
-    int inthrSS = 0;
-    int intminSS = 0;
-    bool sunDown = false;
 
     if (!isnan(time) && !isnan(date) && !isnan(latitude) && !isnan(longitude) && !isnan(timezone)) {
         
@@ -246,26 +241,21 @@ SunData calcSunsetSunrise(GwApi *api, double time, double date, double latitude,
         // Sunrise
         if (sr.hasRise) {
             sunR = (sr.riseTime + int(timezone * secPerHour) + 30) % secPerYear; // add 30 seconds: round to minutes
-            inthrSR = int (sunR / secPerHour);
-            intminSR = int((sunR - inthrSR * secPerHour)/60);
+            returnset.sunriseHour = int (sunR / secPerHour);
+            returnset.sunriseMinute = int((sunR - returnset.sunriseHour * secPerHour)/60);
         }
         // Sunset
         if (sr.hasSet)  {
             sunS = (sr.setTime  + int(timezone * secPerHour) + 30) % secPerYear; // add 30 seconds: round to minutes
-            inthrSS = int (sunS / secPerHour);
-            intminSS = int((sunS - inthrSS * secPerHour)/60);      
+            returnset.sunsetHour = int (sunS / secPerHour);
+            returnset.sunsetMinute = int((sunS - returnset.sunsetHour * secPerHour)/60);      
         }
         // Sun control (return value by sun on sky = false, sun down = true)
         if ((t >= sr.riseTime) && (t <= sr.setTime))      
-             sunDown = false; 
-        else sunDown = true;
+             returnset.sunDown = false; 
+        else returnset.sunDown = true;
     }
     // Return values
-    returnset.sunsetHour = inthrSS;
-    returnset.sunsetMinute = intminSS;
-    returnset.sunriseHour = inthrSR;
-    returnset.sunriseMinute = intminSR;
-    returnset.sunDown = sunDown;
     return returnset;
 }
 
