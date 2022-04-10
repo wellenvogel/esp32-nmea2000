@@ -271,13 +271,22 @@ public:
         display.setTextColor(textcolor);
         display.setFont(&DSEG7Classic_BoldItalic20pt7b);
         display.setCursor(150, 260);
-        if(powerSensor == "INA219" || powerSensor == "INA226"){
+        if((powerSensor == "INA219" || powerSensor == "INA226") && simulation == false){
             if(batRange < 9.9) display.print(batRange, 1);
             else display.print(batRange, 0);
         }
         else  display.print("--");
         display.setFont(&Ubuntu_Bold16pt7b);
         display.print("h");
+
+        // Show sensor type info
+        display.setFont(&Ubuntu_Bold8pt7b);
+        display.setCursor(270, 60);
+        if(powerSensor == "off") display.print("Internal");
+        if(powerSensor == "INA219") display.print("INA219");
+        if(powerSensor == "INA226") display.print("INA226");
+        display.setCursor(270, 80);
+        display.print("Sensor Modul");
 
         // Reading bus data or using simulation data
         display.setTextColor(textcolor);
@@ -312,7 +321,7 @@ public:
         display.setTextColor(textcolor);
         display.setFont(&DSEG7Classic_BoldItalic20pt7b);
         display.setCursor(260, 200);
-        if(powerSensor == "INA219" || powerSensor == "INA226"){
+        if((powerSensor == "INA219" || powerSensor == "INA226") && simulation == false){
             if(value2 <= 9.9) display.print(value2, 2);
             if(value2 > 9.9 && value2 <= 99.9)display.print(value2, 1);
             if(value2 > 99.9) display.print(value2, 0);
@@ -325,7 +334,7 @@ public:
         display.setTextColor(textcolor);
         display.setFont(&DSEG7Classic_BoldItalic20pt7b);
         display.setCursor(260, 260);
-         if(powerSensor == "INA219" || powerSensor == "INA226"){
+        if((powerSensor == "INA219" || powerSensor == "INA226") && simulation == false){
             if(value3 <= 9.9) display.print(value3, 2);
             if(value3 > 9.9 && value3 <= 99.9)display.print(value3, 1);
             if(value3 > 99.9) display.print(value3, 0);
