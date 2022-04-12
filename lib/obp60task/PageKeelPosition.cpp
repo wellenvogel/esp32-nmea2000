@@ -212,15 +212,15 @@ public:
 
         if(rotsensor == "AS5600" && rotfunction == "Keel" && (valid1 == true || holdvalues == true || simulation == true)){
             // Print Unit of keel position
-        display.setFont(&Ubuntu_Bold12pt7b);
-        display.setCursor(175, 110);
-        display.print(unit1);                           // Unit
+            display.setFont(&Ubuntu_Bold12pt7b);
+            display.setCursor(175, 110);
+            display.print(unit1);                       // Unit
         }
         else{
             // Print Unit of keel position
-        display.setFont(&Ubuntu_Bold8pt7b);
-        display.setCursor(145, 110);
-        display.print("No sensor data");                // Info missing sensor
+            display.setFont(&Ubuntu_Bold8pt7b);
+            display.setCursor(145, 110);
+            display.print("No sensor data");            // Info missing sensor
         }
 
 //*******************************************************************************************

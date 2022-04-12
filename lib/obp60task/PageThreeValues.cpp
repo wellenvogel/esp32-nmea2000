@@ -42,7 +42,7 @@ class PageThreeValues : public Page
         
         // Get boat values #1
         GwApi::BoatValue *bvalue1 = pageData.values[0]; // First element in list (only one value by PageOneValue)
-        String name1 = bvalue1->getName().c_str();      // Value name
+        String name1 = xdrDelete(bvalue1->getName());   // Value name
         name1 = name1.substring(0, 6);                  // String length limit for value name
         double value1 = bvalue1->value;                 // Value as double in SI unit
         bool valid1 = bvalue1->valid;                   // Valid information 
@@ -51,7 +51,7 @@ class PageThreeValues : public Page
 
         // Get boat values #2
         GwApi::BoatValue *bvalue2 = pageData.values[1]; // Second element in list (only one value by PageOneValue)
-        String name2 = bvalue2->getName().c_str();      // Value name
+        String name2 = xdrDelete(bvalue2->getName());   // Value name
         name2 = name2.substring(0, 6);                  // String length limit for value name
         double value2 = bvalue2->value;                 // Value as double in SI unit
         bool valid2 = bvalue2->valid;                   // Valid information 
@@ -60,7 +60,7 @@ class PageThreeValues : public Page
 
         // Get boat values #3
         GwApi::BoatValue *bvalue3 = pageData.values[2]; // Second element in list (only one value by PageOneValue)
-        String name3 = bvalue3->getName().c_str();      // Value name
+        String name3 = xdrDelete(bvalue3->getName());      // Value name
         name3 = name3.substring(0, 6);                  // String length limit for value name
         double value3 = bvalue3->value;                 // Value as double in SI unit
         bool valid3 = bvalue3->valid;                   // Valid information 

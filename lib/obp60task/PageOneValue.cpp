@@ -37,7 +37,7 @@ class PageOneValue : public Page{
         
         // Get boat values
         GwApi::BoatValue *bvalue1 = pageData.values[0]; // First element in list (only one value by PageOneValue)
-        String name1 = bvalue1->getName().c_str();      // Value name
+        String name1 = xdrDelete(bvalue1->getName());   // Value name
         name1 = name1.substring(0, 6);                  // String length limit for value name
         double value1 = bvalue1->value;                 // Value as double in SI unit
         bool valid1 = bvalue1->valid;                   // Valid information 

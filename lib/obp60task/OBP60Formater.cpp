@@ -14,7 +14,6 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
     static int dayoffset = 0;
 
     // Load configuration values
-
     String stimeZone = commondata.config->getString(commondata.config->timeZone);               // [UTC -14.00...+12.00]
     double timeZone = stimeZone.toDouble();
     String lengthFormat = commondata.config->getString(commondata.config->lengthFormat);        // [m|ft]
@@ -383,6 +382,25 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
             snprintf(buffer,bsize,"%3.0f",distance);
         }
     }
+    //########################################################
+    else if (value->getFormat() == "formatXdrD"){
+        double angle = 0;
+        if(usesimudata == false) {
+            angle = value->value;
+            angle = angle * 57.2958;      // Unit conversion form rad to deg
+        }
+        else{
+            angle = 20 + random(-5, 5);
+        }
+        if(angle > -10 && angle < 10){
+            snprintf(buffer,bsize,"%3.1f",angle);
+        }
+        else{
+            snprintf(buffer,bsize,"%3.0f",angle);
+        }
+        result.unit = "Deg";
+    }
+    //########################################################
     else{
         if(value->value < 10){
             snprintf(buffer,bsize,"%3.2f",value->value);

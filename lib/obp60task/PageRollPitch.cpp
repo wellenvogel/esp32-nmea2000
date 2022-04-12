@@ -42,20 +42,16 @@ public:
         bool holdvalues = config->getBool(config->holdvalues);
         String flashLED = config->getString(config->flashLED);
         String backlightMode = config->getString(config->backlight);
-        String stimezone = config->getString(config->timeZone);
-        double timezone = stimezone.toDouble();
 
-        // Get boat values for GPS time
+        // Get boat values for roll
         GwApi::BoatValue *bvalue1 = pageData.values[0]; // First element in list (only one value by PageOneValue)
-        String name1 = bvalue1->getName().c_str();      // Value name
-        name1 = name1.substring(0, 6);                  // String length limit for value name
-        if(simulation == false){
-            value1 = bvalue1->value;                    // Value as double in SI unit
+        String name1 = xdrDelete(bvalue1->getName());   // Value name
+        name1 = name1.substring(0, 6);                  // String length limit for value name                                           // Other simulation data see OBP60Formater.cpp
+        bool valid1 = bvalue1->valid;                   // Valid information
+        if(valid1 == false){
+            value1 = 0;
         }
-        else{
-            value1 = 38160;                             // Simulation data for time value 11:36 in seconds
-        }                                               // Other simulation data see OBP60Formater.cpp
-        bool valid1 = bvalue1->valid;                   // Valid information 
+        value1 = bvalue1->value;                        // Raw value for roll in rad
         String svalue1 = formatValue(bvalue1, commonData).svalue;    // Formatted value as string including unit conversion and switching decimal places
         String unit1 = formatValue(bvalue1, commonData).unit;        // Unit of value
         if(valid1 == true){
@@ -63,12 +59,15 @@ public:
             unit1old = unit1;                           // Save old unit
         }
 
-        // Get boat values for GPS date
+        // Get boat values for pitch
         GwApi::BoatValue *bvalue2 = pageData.values[1]; // First element in list (only one value by PageOneValue)
-        String name2 = bvalue2->getName().c_str();      // Value name
+        String name2 = xdrDelete(bvalue2->getName());   // Value name
         name2 = name2.substring(0, 6);                  // String length limit for value name
-        value2 = bvalue2->value;                        // Value as double in SI unit
-        bool valid2 = bvalue2->valid;                   // Valid information 
+        bool valid2 = bvalue2->valid;                   // Valid information
+        value2 = bvalue2->value;                        // Raw value for pitch
+        if(valid1 == false){
+            value1 = 0;
+        }
         String svalue2 = formatValue(bvalue2, commonData).svalue;    // Formatted value as string including unit conversion and switching decimal places
         String unit2 = formatValue(bvalue2, commonData).unit;        // Unit of value
         if(valid2 == true){
@@ -108,45 +107,42 @@ public:
         // Horizintal separator left
         display.fillRect(0, 149, 60, 3, pixelcolor);
 
-        // Show values GPS time
+        // Show roll value
         display.setTextColor(textcolor);
-        if(holdvalues == false){
-            display.setFont(&Ubuntu_Bold8pt7b);
-            display.setCursor(10, 250);
-            display.print(svalue1);                     // Value
-            display.setFont(&Ubuntu_Bold12pt7b);
-            display.setCursor(10, 220);
-            display.print("Roll");                       // Name
-        }
-        else{
-            display.setFont(&Ubuntu_Bold8pt7b);
-            display.setCursor(10, 250);
-            display.print(svalue1old);                     // Value
-            display.setFont(&Ubuntu_Bold12pt7b);
-            display.setCursor(10, 220);
-            display.print("ROLL");                       // Name
-        }
+        display.setFont(&DSEG7Classic_BoldItalic20pt7b);
+        display.setCursor(10, 270);
+        if(holdvalues == false) display.print(svalue1); // Value
+        else display.print(svalue1old);
+        display.setFont(&Ubuntu_Bold12pt7b);
+        display.setCursor(10, 220);
+        display.print(name1);                           // Name
+        display.setFont(&Ubuntu_Bold8pt7b);
+        display.setCursor(10, 190);
+        display.print(" ");
+        if(holdvalues == false) display.print(unit1);   // Unit
+        else display.print(unit1old);
 
         // Horizintal separator right
         display.fillRect(340, 149, 80, 3, pixelcolor);
 
-        // Show values sunset
-        String sunset = "---";
-        if(valid1 == true && valid2 == true){
-            sunset = String(commonData.sundata.sunsetHour) + ":" +  String(commonData.sundata.sunsetMinute + 100).substring(1);
-        }
-
+        // Show pitch value
         display.setTextColor(textcolor);
-        display.setFont(&Ubuntu_Bold8pt7b);
-        display.setCursor(335, 250);
-        display.print(sunset);                         // Value
+        display.setFont(&DSEG7Classic_BoldItalic20pt7b);
+        display.setCursor(295, 270);
+        if(holdvalues == false) display.print(svalue2); // Value
+        else display.print(svalue2old);
         display.setFont(&Ubuntu_Bold12pt7b);
         display.setCursor(335, 220);
-        display.print("Pitch");                        // Name
+        display.print(name2);                           // Name
+        display.setFont(&Ubuntu_Bold8pt7b);
+        display.setCursor(335, 190);
+        display.print(" ");
+        if(holdvalues == false) display.print(unit1);   // Unit
+        else display.print(unit1old);
 
 //*******************************************************************************************
         
-        // Draw clock
+        // Draw instrument
         int rInstrument = 100;     // Radius of instrument
         float pi = 3.141592;
 
@@ -207,22 +203,56 @@ public:
             }
         }
 
-        // RollPitch values
-        double hour = 0;
-        double minute = 0;
-        value1 = value1 + int(timezone*3600);
-        if (value1 > 86400) {value1 = value1 - 86400;}
-        if (value1 < 0) {value1 = value1 + 86400;}
-        hour = (value1 / 3600.0);
-        if(hour > 12) hour = hour - 12.0;
-        minute = (hour - int(hour)) * 3600.0 / 60.0;
-        LOG_DEBUG(GwLog::DEBUG,"... PageRollPitch, value1: %f hour: %f minute:%f", value1, hour, minute);
+        // Draw keel position pointer
+        float startwidth = 8;       // Start width of pointer
+
+        if(valid1 == true || holdvalues == true || simulation == true){
+            float sinx=sin((2 * pi) - (value1 + pi));
+            float cosx=cos((2 * pi) - (value1 + pi));
+            // Normal pointer
+            // Pointer as triangle with center base 2*width
+            float xx1 = -startwidth;
+            float xx2 = startwidth;
+            float yy1 = -startwidth;
+            float yy2 = -(rInstrument * 0.7); 
+            display.fillTriangle(200+(int)(cosx*xx1-sinx*yy1),150+(int)(sinx*xx1+cosx*yy1),
+                200+(int)(cosx*xx2-sinx*yy1),150+(int)(sinx*xx2+cosx*yy1),
+                200+(int)(cosx*0-sinx*yy2),150+(int)(sinx*0+cosx*yy2),pixelcolor);   
+            // Inverted pointer
+            // Pointer as triangle with center base 2*width
+            float endwidth = 2;         // End width of pointer
+            float ix1 = endwidth;
+            float ix2 = -endwidth;
+            float iy1 = -(rInstrument * 0.7);
+            float iy2 = -endwidth;
+            display.fillTriangle(200+(int)(cosx*ix1-sinx*iy1),150+(int)(sinx*ix1+cosx*iy1),
+                200+(int)(cosx*ix2-sinx*iy1),150+(int)(sinx*ix2+cosx*iy1),
+                200+(int)(cosx*0-sinx*iy2),150+(int)(sinx*0+cosx*iy2),pixelcolor);
+
+            // Draw counterweight
+            display.fillCircle(200+(int)(cosx*0-sinx*yy2),150+(int)(sinx*0+cosx*yy2), 5, pixelcolor);
+        }
+
+        // Center circle
+        display.fillCircle(200, 150, startwidth + 22, bgcolor);
+        display.fillCircle(200, 150, startwidth + 20, pixelcolor);      // Boat circle
+        int x0 = 200 + 10*cos((2 * pi) - value1);
+        int y0 = 150 + 10*sin((2 * pi) - value1);
+        int x1 = x0 + 50*cos((2 * pi) - value1);
+        int y1 = y0 + 50*sin((2 * pi) - value1);
+        int x2 = x0 + 50*cos((2 * pi) - value1 - pi/2);
+        int y2 = y0 + 50*sin((2 * pi) - value1 - pi/2);
+        display.fillTriangle(x0, y0, x1, y1, x2, y2, bgcolor);          // Clear half top side of circle (right triangle)
+        x1 = x0 + 50*cos((2 * pi) - value1 + pi);
+        y1 = y0 + 50*sin((2 * pi) - value1 + pi);
+        display.fillTriangle(x0, y0, x1, y1, x2, y2, bgcolor);          // Clear half top side of circle (left triangle)
+        display.fillRect(150, 160, 100, 4, pixelcolor);                 // Water line
 
         // Draw roll pointer
-        int startwidth = 4;       // Start width of pointer
+        startwidth = 4;     // Start width of pointer
         if(valid1 == true || holdvalues == true || simulation == true){
-            float sinx=sin(minute * 6.0 * pi / 180);     // Minute
-            float cosx=cos(minute * 6.0 * pi / 180);
+            float sinx=sin((2 * pi) - value1);     // Roll
+            float cosx=cos((2 * pi) - value1);
             // Normal pointer
             // Pointer as triangle with center base 2*width
             float xx1 = -startwidth;
@@ -243,10 +273,12 @@ public:
                 200+(int)(cosx*ix2-sinx*iy1),150+(int)(sinx*ix2+cosx*iy1),
                 200+(int)(cosx*0-sinx*iy2),150+(int)(sinx*0+cosx*iy2),pixelcolor);
         }
-
-        // Center circle
-        display.fillCircle(200, 150, startwidth + 6, bgcolor);
-        display.fillCircle(200, 150, startwidth + 4, pixelcolor);
+        else{
+            // Print sensor info
+            display.setFont(&Ubuntu_Bold8pt7b);
+            display.setCursor(145, 200);
+            display.print("No sensor data");            // Info missing sensor
+        }
 
 //*******************************************************************************************
         // Key Layout
@@ -285,7 +317,7 @@ PageDescription registerPageRollPitch(
     "RollPitch",        // Page name
     createPage,         // Action
     0,                  // Number of bus values depends on selection in Web configuration
-    {"GPST", "GPSD"},   // Bus values we need in the page
+    {"xdrRoll", "xdrPitch"},// Bus values we need in the page
     true                // Show display header on/off
 );
 

@@ -112,6 +112,14 @@ void setBuzzerPower(uint power){
     buzzerpower = power;
 }
 
+// Delete xdr prefix from string
+String xdrDelete(String input){
+    if(input.substring(0,3) == "xdr"){
+        input = input.substring(3, input.length());
+    }
+    return input;
+}
+
 // Show a triangle for trend direction high (x, y is the left edge)
 void displayTrendHigh(int16_t x, int16_t y, uint16_t size, uint16_t color){
     display.fillTriangle(x, y, x+size*2, y, x+size, y-size*2, color);

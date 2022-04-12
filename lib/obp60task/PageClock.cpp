@@ -107,44 +107,26 @@ public:
 
         // Show values GPS date
         display.setTextColor(textcolor);
-        if(holdvalues == false){
-            display.setFont(&Ubuntu_Bold8pt7b);
-            display.setCursor(10, 65);
-            display.print(svalue2);                     // Value
-            display.setFont(&Ubuntu_Bold12pt7b);
-            display.setCursor(10, 95);
-            display.print("Date");                      // Name
-        }
-        else{
-            display.setFont(&Ubuntu_Bold8pt7b);
-            display.setCursor(10, 65);
-            display.print(svalue2old);                     // Value
-            display.setFont(&Ubuntu_Bold12pt7b);
-            display.setCursor(10, 95);
-            display.print("Date");                       // Name
-        }
+        display.setFont(&Ubuntu_Bold8pt7b);
+        display.setCursor(10, 65);
+        if(holdvalues == false) display.print(svalue2); // Value
+        else display.print(svalue2old);
+        display.setFont(&Ubuntu_Bold12pt7b);
+        display.setCursor(10, 95);
+        display.print("Date");                          // Name
 
         // Horizintal separator left
         display.fillRect(0, 149, 60, 3, pixelcolor);
 
         // Show values GPS time
         display.setTextColor(textcolor);
-        if(holdvalues == false){
-            display.setFont(&Ubuntu_Bold8pt7b);
-            display.setCursor(10, 250);
-            display.print(svalue1);                     // Value
-            display.setFont(&Ubuntu_Bold12pt7b);
-            display.setCursor(10, 220);
-            display.print("Time");                       // Name
-        }
-        else{
-            display.setFont(&Ubuntu_Bold8pt7b);
-            display.setCursor(10, 250);
-            display.print(svalue1old);                     // Value
-            display.setFont(&Ubuntu_Bold12pt7b);
-            display.setCursor(10, 220);
-            display.print("Time");                       // Name
-        }
+        display.setFont(&Ubuntu_Bold8pt7b);
+        display.setCursor(10, 250);
+        if(holdvalues == false) display.print(svalue1); // Value
+        else display.print(svalue1old);
+        display.setFont(&Ubuntu_Bold12pt7b);
+        display.setCursor(10, 220);
+        display.print("Time");                          // Name
 
         // Show values sunrise
         String sunrise = "---";
