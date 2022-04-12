@@ -447,6 +447,48 @@
         }
     },
     {
+        "name": "rollLimit",
+        "label": "Roll Limit",
+        "type": "number",
+        "default": "40",
+        "check": "checkMinMax",
+        "min": -90,
+        "max": 90,
+        "description": "Limit violation for roll angle [-90°...+90°]",
+        "category": "OBP60 Hardware",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "rollOffset",
+        "label": "Roll Offset",
+        "type": "number",
+        "default": "0",
+        "check": "checkMinMax",
+        "min": -45,
+        "max": 45,
+        "description": "Roll offset angle [-45°...+45°]",
+        "category": "OBP60 Hardware",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "pitchOffset",
+        "label": "Pitch Offset",
+        "type": "number",
+        "default": "0",
+        "check": "checkMinMax",
+        "min": -45,
+        "max": 45,
+        "description": "Pitch offset angle [-45°...+45°]",
+        "category": "OBP60 Hardware",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
         "name": "useTempSensor",
         "label": "Temp. Sensor",
         "type": "boolean",

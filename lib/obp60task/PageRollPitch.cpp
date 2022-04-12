@@ -42,43 +42,58 @@ public:
         bool holdvalues = config->getBool(config->holdvalues);
         String flashLED = config->getString(config->flashLED);
         String backlightMode = config->getString(config->backlight);
+        int rolllimit = config->getInt(config->rollLimit);
+        String roffset = config->getString(config->rollOffset);
+        double rolloffset = roffset.toFloat()/360*(2*PI);
+        String poffset = config->getString(config->pitchOffset);
+        double pitchoffset = poffset.toFloat()/360*(2*PI);
 
         // Get boat values for roll
-        GwApi::BoatValue *bvalue1 = pageData.values[0]; // First element in list (only one value by PageOneValue)
+        GwApi::BoatValue *bvalue1 = pageData.values[0]; // First element in list (xdrRoll)
         String name1 = xdrDelete(bvalue1->getName());   // Value name
         name1 = name1.substring(0, 6);                  // String length limit for value name                                           // Other simulation data see OBP60Formater.cpp
         bool valid1 = bvalue1->valid;                   // Valid information
-        if(valid1 == false){
+        if(valid1 == true){
+            value1 = bvalue1->value + rolloffset;       // Raw value for pitch
+        }
+        else{
             value1 = 0;
         }
-        value1 = bvalue1->value;                        // Raw value for roll in rad
-        String svalue1 = formatValue(bvalue1, commonData).svalue;    // Formatted value as string including unit conversion and switching decimal places
-        String unit1 = formatValue(bvalue1, commonData).unit;        // Unit of value
+        String svalue1 = formatValue(bvalue1, commonData).svalue;   // Formatted value as string including unit conversion and switching decimal places
+        String unit1 = formatValue(bvalue1, commonData).unit;       // Unit of value
         if(valid1 == true){
             svalue1old = svalue1;   	                // Save old value
             unit1old = unit1;                           // Save old unit
         }
 
         // Get boat values for pitch
-        GwApi::BoatValue *bvalue2 = pageData.values[1]; // First element in list (only one value by PageOneValue)
+        GwApi::BoatValue *bvalue2 = pageData.values[1]; // Second element in list (xdrPitch)
         String name2 = xdrDelete(bvalue2->getName());   // Value name
         name2 = name2.substring(0, 6);                  // String length limit for value name
         bool valid2 = bvalue2->valid;                   // Valid information
-        value2 = bvalue2->value;                        // Raw value for pitch
-        if(valid1 == false){
-            value1 = 0;
+        if(valid2 == true){
+            value2 = bvalue2->value + pitchoffset;      // Raw value for pitch
         }
-        String svalue2 = formatValue(bvalue2, commonData).svalue;    // Formatted value as string including unit conversion and switching decimal places
-        String unit2 = formatValue(bvalue2, commonData).unit;        // Unit of value
+        else{
+            value2 = 0;
+        }
+        String svalue2 = formatValue(bvalue2, commonData).svalue;   // Formatted value as string including unit conversion and switching decimal places
+        String unit2 = formatValue(bvalue2, commonData).unit;       // Unit of value
         if(valid2 == true){
             svalue2old = svalue2;   	                // Save old value
             unit2old = unit2;                           // Save old unit
         }
 
-        // Optical warning by limit violation (unused)
+        // Optical warning by limit violation
         if(String(flashLED) == "Limit Violation"){
-            setBlinkingLED(false);
-            setPortPin(OBP_FLASH_LED, false); 
+            // Limits for roll
+            if(value1*360/(2*PI) > -1*rolllimit && value1*360/(2*PI) < rolllimit){
+                setBlinkingLED(false);
+                setPortPin(OBP_FLASH_LED, false);
+            }
+            else{
+                setBlinkingLED(true);
+            } 
         }
 
         // Logging boat values
@@ -203,12 +218,14 @@ public:
             }
         }
 
-        // Draw keel position pointer
-        float startwidth = 8;       // Start width of pointer
+        // Draw mast position pointer
+        float startwidth = 8;           // Start width of pointer
+
+        value1 = (2 * pi ) - value1;    // Mirror coordiante system for pointer, keel and boat
 
         if(valid1 == true || holdvalues == true || simulation == true){
-            float sinx=sin((2 * pi) - (value1 + pi));
-            float cosx=cos((2 * pi) - (value1 + pi));
+            float sinx=sin(value1 + pi);
+            float cosx=cos(value1 + pi);
             // Normal pointer
             // Pointer as triangle with center base 2*width
             float xx1 = -startwidth;
@@ -236,23 +253,23 @@ public:
         // Center circle
         display.fillCircle(200, 150, startwidth + 22, bgcolor);
         display.fillCircle(200, 150, startwidth + 20, pixelcolor);      // Boat circle
-        int x0 = 200 + 10*cos((2 * pi) - value1);
-        int y0 = 150 + 10*sin((2 * pi) - value1);
-        int x1 = x0 + 50*cos((2 * pi) - value1);
-        int y1 = y0 + 50*sin((2 * pi) - value1);
-        int x2 = x0 + 50*cos((2 * pi) - value1 - pi/2);
-        int y2 = y0 + 50*sin((2 * pi) - value1 - pi/2);
-        display.fillTriangle(x0, y0, x1, y1, x2, y2, bgcolor);          // Clear half top side of circle (right triangle)
-        x1 = x0 + 50*cos((2 * pi) - value1 + pi);
-        y1 = y0 + 50*sin((2 * pi) - value1 + pi);
-        display.fillTriangle(x0, y0, x1, y1, x2, y2, bgcolor);          // Clear half top side of circle (left triangle)
+        int x0 = 200;
+        int y0 = 150;
+        int x1 = x0 + 50*cos(value1);
+        int y1 = y0 + 50*sin(value1);
+        int x2 = x0 + 50*cos(value1 - pi/2);
+        int y2 = y0 + 50*sin(value1 - pi/2);
+        display.fillTriangle(x0, y0, x1, y1, x2, y2, bgcolor);          // Clear half top side of boat circle (right triangle)
+        x1 = x0 + 50*cos(value1 + pi);
+        y1 = y0 + 50*sin(value1 + pi);
+        display.fillTriangle(x0, y0, x1, y1, x2, y2, bgcolor);          // Clear half top side of boat circle (left triangle)
         display.fillRect(150, 160, 100, 4, pixelcolor);                 // Water line
 
         // Draw roll pointer
         startwidth = 4;     // Start width of pointer
         if(valid1 == true || holdvalues == true || simulation == true){
-            float sinx=sin((2 * pi) - value1);     // Roll
-            float cosx=cos((2 * pi) - value1);
+            float sinx=sin(value1);     // Roll
+            float cosx=cos(value1);
             // Normal pointer
             // Pointer as triangle with center base 2*width
             float xx1 = -startwidth;
