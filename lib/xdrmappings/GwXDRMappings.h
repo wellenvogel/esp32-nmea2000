@@ -183,7 +183,7 @@ class GwXDRFoundMapping : public GwBoatItemNameProvider{
             return String("xdr")+getTransducerName();
         };
         virtual String getBoatItemFormat(){
-            return "formatXdr"+type->xdrunit; //TODO: use the type def for the correct format
+            return "formatXdr:"+type->xdrtype+":"+type->xdrunit; 
         };
         virtual ~GwXDRFoundMapping(){}
 };
