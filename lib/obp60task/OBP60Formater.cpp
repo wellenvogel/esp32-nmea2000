@@ -34,6 +34,9 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
     static const int bsize = 30;
     char buffer[bsize+1];
     buffer[0]=0;
+
+    //########################################################
+    // Formats for several boat data
     //########################################################
     if (value->getFormat() == "formatDate"){
         
@@ -383,7 +386,98 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
         }
     }
     //########################################################
-    else if (value->getFormat() == "formatXdrD"){
+    // Special XDR formats
+    // Refer XDR formats in GwXDRMappings.cpp line 40
+    //########################################################
+    else if (value->getFormat() == "formatXdr:P:P"){
+        double pressure = 0;
+        if(usesimudata == false) {
+            pressure = value->value;
+            pressure = pressure / 1000.0;      // Unit conversion form Pa to kPa
+        }
+        else{
+            pressure = 96 + float(random(0, 20)) / 10.0;
+        }
+        if(pressure <= 99.9){
+            snprintf(buffer,bsize,"%3.1f",pressure);
+        }
+        else{
+            snprintf(buffer,bsize,"%3.0f",pressure);
+        }
+        result.unit = "kPa";
+    }
+    //########################################################
+    else if (value->getFormat() == "formatXdr:P:B"){
+        double pressure = 0;
+        if(usesimudata == false) {
+            pressure = value->value;
+            pressure = pressure / 100.0;      // Unit conversion form Pa to mBar
+        }
+        else{
+            pressure = 968 + float(random(0, 10));
+        }
+        snprintf(buffer,bsize,"%4.0f",pressure);
+        result.unit = "mBar";
+    }
+    //########################################################
+    else if (value->getFormat() == "formatXdr:U:V"){
+        double voltage = 0;
+        if(usesimudata == false) {
+            voltage = value->value;
+        }
+        else{
+            voltage = 12 + float(random(0, 30)) / 10.0;
+        }
+        if(voltage < 10){
+            snprintf(buffer,bsize,"%3.2f",voltage);
+        }
+        else{
+            snprintf(buffer,bsize,"%3.1f",voltage);
+        }
+        result.unit = "V";
+    }
+    //########################################################
+    else if (value->getFormat() == "formatXdr:I:A"){
+        double current = 0;
+        if(usesimudata == false) {
+            current = value->value;
+        }
+        else{
+            current = 8.2 + float(random(0, 50)) / 10.0;
+        }
+        if(current < 10){
+            snprintf(buffer,bsize,"%3.2f",current);
+        }
+        if(current >= 10 && current < 100){
+            snprintf(buffer,bsize,"%3.1f",current);
+        }
+        if(current >= 100){
+            snprintf(buffer,bsize,"%3.0f",current);
+        }
+        result.unit = "A";
+    }
+    //########################################################
+    else if (value->getFormat() == "formatXdr:C:K"){
+        double temperature = 0;
+        if(usesimudata == false) {
+            temperature = value->value;
+        }
+        else{
+            temperature = 21.8 + float(random(0, 50)) / 10.0;
+        }
+        if(temperature < 10){
+            snprintf(buffer,bsize,"%3.2f",temperature);
+        }
+        if(temperature >= 10 && temperature < 100){
+            snprintf(buffer,bsize,"%3.1f",temperature);
+        }
+        if(temperature >= 100){
+            snprintf(buffer,bsize,"%3.0f",temperature);
+        }
+        result.unit = "K";
+    }
+    //########################################################
+    else if (value->getFormat() == "formatXdr:A:D"){
         double angle = 0;
         if(usesimudata == false) {
             angle = value->value;
@@ -400,6 +494,8 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
         }
         result.unit = "Deg";
     }
+    //########################################################
+    // Default format
     //########################################################
     else{
         if(value->value < 10){

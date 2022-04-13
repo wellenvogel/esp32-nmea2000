@@ -168,7 +168,7 @@ public:
         display.fillCircle(200, 150, rInstrument + 10, pixelcolor);    // Outer circle
         display.fillCircle(200, 150, rInstrument + 7, bgcolor);        // Outer circle     
 
-        for(int i=0; i<360; i=i+10)
+        for(int i=0; i<360; i=i+1)
         {
             // Scaling values
             float x = 200 + (rInstrument-30)*sin(i/180.0*pi);  //  x-coordinate dots
@@ -202,11 +202,15 @@ public:
             }
 
             // Draw sub scale with dots
-            float x1c = 200 + rInstrument*sin(i/180.0*pi);
-            float y1c = 150 - rInstrument*cos(i/180.0*pi);
-            display.fillCircle((int)x1c, (int)y1c, 2, pixelcolor);
-            float sinx=sin(i/180.0*pi);
-            float cosx=cos(i/180.0*pi); 
+            float sinx = 0;
+            float cosx = 0;
+             if(i % 6 == 0){
+                float x1c = 200 + rInstrument*sin(i/180.0*pi);
+                float y1c = 150 - rInstrument*cos(i/180.0*pi);
+                display.fillCircle((int)x1c, (int)y1c, 2, pixelcolor);
+                sinx=sin(i/180.0*pi);
+                cosx=cos(i/180.0*pi);
+             }
 
             // Draw sub scale with lines (two triangles)
             if(i % 30 == 0){
@@ -245,7 +249,8 @@ public:
         if (value1 < 0) {value1 = value1 + 86400;}
         hour = (value1 / 3600.0);
         if(hour > 12) hour = hour - 12.0;
-        minute = (hour - int(hour)) * 3600.0 / 60.0;
+//        minute = (hour - int(hour)) * 3600.0 / 60.0;        // Analog minute pointer smoth moving
+        minute = int((hour - int(hour)) * 3600.0 / 60.0);   // Jumping minute pointer from minute to minute
         LOG_DEBUG(GwLog::DEBUG,"... PageClock, value1: %f hour: %f minute:%f", value1, hour, minute);
         
         // Draw hour pointer
