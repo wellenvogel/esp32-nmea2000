@@ -130,6 +130,7 @@ public:
         if(batPercentage > 99) batPercentage = 99;
 
         // Battery range calculation
+        if(value2 <= 0) value2 = 0.0000001; // Limiting current
         batRange = batCapacity * batPercentage / 100 / value2;
         // Limits for battery range
         if(batRange < 0) batRange = 0;

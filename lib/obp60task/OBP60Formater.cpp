@@ -389,22 +389,17 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
     // Special XDR formats
     // Refer XDR formats in GwXDRMappings.cpp line 40
     //########################################################
-    else if (value->getFormat() == "formatXdr:P:P"){
+     else if (value->getFormat() == "formatXdr:P:P"){
         double pressure = 0;
         if(usesimudata == false) {
             pressure = value->value;
-            pressure = pressure / 1000.0;      // Unit conversion form Pa to kPa
+            pressure = pressure;                // Unit conversion form Pa to mBar
         }
         else{
-            pressure = 96 + float(random(0, 20)) / 10.0;
+            pressure = 968 + float(random(0, 10));
         }
-        if(pressure <= 99.9){
-            snprintf(buffer,bsize,"%3.1f",pressure);
-        }
-        else{
-            snprintf(buffer,bsize,"%3.0f",pressure);
-        }
-        result.unit = "kPa";
+        snprintf(buffer,bsize,"%4.0f",pressure);
+        result.unit = "mBar";
     }
     //########################################################
     else if (value->getFormat() == "formatXdr:P:B"){
@@ -517,6 +512,106 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
         result.unit = "%";
     }
     //########################################################
+    else if (value->getFormat() == "formatXdr:V:P"){
+        double volume = 0;
+        if(usesimudata == false) {
+            volume = value->value;    // Value in %
+        }
+        else{
+            volume = 85.8 + float(random(0, 50)) / 10.0;
+        }
+        if(volume < 10){
+            snprintf(buffer,bsize,"%3.2f",volume);
+        }
+        if(volume >= 10 && volume < 100){
+            snprintf(buffer,bsize,"%3.1f",volume);
+        }
+        if(volume >= 100){
+            snprintf(buffer,bsize,"%3.0f",volume);
+        }
+        result.unit = "%";
+    }
+    //########################################################
+    else if (value->getFormat() == "formatXdr:V:M"){
+        double volume = 0;
+        if(usesimudata == false) {
+            volume = value->value;    // Value in l
+        }
+        else{
+            volume = 75.2 + float(random(0, 50)) / 10.0;
+        }
+        if(volume < 10){
+            snprintf(buffer,bsize,"%3.2f",volume);
+        }
+        if(volume >= 10 && volume < 100){
+            snprintf(buffer,bsize,"%3.1f",volume);
+        }
+        if(volume >= 100){
+            snprintf(buffer,bsize,"%3.0f",volume);
+        }
+        result.unit = "l";
+    }
+    //########################################################
+    else if (value->getFormat() == "formatXdr:R:I"){
+        double flow = 0;
+        if(usesimudata == false) {
+            flow = value->value;    // Value in l/min
+        }
+        else{
+            flow = 7.5 + float(random(0, 20)) / 10.0;
+        }
+        if(flow < 10){
+            snprintf(buffer,bsize,"%3.2f",flow);
+        }
+        if(flow >= 10 && flow < 100){
+            snprintf(buffer,bsize,"%3.1f",flow);
+        }
+        if(flow >= 100){
+            snprintf(buffer,bsize,"%3.0f",flow);
+        }
+        result.unit = "l/min";
+    }
+    //########################################################
+    else if (value->getFormat() == "formatXdr:G:"){
+        double generic = 0;
+        if(usesimudata == false) {
+            generic = value->value;    // Value in l/min
+        }
+        else{
+            generic = 18.5 + float(random(0, 20)) / 10.0;
+        }
+        if(generic < 10){
+            snprintf(buffer,bsize,"%3.2f",generic);
+        }
+        if(generic >= 10 && generic < 100){
+            snprintf(buffer,bsize,"%3.1f",generic);
+        }
+        if(generic >= 100){
+            snprintf(buffer,bsize,"%3.0f",generic);
+        }
+        result.unit = "";
+    }
+    //########################################################
+    else if (value->getFormat() == "formatXdr:A:P"){
+        double dplace = 0;
+        if(usesimudata == false) {
+            dplace = value->value;    // Value in %
+        }
+        else{
+            dplace = 55.3 + float(random(0, 20)) / 10.0;
+        }
+        if(dplace < 10){
+            snprintf(buffer,bsize,"%3.2f",dplace);
+        }
+        if(dplace >= 10 && dplace < 100){
+            snprintf(buffer,bsize,"%3.1f",dplace);
+        }
+        if(dplace >= 100){
+            snprintf(buffer,bsize,"%3.0f",dplace);
+        }
+        result.unit = "%";
+    }
+    //########################################################
     else if (value->getFormat() == "formatXdr:A:D"){
         double angle = 0;
         if(usesimudata == false) {
@@ -533,6 +628,26 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
             snprintf(buffer,bsize,"%3.0f",angle);
         }
         result.unit = "Deg";
+    }
+    //########################################################
+    else if (value->getFormat() == "formatXdr:T:R"){
+        double rpm = 0;
+        if(usesimudata == false) {
+            rpm = value->value;    // Value in rpm
+        }
+        else{
+            rpm = 2505 + random(0, 20);
+        }
+        if(rpm < 10){
+            snprintf(buffer,bsize,"%3.2f",rpm);
+        }
+        if(rpm >= 10 && rpm < 100){
+            snprintf(buffer,bsize,"%3.1f",rpm);
+        }
+        if(rpm >= 100){
+            snprintf(buffer,bsize,"%3.0f",rpm);
+        }
+        result.unit = "rpm";
     }
     //########################################################
     // Default format
