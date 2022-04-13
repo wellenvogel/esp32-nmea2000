@@ -862,6 +862,7 @@ function formatDateForFilename(usePrefix,d){
     if (usePrefix){
         let fwt=document.querySelector('.status-fwtype');
         if (fwt) rt=fwt.textContent;
+        rt+="_";
     }
     if (! d) d=new Date();
     [d.getFullYear(),d.getMonth(),d.getDate(),d.getHours(),d.getMinutes(),d.getSeconds()]
@@ -1417,7 +1418,7 @@ function createDashboardItem(name, def, parent) {
     src.setAttribute('id','source_'+name);
     let u=fmt?fmt.u:' ';
     if (! fmt && def.format && def.format.match(/formatXdr/)){
-        u=def.format.replace(/formatXdr/,'');
+        u=def.format.replace(/formatXdr:[^:]*:/,'');
     }
     addEl('span','unit',footer,u);
     return value;
