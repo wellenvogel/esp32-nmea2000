@@ -348,7 +348,7 @@ void sensorTask(void *param){
             }
             else if((envsensor == "SHT21" || envsensor == "HTU21") && SHT21_ready == true){
                 sensors.airHumidity = sht21.readCompensatedHumidity();
-                sensors.airHumidity = sht21.readTemperature();
+                sensors.airTemperature = sht21.readTemperature();
                 // Send to NMEA200 bus
                 if(!isnan(sensors.airTemperature)){
                     SetN2kPGN130312(N2kMsg, 0, 0,(tN2kTempSource) TempSource, CToKelvin(sensors.airTemperature), N2kDoubleNA);

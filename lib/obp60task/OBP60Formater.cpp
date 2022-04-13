@@ -460,7 +460,7 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
     else if (value->getFormat() == "formatXdr:C:K"){
         double temperature = 0;
         if(usesimudata == false) {
-            temperature = value->value;
+            temperature = value->value - 273.15;    // Convert K to C
         }
         else{
             temperature = 21.8 + float(random(0, 50)) / 10.0;
@@ -474,7 +474,47 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
         if(temperature >= 100){
             snprintf(buffer,bsize,"%3.0f",temperature);
         }
-        result.unit = "K";
+        result.unit = "Deg C";
+    }
+    //########################################################
+    else if (value->getFormat() == "formatXdr:C:C"){
+        double temperature = 0;
+        if(usesimudata == false) {
+            temperature = value->value;    // Value in C
+        }
+        else{
+            temperature = 21.8 + float(random(0, 50)) / 10.0;
+        }
+        if(temperature < 10){
+            snprintf(buffer,bsize,"%3.2f",temperature);
+        }
+        if(temperature >= 10 && temperature < 100){
+            snprintf(buffer,bsize,"%3.1f",temperature);
+        }
+        if(temperature >= 100){
+            snprintf(buffer,bsize,"%3.0f",temperature);
+        }
+        result.unit = "Deg C";
+    }
+    //########################################################
+    else if (value->getFormat() == "formatXdr:H:P"){
+        double humidity = 0;
+        if(usesimudata == false) {
+            humidity = value->value;    // Value in %
+        }
+        else{
+            humidity = 41.3 + float(random(0, 50)) / 10.0;
+        }
+        if(humidity < 10){
+            snprintf(buffer,bsize,"%3.2f",humidity);
+        }
+        if(humidity >= 10 && humidity < 100){
+            snprintf(buffer,bsize,"%3.1f",humidity);
+        }
+        if(humidity >= 100){
+            snprintf(buffer,bsize,"%3.0f",humidity);
+        }
+        result.unit = "%";
     }
     //########################################################
     else if (value->getFormat() == "formatXdr:A:D"){
