@@ -34,6 +34,10 @@ public:
 
         double value1 = 0;
         double value2 = 0;
+        String svalue1 = "";
+        String unit1 = "";
+        String svalue2 = "";
+        String unit2 = "";
 
         // Get config data
         String lengthformat = config->getString(config->lengthFormat);
@@ -51,16 +55,27 @@ public:
         // Get boat values for roll
         GwApi::BoatValue *bvalue1 = pageData.values[0]; // First element in list (xdrRoll)
         String name1 = xdrDelete(bvalue1->getName());   // Value name
-        name1 = name1.substring(0, 6);                  // String length limit for value name                                           // Other simulation data see OBP60Formater.cpp
+        name1 = name1.substring(0, 6);                  // String length limit for value name
         bool valid1 = bvalue1->valid;                   // Valid information
         if(valid1 == true){
             value1 = bvalue1->value + rolloffset;       // Raw value for pitch
         }
         else{
-            value1 = 0;
+            if(simulation == true){
+                value1 = (20 + float(random(0, 50)) / 10.0)/360*2*PI;
+                unit1 = "Deg";
+            }
+            else{
+                value1 = 0;
+            }
         }
-        String svalue1 = formatValue(bvalue1, commonData).svalue;   // Formatted value as string including unit conversion and switching decimal places
-        String unit1 = formatValue(bvalue1, commonData).unit;       // Unit of value
+        if(value1/(2*PI)*360 > -10 && value1/(2*PI)*360 < 10){
+            svalue1 = String(value1/(2*PI)*360,1);      // Convert raw value to string
+        }
+        else{
+            svalue1 = String(value1/(2*PI)*360,0);
+        }
+        unit1 = formatValue(bvalue1, commonData).unit;  // Unit of value
         if(valid1 == true){
             svalue1old = svalue1;   	                // Save old value
             unit1old = unit1;                           // Save old unit
@@ -75,10 +90,21 @@ public:
             value2 = bvalue2->value + pitchoffset;      // Raw value for pitch
         }
         else{
-            value2 = 0;
+             if(simulation == true){
+                value2 = (float(random(-5, 5)))/360*2*PI;
+                unit2 = "Deg";
+            }
+            else{
+                value2 = 0;
+            }
         }
-        String svalue2 = formatValue(bvalue2, commonData).svalue;   // Formatted value as string including unit conversion and switching decimal places
-        String unit2 = formatValue(bvalue2, commonData).unit;       // Unit of value
+        if(value2/(2*PI)*360 > -10 && value2/(2*PI)*360 < 10){
+            svalue2 = String(value2/(2*PI)*360,1);      // Convert raw value to string
+        }
+        else{
+            svalue2 = String(value2/(2*PI)*360,0);
+        }
+        unit2 = formatValue(bvalue2, commonData).unit;  // Unit of value
         if(valid2 == true){
             svalue2old = svalue2;   	                // Save old value
             unit2old = unit2;                           // Save old unit
@@ -221,7 +247,7 @@ public:
         // Draw mast position pointer
         float startwidth = 8;           // Start width of pointer
 
-        value1 = (2 * pi ) - value1;    // Mirror coordiante system for pointer, keel and boat
+//        value1 = (2 * pi ) - value1;    // Mirror coordiante system for pointer, keel and boat
 
         if(valid1 == true || holdvalues == true || simulation == true){
             float sinx=sin(value1 + pi);
