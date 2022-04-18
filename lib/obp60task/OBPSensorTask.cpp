@@ -415,8 +415,8 @@ void sensorTask(void *param){
             if(String(powsensor1) == "INA226" && INA226_1_ready == true){
                 double voltage = ina226_1.getBusVoltage();
                 // Limiter for voltage average building
-                if(voltage < -30){
-                    voltage = -30;
+                if(voltage < 0){
+                    voltage = 0;
                 }
                 if(voltage > 30){
                     voltage = 30;

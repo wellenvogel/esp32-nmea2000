@@ -212,6 +212,8 @@ void registerAllPages(PageList &list){
     list.add(&registerPageBattery2);
     extern PageDescription registerPageRollPitch;
     list.add(&registerPageRollPitch);
+    extern PageDescription registerPageSolar;
+    list.add(&registerPageSolar);
 }
 
 // OBP60 Task
