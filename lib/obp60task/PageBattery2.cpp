@@ -9,6 +9,7 @@ class PageBattery2 : public Page
 bool init = false;                  // Marker for init done
 bool keylock = false;               // Keylock
 int average = 0;                    // Average type [0...3], 0=off, 1=10s, 2=60s, 3=300s
+bool trend = true;                  // Trend indicator [0|1], 0=off, 1=on
 double raw = 0;
 
 public:
@@ -20,6 +21,12 @@ public:
         if(key == 1){
             average ++;
             average = average % 4;      // Modulo 4
+            return 0;                   // Commit the key
+        }
+
+        // Trend indicator
+        if(key == 5){
+            trend = !trend;
             return 0;                   // Commit the key
         }
 
@@ -71,6 +78,9 @@ public:
         else{                       // Reading trend value
             valueTrend = commonData.data.batteryVoltage10;
         }
+
+        // Get raw value for trend indicator
+        raw = commonData.data.batteryVoltage;        // Live data
 
         // Switch average values
         switch (average) {
