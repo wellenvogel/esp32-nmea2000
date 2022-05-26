@@ -20,8 +20,8 @@
         "default": "0.00",
         "check": "checkMinMax",
         "min": 0.00,
-        "max": 10.00,
-        "description": "The draft of the boat [0...10m]",
+        "max": 50.00,
+        "description": "The draft of the boat [0...50m]",
         "category": "OBP60 Settings",
         "capabilities": {
             "obp60":"true"
@@ -274,7 +274,7 @@
         "label": "Env. Sensor",
         "type": "list",
         "default": "off",
-        "description": "Use internal or external environment sensor via I2C bus[off|BME280|BMP280|SHT21]",
+        "description": "Use internal or external environment sensor via I2C bus [off|BME280|BMP280|SHT21]",
         "list": [
             "off",
             "BME280",
@@ -382,7 +382,7 @@
         "label": "Gen. Shunt",
         "type": "list",
         "default": "10",
-        "description": "Shunt current value [10A|50A|100A|200A|300A|400A|500A]",
+        "description": "Shunt current value [10A|50A|100A|200A|300A|400A|500A] @ 75mV",
         "list": [
             "10",
             "50",
@@ -524,7 +524,7 @@
         "name": "underVoltage",
         "label": "Undervoltage",
         "type": "boolean",
-        "default": "true",
+        "default": "false",
         "description": "Switch off device if voltage drops below 9V [on|off]",
         "category": "OBP60 Hardware",
         "capabilities": {
@@ -538,6 +538,28 @@
         "default": "false",
         "description": "Use simulation data when bus data are missing [on|off]",
         "category": "OBP60 Hardware",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "vOffset",
+        "label": "VSensor Offset",
+        "type": "number",
+        "default": "0.00",
+        "description": "Offset for internal voltage sensor (ESP32)",
+        "category": "OBP60 Calibrations",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "vSlope",
+        "label": "VSensor Slope",
+        "type": "number",
+        "default": "1.00",
+        "description": "Slope for internal voltage sensor (ESP32)",
+        "category": "OBP60 Calibrations",
         "capabilities": {
             "obp60":"true"
         }

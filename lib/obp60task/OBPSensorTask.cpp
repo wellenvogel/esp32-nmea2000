@@ -248,6 +248,9 @@ void sensorTask(void *param){
     }
 
     int rotoffset = api->getConfig()->getConfigItem(api->getConfig()->rotOffset,true)->asInt();
+    double voffset = (api->getConfig()->getConfigItem(api->getConfig()->vOffset,true)->asString()).toFloat();
+    double vslope = (api->getConfig()->getConfigItem(api->getConfig()->vSlope,true)->asString()).toFloat();
+
     long starttime0 = millis();     // GPS update all 1s
     long starttime5 = millis();     // Voltage update all 1s
     long starttime6 = millis();     // Environment sensor update all 1s
@@ -283,6 +286,7 @@ void sensorTask(void *param){
         if(millis() > starttime5 + 1000 && String(powsensor1) == "off"){
             starttime5 = millis();
             sensors.batteryVoltage = (float(analogRead(OBP_ANALOG0)) * 3.3 / 4096 + 0.17) * 20;   // Vin = 1/20
+            sensors.batteryVoltage = sensors.batteryVoltage * vslope + voffset; // Calibration
             // Save new data in average array
             batV.reading(int(sensors.batteryVoltage * 100));
             // Calculate the average values for different time lines from integer values

@@ -128,29 +128,20 @@ public:
 
         // Show values AWA
         display.setTextColor(textcolor);
+        display.setFont(&DSEG7Classic_BoldItalic20pt7b);
+        display.setCursor(10, 65);
+        display.print(svalue1);                     // Value
+        display.setFont(&Ubuntu_Bold12pt7b);
+        display.setCursor(10, 95);
+        display.print(name1);                       // Name
+        display.setFont(&Ubuntu_Bold8pt7b);
+        display.setCursor(10, 115);
+        display.print(" ");
         if(holdvalues == false){
-            display.setFont(&DSEG7Classic_BoldItalic20pt7b);
-            display.setCursor(10, 65);
-            display.print(svalue1);                     // Value
-            display.setFont(&Ubuntu_Bold12pt7b);
-            display.setCursor(10, 95);
-            display.print(name1);                       // Name
-            display.setFont(&Ubuntu_Bold8pt7b);
-            display.setCursor(10, 115);
-            display.print(" ");
-            display.print(unit1);                       // Unit
+            display.print(unit1);                   // Unit
         }
         else{
-            display.setFont(&DSEG7Classic_BoldItalic20pt7b);
-            display.setCursor(10, 65);
-            display.print(svalue1old);                     // Value
-            display.setFont(&Ubuntu_Bold12pt7b);
-            display.setCursor(10, 95);
-            display.print(name1);                       // Name
-            display.setFont(&Ubuntu_Bold8pt7b);
-            display.setCursor(10, 115);
-            display.print(" ");
-            display.print(unit1old);                       // Unit
+            display.print(unit1old);                // Unit
         }
 
         // Horizintal separator left
@@ -158,56 +149,43 @@ public:
 
         // Show values AWS
         display.setTextColor(textcolor);
+        display.setFont(&DSEG7Classic_BoldItalic20pt7b);
+        display.setCursor(10, 270);
+        display.print(svalue2);                     // Value
+        display.setFont(&Ubuntu_Bold12pt7b);
+        display.setCursor(10, 220);
+        display.print(name2);                       // Name
+        display.setFont(&Ubuntu_Bold8pt7b);
+        display.setCursor(10, 190);
+        display.print(" ");
         if(holdvalues == false){
-            display.setFont(&DSEG7Classic_BoldItalic20pt7b);
-            display.setCursor(10, 270);
-            display.print(svalue2);                     // Value
-            display.setFont(&Ubuntu_Bold12pt7b);
-            display.setCursor(10, 220);
-            display.print(name2);                       // Name
-            display.setFont(&Ubuntu_Bold8pt7b);
-            display.setCursor(10, 190);
-            display.print(" ");
-            display.print(unit2);                       // Unit
+            display.print(unit2);                   // Unit
         }
         else{
-            display.setFont(&DSEG7Classic_BoldItalic20pt7b);
-            display.setCursor(10, 270);
-            display.print(svalue2old);                  // Value
-            display.setFont(&Ubuntu_Bold12pt7b);
-            display.setCursor(10, 220);
-            display.print(name2);                       // Name
-            display.setFont(&Ubuntu_Bold8pt7b);
-            display.setCursor(10, 190);
-            display.print(" ");
-            display.print(unit2old);                    // Unit
+            display.print(unit2old);                // Unit
         }
 
         // Show values TWD
         display.setTextColor(textcolor);
-        if(holdvalues == false){
-            display.setFont(&DSEG7Classic_BoldItalic20pt7b);
-            display.setCursor(295, 65);
-            display.print(svalue3);                     // Value
-            display.setFont(&Ubuntu_Bold12pt7b);
-            display.setCursor(335, 95);
-            display.print(name3);                       // Name
-            display.setFont(&Ubuntu_Bold8pt7b);
-            display.setCursor(335, 115);
-            display.print(" ");
-            display.print(unit3);                       // Unit
+        display.setFont(&DSEG7Classic_BoldItalic20pt7b);
+        display.setCursor(295, 65);
+        if(valid3 == true){
+            display.print(abs(value3 * 360 / PI), 0);   // Value
         }
         else{
-            display.setFont(&DSEG7Classic_BoldItalic20pt7b);
-            display.setCursor(295, 65);
-            display.print(svalue3old);                  // Value
-            display.setFont(&Ubuntu_Bold12pt7b);
-            display.setCursor(335, 95);
-            display.print(name3);                       // Name
-            display.setFont(&Ubuntu_Bold8pt7b);
-            display.setCursor(335, 115);
-            display.print(" ");
-            display.print(unit3old);                    // Unit
+            display.print("---");                   // Value
+        }
+        display.setFont(&Ubuntu_Bold12pt7b);
+        display.setCursor(335, 95);
+        display.print(name3);                       // Name
+        display.setFont(&Ubuntu_Bold8pt7b);
+        display.setCursor(335, 115);
+        display.print(" ");
+        if(holdvalues == false){
+            display.print(unit3);                   // Unit
+        }
+        else{
+            display.print(unit3old);                // Unit
         }
 
         // Horizintal separator right
@@ -215,29 +193,20 @@ public:
 
         // Show values TWS
         display.setTextColor(textcolor);
+        display.setFont(&DSEG7Classic_BoldItalic20pt7b);
+        display.setCursor(295, 270);
+        display.print(svalue4);                     // Value
+        display.setFont(&Ubuntu_Bold12pt7b);
+        display.setCursor(335, 220);
+        display.print(name4);                       // Name
+        display.setFont(&Ubuntu_Bold8pt7b);
+        display.setCursor(335, 190);
+        display.print(" ");
         if(holdvalues == false){
-            display.setFont(&DSEG7Classic_BoldItalic20pt7b);
-            display.setCursor(295, 270);
-            display.print(svalue4);                     // Value
-            display.setFont(&Ubuntu_Bold12pt7b);
-            display.setCursor(335, 220);
-            display.print(name4);                       // Name
-            display.setFont(&Ubuntu_Bold8pt7b);
-            display.setCursor(335, 190);
-            display.print(" ");
-            display.print(unit4);                       // Unit
+            display.print(unit4);                   // Unit
         }
-        else{
-            display.setFont(&DSEG7Classic_BoldItalic20pt7b);
-            display.setCursor(295, 270);
-            display.print(svalue4old);                  // Value
-            display.setFont(&Ubuntu_Bold12pt7b);
-            display.setCursor(335, 220);
-            display.print(name4);                       // Name
-            display.setFont(&Ubuntu_Bold8pt7b);
-            display.setCursor(335, 190);
-            display.print(" ");
-            display.print(unit4old);                    // Unit
+        else{  
+            display.print(unit4old);                // Unit
         }
 
 //*******************************************************************************************
