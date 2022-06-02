@@ -31,6 +31,8 @@ public:
         static String unit1old = "";
         static String svalue2old = "";
         static String unit2old = "";
+        static String svalue3old = "";
+        static String svalue4old = "";
 
         double value1 = 0;
         double value2 = 0;
@@ -132,6 +134,7 @@ public:
         String sunrise = "---";
         if(valid1 == true && valid2 == true){
             sunrise = String(commonData.sundata.sunriseHour) + ":" + String(commonData.sundata.sunriseMinute + 100).substring(1);
+            svalue3old = sunrise;
         }
 
         display.setTextColor(textcolor);
@@ -140,7 +143,8 @@ public:
         display.print(sunrise);                         // Value
         display.setFont(&Ubuntu_Bold12pt7b);
         display.setCursor(335, 95);
-        display.print("SunR");                          // Name
+        if(holdvalues == false) display.print(sunrise); // Value
+        else display.print(svalue3old);
 
         // Horizintal separator right
         display.fillRect(340, 149, 80, 3, pixelcolor);
@@ -149,12 +153,14 @@ public:
         String sunset = "---";
         if(valid1 == true && valid2 == true){
             sunset = String(commonData.sundata.sunsetHour) + ":" +  String(commonData.sundata.sunsetMinute + 100).substring(1);
+            svalue4old = sunset;
         }
 
         display.setTextColor(textcolor);
         display.setFont(&Ubuntu_Bold8pt7b);
         display.setCursor(335, 250);
-        display.print(sunset);                         // Value
+        if(holdvalues == false) display.print(sunset); // Value
+        else display.print(svalue4old);
         display.setFont(&Ubuntu_Bold12pt7b);
         display.setCursor(335, 220);
         display.print("SunS");                          // Name
