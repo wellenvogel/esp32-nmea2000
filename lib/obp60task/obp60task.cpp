@@ -255,7 +255,9 @@ void OBP60Task(GwApi *api){
     }
     display.fillRect(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, bgcolor); // Draw white sreen
     display.setTextColor(textcolor);        // Set display color
+    display.updateWindow(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, true);
     display.update();                       // Full update (slow)
+    display.updateWindow(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, true);
         
     if(String(displaymode) == "Logo + QR Code" || String(displaymode) == "Logo"){
         display.drawBitmap(gImage_Logo_OBP_400x300_sw, 0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, pixelcolor); // Draw start logo
@@ -276,6 +278,7 @@ void OBP60Task(GwApi *api){
             display.fillRect(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, bgcolor); // Draw white sreen
             display.updateWindow(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, true);    // Needs partial update before full update to refresh the frame buffer
             display.update(); // Full update
+            display.updateWindow(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, true);
         }
     }
     
