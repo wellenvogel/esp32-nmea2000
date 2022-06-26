@@ -140,11 +140,11 @@ public:
         display.setTextColor(textcolor);
         display.setFont(&Ubuntu_Bold8pt7b);
         display.setCursor(335, 65);
-        display.print(sunrise);                         // Value
-        display.setFont(&Ubuntu_Bold12pt7b);
-        display.setCursor(335, 95);
         if(holdvalues == false) display.print(sunrise); // Value
         else display.print(svalue3old);
+        display.setFont(&Ubuntu_Bold12pt7b);
+        display.setCursor(335, 95);
+        display.print("SunR");                          // Name
 
         // Horizintal separator right
         display.fillRect(340, 149, 80, 3, pixelcolor);
@@ -159,7 +159,7 @@ public:
         display.setTextColor(textcolor);
         display.setFont(&Ubuntu_Bold8pt7b);
         display.setCursor(335, 250);
-        if(holdvalues == false) display.print(sunset); // Value
+        if(holdvalues == false) display.print(sunset);  // Value
         else display.print(svalue4old);
         display.setFont(&Ubuntu_Bold12pt7b);
         display.setCursor(335, 220);

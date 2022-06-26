@@ -91,7 +91,7 @@ class PageBME280 : public Page
         else{
             svalue3 = "---";
         }
-        String unit3 = "mBar";                          // Unit of value
+        String unit3 = "hPa";                          // Unit of value
 
         // Optical warning by limit violation (unused)
         if(String(flashLED) == "Limit Violation"){
