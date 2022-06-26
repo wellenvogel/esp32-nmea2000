@@ -134,7 +134,7 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
         result.unit = "Deg";
     }
     //########################################################
-    else if (value->getFormat() == "formatKnots"){
+    else if (value->getFormat() == "formatKnots" && (value->getName() == "SOG" || value->getName() == "STW")){
         double speed = 0;
         if(usesimudata == false) {
             speed = value->value;
@@ -142,11 +142,42 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
         else{
             speed = 4.0 + float(random(0, 40));
         }
-        if((String(speedFormat) == "km/h" || String(windspeedFormat) == "km/h") && String(windspeedFormat) != "bft"){
-        speed = speed * 3.6;        // Unit conversion form m/s to km/h
+        if(String(speedFormat) == "km/h"){
+        speed = speed * 3.6;            // Unit conversion form m/s to km/h
+            result.unit = "km/h";
+        }
+        else if(String(speedFormat) == "kn"){
+            speed = speed * 1.94384;    // Unit conversion form m/s to kn
+            result.unit = "kn";
+        }
+        else{
+            speed = speed;              // Unit conversion form m/s to m/s
             result.unit = "m/s";
         }
-        else if((String(speedFormat) == "kn" || String(windspeedFormat) == "kn") && String(windspeedFormat) != "bft"){
+        if(speed < 10){
+            snprintf(buffer,bsize,"%3.2f",speed);
+        }
+        if(speed >= 10 && speed < 100){
+            snprintf(buffer,bsize,"%3.1f",speed);
+        }
+        if(speed >= 100){
+            snprintf(buffer,bsize,"%3.0f",speed);
+        }
+    }
+    //########################################################
+    else if (value->getFormat() == "formatKnots" && (value->getName() == "AWS" || value->getName() == "TWS" || value->getName() == "MaxAws" || value->getName() == "MaxTws")){
+        double speed = 0;
+        if(usesimudata == false) {
+            speed = value->value;
+        }
+        else{
+            speed = 4.0 + float(random(0, 40));
+        }
+        if(String(windspeedFormat) == "km/h"){
+        speed = speed * 3.6;        // Unit conversion form m/s to km/h
+            result.unit = "km/h";
+        }
+        else if(String(windspeedFormat) == "kn"){
             speed = speed * 1.94384;      // Unit conversion form m/s to kn
             result.unit = "kn";
         }
