@@ -3,15 +3,15 @@
 #include "Pagedata.h"
 #include "OBP60Extensions.h"
 
-class PageSolar : public Page
+class PageGenerator : public Page
 {
 bool init = false;                  // Marker for init done
 bool keylock = false;               // Keylock
-int solPercentage = 0;              // Solar power level
+int genPercentage = 0;              // Generator power level
 
 public:
-    PageSolar(CommonData &common){
-        common.logger->logDebug(GwLog::LOG,"Show PageSolar");
+    PageGenerator(CommonData &common){
+        common.logger->logDebug(GwLog::LOG,"Show PageGenerator");
     }
     virtual int handleKey(int key){
         // Code for keylock
@@ -33,24 +33,24 @@ public:
         bool holdvalues = config->getBool(config->holdvalues);
         String flashLED = config->getString(config->flashLED);
         String batVoltage = config->getString(config->batteryVoltage);
-        int solarMaxPower = config->getInt(config->solarPower);
+        int generatorMaxPower = config->getInt(config->genPower);
         String backlightMode = config->getString(config->backlight);
-        String powerSensor = config->getString(config->usePowSensor2);
+        String powerSensor = config->getString(config->usePowSensor3);
 
-        double value1 = 0;  // Solar voltage
-        double value2 = 0;  // Solar current
-        double value3 = 0;  // Solar power consumption
+        double value1 = 0;  // Generator voltage
+        double value2 = 0;  // Generator current
+        double value3 = 0;  // Generator power consumption
 
         // Get values
-        value1 = commonData.data.solarVoltage;        // Live data
-        value2 = commonData.data.solarCurrent;
-        value3 = commonData.data.solarPower;
-        solPercentage = value3 / solarMaxPower * 100;   // Power level calculation
-        if(solPercentage < 0){      // Limiting values
-            solPercentage = 0;
+        value1 = commonData.data.generatorVoltage;          // Live data
+        value2 = commonData.data.generatorCurrent;
+        value3 = commonData.data.generatorPower;
+        genPercentage = value3 / generatorMaxPower * 100;   // Power level calculation
+        if(genPercentage < 0){      // Limiting values
+            genPercentage = 0;
         }
-        if(solPercentage > 99){
-            solPercentage = 99;
+        if(genPercentage > 99){
+            genPercentage = 99;
         }
         bool valid1 = true;
 
@@ -62,7 +62,7 @@ public:
         
         // Logging voltage value
         if (value1 == NULL) return;
-        LOG_DEBUG(GwLog::LOG,"Drawing at PageSolar, V:%f C:%f P:%f", value1, value2, value3);
+        LOG_DEBUG(GwLog::LOG,"Drawing at PageGenerator, V:%f C:%f P:%f", value1, value2, value3);
 
         // Draw page
         //***********************************************************
@@ -87,7 +87,7 @@ public:
         display.setTextColor(textcolor);
         display.setFont(&Ubuntu_Bold20pt7b);
         display.setCursor(10, 65);
-        display.print("Solar");
+        display.print("Generator");
 
         // Show voltage type
         display.setTextColor(textcolor);
@@ -100,25 +100,25 @@ public:
         display.setFont(&Ubuntu_Bold16pt7b);
         display.print("V");
 
-        // Show solar power level
+        // Show generator power level
         display.setTextColor(textcolor);
         display.setFont(&DSEG7Classic_BoldItalic20pt7b);
         display.setCursor(10, 200);
-        if(solarMaxPower <= 999) display.print(solarMaxPower, 0);
-        if(solarMaxPower > 999) display.print(float(solarMaxPower/1000.0), 1);
+        if(generatorMaxPower <= 999) display.print(generatorMaxPower, 0);
+        if(generatorMaxPower > 999) display.print(float(generatorMaxPower/1000.0), 1);
         display.setFont(&Ubuntu_Bold16pt7b);
-        if(solarMaxPower <= 999) display.print("W");
-        if(solarMaxPower > 999) display.print("kw");
+        if(generatorMaxPower <= 999) display.print("W");
+        if(generatorMaxPower > 999) display.print("kw");
 
         // Show info
         display.setFont(&Ubuntu_Bold8pt7b);
         display.setCursor(10, 235);
         display.print("Installed");
         display.setCursor(10, 255);
-        display.print("Solar Power");
+        display.print("Gen. Power");
 
-        // Show solar icon
-        batteryGraphic(150, 45, solPercentage, pixelcolor, bgcolor);
+        // Show generator icon
+        batteryGraphic(150, 45, genPercentage, pixelcolor, bgcolor);
 
         // Show average settings
         display.setTextColor(textcolor);
@@ -130,7 +130,7 @@ public:
         display.setTextColor(textcolor);
         display.setFont(&DSEG7Classic_BoldItalic20pt7b);
         display.setCursor(150, 200);
-        display.print(solPercentage);
+        display.print(genPercentage);
         display.setFont(&Ubuntu_Bold16pt7b);
         display.print("%");
 
@@ -144,7 +144,7 @@ public:
         }
         if(powerSensor == "INA226"){
             display.print("INA226");
-            i2cAddr = " (0x" + String(INA226_I2C_ADDR2, HEX) + ")";
+            i2cAddr = " (0x" + String(INA226_I2C_ADDR3, HEX) + ")";
         }
         display.print(i2cAddr);
         display.setCursor(270, 80);
@@ -227,7 +227,7 @@ public:
 };
 
 static Page *createPage(CommonData &common){
-    return new PageSolar(common);
+    return new PageGenerator(common);
 }
 /**
  * with the code below we make this page known to the PageTask
@@ -236,8 +236,8 @@ static Page *createPage(CommonData &common){
  * and we provide the number of user parameters we expect (0 here)
  * and will will provide the names of the fixed values we need
  */
-PageDescription registerPageSolar(
-    "Solar",        // Name of page
+PageDescription registerPageGenerator(
+    "Generator",    // Name of page
     createPage,     // Action
     0,              // Number of bus values depends on selection in Web configuration
     {},             // Names of bus values undepends on selection in Web configuration (refer GwBoatData.h)

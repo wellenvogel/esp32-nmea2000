@@ -233,7 +233,7 @@ void sensorTask(void *param){
     float maxCurrent = 10.0;    // Default value for max. current
     float corrFactor = 1;       // Correction factor for fix calibration
     
-    // Battery sensor initialisation
+    // Battery sensor initialization
     if(String(powsensor1) == "INA226"){
         if (!ina226_1.begin()){
             api->getLogger()->logDebug(GwLog::ERROR,"Modul 1 INA226 not found, check wiring");
@@ -258,7 +258,7 @@ void sensorTask(void *param){
         }
     }
 
-    // Solar sensor initialisation
+    // Solar sensor initialization
     if(String(powsensor2) == "INA226"){
         if (!ina226_2.begin()){
             api->getLogger()->logDebug(GwLog::ERROR,"Modul 2 INA226 not found, check wiring");
@@ -279,7 +279,7 @@ void sensorTask(void *param){
         }
     }
 
-    // Generator sensor initialisation
+    // Generator sensor initialization
     if(String(powsensor3) == "INA226"){
         if (!ina226_3.begin()){
             api->getLogger()->logDebug(GwLog::ERROR,"Modul 3 INA226 not found, check wiring");
