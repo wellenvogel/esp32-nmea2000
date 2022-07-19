@@ -69,7 +69,9 @@ void sensorTask(void *param){
     Adafruit_BMP085 bmp085;         // Evironment sensor BMP085 and BMP180
     HTU21D sht21(HTU21D_RES_RH12_TEMP14); // Environment sensor SHT21 and HTU21
     AMS_5600 as5600;                // Rotation sensor AS5600
-    INA226 ina226_1(INA226_I2C_ADDR1);// Power management sensor INA226
+    INA226 ina226_1(INA226_I2C_ADDR1);// Power management sensor INA226 Battery
+    INA226 ina226_2(INA226_I2C_ADDR2);// Power management sensor INA226 Solar
+    INA226 ina226_3(INA226_I2C_ADDR3);// Power management sensor INA226 Generator
 
     // Init sensor stuff
     bool gps_ready = false;         // GPS initialized and ready to use
@@ -79,6 +81,8 @@ void sensorTask(void *param){
     bool SHT21_ready = false;       // SHT21 initialized and ready to use
     bool AS5600_ready = false;      // AS5600 initialized and ready to use
     bool INA226_1_ready = false;    // INA226_1 initialized and ready to use
+    bool INA226_2_ready = false;    // INA226_2 initialized and ready to use
+    bool INA226_3_ready = false;    // INA226_3 initialized and ready to use
 
     // Create integer arrays for average building
     const int avgsize = 300;
@@ -215,14 +219,21 @@ void sensorTask(void *param){
         }
     }
 
-    // Settings for power amangement sensors INA226 #1 on I2C bus
+    // Settings for power amangement sensors INA226 #1 for Battery on I2C bus
     String powsensor1 = api->getConfig()->getConfigItem(api->getConfig()->usePowSensor1, true)->asString();
     String shunt1 = api->getConfig()->getConfigItem(api->getConfig()->shunt1, true)->asString();
+    // Settings for power amangement sensors INA226 #1 for Solar on I2C bus
+    String powsensor2 = api->getConfig()->getConfigItem(api->getConfig()->usePowSensor2, true)->asString();
+    String shunt2 = api->getConfig()->getConfigItem(api->getConfig()->shunt2, true)->asString();
+    // Settings for power amangement sensors INA226 #1 for Generator on I2C bus
+    String powsensor3 = api->getConfig()->getConfigItem(api->getConfig()->usePowSensor3, true)->asString();
+    String shunt3 = api->getConfig()->getConfigItem(api->getConfig()->shunt3, true)->asString();
 
     float shuntResistor = 1.0;  // Default value for shunt resistor
     float maxCurrent = 10.0;    // Default value for max. current
     float corrFactor = 1;       // Correction factor for fix calibration
     
+    // Battery sensor initialisation
     if(String(powsensor1) == "INA226"){
         if (!ina226_1.begin()){
             api->getLogger()->logDebug(GwLog::ERROR,"Modul 1 INA226 not found, check wiring");
@@ -231,7 +242,7 @@ void sensorTask(void *param){
             api->getLogger()->logDebug(GwLog::LOG,"Modul 1 INA226 found");
             shuntResistor = SHUNT_VOLTAGE / float(shunt1.toInt());  // Calculate shunt resisitor for max. shunt voltage 75mV
             maxCurrent = shunt1.toFloat();
-            api->getLogger()->logDebug(GwLog::LOG,"Calibation INA226, Imax:%3.0fA Rs:%7.5fOhm Us:%5.3f", maxCurrent, shuntResistor, SHUNT_VOLTAGE);
+            api->getLogger()->logDebug(GwLog::LOG,"Calibation Modul 2 INA226, Imax:%3.0fA Rs:%7.5fOhm Us:%5.3f", maxCurrent, shuntResistor, SHUNT_VOLTAGE);
 //            ina226_1.setMaxCurrentShunt(maxCurrent, shuntResistor);
             ina226_1.setMaxCurrentShunt(10, 0.01);  // Calibration with fix values (because the original values outer range)
             corrFactor = (maxCurrent / 10) * (0.001 / shuntResistor) / (maxCurrent / 100); // Correction factor for fix calibration
@@ -247,6 +258,48 @@ void sensorTask(void *param){
         }
     }
 
+    // Solar sensor initialisation
+    if(String(powsensor2) == "INA226"){
+        if (!ina226_2.begin()){
+            api->getLogger()->logDebug(GwLog::ERROR,"Modul 2 INA226 not found, check wiring");
+        }
+        else{
+            api->getLogger()->logDebug(GwLog::LOG,"Modul 2 INA226 found");
+            shuntResistor = SHUNT_VOLTAGE / float(shunt2.toInt());  // Calculate shunt resisitor for max. shunt voltage 75mV
+            maxCurrent = shunt2.toFloat();
+            api->getLogger()->logDebug(GwLog::LOG,"Calibation Modul 2 INA226, Imax:%3.0fA Rs:%7.5fOhm Us:%5.3f", maxCurrent, shuntResistor, SHUNT_VOLTAGE);
+//            ina226_1.setMaxCurrentShunt(maxCurrent, shuntResistor);
+            ina226_2.setMaxCurrentShunt(10, 0.01);  // Calibration with fix values (because the original values outer range)
+            corrFactor = (maxCurrent / 10) * (0.001 / shuntResistor) / (maxCurrent / 100); // Correction factor for fix calibration
+            sensors.solarVoltage = ina226_2.getBusVoltage();
+            sensors.solarCurrent = ina226_2.getCurrent() * corrFactor;
+            sensors.solarPower = ina226_2.getPower() * corrFactor;
+            // Fill average arrays with start values
+            INA226_2_ready = true;
+        }
+    }
+
+    // Generator sensor initialisation
+    if(String(powsensor3) == "INA226"){
+        if (!ina226_3.begin()){
+            api->getLogger()->logDebug(GwLog::ERROR,"Modul 3 INA226 not found, check wiring");
+        }
+        else{
+            api->getLogger()->logDebug(GwLog::LOG,"Modul 3 INA226 found");
+            shuntResistor = SHUNT_VOLTAGE / float(shunt3.toInt());  // Calculate shunt resisitor for max. shunt voltage 75mV
+            maxCurrent = shunt3.toFloat();
+            api->getLogger()->logDebug(GwLog::LOG,"Calibation Modul 3 INA226, Imax:%3.0fA Rs:%7.5fOhm Us:%5.3f", maxCurrent, shuntResistor, SHUNT_VOLTAGE);
+//            ina226_1.setMaxCurrentShunt(maxCurrent, shuntResistor);
+            ina226_3.setMaxCurrentShunt(10, 0.01);  // Calibration with fix values (because the original values outer range)
+            corrFactor = (maxCurrent / 10) * (0.001 / shuntResistor) / (maxCurrent / 100); // Correction factor for fix calibration
+            sensors.generatorVoltage = ina226_3.getBusVoltage();
+            sensors.generatorCurrent = ina226_3.getCurrent() * corrFactor;
+            sensors.generatorPower = ina226_3.getPower() * corrFactor;
+            // Fill average arrays with start values
+            INA226_3_ready = true;
+        }
+    }
+
     int rotoffset = api->getConfig()->getConfigItem(api->getConfig()->rotOffset,true)->asInt();
     double voffset = (api->getConfig()->getConfigItem(api->getConfig()->vOffset,true)->asString()).toFloat();
     double vslope = (api->getConfig()->getConfigItem(api->getConfig()->vSlope,true)->asString()).toFloat();
@@ -255,7 +308,10 @@ void sensorTask(void *param){
     long starttime5 = millis();     // Voltage update all 1s
     long starttime6 = millis();     // Environment sensor update all 1s
     long starttime7 = millis();     // Rotation sensor update all 500ms
-    long starttime8 = millis();     // Power management sensor update all 1s
+    long starttime8 = millis();     // Battery power sensor update all 1s
+    long starttime9 = millis();     // Solar power sensor update all 1s
+    long starttime10 = millis();    // Generator power sensor update all 1s
+
 
     tN2kMsg N2kMsg;
     shared->setSensorData(sensors); //set initially read values
@@ -413,7 +469,7 @@ void sensorTask(void *param){
             }    
         }
 
-        // Send power management value all 1s
+        // Send battery power value all 1s
         if(millis() > starttime8 + 1000 && (String(powsensor1) == "INA219" || String(powsensor1) == "INA226")){
             starttime8 = millis();
             if(String(powsensor1) == "INA226" && INA226_1_ready == true){
@@ -451,6 +507,66 @@ void sensorTask(void *param){
             // Send battery live data to NMEA200 bus
             if(!isnan(sensors.batteryVoltage) && !isnan(sensors.batteryCurrent)){
                 SetN2kDCBatStatus(N2kMsg, 0, sensors.batteryVoltage, sensors.batteryCurrent, N2kDoubleNA, 1);
+                api->sendN2kMessage(N2kMsg);
+            }
+        }
+
+        // Send solar power value all 1s
+        if(millis() > starttime9 + 1000 && (String(powsensor2) == "INA219" || String(powsensor2) == "INA226")){
+            starttime9 = millis();
+            if(String(powsensor2) == "INA226" && INA226_2_ready == true){
+                double voltage = ina226_2.getBusVoltage();
+                // Limiter for voltage average building
+                if(voltage < 0){
+                    voltage = 0;
+                }
+                if(voltage > 30){
+                    voltage = 30;
+                }
+                sensors.solarVoltage = voltage;
+                sensors.solarCurrent = ina226_2.getCurrent() * corrFactor;
+                // Eliminates bit jitter by zero current values
+                float factor = maxCurrent / 100;
+                if(sensors.solarCurrent >= (-0.015 * factor) && sensors.solarCurrent <= (0.015 * factor)){
+                    sensors.solarCurrent = 0;
+                }
+                
+                // Calculate power value
+                sensors.solarPower = sensors.solarVoltage * sensors.solarCurrent; // more stable
+            }
+            // Send solar live data to NMEA200 bus
+            if(!isnan(sensors.solarVoltage) && !isnan(sensors.solarCurrent)){
+                SetN2kDCBatStatus(N2kMsg, 1, sensors.solarVoltage, sensors.solarCurrent, N2kDoubleNA, 1);
+                api->sendN2kMessage(N2kMsg);
+            }
+        }
+
+        // Send generator power value all 1s
+        if(millis() > starttime10 + 1000 && (String(powsensor3) == "INA219" || String(powsensor3) == "INA226")){
+            starttime10 = millis();
+            if(String(powsensor3) == "INA226" && INA226_3_ready == true){
+                double voltage = ina226_3.getBusVoltage();
+                // Limiter for voltage average building
+                if(voltage < 0){
+                    voltage = 0;
+                }
+                if(voltage > 30){
+                    voltage = 30;
+                }
+                sensors.generatorVoltage = voltage;
+                sensors.generatorCurrent = ina226_3.getCurrent() * corrFactor;
+                // Eliminates bit jitter by zero current values
+                float factor = maxCurrent / 100;
+                if(sensors.generatorCurrent >= (-0.015 * factor) && sensors.generatorCurrent <= (0.015 * factor)){
+                    sensors.generatorCurrent = 0;
+                }
+                
+                // Calculate power value
+                sensors.generatorPower = sensors.generatorVoltage * sensors.generatorCurrent; // more stable
+            }
+            // Send solar live data to NMEA200 bus
+            if(!isnan(sensors.generatorVoltage) && !isnan(sensors.generatorCurrent)){
+                SetN2kDCBatStatus(N2kMsg, 2, sensors.generatorVoltage, sensors.generatorCurrent, N2kDoubleNA, 1);
                 api->sendN2kMessage(N2kMsg);
             }
         }

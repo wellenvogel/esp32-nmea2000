@@ -41,7 +41,7 @@
     #define FONT3 "Ubuntu_Bold32pt7b"
     #define FONT4 "DSEG7Classic_BoldItalic80pt7b"
 
-    // GPS (NEO-6M)
+    // GPS (NEO-6M, NEO-M8N)
      #define OBP_GPS_TX 35      // Read only GPS data
     // TTP229 Touch Pad Controller (!!No I2C!!)
     #define TTP_SDO 25
