@@ -115,7 +115,7 @@ public:
         display.setCursor(10, 235);
         display.print("Installed");
         display.setCursor(10, 255);
-        display.print("Solar Power");
+        display.print("Power");
 
         // Show solar icon
         batteryGraphic(150, 45, solPercentage, pixelcolor, bgcolor);

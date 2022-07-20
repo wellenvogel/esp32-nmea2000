@@ -87,7 +87,7 @@ public:
         display.setTextColor(textcolor);
         display.setFont(&Ubuntu_Bold20pt7b);
         display.setCursor(10, 65);
-        display.print("Generator");
+        display.print("Gen.");
 
         // Show voltage type
         display.setTextColor(textcolor);
@@ -115,7 +115,7 @@ public:
         display.setCursor(10, 235);
         display.print("Installed");
         display.setCursor(10, 255);
-        display.print("Gen. Power");
+        display.print("Type");
 
         // Show generator icon
         batteryGraphic(150, 45, genPercentage, pixelcolor, bgcolor);
