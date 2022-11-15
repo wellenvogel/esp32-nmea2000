@@ -1,6 +1,7 @@
 #include "GWConfig.h"
 #include <ArduinoJson.h>
 #include <string.h>
+#include <MD5Builder.h>
 
 #define B(v) (v?"true":"false")
 
@@ -53,6 +54,7 @@ GwConfigInterface * GwConfigHandler::getConfigItem(const String name, bool dummy
 #define PREF_NAME "gwprefs"
 GwConfigHandler::GwConfigHandler(GwLog *logger): GwConfigDefinitions(){
     this->logger=logger;
+    saltBase=esp_random();
 }
 bool GwConfigHandler::loadConfig(){
     prefs.begin(PREF_NAME,true);
@@ -63,18 +65,6 @@ bool GwConfigHandler::loadConfig(){
     prefs.end();
     return true;
 }
-bool GwConfigHandler::saveConfig(){
-    prefs.begin(PREF_NAME,false);
-    for (int i=0;i<getNumConfig();i++){
-        if (configs[i]->hasChangedValue){
-            LOG_DEBUG(GwLog::LOG,"saving %s=%s",configs[i]->getName().c_str(),configs[i]->changedValue.c_str());
-            prefs.putString(configs[i]->getName().c_str(),configs[i]->changedValue);
-        }
-    }
-    prefs.end();
-    LOG_DEBUG(GwLog::LOG,"saved config");
-    return true;
-}
 
 bool GwConfigHandler::updateValue(String name, String value){
     GwConfigInterface *i=getConfigItem(name);
@@ -83,18 +73,24 @@ bool GwConfigHandler::updateValue(String name, String value){
         LOG_DEBUG(GwLog::LOG,"skip empty password %s",name.c_str());
     }
     else{
+        if (i->asString() == value){
+            return false;
+        }
         LOG_DEBUG(GwLog::LOG,"update config %s=>%s",name.c_str(),i->isSecret()?"***":value.c_str());
-        i->updateValue(value);
+        prefs.begin(PREF_NAME,false);
+        prefs.putString(i->getName().c_str(),value);
+        prefs.end();
     }
     return true;
 }
-bool GwConfigHandler::reset(bool save){
+bool GwConfigHandler::reset(){
     LOG_DEBUG(GwLog::LOG,"reset config");
+    prefs.begin(PREF_NAME,false);
     for (int i=0;i<getNumConfig();i++){
-        configs[i]->updateValue(configs[i]->getDefault());
+        prefs.putString(configs[i]->getName().c_str(),configs[i]->getDefault());
     }
-    if (!save) return true;
-    return saveConfig();
+    prefs.end();
+    return true;
 }
 String GwConfigHandler::getString(const String name, String defaultv) const{
     GwConfigInterface *i=getConfigItem(name,false);
@@ -120,6 +116,47 @@ bool GwConfigHandler::setValue(String name,String value){
     if (!i) return false;
     i->value=value;
     return true;
+}
+
+bool GwConfigHandler::checkPass(String hash){
+    if (! getBool(useAdminPass)) return true;
+    String pass=getString(adminPassword);
+    unsigned long now=millis()/1000UL & ~0x7UL;
+    MD5Builder builder;
+    char buffer[2*sizeof(now)+1];
+    for (int i=0;i< 5 ;i++){
+        unsigned long base=saltBase+now;
+        toHex(base,buffer,2*sizeof(now)+1);
+        builder.begin();
+        builder.add(buffer);
+        builder.add(pass);
+        builder.calculate();
+        String md5=builder.toString();
+        bool rt=hash == md5;
+        logger->logDebug(GwLog::DEBUG,"checking pass %s, base=%ld, hash=%s, res=%d",
+        hash.c_str(),base,md5.c_str(),(int)rt);
+        if (rt) return true;
+        now -= 8;
+    }
+    return false;
+}
+static char hv(uint8_t nibble){
+  nibble=nibble&0xf;
+  if (nibble < 10) return (char)('0'+nibble);
+  return (char)('A'+nibble-10);
+}
+void GwConfigHandler::toHex(unsigned long v, char *buffer, size_t bsize)
+{
+    uint8_t *bp = (uint8_t *)&v;
+    size_t i = 0;
+    for (; i < sizeof(v) && (2 * i + 1) < bsize; i++)
+    {
+        buffer[2 * i] = hv((*bp) >> 4);
+        buffer[2 * i + 1] = hv(*bp);
+        bp++;
+    }
+    if ((2 * i) < bsize)
+        buffer[2 * i] = 0;
 }
 
 void GwNmeaFilter::handleToken(String token, int index){

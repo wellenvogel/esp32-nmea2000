@@ -1,6 +1,7 @@
 #ifndef _GWWEBSERVER_H
 #define _GWWEBSERVER_H
 #include <ESPAsyncWebServer.h>
+#include <functional>
 #include "GwMessage.h"
 #include "GwLog.h"
 class GwWebServer{
@@ -14,6 +15,7 @@ class GwWebServer{
         ~GwWebServer();
         void begin();
         bool registerMainHandler(const char *url,RequestCreator creator);
+        bool registerPostHandler(const char *url, ArRequestHandlerFunction requestHandler, ArBodyHandlerFunction bodyHandler);
         void handleAsyncWebRequest(AsyncWebServerRequest *request, GwRequestMessage *msg);
         AsyncWebServer * getServer(){return server;}
 };
