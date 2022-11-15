@@ -237,7 +237,7 @@ function changeConfig() {
         .then(function (pass) {
             let newAdminPass;
             let url = "/api/setConfig"
-            let body="hash="+encodeURIComponent(pass)+"&";
+            let body="_hash="+encodeURIComponent(pass)+"&";
             let allValues=getAllConfigs();
             if (!allValues) return;
             for (let name in allValues){

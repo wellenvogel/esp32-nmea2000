@@ -21,6 +21,7 @@ void GwLog::logString(const char *fmt,...){
     va_list args;
     va_start(args,fmt);
     xSemaphoreTake(locker, portMAX_DELAY);
+    recordCounter++;
     vsnprintf(buffer,bufferSize-1,fmt,args);
     buffer[bufferSize-1]=0;
     if (! writer) {
@@ -40,6 +41,7 @@ void GwLog::logDebug(int level,const char *fmt,...){
     va_list args;
     va_start(args,fmt);
     xSemaphoreTake(locker, portMAX_DELAY);
+    recordCounter++;
     vsnprintf(buffer,bufferSize-1,fmt,args);
     buffer[bufferSize-1]=0;
     if (! writer) {

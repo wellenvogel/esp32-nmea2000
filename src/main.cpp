@@ -441,69 +441,7 @@ protected:
   }
 };
 
-class SetConfigRequest : public GwRequestMessage
-{
-public:
-  //we rely on the message living not longer then the request
-  AsyncWebServerRequest *request;
-  SetConfigRequest(AsyncWebServerRequest *rq) : GwRequestMessage(F("application/json"),F("setConfig")),
-    request(rq)
-  {};
-  virtual int getTimeout(){return 4000;}
-protected:
-  virtual void processRequest()
-  {
-    bool ok = true;
-    const char * hashArg="_hash";
-    String error;
-    String hash;
-    if (request->hasArg(hashArg)){
-      hash=request->arg(hashArg);
-    }
-    if (! checkPass(hash)){
-      result=JSON_INVALID_PASS;
-      return;
-    }
-    logger.logDebug(GwLog::DEBUG,"Heap free=%ld, minFree=%ld",
-          (long)xPortGetFreeHeapSize(),
-          (long)xPortGetMinimumEverFreeHeapSize()
-      );
-    for (int i = 0; i < request->args(); i++){
-      String name=request->argName(i);
-      String value=request->arg(i);                                  
-      if (name.indexOf("_")>= 0) continue;
-      if (name == GwConfigDefinitions::apPassword && fixedApPass) continue;
-      bool rt = config.updateValue(name, value);
-      if (!rt)
-      {
-        logger.logDebug(GwLog::ERROR,"ERR: unable to update %s to %s", name.c_str(), value.c_str());
-        error += name;
-        error += "=";
-        error += value;
-        error += ",";
-      }
-      logger.flush();
-    }
-    if (ok)
-    {
-      result = JSON_OK;
-      logger.logDebug(GwLog::ERROR,"update config and restart");
-      logger.flush();
-      logger.logDebug(GwLog::DEBUG,"Heap free=%ld, minFree=%ld",
-          (long)xPortGetFreeHeapSize(),
-          (long)xPortGetMinimumEverFreeHeapSize()
-      );
-      logger.flush();
-      delayedRestart();
-    }
-    else
-    {
-      GwJsonDocument rt(100);
-      rt["status"] = error;
-      serializeJson(rt, result);
-    }
-  }
-};
+
 class ResetConfigRequest : public GwRequestMessage
 {
   String hash;
@@ -595,10 +533,11 @@ void handleConfigRequestData(AsyncWebServerRequest *request, uint8_t *data, size
     char hashChecked;
     char parsingValue;
     int bName;
-    char name[16];
+    char name[33];
     int bValue;
     char value[512];
   }RequestNV;
+  long long lastRecords=logger.getRecordCounter();
   logger.logDebug(GwLog::DEBUG,"handleConfigRequestData len=%d,idx=%d,total=%d",(int)len,(int)index,(int)total);
   if (request->_tempObject == NULL){
     logger.logDebug(GwLog::DEBUG,"handleConfigRequestData create receive struct");
@@ -634,12 +573,6 @@ void handleConfigRequestData(AsyncWebServerRequest *request, uint8_t *data, size
           nv->parsingValue = 1;
           break;
         }
-        if (nv->bName >= maxSize)
-        {
-          nv->name[maxSize] = 0;
-          logger.logDebug(GwLog::DEBUG, "parse error name too long %s", nv->name);
-          nv->bName = 0;
-        }
       }
     }
     bool valueDone = false;
@@ -659,12 +592,7 @@ void handleConfigRequestData(AsyncWebServerRequest *request, uint8_t *data, size
         nv->bValue++;
         parsed++;
         data++;
-        if (nv->bValue >= maxSize)
-        {
-          nv->value[maxSize] = 0;
-          logger.logDebug(GwLog::DEBUG, "parse error value too long %s:%s", nv->name, nv->value);
-          nv->bValue = 0;
-        }
+        if (valueDone) break;
       }
       if (! valueDone){
         if (parsed >= len && (len+index) >= total){
@@ -694,7 +622,11 @@ void handleConfigRequestData(AsyncWebServerRequest *request, uint8_t *data, size
         }
         else{
           if (nv->hashChecked){
-            logger.logDebug(GwLog::DEBUG,"update value ns=%d,n=%d,vs=%d,v=%d",nv->bName,nv->name,nv->bValue,nv->value);
+            logger.logDebug(GwLog::DEBUG,"value ns=%d,n=%s,vs=%d,v=%s",nv->bName,nv->name,nv->bValue,nv->value);
+            if ((logger.getRecordCounter() - lastRecords) > 20){
+              logger.flush();
+              lastRecords=logger.getRecordCounter();
+            }
             config.updateValue(request->urlDecode(name),request->urlDecode(value));
           }
         }
@@ -708,6 +640,12 @@ void handleConfigRequestData(AsyncWebServerRequest *request, uint8_t *data, size
     if (nv->notFirst){
       if (nv->hashChecked){
         request->send(200,"application/json",JSON_OK);
+        logger.flush();
+        logger.logDebug(GwLog::DEBUG,"Heap free=%ld, minFree=%ld",
+          (long)xPortGetFreeHeapSize(),
+          (long)xPortGetMinimumEverFreeHeapSize()
+        );
+        logger.flush();
         delayedRestart();
       }
     }
