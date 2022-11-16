@@ -887,6 +887,7 @@ private:
             LOG_DEBUG(GwLog::DEBUG,"unable to parse ROT %s",msg.line);
             return;
         }
+        ROT=ROT / ROT_WA_FACTOR; 
         if (! updateDouble(boatData->ROT,ROT,msg.sourceId)) return;
         tN2kMsg n2kMsg;
         SetN2kRateOfTurn(n2kMsg,1,ROT);

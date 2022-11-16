@@ -7,6 +7,10 @@
 #define GW_BOAT_VALUE_LEN 32
 #define GWSC(name) static constexpr const __FlashStringHelper* name=F(#name)
 
+//see https://github.com/wellenvogel/esp32-nmea2000/issues/44
+//factor to convert from N2k/SI rad/s to current NMEA rad/min
+#define ROT_WA_FACTOR 60
+
 class GwJsonDocument;
 class GwBoatItemBase{
     public:
