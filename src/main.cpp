@@ -403,6 +403,7 @@ protected:
     toHex(base,buffer,bsize);
     status["salt"] = buffer;
     status["fwtype"]= firmwareType;
+    status["heap"]=(long)xPortGetFreeHeapSize();
     //nmea0183Converter->toJson(status);
     countNMEA2KIn.toJson(status);
     countNMEA2KOut.toJson(status);
