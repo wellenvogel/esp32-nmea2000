@@ -14,7 +14,7 @@ class FactoryResetRequest: public GwMessage{
     protected:    
         virtual void processImpl(){
             api->getLogger()->logDebug(GwLog::LOG,"reset request processing");
-            api->getConfig()->reset(true);
+            api->getConfig()->reset();
             xTaskCreate([](void *p){
             delay(500);
             ESP.restart();

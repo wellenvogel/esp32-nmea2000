@@ -10,18 +10,6 @@ class GwConfigInterface{
         const char * initialValue;
         String value;
         bool secret=false;
-        String changedValue;
-        bool hasChangedValue=false;
-        void updateValue(String value)
-        {
-            hasChangedValue = false;
-            if (value != this->value)
-            {
-                changedValue = value;
-                hasChangedValue = true;
-            }
-        }
-
     public:
         GwConfigInterface(const String &name, const char * initialValue, bool secret=false){
             this->name=name;

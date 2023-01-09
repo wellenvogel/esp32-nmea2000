@@ -50,6 +50,20 @@ M5 Atom CAN with M5 RS485 Module
 
 With this set up you get basically all the features from the plain AtomCAN and the Tal485 combined. You still can connect via USB but have the NMEA0183 connection in parallel.
 
+M5 Atom RS485 with M5 CAN Unit
+--------------------------------
+* Hardware: [ATOM RS485](https://docs.m5stack.com/en/atom/atomic485) + [CAN Unit](http://docs.m5stack.com/en/unit/can)
+* Prebuild Binary: m5stack-atom-rs485-canunit-all.bin
+* Build Define: BOARD_M5ATOM_RS485_CANUNIT
+* Power: 12V via RS485 Module or via USB
+
+M5 Atom RS232 with M5 CAN Unit
+--------------------------------
+* Hardware: [ATOM RS232](https://docs.m5stack.com/en/atom/atomic232) + [CAN Unit](http://docs.m5stack.com/en/unit/can)
+* Prebuild Binary: m5stack-atom-rs232-canunit-all.bin
+* Build Define: BOARD_M5ATOM_RS232_CANUNIT
+* Power: 12V via RS232 Module or via USB
+
 M5 Stack Atom Canunit
 ---------------------
 * Hardware: [M5_ATOM](http://docs.m5stack.com/en/core/atom_lite) + [CAN Unit](http://docs.m5stack.com/en/unit/can)
