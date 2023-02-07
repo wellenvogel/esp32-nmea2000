@@ -184,6 +184,8 @@ void handleN2kMessage(const tN2kMsg &n2kMsg,int sourceId, bool isConverted=false
     c->sendActisense(n2kMsg,sourceId);
   });
   if (! isConverted){
+    /* smoothfroggy / Debug tracking */
+    /* logger.logDebug(GwLog::DEBUG, "Converting N2K: pgn %d, dir %d", n2kMsg.PGN,sourceId); */
     nmea0183Converter->HandleMsg(n2kMsg,sourceId);
   }
   if (sourceId != N2K_CHANNEL_ID && sendOutN2k){

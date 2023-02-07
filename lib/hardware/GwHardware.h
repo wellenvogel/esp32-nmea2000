@@ -102,11 +102,11 @@
 #define GWLED_BRIGHTNESS 64
 #endif
 
-
 #ifdef BOARD_M5STICK_CANUNIT
 #define ESP32_CAN_TX_PIN GPIO_NUM_32
 #define ESP32_CAN_RX_PIN GPIO_NUM_33
 #endif
+
 #ifdef BOARD_HOMBERGER
 #define ESP32_CAN_TX_PIN GPIO_NUM_5
 #define ESP32_CAN_RX_PIN GPIO_NUM_4
@@ -117,6 +117,26 @@
 #define GWBUTTON_PIN GPIO_NUM_0
 #define GWBUTTON_ACTIVE LOW
 //if GWBUTTON_PULLUPDOWN we enable a pulup/pulldown
+#define GWBUTTON_PULLUPDOWN 
+#endif
+
+#ifdef BOARD_SMOOTHFROGGY
+// Board based on ESP32 DevKit V1 (30 pins)
+// Handle 2xNMEA0183 bi directionnal serial streams (full duplex)
+#define ESP32_CAN_TX_PIN GPIO_NUM_5
+#define ESP32_CAN_RX_PIN GPIO_NUM_4
+// Serial1 pins
+#define GWSERIAL_RX 18
+#define GWSERIAL_TX 19
+#define GWSERIAL_MODE "BI"
+// Serial2 pins
+#define GWSERIAL2_RX 16
+#define GWSERIAL2_TX 17
+#define GWSERIAL2_MODE "BI"
+// Button 'Flash' of the ESP32 DevKit V1
+#define GWBUTTON_PIN GPIO_NUM_0
+#define GWBUTTON_ACTIVE LOW
+//if GWBUTTON_PULLUPDOWN we enable a pullup/pulldown
 #define GWBUTTON_PULLUPDOWN 
 #endif
 

@@ -12,8 +12,9 @@
 #define N2K_CHANNEL_ID 0
 #define USB_CHANNEL_ID 1
 #define SERIAL1_CHANNEL_ID 2
-#define TCP_CLIENT_CHANNEL_ID 3
-#define MIN_TCP_CHANNEL_ID 4
+#define SERIAL2_CHANNEL_ID 3
+#define TCP_CLIENT_CHANNEL_ID 4
+#define MIN_TCP_CHANNEL_ID 5
 
 #define MIN_USER_TASK 200
 class GwSocketServer;
@@ -28,6 +29,7 @@ class GwChannelList{
         GwSocketServer *sockets;
         GwTcpClient *client;
         String serialMode=F("NONE");
+        String serial2Mode=F("NONE");
     public:
         GwChannelList(GwLog *logger, GwConfigHandler *config);
         typedef std::function<void(GwChannel *)> ChannelAction;
