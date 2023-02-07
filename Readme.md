@@ -1,3 +1,26 @@
+NMEA2000-Gateway with ESP32 / smoothfroggy
+==========================================
+Background
+----------
+* Forked from https://github.com/wellenvogel/esp32-nmea2000
+* Include work from https://github.com/free-x/esp32-nmea2000 (handling BME280)
+
+Details
+-------
+This fork enable:
+* An additional NMEA0183 serial port (serial2 RX & TX) configurable from web
+* Handle a BME280 (I2C) to provide Pressure, Temperature and Humidity. Web config also incorporate pressure offset to calibrate Pressure reading
+
+Implementation:
+A schematic is available, see [schematic](doc/smoothfroggy_2K_2x0183_BME280.pdf). Option is given for NMEA0183 inputs only or full duplex NMEA0183 (RS422).
+
+Note:
+It might be advisable to care of noise and interferences when coupling electrically various ports such NMEA0183, NMEA2000 and USB. In particular, attention must given to ground loops, ground offsets and noise injection. This kind of problems can be difficult to diagnose and solve. Various NMEA0183 and NMEA2000 equipment have no isolation and may lead to issues. Industrial standards require full isolation.
+The schematic proposed handles isolation as follows:
+* Isolated CAN transceiver: here a CANunit from M5stack (https://shop.m5stack.com/products/canbus-unitca-is3050g)
+* NMEA0183 input only: based on an optocoupler
+* NMEA0183 full duplex: based on an isolated TTL<=>RS422 [module](doc/RS422module.jpg) (https://fr.aliexpress.com/item/1005004149339932.html?spm=a2g0o.productlist.main.7.18045752W6UWN7&algo_pvid=5a5e3d83-4686-4261-bef5-94fad1ca826c&algo_exp_id=5a5e3d83-4686-4261-bef5-94fad1ca826c-3&pdp_ext_f=%7B%22sku_id%22%3A%2212000028199592047%22%7D&pdp_npi=3%40dis%21EUR%215.21%214.43%21%21%21%21%21%4021021a7216757684185106902d06c1%2112000028199592047%21sea%21FR%211938846209&curPageLogUid=Ck5dSp40ICpK)
+
 NMEA2000-Gateway with ESP32
 ===========================
 
