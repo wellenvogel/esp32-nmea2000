@@ -526,7 +526,7 @@ private:
             boatData->VAR->getDataWithDefault(N2kDoubleNA),
             boatData->DEV->getDataWithDefault(N2kDoubleNA)
         );
-        send(n2kMsg,msg.sourceId);    
+        send(n2kMsg,msg.sourceId,"127250M");    
     }
     
     void convertHDT(const SNMEA0183Msg &msg){
@@ -570,7 +570,7 @@ private:
         UD(DEV);
         tN2kMsg n2kMsg;
         SetN2kMagneticHeading(n2kMsg,1,MHDG,DEV,VAR);
-        send(n2kMsg,msg.sourceId);    
+        send(n2kMsg,msg.sourceId,"127250M");    
     }
 
     void convertDPT(const SNMEA0183Msg &msg){
@@ -692,10 +692,19 @@ private:
             LOG_DEBUG(GwLog::DEBUG, "failed to parse VHW %s", msg.line);
             return;
         }
-        if (! updateDouble(boatData->STW,STW,msg.sourceId)) return;
-        if (! updateDouble(boatData->HDG,TrueHeading,msg.sourceId)) return;
-        if (MagneticHeading == NMEA0183DoubleNA) MagneticHeading=N2kDoubleNA;
         tN2kMsg n2kMsg;
+        if (updateDouble(boatData->HDG,TrueHeading,msg.sourceId)){
+            SetN2kTrueHeading(n2kMsg,1,TrueHeading);
+            send(n2kMsg,msg.sourceId); 
+        }
+        if(updateDouble(boatData->MHDG,MagneticHeading,msg.sourceId)){
+            SetN2kMagneticHeading(n2kMsg,1,MagneticHeading,
+                boatData->DEV->getDataWithDefault(N2kDoubleNA),
+                boatData->VAR->getDataWithDefault(N2kDoubleNA)
+                );
+            send(n2kMsg,msg.sourceId,"127250M"); //ensure both mag and true are sent
+        }
+        if (! updateDouble(boatData->STW,STW,msg.sourceId)) return;
         SetN2kBoatSpeed(n2kMsg,1,STW);
         send(n2kMsg,msg.sourceId);
 
