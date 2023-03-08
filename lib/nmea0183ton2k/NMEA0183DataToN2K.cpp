@@ -922,6 +922,23 @@ private:
         send(n2kMsg,msg.sourceId);
     }
 
+    void convertMTW(const SNMEA0183Msg &msg){
+        if (msg.FieldCount() < 2){
+            LOG_DEBUG(GwLog::DEBUG,"unable to parse MTW %s",msg.line);
+            return;   
+        }
+        if (msg.Field(1)[0] != 'C'){
+            LOG_DEBUG(GwLog::DEBUG,"invalid temp unit in MTW %s",msg.line);   
+            return; 
+        }
+        if (msg.FieldLen(0) < 1) return;
+        double WTemp=CToKelvin(atof(msg.Field(0)));
+        UD(WTemp);
+        tN2kMsg n2kMsg;
+        SetN2kPGN130310(n2kMsg,1,WTemp);
+        send(n2kMsg,msg.sourceId);
+    }
+
 //shortcut for lambda converters
 #define CVL [](const SNMEA0183Msg &msg, NMEA0183DataToN2KFunctions *p) -> void
     void registerConverters()
@@ -990,7 +1007,10 @@ private:
             String(F("ROT")), &NMEA0183DataToN2KFunctions::convertROT);
         converters.registerConverter(
             129283UL,
-            String(F("XTE")), &NMEA0183DataToN2KFunctions::convertXTE);         
+            String(F("XTE")), &NMEA0183DataToN2KFunctions::convertXTE); 
+        converters.registerConverter(
+            130310UL,
+            String(F("MTW")), &NMEA0183DataToN2KFunctions::convertMTW);             
         unsigned long *xdrpgns=new unsigned long[8]{127505UL,127508UL,130312UL,130313UL,130314UL,127489UL,127488UL,127257UL};    
         converters.registerConverter(
             8,
