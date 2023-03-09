@@ -145,6 +145,16 @@ For details refer to the [example description](lib/exampletask/Readme.md).
 
 Changelog
 ---------
+[20230309](../../releases/tag/20230308)
+**********
+* use underscores in settings file names [#40](../../issues/40)
+* pin platform and lib versions
+* add rs232 and rs485 atom boards
+* use less memory when saving new config
+* correct factor for ROT [#44](../../issues/44)
+* better handling of VHW - send STW (128259) even if no heading, additionally send 127250 (magnetic/true) if included in VHW [#49](../../issues/49)
+* parse MTW and convert to 130310 [#49](../../issues/49)
+
 [20220403](../../releases/tag/20220403)
 *********
 * add support for PGN 127257 pitch/roll/yaw
