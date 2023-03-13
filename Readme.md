@@ -54,6 +54,19 @@ They are devided into binaries for an initial flash (xxx-all.bin) and binaries f
 
 Initial Flash
 *************
+
+__Browser__
+
+If you run a system with a modern Chrome or Edge Browser you can directly flash your device from within the browser.
+Just go to the [Flash Page](https://wellenvogel.github.io/esp32-nmea2000/install.html) and select the "Initial" flash for your Hardware. This will install the most current software to your device.
+If you are on Windows you will need to have the correct driver installed before (see below at [windows users](#windows) - only install the driver, not the flashtool).
+
+You can also install an update from the flash page but normally it is easier to do this from the Web Gui of the device (see [below](#update)).
+
+The [Flash Page](https://wellenvogel.github.io/esp32-nmea2000/install.html) will also allow you to open a console window to your ESP32.
+
+__Tool based__
+
 To initially flash a deviceyou can use [ESPTool](https://github.com/espressif/esptool).
 The flash command must be (example for m5stack-atom):
 
@@ -77,12 +90,14 @@ Afterwards run flashtool.pyz with
 ```
 python3 flashtool.pyz
 ```
+<span id="windows"/>
 
 __windows users__<br> 
-You can find a prebuild executable in tools: [esptool.exe](tools/esptool.exe).
-Just create an empty directory on your machine, download the esptool to this directory and also download the binary (xxx-all.bin) from [releases](../../releases).
-Afterwards you need to install the driver for the serial port to connect your ESP32 board. For a modern windows the driver at [FTDI](https://ftdichip.com/drivers/d2xx-drivers/) should be working.
+You need to install the driver for the serial port to connect your ESP32 board. For a modern windows the driver at [FTDI](https://ftdichip.com/drivers/d2xx-drivers/) should be working.
 After installing the driver check with your device manager for the com port that is assigned to your connected esp device.
+
+For the flashtool you can find a prebuild executable in tools: [esptool.exe](tools/esptool.exe).
+Just create an empty directory on your machine, download the esptool to this directory and also download the binary (xxx-all.bin) from [releases](../../releases).
 
 Open a command prompt and change into the directory you downloaded the esptool.exe and the firmware binary.
 Flash with the command
@@ -97,7 +112,7 @@ There is no installation needed - just start the downloaded exe.
 Some Anti Virus Software may (accidently) tag this as infected. In this case you can still install the UI in two steps:
  *  you first need to install python3 from the [download page](https://www.python.org/downloads/windows/) - use the Windows 64 Bit installer. Install using the default settings. 
 *  Afterwards download [flashtool.pyz](../../raw/master/tools/flashtool.pyz) and run it with a double click.
-
+<span id="update"/>
 
 Update
 ******
