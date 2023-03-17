@@ -160,6 +160,10 @@ For details refer to the [example description](lib/exampletask/Readme.md).
 
 Changelog
 ---------
+[20230317](../../releases/tag/20230317)
+**********
+* correctly convert bar to Pascal in XDR records
+
 [20230309](../../releases/tag/20230308)
 **********
 * use underscores in settings file names [#40](../../issues/40)
