@@ -10,7 +10,7 @@
 #include <NMEA0183Msg.h>
 #include <NMEA0183Messages.h>
 #include <GxEPD.h>                      // GxEPD lib for E-Ink displays
-#include "OBP60Extensions.h"         // Functions lib for extension board
+#include "OBP60Extensions.h"            // Functions lib for extension board
 #include "OBP60Keypad.h"                // Functions for keypad
 
 // True type character sets includes
