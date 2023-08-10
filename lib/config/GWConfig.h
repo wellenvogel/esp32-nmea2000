@@ -18,22 +18,25 @@ class GwConfigHandler: public GwConfigDefinitions{
         public:
         GwConfigHandler(GwLog *logger);
         bool loadConfig();
-        bool saveConfig();
         void stopChanges();
         bool updateValue(String name, String value);
-        bool reset(bool save);
+        bool reset();
         String toString() const;
         String toJson() const;
         String getString(const String name,const String defaultv="") const;
         bool getBool(const String name,bool defaultv=false) const ;
         int getInt(const String name,int defaultv=0) const;
         GwConfigInterface * getConfigItem(const String name, bool dummy=false) const;
+        bool checkPass(String hash);
         /**
          * change the value of a config item
          * will become a noop after stopChanges has been called 
          * !use with care! no checks of the value
          */
         bool setValue(String name, String value);
+        static void toHex(unsigned long v,char *buffer,size_t bsize);
+        unsigned long getSaltBase(){return saltBase;}
     private:
+        unsigned long saltBase=0;
 };
 #endif

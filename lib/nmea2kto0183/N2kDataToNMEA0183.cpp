@@ -32,7 +32,6 @@
 
 
 
-
 N2kDataToNMEA0183::N2kDataToNMEA0183(GwLog * logger, GwBoatData *boatData, 
   SendNMEA0183MessageCallback callback, String talkerId) 
     {
@@ -1055,7 +1054,7 @@ private:
         }
         if (!updateDouble(boatData->ROT,ROT)) return;
         tNMEA0183Msg nmeamsg;
-        if (NMEA0183SetROT(nmeamsg,ROT,talkerId)){
+        if (NMEA0183SetROT(nmeamsg,ROT * ROT_WA_FACTOR,talkerId)){
             SendMessage(nmeamsg);
         }
     }

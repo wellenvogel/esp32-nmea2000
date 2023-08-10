@@ -1,0 +1,24 @@
+.item {
+    margin: 0.5em;
+}
+.itemTitle {
+    margin-top: 0.5em;
+    margin-bottom: 0.2em;
+}
+button.installButton, button.showConsole, button.hideConsole {
+    font-size: 1em;
+    margin-left: 0.5em;
+}
+select.consoleBaud {
+    display: inline-block;
+    max-width: 10em;
+    font-size: 1em;
+}
+.console {
+    margin-bottom: 1em;
+}
+body {
+    font-size: 16px;
+    font-family: system-ui;
+    line-height: 1.5em;
+}

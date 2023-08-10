@@ -526,7 +526,7 @@ private:
             boatData->VAR->getDataWithDefault(N2kDoubleNA),
             boatData->DEV->getDataWithDefault(N2kDoubleNA)
         );
-        send(n2kMsg,msg.sourceId);    
+        send(n2kMsg,msg.sourceId,"127250M");    
     }
     
     void convertHDT(const SNMEA0183Msg &msg){
@@ -570,7 +570,7 @@ private:
         UD(DEV);
         tN2kMsg n2kMsg;
         SetN2kMagneticHeading(n2kMsg,1,MHDG,DEV,VAR);
-        send(n2kMsg,msg.sourceId);    
+        send(n2kMsg,msg.sourceId,"127250M");    
     }
 
     void convertDPT(const SNMEA0183Msg &msg){
@@ -692,10 +692,19 @@ private:
             LOG_DEBUG(GwLog::DEBUG, "failed to parse VHW %s", msg.line);
             return;
         }
-        if (! updateDouble(boatData->STW,STW,msg.sourceId)) return;
-        if (! updateDouble(boatData->HDG,TrueHeading,msg.sourceId)) return;
-        if (MagneticHeading == NMEA0183DoubleNA) MagneticHeading=N2kDoubleNA;
         tN2kMsg n2kMsg;
+        if (updateDouble(boatData->HDG,TrueHeading,msg.sourceId)){
+            SetN2kTrueHeading(n2kMsg,1,TrueHeading);
+            send(n2kMsg,msg.sourceId); 
+        }
+        if(updateDouble(boatData->MHDG,MagneticHeading,msg.sourceId)){
+            SetN2kMagneticHeading(n2kMsg,1,MagneticHeading,
+                boatData->DEV->getDataWithDefault(N2kDoubleNA),
+                boatData->VAR->getDataWithDefault(N2kDoubleNA)
+                );
+            send(n2kMsg,msg.sourceId,"127250M"); //ensure both mag and true are sent
+        }
+        if (! updateDouble(boatData->STW,STW,msg.sourceId)) return;
         SetN2kBoatSpeed(n2kMsg,1,STW);
         send(n2kMsg,msg.sourceId);
 
@@ -887,6 +896,7 @@ private:
             LOG_DEBUG(GwLog::DEBUG,"unable to parse ROT %s",msg.line);
             return;
         }
+        ROT=ROT / ROT_WA_FACTOR; 
         if (! updateDouble(boatData->ROT,ROT,msg.sourceId)) return;
         tN2kMsg n2kMsg;
         SetN2kRateOfTurn(n2kMsg,1,ROT);
@@ -909,6 +919,23 @@ private:
         tN2kMsg n2kMsg;
         tN2kXTEMode mode=xteMode(msg.Field(5)[0]);
         SetN2kXTE(n2kMsg,1,mode,false,xte);
+        send(n2kMsg,msg.sourceId);
+    }
+
+    void convertMTW(const SNMEA0183Msg &msg){
+        if (msg.FieldCount() < 2){
+            LOG_DEBUG(GwLog::DEBUG,"unable to parse MTW %s",msg.line);
+            return;   
+        }
+        if (msg.Field(1)[0] != 'C'){
+            LOG_DEBUG(GwLog::DEBUG,"invalid temp unit in MTW %s",msg.line);   
+            return; 
+        }
+        if (msg.FieldLen(0) < 1) return;
+        double WTemp=CToKelvin(atof(msg.Field(0)));
+        UD(WTemp);
+        tN2kMsg n2kMsg;
+        SetN2kPGN130310(n2kMsg,1,WTemp);
         send(n2kMsg,msg.sourceId);
     }
 
@@ -980,7 +1007,10 @@ private:
             String(F("ROT")), &NMEA0183DataToN2KFunctions::convertROT);
         converters.registerConverter(
             129283UL,
-            String(F("XTE")), &NMEA0183DataToN2KFunctions::convertXTE);         
+            String(F("XTE")), &NMEA0183DataToN2KFunctions::convertXTE); 
+        converters.registerConverter(
+            130310UL,
+            String(F("MTW")), &NMEA0183DataToN2KFunctions::convertMTW);             
         unsigned long *xdrpgns=new unsigned long[8]{127505UL,127508UL,130312UL,130313UL,130314UL,127489UL,127488UL,127257UL};    
         converters.registerConverter(
             8,

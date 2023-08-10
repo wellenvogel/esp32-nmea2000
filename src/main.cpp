@@ -141,46 +141,11 @@ GwWebServer webserver(&logger,&mainQueue,80);
 GwCounter<unsigned long> countNMEA2KIn("count2Kin");
 GwCounter<unsigned long> countNMEA2KOut("count2Kout");
 
-unsigned long saltBase=esp_random();
-
-char hv(uint8_t nibble){
-  nibble=nibble&0xf;
-  if (nibble < 10) return (char)('0'+nibble);
-  return (char)('A'+nibble-10);
-}
-void toHex(unsigned long v,char *buffer,size_t bsize){
-  uint8_t *bp=(uint8_t *)&v;
-  size_t i=0;
-  for (;i<sizeof(v) && (2*i +1)< bsize;i++){
-    buffer[2*i]=hv((*bp) >> 4);
-    buffer[2*i+1]=hv(*bp);
-    bp++;
-  }
-  if ((2*i) < bsize) buffer[2*i]=0;
-}
 
 bool checkPass(String hash){
-  if (! config.getBool(config.useAdminPass)) return true;
-  String pass=config.getString(config.adminPassword);
-  unsigned long now=millis()/1000UL & ~0x7UL;
-  MD5Builder builder;
-  char buffer[2*sizeof(now)+1];
-  for (int i=0;i< 5 ;i++){
-    unsigned long base=saltBase+now;
-    toHex(base,buffer,2*sizeof(now)+1);
-    builder.begin();
-    builder.add(buffer);
-    builder.add(pass);
-    builder.calculate();
-    String md5=builder.toString();
-    bool rt=hash == md5;
-    logger.logDebug(GwLog::DEBUG,"checking pass %s, base=%ld, hash=%s, res=%d",
-      hash.c_str(),base,md5.c_str(),(int)rt);
-    if (rt) return true;
-    now -= 8;
-  }
-  return false;
+  return config.checkPass(hash);
 }
+
 
 GwUpdate updater(&logger,&webserver,&checkPass);
 GwConfigInterface *systemName=config.getConfigItem(config.systemName,true);
@@ -398,11 +363,12 @@ protected:
     status["clientIP"] = WiFi.localIP().toString();
     status["apIp"] = gwWifi.apIP();
     size_t bsize=2*sizeof(unsigned long)+1;
-    unsigned long base=saltBase + ( millis()/1000UL & ~0x7UL);
+    unsigned long base=config.getSaltBase() + ( millis()/1000UL & ~0x7UL);
     char buffer[bsize];
-    toHex(base,buffer,bsize);
+    GwConfigHandler::toHex(base,buffer,bsize);
     status["salt"] = buffer;
     status["fwtype"]= firmwareType;
+    status["heap"]=(long)xPortGetFreeHeapSize();
     //nmea0183Converter->toJson(status);
     countNMEA2KIn.toJson(status);
     countNMEA2KOut.toJson(status);
@@ -476,71 +442,7 @@ protected:
   }
 };
 
-class SetConfigRequest : public GwRequestMessage
-{
-public:
-  //we rely on the message living not longer then the request
-  AsyncWebServerRequest *request;
-  SetConfigRequest(AsyncWebServerRequest *rq) : GwRequestMessage(F("application/json"),F("setConfig")),
-    request(rq)
-  {};
-  virtual int getTimeout(){return 4000;}
-protected:
-  virtual void processRequest()
-  {
-    bool ok = true;
-    const char * hashArg="_hash";
-    String error;
-    String hash;
-    if (request->hasArg(hashArg)){
-      hash=request->arg(hashArg);
-    }
-    if (! checkPass(hash)){
-      result=JSON_INVALID_PASS;
-      return;
-    }
-    logger.logDebug(GwLog::DEBUG,"Heap free=%ld, minFree=%ld",
-          (long)xPortGetFreeHeapSize(),
-          (long)xPortGetMinimumEverFreeHeapSize()
-      );
-    for (int i = 0; i < request->args(); i++){
-      String name=request->argName(i);
-      String value=request->arg(i);                                  
-      if (name.indexOf("_")>= 0) continue;
-      if (name == GwConfigDefinitions::apPassword && fixedApPass) continue;
-      bool rt = config.updateValue(name, value);
-      if (!rt)
-      {
-        logger.logDebug(GwLog::ERROR,"ERR: unable to update %s to %s", name.c_str(), value.c_str());
-        ok = false;
-        error += name;
-        error += "=";
-        error += value;
-        error += ",";
-      }
-      logger.flush();
-    }
-    if (ok)
-    {
-      result = JSON_OK;
-      logger.logDebug(GwLog::ERROR,"update config and restart");
-      config.saveConfig();
-      logger.flush();
-      logger.logDebug(GwLog::DEBUG,"Heap free=%ld, minFree=%ld",
-          (long)xPortGetFreeHeapSize(),
-          (long)xPortGetMinimumEverFreeHeapSize()
-      );
-      logger.flush();
-      delayedRestart();
-    }
-    else
-    {
-      GwJsonDocument rt(100);
-      rt["status"] = error;
-      serializeJson(rt, result);
-    }
-  }
-};
+
 class ResetConfigRequest : public GwRequestMessage
 {
   String hash;
@@ -557,7 +459,7 @@ protected:
       result=JSON_INVALID_PASS;
       return;
     }
-    config.reset(true);
+    config.reset();
     logger.logDebug(GwLog::ERROR,"reset config, restart");
     result = JSON_OK;
     delayedRestart();
@@ -626,6 +528,134 @@ protected:
 };
 
 
+void handleConfigRequestData(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total){
+  typedef struct{
+    char notFirst;
+    char hashChecked;
+    char parsingValue;
+    int bName;
+    char name[33];
+    int bValue;
+    char value[512];
+  }RequestNV;
+  long long lastRecords=logger.getRecordCounter();
+  logger.logDebug(GwLog::DEBUG,"handleConfigRequestData len=%d,idx=%d,total=%d",(int)len,(int)index,(int)total);
+  if (request->_tempObject == NULL){
+    logger.logDebug(GwLog::DEBUG,"handleConfigRequestData create receive struct");
+    //we cannot use new here as it will be deleted with free
+    request->_tempObject=malloc(sizeof(RequestNV));
+    memset(request->_tempObject,0,sizeof(RequestNV));
+  }
+  RequestNV *nv=(RequestNV*)(request->_tempObject);
+  if (nv->notFirst && ! nv->hashChecked){
+    return; //ignore data
+  }
+  int parsed=0;
+  while (parsed < len)
+  {
+    if (!nv->parsingValue)
+    {
+      int maxSize = sizeof(RequestNV::name) - 1;
+      if (nv->bName >= maxSize)
+      {
+        nv->name[maxSize] = 0;
+        logger.logDebug(GwLog::DEBUG, "parse error name too long %s", nv->name);
+        nv->bName = 0;
+      }
+      while (nv->bName < maxSize && parsed < len)
+      {
+        bool endName = *data == '=';
+        nv->name[nv->bName] = endName ? 0 : *data;
+        nv->bName++;
+        parsed++;
+        data++;
+        if (endName)
+        {
+          nv->parsingValue = 1;
+          break;
+        }
+      }
+    }
+    bool valueDone = false;
+    if (nv->parsingValue)
+    {
+      int maxSize = sizeof(RequestNV::value) - 1;
+      if (nv->bValue >= maxSize)
+      {
+        nv->value[maxSize] = 0;
+        logger.logDebug(GwLog::DEBUG, "parse error value too long %s:%s", nv->name, nv->value);
+        nv->bValue = 0;
+      }
+      while (nv->bValue < maxSize && parsed < len)
+      {
+        valueDone = *data == '&';
+        nv->value[nv->bValue] = valueDone ? 0 : *data;
+        nv->bValue++;
+        parsed++;
+        data++;
+        if (valueDone) break;
+      }
+      if (! valueDone){
+        if (parsed >= len && (len+index) >= total){
+          //request ends here
+          nv->value[nv->bValue]=0;
+          valueDone=true;
+        } 
+      }
+      if (valueDone){
+        String name(nv->name);
+        String value(nv->value);
+        if (! nv->notFirst){
+          nv->notFirst=1;
+          //we expect the _hash as first parameter
+          if (name != String("_hash")){
+            logger.logDebug(GwLog::ERROR,"missing first parameter _hash in setConfig");
+            request->send(200,"application/json","{\"status\":\"missing _hash\"}");
+            return;
+          }
+          if (! config.checkPass(request->urlDecode(value))){
+            request->send(200,"application/json",JSON_INVALID_PASS);
+            return;
+          }
+          else{
+            nv->hashChecked=1;
+          }
+        }
+        else{
+          if (nv->hashChecked){
+            logger.logDebug(GwLog::DEBUG,"value ns=%d,n=%s,vs=%d,v=%s",nv->bName,nv->name,nv->bValue,nv->value);
+            if ((logger.getRecordCounter() - lastRecords) > 20){
+              logger.flush();
+              lastRecords=logger.getRecordCounter();
+            }
+            config.updateValue(request->urlDecode(name),request->urlDecode(value));
+          }
+        }
+        nv->parsingValue=0;
+        nv->bName=0;
+        nv->bValue=0;
+      }
+    }
+  }
+  if (parsed >= len && (len+index)>= total){
+    if (nv->notFirst){
+      if (nv->hashChecked){
+        request->send(200,"application/json",JSON_OK);
+        logger.flush();
+        logger.logDebug(GwLog::DEBUG,"Heap free=%ld, minFree=%ld",
+          (long)xPortGetFreeHeapSize(),
+          (long)xPortGetMinimumEverFreeHeapSize()
+        );
+        logger.flush();
+        delayedRestart();
+      }
+    }
+    else{
+      request->send(200,"application/json","{\"status\":\"missing _hash\"}");
+    }
+  }
+}
+
 
 void setup() {
   mainLock=xSemaphoreCreateMutex();
@@ -666,12 +696,6 @@ void setup() {
                               { return new StatusRequest(); });
   webserver.registerMainHandler("/api/config", [](AsyncWebServerRequest *request)->GwRequestMessage *
                               { return new ConfigRequest(); });
-  webserver.registerMainHandler("/api/setConfig",
-                              [](AsyncWebServerRequest *request)->GwRequestMessage *
-                              {
-                                SetConfigRequest *msg = new SetConfigRequest(request);
-                                return msg;
-                              });
   webserver.registerMainHandler("/api/resetConfig", [](AsyncWebServerRequest *request)->GwRequestMessage *
                               { return new ResetConfigRequest(request->arg("_hash")); });
   webserver.registerMainHandler("/api/boatData", [](AsyncWebServerRequest *request)->GwRequestMessage *
@@ -690,7 +714,12 @@ void setup() {
                               { 
                                 String hash=request->arg("hash");
                                 return new CheckPassRequest(hash); 
-                              });                            
+                              });
+  webserver.registerPostHandler("/api/setConfig",
+                              [](AsyncWebServerRequest *request){
+
+                              },
+                              handleConfigRequestData);                                                        
 
   webserver.begin();
   xdrMappings.begin();

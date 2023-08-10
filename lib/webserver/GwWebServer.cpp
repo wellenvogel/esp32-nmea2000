@@ -118,4 +118,12 @@ bool GwWebServer::registerMainHandler(const char *url,RequestCreator creator){
     return true;
 }
 
+bool GwWebServer::registerPostHandler(const char *url, ArRequestHandlerFunction requestHandler,
+ ArBodyHandlerFunction bodyHandler){
+    server->on(url,HTTP_POST,requestHandler,
+    [](AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final){},
+    bodyHandler);
+    return true;
+}
+
 

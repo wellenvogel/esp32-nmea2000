@@ -15,6 +15,7 @@ class GwLog{
         int logLevel=1;
         GwLogWriter *writer;
         SemaphoreHandle_t locker;
+        long long recordCounter=0;
     public:
         static const int LOG=1;
         static const int ERROR=0;
@@ -29,6 +30,7 @@ class GwLog{
         int isActive(int level){return level <= logLevel;};
         void flush();
         void setLevel(int level){this->logLevel=level;}
+        long long getRecordCounter(){return recordCounter;}
 };
 #define LOG_DEBUG(level,...){ if (logger != NULL && logger->isActive(level)) logger->logDebug(level,__VA_ARGS__);}
 
