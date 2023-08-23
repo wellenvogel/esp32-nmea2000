@@ -578,6 +578,6 @@ void sensorTask(void *param){
 
 
 void createSensorTask(SharedData *shared){
-    xTaskCreate(sensorTask,"readSensors",4000,shared,3,NULL);
+    xTaskCreate(sensorTask,"readSensors",8000,shared,3,NULL);
 }
 #endif
