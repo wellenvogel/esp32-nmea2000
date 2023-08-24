@@ -844,11 +844,16 @@ void loop() {
   if (now > (lastCanRecovery + CAN_RECOVERY_PERIOD)){
     lastCanRecovery=now;
     Nmea2kTwai::STATE canState=NMEA2000.getState();
+    Nmea2kTwai::ERRORS canErrors=NMEA2000.getErrors();
+    logger.logDebug(GwLog::DEBUG,"can state %s, rxerr %d, txerr %d, txfail %d",NMEA2000.stateStr(canState),canErrors.rx_errors,canErrors.tx_errors,canErrors.tx_failed);
     if (canState != Nmea2kTwai::ST_RUNNING){
-      logger.logDebug(GwLog::DEBUG,"can state: %d",canState);
       if (canState == Nmea2kTwai::ST_BUS_OFF){
         bool rt=NMEA2000.startRecovery();
         logger.logDebug(GwLog::LOG,"start can recovery - result %d",(int)rt);
+      }
+      if (canState == Nmea2kTwai::ST_STOPPED){
+        bool rt=NMEA2000.CANOpen();
+        logger.logDebug(GwLog::LOG,"restart can driver - result %d",(int)rt);
       }
     }
   }

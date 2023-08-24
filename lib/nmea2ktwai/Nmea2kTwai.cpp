@@ -24,6 +24,14 @@ Nmea2kTwai::Nmea2kTwai(gpio_num_t _TxPin,  gpio_num_t _RxPin,GwLog *l):
 
 bool Nmea2kTwai::CANSendFrame(unsigned long id, unsigned char len, const unsigned char *buf, bool wait_sent)
 {
+    if (recoveryStarted){
+        if (getState() == ST_RUNNING){
+            recoveryStarted=false;
+        }
+        else{
+            return false;
+        }
+    }
     twai_message_t message;
     memset(&message,0,sizeof(message));
     message.identifier = id;
@@ -52,6 +60,14 @@ bool Nmea2kTwai::CANOpen()
 }
 bool Nmea2kTwai::CANGetFrame(unsigned long &id, unsigned char &len, unsigned char *buf)
 {
+    if (recoveryStarted){
+        if (getState() == ST_RUNNING){
+            recoveryStarted=false;
+        }
+        else{
+            return false;
+        }
+    }
     twai_message_t message;
     esp_err_t rt=twai_receive(&message,0);
     if (rt != ESP_OK){
@@ -107,12 +123,38 @@ Nmea2kTwai::STATE Nmea2kTwai::getState(){
     }
     return ST_ERROR;
 }
+Nmea2kTwai::ERRORS Nmea2kTwai::getErrors(){
+    ERRORS rt;
+    twai_status_info_t state;
+    if (twai_get_status_info(&state) != ESP_OK){
+        return rt;
+    }
+    rt.rx_errors=state.rx_error_counter;
+    rt.tx_errors=state.tx_error_counter;
+    rt.tx_failed=state.tx_failed_count;
+    return rt;
+}
 bool Nmea2kTwai::startRecovery(){
+    if (! recoveryStarted){
+        recoveryStarted=true; //prevent any further sends
+        return true;
+    }
     esp_err_t rt=twai_initiate_recovery();
     if (rt != ESP_OK){
         LOG_DEBUG(GwLog::ERROR,"twai: initiate recovery failed with error %x",(int)rt);
         return false;
     }
+    recoveryStarted=true;
     LOG_DEBUG(GwLog::LOG,"twai: bus recovery started");
     return true;
+}
+const char * Nmea2kTwai::stateStr(const Nmea2kTwai::STATE &st){
+    switch (st)
+    {
+    case ST_BUS_OFF: return "BUS_OFF";
+    case ST_RECOVERING: return "RECOVERING";
+    case ST_RUNNING: return "RUNNING";
+    case ST_STOPPED: return "STOPPED";
+    }
+    return "ERROR";
 }
