@@ -80,7 +80,7 @@ void GwTcpClient::startConnection()
         return;
     }
     fcntl( sockfd, F_SETFL, fcntl( sockfd, F_GETFL, 0 ) | O_NONBLOCK );
-    int res = lwip_connect_r(sockfd, (struct sockaddr*)&serveraddr, sizeof(serveraddr));
+    int res = connect(sockfd, (struct sockaddr*)&serveraddr, sizeof(serveraddr));
     if (res < 0 ) {
         if (errno != EINPROGRESS){
             error=String("connect error ")+String(strerror(errno));
@@ -258,7 +258,7 @@ void GwTcpClient::resolveHost(String host)
     if (xTaskCreate([](void *p)
                     {
                         ResolveArgs *args = (ResolveArgs *)p;
-                        struct ip4_addr addr;
+                        esp_ip4_addr_t addr;
                         addr.addr = 0;
                         esp_err_t err = mdns_query_a(args->host.c_str(), args->timeout, &addr);
                         if (err)

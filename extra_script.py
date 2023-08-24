@@ -131,7 +131,7 @@ def generateCfg(inFile,outFile,addDirs=[]):
                 continue
             if len(n) > 15:
                 raise Exception("%s: config names must be max 15 caracters"%n)
-            data+='  static constexpr const __FlashStringHelper* %s=F("%s");\n'%(n,n)
+            data+='  static constexpr const char* %s="%s";\n'%(n,n)
         data+='  protected:\n'    
         data+='  GwConfigInterface *configs[%d]={\n'%(l)
         first=True
