@@ -36,11 +36,10 @@ class Nmea2kTwai : public tNMEA2000{
     
 
     private:
+    void initDriver();
     gpio_num_t TxPin;  
     gpio_num_t RxPin;
     GwLog *logger;
-    bool recoveryStarted=false;
-
 };
 
 #endif

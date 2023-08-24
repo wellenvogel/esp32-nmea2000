@@ -24,14 +24,6 @@ Nmea2kTwai::Nmea2kTwai(gpio_num_t _TxPin,  gpio_num_t _RxPin,GwLog *l):
 
 bool Nmea2kTwai::CANSendFrame(unsigned long id, unsigned char len, const unsigned char *buf, bool wait_sent)
 {
-    if (recoveryStarted){
-        if (getState() == ST_RUNNING){
-            recoveryStarted=false;
-        }
-        else{
-            return false;
-        }
-    }
     twai_message_t message;
     memset(&message,0,sizeof(message));
     message.identifier = id;
@@ -60,14 +52,6 @@ bool Nmea2kTwai::CANOpen()
 }
 bool Nmea2kTwai::CANGetFrame(unsigned long &id, unsigned char &len, unsigned char *buf)
 {
-    if (recoveryStarted){
-        if (getState() == ST_RUNNING){
-            recoveryStarted=false;
-        }
-        else{
-            return false;
-        }
-    }
     twai_message_t message;
     esp_err_t rt=twai_receive(&message,0);
     if (rt != ESP_OK){
@@ -88,10 +72,7 @@ bool Nmea2kTwai::CANGetFrame(unsigned long &id, unsigned char &len, unsigned cha
     }
     return true;
 }
-// This will be called on Open() before any other initialization. Inherit this, if buffers can be set for the driver
-// and you want to change size of library send frame buffer size. See e.g. NMEA2000_teensy.cpp.
-void Nmea2kTwai::InitCANFrameBuffers()
-{
+void Nmea2kTwai::initDriver(){
     twai_general_config_t g_config = TWAI_GENERAL_CONFIG_DEFAULT(TxPin,RxPin, TWAI_MODE_NORMAL);
     g_config.tx_queue_len=20;
     twai_timing_config_t t_config = TWAI_TIMING_CONFIG_250KBITS();
@@ -103,6 +84,12 @@ void Nmea2kTwai::InitCANFrameBuffers()
     else{
         LOG_DEBUG(GwLog::ERROR,"twai driver init failed: %x",(int)rt);
     }
+}
+// This will be called on Open() before any other initialization. Inherit this, if buffers can be set for the driver
+// and you want to change size of library send frame buffer size. See e.g. NMEA2000_teensy.cpp.
+void Nmea2kTwai::InitCANFrameBuffers()
+{
+    initDriver();
     tNMEA2000::InitCANFrameBuffers();
     
 }
@@ -135,18 +122,13 @@ Nmea2kTwai::ERRORS Nmea2kTwai::getErrors(){
     return rt;
 }
 bool Nmea2kTwai::startRecovery(){
-    if (! recoveryStarted){
-        recoveryStarted=true; //prevent any further sends
-        return true;
-    }
-    esp_err_t rt=twai_initiate_recovery();
+    esp_err_t rt=twai_driver_uninstall();
     if (rt != ESP_OK){
-        LOG_DEBUG(GwLog::ERROR,"twai: initiate recovery failed with error %x",(int)rt);
-        return false;
+        LOG_DEBUG(GwLog::ERROR,"twai: deinit for recovery failed with %x",(int)rt);
     }
-    recoveryStarted=true;
-    LOG_DEBUG(GwLog::LOG,"twai: bus recovery started");
-    return true;
+    initDriver();
+    bool frt=CANOpen();
+    return frt;
 }
 const char * Nmea2kTwai::stateStr(const Nmea2kTwai::STATE &st){
     switch (st)
