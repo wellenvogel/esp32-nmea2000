@@ -117,9 +117,33 @@
 		header('Access-Control-Allow-Origin:*');
 		return curl_exec($ch);
 	} 
+	function setFw($curl){
+        $headers=getallheaders();
+		$FWHDR = ['User-Agent'];
+		$outHeaders = array();
+		foreach ($FWHDR as $k) {
+			if (isset($headers[$k])) {
+				array_push($outHeaders, "$k: $headers[$k]");
+			}
+		}
+		curl_setopt($curl, CURLOPT_HTTPHEADER, $outHeaders);
+	}
+	function getJson($url){
+        $curl = curl_init();
+        curl_setopt($curl, CURLOPT_URL,$url);
+        curl_setopt($curl,CURLOPT_RETURNTRANSFER, true);
+        setFw($curl);
+        $response = curl_exec($curl);
+        if($e = curl_error($curl)) {
+            curl_close($curl);
+            return array('error'=>$e);
+        } else {
+            curl_close($curl);
+            return json_decode($response, true);
+        }    
+    }
 	function proxy($url)
 	{
-		$headers=getallheaders();
 		$ch = curl_init($url);
 		curl_setopt_array(
 			$ch,
@@ -128,14 +152,7 @@
 				CURLOPT_CONNECTTIMEOUT => 30,
 			]
 		);
-		$FWHDR = ['User-Agent'];
-		$outHeaders = array();
-		foreach ($FWHDR as $k) {
-			if (isset($headers[$k])) {
-				array_push($outHeaders, "$k: $headers[$k]");
-			}
-		}
-		curl_setopt($ch, CURLOPT_HTTPHEADER, $outHeaders);
+		setFw($ch);
 		$response = curl_exec_follow($ch);
 		curl_close($ch);
 	}
@@ -149,6 +166,27 @@
 		$vars=fillUserAndRepo();
 		$vars=addVars($vars,array('dlName','dlVersion'));
 		proxy(replaceVars($download,$vars));
+		exit(0);
+	}
+	if (isset($_REQUEST['flash'])){
+        $vars=fillUserAndRepo();
+		$json=getJson(replaceVars($api,$vars));
+		$assets=$json['assets'];
+		$targetUrl=null;
+		$targetBase=$_REQUEST['flash'];
+		$mode='all';
+		if (isset($_REQUEST['update'])) $mode='update';
+		$lb=strlen($targetBase);
+		foreach ($assets as &$asset){
+            if (substr($asset['name'],0,$lb) == $targetBase){
+                if (! preg_match("/-$mode.bin/",$asset['name'])) continue;
+                $targetUrl=$asset['browser_download_url'];
+                break;
+            }
+		}
+		if (! $targetUrl) die("unable to find $targetBase $mode\n");
+		#echo("download for $targetBase=$targetUrl\n");
+		proxy($targetUrl);
 		exit(0);
 	}
 	die("invalid request");
