@@ -110,7 +110,7 @@ GwLog logger(LOGLEVEL,NULL);
 GwConfigHandler config(&logger);
 
 #include "Nmea2kTwai.h"
-tNMEA2000 &NMEA2000=*(new Nmea2kTwai(ESP32_CAN_TX_PIN,ESP32_CAN_RX_PIN,&logger));
+Nmea2kTwai &NMEA2000=*(new Nmea2kTwai(ESP32_CAN_TX_PIN,ESP32_CAN_RX_PIN,&logger));
 
 #ifdef GWBUTTON_PIN
 bool fixedApPass=false;
@@ -821,6 +821,8 @@ void handleSendAndRead(bool handleRead){
 
 TimeMonitor monitor(20,0.2);
 unsigned long lastHeapReport=0;
+unsigned long lastCanRecovery=0;
+static const unsigned long CAN_RECOVERY_PERIOD=3000; //ms
 void loop() {
   monitor.reset();
   GWSYNCHRONIZED(&mainLock);
@@ -837,6 +839,17 @@ void loop() {
           (long)xPortGetMinimumEverFreeHeapSize()
       );
       logger.logDebug(GwLog::DEBUG,"Main loop %s",monitor.getLog().c_str());
+    }
+  }
+  if (now > (lastCanRecovery + CAN_RECOVERY_PERIOD)){
+    lastCanRecovery=now;
+    Nmea2kTwai::STATE canState=NMEA2000.getState();
+    if (canState != Nmea2kTwai::ST_RUNNING){
+      logger.logDebug(GwLog::DEBUG,"can state: %d",canState);
+      if (canState == Nmea2kTwai::ST_BUS_OFF){
+        bool rt=NMEA2000.startRecovery();
+        logger.logDebug(GwLog::LOG,"start can recovery - result %d",(int)rt);
+      }
     }
   }
   monitor.setTime(3);

@@ -3,7 +3,7 @@
 #include "driver/twai.h"
 #include "GwLog.h"
 
-#define TWAI_DEBUG 1
+#define TWAI_DEBUG 0
 #if TWAI_DEBUG == 1
     #define TWAI_LOG(...) LOG_DEBUG(__VA_ARGS__)
     #define TWAI_LDEBUG(...)
@@ -89,4 +89,30 @@ void Nmea2kTwai::InitCANFrameBuffers()
     }
     tNMEA2000::InitCANFrameBuffers();
     
+}
+Nmea2kTwai::STATE Nmea2kTwai::getState(){
+    twai_status_info_t state;
+    if (twai_get_status_info(&state) != ESP_OK){
+        return ST_ERROR;
+    }
+    switch(state.state){
+        case TWAI_STATE_STOPPED:
+            return ST_STOPPED;
+        case TWAI_STATE_RUNNING:
+            return ST_RUNNING;
+        case TWAI_STATE_BUS_OFF:
+            return ST_BUS_OFF;
+        case TWAI_STATE_RECOVERING:
+            return ST_RECOVERING;
+    }
+    return ST_ERROR;
+}
+bool Nmea2kTwai::startRecovery(){
+    esp_err_t rt=twai_initiate_recovery();
+    if (rt != ESP_OK){
+        LOG_DEBUG(GwLog::ERROR,"twai: initiate recovery failed with error %x",(int)rt);
+        return false;
+    }
+    LOG_DEBUG(GwLog::LOG,"twai: bus recovery started");
+    return true;
 }

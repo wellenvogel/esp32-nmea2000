@@ -6,6 +6,15 @@
 class Nmea2kTwai : public tNMEA2000{
     public:
         Nmea2kTwai(gpio_num_t _TxPin,  gpio_num_t _RxPin,GwLog *logger);
+        typedef enum{
+            ST_STOPPED,
+            ST_RUNNING,
+            ST_BUS_OFF,
+            ST_RECOVERING,
+            ST_ERROR
+        } STATE;
+        STATE getState();
+        bool startRecovery();
     protected:
     // Virtual functions for different interfaces. Currently there are own classes
     // for Arduino due internal CAN (NMEA2000_due), external MCP2515 SPI CAN bus controller (NMEA2000_mcp),
@@ -16,6 +25,8 @@ class Nmea2kTwai : public tNMEA2000{
     // This will be called on Open() before any other initialization. Inherit this, if buffers can be set for the driver
     // and you want to change size of library send frame buffer size. See e.g. NMEA2000_teensy.cpp.
     virtual void InitCANFrameBuffers();
+
+    
 
     private:
     gpio_num_t TxPin;  
