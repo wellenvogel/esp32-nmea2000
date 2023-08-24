@@ -12,6 +12,7 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 #include "GwAppInfo.h"
+#define USE_TWAI
 // #define GW_MESSAGE_DEBUG_ENABLED
 //#define FALLBACK_SERIAL
 //#define CAN_ESP_DEBUG
@@ -65,17 +66,14 @@ const unsigned long HEAP_REPORT_TIME=2000; //set to 0 to disable heap reporting
 #include "GwTcpClient.h"
 #include "GwChannel.h"
 #include "GwChannelList.h"
-
-#include <NMEA2000_esp32.h>       // forked from https://github.com/ttlappalainen/NMEA2000_esp32
 #ifdef FALLBACK_SERIAL
   #ifdef CAN_ESP_DEBUG
     #define CDBS &Serial
   #else
     #define CDBS NULL
   #endif
-  tNMEA2000 &NMEA2000=*(new tNMEA2000_esp32(ESP32_CAN_TX_PIN,ESP32_CAN_RX_PIN,CDBS));
 #else
-  tNMEA2000 &NMEA2000=*(new tNMEA2000_esp32());
+  #define CDBS NULL
 #endif
 
 
@@ -111,6 +109,15 @@ typedef std::map<String,String> StringMap;
 
 GwLog logger(LOGLEVEL,NULL);
 GwConfigHandler config(&logger);
+
+#ifndef USE_TWAI
+#include <NMEA2000_esp32.h>       // forked from https://github.com/ttlappalainen/NMEA2000_esp32
+tNMEA2000 &NMEA2000=*(new tNMEA2000_esp32(ESP32_CAN_TX_PIN,ESP32_CAN_RX_PIN,CDBS));
+#else
+#include "Nmea2kTwai.h"
+tNMEA2000 &NMEA2000=*(new Nmea2kTwai(ESP32_CAN_TX_PIN,ESP32_CAN_RX_PIN,&logger));
+#endif
+
 #ifdef GWBUTTON_PIN
 bool fixedApPass=false;
 #else
