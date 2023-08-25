@@ -5,9 +5,12 @@
 
 #define LOGID(id) ((id >> 8) & 0x1ffff)
 
-Nmea2kTwai::Nmea2kTwai(gpio_num_t _TxPin,  gpio_num_t _RxPin):
-     tNMEA2000(),RxPin(_RxPin),TxPin(_TxPin)
+static const int TIMEOUT_OFFLINE=256; //# of timeouts to consider offline
+
+Nmea2kTwai::Nmea2kTwai(gpio_num_t _TxPin,  gpio_num_t _RxPin, unsigned long recP):
+     tNMEA2000(),RxPin(_RxPin),TxPin(_TxPin),recoveryPeriod(recP)
 {
+    lastRecoveryCheck=millis();
 }
 
 bool Nmea2kTwai::CANSendFrame(unsigned long id, unsigned char len, const unsigned char *buf, bool wait_sent)
@@ -21,7 +24,7 @@ bool Nmea2kTwai::CANSendFrame(unsigned long id, unsigned char len, const unsigne
     esp_err_t rt=twai_transmit(&message,0);
     if (rt != ESP_OK){
         if (rt == ESP_ERR_TIMEOUT){
-            txTimeouts++;
+            if (txTimeouts < TIMEOUT_OFFLINE) txTimeouts++;
         }
         logDebug(LOG_MSG,"twai transmit for %ld failed: %x",LOGID(id),(int)rt);
         return false;
@@ -111,10 +114,30 @@ Nmea2kTwai::Status Nmea2kTwai::getStatus(){
     rt.rx_missed=state.rx_missed_count;
     rt.rx_overrun=state.rx_overrun_count;
     rt.tx_timeouts=txTimeouts;
-    if (rt.tx_timeouts > 256 && rt.state == ST_RUNNING){
+    if (rt.tx_timeouts >= TIMEOUT_OFFLINE && rt.state == ST_RUNNING){
         rt.state=ST_OFFLINE;
     }
     return rt;
+}
+bool Nmea2kTwai::checkRecovery(){
+    if (recoveryPeriod == 0) return false; //no check
+    unsigned long now=millis();
+    if ((lastRecoveryCheck+recoveryPeriod) > now) return false;
+    lastRecoveryCheck=now;
+    Status canState=getStatus();
+    bool strt=false;
+    if (canState.state != Nmea2kTwai::ST_RUNNING){
+      if (canState.state == Nmea2kTwai::ST_BUS_OFF){
+        strt=true;
+        bool rt=startRecovery();
+        logDebug(LOG_INFO,"start can recovery - result %d",(int)rt);
+      }
+      if (canState.state == Nmea2kTwai::ST_STOPPED){
+        bool rt=CANOpen();
+        logDebug(LOG_INFO,"restart can driver - result %d",(int)rt);
+      }
+    }
+    return strt;
 }
 
 bool Nmea2kTwai::startRecovery(){

@@ -5,7 +5,7 @@
 
 class Nmea2kTwai : public tNMEA2000{
     public:
-        Nmea2kTwai(gpio_num_t _TxPin,  gpio_num_t _RxPin);
+        Nmea2kTwai(gpio_num_t _TxPin,  gpio_num_t _RxPin, unsigned long recP=0);
         typedef enum{
             ST_STOPPED,
             ST_RUNNING,
@@ -25,7 +25,7 @@ class Nmea2kTwai : public tNMEA2000{
             STATE state=ST_ERROR;
         } Status;
         Status getStatus();
-        bool startRecovery();
+        bool checkRecovery();
         static const char * stateStr(const STATE &st);
         virtual bool CANOpen();
         virtual ~Nmea2kTwai(){};
@@ -47,9 +47,12 @@ class Nmea2kTwai : public tNMEA2000{
 
     private:
     void initDriver();
+    bool startRecovery();
     gpio_num_t TxPin;  
     gpio_num_t RxPin;
     uint32_t txTimeouts=0;
+    unsigned long recoveryPeriod=0;
+    unsigned long lastRecoveryCheck=0;
 };
 
 #endif

@@ -110,12 +110,13 @@ GwLog logger(LOGLEVEL,NULL);
 GwConfigHandler config(&logger);
 
 #include "Nmea2kTwai.h"
+static const unsigned long CAN_RECOVERY_PERIOD=3000; //ms
 class Nmea2kTwaiLog : public Nmea2kTwai{
   private:
     GwLog* logger;
   public:
-    Nmea2kTwaiLog(gpio_num_t _TxPin,  gpio_num_t _RxPin, GwLog *l):
-      Nmea2kTwai(_TxPin,_RxPin),logger(l){}
+    Nmea2kTwaiLog(gpio_num_t _TxPin,  gpio_num_t _RxPin, unsigned long recoveryPeriod,GwLog *l):
+      Nmea2kTwai(_TxPin,_RxPin,recoveryPeriod),logger(l){}
     virtual void logDebug(int level, const char *fmt,...){
       va_list args;
       va_start(args,fmt);
@@ -125,7 +126,7 @@ class Nmea2kTwaiLog : public Nmea2kTwai{
 };
 
 
-Nmea2kTwai &NMEA2000=*(new Nmea2kTwaiLog(ESP32_CAN_TX_PIN,ESP32_CAN_RX_PIN,&logger));
+Nmea2kTwai &NMEA2000=*(new Nmea2kTwaiLog(ESP32_CAN_TX_PIN,ESP32_CAN_RX_PIN,CAN_RECOVERY_PERIOD,&logger));
 
 #ifdef GWBUTTON_PIN
 bool fixedApPass=false;
@@ -838,8 +839,7 @@ void handleSendAndRead(bool handleRead){
 
 TimeMonitor monitor(20,0.2);
 unsigned long lastHeapReport=0;
-unsigned long lastCanRecovery=0;
-static const unsigned long CAN_RECOVERY_PERIOD=3000; //ms
+unsigned long lastCanStatus=0;
 void loop() {
   monitor.reset();
   GWSYNCHRONIZED(&mainLock);
@@ -848,6 +848,7 @@ void loop() {
   gwWifi.loop();
   unsigned long now=millis();
   monitor.setTime(2);
+  NMEA2000.checkRecovery();
   if (HEAP_REPORT_TIME > 0 && now > (lastHeapReport+HEAP_REPORT_TIME)){
     lastHeapReport=now;
     if (logger.isActive(GwLog::DEBUG)){
@@ -858,8 +859,8 @@ void loop() {
       logger.logDebug(GwLog::DEBUG,"Main loop %s",monitor.getLog().c_str());
     }
   }
-  if (now > (lastCanRecovery + CAN_RECOVERY_PERIOD)){
-    lastCanRecovery=now;
+  if (now > (lastCanStatus + CAN_RECOVERY_PERIOD)){
+    lastCanStatus=now;
     Nmea2kTwai::Status canState=NMEA2000.getStatus();
     logger.logDebug(GwLog::DEBUG,
       "can state %s, rxerr %d, txerr %d, txfail %d, txtimeout %d, rxmiss %d, rxoverrun %d",
@@ -870,16 +871,6 @@ void loop() {
       canState.tx_timeouts,
       canState.rx_missed,
       canState.rx_overrun);
-    if (canState.state != Nmea2kTwai::ST_RUNNING){
-      if (canState.state == Nmea2kTwai::ST_BUS_OFF){
-        bool rt=NMEA2000.startRecovery();
-        logger.logDebug(GwLog::LOG,"start can recovery - result %d",(int)rt);
-      }
-      if (canState.state == Nmea2kTwai::ST_STOPPED){
-        bool rt=NMEA2000.CANOpen();
-        logger.logDebug(GwLog::LOG,"restart can driver - result %d",(int)rt);
-      }
-    }
   }
   monitor.setTime(3);
   channels.allChannels([](GwChannel *c){
