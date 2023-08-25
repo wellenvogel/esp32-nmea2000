@@ -11,6 +11,7 @@ class Nmea2kTwai : public tNMEA2000{
             ST_RUNNING,
             ST_BUS_OFF,
             ST_RECOVERING,
+            ST_OFFLINE,
             ST_ERROR
         } STATE;
         typedef struct{
@@ -20,6 +21,7 @@ class Nmea2kTwai : public tNMEA2000{
             uint32_t tx_failed=0;
             uint32_t rx_missed=0;
             uint32_t rx_overrun=0;
+            uint32_t tx_timeouts=0;
             STATE state=ST_ERROR;
         } Status;
         Status getStatus();
@@ -47,6 +49,7 @@ class Nmea2kTwai : public tNMEA2000{
     void initDriver();
     gpio_num_t TxPin;  
     gpio_num_t RxPin;
+    uint32_t txTimeouts=0;
 };
 
 #endif

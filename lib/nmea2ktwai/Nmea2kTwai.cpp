@@ -20,9 +20,13 @@ bool Nmea2kTwai::CANSendFrame(unsigned long id, unsigned char len, const unsigne
     memcpy(message.data,buf,len);
     esp_err_t rt=twai_transmit(&message,0);
     if (rt != ESP_OK){
-        logDebug(LOG_DEBUG,"twai transmit for %ld failed: %x",LOGID(id),(int)rt);
+        if (rt == ESP_ERR_TIMEOUT){
+            txTimeouts++;
+        }
+        logDebug(LOG_MSG,"twai transmit for %ld failed: %x",LOGID(id),(int)rt);
         return false;
     }
+    txTimeouts=0;
     logDebug(LOG_MSG,"twai transmit id %ld, len %d",LOGID(id),(int)len);
     return true;
 }
@@ -106,6 +110,10 @@ Nmea2kTwai::Status Nmea2kTwai::getStatus(){
     rt.tx_failed=state.tx_failed_count;
     rt.rx_missed=state.rx_missed_count;
     rt.rx_overrun=state.rx_overrun_count;
+    rt.tx_timeouts=txTimeouts;
+    if (rt.tx_timeouts > 256 && rt.state == ST_RUNNING){
+        rt.state=ST_OFFLINE;
+    }
     return rt;
 }
 
@@ -125,6 +133,7 @@ const char * Nmea2kTwai::stateStr(const Nmea2kTwai::STATE &st){
     case ST_RECOVERING: return "RECOVERING";
     case ST_RUNNING: return "RUNNING";
     case ST_STOPPED: return "STOPPED";
+    case ST_OFFLINE: return "OFFLINE";
     }
     return "ERROR";
 }

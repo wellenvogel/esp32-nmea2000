@@ -861,11 +861,13 @@ void loop() {
   if (now > (lastCanRecovery + CAN_RECOVERY_PERIOD)){
     lastCanRecovery=now;
     Nmea2kTwai::Status canState=NMEA2000.getStatus();
-    logger.logDebug(GwLog::DEBUG,"can state %s, rxerr %d, txerr %d, txfail %d, rxmiss %d, rxoverrun %d",
+    logger.logDebug(GwLog::DEBUG,
+      "can state %s, rxerr %d, txerr %d, txfail %d, txtimeout %d, rxmiss %d, rxoverrun %d",
       NMEA2000.stateStr(canState.state),
       canState.rx_errors,
       canState.tx_errors,
       canState.tx_failed,
+      canState.tx_timeouts,
       canState.rx_missed,
       canState.rx_overrun);
     if (canState.state != Nmea2kTwai::ST_RUNNING){
