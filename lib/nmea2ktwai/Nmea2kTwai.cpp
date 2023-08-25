@@ -3,22 +3,10 @@
 #include "driver/twai.h"
 #include "GwLog.h"
 
-#define TWAI_DEBUG 0
-#if TWAI_DEBUG == 1
-    #define TWAI_LOG(...) LOG_DEBUG(__VA_ARGS__)
-    #define TWAI_LDEBUG(...)
-#else
-  #if TWAI_DEBUG == 2
-    #define TWAI_LOG(...) LOG_DEBUG(__VA_ARGS__)
-    #define TWA_LDEBUG(...) LOG_DEBUG(__VA_ARGS__)
-  #else
-    #define TWAI_LOG(...)
-    #define TWAI_LDEBUG(...)
-  #endif  
-#endif
+#define LOGID(id) ((id >> 8) & 0x1ffff)
 
-Nmea2kTwai::Nmea2kTwai(gpio_num_t _TxPin,  gpio_num_t _RxPin,GwLog *l):
-     tNMEA2000(),RxPin(_RxPin),TxPin(_TxPin),logger(l)
+Nmea2kTwai::Nmea2kTwai(gpio_num_t _TxPin,  gpio_num_t _RxPin):
+     tNMEA2000(),RxPin(_RxPin),TxPin(_TxPin)
 {
 }
 
@@ -32,21 +20,21 @@ bool Nmea2kTwai::CANSendFrame(unsigned long id, unsigned char len, const unsigne
     memcpy(message.data,buf,len);
     esp_err_t rt=twai_transmit(&message,0);
     if (rt != ESP_OK){
-        TWAI_LOG(GwLog::DEBUG,"twai transmit for %ld failed: %x",(id & 0x1ffff),(int)rt);
+        logDebug(LOG_DEBUG,"twai transmit for %ld failed: %x",LOGID(id),(int)rt);
         return false;
     }
-    TWAI_LDEBUG(GwLog::DEBUG,"twai transmit id %ld, len %d",(id & 0x1ffff),(int)len);
+    logDebug(LOG_MSG,"twai transmit id %ld, len %d",LOGID(id),(int)len);
     return true;
 }
 bool Nmea2kTwai::CANOpen()
 {
     esp_err_t rt=twai_start();
     if (rt != ESP_OK){
-        LOG_DEBUG(GwLog::ERROR,"CANOpen failed: %x",(int)rt);
+        logDebug(LOG_ERR,"CANOpen failed: %x",(int)rt);
         return false;
     }
     else{
-        LOG_DEBUG(GwLog::LOG,"CANOpen ok");
+        logDebug(LOG_INFO,"CANOpen ok");
     }
     return true;
 }
@@ -63,10 +51,10 @@ bool Nmea2kTwai::CANGetFrame(unsigned long &id, unsigned char &len, unsigned cha
     id=message.identifier;
     len=message.data_length_code;
     if (len > 8){
-        TWAI_LOG(GwLog::ERROR,"twai: received invalid message %lld, len %d",id,len);
+        logDebug(LOG_DEBUG,"twai: received invalid message %lld, len %d",LOGID(id),len);
         len=8;
     }
-    TWAI_LDEBUG(GwLog::DEBUG,"twai rcv id=%ld,len=%d, ext=%d",message.identifier,message.data_length_code,message.extd);
+    logDebug(LOG_MSG,"twai rcv id=%ld,len=%d, ext=%d",LOGID(message.identifier),message.data_length_code,message.extd);
     if (! message.rtr){
         memcpy(buf,message.data,message.data_length_code);
     }
@@ -79,10 +67,10 @@ void Nmea2kTwai::initDriver(){
     twai_filter_config_t f_config = TWAI_FILTER_CONFIG_ACCEPT_ALL();
     esp_err_t rt=twai_driver_install(&g_config, &t_config, &f_config);
     if (rt == ESP_OK) {
-        LOG_DEBUG(GwLog::LOG,"twai driver initialzed, rx=%d,tx=%d",(int)RxPin,(int)TxPin);
+        logDebug(LOG_INFO,"twai driver initialzed, rx=%d,tx=%d",(int)RxPin,(int)TxPin);
     }
     else{
-        LOG_DEBUG(GwLog::ERROR,"twai driver init failed: %x",(int)rt);
+        logDebug(LOG_ERR,"twai driver init failed: %x",(int)rt);
     }
 }
 // This will be called on Open() before any other initialization. Inherit this, if buffers can be set for the driver
@@ -93,38 +81,38 @@ void Nmea2kTwai::InitCANFrameBuffers()
     tNMEA2000::InitCANFrameBuffers();
     
 }
-Nmea2kTwai::STATE Nmea2kTwai::getState(){
+Nmea2kTwai::Status Nmea2kTwai::getStatus(){
     twai_status_info_t state;
+    Status rt;
     if (twai_get_status_info(&state) != ESP_OK){
-        return ST_ERROR;
+        return rt;
     }
     switch(state.state){
         case TWAI_STATE_STOPPED:
-            return ST_STOPPED;
+            rt.state=ST_STOPPED;
+            break;
         case TWAI_STATE_RUNNING:
-            return ST_RUNNING;
+            rt.state=ST_RUNNING;
+            break;
         case TWAI_STATE_BUS_OFF:
-            return ST_BUS_OFF;
+            rt.state=ST_BUS_OFF;
+            break;
         case TWAI_STATE_RECOVERING:
-            return ST_RECOVERING;
-    }
-    return ST_ERROR;
-}
-Nmea2kTwai::ERRORS Nmea2kTwai::getErrors(){
-    ERRORS rt;
-    twai_status_info_t state;
-    if (twai_get_status_info(&state) != ESP_OK){
-        return rt;
+            rt.state=ST_RECOVERING;
+            break;
     }
     rt.rx_errors=state.rx_error_counter;
     rt.tx_errors=state.tx_error_counter;
     rt.tx_failed=state.tx_failed_count;
+    rt.rx_missed=state.rx_missed_count;
+    rt.rx_overrun=state.rx_overrun_count;
     return rt;
 }
+
 bool Nmea2kTwai::startRecovery(){
     esp_err_t rt=twai_driver_uninstall();
     if (rt != ESP_OK){
-        LOG_DEBUG(GwLog::ERROR,"twai: deinit for recovery failed with %x",(int)rt);
+        logDebug(LOG_ERR,"twai: deinit for recovery failed with %x",(int)rt);
     }
     initDriver();
     bool frt=CANOpen();

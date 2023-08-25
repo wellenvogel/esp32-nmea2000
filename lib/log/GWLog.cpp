@@ -37,9 +37,12 @@ void GwLog::logString(const char *fmt,...){
     xSemaphoreGive(locker);
 }
 void GwLog::logDebug(int level,const char *fmt,...){
-    if (level > logLevel) return;
     va_list args;
     va_start(args,fmt);
+    logDebug(level,fmt,args);
+}
+void GwLog::logDebug(int level,const char *fmt,va_list args){
+    if (level > logLevel) return;
     xSemaphoreTake(locker, portMAX_DELAY);
     recordCounter++;
     vsnprintf(buffer,bufferSize-1,fmt,args);

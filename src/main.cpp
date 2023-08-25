@@ -110,7 +110,22 @@ GwLog logger(LOGLEVEL,NULL);
 GwConfigHandler config(&logger);
 
 #include "Nmea2kTwai.h"
-Nmea2kTwai &NMEA2000=*(new Nmea2kTwai(ESP32_CAN_TX_PIN,ESP32_CAN_RX_PIN,&logger));
+class Nmea2kTwaiLog : public Nmea2kTwai{
+  private:
+    GwLog* logger;
+  public:
+    Nmea2kTwaiLog(gpio_num_t _TxPin,  gpio_num_t _RxPin, GwLog *l):
+      Nmea2kTwai(_TxPin,_RxPin),logger(l){}
+    virtual void logDebug(int level, const char *fmt,...){
+      va_list args;
+      va_start(args,fmt);
+      if (level > 2) level++; //error+info+debug are similar, map msg to 4
+      logger->logDebug(level,fmt,args);
+    }
+};
+
+
+Nmea2kTwai &NMEA2000=*(new Nmea2kTwaiLog(ESP32_CAN_TX_PIN,ESP32_CAN_RX_PIN,&logger));
 
 #ifdef GWBUTTON_PIN
 bool fixedApPass=false;
@@ -354,7 +369,7 @@ public:
 protected:
   virtual void processRequest()
   {
-    GwJsonDocument status(256 + 
+    GwJsonDocument status(290 + 
       countNMEA2KIn.getJsonSize()+
       countNMEA2KOut.getJsonSize() +
       channels.getJsonSize()
@@ -370,6 +385,8 @@ protected:
     status["salt"] = buffer;
     status["fwtype"]= firmwareType;
     status["heap"]=(long)xPortGetFreeHeapSize();
+    Nmea2kTwai::Status n2kState=NMEA2000.getStatus();
+    status["n2kstate"]=NMEA2000.stateStr(n2kState.state);
     //nmea0183Converter->toJson(status);
     countNMEA2KIn.toJson(status);
     countNMEA2KOut.toJson(status);
@@ -843,15 +860,20 @@ void loop() {
   }
   if (now > (lastCanRecovery + CAN_RECOVERY_PERIOD)){
     lastCanRecovery=now;
-    Nmea2kTwai::STATE canState=NMEA2000.getState();
-    Nmea2kTwai::ERRORS canErrors=NMEA2000.getErrors();
-    logger.logDebug(GwLog::DEBUG,"can state %s, rxerr %d, txerr %d, txfail %d",NMEA2000.stateStr(canState),canErrors.rx_errors,canErrors.tx_errors,canErrors.tx_failed);
-    if (canState != Nmea2kTwai::ST_RUNNING){
-      if (canState == Nmea2kTwai::ST_BUS_OFF){
+    Nmea2kTwai::Status canState=NMEA2000.getStatus();
+    logger.logDebug(GwLog::DEBUG,"can state %s, rxerr %d, txerr %d, txfail %d, rxmiss %d, rxoverrun %d",
+      NMEA2000.stateStr(canState.state),
+      canState.rx_errors,
+      canState.tx_errors,
+      canState.tx_failed,
+      canState.rx_missed,
+      canState.rx_overrun);
+    if (canState.state != Nmea2kTwai::ST_RUNNING){
+      if (canState.state == Nmea2kTwai::ST_BUS_OFF){
         bool rt=NMEA2000.startRecovery();
         logger.logDebug(GwLog::LOG,"start can recovery - result %d",(int)rt);
       }
-      if (canState == Nmea2kTwai::ST_STOPPED){
+      if (canState.state == Nmea2kTwai::ST_STOPPED){
         bool rt=NMEA2000.CANOpen();
         logger.logDebug(GwLog::LOG,"restart can driver - result %d",(int)rt);
       }

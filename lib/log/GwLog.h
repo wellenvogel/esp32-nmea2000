@@ -27,6 +27,7 @@ class GwLog{
         void setWriter(GwLogWriter *writer);
         void logString(const char *fmt,...);
         void logDebug(int level, const char *fmt,...);
+        void logDebug(int level, const char *fmt,va_list ap);
         int isActive(int level){return level <= logLevel;};
         void flush();
         void setLevel(int level){this->logLevel=level;}

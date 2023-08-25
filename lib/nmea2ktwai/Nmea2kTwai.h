@@ -5,7 +5,7 @@
 
 class Nmea2kTwai : public tNMEA2000{
     public:
-        Nmea2kTwai(gpio_num_t _TxPin,  gpio_num_t _RxPin,GwLog *logger);
+        Nmea2kTwai(gpio_num_t _TxPin,  gpio_num_t _RxPin);
         typedef enum{
             ST_STOPPED,
             ST_RUNNING,
@@ -14,15 +14,23 @@ class Nmea2kTwai : public tNMEA2000{
             ST_ERROR
         } STATE;
         typedef struct{
+            //see https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/twai.html#_CPPv418twai_status_info_t
             uint32_t rx_errors=0;
             uint32_t tx_errors=0;
             uint32_t tx_failed=0;
-        } ERRORS;
-        STATE getState();
-        ERRORS getErrors();
+            uint32_t rx_missed=0;
+            uint32_t rx_overrun=0;
+            STATE state=ST_ERROR;
+        } Status;
+        Status getStatus();
         bool startRecovery();
         static const char * stateStr(const STATE &st);
         virtual bool CANOpen();
+        virtual ~Nmea2kTwai(){};
+        static const int LOG_ERR=0;
+        static const int LOG_INFO=1;
+        static const int LOG_DEBUG=2;
+        static const int LOG_MSG=3;
     protected:
     // Virtual functions for different interfaces. Currently there are own classes
     // for Arduino due internal CAN (NMEA2000_due), external MCP2515 SPI CAN bus controller (NMEA2000_mcp),
@@ -32,14 +40,13 @@ class Nmea2kTwai : public tNMEA2000{
     // This will be called on Open() before any other initialization. Inherit this, if buffers can be set for the driver
     // and you want to change size of library send frame buffer size. See e.g. NMEA2000_teensy.cpp.
     virtual void InitCANFrameBuffers();
-
+    virtual void logDebug(int level,const char *fmt,...){}
     
 
     private:
     void initDriver();
     gpio_num_t TxPin;  
     gpio_num_t RxPin;
-    GwLog *logger;
 };
 
 #endif
