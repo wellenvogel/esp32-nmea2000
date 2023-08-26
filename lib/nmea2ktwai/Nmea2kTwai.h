@@ -25,6 +25,7 @@ class Nmea2kTwai : public tNMEA2000{
             STATE state=ST_ERROR;
         } Status;
         Status getStatus();
+        unsigned long getLastRecoveryStart(){return lastRecoveryStart;}
         void loop();
         static const char * stateStr(const STATE &st);
         virtual bool CANOpen();
@@ -54,6 +55,7 @@ class Nmea2kTwai : public tNMEA2000{
     gpio_num_t RxPin;
     uint32_t txTimeouts=0;
     GwIntervalRunner timers;
+    unsigned long lastRecoveryStart=0;
 };
 
 #endif

@@ -112,6 +112,7 @@ GwConfigHandler config(&logger);
 
 #include "Nmea2kTwai.h"
 static const unsigned long CAN_RECOVERY_PERIOD=3000; //ms
+static const unsigned long NMEA2000_HEARTBEAT_INTERVAL=5000;
 class Nmea2kTwaiLog : public Nmea2kTwai{
   private:
     GwLog* logger;
@@ -388,7 +389,17 @@ protected:
     status["fwtype"]= firmwareType;
     status["heap"]=(long)xPortGetFreeHeapSize();
     Nmea2kTwai::Status n2kState=NMEA2000.getStatus();
-    status["n2kstate"]=NMEA2000.stateStr(n2kState.state);
+    Nmea2kTwai::STATE driverState=n2kState.state;
+    if (driverState == Nmea2kTwai::ST_RUNNING){
+      unsigned long lastRec=NMEA2000.getLastRecoveryStart();
+      if (lastRec > 0 && (lastRec+NMEA2000_HEARTBEAT_INTERVAL*2) > millis()){
+        //we still report bus off at least for 2 heartbeat intervals
+        //this avoids always reporting BUS_OFF-RUNNING-BUS_OFF if the bus off condition
+        //remains
+        driverState=Nmea2kTwai::ST_BUS_OFF;
+      }
+    }
+    status["n2kstate"]=NMEA2000.stateStr(driverState);
     status["n2knode"]=NodeAddress;
     //nmea0183Converter->toJson(status);
     countNMEA2KIn.toJson(status);
@@ -802,7 +813,7 @@ void setup() {
   logger.flush();
   NMEA2000.SetMode(tNMEA2000::N2km_ListenAndNode, NodeAddress);
   NMEA2000.SetForwardOwnMessages(false);
-  NMEA2000.SetHeartbeatInterval(5000);
+  NMEA2000.SetHeartbeatInterval(NMEA2000_HEARTBEAT_INTERVAL);
   if (sendOutN2k){
     // Set the information for other bus devices, which messages we support
     unsigned long *pgns=toN2KConverter->handledPgns();

@@ -157,6 +157,7 @@ Nmea2kTwai::Status Nmea2kTwai::logStatus(){
 }
 
 bool Nmea2kTwai::startRecovery(){
+    lastRecoveryStart=millis();
     esp_err_t rt=twai_driver_uninstall();
     if (rt != ESP_OK){
         logDebug(LOG_ERR,"twai: deinit for recovery failed with %x",(int)rt);
