@@ -1,16 +1,16 @@
 #include "Nmea2kTwai.h"
 #include "driver/gpio.h"
 #include "driver/twai.h"
-#include "GwLog.h"
 
 #define LOGID(id) ((id >> 8) & 0x1ffff)
 
 static const int TIMEOUT_OFFLINE=256; //# of timeouts to consider offline
 
-Nmea2kTwai::Nmea2kTwai(gpio_num_t _TxPin,  gpio_num_t _RxPin, unsigned long recP):
-     tNMEA2000(),RxPin(_RxPin),TxPin(_TxPin),recoveryPeriod(recP)
+Nmea2kTwai::Nmea2kTwai(gpio_num_t _TxPin,  gpio_num_t _RxPin, unsigned long recP, unsigned long logP):
+     tNMEA2000(),RxPin(_RxPin),TxPin(_TxPin)
 {
-    lastRecoveryCheck=millis();
+    timers.addAction(logP,[this](){logStatus();});
+    timers.addAction(recP,[this](){checkRecovery();});
 }
 
 bool Nmea2kTwai::CANSendFrame(unsigned long id, unsigned char len, const unsigned char *buf, bool wait_sent)
@@ -120,24 +120,40 @@ Nmea2kTwai::Status Nmea2kTwai::getStatus(){
     return rt;
 }
 bool Nmea2kTwai::checkRecovery(){
-    if (recoveryPeriod == 0) return false; //no check
-    unsigned long now=millis();
-    if ((lastRecoveryCheck+recoveryPeriod) > now) return false;
-    lastRecoveryCheck=now;
     Status canState=getStatus();
     bool strt=false;
-    if (canState.state != Nmea2kTwai::ST_RUNNING){
-      if (canState.state == Nmea2kTwai::ST_BUS_OFF){
-        strt=true;
-        bool rt=startRecovery();
-        logDebug(LOG_INFO,"start can recovery - result %d",(int)rt);
-      }
-      if (canState.state == Nmea2kTwai::ST_STOPPED){
-        bool rt=CANOpen();
-        logDebug(LOG_INFO,"restart can driver - result %d",(int)rt);
-      }
+    if (canState.state != Nmea2kTwai::ST_RUNNING)
+    {
+        if (canState.state == Nmea2kTwai::ST_BUS_OFF)
+        {
+            strt = true;
+            bool rt = startRecovery();
+            logDebug(LOG_INFO, "twai BUS_OFF: start can recovery - result %d", (int)rt);
+        }
+        if (canState.state == Nmea2kTwai::ST_STOPPED)
+        {
+            bool rt = CANOpen();
+            logDebug(LOG_INFO, "twai STOPPED: restart can driver - result %d", (int)rt);
+        }
     }
     return strt;
+}
+
+void Nmea2kTwai::loop(){
+    timers.loop();
+}
+
+Nmea2kTwai::Status Nmea2kTwai::logStatus(){
+    Status canState=getStatus();
+    logDebug(LOG_INFO, "twai state %s, rxerr %d, txerr %d, txfail %d, txtimeout %d, rxmiss %d, rxoverrun %d",
+                 stateStr(canState.state),
+                 canState.rx_errors,
+                 canState.tx_errors,
+                 canState.tx_failed,
+                 canState.tx_timeouts,
+                 canState.rx_missed,
+                 canState.rx_overrun);
+    return canState;
 }
 
 bool Nmea2kTwai::startRecovery(){

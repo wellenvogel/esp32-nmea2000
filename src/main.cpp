@@ -65,6 +65,7 @@ const unsigned long HEAP_REPORT_TIME=2000; //set to 0 to disable heap reporting
 #include "GwTcpClient.h"
 #include "GwChannel.h"
 #include "GwChannelList.h"
+#include "GwTimer.h"
 #ifdef FALLBACK_SERIAL
   #ifdef CAN_ESP_DEBUG
     #define CDBS &Serial
@@ -116,7 +117,7 @@ class Nmea2kTwaiLog : public Nmea2kTwai{
     GwLog* logger;
   public:
     Nmea2kTwaiLog(gpio_num_t _TxPin,  gpio_num_t _RxPin, unsigned long recoveryPeriod,GwLog *l):
-      Nmea2kTwai(_TxPin,_RxPin,recoveryPeriod),logger(l){}
+      Nmea2kTwai(_TxPin,_RxPin,recoveryPeriod,recoveryPeriod),logger(l){}
     virtual void logDebug(int level, const char *fmt,...){
       va_list args;
       va_start(args,fmt);
@@ -157,7 +158,7 @@ GwWebServer webserver(&logger,&mainQueue,80);
 
 GwCounter<unsigned long> countNMEA2KIn("count2Kin");
 GwCounter<unsigned long> countNMEA2KOut("count2Kout");
-
+GwIntervalRunner timers;
 
 bool checkPass(String hash){
   return config.checkPass(hash);
@@ -388,6 +389,7 @@ protected:
     status["heap"]=(long)xPortGetFreeHeapSize();
     Nmea2kTwai::Status n2kState=NMEA2000.getStatus();
     status["n2kstate"]=NMEA2000.stateStr(n2kState.state);
+    status["n2knode"]=NodeAddress;
     //nmea0183Converter->toJson(status);
     countNMEA2KIn.toJson(status);
     countNMEA2KOut.toJson(status);
@@ -675,6 +677,7 @@ void handleConfigRequestData(AsyncWebServerRequest *request, uint8_t *data, size
   }
 }
 
+TimeMonitor monitor(20,0.2);
 
 void setup() {
   mainLock=xSemaphoreCreateMutex();
@@ -799,6 +802,7 @@ void setup() {
   logger.flush();
   NMEA2000.SetMode(tNMEA2000::N2km_ListenAndNode, NodeAddress);
   NMEA2000.SetForwardOwnMessages(false);
+  NMEA2000.SetHeartbeatInterval(5000);
   if (sendOutN2k){
     // Set the information for other bus devices, which messages we support
     unsigned long *pgns=toN2KConverter->handledPgns();
@@ -826,6 +830,15 @@ void setup() {
     GWSYNCHRONIZED(&mainLock);
     userCodeHandler.startUserTasks(MIN_USER_TASK);
   }
+  timers.addAction(HEAP_REPORT_TIME,[](){
+    if (logger.isActive(GwLog::DEBUG)){
+      logger.logDebug(GwLog::DEBUG,"Heap free=%ld, minFree=%ld",
+          (long)xPortGetFreeHeapSize(),
+          (long)xPortGetMinimumEverFreeHeapSize()
+      );
+      logger.logDebug(GwLog::DEBUG,"Main loop %s",monitor.getLog().c_str());
+    }
+  });
   logger.logString("wifi AP pass: %s",fixedApPass? gwWifi.AP_password:config.getString(config.apPassword).c_str());
   logger.logString("admin pass: %s",config.getString(config.adminPassword).c_str());
   logger.logDebug(GwLog::LOG,"setup done");
@@ -837,9 +850,6 @@ void handleSendAndRead(bool handleRead){
   });
 }
 
-TimeMonitor monitor(20,0.2);
-unsigned long lastHeapReport=0;
-unsigned long lastCanStatus=0;
 void loop() {
   monitor.reset();
   GWSYNCHRONIZED(&mainLock);
@@ -848,30 +858,8 @@ void loop() {
   gwWifi.loop();
   unsigned long now=millis();
   monitor.setTime(2);
-  NMEA2000.checkRecovery();
-  if (HEAP_REPORT_TIME > 0 && now > (lastHeapReport+HEAP_REPORT_TIME)){
-    lastHeapReport=now;
-    if (logger.isActive(GwLog::DEBUG)){
-      logger.logDebug(GwLog::DEBUG,"Heap free=%ld, minFree=%ld",
-          (long)xPortGetFreeHeapSize(),
-          (long)xPortGetMinimumEverFreeHeapSize()
-      );
-      logger.logDebug(GwLog::DEBUG,"Main loop %s",monitor.getLog().c_str());
-    }
-  }
-  if (now > (lastCanStatus + CAN_RECOVERY_PERIOD)){
-    lastCanStatus=now;
-    Nmea2kTwai::Status canState=NMEA2000.getStatus();
-    logger.logDebug(GwLog::DEBUG,
-      "can state %s, rxerr %d, txerr %d, txfail %d, txtimeout %d, rxmiss %d, rxoverrun %d",
-      NMEA2000.stateStr(canState.state),
-      canState.rx_errors,
-      canState.tx_errors,
-      canState.tx_failed,
-      canState.tx_timeouts,
-      canState.rx_missed,
-      canState.rx_overrun);
-  }
+  timers.loop();
+  NMEA2000.loop();
   monitor.setTime(3);
   channels.allChannels([](GwChannel *c){
     c->loop(true,false);

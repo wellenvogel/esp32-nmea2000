@@ -1,11 +1,11 @@
 #ifndef _NMEA2KTWAI_H
 #define _NMEA2KTWAI_H
 #include "NMEA2000.h"
-#include "GwLog.h"
+#include "GwTimer.h"
 
 class Nmea2kTwai : public tNMEA2000{
     public:
-        Nmea2kTwai(gpio_num_t _TxPin,  gpio_num_t _RxPin, unsigned long recP=0);
+        Nmea2kTwai(gpio_num_t _TxPin,  gpio_num_t _RxPin, unsigned long recP=0, unsigned long logPeriod=0);
         typedef enum{
             ST_STOPPED,
             ST_RUNNING,
@@ -25,7 +25,7 @@ class Nmea2kTwai : public tNMEA2000{
             STATE state=ST_ERROR;
         } Status;
         Status getStatus();
-        bool checkRecovery();
+        void loop();
         static const char * stateStr(const STATE &st);
         virtual bool CANOpen();
         virtual ~Nmea2kTwai(){};
@@ -48,11 +48,12 @@ class Nmea2kTwai : public tNMEA2000{
     private:
     void initDriver();
     bool startRecovery();
+    bool checkRecovery();
+    Status logStatus(); 
     gpio_num_t TxPin;  
     gpio_num_t RxPin;
     uint32_t txTimeouts=0;
-    unsigned long recoveryPeriod=0;
-    unsigned long lastRecoveryCheck=0;
+    GwIntervalRunner timers;
 };
 
 #endif
