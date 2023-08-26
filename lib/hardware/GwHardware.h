@@ -50,13 +50,32 @@
 //led handling
 //if we define GWLED_FASTNET the arduino fastnet lib is used
 #define GWLED_FASTLED
-#define GWLED_TYPE SK6812
+#define GWLED_TYPE WS2812
 //color schema for fastled
 #define GWLED_SCHEMA GRB
-#define GWLED_PIN  GPIO_NUM_27
+#define GWLED_PIN  GPIO_NUM_35
 //brightness 0...255
 #define GWLED_BRIGHTNESS 64
 #endif
+
+#ifdef BOARD_M5ATOMS3_CANUNIT
+#define ESP32_CAN_TX_PIN GPIO_NUM_26
+#define ESP32_CAN_RX_PIN GPIO_NUM_32
+#define GWBUTTON_PIN GPIO_NUM_41
+#define GWBUTTON_ACTIVE LOW
+//if GWBUTTON_PULLUPDOWN we enable a pulup/pulldown
+#define GWBUTTON_PULLUPDOWN 
+//led handling
+//if we define GWLED_FASTNET the arduino fastnet lib is used
+//#define GWLED_FASTLED
+//#define GWLED_TYPE SK6812
+//color schema for fastled
+#define GWLED_SCHEMA GRB
+#define GWLED_PIN  GPIO_NUM_35
+//brightness 0...255
+//#define GWLED_BRIGHTNESS 64
+#endif
+
 
 #ifdef BOARD_M5ATOM_RS232_CANUNIT
 #define ESP32_CAN_TX_PIN GPIO_NUM_26
