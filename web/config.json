@@ -394,6 +394,127 @@
         "category": "serial port"
     },
     {
+        "name": "serialDirectio2",
+        "label": "serial direction",
+        "type": "list",
+        "default": "receive",
+        "list": [
+            "send",
+            "receive",
+            "off"
+        ],
+        "description": "use the serial port to send or receive data",
+        "capabilities": {
+            "serialmode": [
+                "UNI"
+            ]
+        },
+        "category": "serial port2"
+    },
+    {
+        "name": "serialBaud2",
+        "label": "serial baud rate",
+        "type": "list",
+        "default": "115200",
+        "description": "baud rate for the serial port",
+        "list": [
+            1200,
+            2400,
+            4800,
+            9600,
+            14400,
+            19200,
+            28800,
+            38400,
+            57600,
+            115200,
+            230400,
+            460800
+        ],
+        "capabilities": {
+            "serialmode": [
+                "RX",
+                "TX",
+                "UNI",
+                "BI"
+            ]
+        },
+        "category": "serial port2"
+    },
+    {
+        "name": "sendSerial2",
+        "label": "NMEA to Serial",
+        "type": "boolean",
+        "default": "true",
+        "description": "send out NMEA data on the serial port",
+        "capabilities": {
+            "serialmode": [
+                "TX",
+                "BI"
+            ]
+        },
+        "category": "serial port2"
+    },
+    {
+        "name": "receiveSerial2",
+        "label": "NMEA from Serial",
+        "type": "boolean",
+        "default": "true",
+        "description": "receive NMEA data on the serial port",
+        "capabilities": {
+            "serialmode": [
+                "RX",
+                "BI"
+            ]
+        },
+        "category": "serial port2"
+    },
+    {
+        "name": "serialToN2k2",
+        "label": "serial to NMEA2000",
+        "type": "boolean",
+        "default": "true",
+        "description": "convert NMEA0183 from the serial port to NMEA2000",
+        "capabilities": {
+            "serialmode": [
+                "RX",
+                "BI",
+                "UNI"
+            ]
+        },
+        "category": "serial port2"
+    },
+    {
+        "name": "serialReadF2",
+        "label": "serial read Filter",
+        "type": "filter",
+        "default": "",
+        "description": "filter for NMEA0183 data when reading from serial\nselect aison|aisoff, set a whitelist or a blacklist with NMEA sentences like RMC,RMB",
+        "capabilities": {
+            "serialmode": [
+                "RX",
+                "BI",
+                "UNI"
+            ]
+        },
+        "category": "serial port2"
+    },
+    {
+        "name": "serialWriteF2",
+        "label": "serial write Filter",
+        "type": "filter",
+        "default": "",
+        "description": "filter for NMEA0183 data when writing to serial\nselect aison|aisoff, set a whitelist or a blacklist with NMEA sentences like RMC,RMB",
+        "capabilities": {
+            "serialmode": [
+                "TX",
+                "BI",
+                "UNI"
+            ]
+        },
+        "category": "serial port2"
+    },
+    {
         "name": "serverPort",
         "label": "TCP port",
         "type": "number",

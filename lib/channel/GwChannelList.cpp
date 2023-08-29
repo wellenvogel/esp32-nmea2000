@@ -153,6 +153,58 @@ void GwChannelList::begin(bool fallbackSerial){
         theChannels.push_back(channel);
     }
 
+    //serial 2 / smoothfroggy 230125 - Handle second NMEA0183 stream
+    bool ser2CanRead=true;
+    bool ser2CanWrite=true;
+    int serial2rx=-1;
+    int serial2tx=-1;
+    #ifdef GWSERIAL2_MODE
+        #ifdef GWSERIAL2_TX
+            serial2tx=GWSERIAL2_TX;
+        #endif
+        #ifdef GWSERIAL2_RX
+            serial2rx=GWSERIAL2_RX;
+        #endif
+        if (serial2rx != -1 && serial2tx != -1){
+            serial2Mode=GWSERIAL2_MODE;
+        }
+    #endif
+    //the serial direction is from the config (only valid for mode UNI)
+    String serial2Direction=config->getString(config->serialDirectio2);
+    //we only consider the direction if mode is UNI
+    if (serial2Mode != String("UNI")){
+        serial2Direction=String("");
+        //if mode is UNI it depends on the selection
+        ser2CanRead=config->getBool(config->receiveSerial2);
+        ser2CanWrite=config->getBool(config->sendSerial2);
+    }
+    if (serial2Direction == "receive" || serial2Direction == "off" || serial2Mode == "RX") ser2CanWrite=false;
+    if (serial2Direction == "send" || serial2Direction == "off" || serial2Mode == "TX") ser2CanRead=false;
+    LOG_DEBUG(GwLog::DEBUG,"serial2 set up: mode=%s,direction=%s,rx=%d,tx=%d",
+        serial2Mode.c_str(),serial2Direction.c_str(),serial2rx,serial2tx
+        );
+    if (serial2tx != -1 || serial2rx != -1 ){
+        LOG_DEBUG(GwLog::LOG,"creating serial2 interface rx=%d, tx=%d",serial2rx,serial2tx);
+        GwSerial *serial2=new GwSerial(logger,2,SERIAL2_CHANNEL_ID,ser2CanRead);
+        int rt=serial2->setup(config->getInt(config->serialBaud2,115200),serial2rx,serial2tx);
+        LOG_DEBUG(GwLog::LOG,"starting serial2 returns %d",rt);
+        channel=new GwChannel(logger,"SER2",SERIAL2_CHANNEL_ID);
+        channel->setImpl(serial2);
+        channel->begin(
+            ser2CanRead || ser2CanWrite,
+            ser2CanWrite,
+            ser2CanRead,
+            config->getString(config->serialReadF2),
+            config->getString(config->serialWriteF2),
+            false,
+            config->getBool(config->serialToN2k2),
+            false,
+            false    
+        );
+        LOG_DEBUG(GwLog::LOG,"%s",channel->toString().c_str());
+        theChannels.push_back(channel);
+    }
+
     //tcp client
     bool tclEnabled=config->getBool(config->tclEnabled);
     channel=new GwChannel(logger,"TCPClient",TCP_CLIENT_CHANNEL_ID);

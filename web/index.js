@@ -341,7 +341,9 @@ let counters={
     countUSBin: 'USB in',
     countUSBout: 'USB out',
     countSERin: 'Serial in',
-    countSERout: 'Serial out'
+    countSERout: 'Serial out',
+    countSER2in: 'Serial2 in',
+    countSER2out: 'Serial2 out'
 }
 function showOverlay(text, isHtml) {
     let el = document.getElementById('overlayContent');
@@ -1377,11 +1379,13 @@ let valueFormatters = {
         f: function(v){
             v=parseFloat(v);
             if (isNaN(v)) return "----/--/--";
+            // Following code suppressed by XT : was giving erroneous date (while date provided by GPS was OK and GPSD count since 01/01/1970 was OK)
             //strange day offset from NMEA0183 lib
-            let d=new Date("2010/01/01");
-            let days=14610-d.getTime()/1000/86400;
-            let tbase=(v-days)*1000*86400;
-            let od=new Date(tbase);
+            //let d=new Date("2010/01/01");
+            //let days=14610-d.getTime()/1000/86400;
+            //let tbase=(v-days)*1000*86400;
+            //let od=new Date(tbase);
+            let od=new Date(v);
             return formatFixed(od.getFullYear(),4,0)+
                 "/"+formatFixed(od.getMonth()+1,2,0)+
                 "/"+formatFixed(od.getDate(),2,0);
@@ -1451,8 +1455,9 @@ function sourceName(v){
     if (v == 0) return "N2K";
     if (v == 1) return "USB";
     if (v == 2) return "SER";
-    if (v == 3) return "TCPcl"
-    if (v >= 4 && v <= 20) return "TCPser";
+    if (v == 3) return "SER2";
+    if (v == 4) return "TCPcl"
+    if (v >= 5 && v <= 20) return "TCPser";
     if (v >= 200) return "USER";
     return "---";
 }

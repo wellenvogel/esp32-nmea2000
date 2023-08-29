@@ -1,0 +1,78 @@
+[
+    {
+        "name": "Temperature",
+        "label": "Temperature",
+        "type": "list",
+        "list": [
+            { "l": "Sea",       "v": 0 },
+            { "l": "Outside",   "v": 1 },
+            { "l": "Inside",    "v": 2 },
+            { "l": "EngineRoom","v": 3 },
+            { "l": "MainCabin", "v": 4 },
+            { "l": "LiveWell", "v": 5 },
+            { "l": "BaitWell", "v": 6 },
+            { "l": "Refridgeration", "v": 7 },
+            { "l": "HeatingSystem", "v": 8 },
+            { "l": "DewPoint", "v": 9 },
+            { "l": "ApparentWindChill", "v": 10 },
+            { "l": "TheoreticalWindChill", "v": 11 },
+            { "l": "HeatIndex", "v": 12 },
+            { "l": "Freezer", "v": 13 },
+            { "l": "ExhaustGas", "v": 14 }
+         ],
+        "default": "4",
+        "description": "Temperature",
+        "category": "environment",
+        "capabilities": {
+            "temperature":"true"
+        }
+    },
+    {
+        "name": "Pressure",
+        "label": "Pressure",
+        "type": "list",
+        "list": [
+           { "l": "Atmospheric" , "v": 0 },
+           { "l": "Water", "v": 1 },
+           { "l": "Steam", "v": 2 },
+           { "l": "CompressedAir", "v": 3 },
+           { "l": "Hydraulic", "v":4 },
+           { "l": "Filter", "v":5 },
+           { "l": "AltimeterSetting", "v":6 },
+           { "l": "Oil", "v":7 },
+           { "l": "Fuel", "v":8 }
+        ],
+        "default": "0",
+        "description": "Pressure",
+        "category": "environment",
+        "capabilities": {
+            "pressure":"true"
+        }
+    },
+    {
+        "name": "PressureCalib",
+        "label": "PressureCalibration",
+        "type": "number",
+        "default": "0",
+        "description": "Offset to apply to pressure reading",
+        "category": "environment",
+        "capabilities": {
+            "pressure":"true"
+        }
+    },
+    {
+        "name": "Humidity",
+        "label": "Humidity",
+        "type": "list",
+        "list": [
+           { "l": "InsideHumidity" , "v": 0 },
+           { "l": "OutsideHumidity", "v": 1 }
+        ],
+        "default": "0",
+        "description": "Humidity",
+        "category": "environment",
+        "capabilities": {
+            "humidity":"true"
+        }
+    } 
+]
