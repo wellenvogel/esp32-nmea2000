@@ -63,8 +63,8 @@ void GwChannelList::begin(bool fallbackSerial){
     GwChannel *channel=NULL;
     //usb
     if (! fallbackSerial){
-        GwSerial *usb=new GwSerial(NULL,0,USB_CHANNEL_ID);
-        usb->setup(config->getInt(config->usbBaud),3,1);
+        GwSerial *usb=new GwSerial(NULL,&USBSerial,USB_CHANNEL_ID);
+        USBSerial.begin(config->getInt(config->usbBaud));
         logger->setWriter(new GwSerialLog(usb,config->getBool(config->usbActisense)));
         logger->prefix="GWSERIAL:";
         channel=new GwChannel(logger,"USB",USB_CHANNEL_ID);
@@ -133,9 +133,9 @@ void GwChannelList::begin(bool fallbackSerial){
         );
     if (serialtx != -1 || serialrx != -1 ){
         LOG_DEBUG(GwLog::LOG,"creating serial interface rx=%d, tx=%d",serialrx,serialtx);
-        GwSerial *serial=new GwSerial(logger,1,SERIAL1_CHANNEL_ID,serCanRead);
-        int rt=serial->setup(config->getInt(config->serialBaud,115200),serialrx,serialtx);
-        LOG_DEBUG(GwLog::LOG,"starting serial returns %d",rt);
+        Serial1.begin(config->getInt(config->serialBaud,115200),SERIAL_8N1,serialrx,serialtx);
+        GwSerial *serial=new GwSerial(logger,&Serial1,SERIAL1_CHANNEL_ID,serCanRead);
+        LOG_DEBUG(GwLog::LOG,"starting serial1 ");
         channel=new GwChannel(logger,"SER",SERIAL1_CHANNEL_ID);
         channel->setImpl(serial);
         channel->begin(

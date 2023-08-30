@@ -13,6 +13,7 @@
 */
 #ifndef _GWHARDWARE_H
 #define _GWHARDWARE_H
+#include <HardwareSerial.h>
 #include "GwUserTasks.h"
 
 //general definitions for M5AtomLite
@@ -30,6 +31,7 @@
   #define GWBUTTON_PULLUPDOWN
   #define BOARD_LEFT1 GPIO_NUM_22
   #define BOARD_LEFT2 GPIO_NUM_19
+  #define USBSerial Serial
 #endif
 //general definitiones for M5AtomS3
 #ifdef PLATFORM_BOARD_M5STACK_ATOMS3
@@ -52,6 +54,12 @@
 #ifdef PLATFORM_BOARD_M5STICK_C
   #define GROOVE_PIN_1 GPIO_NUM_32
   #define GROOVE_PIN_2 GPIO_NUM_31
+  #define USBSerial Serial
+#endif
+
+//NodeMCU 32 S
+#ifdef PLATFORM_BOARD_NODEMCU_32S
+  #define USBSerial Serial
 #endif
 
 #ifdef BOARD_M5ATOM
@@ -156,5 +164,6 @@
   #define ESP32_CAN_TX_PIN GROOVE_PIN_1
   #define ESP32_CAN_RX_PIN GROOVE_PIN_2
 #endif
+
 
 #endif
