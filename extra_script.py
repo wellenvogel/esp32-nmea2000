@@ -282,8 +282,11 @@ def cleangenerated(source, target, env):
 
 print("#prescript...")
 prebuild(env)
+board="PLATFORM_BOARD_%s"%env["BOARD"].replace("-","_").upper()
+print("Board=#%s#"%board)
 env.Append(
-    LINKFLAGS=[ "-u", "custom_app_desc" ]
+    LINKFLAGS=[ "-u", "custom_app_desc" ],
+    CPPDEFINES=[(board,"1")]
 )
 #script does not run on clean yet - maybe in the future
 env.AddPostAction("clean",cleangenerated)

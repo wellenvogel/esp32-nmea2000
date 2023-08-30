@@ -15,110 +15,93 @@
 #define _GWHARDWARE_H
 #include "GwUserTasks.h"
 
+//general definitions for M5AtomLite
+#ifdef PLATFORM_BOARD_M5STACK_ATOM
+  #define GROOVE_PIN_1 GPIO_NUM_26
+  #define GROOVE_PIN_2 GPIO_NUM_32
+  #define GWBUTTON_PIN GPIO_NUM_39
+  #define GWLED_FASTLED
+  #define GWLED_TYPE SK6812
+  //color schema for fastled
+  #define GWLED_SCHEMA GRB
+  #define GWLED_PIN  GPIO_NUM_27
+  #define GWBUTTON_ACTIVE LOW
+  //if GWBUTTON_PULLUPDOWN we enable a pulup/pulldown
+  #define GWBUTTON_PULLUPDOWN
+  #define BOARD_LEFT1 GPIO_NUM_22
+  #define BOARD_LEFT2 GPIO_NUM_19
+#endif
+//general definitiones for M5AtomS3
+#ifdef PLATFORM_BOARD_M5STACK_ATOMS3
+  #define GROOVE_PIN_1 GPIO_NUM_2
+  #define GROOVE_PIN_2 GPIO_NUM_1
+  #define GWBUTTON_PIN GPIO_NUM_41
+  #define GWLED_FASTLED
+  #define GWLED_TYPE WS2812
+  //color schema for fastled
+  #define GWLED_SCHEMA GRB
+  #define GWLED_PIN  GPIO_NUM_35
+  #define GWBUTTON_ACTIVE LOW
+  //if GWBUTTON_PULLUPDOWN we enable a pulup/pulldown
+  #define GWBUTTON_PULLUPDOWN
+  #define BOARD_LEFT1 GPIO_NUM_5
+  #define BOARD_LEFT2 GPIO_NUM_6
+#endif
+
+//serial adapter at the M5 groove pins
+#define SERIAL_GROOVE(SMODE) \
+  static const gpio_num_t GWSERIAL_TX=GROOVE_PIN_1; \
+  static const gpio_num_t GWSERIAL_RX=GROOVE_PIN_2; \
+  static const char* GWSERIAL_MODE=SMODE;
+
+//M5 Serial (Atomic RS232 Base)
+#define SERIAL_KIT(SMODE) \
+  static const gpio_num_t GWSERIAL_TX=BOARD_LEFT2; \
+  static const gpio_num_t GWSERIAL_RX=BOARD_LEFT1; \
+  static const char* GWSERIAL_MODE=SMODE;
+
+
+#define CANKIT \
+  static const gpio_num_t ESP32_CAN_TX_PIN=BOARD_LEFT1; \
+  static const gpio_num_t ESP32_CAN_RX_PIN=BOARD_LEFT2;
+
+#define CANUNIT \
+  static const gpio_num_t ESP32_CAN_TX_PIN=GROOVE_PIN_1; \
+  static const gpio_num_t ESP32_CAN_RX_PIN=GROOVE_PIN_2;
 //SERIAL_MODE can be: UNI (RX or TX only), BI (both), RX, TX
 //board specific pins
 #ifdef BOARD_M5ATOM
-#define ESP32_CAN_TX_PIN GPIO_NUM_22
-#define ESP32_CAN_RX_PIN GPIO_NUM_19
+CANKIT
 //150mA if we power from the bus
 #define N2K_LOAD_LEVEL 3 
 //if using tail485
-#define GWSERIAL_TX 26
-#define GWSERIAL_RX 32
-#define GWSERIAL_MODE "UNI"
-#define GWBUTTON_PIN GPIO_NUM_39
-#define GWBUTTON_ACTIVE LOW
-//if GWBUTTON_PULLUPDOWN we enable a pulup/pulldown
-#define GWBUTTON_PULLUPDOWN
-//led handling
-//if we define GWLED_FASTNET the arduino fastnet lib is used
-#define GWLED_FASTLED
-#define GWLED_TYPE SK6812
-//color schema for fastled
-#define GWLED_SCHEMA GRB
-#define GWLED_PIN  GPIO_NUM_27
+SERIAL_GROOVE("UNI")
 //brightness 0...255
 #define GWLED_BRIGHTNESS 64
 #endif
 
 #ifdef BOARD_M5ATOM_CANUNIT
-#define ESP32_CAN_TX_PIN GPIO_NUM_26
-#define ESP32_CAN_RX_PIN GPIO_NUM_32
-#define GWBUTTON_PIN GPIO_NUM_39
-#define GWBUTTON_ACTIVE LOW
-//if GWBUTTON_PULLUPDOWN we enable a pulup/pulldown
-#define GWBUTTON_PULLUPDOWN 
-//led handling
-//if we define GWLED_FASTNET the arduino fastnet lib is used
-#define GWLED_FASTLED
-#define GWLED_TYPE SK6812
-//color schema for fastled
-#define GWLED_SCHEMA GRB
-#define GWLED_PIN  GPIO_NUM_27
-//brightness 0...255
+CANUNIT
 #define GWLED_BRIGHTNESS 64
+//150mA if we power from the bus
+#define N2K_LOAD_LEVEL 3 
 #endif
 
 #ifdef BOARD_M5ATOMS3_CANUNIT
-#define ESP32_CAN_TX_PIN GPIO_NUM_2
-#define ESP32_CAN_RX_PIN GPIO_NUM_1
-#define GWBUTTON_PIN GPIO_NUM_41
-#define GWBUTTON_ACTIVE LOW
-//if GWBUTTON_PULLUPDOWN we enable a pulup/pulldown
-#define GWBUTTON_PULLUPDOWN 
-//led handling
-//if we define GWLED_FASTNET the arduino fastnet lib is used
-#define GWLED_FASTLED
-#define GWLED_TYPE WS2812 
-//color schema for fastled
-#define GWLED_SCHEMA GRB
-#define GWLED_PIN  GPIO_NUM_35
-//brightness 0...255
+CANUNIT
 #define GWLED_BRIGHTNESS 64
 #endif
 
 
 #ifdef BOARD_M5ATOM_RS232_CANUNIT
-#define ESP32_CAN_TX_PIN GPIO_NUM_26
-#define ESP32_CAN_RX_PIN GPIO_NUM_32
-//if using rs232
-#define GWSERIAL_TX 19
-#define GWSERIAL_RX 22
-#define GWSERIAL_MODE "BI"
-#define GWBUTTON_PIN GPIO_NUM_39
-#define GWBUTTON_ACTIVE LOW
-//if GWBUTTON_PULLUPDOWN we enable a pulup/pulldown
-#define GWBUTTON_PULLUPDOWN 
-//led handling
-//if we define GWLED_FASTNET the arduino fastnet lib is used
-#define GWLED_FASTLED
-#define GWLED_TYPE SK6812
-//color schema for fastled
-#define GWLED_SCHEMA GRB
-#define GWLED_PIN  GPIO_NUM_27
-//brightness 0...255
+CANUNIT
+SERIALKIT("BI")
 #define GWLED_BRIGHTNESS 64
 #endif
 
 #ifdef BOARD_M5ATOM_RS485_CANUNIT
-#define ESP32_CAN_TX_PIN GPIO_NUM_26
-#define ESP32_CAN_RX_PIN GPIO_NUM_32
-//if using rs232
-#define GWSERIAL_TX 19
-#define GWSERIAL_RX 22
-#define GWSERIAL_MODE "UNI"
-#define GWBUTTON_PIN GPIO_NUM_39
-#define GWBUTTON_ACTIVE LOW
-//if GWBUTTON_PULLUPDOWN we enable a pulup/pulldown
-#define GWBUTTON_PULLUPDOWN 
-//led handling
-//if we define GWLED_FASTNET the arduino fastnet lib is used
-#define GWLED_FASTLED
-#define GWLED_TYPE SK6812
-//color schema for fastled
-#define GWLED_SCHEMA GRB
-#define GWLED_PIN  GPIO_NUM_27
-//brightness 0...255
+SERIALKIT("UNI")
+CANUNIT
 #define GWLED_BRIGHTNESS 64
 #endif
 
@@ -131,7 +114,7 @@
 #define ESP32_CAN_TX_PIN GPIO_NUM_5
 #define ESP32_CAN_RX_PIN GPIO_NUM_4
 //serial input only
-#define GWSERIAL_RX 16
+#define GWSERIAL_RX GPIO_NUM_16
 #define GWSERIAL_MODE "RX"
 
 #define GWBUTTON_PIN GPIO_NUM_0
