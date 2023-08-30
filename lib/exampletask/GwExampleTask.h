@@ -22,6 +22,7 @@
 #define GWLED_PIN  GPIO_NUM_27
 //brightness 0...255
 #define GWLED_BRIGHTNESS 64
+#define USBSerial Serial
 
 void exampleTask(GwApi *param);
 void exampleInit(GwApi *param);

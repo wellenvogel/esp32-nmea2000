@@ -1,10 +1,11 @@
 #include "GwLog.h"
+#include "GwHardware.h"
 
 class DefaultLogWriter: public GwLogWriter{
     public:
         virtual ~DefaultLogWriter(){};
         virtual void write(const char *data){
-            Serial.print(data);
+            USBSerial.print(data);
         }
 };
 

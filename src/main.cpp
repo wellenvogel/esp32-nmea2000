@@ -14,7 +14,6 @@
 #include "GwAppInfo.h"
 // #define GW_MESSAGE_DEBUG_ENABLED
 //#define FALLBACK_SERIAL
-//#define CAN_ESP_DEBUG
 const unsigned long HEAP_REPORT_TIME=2000; //set to 0 to disable heap reporting
 #include <Arduino.h>
 #include "GwApi.h"
@@ -66,15 +65,6 @@ const unsigned long HEAP_REPORT_TIME=2000; //set to 0 to disable heap reporting
 #include "GwChannel.h"
 #include "GwChannelList.h"
 #include "GwTimer.h"
-#ifdef FALLBACK_SERIAL
-  #ifdef CAN_ESP_DEBUG
-    #define CDBS &Serial
-  #else
-    #define CDBS NULL
-  #endif
-#else
-  #define CDBS NULL
-#endif
 
 
 #define MAX_NMEA2000_MESSAGE_SEASMART_SIZE 500
@@ -709,8 +699,8 @@ void setup() {
 #ifdef FALLBACK_SERIAL
   fallbackSerial=true;
     //falling back to old style serial for logging
-    Serial.begin(115200);
-    Serial.printf("fallback serial enabled\n");
+    USBSerial.begin(115200);
+    USBSerial.printf("fallback serial enabled\n");
     logger.prefix="FALLBACK:";
 #endif
   userCodeHandler.startInitTasks(MIN_USER_TASK);
