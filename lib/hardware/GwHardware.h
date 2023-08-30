@@ -48,68 +48,62 @@
   #define BOARD_LEFT2 GPIO_NUM_6
 #endif
 
-//serial adapter at the M5 groove pins
-#define SERIAL_GROOVE(SMODE) \
-  static const gpio_num_t GWSERIAL_TX=GROOVE_PIN_1; \
-  static const gpio_num_t GWSERIAL_RX=GROOVE_PIN_2; \
-  static const char* GWSERIAL_MODE=SMODE;
+//M5Stick C
+#ifdef PLATFORM_BOARD_M5STICK_C
+  #define GROOVE_PIN_1 GPIO_NUM_32
+  #define GROOVE_PIN_2 GPIO_NUM_31
+#endif
 
-//M5 Serial (Atomic RS232 Base)
-#define SERIAL_KIT(SMODE) \
-  static const gpio_num_t GWSERIAL_TX=BOARD_LEFT2; \
-  static const gpio_num_t GWSERIAL_RX=BOARD_LEFT1; \
-  static const char* GWSERIAL_MODE=SMODE;
-
-
-#define CANKIT \
-  static const gpio_num_t ESP32_CAN_TX_PIN=BOARD_LEFT1; \
-  static const gpio_num_t ESP32_CAN_RX_PIN=BOARD_LEFT2;
-
-#define CANUNIT \
-  static const gpio_num_t ESP32_CAN_TX_PIN=GROOVE_PIN_1; \
-  static const gpio_num_t ESP32_CAN_RX_PIN=GROOVE_PIN_2;
-//SERIAL_MODE can be: UNI (RX or TX only), BI (both), RX, TX
-//board specific pins
 #ifdef BOARD_M5ATOM
-CANKIT
+#define M5_CAN_KIT
 //150mA if we power from the bus
 #define N2K_LOAD_LEVEL 3 
 //if using tail485
-SERIAL_GROOVE("UNI")
+#define SERIAL_GROOVE_485
+//brightness 0...255
+#define GWLED_BRIGHTNESS 64
+#endif
+
+#ifdef BOARD_M5ATOMS3
+#define M5_CAN_KIT
+//150mA if we power from the bus
+#define N2K_LOAD_LEVEL 3 
+//if using tail485
+#define SERIAL_GROOVE_485
 //brightness 0...255
 #define GWLED_BRIGHTNESS 64
 #endif
 
 #ifdef BOARD_M5ATOM_CANUNIT
-CANUNIT
+#define M5_CANUNIT
 #define GWLED_BRIGHTNESS 64
 //150mA if we power from the bus
 #define N2K_LOAD_LEVEL 3 
 #endif
 
 #ifdef BOARD_M5ATOMS3_CANUNIT
-CANUNIT
+#define M5_CANUNIT
 #define GWLED_BRIGHTNESS 64
 #endif
 
 
 #ifdef BOARD_M5ATOM_RS232_CANUNIT
-CANUNIT
-SERIALKIT("BI")
+#define M5_CANUNIT
+#define M5_SERIAL_KIT_232
 #define GWLED_BRIGHTNESS 64
 #endif
 
 #ifdef BOARD_M5ATOM_RS485_CANUNIT
-SERIALKIT("UNI")
-CANUNIT
+#define M5_SERIAL_KIT_485
+#define M5_CANUNIT
 #define GWLED_BRIGHTNESS 64
 #endif
 
 
 #ifdef BOARD_M5STICK_CANUNIT
-#define ESP32_CAN_TX_PIN GPIO_NUM_32
-#define ESP32_CAN_RX_PIN GPIO_NUM_33
+#define M5_CANUNIT
 #endif
+
 #ifdef BOARD_HOMBERGER
 #define ESP32_CAN_TX_PIN GPIO_NUM_5
 #define ESP32_CAN_RX_PIN GPIO_NUM_4
@@ -121,6 +115,46 @@ CANUNIT
 #define GWBUTTON_ACTIVE LOW
 //if GWBUTTON_PULLUPDOWN we enable a pulup/pulldown
 #define GWBUTTON_PULLUPDOWN 
+#endif
+
+//below we define the final device config based on the above
+//boards and peripherals
+//this allows us toe easily also set the from outside
+//serial adapter at the M5 groove pins
+#ifdef SERIAL_GROOVE_485
+  #define GWSERIAL_TX GROOVE_PIN_1
+  #define GWSERIAL_RX GROOVE_PIN_2
+  #define GWSERIAL_MODE "UNI"
+#endif
+#ifdef SERIAL_GROOVE_232
+  #define GWSERIAL_TX GROOVE_PIN_1
+  #define GWSERIAL_RX GROOVE_PIN_2
+  #define GWSERIAL_MODE "BI"
+#endif
+
+//M5 Serial (Atomic RS232 Base)
+#ifdef M5_SERIAL_KIT_232 
+  #define GWSERIAL_TX BOARD_LEFT2
+  #define GWSERIAL_RX BOARD_LEFT1
+  #define GWSERIAL_MODE "BI"
+#endif
+
+//M5 Serial (Atomic RS485 Base)
+#ifdef M5_SERIAL_KIT_485 
+  #define GWSERIAL_TX BOARD_LEFT2
+  #define GWSERIAL_RX BOARD_LEFT1
+  #define GWSERIAL_MODE "UNI"
+#endif
+
+//can kit for M5 Atom
+#ifdef M5_CAN_KIT
+  #define ESP32_CAN_TX_PIN BOARD_LEFT1
+  #define ESP32_CAN_RX_PIN BOARD_LEFT2
+#endif
+//CAN via groove 
+#ifdef M5_CANUNIT
+  #define ESP32_CAN_TX_PIN GROOVE_PIN_1
+  #define ESP32_CAN_RX_PIN GROOVE_PIN_2
 #endif
 
 #endif

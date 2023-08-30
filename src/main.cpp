@@ -127,6 +127,14 @@ class Nmea2kTwaiLog : public Nmea2kTwai{
     }
 };
 
+#ifndef ESP32_CAN_TX_PIN
+ #pragma message "WARNING: ESP32_CAN_TX_PIN not defined"
+ #define ESP32_CAN_TX_PIN GPIO_NUM_NC
+#endif
+#ifndef ESP32_CAN_RX_PIN
+ #pragma message "WARNING: ESP32_CAN_RX_PIN not defined"
+ #define ESP32_CAN_RX_PIN GPIO_NUM_NC
+#endif
 
 Nmea2kTwai &NMEA2000=*(new Nmea2kTwaiLog(ESP32_CAN_TX_PIN,ESP32_CAN_RX_PIN,CAN_RECOVERY_PERIOD,&logger));
 
