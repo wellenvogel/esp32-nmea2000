@@ -427,7 +427,7 @@ class CapabilitiesRequest : public GwRequestMessage{
   protected:
     virtual void processRequest(){
       int numCapabilities=userCodeHandler.getCapabilities()->size();
-      GwJsonDocument json(JSON_OBJECT_SIZE(numCapabilities*3+6));
+      GwJsonDocument json(JSON_OBJECT_SIZE(numCapabilities*3+8));
       for (auto it=userCodeHandler.getCapabilities()->begin();
         it != userCodeHandler.getCapabilities()->end();it++){
           json[it->first]=it->second;
@@ -438,6 +438,12 @@ class CapabilitiesRequest : public GwRequestMessage{
       String serial(F("NONE"));
       #endif
       json["serialmode"]=serial;
+      #ifdef GWSERIAL2_MODE
+      String serial2(F(GWSERIAL2_MODE));
+      #else
+      String serial2(F("NONE"));
+      #endif
+      json["serial2mode"]=serial2;
       #ifdef GWBUTTON_PIN
       json["hardwareReset"]="true";
       #endif

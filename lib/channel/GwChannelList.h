@@ -29,6 +29,7 @@ class GwChannelList{
         GwSocketServer *sockets;
         GwTcpClient *client;
         String serialMode=F("NONE");
+        void addSerial(int id,const String &mode,int rx,int tx);
     public:
         GwChannelList(GwLog *logger, GwConfigHandler *config);
         typedef std::function<void(GwChannel *)> ChannelAction;
