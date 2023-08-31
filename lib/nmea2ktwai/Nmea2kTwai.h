@@ -12,6 +12,7 @@ class Nmea2kTwai : public tNMEA2000{
             ST_BUS_OFF,
             ST_RECOVERING,
             ST_OFFLINE,
+            ST_DISABLED,
             ST_ERROR
         } STATE;
         typedef struct{
@@ -55,6 +56,7 @@ class Nmea2kTwai : public tNMEA2000{
     gpio_num_t RxPin;
     uint32_t txTimeouts=0;
     GwIntervalRunner timers;
+    bool disabled=false;
     unsigned long lastRecoveryStart=0;
 };
 

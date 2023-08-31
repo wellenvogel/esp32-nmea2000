@@ -9,12 +9,18 @@ static const int TIMEOUT_OFFLINE=256; //# of timeouts to consider offline
 Nmea2kTwai::Nmea2kTwai(gpio_num_t _TxPin,  gpio_num_t _RxPin, unsigned long recP, unsigned long logP):
      tNMEA2000(),RxPin(_RxPin),TxPin(_TxPin)
 {
-    timers.addAction(logP,[this](){logStatus();});
-    timers.addAction(recP,[this](){checkRecovery();});
+    if (RxPin < 0 || TxPin < 0){
+        disabled=true;    
+    }
+    else{
+        timers.addAction(logP,[this](){logStatus();});
+        timers.addAction(recP,[this](){checkRecovery();});
+    }
 }
 
 bool Nmea2kTwai::CANSendFrame(unsigned long id, unsigned char len, const unsigned char *buf, bool wait_sent)
 {
+    if (disabled) return true;
     twai_message_t message;
     memset(&message,0,sizeof(message));
     message.identifier = id;
@@ -35,6 +41,10 @@ bool Nmea2kTwai::CANSendFrame(unsigned long id, unsigned char len, const unsigne
 }
 bool Nmea2kTwai::CANOpen()
 {
+    if (disabled){
+        logDebug(LOG_INFO,"CAN disabled");
+        return true;
+    }
     esp_err_t rt=twai_start();
     if (rt != ESP_OK){
         logDebug(LOG_ERR,"CANOpen failed: %x",(int)rt);
@@ -47,6 +57,7 @@ bool Nmea2kTwai::CANOpen()
 }
 bool Nmea2kTwai::CANGetFrame(unsigned long &id, unsigned char &len, unsigned char *buf)
 {
+    if (disabled) return false;
     twai_message_t message;
     esp_err_t rt=twai_receive(&message,0);
     if (rt != ESP_OK){
@@ -68,6 +79,7 @@ bool Nmea2kTwai::CANGetFrame(unsigned long &id, unsigned char &len, unsigned cha
     return true;
 }
 void Nmea2kTwai::initDriver(){
+    if (disabled) return;
     twai_general_config_t g_config = TWAI_GENERAL_CONFIG_DEFAULT(TxPin,RxPin, TWAI_MODE_NORMAL);
     g_config.tx_queue_len=20;
     twai_timing_config_t t_config = TWAI_TIMING_CONFIG_250KBITS();
@@ -84,13 +96,22 @@ void Nmea2kTwai::initDriver(){
 // and you want to change size of library send frame buffer size. See e.g. NMEA2000_teensy.cpp.
 void Nmea2kTwai::InitCANFrameBuffers()
 {
-    initDriver();
+    if (disabled){
+        logDebug(LOG_INFO,"twai init - disabled");
+    }
+    else{
+        initDriver();
+    }
     tNMEA2000::InitCANFrameBuffers();
     
 }
 Nmea2kTwai::Status Nmea2kTwai::getStatus(){
     twai_status_info_t state;
     Status rt;
+    if (disabled){
+        rt.state=ST_DISABLED;
+        return rt;
+    }
     if (twai_get_status_info(&state) != ESP_OK){
         return rt;
     }
@@ -120,6 +141,7 @@ Nmea2kTwai::Status Nmea2kTwai::getStatus(){
     return rt;
 }
 bool Nmea2kTwai::checkRecovery(){
+    if (disabled) return false;
     Status canState=getStatus();
     bool strt=false;
     if (canState.state != Nmea2kTwai::ST_RUNNING)
@@ -140,6 +162,7 @@ bool Nmea2kTwai::checkRecovery(){
 }
 
 void Nmea2kTwai::loop(){
+    if (disabled) return;
     timers.loop();
 }
 
@@ -157,6 +180,7 @@ Nmea2kTwai::Status Nmea2kTwai::logStatus(){
 }
 
 bool Nmea2kTwai::startRecovery(){
+    if (disabled) return false;
     lastRecoveryStart=millis();
     esp_err_t rt=twai_driver_uninstall();
     if (rt != ESP_OK){
@@ -174,6 +198,7 @@ const char * Nmea2kTwai::stateStr(const Nmea2kTwai::STATE &st){
     case ST_RUNNING: return "RUNNING";
     case ST_STOPPED: return "STOPPED";
     case ST_OFFLINE: return "OFFLINE";
+    case ST_DISABLED: return "DISABLED";
     }
     return "ERROR";
 }
