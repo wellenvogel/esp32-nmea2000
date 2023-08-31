@@ -9,6 +9,11 @@
 #define GWSERIAL_TX 26
 #define GWSERIAL_RX 32
 #define GWSERIAL_MODE "UNI"
+
+#define GWSERIAL2_TX 14
+#define GWSERIAL2_RX 15
+#define GWSERIAL2_MODE "BI"
+
 #define GWBUTTON_PIN GPIO_NUM_39
 #define GWBUTTON_ACTIVE LOW
 //if GWBUTTON_PULLUPDOWN we enable a pulup/pulldown
