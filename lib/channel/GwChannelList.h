@@ -7,6 +7,7 @@
 #include "GWConfig.h"
 #include "GwJsonDocument.h"
 #include "GwApi.h"
+#include <HardwareSerial.h>
 
 //NMEA message channels
 #define N2K_CHANNEL_ID 0
@@ -28,8 +29,7 @@ class GwChannelList{
         
         GwSocketServer *sockets;
         GwTcpClient *client;
-        String serialMode=F("NONE");
-        void addSerial(int id,const String &mode,int rx,int tx);
+        void addSerial(HardwareSerial *stream,int id,const String &mode,int rx,int tx);
     public:
         GwChannelList(GwLog *logger, GwConfigHandler *config);
         typedef std::function<void(GwChannel *)> ChannelAction;

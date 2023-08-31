@@ -155,8 +155,8 @@ SemaphoreHandle_t mainLock;
 GwRequestQueue mainQueue(&logger,20);
 GwWebServer webserver(&logger,&mainQueue,80);
 
-GwCounter<unsigned long> countNMEA2KIn("count2Kin");
-GwCounter<unsigned long> countNMEA2KOut("count2Kout");
+GwCounter<unsigned long> countNMEA2KIn("countNMEA2000in");
+GwCounter<unsigned long> countNMEA2KOut("countNMEA2000out");
 GwIntervalRunner timers;
 
 bool checkPass(String hash){
@@ -399,6 +399,7 @@ protected:
     }
     status["n2kstate"]=NMEA2000.stateStr(driverState);
     status["n2knode"]=NodeAddress;
+    status["minUser"]=MIN_USER_TASK;
     //nmea0183Converter->toJson(status);
     countNMEA2KIn.toJson(status);
     countNMEA2KOut.toJson(status);
