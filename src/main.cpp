@@ -126,7 +126,7 @@ class Nmea2kTwaiLog : public Nmea2kTwai{
  #define ESP32_CAN_RX_PIN GPIO_NUM_NC
 #endif
 
-Nmea2kTwai &NMEA2000=*(new Nmea2kTwaiLog(ESP32_CAN_TX_PIN,ESP32_CAN_RX_PIN,CAN_RECOVERY_PERIOD,&logger));
+Nmea2kTwai &NMEA2000=*(new Nmea2kTwaiLog((gpio_num_t)ESP32_CAN_TX_PIN,(gpio_num_t)ESP32_CAN_RX_PIN,CAN_RECOVERY_PERIOD,&logger));
 
 #ifdef GWBUTTON_PIN
 bool fixedApPass=false;
@@ -433,18 +433,8 @@ class CapabilitiesRequest : public GwRequestMessage{
         it != userCodeHandler.getCapabilities()->end();it++){
           json[it->first]=it->second;
         }
-      #ifdef GWSERIAL_MODE
-      String serial(F(GWSERIAL_MODE));
-      #else
-      String serial(F("NONE"));
-      #endif
-      json["serialmode"]=serial;
-      #ifdef GWSERIAL2_MODE
-      String serial2(F(GWSERIAL2_MODE));
-      #else
-      String serial2(F("NONE"));
-      #endif
-      json["serial2mode"]=serial2;
+      json["serialmode"]=channels.getMode(SERIAL1_CHANNEL_ID);
+      json["serial2mode"]=channels.getMode(SERIAL2_CHANNEL_ID);
       #ifdef GWBUTTON_PIN
       json["hardwareReset"]="true";
       #endif

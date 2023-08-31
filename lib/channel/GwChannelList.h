@@ -1,6 +1,7 @@
 #pragma once
 #include <functional>
 #include <vector>
+#include <map>
 #include <WString.h>
 #include "GwChannel.h"
 #include "GwLog.h"
@@ -26,10 +27,11 @@ class GwChannelList{
         GwConfigHandler *config;
         typedef std::vector<GwChannel *> ChannelList;
         ChannelList theChannels;
-        
+        std::map<int,String> modes;
         GwSocketServer *sockets;
         GwTcpClient *client;
         void addSerial(HardwareSerial *stream,int id,const String &mode,int rx,int tx);
+        void addSerial(HardwareSerial *stream,int id,int type,int rx,int tx);
     public:
         GwChannelList(GwLog *logger, GwConfigHandler *config);
         typedef std::function<void(GwChannel *)> ChannelAction;
@@ -42,6 +44,6 @@ class GwChannelList{
         //single channel
         GwChannel *getChannelById(int sourceId);
         void fillStatus(GwApi::Status &status);
-
+        String getMode(int id);
 
 };

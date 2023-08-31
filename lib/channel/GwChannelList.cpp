@@ -102,6 +102,29 @@ static SerialParam *getSerialParam(int id){
     return nullptr;
 }
 
+void GwChannelList:: addSerial(HardwareSerial *stream,int id,int type,int rx,int tx){
+    const char *mode=nullptr;
+    switch (type)
+    {
+    case GWSERIAL_TYPE_UNI:
+        mode="UNI";
+        break;
+    case GWSERIAL_TYPE_BI:
+        mode="BI";
+        break;
+    case GWSERIAL_TYPE_RX:
+        mode="RX";
+        break;
+    case GWSERIAL_TYPE_TX:
+        mode="TX";
+        break;
+    }
+    if (mode == nullptr) {
+        LOG_DEBUG(GwLog::ERROR,"unknown serial type %d",type);
+        return;
+    }
+    addSerial(stream,id,mode,rx,tx);
+}
 void GwChannelList::addSerial(HardwareSerial *serialStream,int id,const String &mode,int rx,int tx){
     SerialParam *param=getSerialParam(id);
     if (param == nullptr){
@@ -112,6 +135,7 @@ void GwChannelList::addSerial(HardwareSerial *serialStream,int id,const String &
         logger->logDebug(GwLog::ERROR,"useless config for serial %d: both rx/tx undefined");
         return;
     }
+    modes[id]=String(mode);
     bool canRead=false;
     bool canWrite=false;
     if (mode == "BI"){
@@ -155,6 +179,7 @@ void GwChannelList::addSerial(HardwareSerial *serialStream,int id,const String &
     LOG_DEBUG(GwLog::LOG, "%s", channel->toString().c_str());
     theChannels.push_back(channel);
 }
+
 void GwChannelList::begin(bool fallbackSerial){
     LOG_DEBUG(GwLog::DEBUG,"GwChannelList::begin");
     GwChannel *channel=NULL;
@@ -205,8 +230,12 @@ void GwChannelList::begin(bool fallbackSerial){
     #ifndef GWSERIAL_RX
       #define GWSERIAL_RX -1
     #endif
-    #ifdef GWSERIAL_MODE
-        addSerial(&Serial1,SERIAL1_CHANNEL_ID,GWSERIAL_MODE,GWSERIAL_RX,GWSERIAL_TX);
+    #ifdef GWSERIAL_TYPE
+        addSerial(&Serial1,SERIAL1_CHANNEL_ID,GWSERIAL_TYPE,GWSERIAL_RX,GWSERIAL_TX);
+    #else
+        #ifdef GWSERIAL_MODE
+            addSerial(&Serial1,SERIAL1_CHANNEL_ID,GWSERIAL_MODE,GWSERIAL_RX,GWSERIAL_TX);
+        #endif
     #endif
     //serial 2
     #ifndef GWSERIAL2_TX
@@ -215,8 +244,12 @@ void GwChannelList::begin(bool fallbackSerial){
     #ifndef GWSERIAL2_RX
       #define GWSERIAL2_RX -1
     #endif
-    #ifdef GWSERIAL2_MODE
-        addSerial(&Serial2,SERIAL2_CHANNEL_ID,GWSERIAL2_MODE,GWSERIAL2_RX,GWSERIAL2_TX);
+    #ifdef GWSERIAL2_TYPE
+        addSerial(&Serial2,SERIAL2_CHANNEL_ID,GWSERIAL2_TYPE,GWSERIAL2_RX,GWSERIAL2_TX);
+    #else
+        #ifdef GWSERIAL2_MODE
+            addSerial(&Serial2,SERIAL2_CHANNEL_ID,GWSERIAL2_MODE,GWSERIAL2_RX,GWSERIAL2_TX);
+        #endif
     #endif
     //tcp client
     bool tclEnabled=config->getBool(config->tclEnabled);
@@ -244,6 +277,11 @@ void GwChannelList::begin(bool fallbackSerial){
     theChannels.push_back(channel);
     LOG_DEBUG(GwLog::LOG,"%s",channel->toString().c_str());  
     logger->flush();
+}
+String GwChannelList::getMode(int id){
+    auto it=modes.find(id);
+    if (it != modes.end()) return it->second;
+    return "UNKNOWN";
 }
 int GwChannelList::getJsonSize(){
     int rt=0;
