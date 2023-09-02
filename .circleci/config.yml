@@ -27,7 +27,7 @@ jobs:
           command: "pip install --upgrade platformio"
       - run:
           name: "build"
-          command: "pip run -e << pipeline.parameters.environment >>"
+          command: "pio run -e << pipeline.parameters.environment >>"
 
 # Orchestrate jobs using workflows
 # See: https://circleci.com/docs/configuration-reference/#workflows
