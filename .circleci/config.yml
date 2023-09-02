@@ -7,7 +7,10 @@ parameters:
     default: false
   environment:
     type: string
-    default: "m5-atom"
+    default: "m5stack-atom"
+  build_flags:
+    type: string
+    default: ""
 orbs:
   python: circleci/python@1.4.0
 
@@ -19,7 +22,7 @@ jobs:
     # Add steps to the job
     # See: https://circleci.com/docs/configuration-reference/#steps
     environment:
-
+      PLATFORMIO_BUILD_FLAGS: << pipeline.parameters.build_flags >>
     steps:
       - checkout
       - run:
@@ -28,7 +31,12 @@ jobs:
       - run:
           name: "build"
           command: "pio run -e << pipeline.parameters.environment >>"
-
+      - store_artifacts:
+          path: .pio/build/<< pipeline.parameters.environment >>/firmware.bin
+          destination: << pipeline.parameters.environment >>-update.bin
+      - store_artifacts:
+          path: .pio/build/<< pipeline.parameters.environment >>/<< pipeline.parameters.environment >>-all.bin
+          destination: << pipeline.parameters.environment >>-all.bin
 # Orchestrate jobs using workflows
 # See: https://circleci.com/docs/configuration-reference/#workflows
 workflows:
