@@ -41,7 +41,7 @@ jobs:
       - run:
           name: "save build config"
           working_directory: ".pio/build/<< pipeline.parameters.environment >>"
-          command: "echo 'PLATFORMIO_BUILD_FLAGS=\"<< pipeline.parameters.config >>\" pio run -e << pipeline.parameters.environment >> ' > buildconfig.txt"
+          command: "echo 'PLATFORMIO_BUILD_FLAGS=\"<< pipeline.parameters.environment >>\" pio run -e << pipeline.parameters.environment >> ' > buildconfig.txt"
       - run:
           name: "rename"
           command: "mv .pio/build/<< pipeline.parameters.environment >>/firmware.bin .pio/build/<< pipeline.parameters.environment >>/<< pipeline.parameters.environment >>-update.bin"
