@@ -31,9 +31,16 @@ jobs:
       - run:
           name: "build"
           command: "pio run -e << pipeline.parameters.environment >>"
+      - run:
+          name: "rename"
+          command: "mv .pio/build/<< pipeline.parameters.environment >>/firmware.bin .pio/build/<< pipeline.parameters.environment >>/<< pipeline.parameters.environment >>-update.bin"
+      - run:
+          name: "compress"
+          working_directory: ".pio/build/<< pipeline.parameters.environment >>"
+          command: "zip << pipeline.parameters.environment >>.zip << pipeline.parameters.environment >>-*.bin"
       - store_artifacts:
-          path: .pio/build/<< pipeline.parameters.environment >>/firmware.bin
-          destination: << pipeline.parameters.environment >>-update.bin
+          path: .pio/build/<< pipeline.parameters.environment >>/<< pipeline.parameters.environment >>.zip
+          destination: << pipeline.parameters.environment >>.zip
       - store_artifacts:
           path: .pio/build/<< pipeline.parameters.environment >>/<< pipeline.parameters.environment >>-all.bin
           destination: << pipeline.parameters.environment >>-all.bin
