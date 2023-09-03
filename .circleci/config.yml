@@ -11,6 +11,9 @@ parameters:
   build_flags:
     type: string
     default: ""
+  config:
+    type: string
+    default: "{}"
 orbs:
   python: circleci/python@1.4.0
 
@@ -32,18 +35,23 @@ jobs:
           name: "build"
           command: "pio run -e << pipeline.parameters.environment >>"
       - run:
+          name: "save config"
+          working_directory: ".pio/build/<< pipeline.parameters.environment >>"
+          command: "echo '<< pipeline.parameters.config >>' > config.json"
+      - run:
+          name: "save build config"
+          working_directory: ".pio/build/<< pipeline.parameters.environment >>"
+          command: "echo 'PLATFORMIO_BUILD_FLAGS=\"<< pipeline.parameters.config >>\" pio run -e << pipeline.parameters.environment >> ' > buildconfig.txt"
+      - run:
           name: "rename"
           command: "mv .pio/build/<< pipeline.parameters.environment >>/firmware.bin .pio/build/<< pipeline.parameters.environment >>/<< pipeline.parameters.environment >>-update.bin"
       - run:
           name: "compress"
           working_directory: ".pio/build/<< pipeline.parameters.environment >>"
-          command: "zip << pipeline.parameters.environment >>.zip << pipeline.parameters.environment >>-*.bin"
+          command: "zip << pipeline.parameters.environment >>.zip << pipeline.parameters.environment >>-*.bin config.json buildconfig.txt"
       - store_artifacts:
           path: .pio/build/<< pipeline.parameters.environment >>/<< pipeline.parameters.environment >>.zip
           destination: << pipeline.parameters.environment >>.zip
-      - store_artifacts:
-          path: .pio/build/<< pipeline.parameters.environment >>/<< pipeline.parameters.environment >>-all.bin
-          destination: << pipeline.parameters.environment >>-all.bin
 # Orchestrate jobs using workflows
 # See: https://circleci.com/docs/configuration-reference/#workflows
 workflows:
