@@ -73,50 +73,79 @@ function getArtifacts($job,$slug){
     return getJson($url,getTokenHeaders(),true);
 }
 
-if (isset($_REQUEST['api'])){
-    $action=$_REQUEST['api'];
-    header("Content-Type: application/json");
-    $par=array();
-    if ($action == 'status') {
-        addVars(
-            $par,
-            ['pipeline', 'workflow', 'job'],
-            array('workflow' => workflowName, 'job' => jobName)
-        );
-        try {
-            $pstat = getJobStatus($par['pipeline'], $par['workflow'], $par['job']);
-            echo(json_encode($pstat));
-        } catch (Exception $e) {
-            $rt=array('status'=>'error','error'=>$e->getMessage());
-            echo(json_encode($rt));
-        }
-        exit(0);
+function getArtifactsForPipeline($pipeline,$wf=workflowName,$job=jobName){
+    $jstat=getJobStatus($pipeline,$wf,$job);
+    if (! isset($jstat['job_number'])){
+        throw new Exception("no job number");
     }
-    if ($action == 'artifacts'){
-        addVars(
-            $par,
-            ['pipeline', 'workflow', 'job'],
-            array('workflow' => workflowName, 'job' => jobName)
-        );
-        try{
-            $jstat=getJobStatus($par['pipeline'], $par['workflow'], $par['job']);
-            if (! isset($jstat['project_slug'])){
-                throw new Exception("no project_slug in job");
-            }
-            if (! isset($jstat['status'])){
-                throw new Exception("no job status");
-            }
-            if ($jstat['status'] != 'success'){
-                throw new Exception("invalid job status ".$jstat['status']);
-            }
-            $astat=getArtifacts($jstat['job_number'],$jstat['project_slug']);
-            echo (json_encode($astat));
-        }catch (Exception $e){
-            echo(json_encode(array('status'=>'error','error'=>$e->getMessage())));
-        }
-        exit(0);
+    if (! isset($jstat['status'])){
+        throw new Exception("no job status");
     }
-    die("invalid api $action");
+    if ($jstat['status'] != 'success'){
+        throw new Exception("invalid job status ".$jstat['status']);
+    }
+    $astat=getArtifacts($jstat['job_number'],$jstat['project_slug']);
+    return $astat;
 }
-die("no action");
+try {
+    if (isset($_REQUEST['api'])) {
+        $action = $_REQUEST['api'];
+        header("Content-Type: application/json");
+        $par = array();
+        if ($action == 'status') {
+            addVars(
+                $par,
+                ['pipeline', 'workflow', 'job'],
+                array('workflow' => workflowName, 'job' => jobName)
+            );
+            try {
+                $pstat = getJobStatus($par['pipeline'], $par['workflow'], $par['job']);
+                echo (json_encode($pstat));
+            } catch (Exception $e) {
+                $rt = array('status' => 'error', 'error' => $e->getMessage());
+                echo (json_encode($rt));
+            }
+            exit(0);
+        }
+        if ($action == 'artifacts') {
+            addVars(
+                $par,
+                ['pipeline', 'workflow', 'job'],
+                array('workflow' => workflowName, 'job' => jobName)
+            );
+            try {
+                $astat = getArtifactsForPipeline($par['pipeline'], $par['workflow'], $par['job']);
+                echo (json_encode($astat));
+            } catch (Exception $e) {
+                echo (json_encode(array('status' => 'error', 'error' => $e->getMessage())));
+            }
+            exit(0);
+        }
+        die("invalid api $action");
+    }
+    if (isset($_REQUEST['download'])) {
+        $pipeline = $_REQUEST['download'];
+        $par = array('pipeline' => $pipeline);
+        addVars(
+            $par,
+            ['workflow', 'job'],
+            array('workflow' => workflowName, 'job' => jobName)
+        );
+        $astat = getArtifactsForPipeline($par['pipeline'], $par['workflow'], $par['job']);
+        if (!isset($astat['items']) || count($astat['items']) < 1) {
+            die("no artifacts for job");
+        }
+        $dlurl = $astat['items'][0]['url'];
+        #echo("DL: $dlurl\n");
+        proxy($dlurl);
+        exit(0);
+    }
+    die("no action");
+} catch (HTTPErrorException $h) {
+    header($_SERVER['SERVER_PROTOCOL'] . " " . $h->code . " " . $h->getMessage());
+    die($h->getMessage());
+} catch (Exception $e) {
+    header($_SERVER['SERVER_PROTOCOL'] . ' 500 ' . $e->getMessage());
+    die($e->getMessage());
+}
 ?>
