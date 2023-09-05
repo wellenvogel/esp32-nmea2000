@@ -49,10 +49,15 @@ jobs:
           name: "rename"
           working_directory: ".pio/build/<< pipeline.parameters.environment >>"
           command: "mv firmware.bin << pipeline.parameters.environment >><< pipeline.parameters.suffix >>-update.bin"
-      - run:
-          name: "rename2"
-          working_directory: ".pio/build/<< pipeline.parameters.environment >>"
-          command: "mv << pipeline.parameters.environment >>-all.bin << pipeline.parameters.environment >><< pipeline.parameters.suffix >>-all.bin"
+      - when:
+          condition: 
+            not: 
+              equal: [ << pipeline.parameters.suffix >> ,""]
+          steps:
+            - run:
+                name: "rename2"
+                working_directory: ".pio/build/<< pipeline.parameters.environment >>"
+                command: "mv << pipeline.parameters.environment >>-all.bin << pipeline.parameters.environment >><< pipeline.parameters.suffix >>-all.bin"
       - run:
           name: "compress"
           working_directory: ".pio/build/<< pipeline.parameters.environment >>"
