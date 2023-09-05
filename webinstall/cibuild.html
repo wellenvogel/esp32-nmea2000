@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<script type="module" src="cibuild.js"></script>
+	<link rel="stylesheet" href="cibuild.css"/>
+</head>
+
+<body>
+    <h1>Build your own ESP32-NMEA2000</h1>
+    <div class="xrow">
+        <label>Board type</label>
+        <input type="text" id="environment" value="m5stack-atom-generic">
+    </div>
+    <div class="xrow">
+        <label>Build Flags</label>
+        <input type="text" id="buildflags" value="">
+    </div>
+    <div class="xrow">
+        <button id="start">Start</button>
+    </div>
+    <div class="xrow">
+        <label>Pipeline Id</label>
+        <div id="pipeline">---</div>
+    </div>
+    <div class="xrow">
+        <label>Status</label>
+        <div id="status">---</div>
+    </div>
+    <div class="xrow hidden">
+        <a target="_" id="link">WebStatus</a>
+    </div>
+    <div class="xrow hidden">
+        <button id="download">Download</button>
+    </div>
+    <iframe id="dlframe" width="1" height="1"></iframe>
+</body>
+</html>

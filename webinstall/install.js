@@ -1,10 +1,10 @@
 import {XtermOutputHandler} from "./installUtil.js";
 import ESPInstaller from "./installUtil.js";
+import { addEl, getParam } from "./helper.js";
 (function(){
     let espLoaderTerminal;
     let espInstaller;
     let releaseData={};
-    const addEl=ESPInstaller.addEl; //shorter typing
     let showConsole;
     let hideConsole;
     const enableConsole=(enable,disableBoth)=>{
@@ -134,8 +134,8 @@ import ESPInstaller from "./installUtil.js";
             showError("your browser does not support the ESP flashing (no serial)");
             return;
         }
-        let user = window.gitHubUser||ESPInstaller.getParam('user');
-        let repo = window.gitHubRepo || ESPInstaller.getParam('repo');
+        let user = window.gitHubUser||getParam('user');
+        let repo = window.gitHubRepo || getParam('repo');
         if (!user || !repo) {
             alert("missing parameter user or repo");
         }

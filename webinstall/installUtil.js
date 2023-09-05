@@ -72,39 +72,6 @@ class ESPInstaller{
         // Return the unescaped value minus everything starting from the equals sign or an empty string
         return decodeURIComponent(!!value ? value.toString().replace(/^[^=]+./,"") : "");
     };
-    /**
-     * add an HTML element
-     * @param {*} type 
-     * @param {*} clazz 
-     * @param {*} parent 
-     * @param {*} text 
-     * @returns 
-     */
-    static addEl(type, clazz, parent, text) {
-        let el = document.createElement(type);
-        if (clazz) {
-            if (!(clazz instanceof Array)) {
-                clazz = clazz.split(/  */);
-            }
-            clazz.forEach(function (ce) {
-                el.classList.add(ce);
-            });
-        }
-        if (text) el.textContent = text;
-        if (parent) parent.appendChild(el);
-        return el;
-    }
-    /**
-     * call a function for each matching element
-     * @param {*} selector 
-     * @param {*} cb 
-     */
-    static forEachEl(selector,cb){
-        let arr=document.querySelectorAll(selector);
-        for (let i=0;i<arr.length;i++){
-            cb(arr[i]);
-        }
-    }
     static checkAvailable(){
         if (! navigator.serial || ! navigator.serial.requestPort) return false;
         return true;
