@@ -4,10 +4,13 @@ include("functions.php");
 include("config.php");
 if (! isset($CI_TOKEN)) die("no token");
 const apiBase="https://circleci.com/api/v2/";
+const webApp="https://app.circleci.com/";
 const apiRepo="project/gh/#user#/#repo#";
 const workflowName="build-workflow";
 const jobName="pio-build";
-
+const defaultBranch='circleci-project-setup';
+const defaultUser='wellenvogel';
+const defaultRepo='esp32-nmea2000';
 
 function getTokenHeaders(){
     global $CI_TOKEN;
@@ -63,8 +66,21 @@ function getJobStatus($pipeline,$wf=workflowName,$job=jobName){
     if ($pstat['state'] != 'created'){
         return $pstat;
     }
+    $pipeline_id=$pstat['id'];
+    $pipeline_number=$pstat['number'];
     $pstat=getWorkflow($pipeline,$wf);
+    $workflow_id=$pstat['id'];
+    $workflow_number=$pstat['workflow_number'];
     $pstat=getJob($pipeline,$pstat['id'],$job);
+    $pstat['pipeline_id']=$pipeline_id;
+    $pstat['pipeline_number']=$pipeline_number;
+    $pstat['workflow_id']=$workflow_id;
+    $pstat['workflow_number']=$workflow_number;
+    if (isset($pstat['project_slug'])){
+        $pstat['status_url']=webApp."/pipelines/".
+            preg_replace('/^gh/','github',$pstat['project_slug'])."/".
+            $pipeline_number."/workflows/".$workflow_id."/jobs/".$pstat['job_number'];
+    }
     return $pstat;
 }
 
@@ -121,7 +137,46 @@ try {
             }
             exit(0);
         }
-        die("invalid api $action");
+        if ($action == 'pipeline'){
+            addVars(
+                $par,
+                ['number','user','repo'],
+                array('user'=>defaultUser,'repo'=>defaultRepo)
+            );
+            $url=apiBase."/".replaceVars(apiRepo,fillUserAndRepo(null,$par))."/pipeline/".$par['number'];
+            $rt=getJson($url,getTokenHeaders(),true);
+            echo(json_encode($rt));
+            exit(0);
+        }
+        if ($action == 'start'){
+            addVars(
+                $par,
+                ['environment','buildflags','config','suffix','branch','user','repo'],
+                array('suffix'=>'',
+                    'branch'=>defaultBranch,
+                    'config'=>'{}',
+                    'user'=>defaultUser,
+                    'repo'=>defaultRepo,
+                    'buildflags'=>''
+                    )
+            );
+            $requestParam=array(
+                'branch'=>$par['branch'],
+                'parameters'=> array(
+                    'run_build'=>true,
+                    'environment'=>$par['environment'],
+                    'suffix'=>$par['suffix'],
+                    'config'=>$par['config'],
+                    'build_flags'=>$par['buildflags']
+                )
+            );
+            $userRepo=fillUserAndRepo(null,$par);
+            $url=apiBase."/".replaceVars(apiRepo,$userRepo)."/pipeline";
+            $rt=getJson($url,getTokenHeaders(),true,$requestParam);
+            echo (json_encode($rt));
+            exit(0);
+        }
+        throw new Exception("invalid api $action");
     }
     if (isset($_REQUEST['download'])) {
         $pipeline = $_REQUEST['download'];

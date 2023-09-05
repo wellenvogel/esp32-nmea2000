@@ -121,11 +121,18 @@ function getFwHeaders($aheaders=null){
     }
     return $outHeaders;
 }
-function getJson($url,$headers=null,$doThrow=false){
+function getJson($url,$headers=null,$doThrow=false,$jsonData=null){
     $curl = curl_init();
     curl_setopt($curl, CURLOPT_URL,$url);
     curl_setopt($curl,CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($curl, CURLOPT_HTTPHEADER, getFwHeaders($headers));
+    $outHeaders=getFwHeaders($headers);
+    if ($jsonData != null){
+        $json=json_encode($jsonData);
+        array_push($outHeaders,"Content-Type: application/json");
+        array_push($outHeaders,"Content-length: ".strlen($json));
+        curl_setopt($curl, CURLOPT_POSTFIELDS,$json);   
+    }
+    curl_setopt($curl, CURLOPT_HTTPHEADER, $outHeaders);
     $response = curl_exec($curl);
     $httpcode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
     #echo("curl exec for $url:$response:$httpcode\n");
