@@ -1,3 +1,96 @@
 .hidden{
     display: none;
 }
+
+/* reused stuff from configui */
+.configui.container{
+    max-width: 35em;
+    margin-left: auto;
+    margin-right: auto;
+    position: relative;
+}
+.configui .info{
+    margin-bottom: 1em;
+    opacity: 0.6;
+    white-space: pre-line;
+}
+.configui .parameters {
+    border-bottom: 1px solid grey;
+    margin-bottom: 1em;
+}
+.configui .row input[type="checkbox"] {
+    flex-grow: 1;
+    appearance: auto;
+}
+
+.configui .row {
+    display: flex;
+    flex-direction: row;
+    margin: 0.5em;
+    flex-wrap: unset;
+    padding:   0;
+}
+
+.configui .row .label {
+    width: 10em;
+    opacity: 0.6;
+    padding: 0;
+}
+.configui .since {
+    display: block;
+    font-size: 0.8em;
+}
+.configui input[type=checkbox] {
+    width: 1.5em;
+    height: 1.5em;
+    opacity: 1;
+    z-index: unset;
+}
+
+.configui .buttons {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+}
+.configui button {
+    padding: 0.5em;
+}
+.configui .footer {
+    text-align: right;
+    margin-top: 1em;
+    font-size: 0.8em;
+}
+.configui .visually-hidden {
+    position: absolute !important;
+    height: 1px;
+    width: 1px;
+    overflow: hidden;
+    clip: rect(1px, 1px, 1px, 1px);
+  }
+
+.configui .dialogBack {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 10;
+    background-color: #8a8c8ec7;
+    display: flex;
+}
+.configui .hidden{
+    display: none;
+}
+.configui .dialog{
+    max-width: 35em;
+    margin: auto;
+    background-color: white;
+    padding: 2em;
+}
+.configui #warn{
+    display: none;
+    color: red;
+}
+.configui #warn.warn{
+    display: block;
+}

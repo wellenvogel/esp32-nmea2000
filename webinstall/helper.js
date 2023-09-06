@@ -62,6 +62,21 @@ const setValue=(id,value)=>{
     }
     if (el.tagName == 'INPUT'){
         el.value=value;
+        return;
+    }
+    if (el.tagName == 'A'){
+        el.setAttribute('href',value);
+        return;
+    }
+}
+const setValues=(data,translations)=>{
+    for (let k in data){
+        let id=k;
+        if (translations){
+            let t=translations[k];
+            if (t !== undefined) id=t;
+        }
+        setValue(id,data[k]);
     }
 }
 const buildUrl=(url,pars)=>{
@@ -80,6 +95,7 @@ const fetchJson=(url,pars)=>{
     return fetch(furl).then((rs)=>rs.json());
 }
 const setVisible=(el,vis,useParent)=>{
+    if (typeof(el) !== 'object') el=document.getElementById(el);
     if (! el) return;
     if (useParent) el=el.parentElement;
     if (! el) return;
@@ -93,4 +109,4 @@ const enableEl=(id,en)=>{
     else el.disabled=true;
 }
 
-export { getParam, addEl, forEachEl,setButtons,fillValues, setValue,buildUrl,fetchJson,setVisible, enableEl }
+export { getParam, addEl, forEachEl,setButtons,fillValues, setValue,setValues,buildUrl,fetchJson,setVisible, enableEl }

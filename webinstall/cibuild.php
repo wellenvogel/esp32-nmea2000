@@ -192,6 +192,7 @@ try {
         }
         $dlurl = $astat['items'][0]['url'];
         #echo("DL: $dlurl\n");
+        header('Content-Disposition: attachment; filename="'.$astat['items'][0]['path'].'"');
         proxy($dlurl);
         exit(0);
     }

@@ -7,32 +7,40 @@
 </head>
 
 <body>
+    <div class="configui container">
     <h1>Build your own ESP32-NMEA2000</h1>
-    <div class="xrow">
-        <label>Board type</label>
+    <div class="row">
+        <span class="label">Board type</span>
         <input type="text" id="environment" value="m5stack-atom-generic">
     </div>
-    <div class="xrow">
-        <label>Build Flags</label>
+    <div class="row">
+        <span class="label">Build Flags</span>
         <input type="text" id="buildflags" value="">
     </div>
-    <div class="xrow">
+    <div class="row">
         <button id="start">Start</button>
     </div>
-    <div class="xrow">
-        <label>Pipeline Id</label>
+    <div class="row">
+        <span class="label">Job Id</span>
         <div id="pipeline">---</div>
     </div>
-    <div class="xrow">
-        <label>Status</label>
+    <div class="row">
+        <span class="label">Status</span>
         <div id="status">---</div>
     </div>
-    <div class="xrow hidden">
-        <a target="_" id="link">WebStatus</a>
+    <div class="row hidden error">
+        <span class="label">Error</span>
+        <div class="value" id="error"></div>
     </div>
-    <div class="xrow hidden">
+    <div class="row hidden">
+        <span class="label">Web Status</span>
+        <a target="_" id="status_url">Link</a>
+    </div>
+    <div class="row hidden">
         <button id="download">Download</button>
+        <button id="webinstall">Install</button>
     </div>
     <iframe id="dlframe" width="1" height="1"></iframe>
+</div>
 </body>
 </html>

@@ -1,6 +1,7 @@
 import {XtermOutputHandler} from "./installUtil.js";
 import ESPInstaller from "./installUtil.js";
 import { addEl, getParam } from "./helper.js";
+import * as zip from "https://cdn.jsdelivr.net/npm/@zip.js/zip.js@2.7.29/+esm";
 (function(){
     let espLoaderTerminal;
     let espInstaller;
@@ -21,11 +22,11 @@ import { addEl, getParam } from "./helper.js";
             alert(txt);
         }
     }
-    const buildHeading=(user,repo,element)=>{
+    const buildHeading=(info,element)=>{
         let hFrame=document.querySelector(element||'.heading');
         if (! hFrame) return;
         hFrame.textContent='';
-        let h=addEl('h2',undefined,hFrame,`ESP32 Install ${user}:${repo}`)
+        let h=addEl('h2',undefined,hFrame,`ESP32 Install ${info}`)
     }
     const checkChip=(chipFamily,assetName)=>{
         //for now only ESP32
@@ -100,7 +101,7 @@ import { addEl, getParam } from "./helper.js";
             let line=addEl('div','item',bFrame);
             addEl('div','itemTitle',line,item.label);
             let btLine=addEl('div','buttons',line);
-            let tb=addEl('button','installButton',line,'Initial');
+            let tb=addEl('button','installButton',btLine,'Initial');
             tb.addEventListener('click',async ()=>{
                 enableConsole(false,true);
                 await espInstaller.installClicked(
@@ -113,7 +114,7 @@ import { addEl, getParam } from "./helper.js";
                 )
                 enableConsole(true);
             });
-            tb=addEl('button','installButton',line,'Update');
+            tb=addEl('button','installButton',btLine,'Update');
             tb.addEventListener('click',async ()=>{
                 enableConsole(false,true);
                 await espInstaller.installClicked(
@@ -129,23 +130,85 @@ import { addEl, getParam } from "./helper.js";
         }
 
     }
+    const buildCustomButtons = (name, updateData, fullData,version,element) => {
+        let bFrame = document.querySelector(element || '.content');
+        if (!bFrame) return;
+        bFrame.textContent = '';
+        addEl('div', 'version', bFrame, "Custom Installation");
+        let btLine = addEl('div', 'buttons', bFrame);
+        let tb = addEl('button', 'installButton', btLine, 'Initial');
+        tb.addEventListener('click', async () => {
+            enableConsole(false, true);
+            await espInstaller.runFlash(
+                true,
+                fullData,
+                4096,
+                version,
+                (ch) => checkChip(ch, name)
+            )
+            enableConsole(true);
+        });
+        tb = addEl('button', 'installButton', btLine, 'Update');
+        tb.addEventListener('click', async () => {
+            enableConsole(false, true);
+            await espInstaller.runFlash(
+                false,
+                updateData,
+                65536,
+                version,
+                (ch) => checkChip(ch, name)
+            )
+            enableConsole(true);
+        });
+    }
+    const showLoading=(on)=>{
+
+    };
     window.onload = async () => {
         if (! ESPInstaller.checkAvailable()){
             showError("your browser does not support the ESP flashing (no serial)");
             return;
         }
-        let user = window.gitHubUser||getParam('user');
-        let repo = window.gitHubRepo || getParam('repo');
-        if (!user || !repo) {
-            alert("missing parameter user or repo");
+        let custom=getParam('custom');
+        let user;
+        let repo;
+        if (! custom){
+            user = window.gitHubUser||getParam('user');
+            repo = window.gitHubRepo || getParam('repo');
+            if (!user || !repo) {
+                alert("missing parameter user or repo");
+            }
         }
         try {
             espLoaderTerminal = new XtermOutputHandler('terminal');
             espInstaller = new ESPInstaller(espLoaderTerminal);
-            buildHeading(user, repo);
             buildConsoleButtons();
-            releaseData = await espInstaller.getReleaseInfo(user, repo);
-            buildButtons(user, repo);
+            if (! custom){
+                buildHeading(`${user}:${repo}`);
+                releaseData = await espInstaller.getReleaseInfo(user, repo);
+                buildButtons(user, repo);
+            }
+            else{
+                showLoading(true);
+                let reader= new zip.HttpReader(custom);
+                let zipReader= new zip.ZipReader(reader);
+                const entries=(await zipReader.getEntries());
+                let fullData;
+                let updateData;
+                let base="";
+                for (let i=0;i<entries.length;i++){
+                    if (entries[i].filename.match(/-all.bin$/)){
+                        fullData=await(entries[i].getData(new zip.BlobWriter()))
+                        base=entries[i].filename.replace("-all.bin","");
+                    }
+                    if (entries[i].filename.match(/-update.bin$/)){
+                        updateData=await(entries[i].getData(new zip.BlobWriter()))
+                        base=entries[i].filename.replace("-update.bin","");
+                    }
+                }
+                buildCustomButtons("dummy",updateData,fullData,base);
+                showLoading(false);
+            }
         } catch(error){alert("unable to query release info for user "+user+", repo "+repo+": "+error)};
     }
 })();

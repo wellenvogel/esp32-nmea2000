@@ -269,6 +269,36 @@ class ESPInstaller{
         }
     }
     /**
+     * directly run the flash
+     * @param {*} isFull 
+     * @param {*} address 
+     * @param {*} imageData the data to be flashed
+     * @param {*} version the info shown in the dialog
+     * @returns 
+     */
+    async runFlash(isFull,address,imageData,version,assetName){
+        try {
+            await this.connect();
+            if (typeof (assetName) === 'function') {
+                assetName(this.getChipFamily()); //just check
+            }
+            let fileList = [
+                { data: imageData, address: address }
+            ];
+            let txt = isFull ? "baseImage (all data will be erased)" : "update";
+            if (!confirm(`ready to install ${version}\n${txt}`)) {
+                this.espLoaderTerminal.writeLine("aborted by user...");
+                await this.disconnect();
+                return;
+            }
+            await this.writeFlash(fileList);
+            await this.disconnect();
+        } catch (e) {
+            this.espLoaderTerminal.writeLine(`Error: ${e}`);
+            alert(`Error: ${e}`);
+        }    
+    }
+    /**
      * fetch the release info from the github API
      * @param {*} user 
      * @param {*} repo 
