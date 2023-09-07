@@ -236,21 +236,18 @@ class ESPInstaller{
      * @param {*} repo 
      * @param {*} version 
      * @param {*} address 
-     * @param {*} assetName the name of the asset file.
-     *                      can be a function - will be called with the chip family
-     *                      and must return the asset file name
+     * @param {*} checkChip will be called with the found chip and the data and the isFull flag
      * @returns 
      */
     async installClicked(isFull, user, repo, version, address, assetName) {
         try {
             await this.connect();
-            let assetFileName = assetName;
-            if (typeof (assetName) === 'function') {
-                assetFileName = assetName(this.getChipFamily());
-            }
-            let imageData = await this.getReleaseAsset(user, repo, version, assetFileName);
+            let imageData = await this.getReleaseAsset(user, repo, version, assetName);
             if (!imageData || imageData.length == 0) {
                 throw new Error(`no image data fetched`);
+            }
+            if (checkChip) {
+                await checkChip(this.getChipFamily(),imageData,isFull);
             }
             let fileList = [
                 { data: imageData, address: address }
@@ -274,13 +271,14 @@ class ESPInstaller{
      * @param {*} address 
      * @param {*} imageData the data to be flashed
      * @param {*} version the info shown in the dialog
+     * @param {*} checkChip will be called with the found chip and the data
      * @returns 
      */
-    async runFlash(isFull,imageData,address,version,assetName){
+    async runFlash(isFull,imageData,address,version,checkChip){
         try {
             await this.connect();
-            if (typeof (assetName) === 'function') {
-                assetName(this.getChipFamily()); //just check
+            if (checkChip) {
+                await checkChip(this.getChipFamily(),imageData,isFull); //just check
             }
             let fileList = [
                 { data: imageData, address: address }

@@ -16,3 +16,8 @@
 #endif
 
 #define FIRMWARE_TYPE GWSTRINGIFY(PIO_ENV_BUILD)
+#ifdef PIO_ENV_BOARD
+#define BOARD_INFO "@@" GWSTRINGIFY(PIO_ENV_BOARD)
+#else
+#define BOARD_INFO ""
+#endif

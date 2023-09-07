@@ -76,6 +76,7 @@ const unsigned long HEAP_REPORT_TIME=2000; //set to 0 to disable heap reporting
 //assert length of firmware name and version
 CASSERT(strlen(FIRMWARE_TYPE) <= 32, "environment name (FIRMWARE_TYPE) must not exceed 32 chars");
 CASSERT(strlen(VERSION) <= 32, "VERSION must not exceed 32 chars");
+CASSERT(strlen(BOARD_INFO) <= 32,"BOARD_INFO must not exceed 32 chars");
 //https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/system/app_image_format.html
 //and removed the bugs in the doc...
 __attribute__((section(".rodata_custom_desc"))) esp_app_desc_t custom_app_desc = { 
@@ -86,7 +87,7 @@ __attribute__((section(".rodata_custom_desc"))) esp_app_desc_t custom_app_desc =
   FIRMWARE_TYPE,
   "00:00:00",
   "2021/12/13",
-  "0000",
+  BOARD_INFO,
   {},
   {}
 };

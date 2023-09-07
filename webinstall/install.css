@@ -36,3 +36,10 @@ body {
 .hidden{
     display: none !important;
 }
+.uploadFile{
+    width: 0;
+    height: 0;
+}
+.uploadButton{
+    margin-left: 0.5em;
+}

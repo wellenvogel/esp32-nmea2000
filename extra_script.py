@@ -268,7 +268,10 @@ def prebuild(env):
     genereateUserTasks(os.path.join(outPath(), TASK_INCLUDE))
     generateFile(os.path.join(basePath(),XDR_FILE),os.path.join(outPath(),XDR_INCLUDE),generateXdrMappings)
     version="dev"+datetime.now().strftime("%Y%m%d")
-    env.Append(CPPDEFINES=[('GWDEVVERSION',version)])
+    env.Append(CPPDEFINES=[
+        ('GWDEVVERSION',version),
+        ('PIO_ENV_BOARD',env.get('BOARD_MCU'))
+        ])
 
 def cleangenerated(source, target, env):
     od=outPath()
@@ -290,3 +293,4 @@ env.Append(
 )
 #script does not run on clean yet - maybe in the future
 env.AddPostAction("clean",cleangenerated)
+#print(env.Dump())
