@@ -9,9 +9,11 @@
 <body>
     <div class="configui container">
     <h1>Build your own ESP32-NMEA2000</h1>
+    <h3>New Build</h3>
     <div class="row">
         <span class="label">Board type</span>
-        <input type="text" id="environment" value="m5stack-atom-generic">
+        <select id="environment" value="m5stack-atom-generic">
+        </select>
     </div>
     <div class="row">
         <span class="label">Build Flags</span>
@@ -20,6 +22,7 @@
     <div class="row">
         <button id="start">Start</button>
     </div>
+    <h3>Last Build</h3>
     <div class="row">
         <span class="label">Job Id</span>
         <div id="pipeline">---</div>

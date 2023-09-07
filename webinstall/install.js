@@ -13,8 +13,8 @@ import * as zip from "https://cdn.jsdelivr.net/npm/@zip.js/zip.js@2.7.29/+esm";
     const NAMEOFFSET = 48;
     const CHIPOFFSET=NAMEOFFSET+64;
     const MINSIZE = HDROFFSET + CHIPOFFSET + 32;
+    const imageMagic=0xe9; //at byte 0
     const imageCheckBytes = {
-        0: 0xe9, //image magic
         288: 0x32, //app header magic
         289: 0x54,
         290: 0xcd,
@@ -25,7 +25,6 @@ import * as zip from "https://cdn.jsdelivr.net/npm/@zip.js/zip.js@2.7.29/+esm";
             length--;
         }
         if (length <= 0) return "";
-        let decoder = new TextDecoder();
         return buffer.substr(start,length);
     }
     /**
@@ -37,6 +36,9 @@ import * as zip from "https://cdn.jsdelivr.net/npm/@zip.js/zip.js@2.7.29/+esm";
         let startOffset=isFull?(UPDATE_START-FULL_START):0;
         if (content.length < (MINSIZE+startOffset)) {
             throw new Error(prfx+"image to small, only " + content.length + " expected " + (MINSIZE+startOffset));
+        }
+        if (content.charCodeAt(0) != imageMagic){
+            throw new Error("no image magic "+imageMagic+" at start of "+prfx+"image");
         }
         for (let idx in imageCheckBytes) {
             let cb=content.charCodeAt(parseInt(idx)+startOffset);

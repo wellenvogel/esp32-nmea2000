@@ -1,4 +1,4 @@
-import { setButtons,fillValues, setValue, buildUrl, fetchJson, setVisible, enableEl, setValues } from "./helper";
+import { setButtons,fillValues, setValue, buildUrl, fetchJson, setVisible, enableEl, setValues, getParam, fillSelect, forEachEl } from "./helper.js";
 (function(){
     const STATUS_INTERVAL=2000;
     const CURRENT_PIPELINE='pipeline';
@@ -6,6 +6,8 @@ import { setButtons,fillValues, setValue, buildUrl, fetchJson, setVisible, enabl
     let currentPipeline=undefined;
     let downloadUrl=undefined;
     let timer=undefined;
+    let branch=getParam('branch');
+    if (! branch) branch='master';
     const showError=(text)=>{
         if (text === undefined){
             setVisible('buildError',false,true);
@@ -14,12 +16,21 @@ import { setButtons,fillValues, setValue, buildUrl, fetchJson, setVisible, enabl
         setValue('buildError',text);
         setVisible('buildError',true,true);
     }
+    const hideResults = () => {
+        downloadUrl = undefined;
+        currentPipeline = undefined;
+        setValue('pipeline', currentPipeline);
+        setValue('status','');
+        showError();
+        setVisible('download', false, true);
+        setVisible('status_url', false, true);
+    }
     const setRunning=(active)=>{
         if (active){
-            downloadUrl=undefined;
             showError();
-            setVisible('download',false,true);
-            setVisible('status_url',false,true);
+            downloadUrl=undefined;
+            setVisible('download', false, true);
+            setVisible('status_url', false, true);
         }
         enableEl('start',!active);
     }
@@ -68,12 +79,13 @@ import { setButtons,fillValues, setValue, buildUrl, fetchJson, setVisible, enabl
         window.localStorage.setItem(CURRENT_PIPELINE,pipeline);
     };
     const startBuild=()=>{
-        let param={};
+        let param={'branch':branch};
         currentPipeline=undefined;
         if (timer) window.clearTimeout(timer);
         timer=undefined;
         fillValues(param,['environment','buildflags']);
         setValue('status','requested');
+        setValue('pipeline','');
         setRunning(true);
         fetchJson(API,Object.assign({
             api:'start'},param))
@@ -111,13 +123,21 @@ import { setButtons,fillValues, setValue, buildUrl, fetchJson, setVisible, enabl
         download:runDownload,
         webinstall:webInstall
     };
+    const environments=[
+        'm5stack-atom-generic',
+        'm5stack-atoms3-generic',
+        'nodemcu-generic'
+    ];
     window.onload=()=>{ 
         setButtons(btConfig);
+        forEachEl('#environment',(el)=>el.addEventListener('change',hideResults));
+        forEachEl('#buildflags',(el)=>el.addEventListener('change',hideResults));
+        fillSelect('environment',environments);
         currentPipeline=window.localStorage.getItem(CURRENT_PIPELINE);
         if (currentPipeline){
             setValue('pipeline',currentPipeline);
-            setRunning(true);
             fetchStatus(true);
+            setRunning(true);
         }
     }
 })();

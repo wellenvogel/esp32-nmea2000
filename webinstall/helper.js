@@ -108,5 +108,16 @@ const enableEl=(id,en)=>{
     if (en) el.disabled=false;
     else el.disabled=true;
 }
+const fillSelect=(el,values)=>{
+    if (typeof(el) !== 'object') el=document.getElementById(el);
+    if (! el) return;
+    el.textContent='';
+    let kf=(values instanceof Array)?(k)=>values[k]:(k)=>k;
+    for (let k in values){
+        let o=addEl('option','',el);
+        o.setAttribute('value',kf(k));
+        o.textContent=values[k];
+    }
+}
 
-export { getParam, addEl, forEachEl,setButtons,fillValues, setValue,setValues,buildUrl,fetchJson,setVisible, enableEl }
+export { getParam, addEl, forEachEl,setButtons,fillValues, setValue,setValues,buildUrl,fetchJson,setVisible, enableEl,fillSelect }
