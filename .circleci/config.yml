@@ -44,7 +44,7 @@ jobs:
       - run:
           name: "save build config"
           working_directory: ".pio/build/<< pipeline.parameters.environment >>"
-          command: "echo 'PLATFORMIO_BUILD_FLAGS=\"<< pipeline.parameters.build_flags >>\" pio run -e << pipeline.parameters.environment >> ' > buildconfig.txt"
+          command: "echo 'GIT_SHA=\"<< pipeline.git.revision >>\" PLATFORMIO_BUILD_FLAGS=\"<< pipeline.parameters.build_flags >>\" pio run -e << pipeline.parameters.environment >> ' > buildconfig.txt"
       - run:
           name: "rename"
           working_directory: ".pio/build/<< pipeline.parameters.environment >>"

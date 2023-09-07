@@ -276,7 +276,7 @@ class ESPInstaller{
      * @param {*} version the info shown in the dialog
      * @returns 
      */
-    async runFlash(isFull,address,imageData,version,assetName){
+    async runFlash(isFull,imageData,address,version,assetName){
         try {
             await this.connect();
             if (typeof (assetName) === 'function') {

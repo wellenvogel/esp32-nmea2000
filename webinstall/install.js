@@ -1,6 +1,6 @@
 import {XtermOutputHandler} from "./installUtil.js";
 import ESPInstaller from "./installUtil.js";
-import { addEl, getParam } from "./helper.js";
+import { addEl, getParam, setValue, setVisible } from "./helper.js";
 import * as zip from "https://cdn.jsdelivr.net/npm/@zip.js/zip.js@2.7.29/+esm";
 (function(){
     let espLoaderTerminal;
@@ -130,12 +130,16 @@ import * as zip from "https://cdn.jsdelivr.net/npm/@zip.js/zip.js@2.7.29/+esm";
         }
 
     }
-    const buildCustomButtons = (name, updateData, fullData,version,element) => {
+    const buildCustomButtons = (name, updateData, fullData,version,info,element) => {
         let bFrame = document.querySelector(element || '.content');
         if (!bFrame) return;
         bFrame.textContent = '';
-        addEl('div', 'version', bFrame, "Custom Installation");
-        let btLine = addEl('div', 'buttons', bFrame);
+        let item=addEl('div','item',bFrame);
+        addEl('div', 'version', item, "Custom "+version);
+        if (info){
+            addEl('div','version',item,info);
+        }
+        let btLine = addEl('div', 'buttons', item);
         let tb = addEl('button', 'installButton', btLine, 'Initial');
         tb.addEventListener('click', async () => {
             enableConsole(false, true);
@@ -162,8 +166,25 @@ import * as zip from "https://cdn.jsdelivr.net/npm/@zip.js/zip.js@2.7.29/+esm";
         });
     }
     const showLoading=(on)=>{
-
+        setVisible('loadingFrame',on);
     };
+    class BinaryStringWriter extends zip.Writer {
+
+        constructor() {
+          super();
+          this.binaryString = "";
+        }
+      
+        writeUint8Array(array) {
+          for (let indexCharacter = 0; indexCharacter < array.length; indexCharacter++) {
+            this.binaryString += String.fromCharCode(array[indexCharacter]);
+          }
+        }
+      
+        getData() {
+          return this.binaryString;
+        }
+      }
     window.onload = async () => {
         if (! ESPInstaller.checkAvailable()){
             showError("your browser does not support the ESP flashing (no serial)");
@@ -172,6 +193,7 @@ import * as zip from "https://cdn.jsdelivr.net/npm/@zip.js/zip.js@2.7.29/+esm";
         let custom=getParam('custom');
         let user;
         let repo;
+        let errorText=`unable to query release info for user ${user}, repo ${repo}: `;
         if (! custom){
             user = window.gitHubUser||getParam('user');
             repo = window.gitHubRepo || getParam('repo');
@@ -189,26 +211,42 @@ import * as zip from "https://cdn.jsdelivr.net/npm/@zip.js/zip.js@2.7.29/+esm";
                 buildButtons(user, repo);
             }
             else{
+                errorText="unable to download custom build";
                 showLoading(true);
+                setValue('loadingText','downloading custom build')
                 let reader= new zip.HttpReader(custom);
                 let zipReader= new zip.ZipReader(reader);
                 const entries=(await zipReader.getEntries());
                 let fullData;
                 let updateData;
                 let base="";
+                let environment;
+                let buildflags;
                 for (let i=0;i<entries.length;i++){
                     if (entries[i].filename.match(/-all.bin$/)){
-                        fullData=await(entries[i].getData(new zip.BlobWriter()))
+                        fullData=await(entries[i].getData(new BinaryStringWriter()))
                         base=entries[i].filename.replace("-all.bin","");
                     }
                     if (entries[i].filename.match(/-update.bin$/)){
-                        updateData=await(entries[i].getData(new zip.BlobWriter()))
+                        updateData=await(entries[i].getData(new BinaryStringWriter()))
                         base=entries[i].filename.replace("-update.bin","");
                     }
+                    if (entries[i].filename === 'buildconfig.txt'){
+                        let txt=await(entries[i].getData(new zip.TextWriter()));
+                        environment=txt.replace(/.*pio run *.e */,'').replace(/ .*/,'');
+                        buildflags=txt.replace(/.*PLATFORMIO_BUILD_FLAGS="/,'').replace(/".*/,'');
+                    }
                 }
-                buildCustomButtons("dummy",updateData,fullData,base);
+                let info;
+                if (environment !== undefined && buildflags !== undefined){
+                    info=`env=${environment}, flags=${buildflags}`;
+                }
+                buildCustomButtons("dummy",updateData,fullData,base,info);
                 showLoading(false);
             }
-        } catch(error){alert("unable to query release info for user "+user+", repo "+repo+": "+error)};
+        } catch(error){
+            showLoading(false);
+            alert(errorText+error)
+        };
     }
 })();
