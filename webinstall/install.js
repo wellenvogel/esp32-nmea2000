@@ -3,6 +3,75 @@ import ESPInstaller from "./installUtil.js";
 import { addEl, getParam, setValue, setVisible } from "./helper.js";
 import * as zip from "https://cdn.jsdelivr.net/npm/@zip.js/zip.js@2.7.29/+esm";
 (function(){
+
+    const FULL_START=4096;
+    const UPDATE_START=65536;
+
+    //taken from index.js
+    const HDROFFSET = 288;
+    const VERSIONOFFSET = 16;
+    const NAMEOFFSET = 48;
+    const MINSIZE = HDROFFSET + NAMEOFFSET + 32;
+    const imageCheckBytes = {
+        0: 0xe9, //image magic
+        288: 0x32, //app header magic
+        289: 0x54,
+        290: 0xcd,
+        291: 0xab
+    };
+    const decodeFromBuffer=(buffer, start, length)=>{
+        while (length > 0 && buffer.charCodeAt(start + length - 1) == 0) {
+            length--;
+        }
+        if (length <= 0) return "";
+        let decoder = new TextDecoder();
+        return buffer.substr(start,length);
+    }
+    /**
+     * 
+     * @param {string} content the content to be checked
+     */
+    const checkImage = (content,isFull) => {
+        let prfx=isFull?"full":"update";
+        let startOffset=isFull?(UPDATE_START-FULL_START):0;
+        if (content.length < (MINSIZE+startOffset)) {
+            throw new Error(prfx+"image to small, only " + content.length + " expected " + (MINSIZE+startOffset));
+        }
+        for (let idx in imageCheckBytes) {
+            let cb=content.charCodeAt(parseInt(idx)+startOffset);
+            if (cb != imageCheckBytes[idx]) {
+                throw new Error(prfx+"image: missing magic byte at position " + idx + ", expected " +
+                    imageCheckBytes[idx] + ", got " + cb);
+            }
+        }
+        let version = decodeFromBuffer(content, startOffset+ HDROFFSET + VERSIONOFFSET, 32);
+        let fwtype = decodeFromBuffer(content, startOffset+ HDROFFSET + NAMEOFFSET, 32);
+        let rt = {
+            fwtype: fwtype,
+            version: version,
+        };
+        return rt;
+    }
+    const checkImageFile=(file,isFull)=>{
+        let minSize=MINSIZE+(isFull?(UPDATE_START-FULL_START):0);
+        return new Promise(function (resolve, reject) {
+            if (!file) reject("no file");
+            if (file.size < minSize) reject("file is too small");
+            let slice = file.slice(0, minSize);
+            let reader = new FileReader();
+            reader.addEventListener('load', function (e) {
+                let content = e.target.result;
+                try{
+                    let rt=checkImage(content,isFull);
+                    resolve(rt);
+                }
+                catch (e){
+                    reject(e);    
+                }
+            });
+            reader.readAsBinaryString(slice);
+        });
+    }
     let espLoaderTerminal;
     let espInstaller;
     let releaseData={};
@@ -130,9 +199,15 @@ import * as zip from "https://cdn.jsdelivr.net/npm/@zip.js/zip.js@2.7.29/+esm";
         }
 
     }
-    const buildCustomButtons = (name, updateData, fullData,version,info,element) => {
+    const buildCustomButtons = (name, updateData, fullData,info,element) => {
         let bFrame = document.querySelector(element || '.content');
         if (!bFrame) return;
+        let vinfo=checkImage(fullData,true);
+        let version=vinfo.version;
+        let uinfo=checkImage(updateData);
+        if (uinfo.version != version){
+            throw new Error("different versions in full("+version+") and update("+uinfo.version+") image");
+        }
         bFrame.textContent = '';
         let item=addEl('div','item',bFrame);
         addEl('div', 'version', item, "Custom "+version);
@@ -146,7 +221,7 @@ import * as zip from "https://cdn.jsdelivr.net/npm/@zip.js/zip.js@2.7.29/+esm";
             await espInstaller.runFlash(
                 true,
                 fullData,
-                4096,
+                FULL_START,
                 version,
                 (ch) => checkChip(ch, name)
             )
@@ -158,7 +233,7 @@ import * as zip from "https://cdn.jsdelivr.net/npm/@zip.js/zip.js@2.7.29/+esm";
             await espInstaller.runFlash(
                 false,
                 updateData,
-                65536,
+                UPDATE_START,
                 version,
                 (ch) => checkChip(ch, name)
             )
@@ -224,11 +299,11 @@ import * as zip from "https://cdn.jsdelivr.net/npm/@zip.js/zip.js@2.7.29/+esm";
                 let buildflags;
                 for (let i=0;i<entries.length;i++){
                     if (entries[i].filename.match(/-all.bin$/)){
-                        fullData=await(entries[i].getData(new BinaryStringWriter()))
+                        fullData=await(entries[i].getData(new BinaryStringWriter()));
                         base=entries[i].filename.replace("-all.bin","");
                     }
                     if (entries[i].filename.match(/-update.bin$/)){
-                        updateData=await(entries[i].getData(new BinaryStringWriter()))
+                        updateData=await(entries[i].getData(new BinaryStringWriter()));
                         base=entries[i].filename.replace("-update.bin","");
                     }
                     if (entries[i].filename === 'buildconfig.txt'){
@@ -241,7 +316,7 @@ import * as zip from "https://cdn.jsdelivr.net/npm/@zip.js/zip.js@2.7.29/+esm";
                 if (environment !== undefined && buildflags !== undefined){
                     info=`env=${environment}, flags=${buildflags}`;
                 }
-                buildCustomButtons("dummy",updateData,fullData,base,info);
+                buildCustomButtons("dummy",updateData,fullData,info);
                 showLoading(false);
             }
         } catch(error){
