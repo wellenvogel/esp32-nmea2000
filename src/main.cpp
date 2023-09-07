@@ -94,6 +94,7 @@ __attribute__((section(".rodata_custom_desc"))) esp_app_desc_t custom_app_desc =
 
 
 String firmwareType(FIRMWARE_TYPE);
+String chipType(BOARD_INFO);
 
 typedef std::map<String,String> StringMap;
 
@@ -371,7 +372,7 @@ public:
 protected:
   virtual void processRequest()
   {
-    GwJsonDocument status(290 + 
+    GwJsonDocument status(300 + 
       countNMEA2KIn.getJsonSize()+
       countNMEA2KOut.getJsonSize() +
       channels.getJsonSize()
@@ -386,6 +387,7 @@ protected:
     GwConfigHandler::toHex(base,buffer,bsize);
     status["salt"] = buffer;
     status["fwtype"]= firmwareType;
+    status["chiptype"]=chipType.substring(2);
     status["heap"]=(long)xPortGetFreeHeapSize();
     Nmea2kTwai::Status n2kState=NMEA2000.getStatus();
     Nmea2kTwai::STATE driverState=n2kState.state;

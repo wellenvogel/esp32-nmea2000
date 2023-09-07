@@ -1564,9 +1564,15 @@ function uploadBin(ev){
         .then(function (result) {
             let currentType;
             let currentVersion;
+            let chiptype;
             forEl('.status-version', function (el) { currentVersion = el.textContent });
             forEl('.status-fwtype', function (el) { currentType = el.textContent });
+            forEl('.status-chiptype', function (el) { chiptype = el.textContent });
             let confirmText = 'Ready to update firmware?\n';
+            if (result.chip.match(/^@@/) && (result.chip.substr(2) != chiptype)){
+                confirmText += "WARNING: the chiptype in the image ("+result.chip.substr(2);
+                confirmText +=") does not match the current chip type ("+chiptype+").\n";
+            }
             if (currentType != result.fwtype) {
                 confirmText += "WARNING: image has different type: " + result.fwtype + "\n";
                 confirmText += "** Really update anyway? - device can become unusable **";
@@ -1643,7 +1649,8 @@ function uploadBin(ev){
 let HDROFFSET=288;
 let VERSIONOFFSET=16;
 let NAMEOFFSET=48;
-let MINSIZE=HDROFFSET+NAMEOFFSET+32;
+let CHIPOFFSET=NAMEOFFSET+64;
+let MINSIZE = HDROFFSET + CHIPOFFSET + 32;
 let imageCheckBytes={
     0: 0xe9, //image magic
     288: 0x32, //app header magic
@@ -1678,9 +1685,11 @@ function checkImageFile(file){
         }
         let version=decodeFromBuffer(content,HDROFFSET+VERSIONOFFSET,32);
         let fwtype=decodeFromBuffer(content,HDROFFSET+NAMEOFFSET,32);
+        let chip=decodeFromBuffer(content,HDROFFSET+CHIPOFFSET,32);
         let rt={
             fwtype:fwtype,
             version: version,
+            chip:chip
         };
         resolve(rt);    
     });
@@ -1742,7 +1751,12 @@ window.addEventListener('load', function () {
             checkImageFile(file)
                 .then(function(res){
                     forEl('#imageProperties',function(iel){
-                        iel.textContent=res.fwtype+", "+res.version;
+                        let txt="";
+                        if (res.chip.match(/^@@/)){
+                            txt=res.chip.substr(2)+", "
+                        }
+                        txt+=res.fwtype+", "+res.version;
+                        iel.textContent=txt;
                         iel.classList.remove("error");
                     })    
                 })
