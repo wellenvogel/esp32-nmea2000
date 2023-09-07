@@ -13,6 +13,11 @@
 */
 #ifndef _GWHARDWARE_H
 #define _GWHARDWARE_H
+#define GWSERIAL_TYPE_UNI 1
+#define GWSERIAL_TYPE_BI 2
+#define GWSERIAL_TYPE_RX 3
+#define GWSERIAL_TYPE_TX 4
+
 #include <HardwareSerial.h>
 #include "GwUserTasks.h"
 
@@ -117,7 +122,7 @@
 #define ESP32_CAN_RX_PIN GPIO_NUM_4
 //serial input only
 #define GWSERIAL_RX GPIO_NUM_16
-#define GWSERIAL_MODE "RX"
+#define GWSERIAL_TYPE GWSERIAL_TYPE_RX
 
 #define GWBUTTON_PIN GPIO_NUM_0
 #define GWBUTTON_ACTIVE LOW
@@ -132,26 +137,26 @@
 #ifdef SERIAL_GROOVE_485
   #define GWSERIAL_TX GROOVE_PIN_1
   #define GWSERIAL_RX GROOVE_PIN_2
-  #define GWSERIAL_MODE "UNI"
+  #define GWSERIAL_TYPE GWSERIAL_TYPE_UNI 
 #endif
 #ifdef SERIAL_GROOVE_232
   #define GWSERIAL_TX GROOVE_PIN_1
   #define GWSERIAL_RX GROOVE_PIN_2
-  #define GWSERIAL_MODE "BI"
+  #define GWSERIAL_TYPE GWSERIAL_TYPE_BI
 #endif
 
 //M5 Serial (Atomic RS232 Base)
 #ifdef M5_SERIAL_KIT_232 
   #define GWSERIAL_TX BOARD_LEFT2
   #define GWSERIAL_RX BOARD_LEFT1
-  #define GWSERIAL_MODE "BI"
+  #define GWSERIAL_TYPE GWSERIAL_TYPE_BI
 #endif
 
 //M5 Serial (Atomic RS485 Base)
 #ifdef M5_SERIAL_KIT_485 
   #define GWSERIAL_TX BOARD_LEFT2
   #define GWSERIAL_RX BOARD_LEFT1
-  #define GWSERIAL_MODE "UNI"
+  #define GWSERIAL_TYPE GWSERIAL_TYPE_UNI
 #endif
 
 //can kit for M5 Atom
@@ -164,6 +169,5 @@
   #define ESP32_CAN_TX_PIN GROOVE_PIN_1
   #define ESP32_CAN_RX_PIN GROOVE_PIN_2
 #endif
-
 
 #endif

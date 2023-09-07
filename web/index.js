@@ -3,6 +3,8 @@ let lastUpdate = (new Date()).getTime();
 let reloadConfig = false;
 let needAdminPass=true;
 let lastSalt="";
+let channelList={};
+let minUser=200;
 function addEl(type, clazz, parent, text) {
     let el = document.createElement(type);
     if (clazz) {
@@ -65,21 +67,38 @@ function update() {
     }
     getJson('/api/status')
         .then(function (jsonData) {
+            let statusPage=document.getElementById('statusPageContent');
+            let even=true; //first counter
             for (let k in jsonData) {
                 if (k == "salt"){
                     lastSalt=jsonData[k];
+                    continue;
                 }
+                if (k == "minUser"){
+                    minUser=parseInt(jsonData[k]);
+                    continue;
+                }
+                if (! statusPage) continue;
                 if (typeof (jsonData[k]) === 'object') {
-                    for (let sk in jsonData[k]) {
-                        let key = k + "." + sk;
-                        if (typeof (jsonData[k][sk]) === 'object') {
-                            //msg details
-                            updateMsgDetails(key, jsonData[k][sk]);
+                    if (k.indexOf('count') == 0) {
+                        createCounterDisplay(statusPage, k.replace("count", "").replace(/in$/," in").replace(/out$/," out"), k, even);
+                        even = !even;
+                        for (let sk in jsonData[k]) {
+                            let key = k + "." + sk;
+                            if (typeof (jsonData[k][sk]) === 'object') {
+                                //msg details
+                                updateMsgDetails(key, jsonData[k][sk]);
+                            }
+                            else {
+                                let el = document.getElementById(key);
+                                if (el) el.textContent = jsonData[k][sk];
+                            }
                         }
-                        else {
-                            let el = document.getElementById(key);
-                            if (el) el.textContent = jsonData[k][sk];
-                        }
+                    }
+                    if (k.indexOf("ch")==0){
+                        //channel def
+                        let name=k.substring(2);
+                        channelList[name]=jsonData[k];
                     }
                 }
                 else {
@@ -286,9 +305,13 @@ function factoryReset() {
         .catch(function (e) { });
 }
 function createCounterDisplay(parent,label,key,isEven){
+    if (parent.querySelector("#"+key)){
+        return;
+    }
     let clazz="row icon-row counter-row";
     if (isEven) clazz+=" even";
     let row=addEl('div',clazz,parent);
+    row.setAttribute("id",key);
     let icon=addEl('span','icon icon-more',row);
     addEl('span','label',row,label);
     let value=addEl('span','value',row,'---');
@@ -331,18 +354,7 @@ function updateMsgDetails(key, details) {
         },frame);
     });
 }
-let counters={
-    count2Kin: 'NMEA2000 in',
-    count2Kout: 'NMEA2000 out',
-    countTCPin: 'TCPserver in',
-    countTCPout: 'TCPserver out',
-    countTCPClientin: 'TCPclient in',
-    countTCPClientout: 'TCPclient out',
-    countUSBin: 'USB in',
-    countUSBout: 'USB out',
-    countSERin: 'Serial in',
-    countSERout: 'Serial out'
-}
+
 function showOverlay(text, isHtml) {
     let el = document.getElementById('overlayContent');
     if (isHtml) {
@@ -1448,13 +1460,13 @@ function createDashboard() {
     frame.innerHTML = '';
 }
 function sourceName(v){
-    if (v == 0) return "N2K";
-    if (v == 1) return "USB";
-    if (v == 2) return "SER";
-    if (v == 3) return "TCPcl"
-    if (v >= 4 && v <= 20) return "TCPser";
-    if (v >= 200) return "USER";
-    return "---";
+    for (let n in channelList){
+        if (v >= channelList[n].id && v <= channelList[n].max){
+            return n;
+        }
+    }
+    if (v < minUser) return "---";
+    return "USER["+v+"]";
 }
 let lastSelectList=[];
 function updateDashboard(data) {
@@ -1716,13 +1728,13 @@ window.addEventListener('load', function () {
         }
     }catch(e){}
     let statusPage=document.getElementById('statusPageContent');
-    if (statusPage){
+    /*if (statusPage){
         let even=true;
         for (let c in counters){
             createCounterDisplay(statusPage,counters[c],c,even);
             even=!even;
         }
-    }
+    }*/
     forEl('#uploadFile',function(el){
         el.addEventListener('change',function(ev){
             if (ev.target.files.length < 1) return;

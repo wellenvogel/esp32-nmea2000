@@ -57,7 +57,7 @@ GwChannel::GwChannel(GwLog *logger,
     this->logger = logger;
     this->name=name;
     this->sourceId=sourceId;
-    this->maxSourceId=sourceId;
+    this->maxSourceId=maxSourceId;
     this->countIn=new GwCounter<String>(String("count")+name+String("in"));
     this->countOut=new GwCounter<String>(String("count")+name+String("out"));
     this->impl=NULL;
@@ -146,12 +146,15 @@ bool GwChannel::canReceive(const char *buffer){
 }
 
 int GwChannel::getJsonSize(){
-    int rt=2;
+    int rt=JSON_OBJECT_SIZE(6);
     if (countIn) rt+=countIn->getJsonSize();
     if (countOut) rt+=countOut->getJsonSize();
     return rt;
 }
 void GwChannel::toJson(GwJsonDocument &doc){
+    JsonObject jo=doc.createNestedObject("ch"+name);
+    jo["id"]=sourceId;
+    jo["max"]=maxSourceId;
     if (countOut) countOut->toJson(doc);
     if (countIn) countIn->toJson(doc);
 }
