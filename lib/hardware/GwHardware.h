@@ -38,6 +38,7 @@
   #define BOARD_LEFT2 GPIO_NUM_19
   #define USBSerial Serial
 #endif
+
 //general definitiones for M5AtomS3
 #ifdef PLATFORM_BOARD_M5STACK_ATOMS3
   #define GROOVE_PIN_1 GPIO_NUM_2
@@ -106,6 +107,12 @@
 #define GWLED_BRIGHTNESS 64
 #endif
 
+#ifdef BOARD_M5ATOM_GPS_CANUNIT
+#define M5_CANUNIT
+#define M5_GPS_KIT
+#define GWLED_BRIGHTNESS 64
+#endif
+
 #ifdef BOARD_M5ATOM_RS485_CANUNIT
 #define M5_SERIAL_KIT_485
 #define M5_CANUNIT
@@ -150,6 +157,12 @@
   #define GWSERIAL_TX BOARD_LEFT2
   #define GWSERIAL_RX BOARD_LEFT1
   #define GWSERIAL_TYPE GWSERIAL_TYPE_BI
+#endif
+
+//M5 Serial (Atomic GPS Base)
+#ifdef M5_GPS_KIT 
+  #define GWSERIAL_RX BOARD_LEFT1
+  #define GWSERIAL_TYPE GWSERIAL_TYPE_RX
 #endif
 
 //M5 Serial (Atomic RS485 Base)
