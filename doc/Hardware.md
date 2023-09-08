@@ -64,6 +64,13 @@ M5 Atom RS232 with M5 CAN Unit
 * Build Define: BOARD_M5ATOM_RS232_CANUNIT
 * Power: 12V via RS232 Module or via USB
 
+M5 Atom GPS Kit with M5 CAN Unit
+--------------------------------
+* Hardware: [ATOM GPS](http://docs.m5stack.com/en/atom/atomicgps) + [CAN Unit](http://docs.m5stack.com/en/unit/can)
+* Prebuild Binary: m5stack-atom-gps-canunit-all.bin
+* Build Define: BOARD_M5ATOM_GPS_CANUNIT
+* Power: Via USB
+
 M5 Stack Atom Canunit
 ---------------------
 * Hardware: [M5_ATOM](http://docs.m5stack.com/en/core/atom_lite) + [CAN Unit](http://docs.m5stack.com/en/unit/can)
