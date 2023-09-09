@@ -4,7 +4,6 @@ import { addEl, getParam, setValue, setVisible } from "./helper.js";
 import * as zip from "https://cdn.jsdelivr.net/npm/@zip.js/zip.js@2.7.29/+esm";
 (function(){
 
-    const FULL_START=4096;
     const UPDATE_START=65536;
 
     //taken from index.js
@@ -13,12 +12,21 @@ import * as zip from "https://cdn.jsdelivr.net/npm/@zip.js/zip.js@2.7.29/+esm";
     const NAMEOFFSET = 48;
     const CHIPOFFSET=NAMEOFFSET+64;
     const MINSIZE = HDROFFSET + CHIPOFFSET + 32;
+    const CHIPIDOFFSET=12; //2 bytes chip id here
     const imageMagic=0xe9; //at byte 0
     const imageCheckBytes = {
         288: 0x32, //app header magic
         289: 0x54,
         290: 0xcd,
         291: 0xab
+    };
+    /**
+     * map of our known chip ids to flash starts for full images
+     * 9 - esp32s3 - starts at 0
+     */
+    const FLASHSTART={
+        0:0x1000,
+        9:0
     };
     const decodeFromBuffer=(buffer, start, length)=>{
         while (length > 0 && buffer.charCodeAt(start + length - 1) == 0) {
@@ -27,13 +35,25 @@ import * as zip from "https://cdn.jsdelivr.net/npm/@zip.js/zip.js@2.7.29/+esm";
         if (length <= 0) return "";
         return buffer.substr(start,length);
     }
+    const getChipId=(buffer)=>{
+        if (buffer.length < CHIPIDOFFSET+2) return -1;
+        return buffer.charCodeAt(CHIPIDOFFSET)+256*buffer.charCodeAt(CHIPIDOFFSET+1);
+    }
     /**
      * 
      * @param {string} content the content to be checked
      */
     const checkImage = (content,isFull) => {
         let prfx=isFull?"full":"update";
-        let startOffset=isFull?(UPDATE_START-FULL_START):0;
+        let startOffset=0;
+        let flashStart=UPDATE_START;
+        if (isFull){
+            let chipId=getChipId(content);
+            if (chipId < 0) throw new Error(prfx+"image: no valid chip id found");
+            let flashStart=FLASHSTART[chipId];
+            if (flashStart === undefined) throw new Error(prfx+"image: unknown chip id "+chipId);
+            startOffset=UPDATE_START-flashStart;
+        }
         if (content.length < (MINSIZE+startOffset)) {
             throw new Error(prfx+"image to small, only " + content.length + " expected " + (MINSIZE+startOffset));
         }
@@ -53,7 +73,8 @@ import * as zip from "https://cdn.jsdelivr.net/npm/@zip.js/zip.js@2.7.29/+esm";
         let rt = {
             fwtype: fwtype,
             version: version,
-            chip:chip
+            chip:chip,
+            flashStart: flashStart
         };
         return rt;
     }
@@ -260,7 +281,7 @@ import * as zip from "https://cdn.jsdelivr.net/npm/@zip.js/zip.js@2.7.29/+esm";
                     user,
                     repo,
                     version,
-                    4096,
+                    item.basic,
                     checkChip
                 )
                 enableConsole(true);
@@ -273,7 +294,7 @@ import * as zip from "https://cdn.jsdelivr.net/npm/@zip.js/zip.js@2.7.29/+esm";
                     user,
                     repo,
                     version,
-                    65536,
+                    item.update,
                     checkChip
                 )
                 enableConsole(true);
@@ -286,12 +307,14 @@ import * as zip from "https://cdn.jsdelivr.net/npm/@zip.js/zip.js@2.7.29/+esm";
         if (!bFrame) return;
         if (fullData === undefined && updateData === undefined) return;
         let version;
+        let vinfo;
+        let uinfo;
         if (fullData !== undefined){
-            let vinfo=checkImage(fullData,true);
+            vinfo=checkImage(fullData,true);
             version=vinfo.version;
         }
         if (updateData !== undefined){
-            let uinfo=checkImage(updateData);
+            uinfo=checkImage(updateData);
             if (version !== undefined){
                 if (uinfo.version != version){
                     throw new Error("different versions in full("+version+") and update("+uinfo.version+") image");
@@ -316,7 +339,7 @@ import * as zip from "https://cdn.jsdelivr.net/npm/@zip.js/zip.js@2.7.29/+esm";
                 await espInstaller.runFlash(
                     true,
                     fullData,
-                    FULL_START,
+                    vinfo.flashStart,
                     version,
                     checkChip
                 )
@@ -330,7 +353,7 @@ import * as zip from "https://cdn.jsdelivr.net/npm/@zip.js/zip.js@2.7.29/+esm";
                 await espInstaller.runFlash(
                     false,
                     updateData,
-                    UPDATE_START,
+                    uinfo.flashStart,
                     version,
                     checkChip
                 )

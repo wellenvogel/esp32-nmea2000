@@ -235,22 +235,21 @@ class ESPInstaller{
      * @param {*} user 
      * @param {*} repo 
      * @param {*} version 
-     * @param {*} address 
+     * @param {*} assetName
      * @param {*} checkChip will be called with the found chip and the data and the isFull flag
+     *            must return an info with the flashStart being set
      * @returns 
      */
-    async installClicked(isFull, user, repo, version, address, assetName) {
+    async installClicked(isFull, user, repo, version, assetName,checkChip) {
         try {
             await this.connect();
             let imageData = await this.getReleaseAsset(user, repo, version, assetName);
             if (!imageData || imageData.length == 0) {
                 throw new Error(`no image data fetched`);
             }
-            if (checkChip) {
-                await checkChip(this.getChipFamily(),imageData,isFull);
-            }
+            let info=await checkChip(this.getChipFamily(),imageData,isFull);
             let fileList = [
-                { data: imageData, address: address }
+                { data: imageData, address: info.flashAddress }
             ];
             let txt = isFull ? "baseImage (all data will be erased)" : "update";
             if (!confirm(`ready to install ${version}\n${txt}`)) {
