@@ -10,8 +10,7 @@ import * as zip from "https://cdn.jsdelivr.net/npm/@zip.js/zip.js@2.7.29/+esm";
     const HDROFFSET = 288;
     const VERSIONOFFSET = 16;
     const NAMEOFFSET = 48;
-    const CHIPOFFSET=NAMEOFFSET+64;
-    const MINSIZE = HDROFFSET + CHIPOFFSET + 32;
+    const MINSIZE = HDROFFSET + NAMEOFFSET + 32;
     const CHIPIDOFFSET=12; //2 bytes chip id here
     const imageMagic=0xe9; //at byte 0
     const imageCheckBytes = {
@@ -22,6 +21,7 @@ import * as zip from "https://cdn.jsdelivr.net/npm/@zip.js/zip.js@2.7.29/+esm";
     };
     /**
      * map of our known chip ids to flash starts for full images
+     * 0 - esp32 - starts at 0x1000
      * 9 - esp32s3 - starts at 0
      */
     const FLASHSTART={
@@ -47,8 +47,8 @@ import * as zip from "https://cdn.jsdelivr.net/npm/@zip.js/zip.js@2.7.29/+esm";
         let prfx=isFull?"full":"update";
         let startOffset=0;
         let flashStart=UPDATE_START;
+        let chipId=getChipId(content);
         if (isFull){
-            let chipId=getChipId(content);
             if (chipId < 0) throw new Error(prfx+"image: no valid chip id found");
             let flashStart=FLASHSTART[chipId];
             if (flashStart === undefined) throw new Error(prfx+"image: unknown chip id "+chipId);
@@ -69,11 +69,10 @@ import * as zip from "https://cdn.jsdelivr.net/npm/@zip.js/zip.js@2.7.29/+esm";
         }
         let version = decodeFromBuffer(content, startOffset+ HDROFFSET + VERSIONOFFSET, 32);
         let fwtype = decodeFromBuffer(content, startOffset+ HDROFFSET + NAMEOFFSET, 32);
-        let chip=decodeFromBuffer(content,startOffset+HDROFFSET+CHIPOFFSET,32);
         let rt = {
             fwtype: fwtype,
             version: version,
-            chip:chip,
+            chipId:chipId,
             flashStart: flashStart
         };
         return rt;
@@ -133,22 +132,13 @@ import * as zip from "https://cdn.jsdelivr.net/npm/@zip.js/zip.js@2.7.29/+esm";
         hFrame.textContent='';
         let h=addEl('h2',undefined,hFrame,`ESP32 Install ${info}`)
     }
-    const checkChip= async (chipFamily,data,isFull)=>{
+    const checkChip= async (chipId,data,isFull)=>{
         let info=checkImage(data,isFull);
-        if (info.chip && info.chip.match(/^@@/)){
-            let chip=info.chip.substr(2);
-            let compare=chipFamily.toLowerCase().replace(/[^a-z0-9]*/g,'');
-            if (compare !== chip){
-                let res=confirm("different chip signatures - image("+chip+"), chip ("+compare+")\nUse this image any way?");
-                if (! res) throw new Error("user abort");
-            }
-            return;
+        if (info.chipId != chipId){
+            let res=confirm("different chip signatures - image("+chipId+"), chip ("+info.chipId+")\nUse this image any way?");
+            if (! res) throw new Error("user abort");
         }
-        //for now only ESP32/ESP32-S3
-        if (chipFamily != "ESP32" && chipFamily != "ESP32-S3"){
-            throw new Error(`unexpected chip family ${chipFamily}, expected ESP32/ESP32-S3`);
-        }
-        return;
+        return info;
     }
     const baudRates=[1200,
         2400,
@@ -339,7 +329,6 @@ import * as zip from "https://cdn.jsdelivr.net/npm/@zip.js/zip.js@2.7.29/+esm";
                 await espInstaller.runFlash(
                     true,
                     fullData,
-                    vinfo.flashStart,
                     version,
                     checkChip
                 )
@@ -353,7 +342,6 @@ import * as zip from "https://cdn.jsdelivr.net/npm/@zip.js/zip.js@2.7.29/+esm";
                 await espInstaller.runFlash(
                     false,
                     updateData,
-                    uinfo.flashStart,
                     version,
                     checkChip
                 )

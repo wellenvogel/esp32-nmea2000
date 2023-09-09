@@ -72,7 +72,7 @@ def main():
             tk.Label(frame,textvariable=self.fileInfo).grid(row=row,column=0,columnspan=2,sticky="ew")
             row+=1
             self.flashInfo=tk.StringVar()
-            self.flashInfo.set("Address 0x1000")
+            self.flashInfo.set("Full Flash")
             tk.Label(frame,textvariable=self.flashInfo).grid(row=row,column=0,columnspan=2,sticky='ew',pady=10)
             row+=1
             btFrame=tk.Frame(frame)
@@ -96,7 +96,7 @@ def main():
         def updateFlashInfo(self):
             if self.mode.get() == 1:
                 #full
-                self.flashInfo.set("Address 0x1000")
+                self.flashInfo.set("Full Flash")
             else:
                 self.flashInfo.set("Erase(otadata): 0xe000...0xffff, Address 0x10000")
         def changeMode(self):
@@ -141,50 +141,67 @@ def main():
                 self.interrupt=False
                 raise Exception("User cancel")
 
-        FULLOFFSET=61440
+        UPDATE_ADDR = 0x10000
         HDROFFSET = 288
         VERSIONOFFSET = 16
         NAMEOFFSET = 48
+        IDOFFSET=12 #2 byte chipid
         MINSIZE = HDROFFSET + NAMEOFFSET + 32
         CHECKBYTES = {
-            0: 0xe9,  # image magic
             288: 0x32,  # app header magic
             289: 0x54,
             290: 0xcd,
             291: 0xab
         }
+        #flash addresses for full images based on chip id
+        FLASH_ADDR={
+            0: 0x1000,
+            9: 0
+        }
 
         def getString(self,buffer, offset, len):
             return buffer[offset:offset + len].rstrip(b'\0').decode('utf-8')
 
-        def getFirmwareInfo(self,ih,imageFile,offset):
-            buffer = ih.read(self.MINSIZE)
-            if len(buffer) != self.MINSIZE:
-                return self.setErr("invalid image file %s, to short"%imageFile)
-            for k, v in self.CHECKBYTES.items():
-                if buffer[k] != v:
-                    return self.setErr("invalid magic at %d, expected %d got %d"
+        def getFirmwareInfo(self,filename,isFull):
+            with open(filename,"rb") as ih:
+                buffer = ih.read(self.MINSIZE)
+                if len(buffer) != self.MINSIZE:
+                    return self.setErr("invalid image file %s, to short"%filename)
+                if buffer[0] != 0xe9:
+                    return self.setErr("invalid magic in file, expected 0xe9 got 0x%02x"%buffer[0])
+                chipid= buffer[self.IDOFFSET]+256*buffer[self.IDOFFSET+1]
+                flashoffset=self.FLASH_ADDR.get(chipid)
+                if flashoffset is None:
+                    return self.setErr("unknown chip id in image %d",chipid);
+                if isFull:
+                    offset=self.UPDATE_ADDR-flashoffset;
+                    offset-=self.MINSIZE
+                    ih.seek(offset,os.SEEK_CUR)
+                    buffer=ih.read(self.MINSIZE)
+                    if len(buffer) != self.MINSIZE:
+                        return self.setErr("invalid image file %s, to short"%filename)
+                    if buffer[0] != 0xe9:
+                        return self.setErr("invalid magic in file, expected 0xe9 got 0x%02x"%buffer[0])
+                for k, v in self.CHECKBYTES.items():
+                    if buffer[k] != v:
+                        return self.setErr("invalid magic at %d, expected %d got %d"
                                     % (k+offset, v, buffer[k]))
-            name = self.getString(buffer, self.HDROFFSET + self.NAMEOFFSET, 32)
-            version = self.getString(buffer, self.HDROFFSET + self.VERSIONOFFSET, 32)
-            return {'error':False,'info':"%s:%s"%(name,version)}
+                name = self.getString(buffer, self.HDROFFSET + self.NAMEOFFSET, 32)
+                version = self.getString(buffer, self.HDROFFSET + self.VERSIONOFFSET, 32)
+                chipid= buffer[self.IDOFFSET]+256*buffer[self.IDOFFSET+1]
+                return {
+                    'error':False,
+                    'info':"%s:%s"%(name,version),
+                    'chipid':chipid,
+                    'flashbase':flashoffset if isFull else self.UPDATE_ADDR
+                }
 
         def setErr(self,err):
             return {'error':True,'info':err}
         def checkImageFile(self,filename,isFull):
             if not os.path.exists(filename):
                 return self.setErr("file %s not found"%filename)
-            with open(filename,"rb") as fh:
-                offset=0
-                if isFull:
-                    b=fh.read(1)
-                    if len(b) != 1:
-                        return self.setErr("unable to read header")
-                    if b[0] != 0xe9:
-                        return self.setErr("invalid magic in file, expected 0xe9 got 0x%02x"%b[0])
-                    st=fh.seek(self.FULLOFFSET)
-                    offset=self.FULLOFFSET
-                return self.getFirmwareInfo(fh,filename,offset)
+            return self.getFirmwareInfo(filename,isFull)
 
         def runCheck(self):
             self.text_widget.delete("1.0", "end")
@@ -202,7 +219,7 @@ def main():
             if info['error']:
                 print("ERROR: %s" % info['info'])
                 return
-            return {'port':port,'isFull':isFull}
+            return {'port':port,'isFull':isFull,'info':info}
 
         def runEspTool(self,command):
             for b in self.actionButtons:
@@ -219,25 +236,36 @@ def main():
             for b in self.actionButtons:
                 b.configure(state=tk.NORMAL)
             self.cancelButton.configure(state=tk.DISABLED)
-        def buttonCheck(self):
+        def verifyChip(self):
             param = self.runCheck()
             if not param:
+                print("check failed")
                 return
-            print("Settings OK")
-            command = ['--chip', 'ESP32', '--port', param['port'], 'chip_id']
-            self.runEspTool(command)
+            imageChipId=param['info']['chipid']
+            chip=esptool.ESPLoader.detect_chip(param['port'])
+            print("Detected chip %s, id=%d"%(chip.CHIP_NAME,chip.IMAGE_CHIP_ID))
+            if (chip.IMAGE_CHIP_ID != imageChipId):
+                print("##Error: chip id in image %d does not match detected chip"%imageChipId)
+                return
+            print("Checks OK")
+            param['chipname']=chip.CHIP_NAME
+            return param
+        def buttonCheck(self):
+            param = self.verifyChip()
+            
+            
 
         def buttonFlash(self):
-            param=self.runCheck()
+            param=self.verifyChip()
             if not param:
                 return
             if param['isFull']:
-                command=['--chip','ESP32','--port',param['port'],'write_flash','0x1000',self.filename.get()]
+                command=['--chip',param['chipname'],'--port',param['port'],'write_flash',str(param['info']['flashbase']),self.filename.get()]
                 self.runEspTool(command)
             else:
-                command=['--chip','ESP32','--port',param['port'],'erase_region','0xe000','0x2000']
+                command=['--chip',param['chipname'],'--port',param['port'],'erase_region','0xe000','0x2000']
                 self.runEspTool(command)
-                command = ['--chip', 'ESP32', '--port', param['port'], 'write_flash', '0x10000', self.filename.get()]
+                command = ['--chip', param['chipname'], '--port', param['port'], 'write_flash', str(param['info']['flashbase']), self.filename.get()]
                 self.runEspTool(command)
 
 

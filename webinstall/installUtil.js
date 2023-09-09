@@ -61,6 +61,7 @@ class ESPInstaller{
         this.base=import.meta.url.replace(/[^/]*$/,"install.php");
         this.consoleDevice=undefined;
         this.consoleReader=undefined;
+        this.imageChipId=undefined;
     }
     /**
      * get an URL query parameter
@@ -133,6 +134,7 @@ class ESPInstaller{
             this.espLoaderTerminal.writeLine(`chip: ${foundChip}`);
             await this.esploader.flash_id();
             this.chipFamily = this.esploader.chip.CHIP_NAME;
+            this.imageChipId = this.esploader.chip.IMAGE_CHIP_ID;
             this.espLoaderTerminal.writeLine(`chipFamily: ${this.chipFamily}`);
         } catch (e) {
             this.disconnect();
@@ -185,6 +187,10 @@ class ESPInstaller{
         this.checkConnected();
         return this.chipFamily;
     }
+    getChipId(){
+        this.checkConnected();
+        return this.imageChipId;
+    }
     /**
      * flass the device
      * @param {*} fileList : an array of entries {data:blob,address:number}
@@ -236,7 +242,7 @@ class ESPInstaller{
      * @param {*} repo 
      * @param {*} version 
      * @param {*} assetName
-     * @param {*} checkChip will be called with the found chip and the data and the isFull flag
+     * @param {*} checkChip will be called with the found chipId and the data and the isFull flag
      *            must return an info with the flashStart being set
      * @returns 
      */
@@ -247,7 +253,7 @@ class ESPInstaller{
             if (!imageData || imageData.length == 0) {
                 throw new Error(`no image data fetched`);
             }
-            let info=await checkChip(this.getChipFamily(),imageData,isFull);
+            let info=await checkChip(this.getChipId(),imageData,isFull);
             let fileList = [
                 { data: imageData, address: info.flashAddress }
             ];
@@ -267,20 +273,18 @@ class ESPInstaller{
     /**
      * directly run the flash
      * @param {*} isFull 
-     * @param {*} address 
      * @param {*} imageData the data to be flashed
      * @param {*} version the info shown in the dialog
-     * @param {*} checkChip will be called with the found chip and the data
+     * @param {*} checkChip will be called with the found chipId and the data
+     *            must return an info with flashAddress
      * @returns 
      */
-    async runFlash(isFull,imageData,address,version,checkChip){
+    async runFlash(isFull,imageData,version,checkChip){
         try {
             await this.connect();
-            if (checkChip) {
-                await checkChip(this.getChipFamily(),imageData,isFull); //just check
-            }
+            let info= await checkChip(this.getChipId(),imageData,isFull); //just check
             let fileList = [
-                { data: imageData, address: address }
+                { data: imageData, address: info.flashAddress }
             ];
             let txt = isFull ? "baseImage (all data will be erased)" : "update";
             if (!confirm(`ready to install ${version}\n${txt}`)) {

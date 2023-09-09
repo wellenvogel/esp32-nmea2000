@@ -1564,14 +1564,14 @@ function uploadBin(ev){
         .then(function (result) {
             let currentType;
             let currentVersion;
-            let chiptype;
+            let chipid;
             forEl('.status-version', function (el) { currentVersion = el.textContent });
             forEl('.status-fwtype', function (el) { currentType = el.textContent });
-            forEl('.status-chiptype', function (el) { chiptype = el.textContent });
+            forEl('.status-chipid', function (el) { chipid = el.textContent });
             let confirmText = 'Ready to update firmware?\n';
-            if (result.chip.match(/^@@/) && (result.chip.substr(2) != chiptype)){
-                confirmText += "WARNING: the chiptype in the image ("+result.chip.substr(2);
-                confirmText +=") does not match the current chip type ("+chiptype+").\n";
+            if (result.chipId != chipid){
+                confirmText += "WARNING: the chipid in the image ("+result.chipId;
+                confirmText +=") does not match the current chip id ("+chipid+").\n";
             }
             if (currentType != result.fwtype) {
                 confirmText += "WARNING: image has different type: " + result.fwtype + "\n";
@@ -1649,8 +1649,8 @@ function uploadBin(ev){
 let HDROFFSET=288;
 let VERSIONOFFSET=16;
 let NAMEOFFSET=48;
-let CHIPOFFSET=NAMEOFFSET+64;
-let MINSIZE = HDROFFSET + CHIPOFFSET + 32;
+let MINSIZE = HDROFFSET + NAMEOFFSET + 32;
+let CHIPIDOFFSET=12; //2 bytes chip id here
 let imageCheckBytes={
     0: 0xe9, //image magic
     288: 0x32, //app header magic
@@ -1669,6 +1669,10 @@ function decodeFromBuffer(buffer,start,length){
             start+length));
     return rt;        
 }
+function getChipId(buffer){
+    if (buffer.length < CHIPIDOFFSET+2) return -1;
+    return buffer[CHIPIDOFFSET]+256*buffer[CHIPIDOFFSET+1];
+}
 function checkImageFile(file){
     return new Promise(function(resolve,reject){
         if (! file) reject("no file");
@@ -1685,11 +1689,11 @@ function checkImageFile(file){
         }
         let version=decodeFromBuffer(content,HDROFFSET+VERSIONOFFSET,32);
         let fwtype=decodeFromBuffer(content,HDROFFSET+NAMEOFFSET,32);
-        let chip=decodeFromBuffer(content,HDROFFSET+CHIPOFFSET,32);
+        let chipId=getChipId(content);
         let rt={
             fwtype:fwtype,
             version: version,
-            chip:chip
+            chipId:chipId
         };
         resolve(rt);    
     });
@@ -1751,10 +1755,7 @@ window.addEventListener('load', function () {
             checkImageFile(file)
                 .then(function(res){
                     forEl('#imageProperties',function(iel){
-                        let txt="";
-                        if (res.chip.match(/^@@/)){
-                            txt=res.chip.substr(2)+", "
-                        }
+                        let txt="["+res.chipId+"] ";
                         txt+=res.fwtype+", "+res.version;
                         iel.textContent=txt;
                         iel.classList.remove("error");
