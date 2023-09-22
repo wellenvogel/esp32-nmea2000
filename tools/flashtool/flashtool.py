@@ -20,7 +20,7 @@ from tkinter import filedialog as FileDialog
 import builtins
 
 def main():
-    VERSION="Version 1.1, esptool 3.2"
+    VERSION="Version 2.0, esptool 3.2"
 
     oldprint=builtins.print
     def print(*args, **kwargs):
