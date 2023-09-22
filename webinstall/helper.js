@@ -1,7 +1,8 @@
-const getParam = (key) => {
+const getParam = (key,opt_default) => {
+    if (opt_default === undefined) opt_default="";
     let value = RegExp("" + key + "[^&]+").exec(window.location.search);
     // Return the unescaped value minus everything starting from the equals sign or an empty string
-    return decodeURIComponent(!!value ? value.toString().replace(/^[^=]+./, "") : "");
+    return decodeURIComponent(!!value ? value.toString().replace(/^[^=]+./, "") : opt_default);
 };
 /**
      * add an HTML element

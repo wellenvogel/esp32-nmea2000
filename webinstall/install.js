@@ -21,12 +21,16 @@ import * as zip from "https://cdn.jsdelivr.net/npm/@zip.js/zip.js@2.7.29/+esm";
     };
     /**
      * map of our known chip ids to flash starts for full images
+     * see https://github.com/espressif/esptool-js/tree/main/src/targets
+     * IMAGE_CHIP_ID, BOOTLOADER_FLASH_OFFSET
      * 0 - esp32 - starts at 0x1000
      * 9 - esp32s3 - starts at 0
      */
     const FLASHSTART={
-        0:0x1000,
-        9:0
+        0:0x1000, //ESP32
+        9:0,      //ESP32S3
+        2:0x1000, //ESP32S2
+        5:0       //ESP32C3
     };
     const decodeFromBuffer=(buffer, start, length)=>{
         while (length > 0 && buffer.charCodeAt(start + length - 1) == 0) {
@@ -427,8 +431,8 @@ import * as zip from "https://cdn.jsdelivr.net/npm/@zip.js/zip.js@2.7.29/+esm";
         let repo;
         let errorText=`unable to query release info for user ${user}, repo ${repo}: `;
         if (! custom){
-            user = window.gitHubUser||getParam('user');
-            repo = window.gitHubRepo || getParam('repo');
+            user = window.gitHubUser||getParam('user','wellenvogel');
+            repo = window.gitHubRepo || getParam('repo','esp32-nmea2000');
             if (!user || !repo) {
                 alert("missing parameter user or repo");
             }
