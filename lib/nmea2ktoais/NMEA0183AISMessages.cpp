@@ -347,26 +347,29 @@ bool AddDimensions(tNMEA0183AISMsg &NMEA0183AISMsg, double Length, double Beam, 
   uint16_t _PosRefStbd = 0;
   uint16_t _PosRefPort = 0;
 
-  if ( PosRefBow >= 0.0 && PosRefBow <= 511.0 ) {
-    _PosRefBow = ceil(PosRefBow);
+  if (PosRefBow < 0) PosRefBow=0; //could be N2kIsNA
+  if ( PosRefBow <= 511.0 ) {
+    _PosRefBow = round(PosRefBow);
   } else {
     _PosRefBow = 511;
   }
-
-  if ( PosRefStbd >= 0.0 && PosRefStbd <= 63.0 ) {
-    _PosRefStbd = ceil(PosRefStbd);
+  if (PosRefStbd < 0 ) PosRefStbd=0; //could be N2kIsNA
+  if (PosRefStbd <= 63.0 ) {
+    _PosRefStbd = round(PosRefStbd);
   } else {
     _PosRefStbd = 63;
   }
 
   if ( !N2kIsNA(Length) ) {
-    _PosRefStern = ceil( Length ) - _PosRefBow;
-    if ( _PosRefStern < 0 ) _PosRefStern = 0;
+    if (Length >= PosRefBow){
+      _PosRefStern=round(Length - PosRefBow);
+    }
     if ( _PosRefStern > 511 ) _PosRefStern = 511;
   }
   if ( !N2kIsNA(Beam) ) {
-    _PosRefPort = ceil( Beam ) - _PosRefStbd;
-    if ( _PosRefPort < 0 ) _PosRefPort = 0;
+    if (Beam >= PosRefStbd){
+      _PosRefPort = round( Beam - PosRefStbd);  
+    }
     if ( _PosRefPort > 63 ) _PosRefPort = 63;
   }
 
