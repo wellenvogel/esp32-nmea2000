@@ -3,6 +3,7 @@ types:
       type: select
       target: define
       label: 'M5 Atom light Base'
+      key: m5lightbase
       values:
         - label: "CAN KIT"
           value: M5_CAN_KIT
@@ -13,11 +14,33 @@ types:
           label: "Atomic RS232 Base"
           url: "http://docs.m5stack.com/en/atom/Atomic%20RS232%20Base"
         - value: M5_SERIAL_KIT_485
-          description: "M5 Stack RS484 Base"
+          description: "M5 Stack RS485 Base"
           label: "Atomic RS485 Base"
           url: "http://docs.m5stack.com/en/atom/Atomic%20RS485%20Base"
+  - &m5groovei2c
+    type: multi
+    key: m5groovei2c
+    label: "M5 I2C groove units"
+    values:
+      
+  - &m5grooveserial
+    type: select
+    label: "M5 Serial Unit"
+    target: define
+    key: m5grooveserial
+    values:
+      - label: "RS485"
+        value: SERIAL_GROOVE_485
+        description: "M5 RS485 unit"
+        url: "http://docs.m5stack.com/en/unit/rs485"
+      - label: "Tail485"
+        value: SERIAL_GROOVE_485
+        description: "M5 Tail 485"
+        url: "http://docs.m5stack.com/en/atom/tail485"
+
   - &m5groove
     type: select
+    key: m5groove
     label: 'M5 groove type'
     values:
       - label: 'CAN'
@@ -29,30 +52,13 @@ types:
         children:
         - *m5grooveserial
   
-  - &m5groovei2c
-    type: multi
-    label: "M5 I2C groove units"
-    values:
-      
-  - &m5grooveserial
-    type: select
-    label: "M5 Serial Unit"
-    target: define
-    values:
-      - label: "RS485"
-        value: SERIAL_GROOVE_485
-        description: "M5 RS485 unit"
-        url: "http://docs.m5stack.com/en/unit/rs485"
-      - label: "Tail485"
-        value: SERIAL_GROOVE_485
-        description: "M5 Tail 485"
-        url: "http://docs.m5stack.com/en/atom/tail485"
 
 config:
   board:
     type: select
     target: environment
     label: 'Board'
+    key: board
     values: 
       - value: m5stack-atom-generic
         label: m5stack-atom

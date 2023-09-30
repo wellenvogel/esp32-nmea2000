@@ -1,4 +1,4 @@
-import { setButtons,fillValues, setValue, buildUrl, fetchJson, setVisible, enableEl, setValues, getParam, fillSelect, forEachEl } from "./helper.js";
+import { addEl, setButtons,fillValues, setValue, buildUrl, fetchJson, setVisible, enableEl, setValues, getParam, fillSelect, forEachEl } from "./helper.js";
 import {load as yamlLoad} from "https://cdn.skypack.dev/js-yaml@4.1.0";
 (function(){
     const STATUS_INTERVAL=2000;
@@ -7,6 +7,8 @@ import {load as yamlLoad} from "https://cdn.skypack.dev/js-yaml@4.1.0";
     let currentPipeline=undefined;
     let downloadUrl=undefined;
     let timer=undefined;
+    let structure=undefined;
+    let config={};
     let branch=getParam('branch');
     if (! branch) branch='master';
     const showError=(text)=>{
@@ -132,6 +134,51 @@ import {load as yamlLoad} from "https://cdn.skypack.dev/js-yaml@4.1.0";
     const loadConfig=async (url)=>{
         let config=await fetch(url).then((r)=>r.text());
         let parsed=yamlLoad(config);
+        return parsed;
+    }
+    const buildSelector=(parent,config,prefix,current,callback)=>{
+        let frame=addEl('div','selector',parent);
+        let title=addEl('div','title',frame,config.label);
+        let name=prefix+"_"+config.key;
+        if (! config.values) return;
+        config.values.forEach((v)=>{
+            let ef=addEl('div','radioFrame',frame);
+            addEl('div','label',ef,v.label);
+            let re=addEl('input','radioCi',ef);
+            re.setAttribute('type','radio');
+            re.setAttribute('name',name);
+            re.setAttribute('value',v.value);
+            re.addEventListener('change',(ev)=>callback(v,ev));
+            if (v.description && v.url){
+                let lnk=addEl('a','radioDescription',ef,v.description);
+                lnk.setAttribute('href',v.url);
+                lnk.setAttribute('target','_');
+            }
+        });
+        return frame;
+    }
+    let selectors=[];
+    const buildSelectors=(prefix,configList)=>{
+        if (!configList) return;
+        let parent=document.getElementById("selectors");
+        if (!parent) return;
+        let frame=addEl('div','selectorFrame',parent);
+        selectors.push(frame);
+        let level=selectors.length-1;
+        configList.forEach((cfg)=>{
+            let name=prefix?(prefix+"_"+cfg.key):cfg.key;
+            let current=config[name];
+            buildSelector(frame,cfg,name,current,(cfg,ev)=>{
+                for (let i=level+1;i<selectors.length;i++){
+                    //TODO: remove already set values?
+                    selectors[i].remove();
+                }
+                config[name]=ev.target.value;
+                if (cfg.children){
+                    buildSelectors(name,cfg.children);
+                }
+            })
+        })
     }
     window.onload=async ()=>{ 
         setButtons(btConfig);
@@ -144,6 +191,7 @@ import {load as yamlLoad} from "https://cdn.skypack.dev/js-yaml@4.1.0";
             fetchStatus(true);
             setRunning(true);
         }
-        await loadConfig("testconfig.yaml");
+        structure=await loadConfig("testconfig.yaml");
+        buildSelectors(undefined,[structure.config.board]);
     }
 })();

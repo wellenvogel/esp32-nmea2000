@@ -94,3 +94,22 @@
 .configui #warn.warn{
     display: block;
 }
+.configui .radioFrame {
+    display: flex;
+    flex-direction: row;
+}
+.configui input.radioCi {
+    appearance: auto;
+    float: none;
+    opacity: 1;
+    margin-left: 0.5em;
+    margin-right: 0.5em;
+    z-index: unset;
+}
+.configui .selector {
+    padding-bottom: 0.5em;
+    border-bottom: 1px solid grey;
+}
+.configui .selector .title {
+    font-weight: bold;
+}
