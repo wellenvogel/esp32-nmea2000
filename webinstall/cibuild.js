@@ -1,4 +1,5 @@
 import { setButtons,fillValues, setValue, buildUrl, fetchJson, setVisible, enableEl, setValues, getParam, fillSelect, forEachEl } from "./helper.js";
+import {load as yamlLoad} from "https://cdn.skypack.dev/js-yaml@4.1.0";
 (function(){
     const STATUS_INTERVAL=2000;
     const CURRENT_PIPELINE='pipeline';
@@ -128,7 +129,11 @@ import { setButtons,fillValues, setValue, buildUrl, fetchJson, setVisible, enabl
         'm5stack-atoms3-generic',
         'nodemcu-generic'
     ];
-    window.onload=()=>{ 
+    const loadConfig=async (url)=>{
+        let config=await fetch(url).then((r)=>r.text());
+        let parsed=yamlLoad(config);
+    }
+    window.onload=async ()=>{ 
         setButtons(btConfig);
         forEachEl('#environment',(el)=>el.addEventListener('change',hideResults));
         forEachEl('#buildflags',(el)=>el.addEventListener('change',hideResults));
@@ -139,5 +144,6 @@ import { setButtons,fillValues, setValue, buildUrl, fetchJson, setVisible, enabl
             fetchStatus(true);
             setRunning(true);
         }
+        await loadConfig("testconfig.yaml");
     }
 })();
