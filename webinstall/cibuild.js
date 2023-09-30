@@ -136,10 +136,13 @@ import {load as yamlLoad} from "https://cdn.skypack.dev/js-yaml@4.1.0";
         let parsed=yamlLoad(config);
         return parsed;
     }
+    const PATH_ATTR='data-path';
     const buildSelector=(parent,config,prefix,current,callback)=>{
-        let frame=addEl('div','selector',parent);
-        let title=addEl('div','title',frame,config.label);
         let name=prefix+"_"+config.key;
+        let level=name.replace(/[^_]*/g,'');
+        let frame=addEl('div','selector level'+level.length,parent);
+        frame.setAttribute(PATH_ATTR,name);
+        let title=addEl('div','title',frame,config.label);
         if (! config.values) return;
         config.values.forEach((v)=>{
             let ef=addEl('div','radioFrame',frame);
@@ -157,28 +160,52 @@ import {load as yamlLoad} from "https://cdn.skypack.dev/js-yaml@4.1.0";
         });
         return frame;
     }
-    let selectors=[];
+    const removeSelectors=(prefix)=>{
+        forEachEl('.selectorFrame',(el)=>{
+            let path=el.getAttribute(PATH_ATTR);
+            if (! path) return;
+            if (path.indexOf(prefix) == 0){
+                el.remove();
+            }
+        })
+        let removeKeys=[];
+        for (let k in config){
+            if (k.indexOf(prefix) == 0) removeKeys.push(k);
+        }
+        removeKeys.forEach((k)=>delete config[k]);
+    }
     const buildSelectors=(prefix,configList)=>{
+        removeSelectors(prefix);
         if (!configList) return;
         let parent=document.getElementById("selectors");
         if (!parent) return;
         let frame=addEl('div','selectorFrame',parent);
-        selectors.push(frame);
-        let level=selectors.length-1;
+        frame.setAttribute(PATH_ATTR,prefix);
         configList.forEach((cfg)=>{
             let name=prefix?(prefix+"_"+cfg.key):cfg.key;
             let current=config[name];
-            buildSelector(frame,cfg,name,current,(cfg,ev)=>{
-                for (let i=level+1;i<selectors.length;i++){
-                    //TODO: remove already set values?
-                    selectors[i].remove();
-                }
-                config[name]=ev.target.value;
-                if (cfg.children){
-                    buildSelectors(name,cfg.children);
-                }
+            buildSelector(frame,cfg,prefix,current,(ecfg,ev)=>{
+                buildSelectors(name,ecfg.children);
+                config[name]={cfg:cfg, value:ecfg.value};
+                buildValues();
             })
         })
+    }
+    const buildValues=()=>{
+        let environment;
+        let flags="";
+        for (let k in config){
+            let struct=config[k].cfg;
+            if (! struct) continue;
+            if (struct.target === 'environment'){
+                environment=config[k].value;
+            }
+            if (struct.target === 'define'){
+                flags+=" -D"+config[k].value;
+            }
+        }
+        document.getElementById('environment').value=environment;
+        document.getElementById('buildflags').value=flags;
     }
     window.onload=async ()=>{ 
         setButtons(btConfig);
@@ -192,6 +219,7 @@ import {load as yamlLoad} from "https://cdn.skypack.dev/js-yaml@4.1.0";
             setRunning(true);
         }
         structure=await loadConfig("testconfig.yaml");
-        buildSelectors(undefined,[structure.config.board]);
+        buildSelectors('base',[structure.config.board]);
+        buildValues();
     }
 })();

@@ -113,3 +113,12 @@
 .configui .selector .title {
     font-weight: bold;
 }
+.configui .selector.level2 {
+    margin-left: 0.5em;
+}
+.configui .selector.level3 {
+    margin-left: 1em;
+}
+.configui .selector.level4 {
+    margin-left: 1.5em;
+}
