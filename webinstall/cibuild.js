@@ -8,7 +8,8 @@ import {load as yamlLoad} from "https://cdn.skypack.dev/js-yaml@4.1.0";
     let downloadUrl=undefined;
     let timer=undefined;
     let structure=undefined;
-    let config={};
+    let config={}; //values as read and stored
+    let configStruct={}; //complete struct merged of config and struct
     let branch=getParam('branch');
     if (! branch) branch='master';
     const showError=(text)=>{
@@ -136,31 +137,57 @@ import {load as yamlLoad} from "https://cdn.skypack.dev/js-yaml@4.1.0";
         let parsed=yamlLoad(config);
         return parsed;
     }
+    const getVal=(cfg,keys)=>{
+        for (let i in keys){
+            let k=cfg[keys[i]];
+            if (k !== undefined) return k;
+        }
+    }
+    const KEY_NAMES=['key','value','label'];
+    const LABEL_NAMES=['label','value'];
     const PATH_ATTR='data-path';
-    const buildSelector=(parent,config,prefix,current,callback)=>{
-        let name=prefix+"_"+config.key;
-        let level=name.replace(/[^_]*/g,'');
+    const SEPARATOR=':';
+    /**
+     * 
+     * @param {build a selector} parent 
+     * @param {*} config 
+     * @param {*} name 
+     * @param {*} current 
+     * @param {*} callback will be called with: children,key,value,initial
+     * @returns 
+     */
+    const buildSelector=(parent,config,name,current,callback)=>{
+        let rep=new RegExp("[^"+SEPARATOR+"]*","g");
+        let level=name.replace(rep,'');
         let frame=addEl('div','selector level'+level.length,parent);
         frame.setAttribute(PATH_ATTR,name);
         let title=addEl('div','title',frame,config.label);
-        if (! config.values) return;
-        config.values.forEach((v)=>{
-            let ef=addEl('div','radioFrame',frame);
-            addEl('div','label',ef,v.label);
-            let re=addEl('input','radioCi',ef);
-            re.setAttribute('type','radio');
-            re.setAttribute('name',name);
-            re.setAttribute('value',v.value);
-            re.addEventListener('change',(ev)=>callback(v,ev));
-            if (v.description && v.url){
-                let lnk=addEl('a','radioDescription',ef,v.description);
-                lnk.setAttribute('href',v.url);
-                lnk.setAttribute('target','_');
-            }
-        });
+        if (config.type === 'select') {
+            if (!config.values) return;
+            config.values.forEach((v) => {
+                let ef = addEl('div', 'radioFrame', frame);
+                addEl('div', 'label', ef, getVal(v, LABEL_NAMES));
+                let re = addEl('input', 'radioCi', ef);
+                let val = v.value;
+                let key=getVal(v,KEY_NAMES);
+                re.setAttribute('type', 'radio');
+                re.setAttribute('name', name);
+                re.addEventListener('change', (ev) => callback(v.children,key,val,false));
+                if (v.description && v.url) {
+                    let lnk = addEl('a', 'radioDescription', ef, v.description);
+                    lnk.setAttribute('href', v.url);
+                    lnk.setAttribute('target', '_');
+                }
+                if (key == current) {
+                    window.setTimeout(() => {
+                        callback(v.children,key,val,true);
+                    }, 0);
+                }
+            });
+        }
         return frame;
     }
-    const removeSelectors=(prefix)=>{
+    const removeSelectors=(prefix,removeValues)=>{
         forEachEl('.selectorFrame',(el)=>{
             let path=el.getAttribute(PATH_ATTR);
             if (! path) return;
@@ -168,40 +195,58 @@ import {load as yamlLoad} from "https://cdn.skypack.dev/js-yaml@4.1.0";
                 el.remove();
             }
         })
-        let removeKeys=[];
-        for (let k in config){
-            if (k.indexOf(prefix) == 0) removeKeys.push(k);
+        if (removeValues){
+            let removeKeys=[];
+            for (let k in configStruct){
+                if (k.indexOf(prefix) == 0) removeKeys.push(k);
+            }
+            for (let k in config){
+                if (k.indexOf(prefix) == 0) removeKeys.push(k);
+            }
+            removeKeys.forEach((k)=>{
+                delete config[k];
+                delete configStruct[k];
+            });
         }
-        removeKeys.forEach((k)=>delete config[k]);
     }
-    const buildSelectors=(prefix,configList)=>{
-        removeSelectors(prefix);
+    const buildSelectors=(prefix,configList,initial)=>{
+        removeSelectors(prefix,!initial);
         if (!configList) return;
         let parent=document.getElementById("selectors");
         if (!parent) return;
         let frame=addEl('div','selectorFrame',parent);
         frame.setAttribute(PATH_ATTR,prefix);
         configList.forEach((cfg)=>{
-            let name=prefix?(prefix+"_"+cfg.key):cfg.key;
+            let name=prefix?(prefix+SEPARATOR+cfg.key):cfg.key;
             let current=config[name];
-            buildSelector(frame,cfg,prefix,current,(ecfg,ev)=>{
-                buildSelectors(name,ecfg.children);
-                config[name]={cfg:cfg, value:ecfg.value};
+            buildSelector(frame,cfg,name,current,(children,key,value,initial)=>{
+                buildSelectors(name,children,initial);
+                configStruct[name]={cfg:cfg, key: key, value:value};
                 buildValues();
             })
         })
     }
+    const ROOT_PATH='root';
     const buildValues=()=>{
         let environment;
         let flags="";
-        for (let k in config){
-            let struct=config[k].cfg;
-            if (! struct) continue;
-            if (struct.target === 'environment'){
-                environment=config[k].value;
-            }
-            if (struct.target === 'define'){
-                flags+=" -D"+config[k].value;
+        config={};
+        for (let k in configStruct){
+            let struct=configStruct[k];
+            if (! struct || ! struct.cfg || struct.value === undefined) continue;
+            config[k]=struct.key;
+            if (struct.cfg.target !== undefined) {
+                if (struct.cfg.target === 'environment') {
+                    environment = struct.value;
+                }
+                if (struct.cfg.target === 'define') {
+                    flags += " -D" + struct.value;
+                }
+                const DEFPRFX = "define:";
+                if (struct.cfg.target.indexOf(DEFPRFX) == 0) {
+                    let def = struct.cfg.target.substring(DEFPRFX.length);
+                    flags += " -D" + def + "=" + struct.value;
+                }
             }
         }
         document.getElementById('environment').value=environment;
@@ -219,7 +264,7 @@ import {load as yamlLoad} from "https://cdn.skypack.dev/js-yaml@4.1.0";
             setRunning(true);
         }
         structure=await loadConfig("testconfig.yaml");
-        buildSelectors('base',[structure.config.board]);
+        buildSelectors(ROOT_PATH,structure.config.children,true);
         buildValues();
     }
 })();

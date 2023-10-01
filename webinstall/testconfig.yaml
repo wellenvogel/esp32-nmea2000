@@ -30,11 +30,13 @@ types:
     key: m5grooveserial
     values:
       - label: "RS485"
+        key: unit485
         value: SERIAL_GROOVE_485
         description: "M5 RS485 unit"
         url: "http://docs.m5stack.com/en/unit/rs485"
       - label: "Tail485"
         value: SERIAL_GROOVE_485
+        key: tail485
         description: "M5 Tail 485"
         url: "http://docs.m5stack.com/en/atom/tail485"
 
@@ -54,16 +56,16 @@ types:
   
 
 config:
-  board:
-    type: select
-    target: environment
-    label: 'Board'
-    key: board
-    values: 
-      - value: m5stack-atom-generic
-        label: m5stack-atom
-        description: "M5 Stack Atom light"
-        url: "http://docs.m5stack.com/en/core/atom_lite"
-        children:
-          - *m5base
-          - *m5groove
+  children:
+    - type: select
+      target: environment
+      label: 'Board'
+      key: board
+      values: 
+        - value: m5stack-atom-generic
+          label: m5stack-atom
+          description: "M5 Stack Atom light"
+          url: "http://docs.m5stack.com/en/core/atom_lite"
+          children:
+            - *m5base
+            - *m5groove
