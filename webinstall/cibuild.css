@@ -128,3 +128,6 @@
     /* display: flex; */
     overflow: hidden;
 }
+.configui .label {
+    width: 10em;
+}

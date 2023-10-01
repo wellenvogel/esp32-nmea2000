@@ -20,13 +20,13 @@ types:
   - &m5groovei2c
     type: multi
     key: m5groovei2c
-    label: "M5 I2C groove units"
+    label: "M5 I2C Groove Units"
     values:
   - &m5groovecan
     type: select
     key: m5groovecan
     target: define
-    label: "M5 CAN Units"
+    label: "M5 Groove CAN Units"
     values:
       - label: "CAN Unit"
         url: "http://docs.m5stack.com/en/unit/can"
@@ -34,7 +34,7 @@ types:
         value: M5_CANUNIT    
   - &m5grooveserial
     type: select
-    label: "M5 Serial Unit"
+    label: "M5 Groove Serial Unit"
     target: define
     key: m5grooveserial
     values:

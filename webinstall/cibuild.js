@@ -156,11 +156,6 @@ import fileDownload from "https://cdn.skypack.dev/js-file-download@0.4.12"
         uploadConfig: uploadConfig,
         downloadConfig: downloadConfig
     };
-    const environments=[
-        'm5stack-atom-generic',
-        'm5stack-atoms3-generic',
-        'nodemcu-generic'
-    ];
     const loadConfig=async (url)=>{
         let config=await fetch(url).then((r)=>r.text());
         let parsed=yamlLoad(config);
@@ -289,7 +284,6 @@ import fileDownload from "https://cdn.skypack.dev/js-file-download@0.4.12"
         setButtons(btConfig);
         forEachEl('#environment',(el)=>el.addEventListener('change',hideResults));
         forEachEl('#buildflags',(el)=>el.addEventListener('change',hideResults));
-        fillSelect('environment',environments);
         currentPipeline=window.localStorage.getItem(CURRENT_PIPELINE);
         if (currentPipeline){
             setValue('pipeline',currentPipeline);
