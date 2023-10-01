@@ -22,7 +22,16 @@ types:
     key: m5groovei2c
     label: "M5 I2C groove units"
     values:
-      
+  - &m5groovecan
+    type: select
+    key: m5groovecan
+    target: define
+    label: "M5 CAN Units"
+    values:
+      - label: "CAN Unit"
+        url: "http://docs.m5stack.com/en/unit/can"
+        description: "M5 Can unit"
+        value: M5_CANUNIT    
   - &m5grooveserial
     type: select
     label: "M5 Serial Unit"
@@ -46,7 +55,8 @@ types:
     label: 'M5 groove type'
     values:
       - label: 'CAN'
-        children: 
+        children:
+        - *m5groovecan 
       - label: 'I2C'
         children:
         - *m5groovei2c
@@ -68,4 +78,11 @@ config:
           url: "http://docs.m5stack.com/en/core/atom_lite"
           children:
             - *m5base
+            - *m5groove
+        - value: m5stack-atoms3-generic
+          label: m5stack-atoms3
+          description: "M5 Stack AtomS3 light"
+          url: "http://docs.m5stack.com/en/core/AtomS3%20Lite"
+          children:
+            - *m5base    
             - *m5groove
