@@ -2,15 +2,18 @@
 include("token.php");
 include("functions.php");
 include("config.php");
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+include("cibuild_connection.php");
 if (! isset($CI_TOKEN)) die("no token");
 const apiBase="https://circleci.com/api/v2/";
 const webApp="https://app.circleci.com/";
 const apiRepo="project/gh/#user#/#repo#";
 const workflowName="build-workflow";
 const jobName="pio-build";
-const defaultBranch='circleci-project-setup';
+const defaultBranch='master';
 const defaultUser='wellenvogel';
 const defaultRepo='esp32-nmea2000';
+const TABLENAME="CIBUILDS";
 
 function getTokenHeaders(){
     global $CI_TOKEN;
@@ -68,6 +71,7 @@ function getJobStatus($pipeline,$wf=workflowName,$job=jobName){
     }
     $pipeline_id=$pstat['id'];
     $pipeline_number=$pstat['number'];
+    $vcs=$pstat['vcs'];
     $pstat=getWorkflow($pipeline,$wf);
     $workflow_id=$pstat['id'];
     $workflow_number=$pstat['workflow_number'];
@@ -81,12 +85,86 @@ function getJobStatus($pipeline,$wf=workflowName,$job=jobName){
             preg_replace('/^gh/','github',$pstat['project_slug'])."/".
             $pipeline_number."/workflows/".$workflow_id."/jobs/".$pstat['job_number'];
     }
+    $pstat['vcs']=$vcs;
     return $pstat;
 }
 
 function getArtifacts($job,$slug){
     $url=apiBase."/project/$slug/$job/artifacts";
     return getJson($url,getTokenHeaders(),true);
+}
+
+function insertPipeline($id,$param){
+    global $database;
+    if (! isset($database)) return false;
+    try {
+        $status='created';
+        $stmt = $database->prepare("INSERT into " . TABLENAME .
+            "(id,status,config,environment,buildflags) VALUES (?,?,?,?,?)");
+        $stmt->bind_param("sssss",
+        $id,
+        $status,
+        $param['config'],
+        $param['environment'],
+        $param['build_flags']);
+        $stmt->execute();
+        return true;
+    } catch (Exception $e) {
+        error_log("insert pipeline $id failed: $e");
+        return false;
+    }
+}
+function updatePipeline($id,$status,$tag=null){
+    global $database;
+    if (! isset($database)) return false;
+    try{
+        $stmt=null;
+        if ($tag != null){
+            $stmt=$database->prepare("UPDATE ".TABLENAME." SET status=?,tag=? where id=? and ( status <> ? or tag <> ?)");
+            $stmt->bind_param("sssss",$status,$tag,$id,$status,$tag);
+            $stmt->execute();
+        }
+        else{
+            $stmt=$database->prepare("UPDATE ".TABLENAME." SET status=? where id=? AND status <> ?");
+            $stmt->bind_param("sss",$status,$id,$status);
+            $stmt->execute();
+        }
+
+    }catch (Exception $e){
+        error_log("update pipeline $id failed: $e");
+        return false;
+    }
+    return true;
+}
+
+function findPipeline($param)
+{
+    global $database;
+    if (!isset($database))
+        return false;
+    try {
+        $stmt = null;
+        if (isset($param['tag'])) {
+            $stmt = $database->prepare("SELECT * from " . TABLENAME .
+                " where status='success' and environment=? and buildflags=? and tag=? order by timestamp desc");
+            $stmt->bind_param("sss", $param['environment'], $param['buildflags'], $param['tag']);
+        } else {
+            $stmt = $database->prepare("SELECT id from " . TABLENAME .
+                " where status='success' and environment=? and buildflags=? order by timestamp desc");
+            $stmt->bind_param("ss", $param['environment'], $param['buildflags']);
+        }
+        $stmt->execute();
+        $id=null;
+        $stmt->bind_result($id);
+        if ($stmt->fetch()){
+            return $id;
+        }
+        return false;
+    } catch (Exception $e) {
+        error_log("find pipeline failed: $e");
+        return false;
+    }
+
 }
 
 function getArtifactsForPipeline($pipeline,$wf=workflowName,$job=jobName){
@@ -116,6 +194,12 @@ try {
             );
             try {
                 $pstat = getJobStatus($par['pipeline'], $par['workflow'], $par['job']);
+                if (isset($pstat['vcs'])){
+                    updatePipeline($par['pipeline'],$pstat['status'],$pstat['vcs']['revision']);
+                }
+                else{
+                    updatePipeline($par['pipeline'],$pstat['status']);
+                }
                 echo (json_encode($pstat));
             } catch (Exception $e) {
                 $rt = array('status' => 'error', 'error' => $e->getMessage());
@@ -148,6 +232,16 @@ try {
             echo(json_encode($rt));
             exit(0);
         }
+        if ($action == 'pipelineuuid'){
+            addVars(
+                $par,
+                ['pipeline']
+            );
+            $url=apiBase."/pipeline/".$par['pipeline'];
+            $rt=getJson($url,getTokenHeaders(),true);
+            echo(json_encode($rt));
+            exit(0);
+        }
         if ($action == 'start'){
             addVars(
                 $par,
@@ -173,6 +267,7 @@ try {
             $userRepo=fillUserAndRepo(null,$par);
             $url=apiBase."/".replaceVars(apiRepo,$userRepo)."/pipeline";
             $rt=getJson($url,getTokenHeaders(),true,$requestParam);
+            insertPipeline($rt['id'],$requestParam['parameters']);
             echo (json_encode($rt));
             exit(0);
         }
@@ -194,6 +289,19 @@ try {
         #echo("DL: $dlurl\n");
         header('Content-Disposition: attachment; filename="'.$astat['items'][0]['path'].'"');
         proxy($dlurl);
+        exit(0);
+    }
+    if (isset($_REQUEST['find'])){
+        $par=array();
+        addVars($par,['environment','buildflags']);
+        if (isset($_REQUEST['tag'])) $par['tag']=$_REQUEST['tag'];
+        $id=findPipeline($par);
+        header("Content-Type: application/json");
+        $rt=array('status'=>'OK');
+        if ($id){
+            $rt['pipeline']=$id;
+        }
+        echo(json_encode($rt));
         exit(0);
     }
     die("no action");

@@ -65,6 +65,10 @@ const setValue=(id,value)=>{
         el.value=value;
         return;
     }
+    if (el.tagName.match(/^H[0-9]/)){
+        el.textContent=value;
+        return;
+    }
     if (el.tagName == 'A'){
         el.setAttribute('href',value);
         return;

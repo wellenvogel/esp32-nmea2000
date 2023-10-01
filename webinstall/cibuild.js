@@ -12,7 +12,25 @@ import fileDownload from "https://cdn.skypack.dev/js-file-download@0.4.12"
     let config={}; //values as read and stored
     let configStruct={}; //complete struct merged of config and struct
     let branch=getParam('branch');
+    let displayMode='last';
+    let delayedSearch=undefined;
+    let running=false;
     if (! branch) branch='master';
+    const modeStrings={
+        last: 'Last Build',
+        existing: 'Existing Build',
+        current: 'Current Build'
+    };
+    const setDisplayMode=(mode)=>{
+        let old=displayMode;
+        let ms=modeStrings[mode];
+        if (ms === undefined){
+            return false;
+        }
+        displayMode=mode;
+        setValue('resultTitle',ms);
+        return mode !== old;
+    }
     const showError=(text)=>{
         if (text === undefined){
             setVisible('buildError',false,true);
@@ -30,19 +48,31 @@ import fileDownload from "https://cdn.skypack.dev/js-file-download@0.4.12"
         setVisible('download', false, true);
         setVisible('status_url', false, true);
     }
-    const setRunning=(active)=>{
+    const setRunning=(active,opt_noActivate)=>{
+        running=active;
         if (active){
             showError();
             downloadUrl=undefined;
             setVisible('download', false, true);
             setVisible('status_url', false, true);
         }
-        enableEl('start',!active);
+        if (active || ! opt_noActivate) enableEl('start',!active);
+    }
+    const isRunning=()=>{
+        return running;
     }
     const fetchStatus=(initial)=>{
-        if (currentPipeline === undefined) return;
+        if (currentPipeline === undefined) {
+            setVisible('status_url',false,true);
+            setVisible('error',false);
+            setVisible('download',false,true);
+            setValue('status','---');
+            return;
+        };
+        let queryPipeline=currentPipeline;
         fetchJson(API,{api:'status',pipeline:currentPipeline})
                 .then((st)=>{
+                    if (queryPipeline !== currentPipeline) return;
                     setValues(st);
                     setVisible('status_url',st.status_url !== undefined,true);
                     setVisible('error',st.error !== undefined,true);
@@ -52,7 +82,7 @@ import fileDownload from "https://cdn.skypack.dev/js-file-download@0.4.12"
                         return;
                     }
                     if (st.status === 'success'){
-                        setRunning(false);
+                        setRunning(false, displayMode == 'existing');
                         fetchJson(API,{api:'artifacts',pipeline:currentPipeline})
                         .then((ar)=>{
                             if (! ar.items || ar.items.length < 1){
@@ -79,9 +109,10 @@ import fileDownload from "https://cdn.skypack.dev/js-file-download@0.4.12"
                     timer=window.setTimeout(fetchStatus,STATUS_INTERVAL);
                 })
     }
-    const setCurrentPipeline=(pipeline)=>{
+    const setCurrentPipeline=(pipeline,doStore)=>{
         currentPipeline=pipeline;
-        window.localStorage.setItem(CURRENT_PIPELINE,pipeline);
+        setValue('pipeline',currentPipeline);
+        if (doStore) window.localStorage.setItem(CURRENT_PIPELINE,pipeline);
     };
     const startBuild=()=>{
         let param={'branch':branch};
@@ -92,6 +123,7 @@ import fileDownload from "https://cdn.skypack.dev/js-file-download@0.4.12"
         setValue('status','requested');
         setValue('pipeline','');
         setRunning(true);
+        param.config=JSON.stringify(config);
         fetchJson(API,Object.assign({
             api:'start'},param))
         .then((json)=>{
@@ -99,9 +131,9 @@ import fileDownload from "https://cdn.skypack.dev/js-file-download@0.4.12"
                 throw new Error("unable to create job "+(json.error||''));
             }
             if (!json.id) throw new Error("unable to create job, no id");
-            setCurrentPipeline(json.id);
-            setValue('pipeline',currentPipeline);
+            setCurrentPipeline(json.id,true);
             setValue('status',json.status);
+            setDisplayMode('current');
             timer=window.setTimeout(fetchStatus,STATUS_INTERVAL);
         })
         .catch((err)=>{
@@ -279,14 +311,37 @@ import fileDownload from "https://cdn.skypack.dev/js-file-download@0.4.12"
         }
         document.getElementById('environment').value=environment;
         document.getElementById('buildflags').value=flags;
+        findPipeline();
+    }
+    const findPipeline=()=>{
+        if (delayedSearch !== undefined){
+            window.clearTimeout(delayedSearch);
+            delayedSearch=undefined;
+        }
+        if (isRunning()) {
+            delayedSearch=window.setTimeout(findPipeline,500);
+            return;
+        }
+        let param={find:1};
+        fillValues(param,['environment','buildflags']);
+        fetchJson(API,param)
+            .then((res)=>{
+                setCurrentPipeline(res.pipeline);
+                fetchStatus(true); 
+                setDisplayMode('existing');
+                enableEl('start',res.pipeline === undefined);
+            })
+            .catch((e)=>console.log("findPipeline error ",e));
+
     }
     window.onload=async ()=>{ 
         setButtons(btConfig);
         forEachEl('#environment',(el)=>el.addEventListener('change',hideResults));
         forEachEl('#buildflags',(el)=>el.addEventListener('change',hideResults));
-        currentPipeline=window.localStorage.getItem(CURRENT_PIPELINE);
-        if (currentPipeline){
-            setValue('pipeline',currentPipeline);
+        let pipeline=window.localStorage.getItem(CURRENT_PIPELINE);
+        setDisplayMode('last');
+        if (pipeline){
+            setCurrentPipeline(pipeline);
             fetchStatus(true);
             setRunning(true);
         }
