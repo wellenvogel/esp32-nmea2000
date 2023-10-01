@@ -296,7 +296,7 @@ import fileDownload from "https://cdn.skypack.dev/js-file-download@0.4.12"
             fetchStatus(true);
             setRunning(true);
         }
-        structure=await loadConfig("testconfig.yaml");
+        structure=await loadConfig("build.yaml");
         buildSelectors(ROOT_PATH,structure.config.children,true);
         //buildValues();
     }
