@@ -255,7 +255,7 @@ class ESPInstaller{
             }
             let info=await checkChip(this.getChipId(),imageData,isFull);
             let fileList = [
-                { data: imageData, address: info.flashAddress }
+                { data: imageData, address: info.flashStart }
             ];
             let txt = isFull ? "baseImage (all data will be erased)" : "update";
             if (!confirm(`ready to install ${version}\n${txt}`)) {
@@ -276,7 +276,7 @@ class ESPInstaller{
      * @param {*} imageData the data to be flashed
      * @param {*} version the info shown in the dialog
      * @param {*} checkChip will be called with the found chipId and the data
-     *            must return an info with flashAddress
+     *            must return an info with flashStart
      * @returns 
      */
     async runFlash(isFull,imageData,version,checkChip){
@@ -284,7 +284,7 @@ class ESPInstaller{
             await this.connect();
             let info= await checkChip(this.getChipId(),imageData,isFull); //just check
             let fileList = [
-                { data: imageData, address: info.flashAddress }
+                { data: imageData, address: info.flashStart }
             ];
             let txt = isFull ? "baseImage (all data will be erased)" : "update";
             if (!confirm(`ready to install ${version}\n${txt}`)) {
