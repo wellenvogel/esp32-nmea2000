@@ -1,6 +1,6 @@
 import {XtermOutputHandler} from "./installUtil.js";
 import ESPInstaller from "./installUtil.js";
-import { addEl, getParam, setValue, setVisible } from "./helper.js";
+import { readFile, addEl, getParam, setValue, setVisible } from "./helper.js";
 import * as zip from "https://cdn.jsdelivr.net/npm/@zip.js/zip.js@2.7.29/+esm";
 (function(){
 
@@ -81,16 +81,7 @@ import * as zip from "https://cdn.jsdelivr.net/npm/@zip.js/zip.js@2.7.29/+esm";
         };
         return rt;
     }
-    const readFile=(file)=>{
-        return new Promise((resolve,reject)=>{
-            let reader = new FileReader();
-            reader.addEventListener('load', function (e) {
-                resolve(e.target.result);
-                
-            });
-            reader.readAsBinaryString(file);
-        });
-    }
+    
     const checkImageFile=(file,isFull)=>{
         let minSize=MINSIZE+(isFull?(UPDATE_START-FULL_START):0);
         return new Promise(function (resolve, reject) {

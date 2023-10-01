@@ -120,5 +120,16 @@ const fillSelect=(el,values)=>{
         o.textContent=values[k];
     }
 }
-
-export { getParam, addEl, forEachEl,setButtons,fillValues, setValue,setValues,buildUrl,fetchJson,setVisible, enableEl,fillSelect }
+const readFile=(file,optAsText)=>{
+    return new Promise((resolve,reject)=>{
+        let reader = new FileReader();
+        reader.addEventListener('load', function (e) {
+            resolve(e.target.result);
+            
+        });
+        reader.addEventListener('error',(e)=>reject(e));
+        if (optAsText) reader.readAsText(file);
+        else reader.readAsBinaryString(file);
+    });
+}
+export { readFile, getParam, addEl, forEachEl,setButtons,fillValues, setValue,setValues,buildUrl,fetchJson,setVisible, enableEl,fillSelect }

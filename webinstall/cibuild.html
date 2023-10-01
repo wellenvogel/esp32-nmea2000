@@ -10,8 +10,12 @@
     <div class="configui container">
     <h1>Build your own ESP32-NMEA2000</h1>
     <h3>New Build</h3>
+    <div class="row">
+        <button id="downloadConfig">SaveCfg</button>
+        <button id="uploadConfig">LoadCfg</button>
+    </div>
     <div id="selectors">
-        
+
     </div>
     <div class="row">
         <span class="label">Board type</span>
@@ -47,6 +51,9 @@
         <button id="webinstall">Install</button>
     </div>
     <iframe id="dlframe" width="1" height="1"></iframe>
+    <form id="upload">
+        <input type="file" id="fileSelect"/>
+    </form>
 </div>
 </body>
 </html>

@@ -1,5 +1,6 @@
-import { addEl, setButtons,fillValues, setValue, buildUrl, fetchJson, setVisible, enableEl, setValues, getParam, fillSelect, forEachEl } from "./helper.js";
+import { addEl, setButtons,fillValues, setValue, buildUrl, fetchJson, setVisible, enableEl, setValues, getParam, fillSelect, forEachEl, readFile } from "./helper.js";
 import {load as yamlLoad} from "https://cdn.skypack.dev/js-yaml@4.1.0";
+import fileDownload from "https://cdn.skypack.dev/js-file-download@0.4.12"
 (function(){
     const STATUS_INTERVAL=2000;
     const CURRENT_PIPELINE='pipeline';
@@ -122,10 +123,38 @@ import {load as yamlLoad} from "https://cdn.skypack.dev/js-yaml@4.1.0";
         let url=buildUrl("install.html",{custom:downloadUrl});
         window.location.href=url;
     }
+    const uploadConfig=()=>{
+       let form=document.getElementById("upload");
+       form.reset();
+       let fsel=document.getElementById("fileSelect");
+       fsel.onchange=async ()=>{
+            if (fsel.files.length < 1) return;
+            let file=fsel.files[0];
+            if (! file.name.match(/json$/)){
+                alert("only json files");
+                return;
+            }
+            try{
+                let content=await readFile(file,true);
+                config=JSON.parse(content);
+                buildSelectors(ROOT_PATH,structure.config.children,true);
+            } catch (e){
+                alert("upload "+fsel.files[0].name+" failed: "+e);
+            }
+
+       }
+       fsel.click(); 
+    }
+    const downloadConfig=()=>{
+        let name="buildconfig.json";
+        fileDownload(JSON.stringify(config),name);
+    }
     const btConfig={
         start:startBuild,
         download:runDownload,
-        webinstall:webInstall
+        webinstall:webInstall,
+        uploadConfig: uploadConfig,
+        downloadConfig: downloadConfig
     };
     const environments=[
         'm5stack-atom-generic',
@@ -170,6 +199,7 @@ import {load as yamlLoad} from "https://cdn.skypack.dev/js-yaml@4.1.0";
                 let re = addEl('input', 'radioCi', ef);
                 let val = v.value;
                 let key=getVal(v,KEY_NAMES);
+                if (val === undefined) val=key;
                 re.setAttribute('type', 'radio');
                 re.setAttribute('name', name);
                 re.addEventListener('change', (ev) => callback(v.children,key,val,false));
@@ -179,6 +209,7 @@ import {load as yamlLoad} from "https://cdn.skypack.dev/js-yaml@4.1.0";
                     lnk.setAttribute('target', '_');
                 }
                 if (key == current) {
+                    re.setAttribute('checked','checked');
                     window.setTimeout(() => {
                         callback(v.children,key,val,true);
                     }, 0);
@@ -222,15 +253,17 @@ import {load as yamlLoad} from "https://cdn.skypack.dev/js-yaml@4.1.0";
             buildSelector(frame,cfg,name,current,(children,key,value,initial)=>{
                 buildSelectors(name,children,initial);
                 configStruct[name]={cfg:cfg, key: key, value:value};
-                buildValues();
+                buildValues(initial);
             })
         })
     }
     const ROOT_PATH='root';
-    const buildValues=()=>{
+    const buildValues=(initial)=>{
         let environment;
         let flags="";
-        config={};
+        if (! initial){
+            config={};
+        }
         for (let k in configStruct){
             let struct=configStruct[k];
             if (! struct || ! struct.cfg || struct.value === undefined) continue;
@@ -265,6 +298,6 @@ import {load as yamlLoad} from "https://cdn.skypack.dev/js-yaml@4.1.0";
         }
         structure=await loadConfig("testconfig.yaml");
         buildSelectors(ROOT_PATH,structure.config.children,true);
-        buildValues();
+        //buildValues();
     }
 })();

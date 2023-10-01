@@ -122,3 +122,9 @@
 .configui .selector.level4 {
     margin-left: 1.5em;
 }
+.configui form#upload {
+    width: 0;
+    height: 0;
+    /* display: flex; */
+    overflow: hidden;
+}
