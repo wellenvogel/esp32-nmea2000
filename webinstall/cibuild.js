@@ -77,10 +77,11 @@ import fileDownload from "https://cdn.skypack.dev/js-file-download@0.4.12"
         fetchJson(API,{api:'status',pipeline:currentPipeline})
                 .then((st)=>{
                     if (queryPipeline !== currentPipeline) return;
+                    if (st.status === undefined) st.status=st.state;
                     setValues(st);
                     setVisible('status_url',st.status_url !== undefined,true);
                     setVisible('error',st.error !== undefined,true);
-                    if (st.status === 'error' || st.state === 'errored'){
+                    if (st.status === 'error' || st.status === 'errored'){
                         setRunning(false);
                         setVisible('download',false,true);
                         return;
