@@ -370,11 +370,13 @@ import fileDownload from "https://cdn.skypack.dev/js-file-download@0.4.12"
         }
         if (gitSha === undefined) {
             let tag = getParam('tag');
+            let type="tag";
             if (!tag) {
                 try {
                     let relinfo = await fetchJson(GITAPI, Object.assign({}, gitParam, { api: 1 }));
                     if (relinfo.tag_name) {
                         tag = relinfo.tag_name;
+                        type="release";
                     }
                     else {
                         alert("unable to query latest release");
@@ -388,7 +390,7 @@ import fileDownload from "https://cdn.skypack.dev/js-file-download@0.4.12"
                     let info=await fetchJson(GITAPI,Object.assign({},gitParam,{tag:tag}));
                     if (info.object){
                         gitSha=info.object.sha;
-                        setValue('branchOrTag','tag');
+                        setValue('branchOrTag',type);
                         setValue('branchOrTagValue',tag);    
                     }
                 }catch(e){
