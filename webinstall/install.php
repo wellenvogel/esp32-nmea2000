@@ -1,13 +1,28 @@
 <?php
 include("functions.php");
 include("config.php");
-$api = "https://api.github.com/repos/#user#/#repo#/releases/latest";
+const API_BASE="https://api.github.com/repos/#user#/#repo#";
+$api = API_BASE."/releases/latest";
+$branchsha=API_BASE."/git/refs/heads/#branch#";
+$tagsha=API_BASE."/git/refs/tags/#tag#";
 $download = "https://github.com/#user#/#repo#/releases/download/#dlVersion#/#dlName#";
 $manifest = "?dlName=#mName#&dlVersion=#mVersion#&user=#user#&repo=#repo#";
 try {
 	if (isset($_REQUEST['api'])) {
 		$vars = fillUserAndRepo();
 		proxy(replaceVars($api, $vars));
+		exit(0);
+	}
+	if (isset($_REQUEST['branch'])){
+		$vars = fillUserAndRepo();
+		$vars = addVars($vars, array('branch'));
+		proxy(replaceVars($branchsha, $vars));
+		exit(0);
+	}
+	if (isset($_REQUEST['tag'])){
+		$vars = fillUserAndRepo();
+		$vars = addVars($vars, array('tag'));
+		proxy(replaceVars($tagsha, $vars));
 		exit(0);
 	}
 	if (isset($_REQUEST['dlName'])) {

@@ -4,7 +4,10 @@ import fileDownload from "https://cdn.skypack.dev/js-file-download@0.4.12"
 (function(){
     const STATUS_INTERVAL=2000;
     const CURRENT_PIPELINE='pipeline';
-    let API="cibuild.php";
+    const API="cibuild.php";
+    const GITAPI="install.php";
+    const GITUSER="wellenvogel";
+    const GITREPO="esp32-nmea2000";
     let currentPipeline=undefined;
     let downloadUrl=undefined;
     let timer=undefined;
@@ -15,6 +18,7 @@ import fileDownload from "https://cdn.skypack.dev/js-file-download@0.4.12"
     let displayMode='last';
     let delayedSearch=undefined;
     let running=false;
+    let gitSha=undefined;
     if (! branch) branch='master';
     const modeStrings={
         last: 'Last Build',
@@ -123,6 +127,7 @@ import fileDownload from "https://cdn.skypack.dev/js-file-download@0.4.12"
         setValue('status','requested');
         setValue('pipeline','');
         setRunning(true);
+        if (gitSha !== undefined) param.tag=gitSha;
         param.config=JSON.stringify(config);
         fetchJson(API,Object.assign({
             api:'start'},param))
@@ -324,6 +329,7 @@ import fileDownload from "https://cdn.skypack.dev/js-file-download@0.4.12"
         }
         let param={find:1};
         fillValues(param,['environment','buildflags']);
+        if (gitSha !== undefined) param.tag=gitSha;
         fetchJson(API,param)
             .then((res)=>{
                 setCurrentPipeline(res.pipeline);
@@ -347,6 +353,56 @@ import fileDownload from "https://cdn.skypack.dev/js-file-download@0.4.12"
         }
         structure=await loadConfig("build.yaml");
         buildSelectors(ROOT_PATH,structure.config.children,true);
-        //buildValues();
+        let gitParam={user:GITUSER,repo:GITREPO};
+        let branch=getParam('branch');
+        if (branch){
+            try{
+                let info=await fetchJson(GITAPI,Object.assign({},gitParam,{branch:branch}));
+                if (info.object){
+                    gitSha=info.object.sha;
+                    setValue('branchOrTag','branch');
+                    setValue('branchOrTagValue',branch);
+                }
+            }catch (e){
+                console.log("branch query error",e);
+            }
+        }
+        if (gitSha === undefined) {
+            let tag = getParam('tag');
+            if (!tag) {
+                try {
+                    let relinfo = await fetchJson(GITAPI, Object.assign({}, gitParam, { api: 1 }));
+                    if (relinfo.tag_name) {
+                        tag = relinfo.tag_name;
+                    }
+                    else {
+                        alert("unable to query latest release");
+                    }
+                } catch (e) {
+                    alert("unable to query release info " + e);
+                }
+            }
+            if (tag){
+                try{
+                    let info=await fetchJson(GITAPI,Object.assign({},gitParam,{tag:tag}));
+                    if (info.object){
+                        gitSha=info.object.sha;
+                        setValue('branchOrTag','tag');
+                        setValue('branchOrTagValue',tag);    
+                    }
+                }catch(e){
+                    alert("cannot get sha for tag "+tag+": "+e);
+                }
+            }
+        }
+        if (gitSha === undefined){
+            //last resort: no sha, let the CI pick up latest
+            setValue('gitSha','unknown');
+            setValue('branchOrTag','branch');
+            setValue('branchOrTagValue','master');
+        }
+        else{
+            setValue('gitSha',gitSha);
+        }
     }
 })();

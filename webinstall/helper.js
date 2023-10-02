@@ -57,7 +57,7 @@ const fillValues=(values,items)=>{
 const setValue=(id,value)=>{
     let el=document.getElementById(id);
     if (! el) return;
-    if (el.tagName == 'DIV'){
+    if (el.tagName == 'DIV' || el.tagName == 'SPAN' || el.tagName == 'P'){
         el.textContent=value;
         return;
     }
