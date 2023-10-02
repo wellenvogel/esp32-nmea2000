@@ -2,8 +2,6 @@
 include("token.php");
 include("functions.php");
 include("config.php");
-mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
-include("cibuild_connection.php");
 if (! isset($CI_TOKEN)) die("no token");
 const apiBase="https://circleci.com/api/v2/";
 const webApp="https://app.circleci.com/";
@@ -95,7 +93,7 @@ function getArtifacts($job,$slug){
 }
 
 function insertPipeline($id,$param){
-    global $database;
+    $database=openDb();
     if (! isset($database)) return false;
     try {
         $status='created';
@@ -115,7 +113,7 @@ function insertPipeline($id,$param){
     }
 }
 function updatePipeline($id,$status,$tag=null){
-    global $database;
+    $database=openDb();
     if (! isset($database)) return false;
     try{
         $stmt=null;
@@ -139,25 +137,26 @@ function updatePipeline($id,$status,$tag=null){
 
 function findPipeline($param)
 {
-    global $database;
+    $database=openDb();
     if (!isset($database))
         return false;
     try {
         $stmt = null;
         if (isset($param['tag'])) {
-            $stmt = $database->prepare("SELECT * from " . TABLENAME .
+            $stmt = $database->prepare("SELECT id,UNIX_TIMESTAMP(timestamp) from " . TABLENAME .
                 " where status='success' and environment=? and buildflags=? and tag=? order by timestamp desc");
             $stmt->bind_param("sss", $param['environment'], $param['buildflags'], $param['tag']);
         } else {
-            $stmt = $database->prepare("SELECT id from " . TABLENAME .
+            $stmt = $database->prepare("SELECT id,UNIX_TIMESTAMP(timestamp) from " . TABLENAME .
                 " where status='success' and environment=? and buildflags=? order by timestamp desc");
             $stmt->bind_param("ss", $param['environment'], $param['buildflags']);
         }
         $stmt->execute();
         $id=null;
-        $stmt->bind_result($id);
+        $timestamp=null;
+        $stmt->bind_result($id,$timestamp);
         if ($stmt->fetch()){
-            return $id;
+            return array('pipeline'=>$id,'timestamp'=>$timestamp);
         }
         return false;
     } catch (Exception $e) {
@@ -295,12 +294,12 @@ try {
         $par=array();
         addVars($par,['environment','buildflags']);
         if (isset($_REQUEST['tag'])) $par['tag']=$_REQUEST['tag'];
-        $id=findPipeline($par);
+        $rt=findPipeline($par);
         header("Content-Type: application/json");
-        $rt=array('status'=>'OK');
-        if ($id){
-            $rt['pipeline']=$id;
+        if (!$rt){
+            $rt=array();
         }
+        $rt['status']='OK';
         echo(json_encode($rt));
         exit(0);
     }

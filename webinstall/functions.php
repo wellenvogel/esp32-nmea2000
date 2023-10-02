@@ -1,4 +1,17 @@
 <?php
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+include("../../../cibuild_db.php");
+function openDb(){
+    if (! defined('database::SERVER')) return null;
+    try{
+        $db=new mysqli(database::SERVER, database::USER, database::PASS,database::DB);
+        $db->query("SET CHARACTER SET 'utf8'");
+        return $db;
+    }catch (Exception $e){
+        error_log("openDB error $e");
+    }
+    return null;
+}
 function safeName($name)
 {
     return preg_replace('[^0-9_a-zA-Z.-]', '', $name);
