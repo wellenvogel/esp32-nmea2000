@@ -12,6 +12,7 @@ const defaultBranch='master';
 const defaultUser='wellenvogel';
 const defaultRepo='esp32-nmea2000';
 const TABLENAME="CIBUILDS";
+const KEEPINTERVAL="30"; //days
 
 function getTokenHeaders(){
     global $CI_TOKEN;
@@ -92,20 +93,25 @@ function getArtifacts($job,$slug){
     return getJson($url,getTokenHeaders(),true);
 }
 
-function insertPipeline($id,$param){
+function insertPipeline($id,$requestParam){
     $database=openDb();
     if (! isset($database)) return false;
+    $param=$requestParam['parameters'];
     try {
         $status='created';
+        $tag=null;
+        if (isset($requestParam['tag'])) $tag=$requestParam['tag'];
         $stmt = $database->prepare("INSERT into " . TABLENAME .
-            "(id,status,config,environment,buildflags) VALUES (?,?,?,?,?)");
-        $stmt->bind_param("sssss",
+            "(id,status,config,environment,buildflags,tag) VALUES (?,?,?,?,?,?)");
+        $stmt->bind_param("ssssss",
         $id,
         $status,
         $param['config'],
         $param['environment'],
-        $param['build_flags']);
+        $param['build_flags'],
+        $tag);
         $stmt->execute();
+        $database->query("DELETE from ". TABLENAME. " where timestamp < NOW() - interval ". KEEPINTERVAL. " DAY");
         return true;
     } catch (Exception $e) {
         error_log("insert pipeline $id failed: $e");
@@ -142,13 +148,14 @@ function findPipeline($param)
         return false;
     try {
         $stmt = null;
+        $database->query("DELETE from ". TABLENAME. " where timestamp < NOW() - interval ". KEEPINTERVAL. " DAY");
         if (isset($param['tag'])) {
             $stmt = $database->prepare("SELECT id,UNIX_TIMESTAMP(timestamp) from " . TABLENAME .
-                " where status='success' and environment=? and buildflags=? and tag=? order by timestamp desc");
+                " where status IN('success','running','created') and environment=? and buildflags=? and tag=? order by timestamp desc");
             $stmt->bind_param("sss", $param['environment'], $param['buildflags'], $param['tag']);
         } else {
             $stmt = $database->prepare("SELECT id,UNIX_TIMESTAMP(timestamp) from " . TABLENAME .
-                " where status='success' and environment=? and buildflags=? order by timestamp desc");
+                " where status IN('success','running','created') and environment=? and buildflags=? order by timestamp desc");
             $stmt->bind_param("ss", $param['environment'], $param['buildflags']);
         }
         $stmt->execute();
@@ -244,9 +251,8 @@ try {
         if ($action == 'start'){
             addVars(
                 $par,
-                ['environment','buildflags','config','suffix','branch','user','repo'],
+                ['environment','buildflags','config','suffix','user','repo'],
                 array('suffix'=>'',
-                    'branch'=>defaultBranch,
                     'config'=>'{}',
                     'user'=>defaultUser,
                     'repo'=>defaultRepo,
@@ -254,7 +260,6 @@ try {
                     )
             );
             $requestParam=array(
-                'branch'=>$par['branch'],
                 'parameters'=> array(
                     'run_build'=>true,
                     'environment'=>$par['environment'],
@@ -263,10 +268,16 @@ try {
                     'build_flags'=>$par['buildflags']
                 )
             );
+            if (isset($_REQUEST['tag'])){
+                $requestParam['tag']=safeName($_REQUEST['tag']);
+            }
+            else{
+                $requestParam['branch']=defaultBranch;
+            }
             $userRepo=fillUserAndRepo(null,$par);
             $url=apiBase."/".replaceVars(apiRepo,$userRepo)."/pipeline";
             $rt=getJson($url,getTokenHeaders(),true,$requestParam);
-            insertPipeline($rt['id'],$requestParam['parameters']);
+            insertPipeline($rt['id'],$requestParam);
             echo (json_encode($rt));
             exit(0);
         }
