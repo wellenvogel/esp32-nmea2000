@@ -80,7 +80,7 @@ import fileDownload from "https://cdn.skypack.dev/js-file-download@0.4.12"
                     setValues(st);
                     setVisible('status_url',st.status_url !== undefined,true);
                     setVisible('error',st.error !== undefined,true);
-                    if (st.status === 'error'){
+                    if (st.status === 'error' || st.state === 'errored'){
                         setRunning(false);
                         setVisible('download',false,true);
                         return;

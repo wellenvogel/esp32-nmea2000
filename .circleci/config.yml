@@ -72,7 +72,7 @@ workflows:
     when: << pipeline.parameters.run_build >>
     jobs:
       - pio-build
-          # set the filter to allow a build for any sha tag
-          filters:
-            tags:
-              only: /.*/
+        # set the filter to allow a build for any sha tag
+        filters:
+          tags:
+            only: /.*/

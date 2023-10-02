@@ -65,7 +65,7 @@ function getJobStatus($pipeline,$wf=workflowName,$job=jobName){
     if (! isset($pstat['state'])){
         throw new Exception("state not set");
     }
-    if ($pstat['state'] != 'created'){
+    if ($pstat['state'] == 'created'){
         return $pstat;
     }
     $pipeline_id=$pstat['id'];
