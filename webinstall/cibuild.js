@@ -14,12 +14,11 @@ import fileDownload from "https://cdn.skypack.dev/js-file-download@0.4.12"
     let structure=undefined;
     let config={}; //values as read and stored
     let configStruct={}; //complete struct merged of config and struct
-    let branch=getParam('branch');
     let displayMode='last';
     let delayedSearch=undefined;
     let running=false;
+    let pipelineState=undefined;
     let gitSha=undefined;
-    if (! branch) branch='master';
     const modeStrings={
         last: 'Last Build',
         existing: 'Existing Build',
@@ -52,7 +51,27 @@ import fileDownload from "https://cdn.skypack.dev/js-file-download@0.4.12"
         setVisible('download', false, true);
         setVisible('status_url', false, true);
     }
-    const setRunning=(active,opt_noActivate)=>{
+    const updateStart=()=>{
+        if (running) {
+            enableEl('start',false);
+            return;
+        }
+        if (displayMode != 'existing'){
+            if (currentPipeline !== undefined){
+                //check pipeline state
+                if (['error','success'].indexOf(pipelineState) >= 0){
+                    enableEl('start',true);
+                    return;       
+                }
+                enableEl('start',false);
+                return;    
+            }
+            enableEl('start',true);
+        }
+        //display mnode existing
+        enableEl('start',currentPipeline === undefined);
+    }
+    const setRunning=(active)=>{
         running=active;
         if (active){
             showError();
@@ -60,7 +79,7 @@ import fileDownload from "https://cdn.skypack.dev/js-file-download@0.4.12"
             setVisible('download', false, true);
             setVisible('status_url', false, true);
         }
-        if (active || ! opt_noActivate) enableEl('start',!active);
+        updateStart();
     }
     const isRunning=()=>{
         return running;
@@ -71,6 +90,7 @@ import fileDownload from "https://cdn.skypack.dev/js-file-download@0.4.12"
             setVisible('error',false);
             setVisible('download',false,true);
             setValue('status','---');
+            updateStart();
             return;
         };
         let queryPipeline=currentPipeline;
@@ -78,16 +98,19 @@ import fileDownload from "https://cdn.skypack.dev/js-file-download@0.4.12"
                 .then((st)=>{
                     if (queryPipeline !== currentPipeline) return;
                     if (st.status === undefined) st.status=st.state;
+                    pipelineState=st.status;
                     setValues(st);
                     setVisible('status_url',st.status_url !== undefined,true);
                     setVisible('error',st.error !== undefined,true);
                     if (st.status === 'error' || st.status === 'errored'){
                         setRunning(false);
                         setVisible('download',false,true);
+                        updateStart();
                         return;
                     }
                     if (st.status === 'success'){
-                        setRunning(false, displayMode == 'existing');
+                        setRunning(false);
+                        updateStart();
                         fetchJson(API,{api:'artifacts',pipeline:currentPipeline})
                         .then((ar)=>{
                             if (! ar.items || ar.items.length < 1){
@@ -108,6 +131,7 @@ import fileDownload from "https://cdn.skypack.dev/js-file-download@0.4.12"
                     else{
                         setVisible('download',false,true);
                     }
+                    updateStart();
                     timer=window.setTimeout(fetchStatus,STATUS_INTERVAL)
                 })
                 .catch((e)=>{
@@ -120,7 +144,7 @@ import fileDownload from "https://cdn.skypack.dev/js-file-download@0.4.12"
         if (doStore) window.localStorage.setItem(CURRENT_PIPELINE,pipeline);
     };
     const startBuild=()=>{
-        let param={'branch':branch};
+        let param={};
         currentPipeline=undefined;
         if (timer) window.clearTimeout(timer);
         timer=undefined;
@@ -128,6 +152,7 @@ import fileDownload from "https://cdn.skypack.dev/js-file-download@0.4.12"
         setValue('status','requested');
         setValue('pipeline','');
         setRunning(true);
+        updateStart();
         if (gitSha !== undefined) param.tag=gitSha;
         param.config=JSON.stringify(config);
         fetchJson(API,Object.assign({
@@ -176,6 +201,7 @@ import fileDownload from "https://cdn.skypack.dev/js-file-download@0.4.12"
                 let content=await readFile(file,true);
                 config=JSON.parse(content);
                 buildSelectors(ROOT_PATH,structure.config.children,true);
+                findPipeline();
             } catch (e){
                 alert("upload "+fsel.files[0].name+" failed: "+e);
             }
@@ -243,9 +269,7 @@ import fileDownload from "https://cdn.skypack.dev/js-file-download@0.4.12"
                 }
                 if (key == current) {
                     re.setAttribute('checked','checked');
-                    window.setTimeout(() => {
-                        callback(v.children,key,val,true);
-                    }, 0);
+                    callback(v.children,key,val,true);
                 }
             });
         }
@@ -317,8 +341,9 @@ import fileDownload from "https://cdn.skypack.dev/js-file-download@0.4.12"
         }
         document.getElementById('environment').value=environment;
         document.getElementById('buildflags').value=flags;
-        findPipeline();
+        if (! initial) findPipeline();
     }
+    let findIdx=0;
     const findPipeline=()=>{
         if (delayedSearch !== undefined){
             window.clearTimeout(delayedSearch);
@@ -328,15 +353,18 @@ import fileDownload from "https://cdn.skypack.dev/js-file-download@0.4.12"
             delayedSearch=window.setTimeout(findPipeline,500);
             return;
         }
+        findIdx++;
+        let queryIdx=findIdx;
         let param={find:1};
         fillValues(param,['environment','buildflags']);
         if (gitSha !== undefined) param.tag=gitSha;
         fetchJson(API,param)
             .then((res)=>{
+                if (queryIdx != findIdx) return;
                 setCurrentPipeline(res.pipeline);
-                fetchStatus(true); 
+                updateStart();
                 setDisplayMode('existing');
-                enableEl('start',res.pipeline === undefined);
+                fetchStatus(true); 
             })
             .catch((e)=>console.log("findPipeline error ",e));
 
@@ -354,6 +382,7 @@ import fileDownload from "https://cdn.skypack.dev/js-file-download@0.4.12"
         }
         structure=await loadConfig("build.yaml");
         buildSelectors(ROOT_PATH,structure.config.children,true);
+        if (! running) findPipeline();
         let gitParam={user:GITUSER,repo:GITREPO};
         let branch=getParam('branch');
         if (branch){
@@ -407,5 +436,6 @@ import fileDownload from "https://cdn.skypack.dev/js-file-download@0.4.12"
         else{
             setValue('gitSha',gitSha);
         }
+        updateStart();
     }
 })();
