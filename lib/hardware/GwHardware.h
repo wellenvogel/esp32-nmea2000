@@ -130,21 +130,6 @@
 #define GWBUTTON_PULLUPDOWN 
 #endif
 
-//below we define the final device config based on the above
-//boards and peripherals
-//this allows us toe easily also set the from outside
-//serial adapter at the M5 groove pins
-#ifdef SERIAL_GROOVE_485
-  #define GWSERIAL_TX GROOVE_PIN_1
-  #define GWSERIAL_RX GROOVE_PIN_2
-  #define GWSERIAL_TYPE GWSERIAL_TYPE_UNI 
-#endif
-#ifdef SERIAL_GROOVE_232
-  #define GWSERIAL_TX GROOVE_PIN_1
-  #define GWSERIAL_RX GROOVE_PIN_2
-  #define GWSERIAL_TYPE GWSERIAL_TYPE_BI
-#endif
-
 //M5 Serial (Atomic RS232 Base)
 #ifdef M5_SERIAL_KIT_232 
   #define GWSERIAL_TX BOARD_LEFT2
@@ -157,6 +142,35 @@
   #define GWSERIAL_TX BOARD_LEFT2
   #define GWSERIAL_RX BOARD_LEFT1
   #define GWSERIAL_TYPE GWSERIAL_TYPE_UNI
+#endif
+
+//below we define the final device config based on the above
+//boards and peripherals
+//this allows us to easily also set them from outside
+//serial adapter at the M5 groove pins
+//we use serial2 for groove serial if serial1 is already defined
+//before (e.g. by serial kit)
+#ifdef SERIAL_GROOVE_485
+  #ifdef GWSERIAL_TYPE
+    #define GWSERIAL2_TX GROOVE_PIN_1
+    #define GWSERIAL2_RX GROOVE_PIN_2
+    #define GWSERIAL2_TYPE GWSERIAL_TYPE_UNI
+  #else
+    #define GWSERIAL_TX GROOVE_PIN_1
+    #define GWSERIAL_RX GROOVE_PIN_2
+    #define GWSERIAL_TYPE GWSERIAL_TYPE_UNI
+  #endif 
+#endif
+#ifdef SERIAL_GROOVE_232
+  #ifdef GWSERIAL_TYPE
+    #define GWSERIAL2_TX GROOVE_PIN_1
+    #define GWSERIAL2_RX GROOVE_PIN_2
+    #define GWSERIAL2_TYPE GWSERIAL_TYPE_BI
+  #else
+    #define GWSERIAL_TX GROOVE_PIN_1
+    #define GWSERIAL_RX GROOVE_PIN_2
+    #define GWSERIAL_TYPE GWSERIAL_TYPE_BI
+  #endif
 #endif
 
 //can kit for M5 Atom
