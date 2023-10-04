@@ -91,6 +91,9 @@
     display: none;
     color: red;
 }
+.configui .error .value{
+    color: red;
+}
 .configui #warn.warn{
     display: block;
 }
@@ -130,4 +133,8 @@
 }
 .configui .label {
     width: 10em;
+}
+.configui .row input{
+    flex-grow: 1;
+    width: initial;
 }

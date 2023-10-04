@@ -9,14 +9,17 @@ types:
           value: M5_CAN_KIT
           description: "M5 Stack CAN Kit"
           url: "http://docs.m5stack.com/en/atom/atom_can"
+          resource: can
         - value: M5_SERIAL_KIT_232
           description: "M5 Stack RS232 Base"
           label: "Atomic RS232 Base"
           url: "http://docs.m5stack.com/en/atom/Atomic%20RS232%20Base"
+          resource: serial
         - value: M5_SERIAL_KIT_485
           description: "M5 Stack RS485 Base"
           label: "Atomic RS485 Base"
           url: "http://docs.m5stack.com/en/atom/Atomic%20RS485%20Base"
+          resource: serial
   - &m5groovei2c
     type: multi
     key: m5groovei2c
@@ -31,7 +34,8 @@ types:
       - label: "CAN Unit"
         url: "http://docs.m5stack.com/en/unit/can"
         description: "M5 Can unit"
-        value: M5_CANUNIT    
+        value: M5_CANUNIT
+        resource: can    
   - &m5grooveserial
     type: select
     label: "M5 Groove Serial Unit"
@@ -43,11 +47,13 @@ types:
         value: SERIAL_GROOVE_485
         description: "M5 RS485 unit"
         url: "http://docs.m5stack.com/en/unit/rs485"
+        resource: serial
       - label: "Tail485"
         value: SERIAL_GROOVE_485
         key: tail485
         description: "M5 Tail 485"
         url: "http://docs.m5stack.com/en/atom/tail485"
+        resource: serial
 
   - &m5groove
     type: select
@@ -63,7 +69,11 @@ types:
       - label: 'Serial'
         children:
         - *m5grooveserial
-  
+resources:
+  default: &esp32default
+    serial: 2
+    can: 1
+    i2c: 1 
 
 config:
   children:
@@ -76,6 +86,7 @@ config:
           label: m5stack-atom
           description: "M5 Stack Atom light"
           url: "http://docs.m5stack.com/en/core/atom_lite"
+          resource: *esp32default
           children:
             - *m5base
             - *m5groove
@@ -83,6 +94,7 @@ config:
           label: m5stack-atoms3
           description: "M5 Stack AtomS3 light"
           url: "http://docs.m5stack.com/en/core/AtomS3%20Lite"
+          resource: *esp32default
           children:
             - *m5base    
             - *m5groove

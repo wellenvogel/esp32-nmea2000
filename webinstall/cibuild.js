@@ -56,6 +56,11 @@ import fileDownload from "https://cdn.skypack.dev/js-file-download@0.4.12"
             enableEl('start',false);
             return;
         }
+        let e=document.getElementById('configError');
+        if (e.textContent) {
+            enableEl('start',false);
+            return;
+        }
         if (displayMode != 'existing'){
             if (currentPipeline !== undefined){
                 //check pipeline state
@@ -261,7 +266,7 @@ import fileDownload from "https://cdn.skypack.dev/js-file-download@0.4.12"
                 if (val === undefined) val=key;
                 re.setAttribute('type', 'radio');
                 re.setAttribute('name', name);
-                re.addEventListener('change', (ev) => callback(v.children,key,val,false));
+                re.addEventListener('change', (ev) => callback(v.children,key,val,v.resource,false));
                 if (v.description && v.url) {
                     let lnk = addEl('a', 'radioDescription', ef, v.description);
                     lnk.setAttribute('href', v.url);
@@ -269,7 +274,7 @@ import fileDownload from "https://cdn.skypack.dev/js-file-download@0.4.12"
                 }
                 if (key == current) {
                     re.setAttribute('checked','checked');
-                    callback(v.children,key,val,true);
+                    callback(v.children,key,val,v.resource,true);
                 }
             });
         }
@@ -307,9 +312,9 @@ import fileDownload from "https://cdn.skypack.dev/js-file-download@0.4.12"
         configList.forEach((cfg)=>{
             let name=prefix?(prefix+SEPARATOR+cfg.key):cfg.key;
             let current=config[name];
-            buildSelector(frame,cfg,name,current,(children,key,value,initial)=>{
+            buildSelector(frame,cfg,name,current,(children,key,value,resource,initial)=>{
                 buildSelectors(name,children,initial);
-                configStruct[name]={cfg:cfg, key: key, value:value};
+                configStruct[name]={cfg:cfg, key: key, value:value,resource:resource};
                 buildValues(initial);
             })
         })
@@ -321,27 +326,65 @@ import fileDownload from "https://cdn.skypack.dev/js-file-download@0.4.12"
         if (! initial){
             config={};
         }
-        for (let k in configStruct){
-            let struct=configStruct[k];
-            if (! struct || ! struct.cfg || struct.value === undefined) continue;
-            config[k]=struct.key;
-            if (struct.cfg.target !== undefined) {
-                if (struct.cfg.target === 'environment') {
-                    environment = struct.value;
-                }
-                if (struct.cfg.target === 'define') {
-                    flags += " -D" + struct.value;
-                }
-                const DEFPRFX = "define:";
-                if (struct.cfg.target.indexOf(DEFPRFX) == 0) {
-                    let def = struct.cfg.target.substring(DEFPRFX.length);
-                    flags += " -D" + def + "=" + struct.value;
+        let allowedResources={};
+        let currentResources={};
+        let errors="";
+        for (let round = 0; round <= 1; round++) {
+            //round1: find allowed resources
+            //round2: really collect values
+            for (let k in configStruct) {
+                let struct = configStruct[k];
+                if (!struct || !struct.cfg || struct.value === undefined) continue;
+                if (round > 0) config[k] = struct.key;
+                if (struct.cfg.target !== undefined) {
+                    if (struct.cfg.target === 'environment') {
+                        if (round > 0) environment = struct.value;
+                        else allowedResources=struct.resource;
+                        continue;
+                    }
+                    if (round < 1) continue;
+                    if (struct.resource){
+                        let resList=currentResources[struct.resource];
+                        if (! resList){
+                            resList=[];
+                            currentResources[struct.resource]=resList;
+                        }
+                        resList.push(struct);
+                    }
+                    if (struct.cfg.target === 'define') {
+                        flags += " -D" + struct.value;
+                        continue;
+                    }
+                    const DEFPRFX = "define:";
+                    if (struct.cfg.target.indexOf(DEFPRFX) == 0) {
+                        let def = struct.cfg.target.substring(DEFPRFX.length);
+                        flags += " -D" + def + "=" + struct.value;
+                        continue;
+                    }
                 }
             }
         }
         document.getElementById('environment').value=environment;
         document.getElementById('buildflags').value=flags;
+        //check resources
+        for (let k in currentResources){
+            let resList=currentResources[k];
+            if (allowedResources[k] !== undefined){
+                if (resList.length > allowedResources[k]){
+                    errors+=" more than "+allowedResources[k]+" "+k+" device(s) used";
+                }
+            }
+        }
+        if (errors){
+            setValue('configError',errors);
+            setVisible('configError',true,true);
+        }
+        else{
+            setValue('configError','');
+            setVisible('configError',false,true);
+        }
         if (! initial) findPipeline();
+        updateStart();
     }
     let findIdx=0;
     const findPipeline=()=>{
