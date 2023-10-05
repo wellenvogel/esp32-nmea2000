@@ -8,18 +8,24 @@ types:
         - label: "CAN KIT"
           value: M5_CAN_KIT
           description: "M5 Stack CAN Kit"
-          url: "http://docs.m5stack.com/en/atom/atom_can"
+          url: "https://docs.m5stack.com/en/atom/atom_can"
           resource: can
         - value: M5_SERIAL_KIT_232
           description: "M5 Stack RS232 Base"
           label: "Atomic RS232 Base"
-          url: "http://docs.m5stack.com/en/atom/Atomic%20RS232%20Base"
+          url: "https://docs.m5stack.com/en/atom/Atomic%20RS232%20Base"
           resource: serial
         - value: M5_SERIAL_KIT_485
           description: "M5 Stack RS485 Base"
           label: "Atomic RS485 Base"
-          url: "http://docs.m5stack.com/en/atom/Atomic%20RS485%20Base"
+          url: "https://docs.m5stack.com/en/atom/Atomic%20RS485%20Base"
           resource: serial
+        - value: M5_GPS_KIT
+          description: "M5 Stack Gps Kit"
+          label: "Gps Base"
+          url: "https://docs.m5stack.com/en/atom/atomicgps"
+          resource: serial
+
   - &m5groovei2c
     type: multi
     key: m5groovei2c
@@ -32,7 +38,7 @@ types:
     label: "M5 Groove CAN Units"
     values:
       - label: "CAN Unit"
-        url: "http://docs.m5stack.com/en/unit/can"
+        url: "https://docs.m5stack.com/en/unit/can"
         description: "M5 Can unit"
         value: M5_CANUNIT
         resource: can    
@@ -46,13 +52,18 @@ types:
         key: unit485
         value: SERIAL_GROOVE_485
         description: "M5 RS485 unit"
-        url: "http://docs.m5stack.com/en/unit/rs485"
+        url: "https://docs.m5stack.com/en/unit/rs485"
         resource: serial
       - label: "Tail485"
         value: SERIAL_GROOVE_485
         key: tail485
         description: "M5 Tail 485"
-        url: "http://docs.m5stack.com/en/atom/tail485"
+        url: "https://docs.m5stack.com/en/atom/tail485"
+        resource: serial
+      - label: "Gps Unit"
+        value: M5_GPS_UNIT
+        description: "M5 Gps Unit"
+        url: "https://docs.m5stack.com/en/unit/gps"
         resource: serial
 
   - &m5groove
