@@ -226,7 +226,10 @@ import fileDownload from "https://cdn.skypack.dev/js-file-download@0.4.12"
         downloadConfig: downloadConfig
     };
     const loadConfig=async (url)=>{
-        let config=await fetch(url).then((r)=>r.text());
+        let config=await fetch(url).then((r)=>{
+            if (!r.ok) throw new Error("unable to fetch: "+r.statusText);
+            return r.text()
+        });
         let parsed=yamlLoad(config);
         return parsed;
     }
@@ -423,9 +426,6 @@ import fileDownload from "https://cdn.skypack.dev/js-file-download@0.4.12"
             fetchStatus(true);
             setRunning(true);
         }
-        structure=await loadConfig("build.yaml");
-        buildSelectors(ROOT_PATH,structure.config.children,true);
-        if (! running) findPipeline();
         let gitParam={user:GITUSER,repo:GITREPO};
         let branch=getParam('branch');
         if (branch){
@@ -479,6 +479,19 @@ import fileDownload from "https://cdn.skypack.dev/js-file-download@0.4.12"
         else{
             setValue('gitSha',gitSha);
         }
+        if (gitSha !== undefined){
+            let url=buildUrl(GITAPI,Object.assign({},gitParam,{sha:gitSha,proxy:'webinstall/build.yaml'}));
+            try{
+                structure=await loadConfig(url);
+            }catch (e){
+                alert("unable to load config for selected release:\n "+e+"\n falling back to default");
+            }
+        }
+        if (! structure){
+            structure=await loadConfig("build.yaml");
+        }
+        buildSelectors(ROOT_PATH,structure.config.children,true);
+        if (! running) findPipeline();
         updateStart();
     }
 })();

@@ -7,6 +7,7 @@ $branchsha=API_BASE."/git/refs/heads/#branch#";
 $tagsha=API_BASE."/git/refs/tags/#tag#";
 $download = "https://github.com/#user#/#repo#/releases/download/#dlVersion#/#dlName#";
 $manifest = "?dlName=#mName#&dlVersion=#mVersion#&user=#user#&repo=#repo#";
+$proxurl="https://raw.githubusercontent.com/#user#/#repo#/#sha#/#proxy#";
 try {
 	if (isset($_REQUEST['api'])) {
 		$vars = fillUserAndRepo();
@@ -50,9 +51,15 @@ try {
 			}
 		}
 		if (!$targetUrl)
-			die("unable to find $targetBase $mode\n");
+			throw new Exception("unable to find $targetBase $mode\n");
 		#echo("download for $targetBase=$targetUrl\n");
 		proxy($targetUrl);
+		exit(0);
+	}
+	if (isset($_REQUEST['proxy'])){
+		$vars = fillUserAndRepo();
+		$vars = addVars($vars, array('sha', 'proxy'));
+		proxy(replaceVars($proxurl, $vars));
 		exit(0);
 	}
 } catch (HTTPErrorException $h) {

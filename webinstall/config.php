@@ -15,12 +15,12 @@ function fillUserAndRepo($vars=null,$source=null){
     }
     foreach (array('user','repo') as $n){
         if (! isset($source[$n])){
-            die("missing parameter $n");
+            throw new Exception("missing parameter $n");
         }
         $v=$source[$n];
         $av=$allowed[$n];
         if (! in_array($v,$av)){
-            die("value $v for $n not allowed");
+            throw new Exception("value $v for $n not allowed");
         }
         $vars[$n]=$v;
     }

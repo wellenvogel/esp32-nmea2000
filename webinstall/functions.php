@@ -39,7 +39,7 @@ function addVars(&$vars,$names,$defaults=null){
     foreach ($names as $n){
         $v=null;
         if (! isset($_REQUEST[$n])){
-            if ($defaults == null || ! isset($defaults[$n])) die("missing parameter $n");
+            if ($defaults == null || ! isset($defaults[$n])) throw new Exception("missing parameter $n");
             $v=$defaults[$n];
         }
         else{
