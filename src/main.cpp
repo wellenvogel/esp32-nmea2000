@@ -430,11 +430,16 @@ class CapabilitiesRequest : public GwRequestMessage{
   protected:
     virtual void processRequest(){
       int numCapabilities=userCodeHandler.getCapabilities()->size();
-      GwJsonDocument json(JSON_OBJECT_SIZE(numCapabilities*3+8));
+      int numHidden=config.numHidden();
+      GwJsonDocument json(JSON_OBJECT_SIZE(numCapabilities*3+numHidden*2+8));
       for (auto it=userCodeHandler.getCapabilities()->begin();
         it != userCodeHandler.getCapabilities()->end();it++){
           json[it->first]=it->second;
         }
+      std::vector<String> hiddenCfg=config.getHidden();
+      for (auto it=hiddenCfg.begin();it != hiddenCfg.end();it++){
+        json["HIDE"+*it]=true;
+      }
       json["serialmode"]=channels.getMode(SERIAL1_CHANNEL_ID);
       json["serial2mode"]=channels.getMode(SERIAL2_CHANNEL_ID);
       #ifdef GWBUTTON_PIN

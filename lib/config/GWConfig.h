@@ -4,8 +4,10 @@
 #include <Preferences.h>
 #include "GwLog.h"
 #include "GwConfigItem.h"
+#include "GwHardware.h"
 #include "GwConfigDefinitions.h"
 #include <map>
+#include <vector>
 
 
 class GwConfigHandler: public GwConfigDefinitions{
@@ -28,6 +30,8 @@ class GwConfigHandler: public GwConfigDefinitions{
         int getInt(const String name,int defaultv=0) const;
         GwConfigInterface * getConfigItem(const String name, bool dummy=false) const;
         bool checkPass(String hash);
+        std::vector<String> getHidden() const;
+        int numHidden() const;
         /**
          * change the value of a config item
          * will become a noop after stopChanges has been called 

@@ -136,13 +136,27 @@ def generateCfg(inFile,outFile,addDirs=[]):
         data+='  GwConfigInterface *configs[%d]={\n'%(l)
         first=True
         for item in config:
+            name=item.get('name')
+            if name is None:
+                continue
             if not first:
                 data+=',\n'
             first=False 
             secret="false";
             if item.get('type') == 'password':
-                secret="true"   
-            data+="    new GwConfigInterface(%s,\"%s\",%s)"%(item.get('name'),item.get('default'),secret)
+                secret="true"
+            data+="    #undef __CFGHIDDEN\n"
+            data+="    #ifdef CFGHIDE_%s\n"%(name)
+            data+="      #define __CFGHIDDEN true\n"
+            data+="    #else\n"
+            data+="      #define __CFGHIDDEN false\n"
+            data+="    #endif\n"    
+            data+="    #ifdef CFGDEFAULT_%s\n"%(name)   
+            data+="     new GwConfigInterface(%s,CFGDEFAULT_%s,%s,__CFGHIDDEN)\n"%(name,name,secret)
+            data+="    #else\n"
+            data+="     new GwConfigInterface(%s,\"%s\",%s,__CFGHIDDEN)\n"%(name,item.get('default'),secret)
+            data+="    #endif\n"
+
         data+='};\n'  
         data+='};\n'
     writeFileIfChanged(outFile,data)    

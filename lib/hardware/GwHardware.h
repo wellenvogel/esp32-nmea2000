@@ -144,6 +144,14 @@
   #define GWSERIAL_TYPE GWSERIAL_TYPE_UNI
 #endif
 
+//M5 GPS (Atomic GPS Base)
+#ifdef M5_GPS_KIT 
+  #define GWSERIAL_RX BOARD_LEFT1
+  #define GWSERIAL_TYPE GWSERIAL_TYPE_RX
+  #define CFGGDEFAULT_serialBaud "9600"
+  #define CFGHIDE_serialBaud
+#endif
+
 //below we define the final device config based on the above
 //boards and peripherals
 //this allows us to easily also set them from outside

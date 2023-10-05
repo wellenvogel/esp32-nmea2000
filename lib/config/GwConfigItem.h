@@ -10,12 +10,14 @@ class GwConfigInterface{
         const char * initialValue;
         String value;
         bool secret=false;
+        bool hidden=false;
     public:
-        GwConfigInterface(const String &name, const char * initialValue, bool secret=false){
+        GwConfigInterface(const String &name, const char * initialValue, bool secret=false, bool hidden=false){
             this->name=name;
             this->initialValue=initialValue;
             this->value=initialValue;
             this->secret=secret;
+            this->hidden=hidden;
         }
         virtual String asString() const{
             return value;
@@ -40,6 +42,9 @@ class GwConfigInterface{
         }
         String getDefault() const {
             return initialValue;
+        }
+        bool isHidden() const {
+            return hidden;
         }
         friend class GwConfigHandler;
 };

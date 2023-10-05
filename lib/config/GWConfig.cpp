@@ -159,6 +159,24 @@ void GwConfigHandler::toHex(unsigned long v, char *buffer, size_t bsize)
         buffer[2 * i] = 0;
 }
 
+std::vector<String> GwConfigHandler::getHidden() const{
+    std::vector<String> rt;
+    rt.reserve(numHidden());
+    for (int i=0L;i<getNumConfig();i++){
+        if (configs[i]->isHidden()){
+            rt.push_back(configs[i]->getName());
+        };
+    }
+    return rt;
+}
+int GwConfigHandler::numHidden() const{
+    int rt=0;
+    for (int i=0L;i<getNumConfig();i++){
+        if (configs[i]->isHidden()) rt++;
+    }
+    return rt;
+}
+
 void GwNmeaFilter::handleToken(String token, int index){
     switch(index){
         case 0:
