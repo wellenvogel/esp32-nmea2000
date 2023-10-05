@@ -231,6 +231,7 @@ function getAllConfigs(omitPass) {
         let name = v.getAttribute('name');
         if (!name) continue;
         if (name.indexOf("_") >= 0) continue;
+        if (v.getAttribute('disabled')) continue;
         let def = getConfigDefition(name);
         if (def.type === 'password' && ( v.value == '' || omitPass)) {
             continue;
@@ -444,6 +445,7 @@ function createInput(configItem, frame,clazz) {
     let el;
     if (configItem.type === 'boolean' || configItem.type === 'list' || configItem.type == 'boatData') {
         el=addEl('select',clazz,frame);
+        if (configItem.readOnly) el.setAttribute('disabled',true);
         el.setAttribute('name', configItem.name)
         let slist = [];
         if (configItem.list) {
@@ -476,6 +478,7 @@ function createInput(configItem, frame,clazz) {
         return createXdrInput(configItem,frame,clazz);
     }
     el = addEl('input',clazz,frame);
+    if (configItem.readOnly) el.setAttribute('disabled',true);
     el.setAttribute('name', configItem.name)
     if (configItem.type === 'password') {
         el.setAttribute('type', 'password');
@@ -591,25 +594,29 @@ function createXdrInput(configItem,frame){
             {l:'bidir',v:1},
             {l:'to2K',v:2},
             {l:'from2K',v:3}
-        ]
+        ],
+        readOnly: configItem.readOnly
     },d,'xdrdir');
     d=createXdrLine(el,'Category');
     let category=createInput({
         type: 'list',
         name: configItem.name+"_cat",
-        list:getXdrCategories()
+        list:getXdrCategories(),
+        readOnly: configItem.readOnly
     },d,'xdrcat');
     d=createXdrLine(el,'Source');
     let selector=createInput({
         type: 'list',
         name: configItem.name+"_sel",
-        list:[]
+        list:[],
+        readOnly: configItem.readOnly
     },d,'xdrsel');
     d=createXdrLine(el,'Field');
     let field=createInput({
         type:'list',
         name: configItem.name+'_field',
-        list: []
+        list: [],
+        readOnly: configItem.readOnly
     },d,'xdrfield');
     d=createXdrLine(el,'Instance');
     let imode=createInput({
@@ -620,22 +627,26 @@ function createXdrInput(configItem,frame){
             {l:'single',v:0},
             {l:'ignore',v:1},
             {l:'auto',v:2}
-        ]
+        ],
+        readOnly: configItem.readOnly
     },d,'xdrimode');
     let instance=createInput({
         type:'number',
         name: configItem.name+"_instance",
+        readOnly: configItem.readOnly
     },d,'xdrinstance');
     d=createXdrLine(el,'Transducer');
     let xdrName=createInput({
         type:'text',
-        name: configItem.name+"_xdr"
+        name: configItem.name+"_xdr",
+        readOnly: configItem.readOnly
     },d,'xdrname');
     d=createXdrLine(el,'Example');
     let example=addEl('div','xdrexample',d,'');
     let data = addEl('input','xdrvalue',el);
     data.setAttribute('type', 'hidden');
     data.setAttribute('name', configItem.name);
+    if (configItem.readOnly) data.setAttribute('disabled',true);
     let changeFunction = function () {
         let parts=data.value.split(',');
         direction.value=parts[1] || 0;
@@ -730,16 +741,19 @@ function createFilterInput(configItem, frame) {
     let ais = createInput({
         type: 'list',
         name: configItem.name + "_ais",
-        list: ['aison', 'aisoff']
+        list: ['aison', 'aisoff'],
+        readOnly: configItem.readOnly
     }, el);
     let mode = createInput({
         type: 'list',
         name: configItem.name + "_mode",
-        list: ['whitelist', 'blacklist']
+        list: ['whitelist', 'blacklist'],
+        readOnly: configItem.readOnly
     }, el);
     let sentences = createInput({
         type: 'text',
         name: configItem.name + "_sentences",
+        readOnly: configItem.readOnly
     }, el);
     let data = addEl('input',undefined,el);
     data.setAttribute('type', 'hidden');
@@ -767,6 +781,7 @@ function createFilterInput(configItem, frame) {
         changeFunction();
     });
     data.setAttribute('name', configItem.name);
+    if (configItem.readOnly) data.setAttribute('disabled',true);
     return data;
 }
 let moreicons=['icon-more','icon-less'];
@@ -1048,8 +1063,17 @@ function createConfigDefinitions(parent, capabilities, defs,includeXdr) {
             });
             if (!found) showItem=false;
         }
-        
+        let readOnly=false;
+        let mode=capabilities['CFGMODE'+item.name];
+        if (mode == 1) {
+            //hide
+            showItem=false;
+        }
+        if (mode == 2){
+            readOnly=true;
+        }
         if (showItem) {
+            item.readOnly=readOnly;
             currentCategoryPopulated=true;
             let row = addEl('div', 'row', categoryEl);
             let label = item.label || item.name;
@@ -1058,7 +1082,7 @@ function createConfigDefinitions(parent, capabilities, defs,includeXdr) {
             let valueEl = createInput(item, valueFrame);
             if (!valueEl) return;
             valueEl.setAttribute('data-default', item.default);
-            valueEl.addEventListener('change', function (ev) {
+            if (! readOnly) valueEl.addEventListener('change', function (ev) {
                 let el = ev.target;
                 checkChange(el, row, item.name);
             })
@@ -1075,13 +1099,15 @@ function createConfigDefinitions(parent, capabilities, defs,includeXdr) {
             }
             if (item.check) valueEl.setAttribute('data-check', item.check);
             let btContainer = addEl('div', 'buttonContainer', row);
-            let bt = addEl('button', 'defaultButton', btContainer, 'X');
-            bt.setAttribute('data-default', item.default);
-            bt.addEventListener('click', function (ev) {
-                valueEl.value = valueEl.getAttribute('data-default');
-                let changeEvent = new Event('change');
-                valueEl.dispatchEvent(changeEvent);
-            })
+            if (!readOnly) {
+                let bt = addEl('button', 'defaultButton', btContainer, 'X');
+                bt.setAttribute('data-default', item.default);
+                bt.addEventListener('click', function (ev) {
+                    valueEl.value = valueEl.getAttribute('data-default');
+                    let changeEvent = new Event('change');
+                    valueEl.dispatchEvent(changeEvent);
+                })
+            }
             bt = addEl('button', 'infoButton', btContainer, '?');
             bt.addEventListener('click', function (ev) {
                 if (item.description) {

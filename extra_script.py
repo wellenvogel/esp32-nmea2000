@@ -145,20 +145,33 @@ def generateCfg(inFile,outFile,addDirs=[]):
             secret="false";
             if item.get('type') == 'password':
                 secret="true"
-            data+="    #undef __CFGHIDDEN\n"
-            data+="    #ifdef CFGHIDE_%s\n"%(name)
-            data+="      #define __CFGHIDDEN true\n"
+            data+="    #undef __CFGMODE\n"
+            data+="    #ifdef CFGMODE_%s\n"%(name)
+            data+="      #define __CFGMODE CFGMODE_%s\n"%(name)
             data+="    #else\n"
-            data+="      #define __CFGHIDDEN false\n"
+            data+="      #define __CFGMODE GwConfigInterface::NORMAL\n"
             data+="    #endif\n"    
-            data+="    #ifdef CFGDEFAULT_%s\n"%(name)   
-            data+="     new GwConfigInterface(%s,CFGDEFAULT_%s,%s,__CFGHIDDEN)\n"%(name,name,secret)
+            data+="    #ifdef CFGDEFAULT_%s\n"%(name)
+            data+="     new GwConfigInterface(%s,CFGDEFAULT_%s,%s,__CFGMODE)\n"%(name,name,secret)
             data+="    #else\n"
-            data+="     new GwConfigInterface(%s,\"%s\",%s,__CFGHIDDEN)\n"%(name,item.get('default'),secret)
+            data+="     new GwConfigInterface(%s,\"%s\",%s,__CFGMODE)\n"%(name,item.get('default'),secret)
             data+="    #endif\n"
 
         data+='};\n'  
         data+='};\n'
+        data+="#ifdef CFG_MESSAGES\n"
+        for item in config:
+            name=item.get('name')
+            if name is None:
+                continue
+            data+="#ifdef CFGMODE_%s\n"%(name)
+            data+=" __MSG(\"CFGMODE_%s=\" __XSTR(CFGMODE_%s))\n"%(name,name)
+            data+="#endif\n"
+            data+="#ifdef CFGDEFAULT_%s\n"%(name)
+            data+=" __MSG(\"CFGDEFAULT_%s=\" CFGDEFAULT_%s)\n"%(name,name)
+            data+="#endif\n"
+        data+="#endif"
+
     writeFileIfChanged(outFile,data)    
                     
 
@@ -298,6 +311,7 @@ print("#prescript...")
 prebuild(env)
 board="PLATFORM_BOARD_%s"%env["BOARD"].replace("-","_").upper()
 print("Board=#%s#"%board)
+print("BuildFlags=%s"%(" ".join(env["BUILD_FLAGS"])))
 env.Append(
     LINKFLAGS=[ "-u", "custom_app_desc" ],
     CPPDEFINES=[(board,"1")]

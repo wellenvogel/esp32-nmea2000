@@ -30,8 +30,8 @@ class GwConfigHandler: public GwConfigDefinitions{
         int getInt(const String name,int defaultv=0) const;
         GwConfigInterface * getConfigItem(const String name, bool dummy=false) const;
         bool checkPass(String hash);
-        std::vector<String> getHidden() const;
-        int numHidden() const;
+        std::vector<String> getSpecial() const;
+        int numSpecial() const;
         /**
          * change the value of a config item
          * will become a noop after stopChanges has been called 

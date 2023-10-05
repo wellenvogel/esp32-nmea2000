@@ -430,15 +430,20 @@ class CapabilitiesRequest : public GwRequestMessage{
   protected:
     virtual void processRequest(){
       int numCapabilities=userCodeHandler.getCapabilities()->size();
-      int numHidden=config.numHidden();
-      GwJsonDocument json(JSON_OBJECT_SIZE(numCapabilities*3+numHidden*2+8));
+      int numSpecial=config.numSpecial();
+      logger.logDebug(GwLog::LOG,"capabilities user=%d, config=%d",numCapabilities,numSpecial);
+      GwJsonDocument json(JSON_OBJECT_SIZE(numCapabilities*3+numSpecial*2+8));
       for (auto it=userCodeHandler.getCapabilities()->begin();
         it != userCodeHandler.getCapabilities()->end();it++){
           json[it->first]=it->second;
         }
-      std::vector<String> hiddenCfg=config.getHidden();
-      for (auto it=hiddenCfg.begin();it != hiddenCfg.end();it++){
-        json["HIDE"+*it]=true;
+      std::vector<String> specialCfg=config.getSpecial();
+      for (auto it=specialCfg.begin();it != specialCfg.end();it++){
+        GwConfigInterface *cfg=config.getConfigItem(*it);
+        if (cfg){
+          logger.logDebug(GwLog::LOG,"config mode %s=%d",it->c_str(),(int)(cfg->getType()));
+          json["CFGMODE"+*it]=(int)cfg->getType();
+        }
       }
       json["serialmode"]=channels.getMode(SERIAL1_CHANNEL_ID);
       json["serial2mode"]=channels.getMode(SERIAL2_CHANNEL_ID);

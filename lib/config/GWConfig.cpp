@@ -1,3 +1,4 @@
+#define CFG_MESSAGES
 #include "GWConfig.h"
 #include <ArduinoJson.h>
 #include <string.h>
@@ -159,20 +160,20 @@ void GwConfigHandler::toHex(unsigned long v, char *buffer, size_t bsize)
         buffer[2 * i] = 0;
 }
 
-std::vector<String> GwConfigHandler::getHidden() const{
+std::vector<String> GwConfigHandler::getSpecial() const{
     std::vector<String> rt;
-    rt.reserve(numHidden());
+    rt.reserve(numSpecial());
     for (int i=0L;i<getNumConfig();i++){
-        if (configs[i]->isHidden()){
+        if (configs[i]->getType() != GwConfigInterface::NORMAL){
             rt.push_back(configs[i]->getName());
         };
     }
     return rt;
 }
-int GwConfigHandler::numHidden() const{
+int GwConfigHandler::numSpecial() const{
     int rt=0;
     for (int i=0L;i<getNumConfig();i++){
-        if (configs[i]->isHidden()) rt++;
+        if (configs[i]->getType() != GwConfigInterface::NORMAL) rt++;
     }
     return rt;
 }

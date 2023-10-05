@@ -17,7 +17,7 @@
 #define GWSERIAL_TYPE_BI 2
 #define GWSERIAL_TYPE_RX 3
 #define GWSERIAL_TYPE_TX 4
-
+#include <GwConfigItem.h>
 #include <HardwareSerial.h>
 #include "GwUserTasks.h"
 
@@ -148,8 +148,8 @@
 #ifdef M5_GPS_KIT 
   #define GWSERIAL_RX BOARD_LEFT1
   #define GWSERIAL_TYPE GWSERIAL_TYPE_RX
-  #define CFGGDEFAULT_serialBaud "9600"
-  #define CFGHIDE_serialBaud
+  #define CFGDEFAULT_serialBaud "9600"
+  #define CFGMODE_serialBaud GwConfigInterface::READONLY
 #endif
 
 //below we define the final device config based on the above
@@ -179,6 +179,21 @@
     #define GWSERIAL_RX GROOVE_PIN_2
     #define GWSERIAL_TYPE GWSERIAL_TYPE_BI
   #endif
+#endif
+
+//http://docs.m5stack.com/en/unit/gps
+#ifdef M5_GPS_UNIT
+  #ifdef GWSERIAL_TYPE
+    #define GWSERIAL2_RX GROOVE_PIN_2
+    #define GWSERIAL2_TYPE GWSERIAL_TYPE_RX
+    #define CFGDEFAULT_serialBaud "9600"
+    #define CFGMODE_serialBaud GwConfigInterface::READONLY
+  #else
+    #define GWSERIAL_RX GROOVE_PIN_2
+    #define GWSERIAL_TYPE GWSERIAL_TYPE_RX
+    #define CFGDEFAULT_serial2Baud "9600"
+    #define CFGMODE_serial2Baud GwConfigInterface::READONLY
+  #endif 
 #endif
 
 //can kit for M5 Atom
