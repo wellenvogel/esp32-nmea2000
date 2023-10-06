@@ -35,6 +35,10 @@
     width: 10em;
     opacity: 0.6;
     padding: 0;
+    flex-shrink: 0;
+}
+.configui .row .value{
+    padding-left: 0;
 }
 .configui .since {
     display: block;

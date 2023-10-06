@@ -19,6 +19,10 @@
         <span class="value" id="gitSha">---</span>
     </div>
     <div class="row">
+        <span class="label" >Version</span>
+        <span class="value" id="buildVersion"></span>
+    </div>
+    <div class="row">
         <button id="downloadConfig">SaveCfg</button>
         <button id="uploadConfig">LoadCfg</button>
     </div>
@@ -27,11 +31,11 @@
     </div>
     <div class="row">
         <span class="label">Board type</span>
-        <input type="text" id="environment" disabled/>
+        <div class="value" id="environment" ></div>
     </div>
     <div class="row">
         <span class="label">Build Flags</span>
-        <input type="text" id="buildflags" disabled>
+        <div class="value" id="buildflags"></div>
     </div>
     <div class="row hidden error">
         <span class="label">Error</span>

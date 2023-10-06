@@ -50,7 +50,8 @@ const fillValues=(values,items)=>{
     items.forEach((it)=>{
         let e=document.getElementById(it);
         if (e){
-            values[it]=e.value; //TODO: type of el
+            if (e.tagName == 'INPUT') values[it]=e.value; 
+            if (e.tagName == 'DIV' || e.tagName == 'SPAN') values [it]=e.textContent;
         }
     })
 };

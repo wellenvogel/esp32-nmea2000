@@ -51,6 +51,7 @@ class PipelineInfo{
     let displayMode='last';
     let delayedSearch=undefined;
     let gitSha=undefined;
+    let buildVersion=undefined;
     const modeStrings={
         last: 'Last Build',
         existing: 'Existing Build',
@@ -73,15 +74,20 @@ class PipelineInfo{
         setVisible('download',currentPipeline.valid() && currentPipeline.downloadUrl!==undefined,true);
         setVisible('status_url',currentPipeline.valid() && currentPipeline.status_url!==undefined,true);
         setVisible('error',currentPipeline.error!==undefined,true);
-        let e=document.getElementById('configError');
-        if (e.textContent) {
+        let values={};
+        fillValues(values,['configError','environment']);
+        if (values.textContent) {
+            enableEl('start',false);
+            return;
+        }
+        if (!values.environment){
             enableEl('start',false);
             return;
         }
         if (displayMode != 'existing'){
             if (currentPipeline.valid()){
                 //check pipeline state
-                if (['error','success','canceled'].indexOf(currentPipeline.status) >= 0){
+                if (['error','success','canceled','failed'].indexOf(currentPipeline.status) >= 0){
                     enableEl('start',true);
                     return;       
                 }
@@ -91,8 +97,9 @@ class PipelineInfo{
             enableEl('start',true);
             return;
         }
-        //display node existing
-        enableEl('start',!currentPipeline.valid());
+        //display mode existing
+        //allow start if either no pipeline or not running and status != success
+        enableEl('start',!currentPipeline.valid() || (!currentPipeline.isRunning() && currentPipeline.status != "success"));
     }
     const isRunning=()=>{
         return currentPipeline.isRunning();
@@ -154,10 +161,13 @@ class PipelineInfo{
         updateStatus();
         if (gitSha !== undefined) param.tag=gitSha;
         param.config=JSON.stringify(config);
+        if (buildVersion !== undefined){
+            param.suffix="-"+buildVersion;
+        }
         fetchJson(API,Object.assign({
             api:'start'},param))
         .then((json)=>{
-            let status=json.status || 'error';
+            let status=json.status || json.state|| 'error';
             if (status === 'error'){
                 currentPipeline.update({status:status,error:json.error})
                 updateStatus();
@@ -367,8 +377,10 @@ class PipelineInfo{
                 }
             }
         }
-        document.getElementById('environment').value=environment;
-        document.getElementById('buildflags').value=flags;
+        if (buildVersion !== undefined){
+            flags+=" -DGWRELEASEVERSION="+buildVersion;
+        }
+        setValues({environment:environment,buildflags:flags});
         //check resources
         for (let k in currentResources){
             let resList=currentResources[k];
@@ -483,6 +495,26 @@ class PipelineInfo{
         }
         else{
             setValue('gitSha',gitSha);
+        }
+        let bot=document.getElementById('branchOrTag');
+        let botv=document.getElementById('branchOrTagValue');
+        if (bot  && botv){
+            let type=bot.textContent;
+            let val=botv.textContent;
+            if (type && val){
+                if (type != 'release' && type != 'tag'){
+                    val=type+val;
+                }
+                val=val.replace(/[:.]/g,'_');
+                val=val.replace(/[^a-zA-Z0-9_]*/g,'');
+                if (val.length > 32){
+                    val=val.substring(val.length-32)
+                }
+                if (val.length > 0){
+                    buildVersion=val;
+                    setValue('buildVersion',buildVersion);
+                }
+            }
         }
         if (gitSha !== undefined){
             let url=buildUrl(GITAPI,Object.assign({},gitParam,{sha:gitSha,proxy:'webinstall/build.yaml'}));
