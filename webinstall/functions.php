@@ -5,7 +5,7 @@ function openDb(){
     if (! defined('database::SERVER')) return null;
     try{
         $db=new mysqli(database::SERVER, database::USER, database::PASS,database::DB);
-        $db->query("SET CHARACTER SET 'utf8'");
+        #$db->query("SET CHARACTER SET 'utf8'");
         return $db;
     }catch (Exception $e){
         error_log("openDB error $e");
@@ -193,7 +193,7 @@ function proxy_impl($url, $timeout=30,$headers=null,$num = 5)
                 }
                 #echo ("???code=$code\n");
                 if ($code == 301 || $code == 302) {
-                    if(preg_match('/Location:(.*?)\n/', $header, $matches)){
+                    if(preg_match('/[Ll]ocation:(.*?)\n/', $header, $matches)){
                         $nexturl = trim(array_pop($matches));
                         #echo("???nexturl=$nexturl\n");
                     }
