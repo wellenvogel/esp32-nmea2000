@@ -129,6 +129,23 @@
 .configui .selector.level4 {
     margin-left: 1.5em;
 }
+.configui .selector.tframe {
+    padding-bottom: 0;
+    border-bottom: unset;
+}
+.configui .selector.tdropdown {
+    padding-bottom: unset;
+    border-bottom: unset;
+}
+.configui .selector.tdropdown {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+.configui .title.tdropdown {
+    width: 10em;
+    font-weight: normal !important;
+}
 .configui form#upload {
     width: 0;
     height: 0;

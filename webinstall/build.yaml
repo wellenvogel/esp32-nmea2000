@@ -80,11 +80,33 @@ types:
       - label: 'Serial'
         children:
         - *m5grooveserial
+  - &gpiopin
+    type: dropdown
+    resource: "gpio:"
+    values:
+      - {label: unset,value:}
+      - 0
+      - 1
+      - 2
+  
+  - &serial1
+    type: frame
+    label: 'Serial 1'
+    key: serial1
+    children:
+      - <<: *gpiopin
+        label: RX
+        target: "define:GWSERIAL_RX"
+      - <<: *gpiopin
+        label: TX
+        target: "define:GWSERIAL_TX"
+
 resources:
   default: &esp32default
     serial: 2
     can: 1
-    i2c: 1 
+    i2c: 1
+    gpio: 1 
 
 config:
   children:
@@ -109,3 +131,9 @@ config:
           children:
             - *m5base    
             - *m5groove
+        - value: nodemcu-generic
+          label: nodemcu
+          description: "Node mcu"
+          resource: *esp32default
+          children:
+            - *serial1

@@ -22,7 +22,7 @@ const addEl = (type, clazz, parent, text) => {
             el.classList.add(ce);
         });
     }
-    if (text) el.textContent = text;
+    if (text !== undefined) el.textContent = text;
     if (parent) parent.appendChild(el);
     return el;
 }
