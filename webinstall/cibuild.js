@@ -1,6 +1,41 @@
 import { addEl, setButtons,fillValues, setValue, buildUrl, fetchJson, setVisible, enableEl, setValues, getParam, fillSelect, forEachEl, readFile } from "./helper.js";
 import {load as yamlLoad} from "https://cdn.skypack.dev/js-yaml@4.1.0";
 import fileDownload from "https://cdn.skypack.dev/js-file-download@0.4.12"
+class PipelineInfo{
+    constructor(id){
+        this.STFIELDS=['status','error','status_url'];
+        this.reset(id);
+    }
+    update(state){
+        if (state.pipeline_id !== undefined && state.pipeline_id !== this.id){
+            return false;
+        }
+        this.STFIELDS.forEach((i)=>{
+            let v=state[i];
+            if (v !== undefined)this[i]=v;
+        });
+    }
+    reset(id,opt_state){
+        this.id=id;
+        this.STFIELDS.forEach((i)=>this[i]=undefined);
+        this.downloadUrl=undefined;
+        if (opt_state) {
+            this.update(opt_state);
+        }
+        else{
+            if (id !== undefined) this.status='fetching';
+        }
+    }
+    valid(){
+        return this.id !== undefined;
+    }
+    isRunning(){
+        if (! this.valid()) return false;
+        if (this.status === undefined) return false;
+        return ['error','success','canceled'].indexOf(this.status) < 0;
+    }
+
+}
 (function(){
     const STATUS_INTERVAL=2000;
     const CURRENT_PIPELINE='pipeline';
@@ -8,16 +43,13 @@ import fileDownload from "https://cdn.skypack.dev/js-file-download@0.4.12"
     const GITAPI="install.php";
     const GITUSER="wellenvogel";
     const GITREPO="esp32-nmea2000";
-    let currentPipeline=undefined;
-    let downloadUrl=undefined;
+    let currentPipeline=new PipelineInfo();
     let timer=undefined;
     let structure=undefined;
     let config={}; //values as read and stored
     let configStruct={}; //complete struct merged of config and struct
     let displayMode='last';
     let delayedSearch=undefined;
-    let running=false;
-    let pipelineState=undefined;
     let gitSha=undefined;
     const modeStrings={
         last: 'Last Build',
@@ -34,37 +66,22 @@ import fileDownload from "https://cdn.skypack.dev/js-file-download@0.4.12"
         setValue('resultTitle',ms);
         return mode !== old;
     }
-    const showError=(text)=>{
-        if (text === undefined){
-            setVisible('buildError',false,true);
-            return;
-        }
-        setValue('buildError',text);
-        setVisible('buildError',true,true);
-    }
-    const hideResults = () => {
-        downloadUrl = undefined;
-        currentPipeline = undefined;
-        setValue('pipeline', currentPipeline);
-        setValue('status','');
-        showError();
-        setVisible('download', false, true);
-        setVisible('status_url', false, true);
-    }
-    const updateStart=()=>{
-        if (running) {
-            enableEl('start',false);
-            return;
-        }
+    const updateStatus=()=>{
+        setValues(currentPipeline,{
+            id: 'pipeline'
+        });
+        setVisible('download',currentPipeline.valid() && currentPipeline.downloadUrl!==undefined,true);
+        setVisible('status_url',currentPipeline.valid() && currentPipeline.status_url!==undefined,true);
+        setVisible('error',currentPipeline.error!==undefined,true);
         let e=document.getElementById('configError');
         if (e.textContent) {
             enableEl('start',false);
             return;
         }
         if (displayMode != 'existing'){
-            if (currentPipeline !== undefined){
+            if (currentPipeline.valid()){
                 //check pipeline state
-                if (['error','success'].indexOf(pipelineState) >= 0){
+                if (['error','success','canceled'].indexOf(currentPipeline.status) >= 0){
                     enableEl('start',true);
                     return;       
                 }
@@ -72,71 +89,51 @@ import fileDownload from "https://cdn.skypack.dev/js-file-download@0.4.12"
                 return;    
             }
             enableEl('start',true);
+            return;
         }
-        //display mnode existing
-        enableEl('start',currentPipeline === undefined);
-    }
-    const setRunning=(active)=>{
-        running=active;
-        if (active){
-            showError();
-            downloadUrl=undefined;
-            setVisible('download', false, true);
-            setVisible('status_url', false, true);
-        }
-        updateStart();
+        //display node existing
+        enableEl('start',!currentPipeline.valid());
     }
     const isRunning=()=>{
-        return running;
+        return currentPipeline.isRunning();
     }
     const fetchStatus=(initial)=>{
-        if (currentPipeline === undefined) {
-            setVisible('status_url',false,true);
-            setVisible('error',false);
-            setVisible('download',false,true);
-            setValue('status','---');
-            updateStart();
+        if (! currentPipeline.valid()){
+            updateStatus();
             return;
-        };
-        let queryPipeline=currentPipeline;
-        fetchJson(API,{api:'status',pipeline:currentPipeline})
+        }
+        let queryPipeline=currentPipeline.id;
+        fetchJson(API,{api:'status',pipeline:currentPipeline.id})
                 .then((st)=>{
-                    if (queryPipeline !== currentPipeline) return;
+                    if (queryPipeline !== currentPipeline.id) return;
+                    if (currentPipeline.id !== st.pipeline_id) return;
                     if (st.status === undefined) st.status=st.state;
-                    pipelineState=st.status;
-                    setValues(st);
-                    setVisible('status_url',st.status_url !== undefined,true);
-                    setVisible('error',st.error !== undefined,true);
-                    if (st.status === 'error' || st.status === 'errored'){
-                        setRunning(false);
-                        setVisible('download',false,true);
-                        updateStart();
+                    currentPipeline.update(st);
+                    updateStatus();
+                    if (st.status === 'error' || st.status === 'errored' || st.status === 'canceled'){
                         return;
                     }
                     if (st.status === 'success'){
-                        setRunning(false);
-                        updateStart();
-                        fetchJson(API,{api:'artifacts',pipeline:currentPipeline})
+                        fetchJson(API,{api:'artifacts',pipeline:currentPipeline.id})
                         .then((ar)=>{
                             if (! ar.items || ar.items.length < 1){
                                 throw new Error("no download link");
                             }
-                            downloadUrl=buildUrl(API,{
-                                download: currentPipeline
+                            currentPipeline.downloadUrl=buildUrl(API,{
+                                download: currentPipeline.id
                             });
-                            setVisible('download',true,true);
+                            updateStatus();
 
                         })
                         .catch((err)=>{
-                            showError("Unable to get build result: "+err);
-                            setVisible('download',false,true);
+                            currentPipeline.update({
+                                status:'error',
+                                error:"Unable to get build result: "+err
+                            });
+                            updateStatus();
                         });
                         return;
                     }
-                    else{
-                        setVisible('download',false,true);
-                    }
-                    updateStart();
                     timer=window.setTimeout(fetchStatus,STATUS_INTERVAL)
                 })
                 .catch((e)=>{
@@ -144,51 +141,54 @@ import fileDownload from "https://cdn.skypack.dev/js-file-download@0.4.12"
                 })
     }
     const setCurrentPipeline=(pipeline,doStore)=>{
-        currentPipeline=pipeline;
-        setValue('pipeline',currentPipeline);
+        currentPipeline.reset(pipeline);
         if (doStore) window.localStorage.setItem(CURRENT_PIPELINE,pipeline);
     };
     const startBuild=()=>{
         let param={};
-        currentPipeline=undefined;
+        currentPipeline.reset(undefined,{status:'requested'});
         if (timer) window.clearTimeout(timer);
         timer=undefined;
         fillValues(param,['environment','buildflags']);
-        setValue('status','requested');
-        setValue('pipeline','');
-        setRunning(true);
-        updateStart();
+        setDisplayMode('current');
+        updateStatus();
         if (gitSha !== undefined) param.tag=gitSha;
         param.config=JSON.stringify(config);
         fetchJson(API,Object.assign({
             api:'start'},param))
         .then((json)=>{
-            if (json.status === 'error'){
+            let status=json.status || 'error';
+            if (status === 'error'){
+                currentPipeline.update({status:status,error:json.error})
+                updateStatus();
                 throw new Error("unable to create job "+(json.error||''));
             }
-            if (!json.id) throw new Error("unable to create job, no id");
+            if (!json.id) {
+                let error="unable to create job, no id"
+                currentPipeline.update({status:'error',error:error});
+                updateStatus();
+                throw new Error(error);
+            }
             setCurrentPipeline(json.id,true);
-            setValue('status',json.status);
-            setDisplayMode('current');
+            updateStatus();
             timer=window.setTimeout(fetchStatus,STATUS_INTERVAL);
         })
         .catch((err)=>{
-            setRunning(false);
-            setValue('status','error');
-            showError(err);
+            currentPipeline.update({status:'error',error:err});
+            updateStatus();
         });
     }
     const runDownload=()=>{
-        if (! downloadUrl) return;
+        if (! currentPipeline.downloadUrl) return;
         let df=document.getElementById('dlframe');
         if (df){
             df.setAttribute('src',null);
-            df.setAttribute('src',downloadUrl);
+            df.setAttribute('src',currentPipeline.downloadUrl);
         }
     }
     const webInstall=()=>{
-        if (! downloadUrl) return;
-        let url=buildUrl("install.html",{custom:downloadUrl});
+        if (! currentPipeline.downloadUrl) return;
+        let url=buildUrl("install.html",{custom:currentPipeline.downloadUrl});
         window.location.href=url;
     }
     const uploadConfig=()=>{
@@ -387,7 +387,7 @@ import fileDownload from "https://cdn.skypack.dev/js-file-download@0.4.12"
             setVisible('configError',false,true);
         }
         if (! initial) findPipeline();
-        updateStart();
+        updateStatus();
     }
     let findIdx=0;
     const findPipeline=()=>{
@@ -408,23 +408,28 @@ import fileDownload from "https://cdn.skypack.dev/js-file-download@0.4.12"
             .then((res)=>{
                 if (queryIdx != findIdx) return;
                 setCurrentPipeline(res.pipeline);
-                updateStart();
+                if (res.pipeline) currentPipeline.status="found";
                 setDisplayMode('existing');
+                updateStatus();
                 fetchStatus(true); 
             })
-            .catch((e)=>console.log("findPipeline error ",e));
+            .catch((e)=>{
+                console.log("findPipeline error ",e)
+                if (displayMode == 'existing'){
+                    setCurrentPipeline();
+                    updateStatus();
+                }
+            });
 
     }
     window.onload=async ()=>{ 
         setButtons(btConfig);
-        forEachEl('#environment',(el)=>el.addEventListener('change',hideResults));
-        forEachEl('#buildflags',(el)=>el.addEventListener('change',hideResults));
         let pipeline=window.localStorage.getItem(CURRENT_PIPELINE);
         setDisplayMode('last');
         if (pipeline){
             setCurrentPipeline(pipeline);
+            updateStatus();
             fetchStatus(true);
-            setRunning(true);
         }
         let gitParam={user:GITUSER,repo:GITREPO};
         let branch=getParam('branch');
@@ -491,7 +496,7 @@ import fileDownload from "https://cdn.skypack.dev/js-file-download@0.4.12"
             structure=await loadConfig("build.yaml");
         }
         buildSelectors(ROOT_PATH,structure.config.children,true);
-        if (! running) findPipeline();
-        updateStart();
+        if (! isRunning()) findPipeline();
+        updateStatus();
     }
 })();
