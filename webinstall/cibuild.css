@@ -113,10 +113,7 @@
     margin-right: 0.5em;
     z-index: unset;
 }
-.configui .selector {
-    padding-bottom: 0.5em;
-    border-bottom: 1px solid grey;
-}
+
 .configui .selector .title {
     font-weight: bold;
 }
@@ -133,10 +130,15 @@
     padding-bottom: 0;
     border-bottom: unset;
 }
-.configui .selector.tdropdown {
-    padding-bottom: unset;
-    border-bottom: unset;
+.configui .childFrame {
+    border-top: 1px solid grey;
+    margin-top: 0.3em;
 }
+.configui .tframe>.childFrame {
+    border-top: unset;
+    margin-top: 0.3em;
+}
+
 .configui .selector.tdropdown {
     display: flex;
     flex-direction: row;

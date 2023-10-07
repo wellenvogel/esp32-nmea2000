@@ -243,16 +243,44 @@ class PipelineInfo{
         let parsed=yamlLoad(config);
         return parsed;
     }
-    const getVal=(cfg,keys)=>{
-        for (let i in keys){
-            let k=cfg[keys[i]];
-            if (k !== undefined) return k;
-        }
-    }
-    const KEY_NAMES=['key','value','label'];
-    const LABEL_NAMES=['label','value'];
+    
     const PATH_ATTR='data-path';
     const SEPARATOR=':';
+    const expandObject=(obj,parent)=>{
+        if (typeof(obj) !== 'object'){
+            obj={value:obj}
+        }
+        let rt=Object.assign({},obj);
+        if (rt.value === undefined && rt.key !== undefined) rt.value=rt.key;
+        if (rt.key === undefined) rt.key=rt.value;
+        if (rt.value === null) rt.value=undefined;
+        if (rt.label === undefined){
+            if (rt.value !== undefined) rt.label=rt.value;
+            else rt.label=rt.key;
+        }
+        if (rt.resource === undefined && typeof(parent) === 'object'){
+            if (parent.resource !== undefined){
+                if (parent.resource.match(/:$/)){
+                    if(rt.value !== undefined && rt.value !== null){
+                        rt.resource=parent.resource+rt.value;
+                    }
+                }
+                else{
+                    rt.resource=parent.resource;
+                }
+            }    
+        }
+        if (rt.target === undefined && typeof(parent) === 'object' && parent.target !== undefined){
+            rt.target=parent.target;
+        }
+        return rt;
+    }
+    const expandList=(lst,parent)=>{
+        let rt=[];
+        if (! lst) return rt;
+        lst.forEach((e)=>rt.push(expandObject(e,parent)));
+        return rt;
+    }
     /**
      * 
      * @param {build a selector} parent 
@@ -262,27 +290,28 @@ class PipelineInfo{
      * @param {*} callback will be called with: children,key,value,initial
      * @returns 
      */
-    const buildSelector=(parent,config,name,current,callback)=>{
+    const buildSelector=(parent,cfgBase,name,current,callback)=>{
+        let config=expandObject(cfgBase);
         let rep=new RegExp("[^"+SEPARATOR+"]*","g");
         let level=name.replace(rep,'');
         let frame=addEl('div','selector level'+level.length+' t'+config.type,parent);
         frame.setAttribute(PATH_ATTR,name);
         let title=addEl('div','title t'+config.type,frame,config.label);
-        if (config.type === 'frame'){
-            callback(config.children,true,true,undefined,true);
+        let initialConfig=undefined
+        if (config.type === 'frame' || config.type === undefined){
+            initialConfig=config;
         }
+        let expandedValues=expandList(config.values,config);
         if (config.type === 'select') {
-            if (!config.values) return;
-            config.values.forEach((v) => {
+            for (let idx=0;idx<expandedValues.length;idx++){
+                let v=expandedValues[idx];
+                if (v.key === undefined) continue;
                 let ef = addEl('div', 'radioFrame', frame);
-                addEl('div', 'label', ef, getVal(v, LABEL_NAMES));
+                addEl('div', 'label', ef, v.label);
                 let re = addEl('input', 'radioCi', ef);
-                let val = v.value;
-                let key=getVal(v,KEY_NAMES);
-                if (val === undefined) val=key;
                 re.setAttribute('type', 'radio');
                 re.setAttribute('name', name);
-                re.addEventListener('change', (ev) => callback(v.children,key,val,v.resource,false));
+                re.addEventListener('change', (ev) => callback(v,false));
                 if (v.description){ 
                     if(v.url) {
                         let lnk = addEl('a', 'radioDescription', ef, v.description);
@@ -293,53 +322,35 @@ class PipelineInfo{
                         let de=addEl('span','radioDescription',ef,v.description);
                     }
                 }
-                if (key == current) {
+                if (v.key == current) {
                     re.setAttribute('checked','checked');
-                    callback(v.children,key,val,v.resource,true);
+                    initialConfig=v;
                 }
-            });
+            };
         }
         if (config.type === 'dropdown'){
-            if (!config.values) return;
-            const valForIdx=(idx)=>{
-                let v=config.values[idx];
-                if (typeof(v) !== 'object'){
-                    v={label:v,value:v};
-                }
-                if (v.value === null) v.value=undefined;
-                if (v.key === null) v.key=undefined;
-                return v;
-            };
-            const resourceForVal=(v)=>{
-                if (v === undefined) return undefined;
-                let key=getVal(v,KEY_NAMES);
-                if (key === undefined) return key;
-                let resource=v.resource;
-                if (! resource && config.resource && config.resource.match(/:$/)){
-                    resource=config.resource+key;
-                }
-                return resource;
-            };
             let sel=addEl('select','t'+config.type,frame);
-            for (let idx=0;idx<config.values.length;idx++){
-                let v=valForIdx(idx);
+            for (let idx=0;idx<expandedValues.length;idx++){
+                let v=expandedValues[idx];
+                if (v.key === undefined) continue;
                 let opt=addEl('option','',sel,v.label);
-                let key=getVal(v,KEY_NAMES);
-                if (key === null) key=undefined;
                 opt.setAttribute('value',idx);
-                if (key == current){
+                if (v.key == current){
                     opt.setAttribute('selected',true);
-                    callback(undefined,key,key,resourceForVal(v),true);
+                    initialConfig=v;
                 }
             };
             sel.addEventListener('change',(ev)=>{
-                let resource;
-                let v=valForIdx(ev.target.value);
+                let v=expandedValues[ev.target.value];
                 if (! v) return;
-                callback(undefined,getVal(v,KEY_NAMES), v.value,resourceForVal(v),false);
+                callback(v,false);
             });
         }
-        return frame;
+        let childFrame=addEl('div','childFrame',frame);
+        if (initialConfig !== undefined){
+            callback(initialConfig,true,childFrame);
+        }
+        return childFrame;
     }
     const removeSelectors=(prefix,removeValues)=>{
         forEachEl('.selectorFrame',(el)=>{
@@ -363,21 +374,25 @@ class PipelineInfo{
             });
         }
     }
-    const buildSelectors=(prefix,configList,initial)=>{
+    const buildSelectors=(prefix,configList,initial,parent)=>{
         removeSelectors(prefix,!initial);
+        if (!parent) parent=document.getElementById("selectors");;
         if (!configList) return;
-        let parent=document.getElementById("selectors");
-        if (!parent) return;
         let frame=addEl('div','selectorFrame',parent);
         frame.setAttribute(PATH_ATTR,prefix);
-        configList.forEach((cfg)=>{
-            let key=getVal(cfg,KEY_NAMES);
-            let name=prefix?(prefix+SEPARATOR+key):key;
+        let expandedList=expandList(configList);
+        expandedList.forEach((cfg)=>{
+            if (cfg.key === undefined){
+                console.log("config without key",cfg);
+                return;
+            }
+            let name=prefix?(prefix+SEPARATOR+cfg.key):cfg.key;
             let current=config[name];
-            buildSelector(frame,cfg,name,current,(children,key,value,resource,initial)=>{
-                buildSelectors(name,children,initial);
-                configStruct[name]={cfg:cfg, key: key, value:value,resource:resource};
-                buildValues(initial);
+            let childFrame=buildSelector(frame,cfg,name,current,
+                (child,initial,opt_frame)=>{
+                    buildSelectors(name,child.children,initial,opt_frame||childFrame);
+                    configStruct[name]=child;
+                    buildValues(initial);
             })
         })
     }
@@ -396,10 +411,9 @@ class PipelineInfo{
             //round2: really collect values
             for (let k in configStruct) {
                 let struct = configStruct[k];
-                if (!struct || !struct.cfg || struct.value === undefined) continue;
                 if (round > 0) config[k] = struct.key;
-                if (struct.cfg.target !== undefined) {
-                    if (struct.cfg.target === 'environment') {
+                if (struct.target !== undefined) {
+                    if (struct.target === 'environment') {
                         if (round > 0) environment = struct.value;
                         else allowedResources=struct.resource;
                         continue;
@@ -413,13 +427,13 @@ class PipelineInfo{
                         }
                         resList.push(struct);
                     }
-                    if (struct.cfg.target === 'define') {
+                    if (struct.target === 'define') {
                         flags += " -D" + struct.value;
                         continue;
                     }
                     const DEFPRFX = "define:";
-                    if (struct.cfg.target.indexOf(DEFPRFX) == 0) {
-                        let def = struct.cfg.target.substring(DEFPRFX.length);
+                    if (struct.target.indexOf(DEFPRFX) == 0) {
+                        let def = struct.target.substring(DEFPRFX.length);
                         flags += " -D" + def + "=" + struct.value;
                         continue;
                     }

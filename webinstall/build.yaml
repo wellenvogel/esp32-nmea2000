@@ -1,3 +1,40 @@
+# structure
+# below config we define the structure to be displayed
+# basically there are 2 object types:
+#   children - a list of cfg objects that define the inputs to be shown
+#              if the parent is selected
+#              parameters:
+#                 key: unique key - defines the name(part) in the cfg
+#                      if not set a potential "value" is taken
+#                      null (empty) is a valid key
+#                 label: title to be shown, if unset key will be used
+#                 resorce: a resource that is used by the value children
+#                          simple string use as is
+#                          string + ':' - add value to the resource
+#                 type: if empty or 'frame' only the children are considered
+#                 children: only for type empty or 'frame' - list of child objects
+#                 target: how the selected child value should be stored:
+#                     environment - set the environment to the child value
+#                     define      - add -D<childValue> to the flags
+#                     define:name - add -D<name>=<childValue> to the flags
+#  values    - a list of value objects for a particular config
+#              if the object is just a string it is converted to an object
+#              with value being set to the string
+#              parameters:
+#                 key: unique key, defines the name(part) and the value store in cfg
+#                      for the parent
+#                      if not set, value is used
+#                      null (empty) is a valid key
+#                 value: the value (mandatory)
+#                      if null the value will be set to undefined and ignored
+#                 label: text to be shown
+#                        if not set value will be used
+#                 description,url
+#                 resource: for parent-target environment:
+#                           an object with allowed resource counts
+#                           for other values: the resource to be counted
+#
+#
 types:
   - &m5base
       type: select
@@ -71,13 +108,13 @@ types:
     key: m5groove
     label: 'M5 groove type'
     values:
-      - label: 'CAN'
+      - key: 'CAN'
         children:
         - *m5groovecan 
-      - label: 'I2C'
+      - key: 'I2C'
         children:
         - *m5groovei2c
-      - label: 'Serial'
+      - key: 'Serial'
         children:
         - *m5grooveserial
   - &gpiopin
@@ -95,10 +132,10 @@ types:
     key: serial1
     children:
       - <<: *gpiopin
-        label: RX
+        key: RX
         target: "define:GWSERIAL_RX"
       - <<: *gpiopin
-        label: TX
+        key: TX
         target: "define:GWSERIAL_TX"
 
 resources:
