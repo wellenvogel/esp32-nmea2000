@@ -566,8 +566,16 @@ class PipelineInfo{
             let type=bot.textContent;
             let val=botv.textContent;
             if (type && val){
-                if (type != 'release' && type != 'tag'){
+                if (type != 'release' && type != 'tag' && type != 'branch'){
                     val=type+val;
+                }
+                if (type == 'branch'){
+                    let now=new Date();
+                    let m=now.getMonth()+1;
+                    m=((m<10)?"0":"")+m;
+                    let d=now.getDay();
+                    d=((d<10)?"0":"")+d;
+                    val=val+now.getFullYear()+m+d;
                 }
                 val=val.replace(/[:.]/g,'_');
                 val=val.replace(/[^a-zA-Z0-9_]*/g,'');
