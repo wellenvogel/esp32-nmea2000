@@ -453,8 +453,8 @@ class PipelineInfo{
             for (let k in configStruct) {
                 let struct = configStruct[k];
                 if (round > 0) config[k] = struct.key;
-                if (struct.target !== undefined) {
-                    if (struct.target === 'environment') {
+                if (struct.target !== undefined && struct.value !== undefined) {
+                    if (struct.target === 'environment' ) {
                         if (round > 0) environment = struct.value;
                         else allowedResources=struct.resource;
                         continue;
