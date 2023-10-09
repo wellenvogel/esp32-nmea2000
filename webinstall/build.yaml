@@ -146,9 +146,11 @@ types:
                 - <<: *gpiopin
                   key: RX
                   target: "define:GWSERIAL_RX"
+                  mandatory: true
                 - <<: *gpiopin
                   key: TX
                   target: "define:GWSERIAL_TX"
+                  mandatory: true
             - key: bi
               value: 2
               label: "BiDir" 
@@ -157,9 +159,11 @@ types:
                 - <<: *gpiopin
                   key: RX
                   target: "define:GWSERIAL_RX"
+                  mandatory: true
                 - <<: *gpiopin
                   key: TX
                   target: "define:GWSERIAL_TX"
+                  mandatory: true
             - key: rx
               value: 3
               label: "RX"    
@@ -168,6 +172,7 @@ types:
                 - <<: *gpiopin
                   key: RX
                   target: "define:GWSERIAL_RX"
+                  mandatory: true
             - key: tx
               value: 1
               label: "TX"
@@ -176,6 +181,7 @@ types:
                 - <<: *gpiopin
                   key: TX
                   target: "define:GWSERIAL_TX"      
+                  mandatory: true
 resources:
   default: &esp32default
     serial: 2

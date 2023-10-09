@@ -270,8 +270,11 @@ class PipelineInfo{
                 }
             }    
         }
-        if (rt.target === undefined && typeof(parent) === 'object' && parent.target !== undefined){
+        if (rt.target === undefined && typeof(parent) === 'object'){
             rt.target=parent.target;
+        }
+        if (rt.mandatory === undefined && typeof(parent) === 'object'){
+            rt.mandatory=parent.mandatory;
         }
         return rt;
     }
@@ -453,7 +456,13 @@ class PipelineInfo{
             for (let k in configStruct) {
                 let struct = configStruct[k];
                 if (round > 0) config[k] = struct.key;
-                if (struct.target !== undefined && struct.value !== undefined) {
+                if (struct.target !== undefined ) {
+                    if (struct.value === undefined){
+                        if (struct.mandatory && round > 0){
+                            errors+=" missing value for "+k+"\n";
+                        }
+                        continue;
+                    }
                     if (struct.target === 'environment' ) {
                         if (round > 0) environment = struct.value;
                         else allowedResources=struct.resource;
