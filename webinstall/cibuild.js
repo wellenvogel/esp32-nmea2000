@@ -296,7 +296,8 @@ class PipelineInfo{
         let level=name.replace(rep,'');
         let frame=addEl('div','selector level'+level.length+' t'+config.type,parent);
         frame.setAttribute(PATH_ATTR,name);
-        let title=addEl('div','title t'+config.type,frame,config.label);
+        let inputFrame=addEl('div','inputFrame',frame);
+        let title=addEl('div','title t'+config.type,inputFrame,config.label);
         let initialConfig=undefined
         if (config.type === 'frame' || config.type === undefined){
             initialConfig=config;
@@ -306,7 +307,7 @@ class PipelineInfo{
             for (let idx=0;idx<expandedValues.length;idx++){
                 let v=expandedValues[idx];
                 if (v.key === undefined) continue;
-                let ef = addEl('div', 'radioFrame', frame);
+                let ef = addEl('div', 'radioFrame', inputFrame);
                 addEl('div', 'label', ef, v.label);
                 let re = addEl('input', 'radioCi', ef);
                 re.setAttribute('type', 'radio');
@@ -328,8 +329,8 @@ class PipelineInfo{
                 }
             };
         }
-        if (config.type === 'dropdown'){
-            let sel=addEl('select','t'+config.type,frame);
+        if (expandedValues.length > 0 &&  config.type === 'dropdown'){
+            let sel=addEl('select','t'+config.type,inputFrame);
             for (let idx=0;idx<expandedValues.length;idx++){
                 let v=expandedValues[idx];
                 if (v.key === undefined) continue;
@@ -345,6 +346,39 @@ class PipelineInfo{
                 if (! v) return;
                 callback(v,false);
             });
+        }
+        if (expandedValues.length > 0 && config.type === 'checkbox'){
+            let act=undefined;
+            let inact=undefined;
+            expandedValues.forEach((ev)=>{
+                if (ev.key === true || ev.key === undefined){
+                    act=ev;
+                    if (act.key === undefined) act.key=true;
+                    return;
+                }
+                inact=ev;
+            });
+            if (act !== undefined){
+                if (inact === undefined) inact={key:false};
+                let cb=addEl('input','t'+config.type,inputFrame);
+                cb.setAttribute('type','checkbox');
+                if (current) {
+                    cb.setAttribute('checked',true);
+                    initialConfig=act;
+                }
+                else{
+                    initialConfig=inact;
+                }
+                cb.addEventListener('change',(ev)=>{
+                    if (ev.target.checked){
+                        callback(act,false);
+                    }
+                    else
+                    {
+                        callback(inact,false);
+                    }
+                });
+            }
         }
         let childFrame=addEl('div','childFrame',frame);
         if (initialConfig !== undefined){

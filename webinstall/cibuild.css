@@ -49,6 +49,8 @@
     height: 1.5em;
     opacity: 1;
     z-index: unset;
+    appearance: auto;
+    float:none;
 }
 
 .configui .buttons {
@@ -139,15 +141,18 @@
     margin-top: 0.3em;
 }
 
-.configui .selector.tdropdown {
+.configui .tcheckbox .inputFrame, 
+.configui .tdropdown .inputFrame {
     display: flex;
     flex-direction: row;
     align-items: center;
 }
-.configui .title.tdropdown {
+.configui .title.tdropdown,
+.configui .title.tcheckbox {
     width: 10em;
     font-weight: normal !important;
 }
+
 .configui form#upload {
     width: 0;
     height: 0;

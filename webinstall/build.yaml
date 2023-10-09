@@ -127,16 +127,19 @@ types:
       - 2
   
   - &serial1
-    type: frame
+    type: checkbox
     label: 'Serial 1'
     key: serial1
-    children:
-      - <<: *gpiopin
-        key: RX
-        target: "define:GWSERIAL_RX"
-      - <<: *gpiopin
-        key: TX
-        target: "define:GWSERIAL_TX"
+    values:
+      - type: frame
+        key: true
+        children:
+        - <<: *gpiopin
+          key: RX
+          target: "define:GWSERIAL_RX"
+        - <<: *gpiopin
+          key: TX
+          target: "define:GWSERIAL_TX"
 
 resources:
   default: &esp32default
