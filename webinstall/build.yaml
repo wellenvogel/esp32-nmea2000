@@ -126,16 +126,13 @@ types:
       - 1
       - 2
   
-  - &serial1
-    type: checkbox
-    label: 'Serial 1'
-    key: serial1
-    values:
+  
+  - &serialValues
       - key: true
         children:
         - type: select
           key: type
-          target: "define:GWSERIAL_TYPE"
+          target: "define:#serial#TYPE"
           label: "Serial Type"
           values:
             - key: uni
@@ -145,11 +142,11 @@ types:
               children:
                 - <<: *gpiopin
                   key: RX
-                  target: "define:GWSERIAL_RX"
+                  target: "define:#serial#RX"
                   mandatory: true
                 - <<: *gpiopin
                   key: TX
-                  target: "define:GWSERIAL_TX"
+                  target: "define:#serial#TX"
                   mandatory: true
             - key: bi
               value: 2
@@ -158,11 +155,11 @@ types:
               children:
                 - <<: *gpiopin
                   key: RX
-                  target: "define:GWSERIAL_RX"
+                  target: "define:#serial#RX"
                   mandatory: true
                 - <<: *gpiopin
                   key: TX
-                  target: "define:GWSERIAL_TX"
+                  target: "define:#serial#TX"
                   mandatory: true
             - key: rx
               value: 3
@@ -171,7 +168,7 @@ types:
               children:
                 - <<: *gpiopin
                   key: RX
-                  target: "define:GWSERIAL_RX"
+                  target: "define:#serial#RX"
                   mandatory: true
             - key: tx
               value: 1
@@ -180,8 +177,24 @@ types:
               children:
                 - <<: *gpiopin
                   key: TX
-                  target: "define:GWSERIAL_TX"      
+                  target: "define:#serial#TX"      
                   mandatory: true
+  - &serial1
+    type: checkbox
+    label: 'Serial 1'
+    key: serial1
+    base: 
+      serial: GWSERIAL_
+    values: *serialValues
+      
+  - &serial2
+    type: checkbox
+    label: 'Serial 2'
+    key: serial2
+    base:
+      serial: GWSERIAL2_
+    values: *serialValues
+
 resources:
   default: &esp32default
     serial: 2
@@ -218,3 +231,4 @@ config:
           resource: *esp32default
           children:
             - *serial1
+            - *serial2

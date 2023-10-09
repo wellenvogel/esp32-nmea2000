@@ -5,8 +5,10 @@ class PipelineInfo{
     constructor(id){
         this.STFIELDS=['status','error','status_url'];
         this.reset(id);
+        this.lastUpdate=0;
     }
     update(state){
+        this.lastUpdate=(new Date()).getTime();
         if (state.pipeline_id !== undefined && state.pipeline_id !== this.id){
             return false;
         }
@@ -32,7 +34,7 @@ class PipelineInfo{
     isRunning(){
         if (! this.valid()) return false;
         if (this.status === undefined) return false;
-        return ['error','success','canceled'].indexOf(this.status) < 0;
+        return ['error','success','canceled','failed','errored'].indexOf(this.status) < 0;
     }
 
 }
@@ -113,7 +115,8 @@ class PipelineInfo{
         fetchJson(API,{api:'status',pipeline:currentPipeline.id})
                 .then((st)=>{
                     if (queryPipeline !== currentPipeline.id) return;
-                    if (currentPipeline.id !== st.pipeline_id) return;
+                    let stid=st.pipeline_id||st.id;
+                    if (currentPipeline.id !== stid) return;
                     if (st.status === undefined) st.status=st.state;
                     currentPipeline.update(st);
                     updateStatus();
@@ -214,7 +217,9 @@ class PipelineInfo{
             }
             try{
                 let content=await readFile(file,true);
-                config=JSON.parse(content);
+                let newConfig=JSON.parse(content);
+                removeSelectors(ROOT_PATH,true);
+                config=newConfig;
                 buildSelectors(ROOT_PATH,structure.config.children,true);
                 findPipeline();
             } catch (e){
@@ -300,7 +305,9 @@ class PipelineInfo{
         let frame=addEl('div','selector level'+level.length+' t'+config.type,parent);
         frame.setAttribute(PATH_ATTR,name);
         let inputFrame=addEl('div','inputFrame',frame);
-        let title=addEl('div','title t'+config.type,inputFrame,config.label);
+        if (config.label !== undefined){
+            addEl('div','title t'+config.type,inputFrame,config.label);
+        }
         let initialConfig=undefined
         if (config.type === 'frame' || config.type === undefined){
             initialConfig=config;
@@ -418,8 +425,7 @@ class PipelineInfo{
             });
         }
     }
-    const buildSelectors=(prefix,configList,initial,parent)=>{
-        removeSelectors(prefix,!initial);
+    const buildSelectors=(prefix,configList,initial,base,parent)=>{
         if (!parent) parent=document.getElementById("selectors");;
         if (!configList) return;
         let frame=addEl('div','selectorFrame',parent);
@@ -427,18 +433,37 @@ class PipelineInfo{
         let expandedList=expandList(configList);
         expandedList.forEach((cfg)=>{
             if (cfg.key === undefined){
-                console.log("config without key",cfg);
-                return;
+                if (cfg.type !== undefined && cfg.type !== 'frame'){
+                    console.log("config without key",cfg);
+                    return;
+                }
             }
-            let name=prefix?(prefix+SEPARATOR+cfg.key):cfg.key;
+            let name=prefix;
+            if (name !== undefined){
+                if (cfg.key !== undefined) {
+                    name=prefix+SEPARATOR+cfg.key;
+                }
+            }
+            else{
+                name=cfg.key;
+            }
             let current=config[name];
+            let currentBase=Object.assign({},base,cfg.base);
             let childFrame=buildSelector(frame,cfg,name,current,
                 (child,initial,opt_frame)=>{
-                    buildSelectors(name,child.children,initial,opt_frame||childFrame);
-                    configStruct[name]=child;
+                    if(cfg.key !== undefined) removeSelectors(name,!initial);
+                    buildSelectors(name,child.children,initial,currentBase,opt_frame||childFrame);
+                    if (cfg.key !== undefined) configStruct[name]={cfg:child,base:currentBase};
                     buildValues(initial);
             })
         })
+    }
+    const replaceValues=(str,base)=>{
+        for (let k in base){
+            let r=new RegExp("#"+k+"#","g");
+            str=str.replace(r,base[k]);
+        }
+        return str;
     }
     const ROOT_PATH='root';
     const buildValues=(initial)=>{
@@ -454,7 +479,9 @@ class PipelineInfo{
             //round1: find allowed resources
             //round2: really collect values
             for (let k in configStruct) {
-                let struct = configStruct[k];
+                let container = configStruct[k];
+                if (! container.cfg) continue;
+                let struct=container.cfg;
                 if (round > 0) config[k] = struct.key;
                 if (struct.target !== undefined ) {
                     if (struct.value === undefined){
@@ -463,8 +490,9 @@ class PipelineInfo{
                         }
                         continue;
                     }
-                    if (struct.target === 'environment' ) {
-                        if (round > 0) environment = struct.value;
+                    let target=replaceValues(struct.target,container.base);
+                    if (target === 'environment' ) {
+                        if (round > 0 && struct.key !== undefined) environment = struct.value;
                         else allowedResources=struct.resource;
                         continue;
                     }
@@ -477,13 +505,13 @@ class PipelineInfo{
                         }
                         resList.push(struct);
                     }
-                    if (struct.target === 'define') {
+                    if (target === 'define') {
                         flags += " -D" + struct.value;
                         continue;
                     }
                     const DEFPRFX = "define:";
-                    if (struct.target.indexOf(DEFPRFX) == 0) {
-                        let def = struct.target.substring(DEFPRFX.length);
+                    if (target.indexOf(DEFPRFX) == 0) {
+                        let def = target.substring(DEFPRFX.length);
                         flags += " -D" + def + "=" + struct.value;
                         continue;
                     }
@@ -623,7 +651,7 @@ class PipelineInfo{
                     let now=new Date();
                     let m=now.getMonth()+1;
                     m=((m<10)?"0":"")+m;
-                    let d=now.getDay();
+                    let d=now.getDate();
                     d=((d<10)?"0":"")+d;
                     val=val+now.getFullYear()+m+d;
                 }
