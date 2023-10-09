@@ -131,16 +131,51 @@ types:
     label: 'Serial 1'
     key: serial1
     values:
-      - type: frame
-        key: true
+      - key: true
         children:
-        - <<: *gpiopin
-          key: RX
-          target: "define:GWSERIAL_RX"
-        - <<: *gpiopin
-          key: TX
-          target: "define:GWSERIAL_TX"
-
+        - type: select
+          key: type
+          target: "define:GWSERIAL_TYPE"
+          label: "Serial Type"
+          values:
+            - key: uni
+              value: 1
+              label: "UNI"
+              description: "Select direction at Config UI"    
+              children:
+                - <<: *gpiopin
+                  key: RX
+                  target: "define:GWSERIAL_RX"
+                - <<: *gpiopin
+                  key: TX
+                  target: "define:GWSERIAL_TX"
+            - key: bi
+              value: 2
+              label: "BiDir" 
+              description: "Input and Output"   
+              children:
+                - <<: *gpiopin
+                  key: RX
+                  target: "define:GWSERIAL_RX"
+                - <<: *gpiopin
+                  key: TX
+                  target: "define:GWSERIAL_TX"
+            - key: rx
+              value: 3
+              label: "RX"    
+              description: "Input only"
+              children:
+                - <<: *gpiopin
+                  key: RX
+                  target: "define:GWSERIAL_RX"
+            - key: tx
+              value: 1
+              label: "TX"
+              description: "output only"    
+              children:
+                - <<: *gpiopin
+                  key: TX
+                  target: "define:GWSERIAL_TX"      
 resources:
   default: &esp32default
     serial: 2

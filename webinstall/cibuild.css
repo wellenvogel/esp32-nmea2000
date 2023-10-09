@@ -141,8 +141,8 @@
     margin-top: 0.3em;
 }
 
-.configui .tcheckbox .inputFrame, 
-.configui .tdropdown .inputFrame {
+.configui .tcheckbox>.inputFrame, 
+.configui .tdropdown>.inputFrame {
     display: flex;
     flex-direction: row;
     align-items: center;

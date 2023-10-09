@@ -303,6 +303,13 @@ class PipelineInfo{
             initialConfig=config;
         }
         let expandedValues=expandList(config.values,config);
+        expandedValues.forEach((v)=>{
+            if (v.type !== undefined && v.type !== "frame"){
+                let err="value element with wrong type "+v.type+" at "+name;
+                alert(err);
+                throw new Error(err);
+            }
+        })
         if (config.type === 'select') {
             for (let idx=0;idx<expandedValues.length;idx++){
                 let v=expandedValues[idx];
