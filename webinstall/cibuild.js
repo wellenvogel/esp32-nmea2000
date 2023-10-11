@@ -78,6 +78,7 @@ class PipelineInfo{
         setVisible('error',currentPipeline.error!==undefined,true);
         let values={};
         fillValues(values,['configError','environment']);
+        setVisible('buildCommand',values.environment !== "" && ! values.configError);
         if (values.configError) {
             enableEl('start',false);
             return;
@@ -233,13 +234,23 @@ class PipelineInfo{
         let name="buildconfig.json";
         fileDownload(JSON.stringify(config),name);
     }
-    const btConfig={
-        start:startBuild,
-        download:runDownload,
-        webinstall:webInstall,
-        uploadConfig: uploadConfig,
-        downloadConfig: downloadConfig
-    };
+    const showOverlay=(text, isHtml)=>{
+        let el = document.getElementById('overlayContent');
+        if (isHtml) {
+            el.innerHTML = text;
+            el.classList.remove("text");
+        }
+        else {
+            el.textContent = text;
+            el.classList.add("text");
+        }
+        let container = document.getElementById('overlayContainer');
+        container.classList.remove('hidden');
+    }
+    const hideOverlay=()=> {
+        let container = document.getElementById('overlayContainer');
+        container.classList.add('hidden');
+    }
     const loadConfig=async (url)=>{
         let config=await fetch(url).then((r)=>{
             if (!r.ok) throw new Error("unable to fetch: "+r.statusText);
@@ -248,6 +259,26 @@ class PipelineInfo{
         let parsed=yamlLoad(config);
         return parsed;
     }
+    const showBuildCommand=()=>{
+        let v={};
+        fillValues(v,['environment','buildflags']);
+        if (v.environment !== ""){
+            let help="Run the build from a command line:\nPLATFORMIO_BUILD_FLAGS=\"";
+            help+=v.buildflags;
+            help+="\" pio run -e "+v.environment;
+            showOverlay(help);
+        }
+    }
+    const btConfig={
+        start:startBuild,
+        download:runDownload,
+        webinstall:webInstall,
+        uploadConfig: uploadConfig,
+        downloadConfig: downloadConfig,
+        hideOverlay: hideOverlay,
+        buildCommand: showBuildCommand
+    };
+    
     
     const PATH_ATTR='data-path';
     const SEPARATOR=':';
@@ -289,6 +320,28 @@ class PipelineInfo{
         lst.forEach((e)=>rt.push(expandObject(e,parent)));
         return rt;
     }
+
+    const addDescription=(v,frame)=>{
+        if (frame === undefined) return;
+        if (v.description){ 
+            if(v.url) {
+                let lnk = addEl('a', 'radioDescription', frame, v.description);
+                lnk.setAttribute('href', v.url);
+                lnk.setAttribute('target', '_');
+            }
+            else{
+                let de=addEl('span','radioDescription',frame,v.description);
+            }
+        }
+        if (v.help){
+            let bt=addEl('button','help',frame,'?');
+            bt.addEventListener('click',()=>showOverlay(v.help));
+        }
+        else if (v.helpHtml){
+            let bt=addEl('button','help',frame,'?');
+            bt.addEventListener('click',()=>showOverlay(v.helpHtml,true));
+        }    
+    }
     /**
      * 
      * @param {build a selector} parent 
@@ -305,8 +358,10 @@ class PipelineInfo{
         let frame=addEl('div','selector level'+level.length+' t'+config.type,parent);
         frame.setAttribute(PATH_ATTR,name);
         let inputFrame=addEl('div','inputFrame',frame);
+        let titleFrame=undefined;
         if (config.label !== undefined){
-            addEl('div','title t'+config.type,inputFrame,config.label);
+            titleFrame=addEl('div','titleFrame t'+config.type,inputFrame);
+            addEl('div','title t'+config.type,titleFrame,config.label);
         }
         let initialConfig=undefined
         if (config.type === 'frame' || config.type === undefined){
@@ -321,6 +376,7 @@ class PipelineInfo{
             }
         })
         if (config.type === 'select') {
+            addDescription(config,titleFrame);
             for (let idx=0;idx<expandedValues.length;idx++){
                 let v=expandedValues[idx];
                 if (v.key === undefined) continue;
@@ -330,16 +386,7 @@ class PipelineInfo{
                 re.setAttribute('type', 'radio');
                 re.setAttribute('name', name);
                 re.addEventListener('change', (ev) => callback(v,false));
-                if (v.description){ 
-                    if(v.url) {
-                        let lnk = addEl('a', 'radioDescription', ef, v.description);
-                        lnk.setAttribute('href', v.url);
-                        lnk.setAttribute('target', '_');
-                    }
-                    else{
-                        let de=addEl('span','radioDescription',ef,v.description);
-                    }
-                }
+                addDescription(v,ef);
                 if (v.key == current) {
                     re.setAttribute('checked','checked');
                     initialConfig=v;
@@ -358,6 +405,7 @@ class PipelineInfo{
                     initialConfig=v;
                 }
             };
+            addDescription(config,inputFrame);
             sel.addEventListener('change',(ev)=>{
                 let v=expandedValues[ev.target.value];
                 if (! v) return;
@@ -386,6 +434,7 @@ class PipelineInfo{
                 else{
                     initialConfig=inact;
                 }
+                addDescription(config,inputFrame);
                 cb.addEventListener('change',(ev)=>{
                     if (ev.target.checked){
                         callback(act,false);

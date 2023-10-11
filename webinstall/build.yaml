@@ -107,6 +107,7 @@ types:
     type: select
     key: m5groove
     label: 'M5 groove type'
+    help: 'Select the functionality that should be available at the M5 groove pins'
     values:
       - key: 'CAN'
         children:
@@ -120,6 +121,7 @@ types:
   - &gpiopin
     type: dropdown
     resource: "gpio:"
+    help: 'Select the number of the GPIO pin for this function'
     values:
       - {label: unset,value:}
       - 0
@@ -159,7 +161,18 @@ types:
       - 38
       - 39
   
-  
+  - &serialRX
+    <<: *gpiopin
+    key: RX
+    help: 'number of the GPIO pin for the receive function'
+    target: "define:#serial#RX"
+    mandatory: true
+  - &serialTX
+    <<: *gpiopin
+    key: TX
+    help: 'number of the GPIO pin for the transmit function'
+    target: "define:#serial#TX"
+    mandatory: true
   - &serialValues
       - key: true
         children:
@@ -171,47 +184,31 @@ types:
             - key: uni
               value: 1
               label: "UNI"
-              description: "Select direction at Config UI"    
+              description: "Select direction at Config UI"
+              help: 'On the config UI you can select if the serial should be a transmitter or a receiver'    
               children:
-                - <<: *gpiopin
-                  key: RX
-                  target: "define:#serial#RX"
-                  mandatory: true
-                - <<: *gpiopin
-                  key: TX
-                  target: "define:#serial#TX"
-                  mandatory: true
+                - *serialRX
+                - *serialTX
             - key: bi
               value: 2
               label: "BiDir" 
-              description: "Input and Output"   
+              description: "Input and Output"
+              help: 'The serial device can run both receive and transmit. Typically for RS232.'   
               children:
-                - <<: *gpiopin
-                  key: RX
-                  target: "define:#serial#RX"
-                  mandatory: true
-                - <<: *gpiopin
-                  key: TX
-                  target: "define:#serial#TX"
-                  mandatory: true
+                - *serialRX
+                - *serialTX
             - key: rx
               value: 3
               label: "RX"    
               description: "Input only"
               children:
-                - <<: *gpiopin
-                  key: RX
-                  target: "define:#serial#RX"
-                  mandatory: true
+                - *serialRX
             - key: tx
               value: 1
               label: "TX"
               description: "output only"    
               children:
-                - <<: *gpiopin
-                  key: TX
-                  target: "define:#serial#TX"      
-                  mandatory: true
+                - *serialTX
   - &serial1
     type: checkbox
     label: 'Serial 1'
@@ -230,7 +227,7 @@ types:
 
   - &can
     type: checkbox
-    label: CAN
+    label: CAN(NMEA2000)
     key: can
     values:
       - key: true
@@ -239,11 +236,13 @@ types:
             label: RX
             key: rx
             mandatory: true
+            help: 'set the number of the GPIO pin for the CAN(NMEA2000) RX function'
             target: "define:ESP32_CAN_RX_PIN"
           - <<: *gpiopin
             label: TX
             key: tx
             mandatory: true
+            help: 'set the number of the GPIO pin for the CAN(NMEA2000) TX function'
             target: "define:ESP32_CAN_TX_PIN"
 
 
