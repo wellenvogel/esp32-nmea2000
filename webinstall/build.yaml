@@ -245,6 +245,97 @@ types:
             help: 'set the number of the GPIO pin for the CAN(NMEA2000) TX function'
             target: "define:ESP32_CAN_TX_PIN"
 
+  - &resetButton
+    type: checkbox
+    label: reset button
+    key: resetButton
+    values:
+      - key: true
+        children:
+        - <<: *gpiopin
+          label: Button
+          key: button
+          target: "define:GWBUTTON_PIN"
+          help: 'the gpio pin for a reset to factory settings'
+        - type: dropdown
+          label: active mode
+          help: 'select if the button should be active high or low'
+          key: resetButtonMode
+          target: "define:GWBUTTON_ACTIVE"
+          values:
+            - label: unset
+              value:
+            - label: LOW
+              value: 0
+            - label: HIGH
+              value: 1
+        - type: checkbox
+          label: pullupdown
+          description: "pull up/pull down resistor"
+          key: resetButtonPUD
+          values:
+            - key: true
+              target: define
+              value: GWBUTTON_PULLUPDOWN
+
+  - &led
+    type: checkbox
+    label: Led
+    key: led
+    description: 'RGB LED'
+    values:
+      - key: true
+        children:
+          - <<: *gpiopin
+            label: LedPin
+            key: ledpin
+            mandatory: true
+            target: "define:GWLED_PIN"
+          - type: dropdown
+            label: ledtype
+            help: "the type of the led"
+            key: ledtype
+            target: "define:GWLED_CODE"
+            mandatory: true
+            values:
+              - label: unset
+                value:
+              - label: SK6812
+                value: 0
+                key: sk6812
+              - label: WS2812
+                key: ws2812
+                value: 1
+          - type: dropdown
+            key: ledorder
+            label: color order
+            target: "define:GWLED_SCHEMA"
+            mandatory: true
+            values:
+              - label: unset
+                value: 
+              - label: RGB
+                value: 10  
+              - label: RBG
+                value: 17
+              - label: GRB
+                value: 66
+              - label: GBR
+                value: 80
+              - label: BRG
+                value: 129
+              - label: BGR
+                value: 136
+          - type: range
+            label: brigthness
+            target: "define:GWLED_BRIGHTNESS"
+            key: brightness
+            min: 0
+            max: 255
+            
+
+
+          
 
 resources:
   default: &esp32default
@@ -278,9 +369,12 @@ config:
             - *m5groove
         - value: nodemcu-generic
           label: nodemcu
-          description: "Node mcu"
+          description: "Node mcu esp32"
+          url: "https://docs.platformio.org/en/stable/boards/espressif32/nodemcu-32s.html"
           resource: *esp32default
           children:
             - *serial1
             - *serial2
             - *can
+            - *resetButton
+            - *led

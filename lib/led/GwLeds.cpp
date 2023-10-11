@@ -34,7 +34,7 @@ void handleLeds(void *param){
     #else
     CRGB leds[1];
     #ifdef GWLED_SCHEMA
-    FastLED.addLeds<GWLED_TYPE,GWLED_PIN,GWLED_SCHEMA>(leds,1);
+    FastLED.addLeds<GWLED_TYPE,GWLED_PIN,(EOrder)GWLED_SCHEMA>(leds,1);
     #else
     FastLED.addLeds<GWLED_TYPE,GWLED_PIN>(leds,1);
     #endif

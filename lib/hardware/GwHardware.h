@@ -207,4 +207,21 @@
   #define ESP32_CAN_RX_PIN GROOVE_PIN_2
 #endif
 
+#ifndef GWLED_TYPE
+  #ifdef GWLED_CODE
+  #if GWLED_CODE == 0
+    #define GWLED_TYPE SK6812
+  #endif
+  #if GWLED_CODE == 1
+    #define GWLED_TYPE WS2812
+  #endif
+  #endif
+#endif
+#ifdef GWLED_TYPE
+  #define GWLED_FASTLED
+  #ifndef GWLED_BRIGHTNESS
+    #define GWLED_BRIGHTNESS 64
+  #endif
+#endif
+
 #endif

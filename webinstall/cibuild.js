@@ -325,12 +325,12 @@ class PipelineInfo{
         if (frame === undefined) return;
         if (v.description){ 
             if(v.url) {
-                let lnk = addEl('a', 'radioDescription', frame, v.description);
+                let lnk = addEl('a', 'description', frame, v.description);
                 lnk.setAttribute('href', v.url);
                 lnk.setAttribute('target', '_');
             }
             else{
-                let de=addEl('span','radioDescription',frame,v.description);
+                let de=addEl('div','description',frame,v.description);
             }
         }
         if (v.help){
@@ -411,6 +411,48 @@ class PipelineInfo{
                 if (! v) return;
                 callback(v,false);
             });
+        }
+        if (config.type === 'range'){
+            if (config.min !== undefined && config.max !== undefined) {
+                let min=config.min+0;
+                let step=1;
+                if (config.step !== undefined) step=config.step+0;
+                let max=config.max+0;
+                let valid=false;
+                if (step > 0){
+                    if (min < max) valid=true;
+                }
+                else{
+                    if (min > max) {
+                        let tmp=max;
+                        max=min;
+                        min=tmp;
+                        valid=true;
+                    }
+                }
+                if (! valid){
+                    console.log("invalid range config",config);
+                }
+                else {
+                    let sel = addEl('select', 'tdropdown', inputFrame);
+                    for (let idx=min;idx <=max;idx+=step){
+                        let opt=addEl('option','',sel,idx);
+                        opt.setAttribute('value',idx);
+                        if (idx == current){
+                            opt.setAttribute('selected',true);
+                            initialConfig=expandObject({key:idx,value:idx},config);
+                        }    
+                    }
+                    if (! initialConfig){
+                        initialConfig=expandObject({key:min,value:min},config);
+                    }
+                    addDescription(config, inputFrame);
+                    sel.addEventListener('change', (ev) => {
+                        let v = expandObject({ key: ev.target.value, value: ev.target.value },config);
+                        callback(v, false);
+                    });
+                }   
+            }
         }
         if (expandedValues.length > 0 && config.type === 'checkbox'){
             let act=undefined;

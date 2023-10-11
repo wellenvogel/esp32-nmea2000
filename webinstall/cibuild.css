@@ -4,7 +4,6 @@
 
 /* reused stuff from configui */
 .configui.container{
-    max-width: 35em;
     margin-left: auto;
     margin-right: auto;
     position: relative;
@@ -51,6 +50,7 @@
     z-index: unset;
     appearance: auto;
     float:none;
+    margin-right: 0.5em;
 }
 
 .configui .buttons {
@@ -143,13 +143,15 @@
 }
 
 .configui .tcheckbox>.inputFrame, 
-.configui .tdropdown>.inputFrame {
+.configui .tdropdown>.inputFrame,
+.configui .trange>.inputFrame {
     display: flex;
     flex-direction: row;
     align-items: center;
 }
 .configui .title.tdropdown,
-.configui .title.tcheckbox {
+.configui .title.tcheckbox,
+.configui .title.trange {
     width: 10em;
     font-weight: normal !important;
 }
@@ -173,7 +175,7 @@
     width: initial;
 }
 .configui .overlayContainer {
-    position: fixed;
+    position: absolute;
     top: 0;
     bottom: 0;
     left: 0;
@@ -181,6 +183,7 @@
     background-color: #80808070;
     display: flex;
     overflow-y: auto;
+    padding: 0.5em;
 }
 
 .configui .overlay {
