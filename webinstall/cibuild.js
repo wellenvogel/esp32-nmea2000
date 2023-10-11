@@ -768,6 +768,28 @@ class PipelineInfo{
         if (! structure){
             structure=await loadConfig("build.yaml");
         }
+        let ucfg=getParam('config');
+        let loadedCfg=undefined;
+        if (ucfg){
+            ucfg=ucfg.replace(/[^.a-zA-Z_-]/g,'');
+            if (gitSha !== undefined){
+                try{
+                    loadedCfg=await fetchJson(GITAPI,Object.assign({},gitParam,{sha:gitSha,proxy:'webinstall/config/'+ucfg+".json"}));
+                }catch(e){
+                    alert("unable to load config "+ucfg+" for selected release, trying latest");
+                }
+            }
+            if (loadedCfg === undefined){
+                try{
+                    loadedCfg=await fetchJson('config/'+ucfg+".json");
+                }catch(e){
+                    alert("unable to load config "+ucfg+": "+e);
+                }
+            }
+            if (loadedCfg !== undefined){
+                config=loadedCfg;
+            }
+        }
         buildSelectors(ROOT_PATH,structure.config.children,true);
         if (! isRunning()) findPipeline();
         updateStatus();
