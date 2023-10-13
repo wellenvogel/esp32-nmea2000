@@ -1,1 +1,1 @@
-{"root:board:m5lightbase":"M5_CAN_KIT","root:board":"m5stack-atom-generic","root:board:m5groove":"Serial","root:board:m5groove:m5grooveserial":"M5_GPS_UNIT"}
+{"root:board":"m5stack-atom-generic","root:board:m5lightbase":"M5_GPS_KIT","root:board:m5groove":"CAN","root:board:m5groove:m5groovecan":"M5_CANUNIT"}
