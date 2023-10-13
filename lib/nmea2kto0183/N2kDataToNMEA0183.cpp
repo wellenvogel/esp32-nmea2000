@@ -738,7 +738,7 @@ private:
         char _Destination[21];
         tN2kAISVersion _AISversion;
         tN2kGNSStype _GNSStype;
-        tN2kAISTranceiverInfo _AISinfo;
+        tN2kAISTransceiverInformation _AISinfo;
         tN2kAISDTE _DTE;
 
         tNMEA0183AISMsg NMEA0183AISMsg;
@@ -848,15 +848,16 @@ private:
         tN2kAISUnit _Unit;
         bool _Display, _DSC, _Band, _Msg22, _State;
         tN2kAISMode _Mode;
+        tN2kAISTransceiverInformation  _AISTranceiverInformation;
 
         if (ParseN2kPGN129039(N2kMsg, _MessageID, _Repeat, _UserID, _Latitude, _Longitude, _Accuracy, _RAIM,
-                              _Seconds, _COG, _SOG, _Heading, _Unit, _Display, _DSC, _Band, _Msg22, _Mode, _State))
+                              _Seconds, _COG, _SOG, _AISTranceiverInformation, _Heading, _Unit, _Display, _DSC, _Band, _Msg22, _Mode, _State))
         {
 
             tNMEA0183AISMsg NMEA0183AISMsg;
 
             if (SetAISClassBMessage18(NMEA0183AISMsg, _MessageID, _Repeat, _UserID, _Latitude, _Longitude, _Accuracy, _RAIM,
-                                      _Seconds, _COG, _SOG, _Heading, _Unit, _Display, _DSC, _Band, _Msg22, _Mode, _State))
+                                      _Seconds, _COG, _SOG,  _Heading, _Unit, _Display, _DSC, _Band, _Msg22, _Mode, _State))
             {
 
                 SendMessage(NMEA0183AISMsg);
