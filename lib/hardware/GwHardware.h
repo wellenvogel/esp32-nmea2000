@@ -224,4 +224,10 @@
   #endif
 #endif
 
+#ifdef ESP32_CAN_TX_PIN
+  #ifndef N2K_LOAD_LEVEL
+    #define N2K_LOAD_LEVEL 3
+  #endif
+#endif
+
 #endif

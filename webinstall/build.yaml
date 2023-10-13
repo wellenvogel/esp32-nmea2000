@@ -367,6 +367,15 @@ config:
           children:
             - *m5base    
             - *m5groove
+        - value: m5stickc-atom-generic
+          label: m5stick+ atom
+          description: "M5 Stick C+"
+          url: "http://docs.m5stack.com/en/core/m5stickc_plus"
+          resource: *esp32default
+          children:
+            - *m5groove
+
+
         - value: nodemcu-generic
           label: nodemcu
           description: "Node mcu esp32"

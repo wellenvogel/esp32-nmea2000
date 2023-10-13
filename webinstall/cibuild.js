@@ -54,6 +54,8 @@ class PipelineInfo{
     let delayedSearch=undefined;
     let gitSha=undefined;
     let buildVersion=undefined;
+    let configName="buildconfig";
+    let isModified=false;
     const modeStrings={
         last: 'Last Build',
         existing: 'Existing Build',
@@ -231,7 +233,9 @@ class PipelineInfo{
        fsel.click(); 
     }
     const downloadConfig=()=>{
-        let name="buildconfig.json";
+        let name=configName;
+        if (isModified) name=name.replace(/[0-9]*$/,'')+formatDate(undefined,true);
+        name+=".json";
         fileDownload(JSON.stringify(config),name);
     }
     const showOverlay=(text, isHtml)=>{
@@ -543,6 +547,7 @@ class PipelineInfo{
             let childFrame=buildSelector(frame,cfg,name,current,
                 (child,initial,opt_frame)=>{
                     if(cfg.key !== undefined) removeSelectors(name,!initial);
+                    if (! initial) isModified=true;
                     buildSelectors(name,child.children,initial,currentBase,opt_frame||childFrame);
                     if (cfg.key !== undefined) configStruct[name]={cfg:child,base:currentBase};
                     buildValues(initial);
@@ -667,6 +672,17 @@ class PipelineInfo{
             });
 
     }
+    const formatDate=(opt_date,opt_includeMs)=>{
+        const fmt=(v)=>{
+            return ((v<10)?"0":"")+v;
+        }
+        let now=opt_date|| new Date();
+        let rt=now.getFullYear()+fmt(now.getMonth()+1)+fmt(now.getDate());
+        if (opt_includeMs){
+            rt+=fmt(now.getHours())+fmt(now.getMinutes())+fmt(now.getSeconds());
+        }
+        return rt;
+    }
     window.onload=async ()=>{ 
         setButtons(btConfig);
         let pipeline=window.localStorage.getItem(CURRENT_PIPELINE);
@@ -739,12 +755,7 @@ class PipelineInfo{
                     val=type+val;
                 }
                 if (type == 'branch'){
-                    let now=new Date();
-                    let m=now.getMonth()+1;
-                    m=((m<10)?"0":"")+m;
-                    let d=now.getDate();
-                    d=((d<10)?"0":"")+d;
-                    val=val+now.getFullYear()+m+d;
+                    val=val+formatDate();
                 }
                 val=val.replace(/[:.]/g,'_');
                 val=val.replace(/[^a-zA-Z0-9_]*/g,'');
@@ -771,7 +782,7 @@ class PipelineInfo{
         let ucfg=getParam('config');
         let loadedCfg=undefined;
         if (ucfg){
-            ucfg=ucfg.replace(/[^.a-zA-Z_-]/g,'');
+            ucfg=ucfg.replace(/[^.a-zA-Z_0-9-]/g,'');
             if (gitSha !== undefined){
                 try{
                     loadedCfg=await fetchJson(GITAPI,Object.assign({},gitParam,{sha:gitSha,proxy:'webinstall/config/'+ucfg+".json"}));
@@ -787,6 +798,7 @@ class PipelineInfo{
                 }
             }
             if (loadedCfg !== undefined){
+                configName=ucfg;
                 config=loadedCfg;
             }
         }
