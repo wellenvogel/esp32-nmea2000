@@ -46,23 +46,65 @@ class GwUserCapability{
         }
 };
 #include "GwUserTasks.h"
+class TaskData{
+    SemaphoreHandle_t lock;
+    std::map<String,GwApi::Value> data;
+    GwLog *logger;
+    String computeKey(const String &taskName,const String &name) const{
+        return taskName+":#:"+name;
+    }
+    public:
+    TaskData(GwLog *l){
+        lock=xSemaphoreCreateMutex();
+        logger=l;
+    }
+    ~TaskData(){
+        vSemaphoreDelete(lock);
+    }
+    void setTaskValue(const String &taskName,const String &name,const GwApi::Value &v){
+        String key=computeKey(taskName,name);
+        LOG_DEBUG(GwLog::DEBUG,"set task data %s=%s",key.c_str(),v.getSValue().c_str());
+        GWSYNCHRONIZED(&lock);
+        data[key]=v;
+    }
+    GwApi::Value getTaskValue(const String &taskName,const String &name){
+        GwApi::Value rt;
+        String key=computeKey(taskName,name);
+        {
+            GWSYNCHRONIZED(&lock);
+            auto it=data.find(key);
+            if (it != data.end()) rt=it->second;
+        }
+        LOG_DEBUG(GwLog::DEBUG,"get task data %s:%s (valid=%d)",key.c_str(),rt.getSValue().c_str(),(int)rt.valid());
+        return rt;
+    }
+
+};
 class TaskApi : public GwApiInternal
 {
-    GwApiInternal *api;
+    GwApiInternal *api=nullptr;
+    TaskData *taskData=nullptr;
     int sourceId;
     SemaphoreHandle_t *mainLock;
     SemaphoreHandle_t localLock;
     std::map<int,GwCounter<String>> counter;
+    String name;
     bool counterUsed=false;
     int counterIdx=0;
 
 public:
-    TaskApi(GwApiInternal *api, int sourceId, SemaphoreHandle_t *mainLock, const String &name)
+    TaskApi(GwApiInternal *api, 
+        int sourceId, 
+        SemaphoreHandle_t *mainLock, 
+        const String &name,
+        TaskData *d)
     {
         this->sourceId = sourceId;
         this->api = api;
         this->mainLock=mainLock;
+        this->name=name;
         localLock=xSemaphoreCreateMutex();
+        taskData=d;
     }
     virtual GwRequestQueue *getQueue()
     {
@@ -160,12 +202,20 @@ public:
         else it->second=GwCounter<String>("count"+name);
         return counterIdx;
     }
+    virtual void setTaskValue(const String &name,const Value &v){
+        taskData->setTaskValue(this->name,name,v);
+    }
+    virtual Value getTaskValue(const String &taskName,const String &name){
+        return taskData->getTaskValue(taskName,name);
+    }
+
 };
 
 GwUserCode::GwUserCode(GwApiInternal *api,SemaphoreHandle_t *mainLock){
     this->logger=api->getLogger();
     this->api=api;
     this->mainLock=mainLock;
+    this->taskData=new TaskData(this->logger);
 }
 void userTaskStart(void *p){
     GwUserTask *task=(GwUserTask*)p;
@@ -179,7 +229,7 @@ void userTaskStart(void *p){
     task->api=NULL;
 }
 void GwUserCode::startAddOnTask(GwApiInternal *api,GwUserTask *task,int sourceId,String name){
-    task->api=new TaskApi(api,sourceId,mainLock,name);
+    task->api=new TaskApi(api,sourceId,mainLock,name,taskData);
     xTaskCreate(userTaskStart,name.c_str(),task->stackSize,task,3,NULL);
 }
 void GwUserCode::startUserTasks(int baseId){
@@ -194,7 +244,7 @@ void GwUserCode::startInitTasks(int baseId){
     LOG_DEBUG(GwLog::DEBUG,"starting %d user init tasks",initTasks.size());
     for (auto it=initTasks.begin();it != initTasks.end();it++){
         LOG_DEBUG(GwLog::LOG,"starting user init task %s with id %d",it->name.c_str(),baseId);
-        it->api=new TaskApi(api,baseId,mainLock,it->name);
+        it->api=new TaskApi(api,baseId,mainLock,it->name,taskData);
         userTaskStart(&(*it));
         baseId++;
     }

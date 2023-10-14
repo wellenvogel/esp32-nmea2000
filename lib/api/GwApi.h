@@ -32,6 +32,29 @@ class GwApi{
                     return format;
                 }
         };
+        /**
+         * a simple value container
+         * to exchange data between tasks
+        */
+        class Value{
+            long lvalue=0;
+            String svalue;
+            bool isString=false;
+            bool isValid=false;
+            public:
+            Value(const String &v){isString=true;svalue=v;isValid=true;}
+            Value(long l){lvalue=l;isValid=true;}
+            Value(){}
+            long getLValue() const{
+                if(!isString) return lvalue;
+                return atol(svalue.c_str());
+            }
+            String getSValue() const{
+                if(isString) return svalue;
+                return String(lvalue);
+            }
+            bool valid() const{return isValid;}
+        };
 
         class Status{
             public:
@@ -133,6 +156,15 @@ class GwApi{
         virtual void increment(int idx,const String &name,bool failed=false){}
         virtual void reset(int idx){}
         virtual void remove(int idx){}
+
+        /**
+         * exchange data between different user tasks
+         * each task can set arbitrary items
+         * that can be accessed by other tasks
+        */
+        virtual void setTaskValue(const String &name,const Value &v){}
+        virtual Value getTaskValue(const String &taskName,const String &name){return Value();}
+
         /**
          * not thread safe methods
          * accessing boat data must only be executed from within the main thread

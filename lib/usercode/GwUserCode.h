@@ -34,11 +34,12 @@ class GwUserTask{
         }
 };
 
-
+class TaskData;
 class GwUserCode{
     GwLog *logger;
     GwApiInternal *api;
     SemaphoreHandle_t *mainLock;
+    TaskData *taskData;
     void startAddOnTask(GwApiInternal *api,GwUserTask *task,int sourceId,String name);
     public:
         typedef std::map<String,String> Capabilities;
