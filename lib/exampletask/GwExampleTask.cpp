@@ -98,7 +98,7 @@ void exampleTask(GwApi *api){
     GwApi::BoatValue *testValue=new GwApi::BoatValue(boatItemName);
     GwApi::BoatValue *valueList[]={longitude,latitude,testValue};
     GwApi::Status status;
-    api->setCounterDisplayName("usertest");
+    int counter=api->addCounter("usertest");
     while(true){
         delay(1000);
         /*
@@ -197,7 +197,7 @@ void exampleTask(GwApi *api){
             status.n2kRx,
             status.n2kTx); 
         //increment some counter
-        api->increment("Test");       
+        api->increment(counter,"Test");       
 
     }
     vTaskDelete(NULL);

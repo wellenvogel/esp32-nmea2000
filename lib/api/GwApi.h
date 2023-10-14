@@ -127,10 +127,12 @@ class GwApi{
         /**
          * access to counters for a task
          * thread safe
+         * use the value returned from addCounter for the other operations
         */
-        virtual void setCounterDisplayName(const String &){}
-        virtual void increment(const String &name,bool failed=false){}
-        virtual void reset(){}
+        virtual int addCounter(const String &){return -1;}
+        virtual void increment(int idx,const String &name,bool failed=false){}
+        virtual void reset(int idx){}
+        virtual void remove(int idx){}
         /**
          * not thread safe methods
          * accessing boat data must only be executed from within the main thread

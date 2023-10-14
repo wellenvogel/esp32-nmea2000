@@ -52,8 +52,9 @@ class TaskApi : public GwApiInternal
     int sourceId;
     SemaphoreHandle_t *mainLock;
     SemaphoreHandle_t localLock;
-    GwCounter<String> *counter=NULL;
+    std::map<int,GwCounter<String>> counter;
     bool counterUsed=false;
+    int counterIdx=0;
 
 public:
     TaskApi(GwApiInternal *api, int sourceId, SemaphoreHandle_t *mainLock, const String &name)
@@ -62,7 +63,6 @@ public:
         this->api = api;
         this->mainLock=mainLock;
         localLock=xSemaphoreCreateMutex();
-        counter=new GwCounter<String>("count"+name);
     }
     virtual GwRequestQueue *getQueue()
     {
@@ -112,33 +112,53 @@ public:
     }
     virtual ~TaskApi(){
         vSemaphoreDelete(localLock);
-        delete counter;
     };
     virtual void fillStatus(GwJsonDocument &status){
         GWSYNCHRONIZED(&localLock);
         if (! counterUsed) return;
-        return counter->toJson(status);
+        for (auto it=counter.begin();it != counter.end();it++){
+            it->second.toJson(status);
+        }
     };
     virtual int getJsonSize(){
         GWSYNCHRONIZED(&localLock);
         if (! counterUsed) return 0;
-        return counter->getJsonSize();
+        int rt=0;
+        for (auto it=counter.begin();it != counter.end();it++){
+            rt+=it->second.getJsonSize();
+        }
+        return rt;
     };
-    virtual void increment(const String &name,bool failed=false){
+    virtual void increment(int idx,const String &name,bool failed=false){
         GWSYNCHRONIZED(&localLock);
         counterUsed=true;
-        if (failed) counter->addFail(name);
-        else (counter->add(name));
+        auto it=counter.find(idx);
+        if (it == counter.end()) return;
+        if (failed) it->second.addFail(name);
+        else (it->second.add(name));
     };
-    virtual void reset(){
+    virtual void reset(int idx){
         GWSYNCHRONIZED(&localLock);
         counterUsed=true;
-        counter->reset();
+        auto it=counter.find(idx);
+        if (it == counter.end()) return;
+        it->second.reset();
     };
-    virtual void setCounterDisplayName(const String &name){
+    virtual void remove(int idx){
+        GWSYNCHRONIZED(&localLock);
+        counter.erase(idx);
+    }
+    virtual int addCounter(const String &name){
         GWSYNCHRONIZED(&localLock);
         counterUsed=true;
-        counter->setName("count"+name);
+        counterIdx++;
+        //avoid the need for an empty counter constructor
+        auto it=counter.find(counterIdx);
+        if (it == counter.end()){
+            counter.insert(std::make_pair(counterIdx,GwCounter<String>("count"+name)));
+        }
+        else it->second=GwCounter<String>("count"+name);
+        return counterIdx;
     }
 };
 
