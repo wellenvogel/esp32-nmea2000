@@ -54,7 +54,7 @@ import * as zip from "https://cdn.jsdelivr.net/npm/@zip.js/zip.js@2.7.29/+esm";
         let chipId=getChipId(content);
         if (isFull){
             if (chipId < 0) throw new Error(prfx+"image: no valid chip id found");
-            let flashStart=FLASHSTART[chipId];
+            flashStart=FLASHSTART[chipId];
             if (flashStart === undefined) throw new Error(prfx+"image: unknown chip id "+chipId);
             startOffset=UPDATE_START-flashStart;
         }
