@@ -1,8 +1,15 @@
+#define DECLARE_USERTASK(task) GwUserTaskDef __##task##__(task,#task);
+#define DECLARE_USERTASK_PARAM(task,...) GwUserTaskDef __##task##__(task,#task,__VA_ARGS__);
+#define DECLARE_INITFUNCTION(task) GwInitTask __Init##task##__(task,#task);
+#define DECLARE_CAPABILITY(name,value) GwUserCapability __CAP##name##__(#name,#value);
+#define DECLARE_STRING_CAPABILITY(name,value) GwUserCapability __CAP##name##__(#name,value); 
+
 #include "GwUserCode.h"
 #include "GwSynchronized.h"
 #include <Arduino.h>
 #include <vector>
 #include <map>
+#include "GwCounter.h"
 //user task handling
 
 
@@ -38,25 +45,24 @@ class GwUserCapability{
             userCapabilities[name]=value;  
         }
 };
-#define DECLARE_USERTASK(task) GwUserTaskDef __##task##__(task,#task);
-#define DECLARE_USERTASK_PARAM(task,...) GwUserTaskDef __##task##__(task,#task,__VA_ARGS__);
-#define DECLARE_INITFUNCTION(task) GwInitTask __Init##task##__(task,#task);
-#define DECLARE_CAPABILITY(name,value) GwUserCapability __CAP##name##__(#name,#value);
-#define DECLARE_STRING_CAPABILITY(name,value) GwUserCapability __CAP##name##__(#name,value); 
-#include "GwApi.h"
 #include "GwUserTasks.h"
-class TaskApi : public GwApi
+class TaskApi : public GwApiInternal
 {
-    GwApi *api;
+    GwApiInternal *api;
     int sourceId;
     SemaphoreHandle_t *mainLock;
+    SemaphoreHandle_t localLock;
+    GwCounter<String> *counter=NULL;
+    bool counterUsed=false;
 
 public:
-    TaskApi(GwApi *api, int sourceId, SemaphoreHandle_t *mainLock)
+    TaskApi(GwApiInternal *api, int sourceId, SemaphoreHandle_t *mainLock, const String &name)
     {
         this->sourceId = sourceId;
         this->api = api;
         this->mainLock=mainLock;
+        localLock=xSemaphoreCreateMutex();
+        counter=new GwCounter<String>("count"+name);
     }
     virtual GwRequestQueue *getQueue()
     {
@@ -104,10 +110,39 @@ public:
         GWSYNCHRONIZED(mainLock);
         api->getStatus(status);
     }
-    virtual ~TaskApi(){};
+    virtual ~TaskApi(){
+        vSemaphoreDelete(localLock);
+        delete counter;
+    };
+    virtual void fillStatus(GwJsonDocument &status){
+        GWSYNCHRONIZED(&localLock);
+        if (! counterUsed) return;
+        return counter->toJson(status);
+    };
+    virtual int getJsonSize(){
+        GWSYNCHRONIZED(&localLock);
+        if (! counterUsed) return 0;
+        return counter->getJsonSize();
+    };
+    virtual void increment(const String &name,bool failed=false){
+        GWSYNCHRONIZED(&localLock);
+        counterUsed=true;
+        if (failed) counter->addFail(name);
+        else (counter->add(name));
+    };
+    virtual void reset(){
+        GWSYNCHRONIZED(&localLock);
+        counterUsed=true;
+        counter->reset();
+    };
+    virtual void setCounterDisplayName(const String &name){
+        GWSYNCHRONIZED(&localLock);
+        counterUsed=true;
+        counter->setName("count"+name);
+    }
 };
 
-GwUserCode::GwUserCode(GwApi *api,SemaphoreHandle_t *mainLock){
+GwUserCode::GwUserCode(GwApiInternal *api,SemaphoreHandle_t *mainLock){
     this->logger=api->getLogger();
     this->api=api;
     this->mainLock=mainLock;
@@ -123,8 +158,8 @@ void userTaskStart(void *p){
     delete task->api;
     task->api=NULL;
 }
-void GwUserCode::startAddOnTask(GwApi *api,GwUserTask *task,int sourceId,String name){
-    task->api=new TaskApi(api,sourceId,mainLock);
+void GwUserCode::startAddOnTask(GwApiInternal *api,GwUserTask *task,int sourceId,String name){
+    task->api=new TaskApi(api,sourceId,mainLock,name);
     xTaskCreate(userTaskStart,name.c_str(),task->stackSize,task,3,NULL);
 }
 void GwUserCode::startUserTasks(int baseId){
@@ -139,7 +174,7 @@ void GwUserCode::startInitTasks(int baseId){
     LOG_DEBUG(GwLog::DEBUG,"starting %d user init tasks",initTasks.size());
     for (auto it=initTasks.begin();it != initTasks.end();it++){
         LOG_DEBUG(GwLog::LOG,"starting user init task %s with id %d",it->name.c_str(),baseId);
-        it->api=new TaskApi(api,baseId,mainLock);
+        it->api=new TaskApi(api,baseId,mainLock,it->name);
         userTaskStart(&(*it));
         baseId++;
     }
@@ -152,4 +187,21 @@ void GwUserCode::startAddonTask(String name, TaskFunction_t task, int id){
 
 GwUserCode::Capabilities * GwUserCode::getCapabilities(){
     return &userCapabilities;
+}
+
+void GwUserCode::fillStatus(GwJsonDocument &status){
+    for (auto it=userTasks.begin();it != userTasks.end();it++){
+        if (it->api){
+            it->api->fillStatus(status);
+        }
+    }
+}
+int GwUserCode::getJsonSize(){
+    int rt=0;
+    for (auto it=userTasks.begin();it != userTasks.end();it++){
+        if (it->api){
+            rt+=it->api->getJsonSize();
+        }
+    }
+    return rt;
 }

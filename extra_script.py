@@ -14,6 +14,7 @@ GEN_DIR='lib/generated'
 CFG_FILE='web/config.json'
 XDR_FILE='web/xdrconfig.json'
 CFG_INCLUDE='GwConfigDefinitions.h'
+CFG_INCLUDE_IMPL='GwConfigDefImpl.h'
 XDR_INCLUDE='GwXdrTypeMappings.h'
 TASK_INCLUDE='GwUserTasks.h'
 EMBEDDED_INCLUDE="GwEmbeddedFiles.h"
@@ -112,66 +113,62 @@ def generateMergedConfig(inFile,outFile,addDirs=[]):
         data=json.dumps(config,indent=2)
         writeFileIfChanged(outFile,data)
 
-def generateCfg(inFile,outFile,addDirs=[]):
+def generateCfg(inFile,outFile,impl):
     if not os.path.exists(inFile):
         raise Exception("unable to read cfg file %s"%inFile)
     data=""
     with open(inFile,'rb') as ch:    
-        config=json.load(ch)
-        config=mergeConfig(config,addDirs)      
+        config=json.load(ch)     
         data+="//generated from %s\n"%inFile
-        data+='#include "GwConfigItem.h"\n'
         l=len(config)
-        data+='class GwConfigDefinitions{\n'
-        data+='  public:\n'
-        data+='  int getNumConfig() const{return %d;}\n'%(l)
-        for item in config:
-            n=item.get('name')
-            if n is None:
-                continue
-            if len(n) > 15:
-                raise Exception("%s: config names must be max 15 caracters"%n)
-            data+='  static constexpr const char* %s="%s";\n'%(n,n)
-        data+='  protected:\n'    
-        data+='  GwConfigInterface *configs[%d]={\n'%(l)
-        first=True
-        for item in config:
-            name=item.get('name')
-            if name is None:
-                continue
-            if not first:
-                data+=',\n'
-            first=False 
-            secret="false";
-            if item.get('type') == 'password':
-                secret="true"
-            data+="    #undef __CFGMODE\n"
-            data+="    #ifdef CFGMODE_%s\n"%(name)
-            data+="      #define __CFGMODE CFGMODE_%s\n"%(name)
-            data+="    #else\n"
-            data+="      #define __CFGMODE GwConfigInterface::NORMAL\n"
-            data+="    #endif\n"    
-            data+="    #ifdef CFGDEFAULT_%s\n"%(name)
-            data+="     new GwConfigInterface(%s,CFGDEFAULT_%s,%s,__CFGMODE)\n"%(name,name,secret)
-            data+="    #else\n"
-            data+="     new GwConfigInterface(%s,\"%s\",%s,__CFGMODE)\n"%(name,item.get('default'),secret)
-            data+="    #endif\n"
-
-        data+='};\n'  
-        data+='};\n'
-        data+="#ifdef CFG_MESSAGES\n"
-        for item in config:
-            name=item.get('name')
-            if name is None:
-                continue
-            data+="#ifdef CFGMODE_%s\n"%(name)
-            data+=" __MSG(\"CFGMODE_%s=\" __XSTR(CFGMODE_%s))\n"%(name,name)
-            data+="#endif\n"
-            data+="#ifdef CFGDEFAULT_%s\n"%(name)
-            data+=" __MSG(\"CFGDEFAULT_%s=\" CFGDEFAULT_%s)\n"%(name,name)
-            data+="#endif\n"
-        data+="#endif"
-
+        idx=0
+        if not impl:
+            data+='#include "GwConfigItem.h"\n'
+            data+='class GwConfigDefinitions{\n'
+            data+='  public:\n'
+            data+='  int getNumConfig() const{return %d;}\n'%(l)
+            for item in config:
+                n=item.get('name')
+                if n is None:
+                    continue
+                if len(n) > 15:
+                    raise Exception("%s: config names must be max 15 caracters"%n)
+                data+='  static constexpr const char* %s="%s";\n'%(n,n)
+            data+="};\n"
+        else:
+            data+='void GwConfigHandler::populateConfigs(GwConfigInterface **config){\n'
+            for item in config:
+                name=item.get('name')
+                if name is None:
+                    continue
+                data+='  configs[%d]=\n'%(idx)
+                idx+=1
+                secret="false";
+                if item.get('type') == 'password':
+                    secret="true"
+                data+="    #undef __CFGMODE\n"
+                data+="    #ifdef CFGMODE_%s\n"%(name)
+                data+="      #define __CFGMODE CFGMODE_%s\n"%(name)
+                data+="    #else\n"
+                data+="      #define __CFGMODE GwConfigInterface::NORMAL\n"
+                data+="    #endif\n"    
+                data+="    #ifdef CFGDEFAULT_%s\n"%(name)
+                data+="     new GwConfigInterface(%s,CFGDEFAULT_%s,%s,__CFGMODE)\n"%(name,name,secret)
+                data+="    #else\n"
+                data+="     new GwConfigInterface(%s,\"%s\",%s,__CFGMODE)\n"%(name,item.get('default'),secret)
+                data+="    #endif\n"
+                data+=";\n"
+            data+='}\n'  
+            for item in config:
+                name=item.get('name')
+                if name is None:
+                    continue
+                data+="#ifdef CFGMODE_%s\n"%(name)
+                data+=" __MSG(\"CFGMODE_%s=\" __XSTR(CFGMODE_%s))\n"%(name,name)
+                data+="#endif\n"
+                data+="#ifdef CFGDEFAULT_%s\n"%(name)
+                data+=" __MSG(\"CFGDEFAULT_%s=\" CFGDEFAULT_%s)\n"%(name,name)
+                data+="#endif\n"
     writeFileIfChanged(outFile,data)    
                     
 
@@ -273,7 +270,8 @@ def prebuild(env):
     mergedConfig=os.path.join(outPath(),os.path.basename(CFG_FILE))
     generateMergedConfig(os.path.join(basePath(),CFG_FILE),mergedConfig,userTaskDirs)
     compressFile(mergedConfig,mergedConfig+".gz")
-    generateCfg(mergedConfig,os.path.join(outPath(),CFG_INCLUDE))
+    generateCfg(mergedConfig,os.path.join(outPath(),CFG_INCLUDE),False)
+    generateCfg(mergedConfig,os.path.join(outPath(),CFG_INCLUDE_IMPL),True)
     embedded=getEmbeddedFiles(env)
     filedefs=[]
     for ef in embedded:

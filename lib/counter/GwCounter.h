@@ -11,9 +11,12 @@ template<class T> class GwCounter{
         unsigned long globalFail=0;
         String name;
     public:
-        GwCounter(String name){
+        GwCounter(const String &name){
             this->name=name;
         };
+        void setName(const String &name){
+            this->name=name;
+        }
         void reset(){
             okCounter.clear();
             failCounter.clear();

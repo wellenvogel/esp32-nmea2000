@@ -322,6 +322,11 @@ void GwChannelList::fillStatus(GwApi::Status &status){
         status.serRx=channel->countRx();
         status.serTx=channel->countTx();
     }
+    channel=getChannelById(SERIAL2_CHANNEL_ID);
+    if (channel){
+        status.ser2Rx=channel->countRx();
+        status.ser2Tx=channel->countTx();
+    }
     channel=getChannelById(MIN_TCP_CHANNEL_ID);
     if (channel){
         status.tcpSerRx=channel->countRx();

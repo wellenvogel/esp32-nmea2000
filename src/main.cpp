@@ -235,7 +235,7 @@ void SendNMEA0183Message(const tNMEA0183Msg &NMEA0183Msg, int sourceId,bool conv
   });
 }
 
-class ApiImpl : public GwApi
+class ApiImpl : public GwApiInternal
 {
 private:
   int sourceId = -1;
@@ -374,7 +374,8 @@ protected:
     GwJsonDocument status(300 + 
       countNMEA2KIn.getJsonSize()+
       countNMEA2KOut.getJsonSize() +
-      channels.getJsonSize()
+      channels.getJsonSize()+
+      userCodeHandler.getJsonSize()
       );
     status["version"] = VERSION;
     status["wifiConnected"] = gwWifi.clientConnected();
@@ -406,6 +407,7 @@ protected:
     countNMEA2KIn.toJson(status);
     countNMEA2KOut.toJson(status);
     channels.toJson(status);
+    userCodeHandler.fillStatus(status);
     serializeJson(status, result);
   }
 };

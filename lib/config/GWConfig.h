@@ -1,21 +1,20 @@
 #ifndef _GWCONFIG_H
 #define _GWCONFIG_H
 #include <Arduino.h>
-#include <Preferences.h>
 #include "GwLog.h"
 #include "GwConfigItem.h"
-#include "GwHardware.h"
 #include "GwConfigDefinitions.h"
 #include <map>
 #include <vector>
 
-
+class Preferences;
 class GwConfigHandler: public GwConfigDefinitions{
     private:
-        Preferences prefs;
+        Preferences *prefs;
         GwLog *logger;
         typedef std::map<String,String> StringMap;
         boolean allowChanges=true;
+        GwConfigInterface **configs;
     public:
         public:
         GwConfigHandler(GwLog *logger);
@@ -40,7 +39,9 @@ class GwConfigHandler: public GwConfigDefinitions{
         bool setValue(String name, String value);
         static void toHex(unsigned long v,char *buffer,size_t bsize);
         unsigned long getSaltBase(){return saltBase;}
+        ~GwConfigHandler();
     private:
         unsigned long saltBase=0;
+        void populateConfigs(GwConfigInterface **);
 };
 #endif

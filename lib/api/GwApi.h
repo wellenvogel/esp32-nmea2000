@@ -35,6 +35,12 @@ class GwApi{
 
         class Status{
             public:
+                typedef enum{
+                    OFF,
+                    PRESSED,
+                    PRESSED_5, //5...10s
+                    PRESSED_10 //>10s...30s
+                } ButtonState;
                 bool wifiApOn=false;
                 bool wifiClientOn=false;
                 bool wifiClientConnected=false;
@@ -47,6 +53,8 @@ class GwApi{
                 unsigned long usbTx=0;
                 unsigned long serRx=0;
                 unsigned long serTx=0;
+                unsigned long ser2Rx=0;
+                unsigned long ser2Tx=0;
                 unsigned long tcpSerRx=0;
                 unsigned long tcpSerTx=0;
                 int tcpClients=0;
@@ -55,6 +63,8 @@ class GwApi{
                 bool tcpClientConnected=false;
                 unsigned long n2kRx=0;
                 unsigned long n2kTx=0;
+                ButtonState button=OFF;
+                unsigned long buttonPresses=0;
                 void empty(){
                     wifiApOn=false;
                     wifiClientOn=false;
@@ -68,6 +78,8 @@ class GwApi{
                     usbTx=0;
                     serRx=0;
                     serTx=0;
+                    ser2Rx=0;
+                    ser2Tx=0;
                     tcpSerRx=0;
                     tcpSerTx=0;
                     tcpClients=0;
@@ -75,7 +87,9 @@ class GwApi{
                     tcpClTx=0;
                     tcpClientConnected=false;
                     n2kRx=0;
-                    n2kTx=0; 
+                    n2kTx=0;
+                    button=OFF;
+                    buttonPresses=0; 
                 }
         }; 
         /**
@@ -109,7 +123,14 @@ class GwApi{
         /**
          * fill the status information
          */
-        virtual void getStatus(Status &status);
+        virtual void getStatus(Status &status)=0;
+        /**
+         * access to counters for a task
+         * thread safe
+        */
+        virtual void setCounterDisplayName(const String &){}
+        virtual void increment(const String &name,bool failed=false){}
+        virtual void reset(){}
         /**
          * not thread safe methods
          * accessing boat data must only be executed from within the main thread

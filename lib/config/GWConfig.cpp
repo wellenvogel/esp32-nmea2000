@@ -1,8 +1,11 @@
 #define CFG_MESSAGES
+#include <Preferences.h>
 #include "GWConfig.h"
 #include <ArduinoJson.h>
 #include <string.h>
 #include <MD5Builder.h>
+#include "GwHardware.h"
+#include "GwConfigDefImpl.h"
 
 #define B(v) (v?"true":"false")
 
@@ -56,14 +59,20 @@ GwConfigInterface * GwConfigHandler::getConfigItem(const String name, bool dummy
 GwConfigHandler::GwConfigHandler(GwLog *logger): GwConfigDefinitions(){
     this->logger=logger;
     saltBase=esp_random();
+    configs=new GwConfigInterface*[getNumConfig()];
+    populateConfigs(configs);
+    prefs=new Preferences();
+}
+GwConfigHandler::~GwConfigHandler(){
+    delete prefs;
 }
 bool GwConfigHandler::loadConfig(){
-    prefs.begin(PREF_NAME,true);
+    prefs->begin(PREF_NAME,true);
     for (int i=0;i<getNumConfig();i++){
-        String v=prefs.getString(configs[i]->getName().c_str(),configs[i]->getDefault());
+        String v=prefs->getString(configs[i]->getName().c_str(),configs[i]->getDefault());
         configs[i]->value=v;
     }
-    prefs.end();
+    prefs->end();
     return true;
 }
 
@@ -78,19 +87,19 @@ bool GwConfigHandler::updateValue(String name, String value){
             return false;
         }
         LOG_DEBUG(GwLog::LOG,"update config %s=>%s",name.c_str(),i->isSecret()?"***":value.c_str());
-        prefs.begin(PREF_NAME,false);
-        prefs.putString(i->getName().c_str(),value);
-        prefs.end();
+        prefs->begin(PREF_NAME,false);
+        prefs->putString(i->getName().c_str(),value);
+        prefs->end();
     }
     return true;
 }
 bool GwConfigHandler::reset(){
     LOG_DEBUG(GwLog::LOG,"reset config");
-    prefs.begin(PREF_NAME,false);
+    prefs->begin(PREF_NAME,false);
     for (int i=0;i<getNumConfig();i++){
-        prefs.putString(configs[i]->getName().c_str(),configs[i]->getDefault());
+        prefs->putString(configs[i]->getName().c_str(),configs[i]->getDefault());
     }
-    prefs.end();
+    prefs->end();
     return true;
 }
 String GwConfigHandler::getString(const String name, String defaultv) const{

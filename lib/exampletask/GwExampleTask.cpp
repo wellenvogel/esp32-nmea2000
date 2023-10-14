@@ -3,6 +3,7 @@
 #ifdef BOARD_TEST
 #include "GwExampleTask.h"
 #include "GwApi.h"
+#include "GWConfig.h"
 #include <vector>
 
 /**
@@ -97,6 +98,7 @@ void exampleTask(GwApi *api){
     GwApi::BoatValue *testValue=new GwApi::BoatValue(boatItemName);
     GwApi::BoatValue *valueList[]={longitude,latitude,testValue};
     GwApi::Status status;
+    api->setCounterDisplayName("usertest");
     while(true){
         delay(1000);
         /*
@@ -193,7 +195,9 @@ void exampleTask(GwApi *api){
             status.tcpClRx,
             status.tcpClTx,
             status.n2kRx,
-            status.n2kTx);        
+            status.n2kTx); 
+        //increment some counter
+        api->increment("Test");       
 
     }
     vTaskDelete(NULL);
