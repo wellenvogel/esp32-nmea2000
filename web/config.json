@@ -157,6 +157,16 @@
         "category":"system"
     },
     {
+        "name":"ledBrightness",
+        "label":"led brightness",
+        "type":"number",
+        "default":64,
+        "min":0,
+        "max":255,
+        "description":"the brightness of the led (0..255)",
+        "category":"system"
+    },
+    {
         "name": "minXdrInterval",
         "label":"min XDR interval",
         "type": "number",

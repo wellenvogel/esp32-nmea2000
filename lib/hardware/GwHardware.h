@@ -19,6 +19,7 @@
 #define GWSERIAL_TYPE_TX 4
 #include <GwConfigItem.h>
 #include <HardwareSerial.h>
+#include "GwAppInfo.h"
 #include "GwUserTasks.h"
 
 //general definitions for M5AtomLite
@@ -228,6 +229,15 @@
   #ifndef N2K_LOAD_LEVEL
     #define N2K_LOAD_LEVEL 3
   #endif
+#endif
+
+#ifdef GWLED_FASTLED
+  #define CFGMODE_ledBrightness GwConfigInterface::NORMAL
+  #ifdef GWLED_BRIGHTNESS
+    #define CFGDEFAULT_ledBrightness GWSTRINGIFY(GWLED_BRIGHTNESS)
+  #endif
+#else
+  #define CFGMODE_ledBrightness GwConfigInterface::HIDDEN
 #endif
 
 #endif

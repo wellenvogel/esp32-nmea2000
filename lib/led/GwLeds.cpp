@@ -38,11 +38,7 @@ void handleLeds(void *param){
     #else
     FastLED.addLeds<GWLED_TYPE,GWLED_PIN>(leds,1);
     #endif
-    #ifdef GWLED_BRIGHTNESS
-    uint8_t brightness=GWLED_BRIGHTNESS;
-    #else
-    uint8_t brightness=128; //50%
-    #endif
+    uint8_t brightness=api->getConfig()->getInt(GwConfigDefinitions::ledBrightness,128);
     GwLedMode currentMode=mode;
     leds[0]=colorFromMode(currentMode);
     FastLED.setBrightness(brightness);
