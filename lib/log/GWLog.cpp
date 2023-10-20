@@ -1,22 +1,40 @@
 #include "GwLog.h"
 #include "GwHardware.h"
 
-class DefaultLogWriter: public GwLogWriter{
-    public:
-        virtual ~DefaultLogWriter(){};
-        virtual void write(const char *data){
-            USBSerial.print(data);
-        }
-};
 
 GwLog::GwLog(int level, GwLogWriter *writer){
     logLevel=level;
-    if (writer == NULL) writer=new DefaultLogWriter();
     this->writer=writer;
+    if (!writer){
+        iniBuffer=new char[INIBUFFERSIZE];
+        iniBuffer[0]=0;
+    }
     locker = xSemaphoreCreateMutex();
 }
 GwLog::~GwLog(){
     vSemaphoreDelete(locker);
+}
+void GwLog::writeOut(const char *data)
+{
+    if (!writer)
+    {
+        if (iniBuffer && iniBufferFill < (INIBUFFERSIZE - 1))
+        {
+            size_t remain = INIBUFFERSIZE - iniBufferFill-1;
+            size_t len = strlen(data);
+            if (len < remain)
+                remain = len;
+            if (remain){
+                memcpy(iniBuffer + iniBufferFill, data, remain);
+                iniBufferFill += remain;
+                iniBuffer[iniBufferFill] = 0;
+            }
+        }
+    }
+    else
+    {
+        writer->write(data);
+    }
 }
 void GwLog::logString(const char *fmt,...){
     va_list args;
@@ -25,16 +43,12 @@ void GwLog::logString(const char *fmt,...){
     recordCounter++;
     vsnprintf(buffer,bufferSize-1,fmt,args);
     buffer[bufferSize-1]=0;
-    if (! writer) {
-        xSemaphoreGive(locker);
-        return;
-    }
-    writer->write(prefix.c_str());
+    writeOut(prefix.c_str());
     char buf[20];
     snprintf(buf,20,"%lu:",millis());
-    writer->write(buf);
-    writer->write(buffer);
-    writer->write("\n");
+    writeOut(buf);
+    writeOut(buffer);
+    writeOut("\n");
     xSemaphoreGive(locker);
 }
 void GwLog::logDebug(int level,const char *fmt,...){
@@ -48,22 +62,24 @@ void GwLog::logDebug(int level,const char *fmt,va_list args){
     recordCounter++;
     vsnprintf(buffer,bufferSize-1,fmt,args);
     buffer[bufferSize-1]=0;
-    if (! writer) {
-        xSemaphoreGive(locker);
-        return;
-    }
-    writer->write(prefix.c_str());
+    writeOut(prefix.c_str());
     char buf[20];
     snprintf(buf,20,"%lu:",millis());
-    writer->write(buf);
-    writer->write(buffer);
-    writer->write("\n");
+    writeOut(buf);
+    writeOut(buffer);
+    writeOut("\n");
     xSemaphoreGive(locker);
 }
 void GwLog::setWriter(GwLogWriter *writer){
     xSemaphoreTake(locker, portMAX_DELAY);
     if (this->writer) delete this->writer;
     this->writer=writer;
+    if (iniBuffer && iniBufferFill){
+        writer->write(iniBuffer);
+        iniBufferFill=0;
+        delete[] iniBuffer;
+        iniBuffer=nullptr;
+    }
     xSemaphoreGive(locker);
 }
 

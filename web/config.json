@@ -120,6 +120,22 @@
         "capabilities":{"apPwChange":["true"]}
     },
     {
+        "name": "apIp",
+        "type": "string",
+        "default":"192.168.15.1",
+        "check": "checkApIp",
+        "description": "The IP address for the access point. Clients will get addresses within the same subnet.",
+        "category":"system"
+    },
+    {
+        "name": "apMask",
+        "type": "string",
+        "default":"255.255.255.0",
+        "check": "checkNetMask",
+        "description": "The net mask for the access point",
+        "category":"system"
+    },
+    {
         "name": "useAdminPass",
         "type": "boolean",
         "default": "true",

@@ -698,6 +698,13 @@ void handleConfigRequestData(AsyncWebServerRequest *request, uint8_t *data, size
 }
 
 TimeMonitor monitor(20,0.2);
+class DefaultLogWriter: public GwLogWriter{
+    public:
+        virtual ~DefaultLogWriter(){};
+        virtual void write(const char *data){
+            USBSerial.print(data);
+        }
+};
 
 void setup() {
   mainLock=xSemaphoreCreateMutex();
@@ -713,6 +720,7 @@ void setup() {
     USBSerial.begin(115200);
     USBSerial.printf("fallback serial enabled\n");
     logger.prefix="FALLBACK:";
+  logger.setWriter(new DefaultLogWriter());
 #endif
   userCodeHandler.startInitTasks(MIN_USER_TASK);
   config.stopChanges();

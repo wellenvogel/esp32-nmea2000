@@ -186,6 +186,21 @@ function checkAdminPass(v){
     return checkApPass(v);
 }
 
+function checkApIp(v,allValues){
+    if (! v) return "cannot be empty";
+    let err1="must be in the form 192.168.x.x";
+    if (! v.match(/[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+/))return err1;
+    let parts=v.split(".");
+    if (parts.length != 4) return err1;
+    for (let idx=0;idx < 4;idx++){
+        let iv=parseInt(parts[idx]);
+        if (iv < 0 || iv > 255) return err1;
+    }
+}
+function checkNetMask(v,allValues){
+    return checkApIp(v,allValues);
+}
+
 function checkIpAddress(v,allValues,def){
     if (allValues.tclEnabled != "true") return;
     if (! v) return "cannot be empty";

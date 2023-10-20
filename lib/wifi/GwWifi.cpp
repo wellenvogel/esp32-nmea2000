@@ -11,10 +11,30 @@ GwWifi::GwWifi(const GwConfigHandler *config,GwLog *log, bool fixedApPass){
 }
 void GwWifi::setup(){
     LOG_DEBUG(GwLog::LOG,"Wifi setup");
-    
-    IPAddress AP_local_ip(192, 168, 15, 1);  // Static address for AP
-    IPAddress AP_gateway(192, 168, 15, 1);
-    IPAddress AP_subnet(255, 255, 255, 0);
+    IPAddress defaultAddr(192,168,15,1);
+    IPAddress AP_local_ip;  // Static address for AP
+    const String apip=config->getString(config->apIp);
+    bool cfgIpOk=false;
+    if (!apip.isEmpty()){
+        cfgIpOk= AP_local_ip.fromString(apip);
+    }
+    if (! cfgIpOk){
+        AP_local_ip=IPAddress(192,168,15,1);
+        LOG_DEBUG(GwLog::ERROR,"unable to set access point IP %s, falling back to %s",
+            apip.c_str(),AP_local_ip.toString().c_str());
+    }
+    IPAddress AP_gateway(AP_local_ip);
+    bool maskOk=false;
+    IPAddress AP_subnet;
+    const String apMask=config->getString(config->apMask);
+    if (!apMask.isEmpty()){
+        maskOk=AP_subnet.fromString(apMask);
+    }
+    if (! maskOk){
+        AP_subnet=IPAddress(255, 255, 255, 0);
+        LOG_DEBUG(GwLog::ERROR,"unable to set access point mask %s, falling back to %s",
+            apMask.c_str(),AP_subnet.toString().c_str());
+    }
     WiFi.mode(WIFI_MODE_APSTA); //enable both AP and client
     const char *ssid=config->getConfigItem(config->systemName)->asCString();
     if (fixedApPass){
@@ -33,7 +53,7 @@ void GwWifi::setup(){
     lastApAccess=millis();
     apShutdownTime=config->getConfigItem(config->stopApTime)->asInt() * 60;
     if (apShutdownTime < 120 && apShutdownTime != 0) apShutdownTime=120; //min 2 minutes
-    LOG_DEBUG(GwLog::LOG,"GWWIFI: AP auto shutdown %s (%ds)",apShutdownTime> 0?"enabled":"disabled",apShutdownTime);
+    LOG_DEBUG(GwLog::ERROR,"GWWIFI: AP auto shutdown %s (%ds)",apShutdownTime> 0?"enabled":"disabled",apShutdownTime);
     apShutdownTime=apShutdownTime*1000; //ms   
     clientIsConnected=false;
     connectInternal();    
@@ -65,7 +85,7 @@ void GwWifi::loop(){
         }
         else{
             if (! clientIsConnected){
-                LOG_DEBUG(GwLog::LOG,"client %s now connected",wifiSSID->asCString());
+                LOG_DEBUG(GwLog::LOG,"wifiClient %s now connected to",wifiSSID->asCString());
                 clientIsConnected=true;
             }
         }
@@ -75,7 +95,7 @@ void GwWifi::loop(){
             lastApAccess=millis();
         }
         if ((lastApAccess + apShutdownTime) < millis()){
-            LOG_DEBUG(GwLog::LOG,"GWWIFI: shutdown AP");
+            LOG_DEBUG(GwLog::ERROR,"GWWIFI: shutdown AP");
             WiFi.softAPdisconnect(true);
             apActive=false;
         }

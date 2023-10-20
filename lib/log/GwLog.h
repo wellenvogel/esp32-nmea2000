@@ -16,6 +16,10 @@ class GwLog{
         GwLogWriter *writer;
         SemaphoreHandle_t locker;
         long long recordCounter=0;
+        const size_t INIBUFFERSIZE=1024;
+        char *iniBuffer=nullptr;
+        size_t iniBufferFill=0;
+        void writeOut(const char *data);
     public:
         static const int LOG=1;
         static const int ERROR=0;
