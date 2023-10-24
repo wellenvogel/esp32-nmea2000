@@ -5,6 +5,7 @@
 #include "NMEA0183Msg.h"
 #include "GWConfig.h"
 #include "GwBoatData.h"
+#include <map>
 //API to be used for additional tasks
 class GwApi{
     public:
@@ -33,29 +34,31 @@ class GwApi{
                 }
         };
         /**
-         * a simple value container
-         * to exchange data between tasks
-        */
-        class Value{
-            long lvalue=0;
-            String svalue;
-            bool isString=false;
-            bool isValid=false;
+         * an interface for the data exchange between tasks
+         * the core part will not handle this data at all but
+         * this interface ensures that there is a correct locking of the
+         * data to correctly handle multi threading
+         * The user code should not use this intterface directly
+         * but instead it should use the static functions
+         * apiGetXXX(GwApi *,...)
+         * apiSetXXX(GwApi *,...)
+         * that will be created by the macro DECLARE_TASK_INTERFACE
+         */
+        class TaskInterfaces
+        {
+        public:
+            class Base
+            {
             public:
-            Value(const String &v){isString=true;svalue=v;isValid=true;}
-            Value(long l){lvalue=l;isValid=true;}
-            Value(){}
-            long getLValue() const{
-                if(!isString) return lvalue;
-                return atol(svalue.c_str());
-            }
-            String getSValue() const{
-                if(isString) return svalue;
-                return String(lvalue);
-            }
-            bool valid() const{return isValid;}
+                virtual ~Base()
+                {
+                }
+            };
+            using Ptr = std::shared_ptr<Base>;
+        public:
+            virtual bool iset(const String &file, const String &name, Ptr v) = 0;
+            virtual Ptr iget(const String &name, int &result) = 0;
         };
-
         class Status{
             public:
                 typedef enum{
@@ -156,14 +159,7 @@ class GwApi{
         virtual void increment(int idx,const String &name,bool failed=false){}
         virtual void reset(int idx){}
         virtual void remove(int idx){}
-
-        /**
-         * exchange data between different user tasks
-         * each task can set arbitrary items
-         * that can be accessed by other tasks
-        */
-        virtual void setTaskValue(const String &name,const Value &v){}
-        virtual Value getTaskValue(const String &taskName,const String &name){return Value();}
+        virtual TaskInterfaces * taskInterfaces()=0;
 
         /**
          * not thread safe methods
@@ -187,5 +183,59 @@ class GwApi{
 #endif
 #ifndef DECLARE_STRING_CAPABILITY
 #define DECLARE_STRING_CAPABILITY(name,value)
+#endif
+/**
+ * macro to declare an interface that a task provides to other tasks
+ * this macro must be used in an File I<taskname>.h or GwI<taskname>.h
+ * the first parameter must be the name of the task that should be able
+ * to write this data (the same name as being used in DECLARE_TASK).
+ * The second parameter must be a type (class) that inherits from 
+ * GwApi::TaskInterfaces::Base.
+ * This class must provide copy constructors and empty constructors.
+ * The attributes should only be simple values or structs but no pointers.
+ * example:
+ * class TestTaskApi: public GwApi::TaskInterfaces::Base{
+ *      public:
+ *          int ival1=0;
+ *          int ival2=99;
+ *          String sval="unset";
+ * };
+ * DECLARE_TASKIF(testTask,TestTaskApi);
+ * The macro will generate 2 static funtions:
+ * 
+ * bool apiSetTestTaskApi(GwApi *api, const TestTaskApi &v);
+ * TestTaskApi apiGetTestTaskApi(GwApi *api, int &result);
+ * 
+ * The setter will return true on success.
+ * It is intended to be used by the task that did declare the api.
+ * The getter will set the result to -1 if no data is available, otherwise
+ * it will return the update count (so you can check if there was a change 
+ * compared to the last call).
+ * It is intended to be used by any task.
+ * Be aware that all the apis share a common namespace - so be sure to somehow
+ * make your API names unique.
+ * 
+ * 
+*/
+#define DECLARE_TASKIF_IMPL(task,type) \
+    static bool apiSet##type(GwApi *a,const type &v){ \
+        if (! a || ! a->taskInterfaces()) return false; \
+        return a->taskInterfaces()->iset(__FILE__,#type,GwApi::TaskInterfaces::Ptr(new type(v)));\
+    }\
+    static const type apiGet##type(GwApi *a, int &result) {\
+        if (! a || ! a->taskInterfaces()) {\
+            result=-1; \
+            return type(); \
+            }\
+        auto ptr=a->taskInterfaces()->iget(#type,result); \
+        if (!ptr) {\
+            result=-1; \
+            return type(); \
+        }\
+        type *tp=(type*)ptr.get(); \
+        return type(*tp); \
+    }
+#ifndef DECLARE_TASKIF
+    #define DECLARE_TASKIF(task,type) DECLARE_TASKIF_IMPL(task,type)
 #endif
 #endif

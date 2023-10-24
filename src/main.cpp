@@ -320,6 +320,7 @@ public:
     return config.getString(config.talkerId,String("GP")).c_str();
   }
   virtual ~ApiImpl(){}
+  virtual TaskInterfaces *taskInterfaces(){ return nullptr;}
 };
 
 bool delayedRestart(){

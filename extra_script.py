@@ -17,6 +17,7 @@ CFG_INCLUDE='GwConfigDefinitions.h'
 CFG_INCLUDE_IMPL='GwConfigDefImpl.h'
 XDR_INCLUDE='GwXdrTypeMappings.h'
 TASK_INCLUDE='GwUserTasks.h'
+TASK_INCLUDE_IF='GwUserTasksIf.h'
 EMBEDDED_INCLUDE="GwEmbeddedFiles.h"
 
 def getEmbeddedFiles(env):
@@ -219,23 +220,28 @@ def getUserTaskDirs():
     for task in taskdirs:
         rt.append(task)
     return rt
-def genereateUserTasks(outfile):
+
+def checkAndAdd(file,names,ilist):
+    if not file.endswith('.h'):
+        return
+    match=False
+    for cmp in names:
+        #print("##check %s<->%s"%(f.lower(),cmp))
+        if file.lower() == cmp:
+            match=True
+    if not match:
+        return
+    ilist.append(file) 
+def genereateUserTasks(outfile,forIf=False):
     includes=[]
     for task in userTaskDirs:
         #print("##taskdir=%s"%task)
         base=os.path.basename(task)
         includeNames=[base.lower()+".h",'gw'+base.lower()+'.h']
+        if forIf:
+            includeNames=["i"+base.lower()+".h",'gwi'+base.lower()+'.h']
         for f in os.listdir(task):
-            if not f.endswith('.h'):
-                continue
-            match=False
-            for cmp in includeNames:
-                #print("##check %s<->%s"%(f.lower(),cmp))
-                if f.lower() == cmp:
-                    match=True
-            if not match:
-                continue
-            includes.append(f)
+            checkAndAdd(f,includeNames,includes)
     includeData=""
     for i in includes:
         print("#task include %s"%i)
@@ -291,6 +297,7 @@ def prebuild(env):
             print("#WARNING: infile %s for %s not found"%(inFile,ef))
     generateEmbedded(filedefs,os.path.join(outPath(),EMBEDDED_INCLUDE))
     genereateUserTasks(os.path.join(outPath(), TASK_INCLUDE))
+    genereateUserTasks(os.path.join(outPath(), TASK_INCLUDE_IF),forIf=True)
     generateFile(os.path.join(basePath(),XDR_FILE),os.path.join(outPath(),XDR_INCLUDE),generateXdrMappings)
     version="dev"+datetime.now().strftime("%Y%m%d")
     env.Append(CPPDEFINES=[('GWDEVVERSION',version)])

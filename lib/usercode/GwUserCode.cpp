@@ -17,7 +17,46 @@
 std::vector<GwUserTask> userTasks;
 std::vector<GwUserTask> initTasks;
 GwUserCode::Capabilities userCapabilities;
+class RegEntry{
+    public:
+    String file;
+    String task;
+    RegEntry(const String &t, const String &f):file(f),task(t){}
+    RegEntry(){}
+};
+using RegMap=std::map<String,RegEntry>;
+static RegMap &registrations(){
+    static RegMap *regMap=new RegMap();
+    return *regMap;
+} 
 
+static void registerInterface(const String &task,const String &file, const String &name){
+    auto it=registrations().find(name);
+    if (it != registrations().end()){
+        if (it->second.file != file){
+            ESP_LOGE("Assert","type %s redefined in %s original in %s",name,file,it->second.file);
+            std::abort(); 
+        };
+        if (it->second.task != task){
+            ESP_LOGE("Assert","type %s registered for multiple tasks %s and %s",name,task,it->second.task);
+            std::abort(); 
+        };
+    }   
+    else{
+        registrations()[name]=RegEntry(task,file);
+    }
+}
+
+class GwIreg{
+    public:
+        GwIreg(const String &task,const String &file, const String &name){
+            registerInterface(task,file,name);
+        }
+    };
+
+#define DECLARE_TASKIF(task,type) \
+    DECLARE_TASKIF_IMPL(task,type) \
+    GwIreg __register##type(#task,__FILE__,#type)
 
 
 class GwUserTaskDef{
@@ -46,44 +85,79 @@ class GwUserCapability{
         }
 };
 #include "GwUserTasks.h"
-class TaskData{
-    SemaphoreHandle_t lock;
-    std::map<String,GwApi::Value> data;
-    GwLog *logger;
-    String computeKey(const String &taskName,const String &name) const{
-        return taskName+":#:"+name;
-    }
-    public:
-    TaskData(GwLog *l){
-        lock=xSemaphoreCreateMutex();
-        logger=l;
-    }
-    ~TaskData(){
-        vSemaphoreDelete(lock);
-    }
-    void setTaskValue(const String &taskName,const String &name,const GwApi::Value &v){
-        String key=computeKey(taskName,name);
-        LOG_DEBUG(GwLog::DEBUG,"set task data %s=%s",key.c_str(),v.getSValue().c_str());
-        GWSYNCHRONIZED(&lock);
-        data[key]=v;
-    }
-    GwApi::Value getTaskValue(const String &taskName,const String &name){
-        GwApi::Value rt;
-        String key=computeKey(taskName,name);
-        {
-            GWSYNCHRONIZED(&lock);
-            auto it=data.find(key);
-            if (it != data.end()) rt=it->second;
-        }
-        LOG_DEBUG(GwLog::DEBUG,"get task data %s:%s (valid=%d)",key.c_str(),rt.getSValue().c_str(),(int)rt.valid());
-        return rt;
-    }
+#include "GwUserTasksIf.h"
 
+class TaskDataEntry{
+        public:
+        GwApi::TaskInterfaces::Ptr ptr;
+        int updates=0;
+        TaskDataEntry(GwApi::TaskInterfaces::Ptr p):ptr(p){}
+        TaskDataEntry(){}
+    };
+class TaskInterfacesStorage{
+   GwLog *logger;
+    SemaphoreHandle_t lock;
+    std::map<String,TaskDataEntry> values;
+    public:
+        TaskInterfacesStorage(GwLog* l):
+            logger(l){
+                lock=xSemaphoreCreateMutex();
+            }
+        bool set(const String &file, const String &name, const String &task,GwApi::TaskInterfaces::Ptr v){
+            GWSYNCHRONIZED(&lock);
+            auto it=registrations().find(name);
+            if (it == registrations().end()){
+                LOG_DEBUG(GwLog::ERROR,"invalid set %s not known",name.c_str());
+                return false;
+            }
+            if (it->second.file != file){
+                LOG_DEBUG(GwLog::ERROR,"invalid set %s wrong file, expected %s , got %s",name.c_str(),it->second.file.c_str(),file.c_str());
+                return false;
+            }
+            if (it->second.task != task){
+                LOG_DEBUG(GwLog::ERROR,"invalid set %s wrong task, expected %s , got %s",name.c_str(),it->second.task.c_str(),task.c_str());
+                return false;
+            }
+            auto vit=values.find(name);
+            if (vit != values.end()){
+                vit->second.updates++;
+                vit->second.ptr=v;
+            }
+            else{
+                values[name]=TaskDataEntry(v);
+            }
+            return true;
+        }
+        GwApi::TaskInterfaces::Ptr get(const String &name, int &result){
+            GWSYNCHRONIZED(&lock);
+            auto it = values.find(name);
+            if (it == values.end())
+            {
+                result = -1;
+                return GwApi::TaskInterfaces::Ptr();
+            }
+            result = it->second.updates;
+            return it->second.ptr;
+        } 
+};    
+class TaskInterfacesImpl : public GwApi::TaskInterfaces{
+    String task;
+    TaskInterfacesStorage *storage;
+    public:
+        TaskInterfacesImpl(const String &n,TaskInterfacesStorage *s):
+            task(n),storage(s){}
+        virtual bool iset(const String &file, const String &name, Ptr v){
+            return storage->set(file,name,task,v);
+        }
+        virtual Ptr iget(const String &name, int &result){
+            return storage->get(name,result);
+        }
 };
+
+
 class TaskApi : public GwApiInternal
 {
     GwApiInternal *api=nullptr;
-    TaskData *taskData=nullptr;
     int sourceId;
     SemaphoreHandle_t *mainLock;
     SemaphoreHandle_t localLock;
@@ -91,20 +165,20 @@ class TaskApi : public GwApiInternal
     String name;
     bool counterUsed=false;
     int counterIdx=0;
-
+    TaskInterfacesImpl *interfaces;
 public:
     TaskApi(GwApiInternal *api, 
         int sourceId, 
         SemaphoreHandle_t *mainLock, 
         const String &name,
-        TaskData *d)
+        TaskInterfacesStorage *s)
     {
         this->sourceId = sourceId;
         this->api = api;
         this->mainLock=mainLock;
         this->name=name;
         localLock=xSemaphoreCreateMutex();
-        taskData=d;
+        interfaces=new TaskInterfacesImpl(name,s);
     }
     virtual GwRequestQueue *getQueue()
     {
@@ -153,6 +227,7 @@ public:
         api->getStatus(status);
     }
     virtual ~TaskApi(){
+        delete interfaces;
         vSemaphoreDelete(localLock);
     };
     virtual void fillStatus(GwJsonDocument &status){
@@ -202,11 +277,8 @@ public:
         else it->second=GwCounter<String>("count"+name);
         return counterIdx;
     }
-    virtual void setTaskValue(const String &name,const Value &v){
-        taskData->setTaskValue(this->name,name,v);
-    }
-    virtual Value getTaskValue(const String &taskName,const String &name){
-        return taskData->getTaskValue(taskName,name);
+    virtual TaskInterfaces * taskInterfaces(){
+        return interfaces;
     }
 
 };
@@ -215,7 +287,10 @@ GwUserCode::GwUserCode(GwApiInternal *api,SemaphoreHandle_t *mainLock){
     this->logger=api->getLogger();
     this->api=api;
     this->mainLock=mainLock;
-    this->taskData=new TaskData(this->logger);
+    this->taskData=new TaskInterfacesStorage(this->logger);
+}
+GwUserCode::~GwUserCode(){
+    delete taskData;
 }
 void userTaskStart(void *p){
     GwUserTask *task=(GwUserTask*)p;
