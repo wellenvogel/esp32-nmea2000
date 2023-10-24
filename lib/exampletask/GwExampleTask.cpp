@@ -2,6 +2,7 @@
 //we only compile for some boards
 #ifdef BOARD_TEST
 #include "GwExampleTask.h"
+#include "GwIExampleTask.h"
 #include "GwApi.h"
 #include "GWConfig.h"
 #include <vector>
@@ -99,6 +100,9 @@ void exampleTask(GwApi *api){
     GwApi::BoatValue *valueList[]={longitude,latitude,testValue};
     GwApi::Status status;
     int counter=api->addCounter("usertest");
+    int apiResult=0;
+    ExampleTaskIf e1=apiGetExampleTaskIf(api,apiResult);
+    LOG_DEBUG(GwLog::LOG,"exampleIf before rs=%d,v=%d,s=%s",apiResult,e1.count,e1.someValue.c_str());
     while(true){
         delay(1000);
         /*
@@ -198,7 +202,14 @@ void exampleTask(GwApi *api){
             status.n2kTx); 
         //increment some counter
         api->increment(counter,"Test");       
-
+        ExampleTaskIf e2=apiGetExampleTaskIf(api,apiResult);
+        LOG_DEBUG(GwLog::LOG,"exampleIf before update rs=%d,v=%d,s=%s",apiResult,e2.count,e2.someValue.c_str());
+        e1.count+=1;
+        e1.someValue="running";
+        bool rs=apiSetExampleTaskIf(api,e1);
+        LOG_DEBUG(GwLog::LOG,"exampleIf update rs=%d,v=%d,s=%s",(int)rs,e1.count,e1.someValue.c_str());
+        ExampleTaskIf e3=apiGetExampleTaskIf(api,apiResult);
+        LOG_DEBUG(GwLog::LOG,"exampleIf after update rs=%d,v=%d,s=%s",apiResult,e3.count,e3.someValue.c_str());
     }
     vTaskDelete(NULL);
     
