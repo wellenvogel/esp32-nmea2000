@@ -1,4 +1,5 @@
 #include "GwXDRMappings.h"
+#include "GWConfig.h"
 #include "N2kMessages.h"
 
 double PtoBar(double v)
@@ -96,7 +97,7 @@ static GwXDRType::TypeCode findTypeMapping(GwXDRCategory category, int field)
     return GwXDRType::UNKNOWN;
 }
 //category,direction,selector,field,instanceMode,instance,name
-String GwXDRMappingDef::toString()
+String GwXDRMappingDef::toString() const
 {
     String rt = "";
     rt += String((int)category);
@@ -233,6 +234,82 @@ GwXDRMappings::GwXDRMappings(GwLog *logger, GwConfigHandler *config)
     this->logger = logger;
     this->config = config;
 }
+bool GwXDRMappings::addFixedMapping(const GwXDRMappingDef &mapping){
+    GwXDRMappingDef *nm=new GwXDRMappingDef(mapping);
+    bool res=addMapping(nm);
+    if (! res){
+        LOG_DEBUG(GwLog::ERROR,"unable to add fixed mapping %s",mapping.toString().c_str());
+        return false;
+    }
+    return true;
+}
+bool GwXDRMappings::addMapping(GwXDRMappingDef *def)
+{
+    if (def)
+    {
+        int typeIndex = 0;
+        LOG_DEBUG(GwLog::LOG, "add xdr mapping %s",
+                  def->toString().c_str());
+        // n2k: find first matching type mapping
+        GwXDRType::TypeCode code = findTypeMapping(def->category, def->field);
+        if (code == GwXDRType::UNKNOWN)
+        {
+            LOG_DEBUG(GwLog::ERROR, "no type mapping for %s", def->toString().c_str());
+            return false;
+        }
+        GwXDRType *type = findType(code, &typeIndex);
+        if (!type)
+        {
+            LOG_DEBUG(GwLog::ERROR, "no type definition for %s", def->toString().c_str());
+            return false;
+        }
+        long n2kkey = def->n2kKey();
+        auto it = n2kMap.find(n2kkey);
+        GwXDRMapping *mapping = new GwXDRMapping(def, type);
+        if (it == n2kMap.end())
+        {
+            LOG_DEBUG(GwLog::LOG, "insert mapping with key %ld", n2kkey);
+            GwXDRMapping::MappingList mappings;
+            mappings.push_back(mapping);
+            n2kMap[n2kkey] = mappings;
+        }
+        else
+        {
+            LOG_DEBUG(GwLog::LOG, "append mapping with key %ld", n2kkey);
+            it->second.push_back(mapping);
+        }
+        // for nmea0183 there could be multiple entries
+        // as potentially there are different units that we can handle
+        // so after we inserted the definition we do additional type lookups
+        while (type != NULL)
+        {
+            String n183key = GwXDRMappingDef::n183key(def->xdrName,
+                                                      type->xdrtype, type->xdrunit);
+            auto it = n183Map.find(n183key);
+            if (it == n183Map.end())
+            {
+                LOG_DEBUG(GwLog::LOG, "insert mapping with n183key %s", n183key.c_str());
+                GwXDRMapping::MappingList mappings;
+                mappings.push_back(mapping);
+                n183Map[n183key] = mappings;
+            }
+            else
+            {
+                LOG_DEBUG(GwLog::LOG, "append mapping with n183key %s", n183key.c_str());
+                it->second.push_back(mapping);
+            }
+            type = findType(code, &typeIndex);
+            if (!type)
+                break;
+            mapping = new GwXDRMapping(def, type);
+        }
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
 
 #define MAX_MAPPINGS 100
 void GwXDRMappings::begin()
@@ -258,61 +335,10 @@ void GwXDRMappings::begin()
             GwXDRMappingDef *def = GwXDRMappingDef::fromString(cfg->asCString());
             if (def)
             {
-                int typeIndex = 0;
-                LOG_DEBUG(GwLog::DEBUG, "read xdr mapping %s from %s", 
-                    def->toString().c_str(),namebuf);
-                //n2k: find first matching type mapping
-                GwXDRType::TypeCode code = findTypeMapping(def->category, def->field);
-                if (code == GwXDRType::UNKNOWN)
-                {
-                    LOG_DEBUG(GwLog::DEBUG, "no type mapping for %s", def->toString().c_str());
-                    continue;
-                }
-                GwXDRType *type = findType(code, &typeIndex);
-                if (!type)
-                {
-                    LOG_DEBUG(GwLog::DEBUG, "no type definition for %s", def->toString().c_str());
-                    continue;
-                }
-                long n2kkey = def->n2kKey();
-                auto it = n2kMap.find(n2kkey);
-                GwXDRMapping *mapping = new GwXDRMapping(def, type);
-                if (it == n2kMap.end())
-                {
-                    LOG_DEBUG(GwLog::DEBUG, "insert mapping with key %ld", n2kkey);
-                    GwXDRMapping::MappingList mappings;
-                    mappings.push_back(mapping);
-                    n2kMap[n2kkey] = mappings;
-                }
-                else
-                {
-                    LOG_DEBUG(GwLog::DEBUG, "append mapping with key %ld", n2kkey);
-                    it->second.push_back(mapping);
-                }
-                //for nmea0183 there could be multiple entries
-                //as potentially there are different units that we can handle
-                //so after we inserted the definition we do additional type lookups
-                while (type != NULL)
-                {
-                    String n183key = GwXDRMappingDef::n183key(def->xdrName,
-                                                              type->xdrtype, type->xdrunit);
-                    auto it = n183Map.find(n183key);
-                    if (it == n183Map.end())
-                    {
-                        LOG_DEBUG(GwLog::DEBUG, "insert mapping with n183key %s", n183key.c_str());
-                        GwXDRMapping::MappingList mappings;
-                        mappings.push_back(mapping);
-                        n183Map[n183key] = mappings;
-                    }
-                    else
-                    {
-                        LOG_DEBUG(GwLog::DEBUG, "append mapping with n183key %s", n183key.c_str());
-                        it->second.push_back(mapping);
-                    }
-                    type = findType(code, &typeIndex);
-                    if (!type)
-                        break;
-                    mapping=new GwXDRMapping(def,type);    
+                bool res=addMapping(def);
+                if (! res){
+                    LOG_DEBUG(GwLog::ERROR,"unable to add mapping from %s",cfg);
+                    delete cfg;
                 }
             }
             else{

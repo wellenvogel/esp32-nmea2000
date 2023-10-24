@@ -40,6 +40,7 @@ class GwConfigHandler: public GwConfigDefinitions{
         static void toHex(unsigned long v,char *buffer,size_t bsize);
         unsigned long getSaltBase(){return saltBase;}
         ~GwConfigHandler();
+        bool userChangesAllowed(){return allowChanges;}
     private:
         unsigned long saltBase=0;
         void populateConfigs(GwConfigInterface **);

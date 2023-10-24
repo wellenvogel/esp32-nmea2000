@@ -5,6 +5,7 @@
 #include "NMEA0183Msg.h"
 #include "GWConfig.h"
 #include "GwBoatData.h"
+#include "GwXDRMappings.h"
 #include <map>
 //API to be used for additional tasks
 class GwApi{
@@ -150,6 +151,11 @@ class GwApi{
         virtual void reset(int idx){}
         virtual void remove(int idx){}
         virtual TaskInterfaces * taskInterfaces()=0;
+
+        /**
+         * only allowed during init methods
+        */
+        virtual bool addXdrMapping(const GwXDRMappingDef &);
 
         /**
          * not thread safe methods

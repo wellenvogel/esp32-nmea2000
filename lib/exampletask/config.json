@@ -20,5 +20,30 @@
         "capabilities": {
             "testboard":"true"
         }
+    },
+    {
+        "name": "exTransducer",
+        "label": "voltage transducer name",
+        "type": "String",
+        "default": "",
+        "description": "set the name for the xdr transducer for the simulated voltage, leave empty to disable ",
+        "category": "example",
+        "capabilities": {
+            "testboard":"true"
+        }
+    },
+    {
+        "name": "exInstanceId",
+        "label": "voltage instance id",
+        "type": "number",
+        "default": 99,
+        "description": "the N2K instance id for the simulated voltage ",
+        "category": "example",
+        "min": 0,
+        "max": 255,
+        "check": "checkMinMax",
+        "capabilities": {
+            "testboard":"true"
+        }
     }
 ]

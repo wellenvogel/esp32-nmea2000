@@ -280,6 +280,9 @@ public:
     virtual TaskInterfaces * taskInterfaces(){
         return interfaces;
     }
+    virtual bool addXdrMapping(const GwXDRMappingDef &def){
+        return api->addXdrMapping(def);
+    }
 
 };
 

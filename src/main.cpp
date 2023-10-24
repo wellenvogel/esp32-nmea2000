@@ -319,6 +319,13 @@ public:
   }
   virtual ~ApiImpl(){}
   virtual TaskInterfaces *taskInterfaces(){ return nullptr;}
+  virtual bool addXdrMapping(const GwXDRMappingDef &mapping){
+    if (! config.userChangesAllowed()){
+      logger.logDebug(GwLog::ERROR,"trying to add an XDR mapping %s after the init phase",mapping.toString().c_str());
+      return false;
+    }
+    return xdrMappings.addFixedMapping(mapping);
+  }
 };
 
 bool delayedRestart(){

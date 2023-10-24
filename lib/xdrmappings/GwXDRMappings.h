@@ -1,7 +1,6 @@
 #ifndef _GWXDRMAPPINGS_H
 #define _GWXDRMAPPINGS_H
 #include "GwLog.h"
-#include "GWConfig.h"
 #include "GwBoatData.h"
 #include <WString.h>
 #include <vector>
@@ -115,7 +114,7 @@ class GwXDRMappingDef{
         category=XDRTEMP;
     }
     //category,direction,selector,field,instanceMode,instance,name
-    String toString();
+    String toString() const;
     static GwXDRMappingDef *fromString(String s);
     //we allow 100 entities of code,selector and field nid
     static unsigned long n2kKey(GwXDRCategory category, int selector, int field)
@@ -200,6 +199,7 @@ class GwXDRFoundMapping : public GwBoatItemNameProvider{
 
 //the class GwXDRMappings is not intended to be deleted
 //the deletion will leave memory leaks!
+class GwConfigHandler;
 class GwXDRMappings{
     static const int MAX_UNKNOWN=200;
     static const int ESIZE=13;
@@ -212,8 +212,10 @@ class GwXDRMappings{
      char *unknowAsString=NULL;
      GwXDRFoundMapping selectMapping(GwXDRMapping::MappingList *list,int instance,const char * key);
      bool addUnknown(GwXDRCategory category,int selector,int field=0,int instance=-1);
+     bool addMapping(GwXDRMappingDef *mapping);
     public:
         GwXDRMappings(GwLog *logger,GwConfigHandler *config);
+        bool addFixedMapping(const GwXDRMappingDef &mapping);
         void begin();
         //get the mappings
         //the returned mapping will exactly contain one mapping def
