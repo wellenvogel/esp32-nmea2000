@@ -107,15 +107,15 @@ class TaskInterfacesStorage{
             GWSYNCHRONIZED(&lock);
             auto it=registrations().find(name);
             if (it == registrations().end()){
-                LOG_DEBUG(GwLog::ERROR,"invalid set %s not known",name.c_str());
+                LOG_DEBUG(GwLog::ERROR,"TaskInterfaces: invalid set %s not known",name.c_str());
                 return false;
             }
             if (it->second.file != file){
-                LOG_DEBUG(GwLog::ERROR,"invalid set %s wrong file, expected %s , got %s",name.c_str(),it->second.file.c_str(),file.c_str());
+                LOG_DEBUG(GwLog::ERROR,"TaskInterfaces: invalid set %s wrong file, expected %s , got %s",name.c_str(),it->second.file.c_str(),file.c_str());
                 return false;
             }
             if (it->second.task != task){
-                LOG_DEBUG(GwLog::ERROR,"invalid set %s wrong task, expected %s , got %s",name.c_str(),it->second.task.c_str(),task.c_str());
+                LOG_DEBUG(GwLog::ERROR,"TaskInterfaces: invalid set %s wrong task, expected %s , got %s",name.c_str(),it->second.task.c_str(),task.c_str());
                 return false;
             }
             auto vit=values.find(name);

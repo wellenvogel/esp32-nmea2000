@@ -8,6 +8,20 @@
 #include <vector>
 
 /**
+ * INVALID!!! - the next interface declaration will not work
+ *              as it is not in the correct header file
+ *              it is just included here to show you how errors
+ *              could be created.
+ *              if you call the apiSetExampleNotWorkingIf method
+ *              it will always return false
+*/
+class ExampleNotWorkingIf: public GwApi::TaskInterfaces::Base{
+    public:
+    int someValue=99;
+};
+DECLARE_TASKIF(exampleTask,ExampleNotWorkingIf);
+
+/**
  * an init function that ist being called before other initializations from the core
  */
 void exampleInit(GwApi *api){
@@ -103,6 +117,9 @@ void exampleTask(GwApi *api){
     int apiResult=0;
     ExampleTaskIf e1=apiGetExampleTaskIf(api,apiResult);
     LOG_DEBUG(GwLog::LOG,"exampleIf before rs=%d,v=%d,s=%s",apiResult,e1.count,e1.someValue.c_str());
+    ExampleNotWorkingIf nw1;
+    bool nwrs=apiSetExampleNotWorkingIf(api,nw1);
+    LOG_DEBUG(GwLog::LOG,"exampleNotWorking update returned %d",(int)nwrs);
     while(true){
         delay(1000);
         /*
