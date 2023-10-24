@@ -1,7 +1,7 @@
 #include "GwButtons.h"
 #include "GwHardware.h"
 #include "GwApi.h"
-#include "GwLeds.h"
+#include "GwLedTask.h"
 
 class FactoryResetRequest: public GwMessage{
     private:

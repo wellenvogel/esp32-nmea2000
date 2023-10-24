@@ -1,4 +1,4 @@
-#include "GwLeds.h"
+#include "GwLedTask.h"
 #include "GwHardware.h"
 #include "GwApi.h"
 #include "FastLED.h"
@@ -23,8 +23,7 @@ static CRGB::HTMLColorCode colorFromMode(GwLedMode cmode){
             return CRGB::Black;    
     }
 }
-void handleLeds(void *param){
-    GwApi *api=(GwApi*)param;
+void handleLeds(GwApi *api){
     GwLog *logger=api->getLogger();
     #ifndef GWLED_FASTLED
         LOG_DEBUG(GwLog::LOG,"currently only fastled handling");
@@ -43,6 +42,7 @@ void handleLeds(void *param){
     leds[0]=colorFromMode(currentMode);
     FastLED.setBrightness(brightness);
     FastLED.show();
+    LOG_DEBUG(GwLog::LOG,"led task started with mode %d",(int)currentMode);
     while(true){
         delay(50);
         GwLedMode newMode=mode;
