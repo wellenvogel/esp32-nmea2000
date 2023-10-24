@@ -53,8 +53,6 @@ const unsigned long HEAP_REPORT_TIME=2000; //set to 0 to disable heap reporting
 #include "GwSerial.h"
 #include "GwWebServer.h"
 #include "NMEA0183DataToN2K.h"
-#include "GwButtons.h"
-#include "GwLedTask.h"
 #include "GwCounter.h"
 #include "GwXDRMappings.h"
 #include "GwSynchronized.h"
@@ -852,8 +850,6 @@ void setup() {
   NMEA2000.Open();
   logger.logDebug(GwLog::LOG,"starting addon tasks");
   logger.flush();
-  setLedMode(LED_GREEN);
-  userCodeHandler.startAddonTask(F("handleButtons"),handleButtons,100);
   {
     GWSYNCHRONIZED(&mainLock);
     userCodeHandler.startUserTasks(MIN_USER_TASK);

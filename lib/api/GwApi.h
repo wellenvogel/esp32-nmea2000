@@ -61,12 +61,6 @@ class GwApi{
         };
         class Status{
             public:
-                typedef enum{
-                    OFF,
-                    PRESSED,
-                    PRESSED_5, //5...10s
-                    PRESSED_10 //>10s...30s
-                } ButtonState;
                 bool wifiApOn=false;
                 bool wifiClientOn=false;
                 bool wifiClientConnected=false;
@@ -89,8 +83,6 @@ class GwApi{
                 bool tcpClientConnected=false;
                 unsigned long n2kRx=0;
                 unsigned long n2kTx=0;
-                ButtonState button=OFF;
-                unsigned long buttonPresses=0;
                 void empty(){
                     wifiApOn=false;
                     wifiClientOn=false;
@@ -114,8 +106,6 @@ class GwApi{
                     tcpClientConnected=false;
                     n2kRx=0;
                     n2kTx=0;
-                    button=OFF;
-                    buttonPresses=0; 
                 }
         }; 
         /**

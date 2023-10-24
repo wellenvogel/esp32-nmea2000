@@ -1,4 +1,5 @@
-#include "GwButtons.h"
+#include "GwButtonTask.h"
+#include "GwIButtonTask.h"
 #include "GwHardware.h"
 #include "GwApi.h"
 #include "GwLedTask.h"
@@ -22,9 +23,12 @@ class FactoryResetRequest: public GwMessage{
             },"reset",1000,NULL,0,NULL);
         };
 };
-void handleButtons(void *param){
-    GwApi *api=(GwApi*)param;
+void handleButtons(GwApi *api){
     GwLog *logger=api->getLogger();
+    IButtonTask state;
+    if (!apiSetIButtonTask(api,state)){
+        LOG_DEBUG(GwLog::ERROR,"unable to set button state");
+    } 
     #ifndef GWBUTTON_PIN
         LOG_DEBUG(GwLog::LOG,"no button pin defined, do not watch");
         vTaskDelete(NULL);
@@ -50,21 +54,24 @@ void handleButtons(void *param){
     unsigned long lastReport=0;
     const unsigned long OFF_TIME=20;
     const unsigned long REPORT_TIME=1000;
-    const unsigned long HARD_REST_TIME=10000;
-    GwLedMode ledMode=LED_OFF;
+    const unsigned long PRESS_5_TIME=5000;
+    const unsigned long PRESS_10_TIME=10000;
+    const unsigned long PRESS_RESET_TIME=12000;
+    LOG_DEBUG(GwLog::LOG,"button task started");
     while(true){
         delay(10);
         int current=digitalRead(GWBUTTON_PIN);
         unsigned long now=millis();
+        IButtonTask::ButtonState lastState=state.state;
         if (current != activeState){
             if (lastPressed != 0 && (lastPressed+OFF_TIME) < now){
                 lastPressed=0; //finally off
                 firstPressed=0;
-                if (ledMode != LED_OFF){
-                    setLedMode(LED_GREEN); //TODO: better "go back"
-                    ledMode=LED_OFF;
-                }
+                state.state=IButtonTask::OFF;
                 LOG_DEBUG(GwLog::LOG,"Button press stopped");
+            }
+            if (state.state != lastState){
+                apiSetIButtonTask(api,state);
             }
             continue;
         }
@@ -72,24 +79,26 @@ void handleButtons(void *param){
         if (firstPressed == 0) {
             firstPressed=now;
             LOG_DEBUG(GwLog::LOG,"Button press started");
+            state.pressCount++;
+            state.state=IButtonTask::PRESSED;
+            apiSetIButtonTask(api,state);
             lastReport=now;
+            continue;
         }
         if (lastReport != 0 && (lastReport + REPORT_TIME) < now ){
             LOG_DEBUG(GwLog::LOG,"Button active for %ld",(now-firstPressed));
             lastReport=now;
         }
-        GwLedMode nextMode=ledMode;
-        if (now > (firstPressed+HARD_REST_TIME/2)){
-            nextMode=LED_BLUE;
+        if (now > (firstPressed+PRESS_5_TIME)){
+            state.state=IButtonTask::PRESSED_5;
         }
-        if (now > (firstPressed+HARD_REST_TIME*0.9)){
-            nextMode=LED_RED;
+        if (now > (firstPressed+PRESS_10_TIME)){
+            state.state=IButtonTask::PRESSED_10;
         }
-        if (ledMode != nextMode){
-            setLedMode(nextMode);
-            ledMode=nextMode;
+        if (lastState != state.state){
+            apiSetIButtonTask(api,state);
         }
-        if (now > (firstPressed+HARD_REST_TIME)){
+        if (now > (firstPressed+PRESS_RESET_TIME)){
             LOG_DEBUG(GwLog::ERROR,"Factory reset by button");
             GwMessage *r=new FactoryResetRequest(api);
             api->getQueue()->sendAndForget(r);

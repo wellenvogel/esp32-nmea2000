@@ -2,12 +2,14 @@
 #include "GwHardware.h"
 #include "GwApi.h"
 #include "FastLED.h"
-
-static GwLedMode mode=LED_OFF;
-void setLedMode(GwLedMode newMode){
-    //we consider the mode to an atomic item...
-    mode=newMode;
-}
+#include "GwIButtonTask.h"
+typedef enum {
+    LED_OFF,
+    LED_GREEN,
+    LED_BLUE,
+    LED_RED,
+    LED_WHITE
+} GwLedMode;
 
 static CRGB::HTMLColorCode colorFromMode(GwLedMode cmode){
     switch(cmode){
@@ -38,18 +40,41 @@ void handleLeds(GwApi *api){
     FastLED.addLeds<GWLED_TYPE,GWLED_PIN>(leds,1);
     #endif
     uint8_t brightness=api->getConfig()->getInt(GwConfigDefinitions::ledBrightness,128);
-    GwLedMode currentMode=mode;
+    GwLedMode currentMode=LED_GREEN;
     leds[0]=colorFromMode(currentMode);
     FastLED.setBrightness(brightness);
     FastLED.show();
     LOG_DEBUG(GwLog::LOG,"led task started with mode %d",(int)currentMode);
-    while(true){
+    int apiResult=0;
+    while (true)
+    {
         delay(50);
-        GwLedMode newMode=mode;
-        if (newMode != currentMode){
-            leds[0]=colorFromMode(newMode);
+        GwLedMode newMode = currentMode;
+        IButtonTask buttonState = apiGetIButtonTask(api, apiResult);
+        if (apiResult >= 0)
+        {
+            switch (buttonState.state)
+            {
+            case IButtonTask::PRESSED_5:
+                newMode = LED_BLUE;
+                break;
+            case IButtonTask::PRESSED_10:
+                newMode = LED_RED;
+                break;
+            default:
+                newMode = LED_GREEN;
+                break;
+            }
+        }
+        else
+        {
+            newMode = LED_WHITE;
+        }
+        if (newMode != currentMode)
+        {
+            leds[0] = colorFromMode(newMode);
             FastLED.show();
-            currentMode=newMode;
+            currentMode = newMode;
         }
     }
     vTaskDelete(NULL);
