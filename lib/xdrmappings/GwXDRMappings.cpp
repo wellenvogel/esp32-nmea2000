@@ -55,20 +55,19 @@ GwXDRType *types[] = {
     new GwXDRType(GwXDRType::GENERIC, "G", ""),
     new GwXDRType(GwXDRType::DISPLACEMENT, "A", "P"),
     new GwXDRType(GwXDRType::DISPLACEMENTD, "A", "D",DegToRad,RadToDeg,"rd"),
-    new GwXDRType(GwXDRType::RPM,"T","R"),
-    //important to have 2x NULL!
-    NULL,
-    NULL};
-
+    new GwXDRType(GwXDRType::RPM,"T","R")
+    };
+template<typename T, int size>
+int GetArrLength(T(&)[size]){return size;}
 static GwXDRType *findType(GwXDRType::TypeCode type, int *start = NULL)
 {
+    int len=GetArrLength(types);
     int from = 0;
     if (start != NULL)
         from = *start;
-    if (types[from] == NULL)
-        return NULL;
+    if (from < 0 || from >= len) return NULL;    
     int i = from;
-    for (; types[i] != NULL; i++)
+    for (; i< len; i++)
     {
         if (types[i]->code == type)
         {
