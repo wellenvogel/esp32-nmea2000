@@ -7,6 +7,7 @@ import inspect
 import json
 import glob
 from datetime import datetime
+import re
 Import("env")
 #print(env.Dump())
 OWN_FILE="extra_script.py"
@@ -172,7 +173,8 @@ def generateCfg(inFile,outFile,impl):
                 data+="#endif\n"
     writeFileIfChanged(outFile,data)    
                     
-
+def labelFilter(label):
+    return re.sub("[^a-zA-Z0-9]","",re.sub("\([0-9]*\)","",label))    
 def generateXdrMappings(fp,oh,inFile=''):
     jdoc=json.load(fp)
     oh.write("static GwXDRTypeMapping* typeMappings[]={\n")
@@ -211,6 +213,35 @@ def generateXdrMappings(fp,oh,inFile=''):
             oh.write("   new GwXDRTypeMapping(%d,%d,%d) /*%s:%s*/"%(cid,id,tc,cat,l))
     oh.write("\n")
     oh.write("};\n")
+    for cat in jdoc:
+        item=jdoc[cat]
+        cid=item.get('id')
+        if cid is None:
+            continue
+        selectors=item.get('selector')
+        if selectors is not None:
+            for selector in selectors:
+                label=selector.get('l')
+                value=selector.get('v')
+                if label is not None and value is not None:
+                    label=labelFilter(label)
+                    define=("GWXDRSEL_%s_%s"%(cat,label)).upper()
+                    oh.write("    #define %s %s\n"%(define,value))
+        fields=item.get('fields')
+        if fields is not None:
+            idx=0
+            for field in fields:
+                v=field.get('v')
+                if v is None:
+                    v=idx
+                else:
+                    v=int(v)
+                label=field.get('l')
+                if v is not None and label is not None:
+                    define=("GWXDRFIELD_%s_%s"%(cat,labelFilter(label))).upper();
+                    oh.write("    #define %s %s\n"%(define,str(v)))
+                idx+=1
+
 
 userTaskDirs=[]
 

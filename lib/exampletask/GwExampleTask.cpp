@@ -7,6 +7,7 @@
 #include "GWConfig.h"
 #include <vector>
 #include "N2kMessages.h"
+#include "GwXdrTypeMappings.h"
 /**
  * INVALID!!! - the next interface declaration will not work
  *              as it is not in the correct header file
@@ -39,11 +40,20 @@ void exampleInit(GwApi *api){
     if (!voltageTransducer.isEmpty()){
         int instance=api->getConfig()->getInt(GwConfigDefinitions::exInstanceId);
         GwXDRMappingDef xdr;
+        //we send a battery message - so it is category battery
         xdr.category=GwXDRCategory::XDRBAT;
+        //we only need a conversion from N2K to NMEA0183
         xdr.direction=GwXDRMappingDef::Direction::M_FROM2K;
-        xdr.field=0; //refer to xdrconfig.json to pick up the field id (the index in the field list) - in this case 0 for Voltage
-        xdr.selector=0; //refer to xdrconfig.json - there is no selector under Battery, so we can leave it empty
-        xdr.instanceMode=GwXDRMappingDef::IS_SINGLE; //we just map exactly our instance
+        //you can find the XDR field and selector definitions
+        //in the generated GwXdrTypeMappings.h
+        xdr.field=GWXDRFIELD_BATTERY_BATTERYVOLTAGE;
+        //xdr.selector=-1; //refer to xdrconfig.json - there is no selector under Battery, so we can leave it empty
+        //we just map exactly our instance
+        xdr.instanceMode=GwXDRMappingDef::IS_SINGLE; 
+        
+        //those are the user configured values
+        //this instance is the one we use for the battery instance when we set up 
+        //the N2K message
         xdr.instanceId=instance;
         xdr.xdrName=voltageTransducer;
         if (!api->addXdrMapping(xdr)){
