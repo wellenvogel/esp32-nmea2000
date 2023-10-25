@@ -23,9 +23,11 @@
 #include "GwUserTasks.h"
 
 //general definitions for M5AtomLite
+//hint for groove pins:
+//according to some schematics the numbering is 1,2,3(VCC),4(GND)
 #ifdef PLATFORM_BOARD_M5STACK_ATOM
-  #define GROOVE_PIN_1 GPIO_NUM_26
-  #define GROOVE_PIN_2 GPIO_NUM_32
+  #define GROOVE_PIN_2 GPIO_NUM_26
+  #define GROOVE_PIN_1 GPIO_NUM_32
   #define GWBUTTON_PIN GPIO_NUM_39
   #define GWLED_FASTLED
   #define GWLED_TYPE SK6812
@@ -41,8 +43,8 @@
 #endif
 //general definitiones for M5AtomS3
 #ifdef PLATFORM_BOARD_M5STACK_ATOMS3
-  #define GROOVE_PIN_1 GPIO_NUM_2
-  #define GROOVE_PIN_2 GPIO_NUM_1
+  #define GROOVE_PIN_2 GPIO_NUM_2
+  #define GROOVE_PIN_1 GPIO_NUM_1
   #define GWBUTTON_PIN GPIO_NUM_41
   #define GWLED_FASTLED
   #define GWLED_TYPE WS2812
@@ -58,8 +60,8 @@
 
 //M5Stick C
 #ifdef PLATFORM_BOARD_M5STICK_C
-  #define GROOVE_PIN_1 GPIO_NUM_32
-  #define GROOVE_PIN_2 GPIO_NUM_31
+  #define GROOVE_PIN_2 GPIO_NUM_32
+  #define GROOVE_PIN_1 GPIO_NUM_31
   #define USBSerial Serial
 #endif
 
@@ -161,23 +163,23 @@
 //before (e.g. by serial kit)
 #ifdef SERIAL_GROOVE_485
   #ifdef GWSERIAL_TYPE
-    #define GWSERIAL2_TX GROOVE_PIN_1
-    #define GWSERIAL2_RX GROOVE_PIN_2
+    #define GWSERIAL2_TX GROOVE_PIN_2
+    #define GWSERIAL2_RX GROOVE_PIN_1
     #define GWSERIAL2_TYPE GWSERIAL_TYPE_UNI
   #else
-    #define GWSERIAL_TX GROOVE_PIN_1
-    #define GWSERIAL_RX GROOVE_PIN_2
+    #define GWSERIAL_TX GROOVE_PIN_2
+    #define GWSERIAL_RX GROOVE_PIN_1
     #define GWSERIAL_TYPE GWSERIAL_TYPE_UNI
   #endif 
 #endif
 #ifdef SERIAL_GROOVE_232
   #ifdef GWSERIAL_TYPE
-    #define GWSERIAL2_TX GROOVE_PIN_1
-    #define GWSERIAL2_RX GROOVE_PIN_2
+    #define GWSERIAL2_TX GROOVE_PIN_2
+    #define GWSERIAL2_RX GROOVE_PIN_1
     #define GWSERIAL2_TYPE GWSERIAL_TYPE_BI
   #else
-    #define GWSERIAL_TX GROOVE_PIN_1
-    #define GWSERIAL_RX GROOVE_PIN_2
+    #define GWSERIAL_TX GROOVE_PIN_2
+    #define GWSERIAL_RX GROOVE_PIN_1
     #define GWSERIAL_TYPE GWSERIAL_TYPE_BI
   #endif
 #endif
@@ -185,12 +187,12 @@
 //http://docs.m5stack.com/en/unit/gps
 #ifdef M5_GPS_UNIT
   #ifdef GWSERIAL_TYPE
-    #define GWSERIAL2_RX GROOVE_PIN_2
+    #define GWSERIAL2_RX GROOVE_PIN_1
     #define GWSERIAL2_TYPE GWSERIAL_TYPE_RX
     #define CFGDEFAULT_serialBaud "9600"
     #define CFGMODE_serialBaud GwConfigInterface::READONLY
   #else
-    #define GWSERIAL_RX GROOVE_PIN_2
+    #define GWSERIAL_RX GROOVE_PIN_1
     #define GWSERIAL_TYPE GWSERIAL_TYPE_RX
     #define CFGDEFAULT_serial2Baud "9600"
     #define CFGMODE_serial2Baud GwConfigInterface::READONLY
@@ -204,8 +206,8 @@
 #endif
 //CAN via groove 
 #ifdef M5_CANUNIT
-  #define ESP32_CAN_TX_PIN GROOVE_PIN_1
-  #define ESP32_CAN_RX_PIN GROOVE_PIN_2
+  #define ESP32_CAN_TX_PIN GROOVE_PIN_2
+  #define ESP32_CAN_RX_PIN GROOVE_PIN_1
 #endif
 
 #ifndef GWLED_TYPE
