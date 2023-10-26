@@ -1,0 +1,74 @@
+[
+    {
+        "name": "iicSHT3XTemp",
+        "label": "SHT3X Temperature",
+        "type": "boolen",
+        "default": true,
+        "description": "Enable the I2C SHT3x temp sensor",
+        "category": "sensors",
+        "capabilities": {
+            "SHT3X":"true"
+        }
+    },
+    {
+        "name": "iicSHT3XHumid",
+        "label": "SHT3X Humidity",
+        "type": "boolean",
+        "default": true,
+        "description": "Enable the I2C SHT3x humidity sensor",
+        "category": "sensors",
+        "capabilities": {
+            "SHT3X":"true"
+        }
+    },
+    {
+        "name": "SHT3XTempName",
+        "label": "SHT3X Temperature XDR",
+        "type": "String",
+        "default": "Temp",
+        "description": "set the XDR transducer name for the SHT3X Temperature, leave empty to disable ",
+        "category": "sensors",
+        "capabilities": {
+            "SHT3X":"true"
+        }
+    },
+    {
+        "name": "SHT3XHumidName",
+        "label": "SHT3X Humidity XDR",
+        "type": "String",
+        "default": "Humidity",
+        "description": "set the XDR transducer name for the SHT3X Humidity, leave empty to disable ",
+        "category": "sensors",
+        "capabilities": {
+            "SHT3X":"true"
+        }
+    },
+    {
+        "name": "SHT3Xiid",
+        "label": "SHT3X N2K instance id",
+        "type": "number",
+        "default": 99,
+        "description": "the N2K instance id the SHT3X Temperature and Humidity ",
+        "category": "sensors",
+        "min": 0,
+        "max": 255,
+        "check": "checkMinMax",
+        "capabilities": {
+            "SHT3X":"true"
+        }
+    },
+    {
+        "name": "SHT3Xinterval",
+        "label": "SHT3X Interval",
+        "type": "number",
+        "default": 2,
+        "description": "Interval(s) to query SHT3X Temperature and Humidity (1...300)",
+        "category": "sensors",
+        "min": 1,
+        "max": 300,
+        "check": "checkMinMax",
+        "capabilities": {
+            "SHT3X":"true"
+        }
+    }
+]
