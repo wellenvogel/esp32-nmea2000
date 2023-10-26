@@ -135,20 +135,29 @@
 
 //M5 Serial (Atomic RS232 Base)
 #ifdef M5_SERIAL_KIT_232 
+  #define _GWM5_BOARD
   #define GWSERIAL_TX BOARD_LEFT2
   #define GWSERIAL_RX BOARD_LEFT1
   #define GWSERIAL_TYPE GWSERIAL_TYPE_BI
 #endif
 
 //M5 Serial (Atomic RS485 Base)
-#ifdef M5_SERIAL_KIT_485 
+#ifdef M5_SERIAL_KIT_485
+  #ifdef _GWM5_BOARD
+    #error "can only define one M5 base"
+  #endif
+  #define _GWM5_BOARD
   #define GWSERIAL_TX BOARD_LEFT2
   #define GWSERIAL_RX BOARD_LEFT1
   #define GWSERIAL_TYPE GWSERIAL_TYPE_UNI
 #endif
 
 //M5 GPS (Atomic GPS Base)
-#ifdef M5_GPS_KIT 
+#ifdef M5_GPS_KIT
+  #ifdef _GWM5_BOARD
+    #error "can only define one M5 base"
+  #endif
+  #define _GWM5_BOARD
   #define GWSERIAL_RX BOARD_LEFT1
   #define GWSERIAL_TYPE GWSERIAL_TYPE_RX
   #define CFGDEFAULT_serialBaud "9600"
@@ -162,6 +171,7 @@
 //we use serial2 for groove serial if serial1 is already defined
 //before (e.g. by serial kit)
 #ifdef SERIAL_GROOVE_485
+  #define _GWM5_GROOVE
   #ifdef GWSERIAL_TYPE
     #define GWSERIAL2_TX GROOVE_PIN_2
     #define GWSERIAL2_RX GROOVE_PIN_1
@@ -173,6 +183,10 @@
   #endif 
 #endif
 #ifdef SERIAL_GROOVE_232
+  #ifdef _GWM5_GROOVE
+    #error "can only have one groove device"
+  #endif
+  #define _GWM5_GROOVE
   #ifdef GWSERIAL_TYPE
     #define GWSERIAL2_TX GROOVE_PIN_2
     #define GWSERIAL2_RX GROOVE_PIN_1
@@ -186,6 +200,10 @@
 
 //http://docs.m5stack.com/en/unit/gps
 #ifdef M5_GPS_UNIT
+  #ifdef _GWM5_GROOVE
+    #error "can only have one M5 groove"
+  #endif
+  #define _GWM5_GROOVE
   #ifdef GWSERIAL_TYPE
     #define GWSERIAL2_RX GROOVE_PIN_1
     #define GWSERIAL2_TYPE GWSERIAL_TYPE_RX
@@ -201,14 +219,50 @@
 
 //can kit for M5 Atom
 #ifdef M5_CAN_KIT
+  #ifdef _GWM5_BOARD
+    #error "can only define one M5 base"
+  #endif
+  #define _GWM5_BOARD
   #define ESP32_CAN_TX_PIN BOARD_LEFT1
   #define ESP32_CAN_RX_PIN BOARD_LEFT2
 #endif
 //CAN via groove 
 #ifdef M5_CANUNIT
+  #ifdef _GWM5_GROOVE
+    #error "can only have one M5 groove"
+  #endif
+  #define _GWM5_GROOVE
   #define ESP32_CAN_TX_PIN GROOVE_PIN_2
   #define ESP32_CAN_RX_PIN GROOVE_PIN_1
 #endif
+
+#ifdef M5_GROOVEIIC
+  #ifdef _GWM5_GROOVE
+    #error "can only have one M5 groove"
+  #endif
+  #define _GWM5_GROOVE
+  #ifdef GWIIC_SCL
+    #error "you cannot define both GWIIC_SCL and M5_GROOVEIIC"
+  #endif
+  #define GWIIC_SCL GROOVE_PIN_1
+  #ifdef GWIIC_SDA
+    #error "you cannot define both GWIIC_SDA and M5_GROOVEIIC"
+  #endif
+  #define GWIIC_SDA GROOVE_PIN_2
+#endif
+
+#ifdef GWIIC_SDA
+  #ifndef GWIIC_SCL
+    #error "you must both define GWIIC_SDA and GWIIC_SCL
+  #endif
+#endif
+#ifdef GWIIC_SCL
+  #ifndef GWIIC_SDA
+    #error "you must both define GWIIC_SDA and GWIIC_SCL
+  #endif
+  #define _GWIIC
+#endif
+
 
 #ifndef GWLED_TYPE
   #ifdef GWLED_CODE
