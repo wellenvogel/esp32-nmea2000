@@ -234,7 +234,7 @@ class GwApi{
  * 
  * 
 */
-#define DECLARE_TASKIF_IMPL(task,type) \
+#define DECLARE_TASKIF_IMPL(type) \
     template<> \
     inline bool GwApi::TaskInterfaces::set(const type & v) {\
         return iset(__FILE__,#type,GwApi::TaskInterfaces::Ptr(new type(v))); \
@@ -250,6 +250,6 @@ class GwApi{
         return type(*tp); \
     }
 #ifndef DECLARE_TASKIF
-    #define DECLARE_TASKIF(task,type) DECLARE_TASKIF_IMPL(task,type)
+    #define DECLARE_TASKIF(type) DECLARE_TASKIF_IMPL(type)
 #endif
 #endif

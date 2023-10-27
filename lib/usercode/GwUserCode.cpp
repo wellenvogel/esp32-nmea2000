@@ -3,9 +3,9 @@
 #define DECLARE_INITFUNCTION(task) GwInitTask __Init##task##__(task,#task);
 #define DECLARE_CAPABILITY(name,value) GwUserCapability __CAP##name##__(#name,#value);
 #define DECLARE_STRING_CAPABILITY(name,value) GwUserCapability __CAP##name##__(#name,value); 
-#define DECLARE_TASKIF(task,type) \
-    DECLARE_TASKIF_IMPL(task,type) \
-    GwIreg __register##type(#task,__FILE__,#type)
+#define DECLARE_TASKIF(type) \
+    DECLARE_TASKIF_IMPL(type) \
+    GwIreg __register##type(__FILE__,#type)
 
 #include "GwUserCode.h"
 #include "GwSynchronized.h"
@@ -60,8 +60,8 @@ static void registerInterface(const String &task,const String &file, const Strin
 
 class GwIreg{
     public:
-        GwIreg(const String &task,const String &file, const String &name){
-            registerInterface(task,file,name);
+        GwIreg(const String &file, const String &name){
+            registerInterface("",file,name);
         }
     };
 
@@ -124,7 +124,6 @@ class TaskInterfacesStorage{
             }
             if (it->second.task != task){
                 LOG_DEBUG(GwLog::ERROR,"TaskInterfaces: invalid set %s wrong task, expected %s , got %s",name.c_str(),it->second.task.c_str(),task.c_str());
-                return false;
             }
             auto vit=values.find(name);
             if (vit != values.end()){

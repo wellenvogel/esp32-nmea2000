@@ -9,6 +9,6 @@ class ExampleTaskIf : public GwApi::TaskInterfaces::Base{
     long count=0;
     String someValue;
 };
-DECLARE_TASKIF(exampleTask,ExampleTaskIf);
+DECLARE_TASKIF(ExampleTaskIf);
 
 #endif

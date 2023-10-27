@@ -14,6 +14,6 @@ public:
     ButtonState state=OFF;
     long pressCount=0;
 };
-DECLARE_TASKIF(handleButtons,IButtonTask);
+DECLARE_TASKIF(IButtonTask);
 
 #endif
