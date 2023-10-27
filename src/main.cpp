@@ -16,6 +16,7 @@
 //#define FALLBACK_SERIAL
 const unsigned long HEAP_REPORT_TIME=2000; //set to 0 to disable heap reporting
 #include <Arduino.h>
+#include "FS.h"
 #include "GwApi.h"
 #include "GwHardware.h"
 
@@ -326,6 +327,7 @@ public:
     }
     return xdrMappings.addFixedMapping(mapping);
   }
+  virtual void addCapability(const String &name, const String &value){}
 };
 
 bool delayedRestart(){

@@ -1,12 +1,19 @@
-//#ifdef _GWIIC
 #include "GwIicTask.h"
 #include "GwHardware.h"
 #include <Wire.h>
 #include <SHT3X.h>
 #include "GwTimer.h"
 #include "N2kMessages.h"
-#define GWSHT3X -1
+#include "GwHardware.h"
+#include "GwXdrTypeMappings.h"
+//#define GWSHT3X -1
 
+#ifndef GWIIC_SDA
+    #define GWIIC_SDA -1
+#endif
+#ifndef GWIIC_SCL
+    #define GWIIC_SCL -1
+#endif
 class SHT3XConfig{
     public:
     String tempTransducer;
@@ -29,18 +36,48 @@ class SHT3XConfig{
         tempSource=N2kts_InsideTemperature;
     }
 };
-void runIicTask(GwApi *api){
+
+void initIicTask(GwApi *api){
     GwLog *logger=api->getLogger();
     #ifndef _GWIIC
+        return;
+    #endif
+    #ifdef GWSHT3X
+        api->addCapability("SHT3X","true");
+        LOG_DEBUG(GwLog::LOG,"GWSHT3X configured, adding capability and xdr mappings");
+        SHT3XConfig sht3xConfig(api->getConfig());
+        if (sht3xConfig.humidActive && ! sht3xConfig.humidTransducer.isEmpty()){
+            //add XDR mapping for humidity
+            GwXDRMappingDef xdr;
+            xdr.category=GwXDRCategory::XDRHUMIDITY;
+            xdr.direction=GwXDRMappingDef::M_FROM2K;
+            xdr.field=GWXDRFIELD_HUMIDITY_ACTUALHUMIDITY;
+            xdr.selector=(int)sht3xConfig.humiditySource;
+            xdr.instanceMode=GwXDRMappingDef::IS_SINGLE;
+            xdr.instanceId=sht3xConfig.iid;
+            xdr.xdrName=sht3xConfig.humidTransducer;
+            api->addXdrMapping(xdr);
+        }
+        if (sht3xConfig.tempActive && ! sht3xConfig.tempTransducer.isEmpty()){
+            //add XDR mapping for humidity
+            GwXDRMappingDef xdr;
+            xdr.category=GwXDRCategory::XDRTEMP;
+            xdr.direction=GwXDRMappingDef::M_FROM2K;
+            xdr.field=GWXDRFIELD_TEMPERATURE_ACTUALTEMPERATURE;
+            xdr.selector=(int)sht3xConfig.tempSource;
+            xdr.instanceMode=GwXDRMappingDef::IS_SINGLE;
+            xdr.instanceId=sht3xConfig.iid;
+            xdr.xdrName=sht3xConfig.tempTransducer;
+            api->addXdrMapping(xdr);
+        }
+    #endif
+}
+void runIicTask(GwApi *api){
+    GwLog *logger=api->getLogger();
+    #ifndef _GWIIC 
         LOG_DEBUG(GwLog::LOG,"no iic defined, iic task stopped");
         vTaskDelete(NULL);
         return;
-    #endif
-    #ifndef GWIIC_SDA
-        #define GWIIC_SDA -1
-    #endif
-    #ifndef GWIIC_SCL
-        #define GWIIC_SCL -1
     #endif
     LOG_DEBUG(GwLog::LOG,"iic task started");
     bool rt=Wire.begin(GWIIC_SDA,GWIIC_SCL);
@@ -60,7 +97,7 @@ void runIicTask(GwApi *api){
         if (sht3xConfig.humidActive || sht3xConfig.tempActive){
             sht3x=new SHT3X();
             sht3x->init(addr,&Wire);
-            LOG_DEBUG(GwLog::LOG,"initialized SHT3X at address %d",(int)addr);
+            LOG_DEBUG(GwLog::LOG,"initialized SHT3X at address %d, interval %ld",(int)addr,sht3xConfig.interval);
             runLoop=true;
             timers.addAction(sht3xConfig.interval,[logger,api,sht3x,sht3xConfig](){
                 int rt=0;
@@ -94,5 +131,5 @@ void runIicTask(GwApi *api){
         delay(100);
         timers.loop();
     }
+    vTaskDelete(NULL);
 }
-//#endif

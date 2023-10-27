@@ -1,6 +1,6 @@
 #ifndef __SHT3X_H
 #define __HT3X_H
-
+//taken from https://github.com/m5stack/M5Unit-ENV/tree/0.0.8/src
 
 #if ARDUINO >= 100
  #include "Arduino.h"

@@ -236,6 +236,15 @@
   #define ESP32_CAN_RX_PIN GROOVE_PIN_1
 #endif
 
+#ifdef M5_ENV3
+  #ifndef M5_GROOVEIIC
+    #define M5_GROOVEIIC
+  #endif
+  #ifndef GWSHT3X
+    #define GWSHT3X -1
+  #endif
+#endif
+
 #ifdef M5_GROOVEIIC
   #ifdef _GWM5_GROOVE
     #error "can only have one M5 groove"
@@ -253,12 +262,12 @@
 
 #ifdef GWIIC_SDA
   #ifndef GWIIC_SCL
-    #error "you must both define GWIIC_SDA and GWIIC_SCL
+    #error "you must both define GWIIC_SDA and GWIIC_SCL"
   #endif
 #endif
 #ifdef GWIIC_SCL
   #ifndef GWIIC_SDA
-    #error "you must both define GWIIC_SDA and GWIIC_SCL
+    #error "you must both define GWIIC_SDA and GWIIC_SCL"
   #endif
   #define _GWIIC
 #endif

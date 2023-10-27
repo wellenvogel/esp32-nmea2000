@@ -166,12 +166,14 @@ class TaskApi : public GwApiInternal
     bool counterUsed=false;
     int counterIdx=0;
     TaskInterfacesImpl *interfaces;
+    bool isInit=false;
 public:
     TaskApi(GwApiInternal *api, 
         int sourceId, 
         SemaphoreHandle_t *mainLock, 
         const String &name,
-        TaskInterfacesStorage *s)
+        TaskInterfacesStorage *s,
+        bool init=false)
     {
         this->sourceId = sourceId;
         this->api = api;
@@ -179,6 +181,7 @@ public:
         this->name=name;
         localLock=xSemaphoreCreateMutex();
         interfaces=new TaskInterfacesImpl(name,s);
+        isInit=init;
     }
     virtual GwRequestQueue *getQueue()
     {
@@ -283,6 +286,10 @@ public:
     virtual bool addXdrMapping(const GwXDRMappingDef &def){
         return api->addXdrMapping(def);
     }
+    virtual void addCapability(const String &name, const String &value){
+        if (! isInit) return;
+        userCapabilities[name]=value;
+    }
 
 };
 
@@ -322,7 +329,7 @@ void GwUserCode::startInitTasks(int baseId){
     LOG_DEBUG(GwLog::DEBUG,"starting %d user init tasks",initTasks.size());
     for (auto it=initTasks.begin();it != initTasks.end();it++){
         LOG_DEBUG(GwLog::LOG,"starting user init task %s with id %d",it->name.c_str(),baseId);
-        it->api=new TaskApi(api,baseId,mainLock,it->name,taskData);
+        it->api=new TaskApi(api,baseId,mainLock,it->name,taskData,true);
         userTaskStart(&(*it));
         baseId++;
     }

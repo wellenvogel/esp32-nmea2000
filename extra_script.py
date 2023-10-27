@@ -8,6 +8,10 @@ import json
 import glob
 from datetime import datetime
 import re
+import pprint
+from platformio.project.config import ProjectConfig
+
+
 Import("env")
 #print(env.Dump())
 OWN_FILE="extra_script.py"
@@ -247,7 +251,7 @@ userTaskDirs=[]
 
 def getUserTaskDirs():
     rt=[]
-    taskdirs=glob.glob(os.path.join('lib','*task*'))
+    taskdirs=glob.glob(os.path.join( basePath(),'lib','*task*'))
     for task in taskdirs:
         rt.append(task)
     return rt
@@ -298,11 +302,59 @@ def getContentType(fn):
         return "text/css"
     return "application/octet-stream"
 
+def addLibs(env,libs):
+    print("####Options:")
+    po=env.GetProjectOptions()
+    print("type po %s"%str(type(po)))
+    for k,v in po:
+        if k == 'lib_deps':
+            v+=libs
+    pprint.pprint(po)
+
+
+
+def getLibs():
+    base=os.path.join(basePath(),"lib")
+    rt=[]
+    for sd in os.listdir(base):
+        if sd == '..':
+            continue
+        if sd == '.':
+            continue
+        fn=os.path.join(base,sd)
+        if os.path.isdir(fn):
+            rt.append(sd)
+    return rt
+
 def prebuild(env):
     global userTaskDirs
     print("#prebuild running")
     if not checkDir():
         sys.exit(1)
+    allLibs=getLibs()
+    def GetProjectConfigX(env):        
+        rt=ProjectConfig.get_instance(env["PROJECT_CONFIG"])
+        cenv="env:"+env['PIOENV']
+        libs=[]
+        for section,options in rt.as_tuple():
+            if section == cenv:
+                for key,values in options:
+                    if key == 'lib_deps':
+                        libs=values
+    
+        mustUpdate=False
+        for lib in allLibs:
+            if not lib in libs:
+                libs.append(lib)
+                mustUpdate=True
+        if mustUpdate:
+            update=[(cenv,[('lib_deps',libs)])]
+            print("##update libdeps")
+            #pprint.pprint(update)
+            rt.update(update)
+        return rt
+    env.AddMethod(GetProjectConfigX,"GetProjectConfig")
+    addLibs(env,['appinfo'])
     userTaskDirs=getUserTaskDirs()
     mergedConfig=os.path.join(outPath(),os.path.basename(CFG_FILE))
     generateMergedConfig(os.path.join(basePath(),CFG_FILE),mergedConfig,userTaskDirs)

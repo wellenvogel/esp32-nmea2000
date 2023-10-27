@@ -155,7 +155,9 @@ class GwApi{
         /**
          * only allowed during init methods
         */
-        virtual bool addXdrMapping(const GwXDRMappingDef &);
+        virtual bool addXdrMapping(const GwXDRMappingDef &)=0;
+
+        virtual void addCapability(const String &name, const String &value)=0;
 
         /**
          * not thread safe methods

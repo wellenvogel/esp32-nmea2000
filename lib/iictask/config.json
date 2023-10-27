@@ -1,9 +1,9 @@
 [
     {
         "name": "iicSHT3XTemp",
-        "label": "SHT3X Temperature",
-        "type": "boolen",
-        "default": true,
+        "label": "SHT3X Temp",
+        "type": "boolean",
+        "default": "true",
         "description": "Enable the I2C SHT3x temp sensor",
         "category": "sensors",
         "capabilities": {
@@ -14,7 +14,7 @@
         "name": "iicSHT3XHumid",
         "label": "SHT3X Humidity",
         "type": "boolean",
-        "default": true,
+        "default": "true",
         "description": "Enable the I2C SHT3x humidity sensor",
         "category": "sensors",
         "capabilities": {
@@ -23,7 +23,7 @@
     },
     {
         "name": "SHT3XTempName",
-        "label": "SHT3X Temperature XDR",
+        "label": "SHT3X Temp XDR",
         "type": "String",
         "default": "Temp",
         "description": "set the XDR transducer name for the SHT3X Temperature, leave empty to disable ",
@@ -34,7 +34,7 @@
     },
     {
         "name": "SHT3XHumidName",
-        "label": "SHT3X Humidity XDR",
+        "label": "SHT3X Humid XDR",
         "type": "String",
         "default": "Humidity",
         "description": "set the XDR transducer name for the SHT3X Humidity, leave empty to disable ",
@@ -45,7 +45,7 @@
     },
     {
         "name": "SHT3Xiid",
-        "label": "SHT3X N2K instance id",
+        "label": "SHT3X N2K iid",
         "type": "number",
         "default": 99,
         "description": "the N2K instance id the SHT3X Temperature and Humidity ",
