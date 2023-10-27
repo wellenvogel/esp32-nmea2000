@@ -46,7 +46,7 @@ void exampleInit(GwApi *api){
         defaultXdrInt=current->getDefault();
     }
     //with the true parameter this config value will be hidden
-    //if you would like the user to be able to see this item, omit the "false", the config value will be read only
+    //if you would like the user to be able to see this item, omit the "true", the config value will be read only
     api->getConfig()->setValue(GwConfigDefinitions::minXdrInterval,defaultXdrInt,true);
     // example for a user defined help url that will be shown when clicking the help button
     api->addCapability("HELP_URL", "https://www.wellenvogel.de");
