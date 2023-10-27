@@ -50,7 +50,7 @@ void handleLeds(GwApi *api){
     {
         delay(50);
         GwLedMode newMode = currentMode;
-        IButtonTask buttonState = apiGetIButtonTask(api, apiResult);
+        IButtonTask buttonState = api->taskInterfaces()->get<IButtonTask>(apiResult);
         if (apiResult >= 0)
         {
             switch (buttonState.state)

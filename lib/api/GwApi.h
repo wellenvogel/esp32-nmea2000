@@ -58,9 +58,19 @@ class GwApi{
                 }
             };
             using Ptr = std::shared_ptr<Base>;
-        public:
+        protected:
             virtual bool iset(const String &file, const String &name, Ptr v) = 0;
             virtual Ptr iget(const String &name, int &result) = 0;
+        public:
+            template <typename T>
+            bool set(const T &v){
+                return false;
+            }
+            template <typename T>
+            T get(int &res){
+                res=-1;
+                return T();
+            }
         };
         class Status{
             public:
@@ -225,16 +235,13 @@ class GwApi{
  * 
 */
 #define DECLARE_TASKIF_IMPL(task,type) \
-    static bool apiSet##type(GwApi *a,const type &v){ \
-        if (! a || ! a->taskInterfaces()) return false; \
-        return a->taskInterfaces()->iset(__FILE__,#type,GwApi::TaskInterfaces::Ptr(new type(v)));\
+    template<> \
+    inline bool GwApi::TaskInterfaces::set(const type & v) {\
+        return iset(__FILE__,#type,GwApi::TaskInterfaces::Ptr(new type(v))); \
     }\
-    static const type apiGet##type(GwApi *a, int &result) {\
-        if (! a || ! a->taskInterfaces()) {\
-            result=-1; \
-            return type(); \
-            }\
-        auto ptr=a->taskInterfaces()->iget(#type,result); \
+    template<> \
+    inline type GwApi::TaskInterfaces::get<type>(int &result) {\
+        auto ptr=iget(#type,result); \
         if (!ptr) {\
             result=-1; \
             return type(); \

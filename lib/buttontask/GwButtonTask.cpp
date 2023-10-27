@@ -25,8 +25,9 @@ class FactoryResetRequest: public GwMessage{
 };
 void handleButtons(GwApi *api){
     GwLog *logger=api->getLogger();
+    GwApi::TaskInterfaces *interfaces=api->taskInterfaces();
     IButtonTask state;
-    if (!apiSetIButtonTask(api,state)){
+    if (!interfaces->set(state)){
         LOG_DEBUG(GwLog::ERROR,"unable to set button state");
     } 
     #ifndef GWBUTTON_PIN
@@ -71,7 +72,7 @@ void handleButtons(GwApi *api){
                 LOG_DEBUG(GwLog::LOG,"Button press stopped");
             }
             if (state.state != lastState){
-                apiSetIButtonTask(api,state);
+                interfaces->set(state);
             }
             continue;
         }
@@ -81,7 +82,7 @@ void handleButtons(GwApi *api){
             LOG_DEBUG(GwLog::LOG,"Button press started");
             state.pressCount++;
             state.state=IButtonTask::PRESSED;
-            apiSetIButtonTask(api,state);
+            interfaces->set(state);
             lastReport=now;
             continue;
         }
@@ -96,7 +97,7 @@ void handleButtons(GwApi *api){
             state.state=IButtonTask::PRESSED_10;
         }
         if (lastState != state.state){
-            apiSetIButtonTask(api,state);
+            interfaces->set(state);
         }
         if (now > (firstPressed+PRESS_RESET_TIME)){
             LOG_DEBUG(GwLog::ERROR,"Factory reset by button");
