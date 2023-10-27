@@ -20,13 +20,38 @@ class ExampleNotWorkingIf: public GwApi::TaskInterfaces::Base{
     public:
     int someValue=99;
 };
-DECLARE_TASKIF(exampleTask,ExampleNotWorkingIf);
-
+DECLARE_TASKIF(ExampleNotWorkingIf);
+void exampleTask(GwApi *param);
 /**
  * an init function that ist being called before other initializations from the core
  */
 void exampleInit(GwApi *api){
     api->getLogger()->logDebug(GwLog::LOG,"example init running");
+    // make the task known to the core
+    // the task function should not return (unless you delete the task - see example code)
+    const String taskName("exampleTask");
+    api->addUserTask(exampleTask, taskName, 4000);
+    // this would create our task with a stack size of 4000 bytes
+
+    // we declare some capabilities that we can
+    // use in config.json to only show some
+    // elements when this capability is set correctly
+    api->addCapability("testboard", "true");
+    api->addCapability("testboard2", "true");
+    // hide some config value
+    // just set HIDE + the name of the config item to true
+    api->addCapability("HIDEminXdrInterval", "true");
+    // example for a user defined help url that will be shown when clicking the help button
+    api->addCapability("HELP_URL", "https://www.wellenvogel.de");
+
+    //we would like to store data with the interfaces that we defined
+    //the name must match the one we used for addUserTask
+    api->taskInterfaces()->claim<ExampleTaskIf>(taskName);
+    //not working interface
+    if (!api->taskInterfaces()->claim<ExampleNotWorkingIf>(taskName)){
+        api->getLogger()->logDebug(GwLog::ERROR,"unable to claim ExampleNotWorkingIf");
+    }
+
     //this example is a more or less useless example how you could set some
     //config value to a fixed value
     //you can only set config values within the init function
@@ -142,10 +167,10 @@ void exampleTask(GwApi *api){
     GwApi::Status status;
     int counter=api->addCounter("usertest");
     int apiResult=0;
-    ExampleTaskIf e1=apiGetExampleTaskIf(api,apiResult);
+    ExampleTaskIf e1=api->taskInterfaces()->get<ExampleTaskIf>(apiResult);
     LOG_DEBUG(GwLog::LOG,"exampleIf before rs=%d,v=%d,s=%s",apiResult,e1.count,e1.someValue.c_str());
     ExampleNotWorkingIf nw1;
-    bool nwrs=apiSetExampleNotWorkingIf(api,nw1);
+    bool nwrs=api->taskInterfaces()->set(nw1);
     LOG_DEBUG(GwLog::LOG,"exampleNotWorking update returned %d",(int)nwrs);
     String voltageTransducer=api->getConfig()->getString(GwConfigDefinitions::exTransducer);
     int voltageInstance=api->getConfig()->getInt(GwConfigDefinitions::exInstanceId);
@@ -248,13 +273,13 @@ void exampleTask(GwApi *api){
             status.n2kTx); 
         //increment some counter
         api->increment(counter,"Test");       
-        ExampleTaskIf e2=apiGetExampleTaskIf(api,apiResult);
+        ExampleTaskIf e2=api->taskInterfaces()->get<ExampleTaskIf>(apiResult);
         LOG_DEBUG(GwLog::LOG,"exampleIf before update rs=%d,v=%d,s=%s",apiResult,e2.count,e2.someValue.c_str());
         e1.count+=1;
         e1.someValue="running";
-        bool rs=apiSetExampleTaskIf(api,e1);
+        bool rs=api->taskInterfaces()->set(e1);
         LOG_DEBUG(GwLog::LOG,"exampleIf update rs=%d,v=%d,s=%s",(int)rs,e1.count,e1.someValue.c_str());
-        ExampleTaskIf e3=apiGetExampleTaskIf(api,apiResult);
+        ExampleTaskIf e3=api->taskInterfaces()->get<ExampleTaskIf>(apiResult);
         LOG_DEBUG(GwLog::LOG,"exampleIf after update rs=%d,v=%d,s=%s",apiResult,e3.count,e3.someValue.c_str());
         if (!voltageTransducer.isEmpty()){
             //simulate some voltage measurements...
