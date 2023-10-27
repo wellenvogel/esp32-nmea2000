@@ -36,7 +36,7 @@ class GwConfigHandler: public GwConfigDefinitions{
          * will become a noop after stopChanges has been called 
          * !use with care! no checks of the value
          */
-        bool setValue(String name, String value);
+        bool setValue(String name, String value, bool hide=false);
         static void toHex(unsigned long v,char *buffer,size_t bsize);
         unsigned long getSaltBase(){return saltBase;}
         ~GwConfigHandler();

@@ -120,11 +120,12 @@ int GwConfigHandler::getInt(const String name,int defaultv) const{
 void GwConfigHandler::stopChanges(){
     allowChanges=false;
 }
-bool GwConfigHandler::setValue(String name,String value){
+bool GwConfigHandler::setValue(String name,String value, bool hide){
     if (! allowChanges) return false;
     GwConfigInterface *i=getConfigItem(name,false);
     if (!i) return false;
     i->value=value;
+    i->type=hide?GwConfigInterface::HIDDEN:GwConfigInterface::READONLY;
     return true;
 }
 

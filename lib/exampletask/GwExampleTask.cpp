@@ -39,8 +39,15 @@ void exampleInit(GwApi *api){
     api->addCapability("testboard", "true");
     api->addCapability("testboard2", "true");
     // hide some config value
-    // just set HIDE + the name of the config item to true
-    api->addCapability("HIDEminXdrInterval", "true");
+    // and force it's default value
+    auto current=api->getConfig()->getConfigItem(GwConfigDefinitions::minXdrInterval,false);
+    String defaultXdrInt="50";
+    if (current){
+        defaultXdrInt=current->getDefault();
+    }
+    //with the true parameter this config value will be hidden
+    //if you would like the user to be able to see this item, omit the "false", the config value will be read only
+    api->getConfig()->setValue(GwConfigDefinitions::minXdrInterval,defaultXdrInt,true);
     // example for a user defined help url that will be shown when clicking the help button
     api->addCapability("HELP_URL", "https://www.wellenvogel.de");
 
@@ -51,14 +58,6 @@ void exampleInit(GwApi *api){
     if (!api->taskInterfaces()->claim<ExampleNotWorkingIf>(taskName)){
         api->getLogger()->logDebug(GwLog::ERROR,"unable to claim ExampleNotWorkingIf");
     }
-
-    //this example is a more or less useless example how you could set some
-    //config value to a fixed value
-    //you can only set config values within the init function
-    //you could also compute this value from some own configuration
-    //for this example it would make a lot of sense to declare a capability
-    //to hide this config item from the UI - see header file 
-    api->getConfig()->setValue(api->getConfig()->minXdrInterval,"50");
     //check if we should simulate some voltage measurements
     //add an XDR mapping in this case
     String voltageTransducer=api->getConfig()->getString(GwConfigDefinitions::exTransducer); 
