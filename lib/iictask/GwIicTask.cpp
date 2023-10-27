@@ -32,8 +32,8 @@ class SHT3XConfig{
         humidActive=config->getBool(GwConfigDefinitions::iicSHT3XHumid);
         interval=config->getInt(GwConfigDefinitions::SHT3Xinterval);
         interval*=1000;
-        humiditySource=N2khs_InsideHumidity;
-        tempSource=N2kts_InsideTemperature;
+        humiditySource=(tN2kHumiditySource)(config->getInt(GwConfigDefinitions::SHT3XHumSource));
+        tempSource=(tN2kTempSource)(config->getInt(GwConfigDefinitions::SHT3XTempSource));
     }
 };
 

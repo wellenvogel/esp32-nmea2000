@@ -11,6 +11,83 @@
         }
     },
     {
+        "name": "SHT3XTempSource",
+        "label": "SHT3X Temp Type",
+        "type": "list",
+        "default": "2",
+        "description": "the NMEA2000 source type for the temperature",
+        "list": [
+            {
+                "l": "SeaTemperature",
+                "v": "0"
+            },
+            {
+                "l": "OutsideTemperature",
+                "v": "1"
+            },
+            {
+                "l": "InsideTemperature",
+                "v": "2"
+            },
+            {
+                "l": "EngineRoomTemperature",
+                "v": "3"
+            },
+            {
+                "l": "MainCabinTemperature",
+                "v": "4"
+            },
+            {
+                "l": "LiveWellTemperature",
+                "v": "5"
+            },
+            {
+                "l": "BaitWellTemperature",
+                "v": "6"
+            },
+            {
+                "l": "RefridgerationTemperature",
+                "v": "7"
+            },
+            {
+                "l": "HeatingSystemTemperature",
+                "v": "8"
+            },
+            {
+                "l": "DewPointTemperature",
+                "v": "9"
+            },
+            {
+                "l": "ApparentWindChillTemperature",
+                "v": "10"
+            },
+            {
+                "l": "TheoreticalWindChillTemperature",
+                "v": "11"
+            },
+            {
+                "l": "HeatIndexTemperature",
+                "v": "12"
+            },
+            {
+                "l": "FreezerTemperature",
+                "v": "13"
+            },
+            {
+                "l": "ExhaustGasTemperature",
+                "v": "14"
+            },
+            {
+                "l": "ShaftSealTemperature",
+                "v": "15"
+            }
+        ],
+        "category": "sensors",
+        "capabilities": {
+            "SHT3X":"true"
+        }
+    },
+    {
         "name": "iicSHT3XHumid",
         "label": "SHT3X Humidity",
         "type": "boolean",
@@ -22,22 +99,16 @@
         }
     },
     {
-        "name": "SHT3XTempName",
-        "label": "SHT3X Temp XDR",
-        "type": "String",
-        "default": "Temp",
-        "description": "set the XDR transducer name for the SHT3X Temperature, leave empty to disable ",
-        "category": "sensors",
-        "capabilities": {
-            "SHT3X":"true"
-        }
-    },
-    {
-        "name": "SHT3XHumidName",
-        "label": "SHT3X Humid XDR",
-        "type": "String",
-        "default": "Humidity",
-        "description": "set the XDR transducer name for the SHT3X Humidity, leave empty to disable ",
+        "name": "SHT3XHumSource",
+        "label": "SHT3X Humid Type",
+        "type": "list",
+        "description": "the NMEA2000 source type for the humidity",
+        "default": "0",
+        "list":[
+            {"l":"InsideHumidity","v":"0"},
+            {"l":"OutsideHumidity","v":"1"},
+            {"l":"Undef","v":"0xff"}  
+        ],
         "category": "sensors",
         "capabilities": {
             "SHT3X":"true"
@@ -48,10 +119,10 @@
         "label": "SHT3X N2K iid",
         "type": "number",
         "default": 99,
-        "description": "the N2K instance id the SHT3X Temperature and Humidity ",
+        "description": "the N2K instance id for the SHT3X Temperature and Humidity ",
         "category": "sensors",
         "min": 0,
-        "max": 255,
+        "max": 253,
         "check": "checkMinMax",
         "capabilities": {
             "SHT3X":"true"
@@ -67,6 +138,28 @@
         "min": 1,
         "max": 300,
         "check": "checkMinMax",
+        "capabilities": {
+            "SHT3X":"true"
+        }
+    },
+    {
+        "name": "SHT3XTempName",
+        "label": "SHT3X Temp XDR",
+        "type": "String",
+        "default": "Temp",
+        "description": "set the XDR transducer name for the SHT3X Temperature, leave empty to disable NMEA0183 XDR ",
+        "category": "sensors",
+        "capabilities": {
+            "SHT3X":"true"
+        }
+    },
+    {
+        "name": "SHT3XHumidName",
+        "label": "SHT3X Humid XDR",
+        "type": "String",
+        "default": "Humidity",
+        "description": "set the XDR transducer name for the SHT3X Humidity, leave empty to disable NMEA0183 XDR",
+        "category": "sensors",
         "capabilities": {
             "SHT3X":"true"
         }
