@@ -61,6 +61,7 @@ class GwApi{
         protected:
             virtual bool iset(const String &file, const String &name, Ptr v) = 0;
             virtual Ptr iget(const String &name, int &result) = 0;
+            virtual bool iclaim(const String &name, const String &task)=0;
         public:
             template <typename T>
             bool set(const T &v){
@@ -70,6 +71,10 @@ class GwApi{
             T get(int &res){
                 res=-1;
                 return T();
+            }
+            template <typename T>
+            bool claim(const String &task){
+                return false;
             }
         };
         class Status{
@@ -248,7 +253,12 @@ class GwApi{
         }\
         type *tp=(type*)ptr.get(); \
         return type(*tp); \
-    }
+    }\
+    template<> \
+    inline bool GwApi::TaskInterfaces::claim<type>(const String &task) {\
+        return iclaim(#type,task);\
+    }\
+
 #ifndef DECLARE_TASKIF
     #define DECLARE_TASKIF(type) DECLARE_TASKIF_IMPL(type)
 #endif

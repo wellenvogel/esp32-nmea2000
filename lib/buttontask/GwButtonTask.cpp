@@ -111,3 +111,13 @@ void handleButtons(GwApi *api){
     vTaskDelete(NULL);
     #endif
 }
+
+void initButtons(GwApi *api){
+    #ifndef GWBUTTON_PIN
+    api->getLogger()->logDebug(GwLog::LOG,"no buttons defined, no button task");
+    return;
+    #endif
+    const String taskname("buttonTask");
+    api->addUserTask(handleButtons,taskname);
+    api->taskInterfaces()->claim<IButtonTask>(taskname);
+}

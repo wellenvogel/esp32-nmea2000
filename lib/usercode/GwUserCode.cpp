@@ -124,6 +124,7 @@ class TaskInterfacesStorage{
             }
             if (it->second.task != task){
                 LOG_DEBUG(GwLog::ERROR,"TaskInterfaces: invalid set %s wrong task, expected %s , got %s",name.c_str(),it->second.task.c_str(),task.c_str());
+                return false;
             }
             auto vit=values.find(name);
             if (vit != values.end()){
@@ -150,14 +151,31 @@ class TaskInterfacesStorage{
 class TaskInterfacesImpl : public GwApi::TaskInterfaces{
     String task;
     TaskInterfacesStorage *storage;
+    GwLog *logger;
+    bool isInit=false;
     public:
-        TaskInterfacesImpl(const String &n,TaskInterfacesStorage *s):
-            task(n),storage(s){}
+        TaskInterfacesImpl(const String &n,TaskInterfacesStorage *s, GwLog *l,bool i):
+            task(n),storage(s),isInit(i),logger(l){}
         virtual bool iset(const String &file, const String &name, Ptr v){
             return storage->set(file,name,task,v);
         }
         virtual Ptr iget(const String &name, int &result){
             return storage->get(name,result);
+        }
+        virtual bool iclaim(const String &name, const String &task){
+            if (! isInit) return false;
+            auto it=registrations().find(name);
+            if (it == registrations().end()){
+                LOG_DEBUG(GwLog::ERROR,"unable to claim interface %s for task %s, not registered",name.c_str(),task.c_str());
+                return false;
+            }
+            if (!it->second.task.isEmpty()){
+                LOG_DEBUG(GwLog::ERROR,"unable to claim interface %s for task %s, already claimed by %s",name.c_str(),task.c_str(),it->second.task.c_str());
+                return false;
+            }
+            it->second.task=task;
+            LOG_DEBUG(GwLog::LOG,"claimed interface %s for task %s",name.c_str(),task.c_str());
+            return true;
         }
 };
 
@@ -187,7 +205,7 @@ public:
         this->mainLock=mainLock;
         this->name=name;
         localLock=xSemaphoreCreateMutex();
-        interfaces=new TaskInterfacesImpl(name,s);
+        interfaces=new TaskInterfacesImpl(name,s,api->getLogger(),init);
         isInit=init;
     }
     virtual GwRequestQueue *getQueue()
