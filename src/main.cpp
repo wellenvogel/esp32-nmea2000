@@ -16,7 +16,7 @@
 //#define FALLBACK_SERIAL
 const unsigned long HEAP_REPORT_TIME=2000; //set to 0 to disable heap reporting
 #include <Arduino.h>
-#include "FS.h"
+#include "Preferences.h"
 #include "GwApi.h"
 #include "GwHardware.h"
 

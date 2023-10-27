@@ -302,16 +302,6 @@ def getContentType(fn):
         return "text/css"
     return "application/octet-stream"
 
-def addLibs(env,libs):
-    print("####Options:")
-    po=env.GetProjectOptions()
-    print("type po %s"%str(type(po)))
-    for k,v in po:
-        if k == 'lib_deps':
-            v+=libs
-    pprint.pprint(po)
-
-
 
 def getLibs():
     base=os.path.join(basePath(),"lib")
@@ -326,14 +316,15 @@ def getLibs():
             rt.append(sd)
     return rt
 
-def prebuild(env):
-    global userTaskDirs
-    print("#prebuild running")
-    if not checkDir():
-        sys.exit(1)
-    allLibs=getLibs()
+OWNLIBS=getLibs()+["FS","WiFi"]
+GLOBAL_INCLUDES=[]
+
+def handleDeps(env):
+    #overwrite the GetProjectConfig
+    #to inject all our libs
+    oldGetProjectConfig=env.GetProjectConfig    
     def GetProjectConfigX(env):        
-        rt=ProjectConfig.get_instance(env["PROJECT_CONFIG"])
+        rt=oldGetProjectConfig()
         cenv="env:"+env['PIOENV']
         libs=[]
         for section,options in rt.as_tuple():
@@ -343,18 +334,50 @@ def prebuild(env):
                         libs=values
     
         mustUpdate=False
-        for lib in allLibs:
+        for lib in OWNLIBS:
             if not lib in libs:
                 libs.append(lib)
                 mustUpdate=True
         if mustUpdate:
             update=[(cenv,[('lib_deps',libs)])]
-            print("##update libdeps")
-            #pprint.pprint(update)
             rt.update(update)
         return rt
     env.AddMethod(GetProjectConfigX,"GetProjectConfig")
-    addLibs(env,['appinfo'])
+    #store the list of all includes after we resolved
+    #the dependencies for our main project
+    #we will use them for all compilations afterwards
+    oldLibBuilder=env.ConfigureProjectLibBuilder
+    def ConfigureProjectLibBuilderX(env):
+        global GLOBAL_INCLUDES
+        project=oldLibBuilder()
+        #print("##ConfigureProjectLibBuilderX")
+        #pprint.pprint(project)
+        if project.depbuilders:
+            #print("##depbuilders %s"%",".join(map(lambda x: x.path,project.depbuilders)))
+            for db in project.depbuilders:
+                idirs=db.get_include_dirs()
+                for id in idirs:
+                    if not id in GLOBAL_INCLUDES:
+                        GLOBAL_INCLUDES.append(id)
+        return project
+    env.AddMethod(ConfigureProjectLibBuilderX,"ConfigureProjectLibBuilder")
+    def injectIncludes(env,node):
+        return env.Object(
+            node,
+            CPPPATH=env["CPPPATH"]+GLOBAL_INCLUDES
+        )
+    env.AddBuildMiddleware(injectIncludes)
+
+
+def prebuild(env):
+    global userTaskDirs
+    print("#prebuild running")
+    if not checkDir():
+        sys.exit(1)
+    ldf_mode=env.GetProjectOption("lib_ldf_mode")
+    if ldf_mode == 'off':
+        print("##ldf off - own dependency handling")
+        handleDeps(env)
     userTaskDirs=getUserTaskDirs()
     mergedConfig=os.path.join(outPath(),os.path.basename(CFG_FILE))
     generateMergedConfig(os.path.join(basePath(),CFG_FILE),mergedConfig,userTaskDirs)
@@ -394,6 +417,7 @@ def cleangenerated(source, target, env):
                 continue
             fn=os.path.join(od,f)
             os.unlink(f)
+
 
 print("#prescript...")
 prebuild(env)
