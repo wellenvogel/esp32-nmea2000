@@ -328,6 +328,9 @@ public:
     return xdrMappings.addFixedMapping(mapping);
   }
   virtual void addCapability(const String &name, const String &value){}
+  virtual bool addUserTask(GwUserTaskFunction task,const String Name, int stackSize=2000){
+    return false;
+  }
 };
 
 bool delayedRestart(){

@@ -7,6 +7,8 @@
 #include "GwBoatData.h"
 #include "GwXDRMappings.h"
 #include <map>
+class GwApi;
+typedef void (*GwUserTaskFunction)(GwApi *);
 //API to be used for additional tasks
 class GwApi{
     public:
@@ -158,6 +160,13 @@ class GwApi{
         virtual bool addXdrMapping(const GwXDRMappingDef &)=0;
 
         virtual void addCapability(const String &name, const String &value)=0;
+        /**
+         * add a user task
+         * this allows you decide based on defines/config if a user task really should be added
+         * so this is the preferred solution over DECLARE_USERTASK
+         * The name should be similar to the function name of the user task (although not mandatory)
+        */
+        virtual bool addUserTask(GwUserTaskFunction task,const String Name, int stackSize=2000)=0;
 
         /**
          * not thread safe methods

@@ -36,12 +36,13 @@ class SHT3XConfig{
         tempSource=(tN2kTempSource)(config->getInt(GwConfigDefinitions::SHT3XTempSource));
     }
 };
-
+void runIicTask(GwApi *api);
 void initIicTask(GwApi *api){
     GwLog *logger=api->getLogger();
     #ifndef _GWIIC
         return;
     #endif
+    bool addTask=false;
     #ifdef GWSHT3X
         api->addCapability("SHT3X","true");
         LOG_DEBUG(GwLog::LOG,"GWSHT3X configured, adding capability and xdr mappings");
@@ -70,7 +71,11 @@ void initIicTask(GwApi *api){
             xdr.xdrName=sht3xConfig.tempTransducer;
             api->addXdrMapping(xdr);
         }
+        if (sht3xConfig.tempActive || sht3xConfig.humidActive) addTask=true;
     #endif
+    if (addTask){
+        api->addUserTask(runIicTask,"iicTask",3000);
+    }
 }
 void runIicTask(GwApi *api){
     GwLog *logger=api->getLogger();

@@ -3,6 +3,9 @@
 #define DECLARE_INITFUNCTION(task) GwInitTask __Init##task##__(task,#task);
 #define DECLARE_CAPABILITY(name,value) GwUserCapability __CAP##name##__(#name,#value);
 #define DECLARE_STRING_CAPABILITY(name,value) GwUserCapability __CAP##name##__(#name,value); 
+#define DECLARE_TASKIF(task,type) \
+    DECLARE_TASKIF_IMPL(task,type) \
+    GwIreg __register##type(#task,__FILE__,#type)
 
 #include "GwUserCode.h"
 #include "GwSynchronized.h"
@@ -17,6 +20,14 @@
 std::vector<GwUserTask> userTasks;
 std::vector<GwUserTask> initTasks;
 GwUserCode::Capabilities userCapabilities;
+
+template <typename V>
+bool taskExists(V &list, const String &name){
+    for (auto it=list.begin();it!=list.end();it++){
+        if (it->name == name) return true;
+    }
+    return false;
+}
 class RegEntry{
     public:
     String file;
@@ -54,9 +65,6 @@ class GwIreg{
         }
     };
 
-#define DECLARE_TASKIF(task,type) \
-    DECLARE_TASKIF_IMPL(task,type) \
-    GwIreg __register##type(#task,__FILE__,#type)
 
 
 class GwUserTaskDef{
@@ -289,6 +297,19 @@ public:
     virtual void addCapability(const String &name, const String &value){
         if (! isInit) return;
         userCapabilities[name]=value;
+    }
+    virtual bool addUserTask(GwUserTaskFunction task,const String tname, int stackSize=2000){
+        if (! isInit){
+            api->getLogger()->logDebug(GwLog::ERROR,"trying to add a user task %s outside init",tname.c_str());
+            return false;
+        }
+        if (taskExists(userTasks,name)){
+            api->getLogger()->logDebug(GwLog::ERROR,"trying to add a user task %s that already exists",tname.c_str());
+            return false;
+        }
+        userTasks.push_back(GwUserTask(tname,task,stackSize));
+        api->getLogger()->logDebug(GwLog::LOG,"adding user task %s",tname.c_str());
+        return true;
     }
 
 };

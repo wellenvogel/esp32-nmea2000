@@ -5,7 +5,6 @@
 #include "GwApi.h"
 #include "GwJsonDocument.h"
 class GwLog;
-typedef void (*GwUserTaskFunction)(GwApi *);
 
 class GwApiInternal : public GwApi{
     public:
