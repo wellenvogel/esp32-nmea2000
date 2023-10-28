@@ -130,6 +130,9 @@ class TaskInterfacesStorage{
             auto vit=values.find(name);
             if (vit != values.end()){
                 vit->second.updates++;
+                if (vit->second.updates < 0){
+                    vit->second.updates=0;
+                }
                 vit->second.ptr=v;
             }
             else{
