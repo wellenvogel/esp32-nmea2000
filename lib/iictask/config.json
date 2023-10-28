@@ -314,6 +314,17 @@
         }
     },
     {
+        "name":"BME280TOffset",
+        "label":"BME280 Temperature Offset",
+        "type": "number",
+        "description": "offset (in °) to be added to the BME280 temperature measurements",
+        "default":"0",
+        "category": "sensors",
+        "capabilities": {
+            "BME280":"true"
+        }
+    },
+    {
         "name": "iicBME280Humid",
         "label": "BME280 Humidity",
         "type": "boolean",
@@ -346,6 +357,17 @@
         "type": "boolean",
         "default": "true",
         "description": "Enable the I2C BME280 pressure sensor",
+        "category": "sensors",
+        "capabilities": {
+            "BME280":"true"
+        }
+    },
+    {
+        "name":"BME280POffset",
+        "label":"BME280 Pressure Offset",
+        "type": "number",
+        "description": "offset (in pa) to be added to the BME280 pressure measurements",
+        "default":"0",
         "category": "sensors",
         "capabilities": {
             "BME280":"true"

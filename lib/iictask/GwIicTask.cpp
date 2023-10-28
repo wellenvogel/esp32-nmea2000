@@ -83,7 +83,8 @@ class BME280Config{
         tempXdrName=config->getString(GwConfigDefinitions::BME280TempName);
         humidXdrName=config->getString(GwConfigDefinitions::BME280HumidName);
         pressXdrName=config->getString(GwConfigDefinitions::BME280PressName);
-        //TODO: offsets
+        tempOffset=config->getInt(GwConfigDefinitions::BME280TOffset);
+        pressureOffset=config->getInt(GwConfigDefinitions::BME280POffset);
     }
 };
 void runIicTask(GwApi *api);
