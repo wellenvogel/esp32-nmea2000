@@ -1,5 +1,4 @@
 #include "GwButtonTask.h"
-#include "GwIButtonTask.h"
 #include "GwHardware.h"
 #include "GwApi.h"
 #include "GwLedTask.h"

@@ -22,7 +22,6 @@ CFG_INCLUDE='GwConfigDefinitions.h'
 CFG_INCLUDE_IMPL='GwConfigDefImpl.h'
 XDR_INCLUDE='GwXdrTypeMappings.h'
 TASK_INCLUDE='GwUserTasks.h'
-TASK_INCLUDE_IF='GwUserTasksIf.h'
 EMBEDDED_INCLUDE="GwEmbeddedFiles.h"
 
 def getEmbeddedFiles(env):
@@ -267,14 +266,12 @@ def checkAndAdd(file,names,ilist):
     if not match:
         return
     ilist.append(file) 
-def genereateUserTasks(outfile,forIf=False):
+def genereateUserTasks(outfile):
     includes=[]
     for task in userTaskDirs:
         #print("##taskdir=%s"%task)
         base=os.path.basename(task)
         includeNames=[base.lower()+".h",'gw'+base.lower()+'.h']
-        if forIf:
-            includeNames=["i"+base.lower()+".h",'gwi'+base.lower()+'.h']
         for f in os.listdir(task):
             checkAndAdd(f,includeNames,includes)
     includeData=""
@@ -403,7 +400,6 @@ def prebuild(env):
             print("#WARNING: infile %s for %s not found"%(inFile,ef))
     generateEmbedded(filedefs,os.path.join(outPath(),EMBEDDED_INCLUDE))
     genereateUserTasks(os.path.join(outPath(), TASK_INCLUDE))
-    genereateUserTasks(os.path.join(outPath(), TASK_INCLUDE_IF),forIf=True)
     generateFile(os.path.join(basePath(),XDR_FILE),os.path.join(outPath(),XDR_INCLUDE),generateXdrMappings)
     version="dev"+datetime.now().strftime("%Y%m%d")
     env.Append(CPPDEFINES=[('GWDEVVERSION',version)])

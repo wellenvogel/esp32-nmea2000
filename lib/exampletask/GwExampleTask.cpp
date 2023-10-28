@@ -2,7 +2,6 @@
 //we only compile for some boards
 #ifdef BOARD_TEST
 #include "GwExampleTask.h"
-#include "GwIExampleTask.h"
 #include "GwApi.h"
 #include "GWConfig.h"
 #include <vector>

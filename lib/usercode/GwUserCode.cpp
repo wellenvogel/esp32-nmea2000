@@ -93,7 +93,6 @@ class GwUserCapability{
         }
 };
 #include "GwUserTasks.h"
-#include "GwUserTasksIf.h"
 
 class TaskDataEntry{
         public:
