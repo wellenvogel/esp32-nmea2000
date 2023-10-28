@@ -135,6 +135,7 @@ void runIicTask(GwApi *api){
     SHT3X *sht3x=nullptr;
     bool runLoop=false;
     GwIntervalRunner timers;
+    int counterId=api->addCounter("iicsensors");
     #ifdef GWSHT3X
         int addr=GWSHT3X;
         if (addr < 0) addr=0x44; //default
@@ -144,7 +145,7 @@ void runIicTask(GwApi *api){
             sht3x->init(addr,&Wire);
             LOG_DEBUG(GwLog::LOG,"initialized SHT3X at address %d, interval %ld",(int)addr,sht3xConfig.interval);
             runLoop=true;
-            timers.addAction(sht3xConfig.interval,[logger,api,sht3x,sht3xConfig](){
+            timers.addAction(sht3xConfig.interval,[logger,api,sht3x,sht3xConfig,counterId](){
                 int rt=0;
                 if ((rt=sht3x->get())==0){
                     double temp=sht3x->cTemp;
@@ -155,10 +156,12 @@ void runIicTask(GwApi *api){
                     if (sht3xConfig.humidActive){
                         SetN2kHumidity(msg,1,sht3xConfig.iid,sht3xConfig.humiditySource,humid);
                         api->sendN2kMessage(msg);
+                        api->increment(counterId,"SHT3Xhum");
                     }
                     if (sht3xConfig.tempActive){
                         SetN2kTemperature(msg,1,sht3xConfig.iid,sht3xConfig.tempSource,temp);
                         api->sendN2kMessage(msg);
+                        api->increment(counterId,"SHT3Xtemp");
                     }
                 }
                 else{
@@ -177,13 +180,14 @@ void runIicTask(GwApi *api){
             qmp6988=new QMP6988();
             qmp6988->init(qaddr,&Wire);
             LOG_DEBUG(GwLog::LOG,"initialized QMP6988 at address %d, interval %ld",qaddr,qmp6988Config.interval);
-            timers.addAction(qmp6988Config.interval,[logger,api,qmp6988,qmp6988Config](){
+            timers.addAction(qmp6988Config.interval,[logger,api,qmp6988,qmp6988Config,counterId](){
                 float pressure=qmp6988->calcPressure();
                 float computed=pressure+qmp6988Config.offset;
                 LOG_DEBUG(GwLog::DEBUG,"qmp6988 measure %2.0fPa, computed %2.0fPa",pressure,computed);
                 tN2kMsg msg;
                 SetN2kPressure(msg,1,qmp6988Config.iid,tN2kPressureSource::N2kps_Atmospheric,computed);
                 api->sendN2kMessage(msg);
+                api->increment(counterId,"QMP6988press");
             });
         }
     #endif
