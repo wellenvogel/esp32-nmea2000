@@ -7,6 +7,7 @@
 #include "N2kMessages.h"
 #include "GwHardware.h"
 #include "GwXdrTypeMappings.h"
+#include <Adafruit_BME280.h>
 //#define GWSHT3X -1
 
 #ifndef GWIIC_SDA
@@ -54,6 +55,16 @@ class QMP6988Config{
             interval*=1000;
             offset=config->getInt(GwConfigDefinitions::QMP6988POffset);
         }
+};
+
+class BME280Config{
+    public:
+    bool active=true;
+    int iid=99;
+    long interval=2000;
+    BME280Config(GwConfigHandler *config){
+
+    }
 };
 void runIicTask(GwApi *api);
 void initIicTask(GwApi *api){
@@ -111,6 +122,17 @@ void initIicTask(GwApi *api){
         }
         else{
             LOG_DEBUG(GwLog::LOG,"QMP6988 configured but disabled");
+        }
+    #endif
+    #ifdef GWBME280
+        api->addCapability("BME280","true");
+        BME280Config bme280Config(api->getConfig());
+        if (bme280Config.active){
+            LOG_DEBUG(GwLog::DEBUG,"BME280 configured and active, adding capability and xdr mapping");
+            addTask=true;
+        }
+        else{
+            LOG_DEBUG(GwLog::DEBUG,"BME280 configured but disabled");
         }
     #endif
     if (addTask){
@@ -189,6 +211,30 @@ void runIicTask(GwApi *api){
                 api->sendN2kMessage(msg);
                 api->increment(counterId,"QMP6988press");
             });
+        }
+    #endif
+    #ifdef GWBME280
+        int baddr=GWBME280;
+        if (baddr < 0) baddr=0x76;
+        BME280Config bme280Config(api->getConfig());
+        if (bme280Config.active){
+            Adafruit_BME280 *bme280=new Adafruit_BME280();
+            if (bme280->begin(baddr,&Wire)){
+                uint32_t sensorId=bme280->sensorID();
+                bool hasHumidity=sensorId == 0x60; //BME280, else BMP280
+                LOG_DEBUG(GwLog::LOG,"initialized BME280 at %d, sensorId 0x%x",baddr,sensorId);
+                timers.addAction(bme280Config.interval,[logger,api,bme280,bme280Config,counterId,hasHumidity](){
+                    float pressure=bme280->readPressure();
+                    float temperature=bme280->readTemperature();
+                    float humidity=-1;
+                    if (hasHumidity) humidity=bme280->readHumidity();
+                    LOG_DEBUG(GwLog::DEBUG,"BME280 read press=%.0f, temp=%.1f, humid=%02.0f",pressure,temperature,humidity);
+                });
+                runLoop=true;
+            }
+            else{
+                LOG_DEBUG(GwLog::ERROR,"unable to initialize BME280 sensor at address %d",baddr);
+            }
         }
     #endif
     if (! runLoop){
