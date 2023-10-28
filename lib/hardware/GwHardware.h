@@ -246,6 +246,9 @@
   #ifndef GWSHT3X
     #define GWSHT3X -1
   #endif
+  #ifndef GWQMP6988
+    #define GWQMP6988 -1
+  #endif
 #endif
 
 #ifdef M5_GROOVEIIC

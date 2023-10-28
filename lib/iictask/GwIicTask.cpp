@@ -1,7 +1,8 @@
 #include "GwIicTask.h"
 #include "GwHardware.h"
 #include <Wire.h>
-#include <SHT3X.h>
+#include "SHT3X.h"
+#include "QMP6988.h"
 #include "GwTimer.h"
 #include "N2kMessages.h"
 #include "GwHardware.h"
@@ -35,6 +36,17 @@ class SHT3XConfig{
         humiditySource=(tN2kHumiditySource)(config->getInt(GwConfigDefinitions::SHT3XHumSource));
         tempSource=(tN2kTempSource)(config->getInt(GwConfigDefinitions::SHT3XTempSource));
     }
+};
+
+class QMP6988Config{
+    public:
+        String transducer="Pressure";
+        int iid=99;
+        bool active=true;
+        long interval=2000;
+        QMP6988Config(GwConfigHandler *config){
+            //TODO
+        }
 };
 void runIicTask(GwApi *api);
 void initIicTask(GwApi *api){
@@ -72,6 +84,12 @@ void initIicTask(GwApi *api){
             api->addXdrMapping(xdr);
         }
         if (sht3xConfig.tempActive || sht3xConfig.humidActive) addTask=true;
+    #endif
+    #ifdef GWQMP6988
+        api->addCapability("QMP6988","true");
+        LOG_DEBUG(GwLog::LOG,"QMP6988 configured, adding capability and xdr mappings");
+        QMP6988Config qmp6988Config(api->getConfig());
+        if (qmp6988Config.active) addTask=true;
     #endif
     if (addTask){
         api->addUserTask(runIicTask,"iicTask",3000);
@@ -124,6 +142,20 @@ void runIicTask(GwApi *api){
                 else{
                     LOG_DEBUG(GwLog::DEBUG,"unable to query SHT3X: %d",rt);
                 }    
+            });
+        }
+    #endif
+    #ifdef GWQMP6988
+        int qaddr=GWQMP6988;
+        if (qaddr < 0) qaddr=0x56;
+        QMP6988Config qmp6988Config(api->getConfig());
+        QMP6988 *qmp6988=nullptr;
+        if (qmp6988Config.active){
+            qmp6988=new QMP6988();
+            qmp6988->init(qaddr,&Wire);
+            timers.addAction(qmp6988Config.interval,[logger,api,qmp6988,qmp6988Config](){
+                float pressure=qmp6988->calcPressure();
+                LOG_DEBUG(GwLog::DEBUG,"qmp6988 measure %2.0fPa",pressure);
             });
         }
     #endif
