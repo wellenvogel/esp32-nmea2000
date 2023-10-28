@@ -163,5 +163,66 @@
         "capabilities": {
             "SHT3X":"true"
         }
+    },
+    {
+        "name": "QMP6988act",
+        "label": "QMP6988 pressure",
+        "description": "activate the QMP6988 pressure measurement",
+        "type":"boolean",
+        "default":"true",
+        "category": "sensors",
+        "capabilities": {
+            "QMP6988":"true"
+        }
+    },
+    {
+        "name": "QMP6988iid",
+        "label": "QMP6988 N2K iid",
+        "type": "number",
+        "default": 99,
+        "description": "the N2K instance id for the QMP6988 pressure",
+        "category": "sensors",
+        "min": 0,
+        "max": 253,
+        "check": "checkMinMax",
+        "capabilities": {
+            "QMP6988":"true"
+        }
+    },
+    {
+        "name": "QMP6988interval",
+        "label": "QMP6988 Interval",
+        "type": "number",
+        "default": 2,
+        "description": "Interval(s) to query QMP6988 Pressure (1...300)",
+        "category": "sensors",
+        "min": 1,
+        "max": 300,
+        "check": "checkMinMax",
+        "capabilities": {
+            "QMP6988":"true"
+        }
+    },
+    {
+        "name": "QMP6988PName",
+        "label": "QMP6988 Pressure XDR",
+        "type": "String",
+        "default": "Pressure",
+        "description": "set the XDR transducer name for the QMP6988 Pressure, leave empty to disable NMEA0183 XDR",
+        "category": "sensors",
+        "capabilities": {
+            "QMP6988":"true"
+        }
+    },
+    {
+        "name":"QMP6988POffset",
+        "label":"QMP6988 Pressure Offset",
+        "type": "number",
+        "description": "offset (in pa) to be added to the QMP6988 pressure measurements",
+        "default":"0",
+        "category": "sensors",
+        "capabilities": {
+            "QMP6988":"true"
+        }
     }
 ]

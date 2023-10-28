@@ -44,8 +44,15 @@ class QMP6988Config{
         int iid=99;
         bool active=true;
         long interval=2000;
+        tN2kPressureSource source=tN2kPressureSource::N2kps_Atmospheric;
+        float offset=0;
         QMP6988Config(GwConfigHandler *config){
-            //TODO
+            transducer=config->getString(GwConfigDefinitions::QMP6988PName);
+            iid=config->getInt(GwConfigDefinitions::QMP6988iid);
+            active=config->getBool(GwConfigDefinitions::QMP6988act);
+            interval=config->getInt(GwConfigDefinitions::QMP6988interval);
+            interval*=1000;
+            offset=config->getInt(GwConfigDefinitions::QMP6988POffset);
         }
 };
 void runIicTask(GwApi *api);
@@ -57,9 +64,10 @@ void initIicTask(GwApi *api){
     bool addTask=false;
     #ifdef GWSHT3X
         api->addCapability("SHT3X","true");
-        LOG_DEBUG(GwLog::LOG,"GWSHT3X configured, adding capability and xdr mappings");
+        LOG_DEBUG(GwLog::LOG,"SHT3X configured");
         SHT3XConfig sht3xConfig(api->getConfig());
         if (sht3xConfig.humidActive && ! sht3xConfig.humidTransducer.isEmpty()){
+            LOG_DEBUG(GwLog::DEBUG,"SHT3X humidity measure active, adding capability and xdr mappings");
             //add XDR mapping for humidity
             GwXDRMappingDef xdr;
             xdr.category=GwXDRCategory::XDRHUMIDITY;
@@ -72,6 +80,7 @@ void initIicTask(GwApi *api){
             api->addXdrMapping(xdr);
         }
         if (sht3xConfig.tempActive && ! sht3xConfig.tempTransducer.isEmpty()){
+            LOG_DEBUG(GwLog::DEBUG,"SHT3X temperature measure active, adding capability and xdr mappings");
             //add XDR mapping for humidity
             GwXDRMappingDef xdr;
             xdr.category=GwXDRCategory::XDRTEMP;
@@ -87,9 +96,22 @@ void initIicTask(GwApi *api){
     #endif
     #ifdef GWQMP6988
         api->addCapability("QMP6988","true");
-        LOG_DEBUG(GwLog::LOG,"QMP6988 configured, adding capability and xdr mappings");
         QMP6988Config qmp6988Config(api->getConfig());
-        if (qmp6988Config.active) addTask=true;
+        if (qmp6988Config.active) {
+            LOG_DEBUG(GwLog::LOG,"QMP6988 configured, adding capability and xdr mappings");
+            addTask=true;
+            GwXDRMappingDef xdr;
+            xdr.category=GwXDRCategory::XDRPRESSURE;
+            xdr.direction=GwXDRMappingDef::M_FROM2K;
+            xdr.selector=(int)qmp6988Config.source;
+            xdr.instanceId=qmp6988Config.iid;
+            xdr.instanceMode=GwXDRMappingDef::IS_SINGLE;
+            xdr.xdrName=qmp6988Config.transducer;
+            api->addXdrMapping(xdr);
+        }
+        else{
+            LOG_DEBUG(GwLog::LOG,"QMP6988 configured but disabled");
+        }
     #endif
     if (addTask){
         api->addUserTask(runIicTask,"iicTask",3000);
@@ -114,7 +136,7 @@ void runIicTask(GwApi *api){
     bool runLoop=false;
     GwIntervalRunner timers;
     #ifdef GWSHT3X
-        int8_t addr=GWSHT3X;
+        int addr=GWSHT3X;
         if (addr < 0) addr=0x44; //default
         SHT3XConfig sht3xConfig(config);
         if (sht3xConfig.humidActive || sht3xConfig.tempActive){
@@ -151,11 +173,17 @@ void runIicTask(GwApi *api){
         QMP6988Config qmp6988Config(api->getConfig());
         QMP6988 *qmp6988=nullptr;
         if (qmp6988Config.active){
+            runLoop=true;
             qmp6988=new QMP6988();
             qmp6988->init(qaddr,&Wire);
+            LOG_DEBUG(GwLog::LOG,"initialized QMP6988 at address %d, interval %ld",qaddr,qmp6988Config.interval);
             timers.addAction(qmp6988Config.interval,[logger,api,qmp6988,qmp6988Config](){
                 float pressure=qmp6988->calcPressure();
-                LOG_DEBUG(GwLog::DEBUG,"qmp6988 measure %2.0fPa",pressure);
+                float computed=pressure+qmp6988Config.offset;
+                LOG_DEBUG(GwLog::DEBUG,"qmp6988 measure %2.0fPa, computed %2.0fPa",pressure,computed);
+                tN2kMsg msg;
+                SetN2kPressure(msg,1,qmp6988Config.iid,tN2kPressureSource::N2kps_Atmospheric,computed);
+                api->sendN2kMessage(msg);
             });
         }
     #endif
