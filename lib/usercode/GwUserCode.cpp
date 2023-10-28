@@ -92,7 +92,9 @@ class GwUserCapability{
             userCapabilities[name]=value;  
         }
 };
+#define _NOGWHARDWAREUT
 #include "GwUserTasks.h"
+#undef _NOGWHARDWAREUT
 
 class TaskDataEntry{
         public:

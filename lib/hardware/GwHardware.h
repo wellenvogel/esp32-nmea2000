@@ -11,6 +11,9 @@
   License along with this library; if not, write to the Free Software
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
+#ifdef _NOGWHARDWAREUT
+  #error "you are not allowed to include GwHardware.h in your user task header"
+#endif
 #ifndef _GWHARDWARE_H
 #define _GWHARDWARE_H
 #define GWSERIAL_TYPE_UNI 1
