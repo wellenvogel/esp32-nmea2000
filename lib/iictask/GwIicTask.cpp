@@ -1,13 +1,21 @@
 #include "GwIicTask.h"
 #include "GwHardware.h"
-#include <Wire.h>
-#include "SHT3X.h"
-#include "QMP6988.h"
+#ifdef _GWIIC
+    #include <Wire.h>
+#endif
+#ifdef GWSHT3X
+    #include "SHT3X.h"
+#endif
+#ifdef GWQMP6988
+    #include "QMP6988.h"
+#endif
 #include "GwTimer.h"
 #include "N2kMessages.h"
 #include "GwHardware.h"
 #include "GwXdrTypeMappings.h"
-#include <Adafruit_BME280.h>
+#ifdef GWBME280
+    #include <Adafruit_BME280.h>
+#endif
 //#define GWSHT3X -1
 
 #ifndef GWIIC_SDA
@@ -92,8 +100,9 @@ void runIicTask(GwApi *api);
 void initIicTask(GwApi *api){
     GwLog *logger=api->getLogger();
     #ifndef _GWIIC
+        vTaskDelete(NULL);
         return;
-    #endif
+    #else
     bool addTask=false;
     #ifdef GWSHT3X
         api->addCapability("SHT3X","true");
@@ -214,11 +223,11 @@ void runIicTask(GwApi *api){
         return;
     }
     GwConfigHandler *config=api->getConfig();
-    SHT3X *sht3x=nullptr;
     bool runLoop=false;
     GwIntervalRunner timers;
     int counterId=api->addCounter("iicsensors");
     #ifdef GWSHT3X
+        SHT3X *sht3x=nullptr;
         int addr=GWSHT3X;
         if (addr < 0) addr=0x44; //default
         SHT3XConfig sht3xConfig(config);
@@ -337,4 +346,5 @@ void runIicTask(GwApi *api){
         timers.loop();
     }
     vTaskDelete(NULL);
+    #endif
 }

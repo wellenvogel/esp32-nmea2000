@@ -1,3 +1,5 @@
+#include "GwHardware.h"
+#ifdef GWSHT3X
 #include "SHT3X.h"
 
 bool SHT3X::init(uint8_t slave_addr_in, TwoWire* wire_in)
@@ -43,3 +45,4 @@ byte SHT3X::get()
 
   return 0;
 }
+#endif

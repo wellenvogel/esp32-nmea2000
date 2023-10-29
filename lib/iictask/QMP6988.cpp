@@ -1,3 +1,5 @@
+#include "GwHardware.h"
+#ifdef GWQMP6988
 #include <math.h>
 #include "stdint.h"
 #include "stdio.h"
@@ -390,3 +392,4 @@ uint8_t QMP6988::init(uint8_t slave_addr_in, TwoWire* wire_in) {
     setOversamplingT(QMP6988_OVERSAMPLING_1X);
     return 1;
 }
+#endif
