@@ -24,75 +24,86 @@
 #ifndef GWIIC_SCL
     #define GWIIC_SCL -1
 #endif
+
+#define CFG_GET(cfg,name,prefix) \
+    cfg->getValue(name, GwConfigDefinitions::prefix ## name)
+
+#define CSHT3X(name) \
+    CFG_GET(config,name,SHT3X)
+#define CQMP6988(name) \
+    CFG_GET(config,name,QMP6988)
+#define CBME280(name) \
+    CFG_GET(config,name,BME280)    
 class SHT3XConfig{
     public:
-    String tempTransducer;
-    String humidTransducer;
+    String tmNam;
+    String huNam;
     int iid;
-    bool tempActive;
-    bool humidActive;
-    long interval;
-    tN2kHumiditySource humiditySource;
-    tN2kTempSource tempSource;
+    bool tmAct;
+    bool huAct;
+    long intv;
+    tN2kHumiditySource huSrc;
+    tN2kTempSource tmSrc;
     SHT3XConfig(GwConfigHandler *config){
-        tempTransducer=config->getString(GwConfigDefinitions::SHT3XTempName);
-        humidTransducer=config->getString(GwConfigDefinitions::SHT3XHumidName);
-        iid=config->getInt(GwConfigDefinitions::SHT3Xiid,99);
-        tempActive=config->getBool(GwConfigDefinitions::iicSHT3XTemp);
-        humidActive=config->getBool(GwConfigDefinitions::iicSHT3XHumid);
-        interval=config->getInt(GwConfigDefinitions::SHT3Xinterval);
-        interval*=1000;
-        humiditySource=(tN2kHumiditySource)(config->getInt(GwConfigDefinitions::SHT3XHumSource));
-        tempSource=(tN2kTempSource)(config->getInt(GwConfigDefinitions::SHT3XTempSource));
+        CSHT3X(tmNam);
+        CSHT3X(huNam);
+        CSHT3X(iid);
+        CSHT3X(tmAct);
+        CSHT3X(huAct);
+        CSHT3X(intv);
+        intv*=1000;
+        CSHT3X(huSrc);
+        CSHT3X(tmSrc);
     }
 };
 
 class QMP6988Config{
     public:
-        String transducer="Pressure";
+        String prNam="Pressure";
         int iid=99;
-        bool active=true;
-        long interval=2000;
+        bool prAct=true;
+        long intv=2000;
         tN2kPressureSource source=tN2kPressureSource::N2kps_Atmospheric;
-        float offset=0;
+        float prOff=0;
         QMP6988Config(GwConfigHandler *config){
-            transducer=config->getString(GwConfigDefinitions::QMP6988PName);
-            iid=config->getInt(GwConfigDefinitions::QMP6988iid);
-            active=config->getBool(GwConfigDefinitions::QMP6988act);
-            interval=config->getInt(GwConfigDefinitions::QMP6988interval);
-            interval*=1000;
-            offset=config->getInt(GwConfigDefinitions::QMP6988POffset);
+            CQMP6988(prNam);
+            CQMP6988(iid);
+            CQMP6988(prAct);
+            CQMP6988(intv);
+            intv*=1000;
+            CQMP6988(prOff);
         }
 };
 
 class BME280Config{
     public:
-    bool pressureActive=true;
-    bool tempActive=true;
-    bool humidActive=true;
-    tN2kTempSource tempSource=tN2kTempSource::N2kts_InsideTemperature;
-    tN2kHumiditySource humidSource=tN2kHumiditySource::N2khs_InsideHumidity;
-    tN2kPressureSource pressureSource=tN2kPressureSource::N2kps_Atmospheric;
+    bool prAct=true;
+    bool tmAct=true;
+    bool huAct=true;
+    tN2kTempSource tmSrc=tN2kTempSource::N2kts_InsideTemperature;
+    tN2kHumiditySource huSrc=tN2kHumiditySource::N2khs_InsideHumidity;
+    tN2kPressureSource prSrc=tN2kPressureSource::N2kps_Atmospheric;
     int iid=99;
-    long interval=2000;
-    String tempXdrName="Temperature";
-    String humidXdrName="Humidity";
-    String pressXdrName="Pressure";
-    float tempOffset=0;
-    float pressureOffset=0;
+    long intv=2000;
+    String tmNam="Temperature";
+    String huNam="Humidity";
+    String prNam="Pressure";
+    float tmOff=0;
+    float prOff=0;
     BME280Config(GwConfigHandler *config){
-        pressureActive=config->getBool(GwConfigDefinitions::iicBME280Press);
-        tempActive=config->getBool(GwConfigDefinitions::iicBME280Temp);
-        humidActive=config->getBool(GwConfigDefinitions::iicBME280Humid);
-        tempSource=(tN2kTempSource)config->getInt(GwConfigDefinitions::BME280TSource);
-        humidSource=(tN2kHumiditySource)config->getInt(GwConfigDefinitions::BME280HumSource);
-        iid=config->getInt(GwConfigDefinitions::BME280iid);
-        interval=1000*config->getInt(GwConfigDefinitions::BME280interval);
-        tempXdrName=config->getString(GwConfigDefinitions::BME280TempName);
-        humidXdrName=config->getString(GwConfigDefinitions::BME280HumidName);
-        pressXdrName=config->getString(GwConfigDefinitions::BME280PressName);
-        tempOffset=config->getInt(GwConfigDefinitions::BME280TOffset);
-        pressureOffset=config->getInt(GwConfigDefinitions::BME280POffset);
+        CBME280(prAct);
+        CBME280(tmAct);
+        CBME280(huAct);
+        CBME280(tmSrc);
+        CBME280(huSrc);
+        CBME280(iid);
+        CBME280(intv);
+        intv*=1000;
+        CBME280(tmNam);
+        CBME280(huNam);
+        CBME280(prNam);
+        CBME280(tmOff);
+        CBME280(prOff);
     }
 };
 void runIicTask(GwApi *api);
@@ -108,38 +119,38 @@ void initIicTask(GwApi *api){
         api->addCapability("SHT3X","true");
         LOG_DEBUG(GwLog::LOG,"SHT3X configured");
         SHT3XConfig sht3xConfig(api->getConfig());
-        if (sht3xConfig.humidActive && ! sht3xConfig.humidTransducer.isEmpty()){
+        if (sht3xConfig.huAct && ! sht3xConfig.humidTransducer.isEmpty()){
             LOG_DEBUG(GwLog::DEBUG,"SHT3X humidity measure active, adding capability and xdr mappings");
             //add XDR mapping for humidity
             GwXDRMappingDef xdr;
             xdr.category=GwXDRCategory::XDRHUMIDITY;
             xdr.direction=GwXDRMappingDef::M_FROM2K;
             xdr.field=GWXDRFIELD_HUMIDITY_ACTUALHUMIDITY;
-            xdr.selector=(int)sht3xConfig.humiditySource;
+            xdr.selector=(int)sht3xConfig.huSrc;
             xdr.instanceMode=GwXDRMappingDef::IS_SINGLE;
             xdr.instanceId=sht3xConfig.iid;
             xdr.xdrName=sht3xConfig.humidTransducer;
             api->addXdrMapping(xdr);
         }
-        if (sht3xConfig.tempActive && ! sht3xConfig.tempTransducer.isEmpty()){
+        if (sht3xConfig.tmAct && ! sht3xConfig.tName.isEmpty()){
             LOG_DEBUG(GwLog::DEBUG,"SHT3X temperature measure active, adding capability and xdr mappings");
             //add XDR mapping for humidity
             GwXDRMappingDef xdr;
             xdr.category=GwXDRCategory::XDRTEMP;
             xdr.direction=GwXDRMappingDef::M_FROM2K;
             xdr.field=GWXDRFIELD_TEMPERATURE_ACTUALTEMPERATURE;
-            xdr.selector=(int)sht3xConfig.tempSource;
+            xdr.selector=(int)sht3xConfig.tmSrc;
             xdr.instanceMode=GwXDRMappingDef::IS_SINGLE;
             xdr.instanceId=sht3xConfig.iid;
-            xdr.xdrName=sht3xConfig.tempTransducer;
+            xdr.xdrName=sht3xConfig.tName;
             api->addXdrMapping(xdr);
         }
-        if (sht3xConfig.tempActive || sht3xConfig.humidActive) addTask=true;
+        if (sht3xConfig.tmAct || sht3xConfig.huAct) addTask=true;
     #endif
     #ifdef GWQMP6988
         api->addCapability("QMP6988","true");
         QMP6988Config qmp6988Config(api->getConfig());
-        if (qmp6988Config.active) {
+        if (qmp6988Config.prAct) {
             LOG_DEBUG(GwLog::LOG,"QMP6988 configured, adding capability and xdr mappings");
             addTask=true;
             GwXDRMappingDef xdr;
@@ -148,7 +159,7 @@ void initIicTask(GwApi *api){
             xdr.selector=(int)qmp6988Config.source;
             xdr.instanceId=qmp6988Config.iid;
             xdr.instanceMode=GwXDRMappingDef::IS_SINGLE;
-            xdr.xdrName=qmp6988Config.transducer;
+            xdr.xdrName=qmp6988Config.prName;
             api->addXdrMapping(xdr);
         }
         else{
@@ -159,42 +170,42 @@ void initIicTask(GwApi *api){
         api->addCapability("BME280","true");
         BME280Config bme280Config(api->getConfig());
         bool bme280Active=false;
-        if (bme280Config.pressureActive){
+        if (bme280Config.prAct){
             LOG_DEBUG(GwLog::DEBUG,"BME280 pressure active, adding capability and xdr mapping");
             bme280Active=true;
             GwXDRMappingDef xdr;
             xdr.category=GwXDRCategory::XDRPRESSURE;
             xdr.direction=GwXDRMappingDef::M_FROM2K;
-            xdr.selector=(int)bme280Config.pressureSource;
+            xdr.selector=(int)bme280Config.prSrc;
             xdr.instanceId=bme280Config.iid;
             xdr.instanceMode=GwXDRMappingDef::IS_SINGLE;
-            xdr.xdrName=bme280Config.pressXdrName;
+            xdr.xdrName=bme280Config.prNam;
             api->addXdrMapping(xdr);
         }
-        if (bme280Config.tempActive){
+        if (bme280Config.tmAct){
             LOG_DEBUG(GwLog::DEBUG,"BME280 temperature active, adding capability and xdr mapping");
             bme280Active=true;
             GwXDRMappingDef xdr;
             xdr.category=GwXDRCategory::XDRTEMP;
             xdr.direction=GwXDRMappingDef::M_FROM2K;
             xdr.field=GWXDRFIELD_TEMPERATURE_ACTUALTEMPERATURE;
-            xdr.selector=(int)bme280Config.tempSource;
+            xdr.selector=(int)bme280Config.tmSrc;
             xdr.instanceMode=GwXDRMappingDef::IS_SINGLE;
             xdr.instanceId=bme280Config.iid;
-            xdr.xdrName=bme280Config.tempXdrName;
+            xdr.xdrName=bme280Config.tmNam;
             api->addXdrMapping(xdr);
         }
-        if (bme280Config.humidActive){
+        if (bme280Config.huAct){
             LOG_DEBUG(GwLog::DEBUG,"BME280 humidity active, adding capability and xdr mapping");
             bme280Active=true;
             GwXDRMappingDef xdr;
             xdr.category=GwXDRCategory::XDRHUMIDITY;
             xdr.direction=GwXDRMappingDef::M_FROM2K;
             xdr.field=GWXDRFIELD_HUMIDITY_ACTUALHUMIDITY;
-            xdr.selector=(int)bme280Config.humidSource;
+            xdr.selector=(int)bme280Config.huSrc;
             xdr.instanceMode=GwXDRMappingDef::IS_SINGLE;
             xdr.instanceId=bme280Config.iid;
-            xdr.xdrName=bme280Config.humidXdrName;
+            xdr.xdrName=bme280Config.huNam;
             api->addXdrMapping(xdr);
         }
         if (! bme280Active){
@@ -231,12 +242,12 @@ void runIicTask(GwApi *api){
         int addr=GWSHT3X;
         if (addr < 0) addr=0x44; //default
         SHT3XConfig sht3xConfig(config);
-        if (sht3xConfig.humidActive || sht3xConfig.tempActive){
+        if (sht3xConfig.huAct || sht3xConfig.tmAct){
             sht3x=new SHT3X();
             sht3x->init(addr,&Wire);
-            LOG_DEBUG(GwLog::LOG,"initialized SHT3X at address %d, interval %ld",(int)addr,sht3xConfig.interval);
+            LOG_DEBUG(GwLog::LOG,"initialized SHT3X at address %d, intv %ld",(int)addr,sht3xConfig.intv);
             runLoop=true;
-            timers.addAction(sht3xConfig.interval,[logger,api,sht3x,sht3xConfig,counterId](){
+            timers.addAction(sht3xConfig.intv,[logger,api,sht3x,sht3xConfig,counterId](){
                 int rt=0;
                 if ((rt=sht3x->get())==0){
                     double temp=sht3x->cTemp;
@@ -244,13 +255,13 @@ void runIicTask(GwApi *api){
                     double humid=sht3x->humidity;
                     LOG_DEBUG(GwLog::DEBUG,"SHT3X measure temp=%2.1f, humid=%2.0f",(float)temp,(float)humid);
                     tN2kMsg msg;
-                    if (sht3xConfig.humidActive){
-                        SetN2kHumidity(msg,1,sht3xConfig.iid,sht3xConfig.humiditySource,humid);
+                    if (sht3xConfig.huAct){
+                        SetN2kHumidity(msg,1,sht3xConfig.iid,sht3xConfig.huSrc,humid);
                         api->sendN2kMessage(msg);
                         api->increment(counterId,"SHT3Xhum");
                     }
-                    if (sht3xConfig.tempActive){
-                        SetN2kTemperature(msg,1,sht3xConfig.iid,sht3xConfig.tempSource,temp);
+                    if (sht3xConfig.tmAct){
+                        SetN2kTemperature(msg,1,sht3xConfig.iid,sht3xConfig.tmSrc,temp);
                         api->sendN2kMessage(msg);
                         api->increment(counterId,"SHT3Xtemp");
                     }
@@ -266,14 +277,14 @@ void runIicTask(GwApi *api){
         if (qaddr < 0) qaddr=0x56;
         QMP6988Config qmp6988Config(api->getConfig());
         QMP6988 *qmp6988=nullptr;
-        if (qmp6988Config.active){
+        if (qmp6988Config.prAct){
             runLoop=true;
             qmp6988=new QMP6988();
             qmp6988->init(qaddr,&Wire);
-            LOG_DEBUG(GwLog::LOG,"initialized QMP6988 at address %d, interval %ld",qaddr,qmp6988Config.interval);
-            timers.addAction(qmp6988Config.interval,[logger,api,qmp6988,qmp6988Config,counterId](){
+            LOG_DEBUG(GwLog::LOG,"initialized QMP6988 at address %d, intv %ld",qaddr,qmp6988Config.intv);
+            timers.addAction(qmp6988Config.intv,[logger,api,qmp6988,qmp6988Config,counterId](){
                 float pressure=qmp6988->calcPressure();
-                float computed=pressure+qmp6988Config.offset;
+                float computed=pressure+qmp6988Config.prOff;
                 LOG_DEBUG(GwLog::DEBUG,"qmp6988 measure %2.0fPa, computed %2.0fPa",pressure,computed);
                 tN2kMsg msg;
                 SetN2kPressure(msg,1,qmp6988Config.iid,tN2kPressureSource::N2kps_Atmospheric,computed);
@@ -286,41 +297,41 @@ void runIicTask(GwApi *api){
         int baddr=GWBME280;
         if (baddr < 0) baddr=0x76;
         BME280Config bme280Config(api->getConfig());
-        if (bme280Config.tempActive || bme280Config.pressureActive|| bme280Config.humidActive){
+        if (bme280Config.tmAct || bme280Config.prAct|| bme280Config.huAct){
             Adafruit_BME280 *bme280=new Adafruit_BME280();
             if (bme280->begin(baddr,&Wire)){
                 uint32_t sensorId=bme280->sensorID();
                 bool hasHumidity=sensorId == 0x60; //BME280, else BMP280
-                if (bme280Config.tempOffset != 0){
-                    bme280->setTemperatureCompensation(bme280Config.tempOffset);
+                if (bme280Config.tmOff != 0){
+                    bme280->setTemperatureCompensation(bme280Config.tmOff);
                 }
-                if (hasHumidity || bme280Config.tempActive || bme280Config.pressureActive)
+                if (hasHumidity || bme280Config.tmAct || bme280Config.prAct)
                 {
                     LOG_DEBUG(GwLog::LOG, "initialized BME280 at %d, sensorId 0x%x", baddr, sensorId);
-                    timers.addAction(bme280Config.interval, [logger, api, bme280, bme280Config, counterId, hasHumidity](){
-                        if (bme280Config.pressureActive){
+                    timers.addAction(bme280Config.intv, [logger, api, bme280, bme280Config, counterId, hasHumidity](){
+                        if (bme280Config.prAct){
                             float pressure=bme280->readPressure();
-                            float computed=pressure+bme280Config.pressureOffset;
+                            float computed=pressure+bme280Config.prOff;
                             LOG_DEBUG(GwLog::DEBUG,"BME280 measure %2.0fPa, computed %2.0fPa",pressure,computed);
                             tN2kMsg msg;
-                            SetN2kPressure(msg,1,bme280Config.iid,bme280Config.pressureSource,computed);
+                            SetN2kPressure(msg,1,bme280Config.iid,bme280Config.prSrc,computed);
                             api->sendN2kMessage(msg);
                             api->increment(counterId,"BME280press");
                         }
-                        if (bme280Config.tempActive){
+                        if (bme280Config.tmAct){
                             float temperature=bme280->readTemperature(); //offset is handled internally
                             temperature=CToKelvin(temperature);
                             LOG_DEBUG(GwLog::DEBUG,"BME280 measure temp=%2.1f",temperature);
                             tN2kMsg msg;
-                            SetN2kTemperature(msg,1,bme280Config.iid,bme280Config.tempSource,temperature);
+                            SetN2kTemperature(msg,1,bme280Config.iid,bme280Config.tmSrc,temperature);
                             api->sendN2kMessage(msg);
                             api->increment(counterId,"BME280temp");
                         }
-                        if (bme280Config.humidActive && hasHumidity){
+                        if (bme280Config.huAct && hasHumidity){
                             float humidity=bme280->readHumidity();
                             LOG_DEBUG(GwLog::DEBUG,"BME280 read humid=%02.0f",humidity);
                             tN2kMsg msg; 
-                            SetN2kHumidity(msg,1,bme280Config.iid,bme280Config.humidSource,humidity);
+                            SetN2kHumidity(msg,1,bme280Config.iid,bme280Config.huSrc,humidity);
                             api->sendN2kMessage(msg);
                             api->increment(counterId,"BME280hum");
                         }

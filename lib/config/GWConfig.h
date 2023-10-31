@@ -41,6 +41,52 @@ class GwConfigHandler: public GwConfigDefinitions{
         unsigned long getSaltBase(){return saltBase;}
         ~GwConfigHandler();
         bool userChangesAllowed(){return allowChanges;}
+        template <typename T>
+        bool getValue(T & target, const String &name, int defaultv=0){
+            GwConfigInterface *i=getConfigItem(name);
+            if (!i){
+                target=(T)defaultv;
+                return false;
+            }
+            target=(T)(i->asInt());
+            return true;
+        }
+        bool getValue(int &target, const String &name, int defaultv=0){
+            GwConfigInterface *i=getConfigItem(name);
+            if (!i){
+                target=defaultv;
+                return false;
+            }
+            target=i->asInt();
+            return true;
+        }
+        bool getValue(long &target, const String &name, long defaultv=0){
+            GwConfigInterface *i=getConfigItem(name);
+            if (!i){
+                target=defaultv;
+                return false;
+            }
+            target=i->asInt();
+            return true;
+        }
+        bool getValue(bool &target, const String name, bool defaultv=false){
+            GwConfigInterface *i=getConfigItem(name);
+            if (!i){
+                target=defaultv;
+                return false;
+            }
+            target=i->asBoolean();
+            return true;
+        }
+        bool getValue(String &target, const String name, const String &defaultv=""){
+            GwConfigInterface *i=getConfigItem(name);
+            if (!i){
+                target=defaultv;
+                return false;
+            }
+            target=i->asString();
+            return true;
+        }
     private:
         unsigned long saltBase=0;
         void populateConfigs(GwConfigInterface **);

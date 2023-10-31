@@ -1,6 +1,6 @@
 [
     {
-        "name": "iicSHT3XTemp",
+        "name": "SHT3XtmAct",
         "label": "SHT3X Temp",
         "type": "boolean",
         "default": "true",
@@ -11,7 +11,7 @@
         }
     },
     {
-        "name": "SHT3XTempSource",
+        "name": "SHT3XtmSrc",
         "label": "SHT3X Temp Type",
         "type": "list",
         "default": "2",
@@ -88,7 +88,7 @@
         }
     },
     {
-        "name": "iicSHT3XHumid",
+        "name": "SHT3XhuAct",
         "label": "SHT3X Humidity",
         "type": "boolean",
         "default": "true",
@@ -99,13 +99,9 @@
         }
     },
     {
-        "name": "SHT3XHumSource",
+        "name": "SHT3XhuSrc",
         "label": "SHT3X Humid Type",
-        "type": "list",
-        "description": "the NMEA2000 source type for the humidity",
-        "default": "0",
         "list":[
-            {"l":"InsideHumidity","v":"0"},
             {"l":"OutsideHumidity","v":"1"},
             {"l":"Undef","v":"0xff"}  
         ],
@@ -129,7 +125,7 @@
         }
     },
     {
-        "name": "SHT3Xinterval",
+        "name": "SHT3Xintv",
         "label": "SHT3X Interval",
         "type": "number",
         "default": 2,
@@ -143,7 +139,7 @@
         }
     },
     {
-        "name": "SHT3XTempName",
+        "name": "SHT3XtmNam",
         "label": "SHT3X Temp XDR",
         "type": "String",
         "default": "Temp",
@@ -154,7 +150,7 @@
         }
     },
     {
-        "name": "SHT3XHumidName",
+        "name": "SHT3XhuNam",
         "label": "SHT3X Humid XDR",
         "type": "String",
         "default": "Humidity",
@@ -165,7 +161,7 @@
         }
     },
     {
-        "name": "QMP6988act",
+        "name": "QMP6988prAct",
         "label": "QMP6988 pressure",
         "description": "activate the QMP6988 pressure measurement",
         "type":"boolean",
@@ -190,7 +186,7 @@
         }
     },
     {
-        "name": "QMP6988interval",
+        "name": "QMP6988intv",
         "label": "QMP6988 Interval",
         "type": "number",
         "default": 2,
@@ -204,7 +200,7 @@
         }
     },
     {
-        "name": "QMP6988PName",
+        "name": "QMP6988prNam",
         "label": "QMP6988 Pressure XDR",
         "type": "String",
         "default": "Pressure",
@@ -215,7 +211,7 @@
         }
     },
     {
-        "name":"QMP6988POffset",
+        "name":"QMP6988prOff",
         "label":"QMP6988 Pressure Offset",
         "type": "number",
         "description": "offset (in pa) to be added to the QMP6988 pressure measurements",
@@ -226,7 +222,7 @@
         }
     },
     {
-        "name": "iicBME280Temp",
+        "name": "BME280tmAct",
         "label": "BME280 Temp",
         "type": "boolean",
         "default": "true",
@@ -237,7 +233,7 @@
         }
     },
     {
-        "name": "BME280TSource",
+        "name": "BME280tmSrc",
         "label": "BME280 Temp Type",
         "type": "list",
         "default": "2",
@@ -314,7 +310,7 @@
         }
     },
     {
-        "name":"BME280TOffset",
+        "name":"BME280tmOff",
         "label":"BME280 Temperature Offset",
         "type": "number",
         "description": "offset (in °) to be added to the BME280 temperature measurements",
@@ -325,7 +321,7 @@
         }
     },
     {
-        "name": "iicBME280Humid",
+        "name": "BME280huAct",
         "label": "BME280 Humidity",
         "type": "boolean",
         "default": "true",
@@ -336,7 +332,7 @@
         }
     },
     {
-        "name": "BME280HumSource",
+        "name": "BME280huSrc",
         "label": "BME280 Humid Type",
         "type": "list",
         "description": "the NMEA2000 source type for the humidity",
@@ -352,7 +348,7 @@
         }
     },
     {
-        "name": "iicBME280Press",
+        "name": "BME280prAct",
         "label": "BME280 Pressure",
         "type": "boolean",
         "default": "true",
@@ -363,7 +359,7 @@
         }
     },
     {
-        "name":"BME280POffset",
+        "name":"BME280prOff",
         "label":"BME280 Pressure Offset",
         "type": "number",
         "description": "offset (in pa) to be added to the BME280 pressure measurements",
@@ -388,7 +384,7 @@
         }
     },
     {
-        "name": "BME280interval",
+        "name": "BME280intv",
         "label": "BME280 Interval",
         "type": "number",
         "default": 2,
@@ -402,7 +398,7 @@
         }
     },
     {
-        "name": "BME280TempName",
+        "name": "BME280tmNam",
         "label": "BME280 Temp XDR",
         "type": "String",
         "default": "Temp",
@@ -413,7 +409,7 @@
         }
     },
     {
-        "name": "BME280HumidName",
+        "name": "BME280huNam",
         "label": "BME280 Humid XDR",
         "type": "String",
         "default": "Humidity",
@@ -424,7 +420,7 @@
         }
     },
     {
-        "name": "BME280PressName",
+        "name": "BME280prNam",
         "label": "BME280 Pressure XDR",
         "type": "String",
         "default": "Pressure",
