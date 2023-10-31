@@ -63,7 +63,7 @@ class QMP6988Config{
         int iid=99;
         bool prAct=true;
         long intv=2000;
-        tN2kPressureSource source=tN2kPressureSource::N2kps_Atmospheric;
+        tN2kPressureSource prSrc=tN2kPressureSource::N2kps_Atmospheric;
         float prOff=0;
         QMP6988Config(GwConfigHandler *config){
             CQMP6988(prNam);
@@ -106,6 +106,69 @@ class BME280Config{
         CBME280(prOff);
     }
 };
+
+template <class CFG>
+bool addPressureXdr(GwApi *api, CFG &cfg, const String &prefix)
+{
+    if (! cfg.prAct) return false;
+    if (cfg.prNam.isEmpty()){
+        api->getLogger()->logDebug(GwLog::LOG, "pressure active for %s, no xdr mapping", prefix.c_str());    
+        return true;
+    }
+    api->getLogger()->logDebug(GwLog::LOG, "adding pressure xdr mapping for %s", prefix.c_str());
+    GwXDRMappingDef xdr;
+    xdr.category = GwXDRCategory::XDRPRESSURE;
+    xdr.direction = GwXDRMappingDef::M_FROM2K;
+    xdr.selector = (int)cfg.prSrc;
+    xdr.instanceId = cfg.iid;
+    xdr.instanceMode = GwXDRMappingDef::IS_SINGLE;
+    xdr.xdrName = cfg.prNam;
+    api->addXdrMapping(xdr);
+    return true;
+}
+
+template <class CFG>
+bool addTempXdr(GwApi *api, CFG &cfg, const String &prefix)
+{
+    if (cfg.tmAct) return false;
+    if (cfg.tmNam.isEmpty()){
+        api->getLogger()->logDebug(GwLog::LOG, "temperature active for %s, no xdr mapping", prefix.c_str());    
+        return true;
+    }
+    api->getLogger()->logDebug(GwLog::LOG, "adding temperature xdr mapping for %s", prefix.c_str());
+    GwXDRMappingDef xdr;
+    xdr.category = GwXDRCategory::XDRTEMP;
+    xdr.direction = GwXDRMappingDef::M_FROM2K;
+    xdr.field = GWXDRFIELD_TEMPERATURE_ACTUALTEMPERATURE;
+    xdr.selector = (int)cfg.tmSrc;
+    xdr.instanceMode = GwXDRMappingDef::IS_SINGLE;
+    xdr.instanceId = cfg.iid;
+    xdr.xdrName = cfg.tmNam;
+    api->addXdrMapping(xdr);
+    return true;
+}
+
+template <class CFG>
+bool addHumidXdr(GwApi *api, CFG &cfg, const String &prefix)
+{
+    if (! cfg.huAct) return false;
+    if (cfg.huNam.isEmpty()){
+        api->getLogger()->logDebug(GwLog::LOG, "humidity active for %s, no xdr mapping", prefix.c_str());    
+        return true;
+    }
+    api->getLogger()->logDebug(GwLog::LOG, "adding humidity xdr mapping for %s", prefix.c_str());
+    GwXDRMappingDef xdr;
+    xdr.category = GwXDRCategory::XDRHUMIDITY;
+    xdr.direction = GwXDRMappingDef::M_FROM2K;
+    xdr.field = GWXDRFIELD_HUMIDITY_ACTUALHUMIDITY;
+    xdr.selector = (int)cfg.huSrc;
+    xdr.instanceMode = GwXDRMappingDef::IS_SINGLE;
+    xdr.instanceId = cfg.iid;
+    xdr.xdrName = cfg.huNam;
+    api->addXdrMapping(xdr);
+    return true;
+}
+
 void runIicTask(GwApi *api);
 
 void initIicTask(GwApi *api){
@@ -119,95 +182,24 @@ void initIicTask(GwApi *api){
         api->addCapability("SHT3X","true");
         LOG_DEBUG(GwLog::LOG,"SHT3X configured");
         SHT3XConfig sht3xConfig(api->getConfig());
-        if (sht3xConfig.huAct && ! sht3xConfig.huNam.isEmpty()){
-            LOG_DEBUG(GwLog::DEBUG,"SHT3X humidity measure active, adding capability and xdr mappings");
-            //add XDR mapping for humidity
-            GwXDRMappingDef xdr;
-            xdr.category=GwXDRCategory::XDRHUMIDITY;
-            xdr.direction=GwXDRMappingDef::M_FROM2K;
-            xdr.field=GWXDRFIELD_HUMIDITY_ACTUALHUMIDITY;
-            xdr.selector=(int)sht3xConfig.huSrc;
-            xdr.instanceMode=GwXDRMappingDef::IS_SINGLE;
-            xdr.instanceId=sht3xConfig.iid;
-            xdr.xdrName=sht3xConfig.huNam;
-            api->addXdrMapping(xdr);
-        }
-        if (sht3xConfig.tmAct && ! sht3xConfig.tmNam.isEmpty()){
-            LOG_DEBUG(GwLog::DEBUG,"SHT3X temperature measure active, adding capability and xdr mappings");
-            //add XDR mapping for humidity
-            GwXDRMappingDef xdr;
-            xdr.category=GwXDRCategory::XDRTEMP;
-            xdr.direction=GwXDRMappingDef::M_FROM2K;
-            xdr.field=GWXDRFIELD_TEMPERATURE_ACTUALTEMPERATURE;
-            xdr.selector=(int)sht3xConfig.tmSrc;
-            xdr.instanceMode=GwXDRMappingDef::IS_SINGLE;
-            xdr.instanceId=sht3xConfig.iid;
-            xdr.xdrName=sht3xConfig.tmNam;
-            api->addXdrMapping(xdr);
-        }
+        addHumidXdr(api,sht3xConfig,"SHT3X");
+        addTempXdr(api,sht3xConfig,"SHT3X");
         if (sht3xConfig.tmAct || sht3xConfig.huAct) addTask=true;
     #endif
     #ifdef GWQMP6988
         api->addCapability("QMP6988","true");
+        LOG_DEBUG(GwLog::LOG,"QMP6988 configured");
         QMP6988Config qmp6988Config(api->getConfig());
-        if (qmp6988Config.prAct) {
-            LOG_DEBUG(GwLog::LOG,"QMP6988 configured, adding capability and xdr mappings");
-            addTask=true;
-            GwXDRMappingDef xdr;
-            xdr.category=GwXDRCategory::XDRPRESSURE;
-            xdr.direction=GwXDRMappingDef::M_FROM2K;
-            xdr.selector=(int)qmp6988Config.source;
-            xdr.instanceId=qmp6988Config.iid;
-            xdr.instanceMode=GwXDRMappingDef::IS_SINGLE;
-            xdr.xdrName=qmp6988Config.prNam;
-            api->addXdrMapping(xdr);
-        }
-        else{
-            LOG_DEBUG(GwLog::LOG,"QMP6988 configured but disabled");
-        }
+        addPressureXdr(api,qmp6988Config,"QMP6988");
     #endif
     #ifdef GWBME280
         api->addCapability("BME280","true");
+        LOG_DEBUG(GwLog::LOG,"BME280 configured");
         BME280Config bme280Config(api->getConfig());
         bool bme280Active=false;
-        if (bme280Config.prAct){
-            LOG_DEBUG(GwLog::DEBUG,"BME280 pressure active, adding capability and xdr mapping");
-            bme280Active=true;
-            GwXDRMappingDef xdr;
-            xdr.category=GwXDRCategory::XDRPRESSURE;
-            xdr.direction=GwXDRMappingDef::M_FROM2K;
-            xdr.selector=(int)bme280Config.prSrc;
-            xdr.instanceId=bme280Config.iid;
-            xdr.instanceMode=GwXDRMappingDef::IS_SINGLE;
-            xdr.xdrName=bme280Config.prNam;
-            api->addXdrMapping(xdr);
-        }
-        if (bme280Config.tmAct){
-            LOG_DEBUG(GwLog::DEBUG,"BME280 temperature active, adding capability and xdr mapping");
-            bme280Active=true;
-            GwXDRMappingDef xdr;
-            xdr.category=GwXDRCategory::XDRTEMP;
-            xdr.direction=GwXDRMappingDef::M_FROM2K;
-            xdr.field=GWXDRFIELD_TEMPERATURE_ACTUALTEMPERATURE;
-            xdr.selector=(int)bme280Config.tmSrc;
-            xdr.instanceMode=GwXDRMappingDef::IS_SINGLE;
-            xdr.instanceId=bme280Config.iid;
-            xdr.xdrName=bme280Config.tmNam;
-            api->addXdrMapping(xdr);
-        }
-        if (bme280Config.huAct){
-            LOG_DEBUG(GwLog::DEBUG,"BME280 humidity active, adding capability and xdr mapping");
-            bme280Active=true;
-            GwXDRMappingDef xdr;
-            xdr.category=GwXDRCategory::XDRHUMIDITY;
-            xdr.direction=GwXDRMappingDef::M_FROM2K;
-            xdr.field=GWXDRFIELD_HUMIDITY_ACTUALHUMIDITY;
-            xdr.selector=(int)bme280Config.huSrc;
-            xdr.instanceMode=GwXDRMappingDef::IS_SINGLE;
-            xdr.instanceId=bme280Config.iid;
-            xdr.xdrName=bme280Config.huNam;
-            api->addXdrMapping(xdr);
-        }
+        if (addPressureXdr(api,bme280Config,"BME280")) bme280Active=true;
+        if (addTempXdr(api,bme280Config,"BME280")) bme280Active=true;
+        if (addHumidXdr(api,bme280Config,"BME280")) bme280Active=true;
         if (! bme280Active){
             LOG_DEBUG(GwLog::DEBUG,"BME280 configured but disabled");
         }
