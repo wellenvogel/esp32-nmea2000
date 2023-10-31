@@ -169,6 +169,29 @@ bool addHumidXdr(GwApi *api, CFG &cfg, const String &prefix)
     return true;
 }
 
+template <class CFG>
+void sendN2kHumidity(GwApi *api,CFG &cfg,const String &prfx,double value, int counterId){
+    tN2kMsg msg;
+    SetN2kHumidity(msg,1,cfg.iid,cfg.huSrc,value);
+    api->sendN2kMessage(msg);
+    api->increment(counterId,prfx+String("hum"));
+}
+
+template <class CFG>
+void sendN2kPressure(GwApi *api,CFG &cfg,const String &prfx,double value, int counterId){
+    tN2kMsg msg;
+    SetN2kPressure(msg,1,cfg.iid,cfg.prSrc,value);
+    api->sendN2kMessage(msg);
+    api->increment(counterId,prfx+String("press"));
+}
+
+template <class CFG>
+void sendN2kTemperature(GwApi *api,CFG &cfg,const String &prfx,double value, int counterId){
+    tN2kMsg msg;
+    SetN2kTemperature(msg,1,cfg.iid,cfg.tmSrc,value);
+    api->sendN2kMessage(msg);
+    api->increment(counterId,prfx+String("temp"));
+}
 void runIicTask(GwApi *api);
 
 void initIicTask(GwApi *api){
@@ -246,16 +269,11 @@ void runIicTask(GwApi *api){
                     temp=CToKelvin(temp);
                     double humid=sht3x->humidity;
                     LOG_DEBUG(GwLog::DEBUG,"SHT3X measure temp=%2.1f, humid=%2.0f",(float)temp,(float)humid);
-                    tN2kMsg msg;
                     if (sht3xConfig.huAct){
-                        SetN2kHumidity(msg,1,sht3xConfig.iid,sht3xConfig.huSrc,humid);
-                        api->sendN2kMessage(msg);
-                        api->increment(counterId,"SHT3Xhum");
+                        sendN2kHumidity(api,sht3xConfig,"SHT3X",humid,counterId);
                     }
                     if (sht3xConfig.tmAct){
-                        SetN2kTemperature(msg,1,sht3xConfig.iid,sht3xConfig.tmSrc,temp);
-                        api->sendN2kMessage(msg);
-                        api->increment(counterId,"SHT3Xtemp");
+                        sendN2kTemperature(api,sht3xConfig,"SHT3X",temp,counterId);
                     }
                 }
                 else{
@@ -278,10 +296,7 @@ void runIicTask(GwApi *api){
                 float pressure=qmp6988->calcPressure();
                 float computed=pressure+qmp6988Config.prOff;
                 LOG_DEBUG(GwLog::DEBUG,"qmp6988 measure %2.0fPa, computed %2.0fPa",pressure,computed);
-                tN2kMsg msg;
-                SetN2kPressure(msg,1,qmp6988Config.iid,tN2kPressureSource::N2kps_Atmospheric,computed);
-                api->sendN2kMessage(msg);
-                api->increment(counterId,"QMP6988press");
+                sendN2kPressure(api,qmp6988Config,"QMP6988",computed,counterId);
             });
         }
     #endif
@@ -305,27 +320,18 @@ void runIicTask(GwApi *api){
                             float pressure=bme280->readPressure();
                             float computed=pressure+bme280Config.prOff;
                             LOG_DEBUG(GwLog::DEBUG,"BME280 measure %2.0fPa, computed %2.0fPa",pressure,computed);
-                            tN2kMsg msg;
-                            SetN2kPressure(msg,1,bme280Config.iid,bme280Config.prSrc,computed);
-                            api->sendN2kMessage(msg);
-                            api->increment(counterId,"BME280press");
+                            sendN2kPressure(api,bme280Config,"BME280",computed,counterId);
                         }
                         if (bme280Config.tmAct){
                             float temperature=bme280->readTemperature(); //offset is handled internally
                             temperature=CToKelvin(temperature);
                             LOG_DEBUG(GwLog::DEBUG,"BME280 measure temp=%2.1f",temperature);
-                            tN2kMsg msg;
-                            SetN2kTemperature(msg,1,bme280Config.iid,bme280Config.tmSrc,temperature);
-                            api->sendN2kMessage(msg);
-                            api->increment(counterId,"BME280temp");
+                            sendN2kTemperature(api,bme280Config,"BME280",temperature,counterId);
                         }
                         if (bme280Config.huAct && hasHumidity){
                             float humidity=bme280->readHumidity();
                             LOG_DEBUG(GwLog::DEBUG,"BME280 read humid=%02.0f",humidity);
-                            tN2kMsg msg; 
-                            SetN2kHumidity(msg,1,bme280Config.iid,bme280Config.huSrc,humidity);
-                            api->sendN2kMessage(msg);
-                            api->increment(counterId,"BME280hum");
+                            sendN2kHumidity(api,bme280Config,"BME280",humidity,counterId);
                         }
                     });
                     runLoop = true;
