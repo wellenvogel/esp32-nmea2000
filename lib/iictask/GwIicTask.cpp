@@ -119,7 +119,7 @@ void initIicTask(GwApi *api){
         api->addCapability("SHT3X","true");
         LOG_DEBUG(GwLog::LOG,"SHT3X configured");
         SHT3XConfig sht3xConfig(api->getConfig());
-        if (sht3xConfig.huAct && ! sht3xConfig.humidTransducer.isEmpty()){
+        if (sht3xConfig.huAct && ! sht3xConfig.huNam.isEmpty()){
             LOG_DEBUG(GwLog::DEBUG,"SHT3X humidity measure active, adding capability and xdr mappings");
             //add XDR mapping for humidity
             GwXDRMappingDef xdr;
@@ -129,10 +129,10 @@ void initIicTask(GwApi *api){
             xdr.selector=(int)sht3xConfig.huSrc;
             xdr.instanceMode=GwXDRMappingDef::IS_SINGLE;
             xdr.instanceId=sht3xConfig.iid;
-            xdr.xdrName=sht3xConfig.humidTransducer;
+            xdr.xdrName=sht3xConfig.huNam;
             api->addXdrMapping(xdr);
         }
-        if (sht3xConfig.tmAct && ! sht3xConfig.tName.isEmpty()){
+        if (sht3xConfig.tmAct && ! sht3xConfig.tmNam.isEmpty()){
             LOG_DEBUG(GwLog::DEBUG,"SHT3X temperature measure active, adding capability and xdr mappings");
             //add XDR mapping for humidity
             GwXDRMappingDef xdr;
@@ -142,7 +142,7 @@ void initIicTask(GwApi *api){
             xdr.selector=(int)sht3xConfig.tmSrc;
             xdr.instanceMode=GwXDRMappingDef::IS_SINGLE;
             xdr.instanceId=sht3xConfig.iid;
-            xdr.xdrName=sht3xConfig.tName;
+            xdr.xdrName=sht3xConfig.tmNam;
             api->addXdrMapping(xdr);
         }
         if (sht3xConfig.tmAct || sht3xConfig.huAct) addTask=true;
@@ -159,7 +159,7 @@ void initIicTask(GwApi *api){
             xdr.selector=(int)qmp6988Config.source;
             xdr.instanceId=qmp6988Config.iid;
             xdr.instanceMode=GwXDRMappingDef::IS_SINGLE;
-            xdr.xdrName=qmp6988Config.prName;
+            xdr.xdrName=qmp6988Config.prNam;
             api->addXdrMapping(xdr);
         }
         else{
