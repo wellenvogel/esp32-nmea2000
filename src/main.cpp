@@ -204,7 +204,6 @@ void handleN2kMessage(const tN2kMsg &n2kMsg,int sourceId, bool isConverted=false
     nmea0183Converter->HandleMsg(n2kMsg,sourceId);
   }
   if (sourceId != N2K_CHANNEL_ID && sendOutN2k){
-    countNMEA2KOut.add(n2kMsg.PGN);
     if (NMEA2000.SendMsg(n2kMsg)){
       countNMEA2KOut.add(n2kMsg.PGN);
     }
