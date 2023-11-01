@@ -36,6 +36,7 @@
     CFG_GET(config,name,BME280)    
 class SHT3XConfig{
     public:
+    const String prefix="SHT3X";
     String tmNam;
     String huNam;
     int iid;
@@ -59,6 +60,7 @@ class SHT3XConfig{
 
 class QMP6988Config{
     public:
+        const String prefix="QMP6988";
         String prNam="Pressure";
         int iid=99;
         bool prAct=true;
@@ -77,6 +79,7 @@ class QMP6988Config{
 
 class BME280Config{
     public:
+    const String prefix="BME280";
     bool prAct=true;
     bool tmAct=true;
     bool huAct=true;
@@ -108,14 +111,14 @@ class BME280Config{
 };
 
 template <class CFG>
-bool addPressureXdr(GwApi *api, CFG &cfg, const String &prefix)
+bool addPressureXdr(GwApi *api, CFG &cfg)
 {
     if (! cfg.prAct) return false;
     if (cfg.prNam.isEmpty()){
-        api->getLogger()->logDebug(GwLog::LOG, "pressure active for %s, no xdr mapping", prefix.c_str());    
+        api->getLogger()->logDebug(GwLog::LOG, "pressure active for %s, no xdr mapping", cfg.prefix.c_str());    
         return true;
     }
-    api->getLogger()->logDebug(GwLog::LOG, "adding pressure xdr mapping for %s", prefix.c_str());
+    api->getLogger()->logDebug(GwLog::LOG, "adding pressure xdr mapping for %s", cfg.prefix.c_str());
     GwXDRMappingDef xdr;
     xdr.category = GwXDRCategory::XDRPRESSURE;
     xdr.direction = GwXDRMappingDef::M_FROM2K;
@@ -128,14 +131,14 @@ bool addPressureXdr(GwApi *api, CFG &cfg, const String &prefix)
 }
 
 template <class CFG>
-bool addTempXdr(GwApi *api, CFG &cfg, const String &prefix)
+bool addTempXdr(GwApi *api, CFG &cfg)
 {
-    if (cfg.tmAct) return false;
+    if (!cfg.tmAct) return false;
     if (cfg.tmNam.isEmpty()){
-        api->getLogger()->logDebug(GwLog::LOG, "temperature active for %s, no xdr mapping", prefix.c_str());    
+        api->getLogger()->logDebug(GwLog::LOG, "temperature active for %s, no xdr mapping", cfg.prefix.c_str());    
         return true;
     }
-    api->getLogger()->logDebug(GwLog::LOG, "adding temperature xdr mapping for %s", prefix.c_str());
+    api->getLogger()->logDebug(GwLog::LOG, "adding temperature xdr mapping for %s", cfg.prefix.c_str());
     GwXDRMappingDef xdr;
     xdr.category = GwXDRCategory::XDRTEMP;
     xdr.direction = GwXDRMappingDef::M_FROM2K;
@@ -149,14 +152,14 @@ bool addTempXdr(GwApi *api, CFG &cfg, const String &prefix)
 }
 
 template <class CFG>
-bool addHumidXdr(GwApi *api, CFG &cfg, const String &prefix)
+bool addHumidXdr(GwApi *api, CFG &cfg)
 {
     if (! cfg.huAct) return false;
     if (cfg.huNam.isEmpty()){
-        api->getLogger()->logDebug(GwLog::LOG, "humidity active for %s, no xdr mapping", prefix.c_str());    
+        api->getLogger()->logDebug(GwLog::LOG, "humidity active for %s, no xdr mapping", cfg.prefix.c_str());    
         return true;
     }
-    api->getLogger()->logDebug(GwLog::LOG, "adding humidity xdr mapping for %s", prefix.c_str());
+    api->getLogger()->logDebug(GwLog::LOG, "adding humidity xdr mapping for %s", cfg.prefix.c_str());
     GwXDRMappingDef xdr;
     xdr.category = GwXDRCategory::XDRHUMIDITY;
     xdr.direction = GwXDRMappingDef::M_FROM2K;
@@ -170,27 +173,27 @@ bool addHumidXdr(GwApi *api, CFG &cfg, const String &prefix)
 }
 
 template <class CFG>
-void sendN2kHumidity(GwApi *api,CFG &cfg,const String &prfx,double value, int counterId){
+void sendN2kHumidity(GwApi *api,CFG &cfg,double value, int counterId){
     tN2kMsg msg;
     SetN2kHumidity(msg,1,cfg.iid,cfg.huSrc,value);
     api->sendN2kMessage(msg);
-    api->increment(counterId,prfx+String("hum"));
+    api->increment(counterId,cfg.prefix+String("hum"));
 }
 
 template <class CFG>
-void sendN2kPressure(GwApi *api,CFG &cfg,const String &prfx,double value, int counterId){
+void sendN2kPressure(GwApi *api,CFG &cfg,double value, int counterId){
     tN2kMsg msg;
     SetN2kPressure(msg,1,cfg.iid,cfg.prSrc,value);
     api->sendN2kMessage(msg);
-    api->increment(counterId,prfx+String("press"));
+    api->increment(counterId,cfg.prefix+String("press"));
 }
 
 template <class CFG>
-void sendN2kTemperature(GwApi *api,CFG &cfg,const String &prfx,double value, int counterId){
+void sendN2kTemperature(GwApi *api,CFG &cfg,double value, int counterId){
     tN2kMsg msg;
     SetN2kTemperature(msg,1,cfg.iid,cfg.tmSrc,value);
     api->sendN2kMessage(msg);
-    api->increment(counterId,prfx+String("temp"));
+    api->increment(counterId,cfg.prefix+String("temp"));
 }
 void runIicTask(GwApi *api);
 
@@ -202,27 +205,27 @@ void initIicTask(GwApi *api){
     #else
     bool addTask=false;
     #ifdef GWSHT3X
-        api->addCapability("SHT3X","true");
         LOG_DEBUG(GwLog::LOG,"SHT3X configured");
         SHT3XConfig sht3xConfig(api->getConfig());
-        addHumidXdr(api,sht3xConfig,"SHT3X");
-        addTempXdr(api,sht3xConfig,"SHT3X");
+        api->addCapability(sht3xConfig.prefix,"true");
+        addHumidXdr(api,sht3xConfig);
+        addTempXdr(api,sht3xConfig);
         if (sht3xConfig.tmAct || sht3xConfig.huAct) addTask=true;
     #endif
     #ifdef GWQMP6988
-        api->addCapability("QMP6988","true");
         LOG_DEBUG(GwLog::LOG,"QMP6988 configured");
         QMP6988Config qmp6988Config(api->getConfig());
-        addPressureXdr(api,qmp6988Config,"QMP6988");
+        api->addCapability(qmp6988Config.prefix,"true");
+        addPressureXdr(api,qmp6988Config);
     #endif
     #ifdef GWBME280
-        api->addCapability("BME280","true");
         LOG_DEBUG(GwLog::LOG,"BME280 configured");
         BME280Config bme280Config(api->getConfig());
+        api->addCapability(bme280Config.prefix,"true");
         bool bme280Active=false;
-        if (addPressureXdr(api,bme280Config,"BME280")) bme280Active=true;
-        if (addTempXdr(api,bme280Config,"BME280")) bme280Active=true;
-        if (addHumidXdr(api,bme280Config,"BME280")) bme280Active=true;
+        if (addPressureXdr(api,bme280Config)) bme280Active=true;
+        if (addTempXdr(api,bme280Config)) bme280Active=true;
+        if (addHumidXdr(api,bme280Config)) bme280Active=true;
         if (! bme280Active){
             LOG_DEBUG(GwLog::DEBUG,"BME280 configured but disabled");
         }
@@ -270,10 +273,10 @@ void runIicTask(GwApi *api){
                     double humid=sht3x->humidity;
                     LOG_DEBUG(GwLog::DEBUG,"SHT3X measure temp=%2.1f, humid=%2.0f",(float)temp,(float)humid);
                     if (sht3xConfig.huAct){
-                        sendN2kHumidity(api,sht3xConfig,"SHT3X",humid,counterId);
+                        sendN2kHumidity(api,sht3xConfig,humid,counterId);
                     }
                     if (sht3xConfig.tmAct){
-                        sendN2kTemperature(api,sht3xConfig,"SHT3X",temp,counterId);
+                        sendN2kTemperature(api,sht3xConfig,temp,counterId);
                     }
                 }
                 else{
@@ -296,7 +299,7 @@ void runIicTask(GwApi *api){
                 float pressure=qmp6988->calcPressure();
                 float computed=pressure+qmp6988Config.prOff;
                 LOG_DEBUG(GwLog::DEBUG,"qmp6988 measure %2.0fPa, computed %2.0fPa",pressure,computed);
-                sendN2kPressure(api,qmp6988Config,"QMP6988",computed,counterId);
+                sendN2kPressure(api,qmp6988Config,computed,counterId);
             });
         }
     #endif
@@ -320,18 +323,18 @@ void runIicTask(GwApi *api){
                             float pressure=bme280->readPressure();
                             float computed=pressure+bme280Config.prOff;
                             LOG_DEBUG(GwLog::DEBUG,"BME280 measure %2.0fPa, computed %2.0fPa",pressure,computed);
-                            sendN2kPressure(api,bme280Config,"BME280",computed,counterId);
+                            sendN2kPressure(api,bme280Config,computed,counterId);
                         }
                         if (bme280Config.tmAct){
                             float temperature=bme280->readTemperature(); //offset is handled internally
                             temperature=CToKelvin(temperature);
                             LOG_DEBUG(GwLog::DEBUG,"BME280 measure temp=%2.1f",temperature);
-                            sendN2kTemperature(api,bme280Config,"BME280",temperature,counterId);
+                            sendN2kTemperature(api,bme280Config,temperature,counterId);
                         }
                         if (bme280Config.huAct && hasHumidity){
                             float humidity=bme280->readHumidity();
                             LOG_DEBUG(GwLog::DEBUG,"BME280 read humid=%02.0f",humidity);
-                            sendN2kHumidity(api,bme280Config,"BME280",humidity,counterId);
+                            sendN2kHumidity(api,bme280Config,humidity,counterId);
                         }
                     });
                     runLoop = true;
