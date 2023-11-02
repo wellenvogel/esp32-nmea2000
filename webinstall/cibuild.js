@@ -357,6 +357,9 @@ class PipelineInfo{
      */
     const buildSelector=(parent,cfgBase,name,current,callback)=>{
         let config=expandObject(cfgBase);
+        if (current === undefined && config.default !== undefined){
+            current=config.default;
+        }
         let rep=new RegExp("[^"+SEPARATOR+"]*","g");
         let level=name.replace(rep,'');
         let frame=addEl('div','selector level'+level.length+' t'+config.type,parent);

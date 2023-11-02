@@ -343,8 +343,80 @@ types:
             max: 255
             
 
+  - &iicsensors
+    type: checkbox
+    label: I2C
+    key: i2c
+    description: 'I2C Bus #1'
+    values:
+      - key: true
+        children:
+          - <<: *gpiopin
+            label: SDA
+            key: sda
+            mandatory: true
+            target: "define:GWIIC_SDA"
+          - <<: *gpiopin
+            label: SCL
+            key: scl
+            mandatory: true
+            target: "define:GWIIC_SCL"
+          - type: checkbox
+            label: SHT3X
+            description: "SHT30 temperature and humidity sensor"
+            key: sht3x
+            values: 
+              - key: true
+                children:
+                  - type: select
+                    label: address
+                    key: address
+                    target: "define:GWSHT3X"
+                    mandatory: true
+                    default: 68
+                    values:
+                      - label: "default(0x44 - L)"
+                        value: 68
+                      - label: "opt(0x45 - H)"
+                        value: 69
+          - type: checkbox
+            label: QMP6988
+            description: "QMP6988 pressure sensor"
+            key: qmp6988
+            values: 
+              - key: true
+                children:
+                  - type: select
+                    label: address
+                    key: address
+                    target: "define:GWQMP6988"
+                    mandatory: true
+                    default: 86
+                    values:
+                      - label: "default(0x56 - H)"
+                        value: 86
+                      - label: "opt(0x70 - L)"
+                        value: 112
 
-          
+          - type: checkbox
+            label: BME280
+            description: "BME280 temperature/humidity/pressure sensor"
+            key: bme280
+            values: 
+              - key: true
+                children:
+                  - type: select
+                    label: address
+                    key: address
+                    target: "define:GWBME280"
+                    mandatory: true
+                    default: 118
+                    values:
+                      - label: "default(0x76 - L)"
+                        value: 118
+                      - label: "opt(0x77 - nc)"
+                        value: 119
+
 
 resources:
   default: &esp32default
@@ -396,3 +468,4 @@ config:
             - *can
             - *resetButton
             - *led
+            - *iicsensors
