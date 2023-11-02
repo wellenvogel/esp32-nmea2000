@@ -311,6 +311,10 @@ def getLibs():
         fn=os.path.join(base,sd)
         if os.path.isdir(fn):
             rt.append(sd)
+    EXTRAS=['generated']
+    for e in EXTRAS:
+        if not e in rt:
+            rt.append(e)
     return rt
 
 OWNLIBS=getLibs()+["FS","WiFi"]
