@@ -1,12 +1,20 @@
 #include "GwIicTask.h"
 #include "GwHardware.h"
+#include <map>
 #ifdef _GWIIC
     #include <Wire.h>
-#endif
-#if defined(GWSHT3X) || defined(GWSHT3X1) || defined(GWSHT3X2) || defined(GWSHT3X2) || defined(GWSHT3X4)
-    #define _GWSHT3X
+    #if defined(GWSHT3X) || defined(GWSHT3X1) || defined(GWSHT3X2) || defined(GWSHT3X2) || defined(GWSHT3X4)
+        #define _GWSHT3X
+    #else
+        #undef _GWSHT3X
+    #endif
 #else
     #undef _GWSHT3X
+    #undef GWSHT3X
+    #undef GWSHT3X1
+    #undef GWSHT3X2
+    #undef GWSHT3X3
+    #undef GWSHT3X4
 #endif
 #ifdef _GWSHT3X
     #include "SHT3X.h"
@@ -22,97 +30,6 @@
     #include <Adafruit_BME280.h>
 #endif
 
-#ifndef GWIIC_SDA
-    #define GWIIC_SDA -1
-#endif
-#ifndef GWIIC_SCL
-    #define GWIIC_SCL -1
-#endif
-
-#define CFG_GET(cfg,name,prefix) \
-    cfg->getValue(name, GwConfigDefinitions::prefix ## name)
-
-#define CSHT3X(name) \
-    CFG_GET(config,name,SHT3X1)
-#define CQMP6988(name) \
-    CFG_GET(config,name,QMP69881)
-#define CBME280(name) \
-    CFG_GET(config,name,BME2801)    
-class SHT3XConfig{
-    public:
-    const String prefix="SHT3X1";
-    String tmNam;
-    String huNam;
-    int iid;
-    bool tmAct;
-    bool huAct;
-    long intv;
-    tN2kHumiditySource huSrc;
-    tN2kTempSource tmSrc;
-    SHT3XConfig(GwConfigHandler *config){
-        CSHT3X(tmNam);
-        CSHT3X(huNam);
-        CSHT3X(iid);
-        CSHT3X(tmAct);
-        CSHT3X(huAct);
-        CSHT3X(intv);
-        intv*=1000;
-        CSHT3X(huSrc);
-        CSHT3X(tmSrc);
-    }
-};
-
-class QMP6988Config{
-    public:
-        const String prefix="QMP69881";
-        String prNam="Pressure";
-        int iid=99;
-        bool prAct=true;
-        long intv=2000;
-        tN2kPressureSource prSrc=tN2kPressureSource::N2kps_Atmospheric;
-        float prOff=0;
-        QMP6988Config(GwConfigHandler *config){
-            CQMP6988(prNam);
-            CQMP6988(iid);
-            CQMP6988(prAct);
-            CQMP6988(intv);
-            intv*=1000;
-            CQMP6988(prOff);
-        }
-};
-
-class BME280Config{
-    public:
-    const String prefix="BME2801";
-    bool prAct=true;
-    bool tmAct=true;
-    bool huAct=true;
-    tN2kTempSource tmSrc=tN2kTempSource::N2kts_InsideTemperature;
-    tN2kHumiditySource huSrc=tN2kHumiditySource::N2khs_InsideHumidity;
-    tN2kPressureSource prSrc=tN2kPressureSource::N2kps_Atmospheric;
-    int iid=99;
-    long intv=2000;
-    String tmNam="Temperature";
-    String huNam="Humidity";
-    String prNam="Pressure";
-    float tmOff=0;
-    float prOff=0;
-    BME280Config(GwConfigHandler *config){
-        CBME280(prAct);
-        CBME280(tmAct);
-        CBME280(huAct);
-        CBME280(tmSrc);
-        CBME280(huSrc);
-        CBME280(iid);
-        CBME280(intv);
-        intv*=1000;
-        CBME280(tmNam);
-        CBME280(huNam);
-        CBME280(prNam);
-        CBME280(tmOff);
-        CBME280(prOff);
-    }
-};
 
 template <class CFG>
 bool addPressureXdr(GwApi *api, CFG &cfg)
@@ -199,7 +116,170 @@ void sendN2kTemperature(GwApi *api,CFG &cfg,double value, int counterId){
     api->sendN2kMessage(msg);
     api->increment(counterId,cfg.prefix+String("temp"));
 }
+
+class SensorBase{
+    public:
+    int busId=0;
+    int iid=99; //N2K instanceId
+    int addr=-1;
+    String prefix;
+    long intv=0;
+    virtual void readConfig(GwConfigHandler *cfg){};
+    SensorBase(GwApi *api,const String &prfx):prefix(prfx){
+        readConfig(api->getConfig());
+    }
+    virtual bool isActive(){return false;};
+    virtual bool initDevice(GwApi *api,TwoWire *wire){return false;};
+    virtual bool preinit(GwApi * api){return false;}
+    virtual void measure(GwApi * api,TwoWire *wire, int counterId){};
+    virtual ~SensorBase(){}
+};
+
+#ifndef GWIIC_SDA
+    #define GWIIC_SDA -1
+#endif
+#ifndef GWIIC_SCL
+    #define GWIIC_SCL -1
+#endif
+#ifndef GWIIC_SDA2
+    #define GWIIC_SDA2 -1
+#endif
+#ifndef GWIIC_SCL2
+    #define GWIIC_SCL2 -1
+#endif
+
+#define CFG_GET(cfg,name,prefix) \
+    cfg->getValue(name, GwConfigDefinitions::prefix ## name)
+
+#define CFG_SET(target,cfg,name,prefix) \
+    cfg->getValue(target->name,GwConfigDefinitions::prefix ## name)
+
+#define CQMP6988(name) \
+    CFG_GET(config,name,QMP69881)
+#define CBME280(name) \
+    CFG_GET(config,name,BME2801)    
+
+#ifdef _GWSHT3X
+class SHT3XConfig : public SensorBase{
+    public:
+    String tmNam;
+    String huNam;
+    bool tmAct=false;
+    bool huAct=false;
+    tN2kHumiditySource huSrc;
+    tN2kTempSource tmSrc;
+    SHT3X *device=nullptr;
+    SHT3XConfig(GwApi *api,const String &prefix, int bus, int addr):
+        SensorBase(api,prefix){
+            busId=bus;
+            this->addr=addr;
+        }
+    virtual bool isActive(){
+        return tmAct || huAct;
+    }
+    virtual bool initDevice(GwApi * api,TwoWire *wire){
+        if (! isActive()) return false;
+        device=new SHT3X();
+        device->init(addr,wire);
+        GwLog *logger=api->getLogger();
+        LOG_DEBUG(GwLog::LOG,"initialized %s at address %d, intv %ld",prefix.c_str(),(int)addr,intv);
+        return true;
+    }
+    virtual bool preinit(GwApi * api){
+        GwLog *logger=api->getLogger();
+        LOG_DEBUG(GwLog::LOG,"SHT3X configured");
+        api->addCapability(prefix,"true");
+        addHumidXdr(api,*this);
+        addTempXdr(api,*this);
+        return isActive();
+    }
+    virtual void measure(GwApi * api,TwoWire *wire, int counterId)
+    {
+        if (!device)
+            return;
+        GwLog *logger=api->getLogger();    
+        int rt = 0;
+        if ((rt = device->get()) == 0)
+        {
+            double temp = device->cTemp;
+            temp = CToKelvin(temp);
+            double humid = device->humidity;
+            LOG_DEBUG(GwLog::DEBUG, "SHT3X measure temp=%2.1f, humid=%2.0f", (float)temp, (float)humid);
+            if (huAct)
+            {
+                sendN2kHumidity(api, *this, humid, counterId);
+            }
+            if (tmAct)
+            {
+                sendN2kTemperature(api, *this, temp, counterId);
+            }
+        }
+        else
+        {
+            LOG_DEBUG(GwLog::DEBUG, "unable to query SHT3X: %d", rt);
+        }
+    }
+};
+
+
+#endif
+
+class QMP6988Config{
+    public:
+        const String prefix="QMP69881";
+        String prNam="Pressure";
+        int iid=99;
+        bool prAct=true;
+        long intv=2000;
+        tN2kPressureSource prSrc=tN2kPressureSource::N2kps_Atmospheric;
+        float prOff=0;
+        QMP6988Config(GwConfigHandler *config){
+            CQMP6988(prNam);
+            CQMP6988(iid);
+            CQMP6988(prAct);
+            CQMP6988(intv);
+            intv*=1000;
+            CQMP6988(prOff);
+        }
+};
+
+class BME280Config{
+    public:
+    const String prefix="BME2801";
+    bool prAct=true;
+    bool tmAct=true;
+    bool huAct=true;
+    tN2kTempSource tmSrc=tN2kTempSource::N2kts_InsideTemperature;
+    tN2kHumiditySource huSrc=tN2kHumiditySource::N2khs_InsideHumidity;
+    tN2kPressureSource prSrc=tN2kPressureSource::N2kps_Atmospheric;
+    int iid=99;
+    long intv=2000;
+    String tmNam="Temperature";
+    String huNam="Humidity";
+    String prNam="Pressure";
+    float tmOff=0;
+    float prOff=0;
+    BME280Config(GwConfigHandler *config){
+        CBME280(prAct);
+        CBME280(tmAct);
+        CBME280(huAct);
+        CBME280(tmSrc);
+        CBME280(huSrc);
+        CBME280(iid);
+        CBME280(intv);
+        intv*=1000;
+        CBME280(tmNam);
+        CBME280(huNam);
+        CBME280(prNam);
+        CBME280(tmOff);
+        CBME280(prOff);
+    }
+};
+
+
 void runIicTask(GwApi *api);
+
+static std::vector<SensorBase*> sensors;
 
 void initIicTask(GwApi *api){
     GwLog *logger=api->getLogger();
@@ -208,13 +288,74 @@ void initIicTask(GwApi *api){
         return;
     #else
     bool addTask=false;
-    #ifdef GWSHT3X
-        LOG_DEBUG(GwLog::LOG,"SHT3X configured");
-        SHT3XConfig sht3xConfig(api->getConfig());
-        api->addCapability(sht3xConfig.prefix,"true");
-        addHumidXdr(api,sht3xConfig);
-        addTempXdr(api,sht3xConfig);
-        if (sht3xConfig.tmAct || sht3xConfig.huAct) addTask=true;
+    GwConfigHandler *config=api->getConfig();
+    #if defined(GWSHT3X) || defined (GWSHT3X1)
+        LOG_DEBUG(GwLog::LOG,"SHT3X1 configured");
+        SHT3XConfig *scfg=new SHT3XConfig(api,"SHT3X1",0,0x44);
+        #undef _SET
+        #define _SET(name) \
+            CFG_SET(scfg,config,name,SHT3X1)
+        _SET(tmNam);
+        _SET(huNam);
+        _SET(iid);
+        _SET(tmAct);
+        _SET(huAct);
+        _SET(intv);
+        scfg->intv*=1000;
+        _SET(huSrc);
+        _SET(tmSrc);
+        sensors.push_back(scfg);
+    #endif
+    #if defined(GWSHT3X2)
+        LOG_DEBUG(GwLog::LOG,"SHT3X2 configured");
+        SHT3XConfig *scfg=new SHT3XConfig(api,"SHT3X2",0,0x45);
+        #undef _SET
+        #define _SET(name) \
+            CFG_SET(scfg,config,name,SHT3X2)
+        _SET(tmNam);
+        _SET(huNam);
+        _SET(iid);
+        _SET(tmAct);
+        _SET(huAct);
+        _SET(intv);
+        scfg->intv*=1000;
+        _SET(huSrc);
+        _SET(tmSrc);
+        sensors.push_back(scfg);
+    #endif
+    #if defined(GWSHT3X3)
+        LOG_DEBUG(GwLog::LOG,"SHT3X3 configured");
+        SHT3XConfig *scfg=new SHT3XConfig(api,"SHT3X3",1,0x44);
+        #undef _SET
+        #define _SET(name) \
+            CFG_SET(scfg,config,name,SHT3X2)
+        _SET(tmNam);
+        _SET(huNam);
+        _SET(iid);
+        _SET(tmAct);
+        _SET(huAct);
+        _SET(intv);
+        scfg->intv*=1000;
+        _SET(huSrc);
+        _SET(tmSrc);
+        sensors.push_back(scfg);
+    #endif
+    #if defined(GWSHT3X4)
+        LOG_DEBUG(GwLog::LOG,"SHT3X4 configured");
+        SHT3XConfig *scfg=new SHT3XConfig(api,"SHT3X4",1,0x45);
+        #undef _SET
+        #define _SET(name) \
+            CFG_SET(scfg,config,name,SHT3X2)
+        _SET(tmNam);
+        _SET(huNam);
+        _SET(iid);
+        _SET(tmAct);
+        _SET(huAct);
+        _SET(intv);
+        scfg->intv*=1000;
+        _SET(huSrc);
+        _SET(tmSrc);
+        sensors.push_back(scfg);
     #endif
     #ifdef GWQMP6988
         LOG_DEBUG(GwLog::LOG,"QMP6988 configured");
@@ -237,58 +378,86 @@ void initIicTask(GwApi *api){
             addTask=true;
         }
     #endif
+    for (auto it=sensors.begin();it != sensors.end();it++){
+        if ((*it)->preinit(api)) addTask=true;
+    }
     if (addTask){
         api->addUserTask(runIicTask,"iicTask",3000);
     }
 }
+#ifndef _GWIIC 
+void runIicTask(GwApi *api){
+   GwLog *logger=api->getLogger();
+   LOG_DEBUG(GwLog::LOG,"no iic defined, iic task stopped");
+   vTaskDelete(NULL);
+   return; 
+}
+#else
 void runIicTask(GwApi *api){
     GwLog *logger=api->getLogger();
-    #ifndef _GWIIC 
-        LOG_DEBUG(GwLog::LOG,"no iic defined, iic task stopped");
-        vTaskDelete(NULL);
-        return;
-    #endif
+    std::map<int,TwoWire *> buses;
     LOG_DEBUG(GwLog::LOG,"iic task started");
-    bool rt=Wire.begin(GWIIC_SDA,GWIIC_SCL);
-    if (! rt){
-        LOG_DEBUG(GwLog::ERROR,"unable to initialize IIC");
-        vTaskDelete(NULL);
-        return;
+    for (auto it=sensors.begin();it != sensors.end();it++){
+        int busId=(*it)->busId;
+        auto bus=buses.find(busId);
+        if (bus == buses.end()){
+            switch (busId)
+            {
+            case 1:
+            {
+                bool rt = Wire.begin(GWIIC_SDA, GWIIC_SCL);
+                if (!rt)
+                {
+                    LOG_DEBUG(GwLog::ERROR, "unable to initialize IIC 1 at %d,%d",
+                              (int)GWIIC_SDA, (int)GWIIC_SCL);
+                }
+                else
+                {
+                    buses[busId] = &Wire;
+                }
+            }
+            break;
+            case 2:
+            {
+                bool rt = Wire1.begin(GWIIC_SDA2, GWIIC_SCL2);
+                if (!rt)
+                {
+                    LOG_DEBUG(GwLog::ERROR, "unable to initialize IIC 2 at %d,%d",
+                              (int)GWIIC_SDA2, (int)GWIIC_SCL2);
+                }
+                else
+                {
+                    buses[busId] = &Wire1;
+                }
+            }
+            break;
+            default:
+                LOG_DEBUG(GwLog::ERROR, "invalid bus id %d at config %s", busId, (*it)->prefix.c_str());
+                break;
+            }
+        }
     }
     GwConfigHandler *config=api->getConfig();
     bool runLoop=false;
     GwIntervalRunner timers;
     int counterId=api->addCounter("iicsensors");
-    #ifdef GWSHT3X
-        SHT3X *sht3x=nullptr;
-        int addr=GWSHT3X;
-        if (addr < 0) addr=0x44; //default
-        SHT3XConfig sht3xConfig(config);
-        if (sht3xConfig.huAct || sht3xConfig.tmAct){
-            sht3x=new SHT3X();
-            sht3x->init(addr,&Wire);
-            LOG_DEBUG(GwLog::LOG,"initialized SHT3X at address %d, intv %ld",(int)addr,sht3xConfig.intv);
+    for (auto it=sensors.begin();it != sensors.end();it++){
+        SensorBase *cfg=*it;
+        auto bus=buses.find(cfg->busId);
+        if (! cfg->isActive()) continue;
+        if (bus == buses.end()){
+            LOG_DEBUG(GwLog::ERROR,"No bus initialized for %s",cfg->prefix.c_str());
+            continue;
+        }
+        TwoWire *wire=bus->second;
+        bool rt=cfg->initDevice(api,&Wire);
+        if (rt){
             runLoop=true;
-            timers.addAction(sht3xConfig.intv,[logger,api,sht3x,sht3xConfig,counterId](){
-                int rt=0;
-                if ((rt=sht3x->get())==0){
-                    double temp=sht3x->cTemp;
-                    temp=CToKelvin(temp);
-                    double humid=sht3x->humidity;
-                    LOG_DEBUG(GwLog::DEBUG,"SHT3X measure temp=%2.1f, humid=%2.0f",(float)temp,(float)humid);
-                    if (sht3xConfig.huAct){
-                        sendN2kHumidity(api,sht3xConfig,humid,counterId);
-                    }
-                    if (sht3xConfig.tmAct){
-                        sendN2kTemperature(api,sht3xConfig,temp,counterId);
-                    }
-                }
-                else{
-                    LOG_DEBUG(GwLog::DEBUG,"unable to query SHT3X: %d",rt);
-                }    
+            timers.addAction(cfg->intv,[wire,api,cfg,counterId](){
+                cfg->measure(api,wire,counterId);
             });
         }
-    #endif
+    }
     #ifdef GWQMP6988
         int qaddr=GWQMP6988;
         if (qaddr < 0) qaddr=0x56;
@@ -364,3 +533,4 @@ void runIicTask(GwApi *api){
     vTaskDelete(NULL);
     #endif
 }
+#endif
