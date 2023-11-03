@@ -291,7 +291,7 @@ void initIicTask(GwApi *api){
     GwConfigHandler *config=api->getConfig();
     #if defined(GWSHT3X) || defined (GWSHT3X1)
         LOG_DEBUG(GwLog::LOG,"SHT3X1 configured");
-        SHT3XConfig *scfg=new SHT3XConfig(api,"SHT3X1",0,0x44);
+        SHT3XConfig *scfg=new SHT3XConfig(api,"SHT3X1",1,0x44);
         #undef _SET
         #define _SET(name) \
             CFG_SET(scfg,config,name,SHT3X1)
@@ -308,7 +308,7 @@ void initIicTask(GwApi *api){
     #endif
     #if defined(GWSHT3X2)
         LOG_DEBUG(GwLog::LOG,"SHT3X2 configured");
-        SHT3XConfig *scfg=new SHT3XConfig(api,"SHT3X2",0,0x45);
+        SHT3XConfig *scfg=new SHT3XConfig(api,"SHT3X2",1,0x45);
         #undef _SET
         #define _SET(name) \
             CFG_SET(scfg,config,name,SHT3X2)
@@ -325,10 +325,10 @@ void initIicTask(GwApi *api){
     #endif
     #if defined(GWSHT3X3)
         LOG_DEBUG(GwLog::LOG,"SHT3X3 configured");
-        SHT3XConfig *scfg=new SHT3XConfig(api,"SHT3X3",1,0x44);
+        SHT3XConfig *scfg=new SHT3XConfig(api,"SHT3X3",2,0x44);
         #undef _SET
         #define _SET(name) \
-            CFG_SET(scfg,config,name,SHT3X2)
+            CFG_SET(scfg,config,name,SHT3X3)
         _SET(tmNam);
         _SET(huNam);
         _SET(iid);
@@ -342,10 +342,10 @@ void initIicTask(GwApi *api){
     #endif
     #if defined(GWSHT3X4)
         LOG_DEBUG(GwLog::LOG,"SHT3X4 configured");
-        SHT3XConfig *scfg=new SHT3XConfig(api,"SHT3X4",1,0x45);
+        SHT3XConfig *scfg=new SHT3XConfig(api,"SHT3X4",2,0x45);
         #undef _SET
         #define _SET(name) \
-            CFG_SET(scfg,config,name,SHT3X2)
+            CFG_SET(scfg,config,name,SHT3X4)
         _SET(tmNam);
         _SET(huNam);
         _SET(iid);
