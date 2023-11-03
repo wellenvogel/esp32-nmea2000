@@ -345,9 +345,9 @@ types:
 
   - &iicsensors
     type: checkbox
-    label: I2C
-    key: i2c
-    description: 'I2C Bus #1'
+    label: "I2C #busname#"
+    key: "i2c#busname#"
+    description: "I2C Bus #busname#"
     values:
       - key: true
         children:
@@ -355,68 +355,61 @@ types:
             label: SDA
             key: sda
             mandatory: true
-            target: "define:GWIIC_SDA"
+            target: "define:GWIIC_SDA#bus#"
           - <<: *gpiopin
             label: SCL
             key: scl
             mandatory: true
-            target: "define:GWIIC_SCL"
+            target: "define:GWIIC_SCL#bus#"
           - type: checkbox
-            label: SHT3X
-            description: "SHT30 temperature and humidity sensor"
-            key: sht3x
+            label: SHT3X-#busname#-1
+            description: "SHT30 temperature and humidity sensor 0x44"
+            key: sht3x1
+            target: define
             values: 
               - key: true
-                children:
-                  - type: select
-                    label: address
-                    key: address
-                    target: "define:GWSHT3X"
-                    mandatory: true
-                    default: 68
-                    values:
-                      - label: "default(0x44 - L)"
-                        value: 68
-                      - label: "opt(0x45 - H)"
-                        value: 69
+                value: GWSHT3X#busname#1
           - type: checkbox
-            label: QMP6988
-            description: "QMP6988 pressure sensor"
-            key: qmp6988
+            label: SHT3X-#busname#-1
+            description: "SHT30 temperature and humidity sensor 0x45"
+            key: sht3x2
+            target: define
             values: 
               - key: true
-                children:
-                  - type: select
-                    label: address
-                    key: address
-                    target: "define:GWQMP6988"
-                    mandatory: true
-                    default: 86
-                    values:
-                      - label: "default(0x56 - H)"
-                        value: 86
-                      - label: "opt(0x70 - L)"
-                        value: 112
-
+                value: GWSHT3X#busname#2
           - type: checkbox
-            label: BME280
+            label: QMP6988-#busname#-1
+            description: "QMP6988 pressure sensor addr 86"
+            key: qmp69881
+            target: define
+            values: 
+              - key: true
+                value: GWQMP6988#busname#1
+          - type: checkbox
+            label: QMP6988-#busname#-2
+            description: "QMP6988 pressure sensor addr 112"
+            key: qmp69882
+            target: define
+            values: 
+              - key: true
+                value: GWQMP6988#busname#2
+          - type: checkbox
+            label: BME280-#busname#-1
             description: "BME280 temperature/humidity/pressure sensor"
-            key: bme280
+            key: bme2801
+            target: define
             values: 
               - key: true
-                children:
-                  - type: select
-                    label: address
-                    key: address
-                    target: "define:GWBME280"
-                    mandatory: true
-                    default: 118
-                    values:
-                      - label: "default(0x76 - L)"
-                        value: 118
-                      - label: "opt(0x77 - nc)"
-                        value: 119
-
+                value: GWBME280#busname#1
+          - type: checkbox
+            label: BME280-#busname#-2
+            description: "BME280 temperature/humidity/pressure sensor"
+            key: bme2802
+            target: define
+            values: 
+              - key: true
+                value: GWBME280#busname#2
+                
 
 resources:
   default: &esp32default
@@ -468,4 +461,11 @@ config:
             - *can
             - *resetButton
             - *led
-            - *iicsensors
+            - <<: *iicsensors
+              base: 
+                busname: "1"
+                bus: ""
+            - <<: *iicsensors
+              base: 
+                busname: "2"
+                bus: "2"

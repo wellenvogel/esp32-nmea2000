@@ -530,6 +530,8 @@ class PipelineInfo{
         frame.setAttribute(PATH_ATTR,prefix);
         let expandedList=expandList(configList);
         expandedList.forEach((cfg)=>{
+            let currentBase=Object.assign({},base,cfg.base);
+            cfg=replaceValues(cfg,currentBase);
             if (cfg.key === undefined){
                 if (cfg.type !== undefined && cfg.type !== 'frame'){
                     console.log("config without key",cfg);
@@ -546,7 +548,6 @@ class PipelineInfo{
                 name=cfg.key;
             }
             let current=config[name];
-            let currentBase=Object.assign({},base,cfg.base);
             let childFrame=buildSelector(frame,cfg,name,current,
                 (child,initial,opt_frame)=>{
                     if(cfg.key !== undefined) removeSelectors(name,!initial);
@@ -558,9 +559,27 @@ class PipelineInfo{
         })
     }
     const replaceValues=(str,base)=>{
-        for (let k in base){
-            let r=new RegExp("#"+k+"#","g");
-            str=str.replace(r,base[k]);
+        if (! base) return str;
+        if (typeof(str) === 'string'){
+            for (let k in base){
+                let r=new RegExp("#"+k+"#","g");
+                str=str.replace(r,base[k]);
+            }
+            return str;
+        }
+        if (str instanceof Array){
+            let rt=[];
+            str.forEach((el)=>{
+                rt.push(replaceValues(el,base));
+            })
+            return rt;
+        }
+        if (str instanceof Object){
+            let rt={};
+            for (let k in str){
+                rt[k]=replaceValues(str[k],base);
+            }
+            return rt;
         }
         return str;
     }
