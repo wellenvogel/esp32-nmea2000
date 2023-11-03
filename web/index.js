@@ -1020,9 +1020,7 @@ function toggleClass(el,id,classList){
 }
 
 function createConfigDefinitions(parent, capabilities, defs,includeXdr) {
-    let category;
-    let categoryEl;
-    let categoryFrame;
+    let categories={};
     let frame = parent.querySelector('.configFormRows');
     if (!frame) throw Error("no config form");
     frame.innerHTML = '';
@@ -1035,23 +1033,25 @@ function createConfigDefinitions(parent, capabilities, defs,includeXdr) {
         }
         else{
             if(includeXdr) return;
-        } 
-        if (item.category != category || !categoryEl) {
-            if (categoryFrame && ! currentCategoryPopulated){
-                categoryFrame.remove();
+        }
+        let catEntry;
+        if (categories[item.category] === undefined){
+            catEntry={
+                populated:false,
+                frame: undefined,
+                element: undefined
             }
-            currentCategoryPopulated=false;
-            categoryFrame = addEl('div', 'category', frame);
-            categoryFrame.setAttribute('data-category',item.category)
-            let categoryTitle = addEl('div', 'title', categoryFrame);
+            categories[item.category]=catEntry
+            catEntry.frame = addEl('div', 'category', frame);
+            catEntry.frame.setAttribute('data-category',item.category)
+            let categoryTitle = addEl('div', 'title', catEntry.frame);
             let categoryButton = addEl('span', 'icon icon-more', categoryTitle);
             addEl('span', 'label', categoryTitle, item.category);
             addEl('span','categoryAdd',categoryTitle);
-            categoryEl = addEl('div', 'content', categoryFrame);
-            categoryEl.classList.add('hidden');
-            let currentEl = categoryEl;
+            catEntry.element = addEl('div', 'content', catEntry.frame);
+            catEntry.element.classList.add('hidden');
             categoryTitle.addEventListener('click', function (ev) {
-                let rs = currentEl.classList.toggle('hidden');
+                let rs = catEntry.element.classList.toggle('hidden');
                 if (rs) {
                     toggleClass(categoryButton,0,moreicons);
                 }
@@ -1059,7 +1059,9 @@ function createConfigDefinitions(parent, capabilities, defs,includeXdr) {
                     toggleClass(categoryButton,1,moreicons);
                 }
             })
-            category = item.category;
+        }
+        else{
+            catEntry=categories[item.category];
         }
         let showItem=true;
         let itemCapabilities=item.capabilities||{};
@@ -1089,8 +1091,8 @@ function createConfigDefinitions(parent, capabilities, defs,includeXdr) {
         }
         if (showItem) {
             item.readOnly=readOnly;
-            currentCategoryPopulated=true;
-            let row = addEl('div', 'row', categoryEl);
+            catEntry.populated=true;
+            let row = addEl('div', 'row', catEntry.element);
             let label = item.label || item.name;
             addEl('span', 'label', row, label);
             let valueFrame = addEl('div', 'value', row);
@@ -1136,8 +1138,11 @@ function createConfigDefinitions(parent, capabilities, defs,includeXdr) {
             });
         }
     });
-    if (categoryFrame && ! currentCategoryPopulated){
-        categoryFrame.remove();
+    for (let cat in categories){
+        let catEntry=categories[cat];
+        if (! catEntry.populated){
+            catEntry.frame.remove();
+        }
     }
 }
 function loadConfigDefinitions() {

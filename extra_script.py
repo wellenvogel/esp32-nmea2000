@@ -108,6 +108,44 @@ def mergeConfig(base,other):
                 base=base+merge
     return base
 
+def replaceTexts(data,replacements):
+    if replacements is None:
+        return data
+    if isinstance(data,str):
+        for k,v in replacements.items():
+            data=data.replace("$"+k,str(v))
+        return data
+    if isinstance(data,list):
+        rt=[]
+        for e in data:
+            rt.append(replaceTexts(e,replacements))
+        return rt
+    if isinstance(data,dict):   
+        rt={} 
+        for k,v in data.items():
+            rt[replaceTexts(k,replacements)]=replaceTexts(v,replacements)
+        return rt
+    return data
+def expandConfig(config):
+    rt=[]
+    for item in config:
+        type=item.get('type')
+        if type != 'array':
+            rt.append(item)
+            continue
+        replacements=item.get('replace')
+        children=item.get('children')
+        name=item.get('name')
+        if name is None:
+            name="#unknown#"
+        if not isinstance(replacements,list):
+            raise Exception("missing replacements at array %s"%name)
+        for replace in replacements:
+            if children is not None:
+                for c in children:
+                    rt.append(replaceTexts(c,replace))
+    return rt
+
 def generateMergedConfig(inFile,outFile,addDirs=[]):
     if not os.path.exists(inFile):
         raise Exception("unable to read cfg file %s"%inFile)
@@ -115,6 +153,7 @@ def generateMergedConfig(inFile,outFile,addDirs=[]):
     with open(inFile,'rb') as ch:    
         config=json.load(ch)
         config=mergeConfig(config,addDirs)
+        config=expandConfig(config)
         data=json.dumps(config,indent=2)
         writeFileIfChanged(outFile,data)
 

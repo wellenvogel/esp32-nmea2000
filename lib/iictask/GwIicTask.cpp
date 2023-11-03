@@ -3,7 +3,12 @@
 #ifdef _GWIIC
     #include <Wire.h>
 #endif
-#ifdef GWSHT3X
+#if defined(GWSHT3X) || defined(GWSHT3X1) || defined(GWSHT3X2) || defined(GWSHT3X2) || defined(GWSHT3X4)
+    #define _GWSHT3X
+#else
+    #undef _GWSHT3X
+#endif
+#ifdef _GWSHT3X
     #include "SHT3X.h"
 #endif
 #ifdef GWQMP6988
@@ -16,7 +21,6 @@
 #ifdef GWBME280
     #include <Adafruit_BME280.h>
 #endif
-//#define GWSHT3X -1
 
 #ifndef GWIIC_SDA
     #define GWIIC_SDA -1
@@ -29,14 +33,14 @@
     cfg->getValue(name, GwConfigDefinitions::prefix ## name)
 
 #define CSHT3X(name) \
-    CFG_GET(config,name,SHT3X)
+    CFG_GET(config,name,SHT3X1)
 #define CQMP6988(name) \
-    CFG_GET(config,name,QMP6988)
+    CFG_GET(config,name,QMP69881)
 #define CBME280(name) \
-    CFG_GET(config,name,BME280)    
+    CFG_GET(config,name,BME2801)    
 class SHT3XConfig{
     public:
-    const String prefix="SHT3X";
+    const String prefix="SHT3X1";
     String tmNam;
     String huNam;
     int iid;
@@ -60,7 +64,7 @@ class SHT3XConfig{
 
 class QMP6988Config{
     public:
-        const String prefix="QMP6988";
+        const String prefix="QMP69881";
         String prNam="Pressure";
         int iid=99;
         bool prAct=true;
@@ -79,7 +83,7 @@ class QMP6988Config{
 
 class BME280Config{
     public:
-    const String prefix="BME280";
+    const String prefix="BME2801";
     bool prAct=true;
     bool tmAct=true;
     bool huAct=true;

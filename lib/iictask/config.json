@@ -1,433 +1,508 @@
 [
     {
-        "name": "SHT3XtmAct",
-        "label": "SHT3X Temp",
-        "type": "boolean",
-        "default": "true",
-        "description": "Enable the I2C SHT3x temp sensor",
-        "category": "sensors",
-        "capabilities": {
-            "SHT3X":"true"
-        }
+        "type": "array",
+        "name": "SHT3X",
+        "replace": [
+            {
+                "b": "1",
+                "i": "1",
+                "n": "99"
+            },
+            {
+                "b": "1",
+                "i": "2",
+                "n": "98"
+            },
+            {
+                "b": "2",
+                "i": "1",
+                "n": "109"
+            }
+
+        ],
+        "children": [
+            {
+                "name": "SHT3X$itmAct",
+                "label": "SHT3X$i Temp",
+                "type": "boolean",
+                "default": "true",
+                "description": "Enable the $i. I2C SHT3x temp sensor (bus $b)",
+                "category": "iicsensors$b",
+                "capabilities": {
+                    "SHT3X$i": "true"
+                }
+            },
+            {
+                "name": "SHT3X$itmSrc",
+                "label": "SHT3X$i Temp Type",
+                "type": "list",
+                "default": "2",
+                "description": "the NMEA2000 source type for the temperature",
+                "list": [
+                    {
+                        "l": "SeaTemperature",
+                        "v": "0"
+                    },
+                    {
+                        "l": "OutsideTemperature",
+                        "v": "1"
+                    },
+                    {
+                        "l": "InsideTemperature",
+                        "v": "2"
+                    },
+                    {
+                        "l": "EngineRoomTemperature",
+                        "v": "3"
+                    },
+                    {
+                        "l": "MainCabinTemperature",
+                        "v": "4"
+                    },
+                    {
+                        "l": "LiveWellTemperature",
+                        "v": "5"
+                    },
+                    {
+                        "l": "BaitWellTemperature",
+                        "v": "6"
+                    },
+                    {
+                        "l": "RefridgerationTemperature",
+                        "v": "7"
+                    },
+                    {
+                        "l": "HeatingSystemTemperature",
+                        "v": "8"
+                    },
+                    {
+                        "l": "DewPointTemperature",
+                        "v": "9"
+                    },
+                    {
+                        "l": "ApparentWindChillTemperature",
+                        "v": "10"
+                    },
+                    {
+                        "l": "TheoreticalWindChillTemperature",
+                        "v": "11"
+                    },
+                    {
+                        "l": "HeatIndexTemperature",
+                        "v": "12"
+                    },
+                    {
+                        "l": "FreezerTemperature",
+                        "v": "13"
+                    },
+                    {
+                        "l": "ExhaustGasTemperature",
+                        "v": "14"
+                    },
+                    {
+                        "l": "ShaftSealTemperature",
+                        "v": "15"
+                    }
+                ],
+                "category": "iicsensors$b",
+                "capabilities": {
+                    "SHT3X$i": "true"
+                }
+            },
+            {
+                "name": "SHT3X$ihuAct",
+                "label": "SHT3X$i Humidity",
+                "type": "boolean",
+                "default": "true",
+                "description": "Enable the $i. I2C SHT3x humidity sensor (bus $b)",
+                "category": "iicsensors$b",
+                "capabilities": {
+                    "SHT3X$i": "true"
+                }
+            },
+            {
+                "name": "SHT3X$ihuSrc",
+                "label": "SHT3X$i Humid Type",
+                "list": [
+                    {
+                        "l": "OutsideHumidity",
+                        "v": "1"
+                    },
+                    {
+                        "l": "Undef",
+                        "v": "0xff"
+                    }
+                ],
+                "category": "iicsensors$b",
+                "capabilities": {
+                    "SHT3X": "true"
+                }
+            },
+            {
+                "name": "SHT3X$iiid",
+                "label": "SHT3X$i N2K iid",
+                "type": "number",
+                "default": "$n",
+                "description": "the N2K instance id for the $i. SHT3X Temperature and Humidity ",
+                "category": "iicsensors$b",
+                "min": 0,
+                "max": 253,
+                "check": "checkMinMax",
+                "capabilities": {
+                    "SHT3X$i": "true"
+                }
+            },
+            {
+                "name": "SHT3X$iintv",
+                "label": "SHT3X$i Interval",
+                "type": "number",
+                "default": 2,
+                "description": "Interval(s) to query SHT3X Temperature and Humidity (1...300)",
+                "category": "iicsensors$b",
+                "min": 1,
+                "max": 300,
+                "check": "checkMinMax",
+                "capabilities": {
+                    "SHT3X$i": "true"
+                }
+            },
+            {
+                "name": "SHT3X$itmNam",
+                "label": "SHT3X$i Temp XDR",
+                "type": "String",
+                "default": "Temp$i",
+                "description": "set the XDR transducer name for the $i. SHT3X Temperature, leave empty to disable NMEA0183 XDR ",
+                "category": "iicsensors$b",
+                "capabilities": {
+                    "SHT3X$i": "true"
+                }
+            },
+            {
+                "name": "SHT3X$ihuNam",
+                "label": "SHT3X$i Humid XDR",
+                "type": "String",
+                "default": "Humidity$i",
+                "description": "set the XDR transducer name for the $i. SHT3X Humidity, leave empty to disable NMEA0183 XDR",
+                "category": "iicsensors$b",
+                "capabilities": {
+                    "SHT3X$i": "true"
+                }
+            }
+        ]
     },
     {
-        "name": "SHT3XtmSrc",
-        "label": "SHT3X Temp Type",
-        "type": "list",
-        "default": "2",
-        "description": "the NMEA2000 source type for the temperature",
-        "list": [
+        "type": "array",
+        "name": "QMP6988",
+        "replace": [
             {
-                "l": "SeaTemperature",
-                "v": "0"
+                "b": "1",
+                "i": "1",
+                "n": "97"
             },
             {
-                "l": "OutsideTemperature",
-                "v": "1"
-            },
-            {
-                "l": "InsideTemperature",
-                "v": "2"
-            },
-            {
-                "l": "EngineRoomTemperature",
-                "v": "3"
-            },
-            {
-                "l": "MainCabinTemperature",
-                "v": "4"
-            },
-            {
-                "l": "LiveWellTemperature",
-                "v": "5"
-            },
-            {
-                "l": "BaitWellTemperature",
-                "v": "6"
-            },
-            {
-                "l": "RefridgerationTemperature",
-                "v": "7"
-            },
-            {
-                "l": "HeatingSystemTemperature",
-                "v": "8"
-            },
-            {
-                "l": "DewPointTemperature",
-                "v": "9"
-            },
-            {
-                "l": "ApparentWindChillTemperature",
-                "v": "10"
-            },
-            {
-                "l": "TheoreticalWindChillTemperature",
-                "v": "11"
-            },
-            {
-                "l": "HeatIndexTemperature",
-                "v": "12"
-            },
-            {
-                "l": "FreezerTemperature",
-                "v": "13"
-            },
-            {
-                "l": "ExhaustGasTemperature",
-                "v": "14"
-            },
-            {
-                "l": "ShaftSealTemperature",
-                "v": "15"
+                "b": "1",
+                "i": "2",
+                "n": "96"
             }
         ],
-        "category": "sensors",
-        "capabilities": {
-            "SHT3X":"true"
-        }
+        "children": [
+            {
+                "name": "QMP6988$iprAct",
+                "label": "QMP6988-$i pressure",
+                "description": "activate the $i. QMP6988 pressure measurement (bus $b)",
+                "type": "boolean",
+                "default": "true",
+                "category": "iicsensors$b",
+                "capabilities": {
+                    "QMP6988$i": "true"
+                }
+            },
+            {
+                "name": "QMP6988$iiid",
+                "label": "QMP6988-$i N2K iid",
+                "type": "number",
+                "default": "$n",
+                "description": "the N2K instance id for the $i. QMP6988 pressure",
+                "category": "iicsensors$b",
+                "min": 0,
+                "max": 253,
+                "check": "checkMinMax",
+                "capabilities": {
+                    "QMP6988$i": "true"
+                }
+            },
+            {
+                "name": "QMP6988$iintv",
+                "label": "QMP6988-$i Interval",
+                "type": "number",
+                "default": 2,
+                "description": "Interval(s) to query the $i. QMP6988 Pressure (1...300)",
+                "category": "iicsensors$b",
+                "min": 1,
+                "max": 300,
+                "check": "checkMinMax",
+                "capabilities": {
+                    "QMP6988$i": "true"
+                }
+            },
+            {
+                "name": "QMP6988$iprNam",
+                "label": "QMP6988-$i Pressure XDR",
+                "type": "String",
+                "default": "Pressure$i",
+                "description": "set the XDR transducer name for the $i. QMP6988 Pressure, leave empty to disable NMEA0183 XDR",
+                "category": "iicsensors$b",
+                "capabilities": {
+                    "QMP6988$i": "true"
+                }
+            },
+            {
+                "name": "QMP6988$iprOff",
+                "label": "QMP6988-$i Pressure Offset",
+                "type": "number",
+                "description": "offset (in pa) to be added to the $i. QMP6988 pressure measurements",
+                "default": "0",
+                "category": "iicsensors$b",
+                "capabilities": {
+                    "QMP6988$i": "true"
+                }
+            }
+        ]
     },
     {
-        "name": "SHT3XhuAct",
-        "label": "SHT3X Humidity",
-        "type": "boolean",
-        "default": "true",
-        "description": "Enable the I2C SHT3x humidity sensor",
-        "category": "sensors",
-        "capabilities": {
-            "SHT3X":"true"
-        }
-    },
-    {
-        "name": "SHT3XhuSrc",
-        "label": "SHT3X Humid Type",
-        "list":[
-            {"l":"OutsideHumidity","v":"1"},
-            {"l":"Undef","v":"0xff"}  
-        ],
-        "category": "sensors",
-        "capabilities": {
-            "SHT3X":"true"
-        }
-    },
-    {
-        "name": "SHT3Xiid",
-        "label": "SHT3X N2K iid",
-        "type": "number",
-        "default": 99,
-        "description": "the N2K instance id for the SHT3X Temperature and Humidity ",
-        "category": "sensors",
-        "min": 0,
-        "max": 253,
-        "check": "checkMinMax",
-        "capabilities": {
-            "SHT3X":"true"
-        }
-    },
-    {
-        "name": "SHT3Xintv",
-        "label": "SHT3X Interval",
-        "type": "number",
-        "default": 2,
-        "description": "Interval(s) to query SHT3X Temperature and Humidity (1...300)",
-        "category": "sensors",
-        "min": 1,
-        "max": 300,
-        "check": "checkMinMax",
-        "capabilities": {
-            "SHT3X":"true"
-        }
-    },
-    {
-        "name": "SHT3XtmNam",
-        "label": "SHT3X Temp XDR",
-        "type": "String",
-        "default": "Temp",
-        "description": "set the XDR transducer name for the SHT3X Temperature, leave empty to disable NMEA0183 XDR ",
-        "category": "sensors",
-        "capabilities": {
-            "SHT3X":"true"
-        }
-    },
-    {
-        "name": "SHT3XhuNam",
-        "label": "SHT3X Humid XDR",
-        "type": "String",
-        "default": "Humidity",
-        "description": "set the XDR transducer name for the SHT3X Humidity, leave empty to disable NMEA0183 XDR",
-        "category": "sensors",
-        "capabilities": {
-            "SHT3X":"true"
-        }
-    },
-    {
-        "name": "QMP6988prAct",
-        "label": "QMP6988 pressure",
-        "description": "activate the QMP6988 pressure measurement",
-        "type":"boolean",
-        "default":"true",
-        "category": "sensors",
-        "capabilities": {
-            "QMP6988":"true"
-        }
-    },
-    {
-        "name": "QMP6988iid",
-        "label": "QMP6988 N2K iid",
-        "type": "number",
-        "default": 99,
-        "description": "the N2K instance id for the QMP6988 pressure",
-        "category": "sensors",
-        "min": 0,
-        "max": 253,
-        "check": "checkMinMax",
-        "capabilities": {
-            "QMP6988":"true"
-        }
-    },
-    {
-        "name": "QMP6988intv",
-        "label": "QMP6988 Interval",
-        "type": "number",
-        "default": 2,
-        "description": "Interval(s) to query QMP6988 Pressure (1...300)",
-        "category": "sensors",
-        "min": 1,
-        "max": 300,
-        "check": "checkMinMax",
-        "capabilities": {
-            "QMP6988":"true"
-        }
-    },
-    {
-        "name": "QMP6988prNam",
-        "label": "QMP6988 Pressure XDR",
-        "type": "String",
-        "default": "Pressure",
-        "description": "set the XDR transducer name for the QMP6988 Pressure, leave empty to disable NMEA0183 XDR",
-        "category": "sensors",
-        "capabilities": {
-            "QMP6988":"true"
-        }
-    },
-    {
-        "name":"QMP6988prOff",
-        "label":"QMP6988 Pressure Offset",
-        "type": "number",
-        "description": "offset (in pa) to be added to the QMP6988 pressure measurements",
-        "default":"0",
-        "category": "sensors",
-        "capabilities": {
-            "QMP6988":"true"
-        }
-    },
-    {
-        "name": "BME280tmAct",
-        "label": "BME280 Temp",
-        "type": "boolean",
-        "default": "true",
-        "description": "Enable the I2C BME280 temp sensor",
-        "category": "sensors",
-        "capabilities": {
-            "BME280":"true"
-        }
-    },
-    {
-        "name": "BME280tmSrc",
-        "label": "BME280 Temp Type",
-        "type": "list",
-        "default": "2",
-        "description": "the NMEA2000 source type for the temperature",
-        "list": [
+        "type": "array",
+        "name": "BME280",
+        "replace": [
             {
-                "l": "SeaTemperature",
-                "v": "0"
+                "b": "1",
+                "i": "1",
+                "n": "95"
             },
             {
-                "l": "OutsideTemperature",
-                "v": "1"
-            },
-            {
-                "l": "InsideTemperature",
-                "v": "2"
-            },
-            {
-                "l": "EngineRoomTemperature",
-                "v": "3"
-            },
-            {
-                "l": "MainCabinTemperature",
-                "v": "4"
-            },
-            {
-                "l": "LiveWellTemperature",
-                "v": "5"
-            },
-            {
-                "l": "BaitWellTemperature",
-                "v": "6"
-            },
-            {
-                "l": "RefridgerationTemperature",
-                "v": "7"
-            },
-            {
-                "l": "HeatingSystemTemperature",
-                "v": "8"
-            },
-            {
-                "l": "DewPointTemperature",
-                "v": "9"
-            },
-            {
-                "l": "ApparentWindChillTemperature",
-                "v": "10"
-            },
-            {
-                "l": "TheoreticalWindChillTemperature",
-                "v": "11"
-            },
-            {
-                "l": "HeatIndexTemperature",
-                "v": "12"
-            },
-            {
-                "l": "FreezerTemperature",
-                "v": "13"
-            },
-            {
-                "l": "ExhaustGasTemperature",
-                "v": "14"
-            },
-            {
-                "l": "ShaftSealTemperature",
-                "v": "15"
+                "b": "1",
+                "i": "2",
+                "n": "94"
             }
         ],
-        "category": "sensors",
-        "capabilities": {
-            "BME280":"true"
-        }
-    },
-    {
-        "name":"BME280tmOff",
-        "label":"BME280 Temperature Offset",
-        "type": "number",
-        "description": "offset (in °) to be added to the BME280 temperature measurements",
-        "default":"0",
-        "category": "sensors",
-        "capabilities": {
-            "BME280":"true"
-        }
-    },
-    {
-        "name": "BME280huAct",
-        "label": "BME280 Humidity",
-        "type": "boolean",
-        "default": "true",
-        "description": "Enable the I2C BME280 humidity sensor",
-        "category": "sensors",
-        "capabilities": {
-            "BME280":"true"
-        }
-    },
-    {
-        "name": "BME280huSrc",
-        "label": "BME280 Humid Type",
-        "type": "list",
-        "description": "the NMEA2000 source type for the humidity",
-        "default": "0",
-        "list":[
-            {"l":"InsideHumidity","v":"0"},
-            {"l":"OutsideHumidity","v":"1"},
-            {"l":"Undef","v":"0xff"}  
-        ],
-        "category": "sensors",
-        "capabilities": {
-            "BME280":"true"
-        }
-    },
-    {
-        "name": "BME280prAct",
-        "label": "BME280 Pressure",
-        "type": "boolean",
-        "default": "true",
-        "description": "Enable the I2C BME280 pressure sensor",
-        "category": "sensors",
-        "capabilities": {
-            "BME280":"true"
-        }
-    },
-    {
-        "name":"BME280prOff",
-        "label":"BME280 Pressure Offset",
-        "type": "number",
-        "description": "offset (in pa) to be added to the BME280 pressure measurements",
-        "default":"0",
-        "category": "sensors",
-        "capabilities": {
-            "BME280":"true"
-        }
-    },
-    {
-        "name": "BME280iid",
-        "label": "BME280 N2K iid",
-        "type": "number",
-        "default": 99,
-        "description": "the N2K instance id for the BME280 Temperature and Humidity ",
-        "category": "sensors",
-        "min": 0,
-        "max": 253,
-        "check": "checkMinMax",
-        "capabilities": {
-            "BME280":"true"
-        }
-    },
-    {
-        "name": "BME280intv",
-        "label": "BME280 Interval",
-        "type": "number",
-        "default": 2,
-        "description": "Interval(s) to query BME280 Temperature and Humidity (1...300)",
-        "category": "sensors",
-        "min": 1,
-        "max": 300,
-        "check": "checkMinMax",
-        "capabilities": {
-            "BME280":"true"
-        }
-    },
-    {
-        "name": "BME280tmNam",
-        "label": "BME280 Temp XDR",
-        "type": "String",
-        "default": "Temp",
-        "description": "set the XDR transducer name for the BME280 Temperature, leave empty to disable NMEA0183 XDR ",
-        "category": "sensors",
-        "capabilities": {
-            "BME280":"true"
-        }
-    },
-    {
-        "name": "BME280huNam",
-        "label": "BME280 Humid XDR",
-        "type": "String",
-        "default": "Humidity",
-        "description": "set the XDR transducer name for the BME280 Humidity, leave empty to disable NMEA0183 XDR",
-        "category": "sensors",
-        "capabilities": {
-            "BME280":"true"
-        }
-    },
-    {
-        "name": "BME280prNam",
-        "label": "BME280 Pressure XDR",
-        "type": "String",
-        "default": "Pressure",
-        "description": "set the XDR transducer name for the BME280 Pressure, leave empty to disable NMEA0183 XDR",
-        "category": "sensors",
-        "capabilities": {
-            "BME280":"true"
-        }
+        "children": [
+            {
+                "name": "BME280$itmAct",
+                "label": "BME280-$i Temp",
+                "type": "boolean",
+                "default": "true",
+                "description": "Enable the $i. I2C BME280 temp sensor (bus $b)",
+                "category": "iicsensors$b",
+                "capabilities": {
+                    "BME280$i": "true"
+                }
+            },
+            {
+                "name": "BME280$itmSrc",
+                "label": "BME280-$i Temp Type",
+                "type": "list",
+                "default": "2",
+                "description": "the NMEA2000 source type for the temperature",
+                "list": [
+                    {
+                        "l": "SeaTemperature",
+                        "v": "0"
+                    },
+                    {
+                        "l": "OutsideTemperature",
+                        "v": "1"
+                    },
+                    {
+                        "l": "InsideTemperature",
+                        "v": "2"
+                    },
+                    {
+                        "l": "EngineRoomTemperature",
+                        "v": "3"
+                    },
+                    {
+                        "l": "MainCabinTemperature",
+                        "v": "4"
+                    },
+                    {
+                        "l": "LiveWellTemperature",
+                        "v": "5"
+                    },
+                    {
+                        "l": "BaitWellTemperature",
+                        "v": "6"
+                    },
+                    {
+                        "l": "RefridgerationTemperature",
+                        "v": "7"
+                    },
+                    {
+                        "l": "HeatingSystemTemperature",
+                        "v": "8"
+                    },
+                    {
+                        "l": "DewPointTemperature",
+                        "v": "9"
+                    },
+                    {
+                        "l": "ApparentWindChillTemperature",
+                        "v": "10"
+                    },
+                    {
+                        "l": "TheoreticalWindChillTemperature",
+                        "v": "11"
+                    },
+                    {
+                        "l": "HeatIndexTemperature",
+                        "v": "12"
+                    },
+                    {
+                        "l": "FreezerTemperature",
+                        "v": "13"
+                    },
+                    {
+                        "l": "ExhaustGasTemperature",
+                        "v": "14"
+                    },
+                    {
+                        "l": "ShaftSealTemperature",
+                        "v": "15"
+                    }
+                ],
+                "category": "iicsensors$b",
+                "capabilities": {
+                    "BME280$i": "true"
+                }
+            },
+            {
+                "name": "BME280$itmOff",
+                "label": "BME280-$i Temperature Offset",
+                "type": "number",
+                "description": "offset (in °) to be added to the BME280 temperature measurements",
+                "default": "0",
+                "category": "iicsensors$b",
+                "capabilities": {
+                    "BME280$i": "true"
+                }
+            },
+            {
+                "name": "BME280$ihuAct",
+                "label": "BME280-$i Humidity",
+                "type": "boolean",
+                "default": "true",
+                "description": "Enable the $i. I2C BME280 humidity sensor",
+                "category": "iicsensors$b",
+                "capabilities": {
+                    "BME280$i": "true"
+                }
+            },
+            {
+                "name": "BME280$ihuSrc",
+                "label": "BME280-$i Humid Type",
+                "type": "list",
+                "description": "the NMEA2000 source type for the humidity",
+                "default": "0",
+                "list": [
+                    {
+                        "l": "InsideHumidity",
+                        "v": "0"
+                    },
+                    {
+                        "l": "OutsideHumidity",
+                        "v": "1"
+                    },
+                    {
+                        "l": "Undef",
+                        "v": "0xff"
+                    }
+                ],
+                "category": "iicsensors$b",
+                "capabilities": {
+                    "BME280$i": "true"
+                }
+            },
+            {
+                "name": "BME280$iprAct",
+                "label": "BME280-$i Pressure",
+                "type": "boolean",
+                "default": "true",
+                "description": "Enable the $i. I2C BME280 pressure sensor (bus $b)",
+                "category": "iicsensors$b",
+                "capabilities": {
+                    "BME280$i": "true"
+                }
+            },
+            {
+                "name": "BME280$iprOff",
+                "label": "BME280 Pressure Offset",
+                "type": "number",
+                "description": "offset (in pa) to be added to the BME280 pressure measurements",
+                "default": "0",
+                "category": "iicsensors$b",
+                "capabilities": {
+                    "BME280$i": "true"
+                }
+            },
+            {
+                "name": "BME280$iiid",
+                "label": "BME280-$i N2K iid",
+                "type": "number",
+                "default": "$n",
+                "description": "the N2K instance id for the BME280 Temperature and Humidity ",
+                "category": "iicsensors$b",
+                "min": 0,
+                "max": 253,
+                "check": "checkMinMax",
+                "capabilities": {
+                    "BME280$i": "true"
+                }
+            },
+            {
+                "name": "BME280$iintv",
+                "label": "BME280-$i Interval",
+                "type": "number",
+                "default": 2,
+                "description": "Interval(s) to query BME280 Temperature and Humidity (1...300)",
+                "category": "iicsensors$b",
+                "min": 1,
+                "max": 300,
+                "check": "checkMinMax",
+                "capabilities": {
+                    "BME280$i": "true"
+                }
+            },
+            {
+                "name": "BME280$itmNam",
+                "label": "BME280-$i Temp XDR",
+                "type": "String",
+                "default": "BTemp$i",
+                "description": "set the XDR transducer name for the BME280 Temperature, leave empty to disable NMEA0183 XDR ",
+                "category": "iicsensors$b",
+                "capabilities": {
+                    "BME280$i": "true"
+                }
+            },
+            {
+                "name": "BME280$ihuNam",
+                "label": "BME280-$i Humid XDR",
+                "type": "String",
+                "default": "BHumidity$i",
+                "description": "set the XDR transducer name for the BME280 Humidity, leave empty to disable NMEA0183 XDR",
+                "category": "iicsensors$b",
+                "capabilities": {
+                    "BME280$i": "true"
+                }
+            },
+            {
+                "name": "BME280$iprNam",
+                "label": "BME280-$i Pressure XDR",
+                "type": "String",
+                "default": "BPressure$i",
+                "description": "set the XDR transducer name for the BME280 Pressure, leave empty to disable NMEA0183 XDR",
+                "category": "iicsensors$b",
+                "capabilities": {
+                    "BME280$i": "true"
+                }
+            }
+        ]
     }
 ]
