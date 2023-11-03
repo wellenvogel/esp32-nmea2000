@@ -1,9 +1,8 @@
-#include "GwHardware.h"
-#ifdef GWQMP6988
+#include "GwQMP6988.h"
+#ifdef _GWQMP6988
 #include <math.h>
 #include "stdint.h"
 #include "stdio.h"
-#include "QMP6988.h"
 
 // DISABLE LOG
 #define QMP6988_LOG(format...)

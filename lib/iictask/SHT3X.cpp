@@ -1,6 +1,5 @@
-#include "GwHardware.h"
-#ifdef GWSHT3X
-#include "SHT3X.h"
+#include "GwSHT3X.h"
+#ifdef _GWSHT3X
 
 bool SHT3X::init(uint8_t slave_addr_in, TwoWire* wire_in)
 {

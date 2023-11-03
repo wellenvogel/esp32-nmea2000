@@ -1,26 +1,9 @@
 #include "GwQMP6988.h"
-#ifdef _GWIIC
-    #if defined(GWQMP6988) || defined(GWQMP69881) || defined(GWQMP69882) || defined(GWQMP69883) || defined(GWQMP69884)
-        #define _GWQMP6988
-    #else
-        #undef _GWQMP6988
-    #endif
-#else
-    #undef _GWQMP6988
-    #undef GWQMP6988
-    #undef GWQMP69881
-    #undef GWQMP69882
-    #undef GWQMP69883
-    #undef GWQMP69884
-#endif
 #ifdef _GWQMP6988
-    #include "QMP6988.h"
-#endif
-#ifdef _GWQMP6988
-#define PRFX1 "QMP69881"
-#define PRFX2 "QMP69882"
-#define PRFX3 "QMP69883"
-#define PRFX4 "QMP69884"
+#define PRFX1 "QMP698811"
+#define PRFX2 "QMP698812"
+#define PRFX3 "QMP698821"
+#define PRFX4 "QMP698822"
 class QMP6988Config : public SensorBase{
     public:
         String prNam="Pressure";
@@ -62,7 +45,7 @@ class QMP6988Config : public SensorBase{
                 busId=1;
                 addr=86;
                 #undef CG
-                #define CG(name) CFG_GET(name,QMP69881)
+                #define CG(name) CFG_GET(name,QMP698811)
                 CG(prNam);
                 CG(iid);
                 CG(prAct);
@@ -74,7 +57,7 @@ class QMP6988Config : public SensorBase{
                 busId=1;
                 addr=112;
                 #undef CG
-                #define CG(name) CFG_GET(name,QMP69882)
+                #define CG(name) CFG_GET(name,QMP698812)
                 CG(prNam);
                 CG(iid);
                 CG(prAct);
@@ -86,7 +69,7 @@ class QMP6988Config : public SensorBase{
                 busId=2;
                 addr=86;
                 #undef CG
-                #define CG(name) CFG_GET(name,QMP69883)
+                #define CG(name) CFG_GET(name,QMP698821)
                 CG(prNam);
                 CG(iid);
                 CG(prAct);
@@ -98,7 +81,7 @@ class QMP6988Config : public SensorBase{
                 busId=2;
                 addr=112;
                 #undef CG
-                #define CG(name) CFG_GET(name,QMP69884)
+                #define CG(name) CFG_GET(name,QMP698822)
                 CG(prNam);
                 CG(iid);
                 CG(prAct);

@@ -1,27 +1,10 @@
 #include "GwSHT3X.h"
-#ifdef _GWIIC
-    #if defined(GWSHT3X) || defined(GWSHT3X1) || defined(GWSHT3X2) || defined(GWSHT3X2) || defined(GWSHT3X4)
-        #define _GWSHT3X
-    #else
-        #undef _GWSHT3X
-    #endif
-#else
-    #undef _GWSHT3X
-    #undef GWSHT3X
-    #undef GWSHT3X1
-    #undef GWSHT3X2
-    #undef GWSHT3X3
-    #undef GWSHT3X4
-#endif
-#ifdef _GWSHT3X
-    #include "SHT3X.h"
-#endif
 
 #ifdef _GWSHT3X
-#define PRFX1 "SHT3X1"
-#define PRFX2 "SHT3X2"
-#define PRFX3 "SHT3X3"
-#define PRFX4 "SHT3X4"
+#define PRFX1 "SHT3X11"
+#define PRFX2 "SHT3X12"
+#define PRFX3 "SHT3X21"
+#define PRFX4 "SHT3X22"
 class SHT3XConfig : public SensorBase{
     public:
     String tmNam;
@@ -88,7 +71,7 @@ class SHT3XConfig : public SensorBase{
             busId=1;
             addr=0x44;
             #undef CG
-            #define CG(name) CFG_GET(name,SHT3X1)
+            #define CG(name) CFG_GET(name,SHT3X11)
             CG(tmNam);
             CG(huNam);
             CG(iid);
@@ -103,7 +86,7 @@ class SHT3XConfig : public SensorBase{
             busId=1;
             addr=0x45;
             #undef CG
-            #define CG(name) CFG_GET(name,SHT3X2)
+            #define CG(name) CFG_GET(name,SHT3X12)
             CG(tmNam);
             CG(huNam);
             CG(iid);
@@ -118,7 +101,7 @@ class SHT3XConfig : public SensorBase{
             busId=2;
             addr=0x44;
             #undef CG
-            #define CG(name) CFG_GET(name,SHT3X3)
+            #define CG(name) CFG_GET(name,SHT3X21)
             CG(tmNam);
             CG(huNam);
             CG(iid);
@@ -133,7 +116,7 @@ class SHT3XConfig : public SensorBase{
             busId=2;
             addr=0x45;
             #undef CG
-            #define CG(name) CFG_GET(name,SHT3X4)
+            #define CG(name) CFG_GET(name,SHT3X22)
             CG(tmNam);
             CG(huNam);
             CG(iid);
@@ -149,25 +132,25 @@ class SHT3XConfig : public SensorBase{
 };
 void registerSHT3X(GwApi *api,SensorList &sensors){
     GwLog *logger=api->getLogger();
-    #if defined(GWSHT3X) || defined (GWSHT3X1)
+    #if defined(GWSHT3X) || defined (GWSHT3X11)
     {
         SHT3XConfig *scfg=new SHT3XConfig(api,PRFX1);
         sensors.add(api,scfg);
     }
     #endif
-    #if defined(GWSHT3X2)
+    #if defined(GWSHT3X12)
     {
         SHT3XConfig *scfg=new SHT3XConfig(api,PRFX2);
         sensors.add(api,scfg);
     }
     #endif
-    #if defined(GWSHT3X3)
+    #if defined(GWSHT3X21)
     {
         SHT3XConfig *scfg=new SHT3XConfig(api,PRFX3);
         sensors.add(api,scfg);
     }
     #endif
-    #if defined(GWSHT3X4)
+    #if defined(GWSHT3X22)
     {
         SHT3XConfig *scfg=new SHT3XConfig(api,PRFX4);
         sensors.add(api,scfg);

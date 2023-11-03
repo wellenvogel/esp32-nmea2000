@@ -45,6 +45,7 @@ void initIicTask(GwApi *api){
     if (addTask){
         api->addUserTask(runIicTask,"iicTask",3000);
     }
+    #endif
 }
 #ifndef _GWIIC 
 void runIicTask(GwApi *api){
@@ -147,6 +148,5 @@ void runIicTask(GwApi *api){
         timers.loop();
     }
     vTaskDelete(NULL);
-    #endif
 }
 #endif

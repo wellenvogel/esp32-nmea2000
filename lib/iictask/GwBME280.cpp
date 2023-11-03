@@ -8,19 +8,19 @@
 #else
     #undef _GWBME280
     #undef GWBME280
-    #undef GWBME2801
-    #undef GWBME2802
-    #undef GWBME2803
-    #undef GWBME2804
+    #undef GWBME28011
+    #undef GWBME28012
+    #undef GWBME28021
+    #undef GWBME28022
 #endif
 #ifdef _GWBME280
     #include <Adafruit_BME280.h>
 #endif
 #ifdef _GWBME280
-#define PRFX1 "BME2801"
-#define PRFX2 "BME2802"
-#define PRFX3 "BME2803"
-#define PRFX4 "BME2804"
+#define PRFX1 "BME28011"
+#define PRFX2 "BME28012"
+#define PRFX3 "BME28013"
+#define PRFX4 "BME28014"
 class BME280Config : public SensorBase{
     public:
     bool prAct=true;
@@ -97,7 +97,7 @@ class BME280Config : public SensorBase{
             busId = 1;
             addr = 0x76;
             #undef CG
-            #define CG(name) CFG_GET(name, BME2801)
+            #define CG(name) CFG_GET(name, BME28011)
             CG(prAct);
             CG(tmAct);
             CG(huAct);
@@ -117,7 +117,7 @@ class BME280Config : public SensorBase{
             busId = 1;
             addr = 0x77;
             #undef CG
-            #define CG(name) CFG_GET(name, BME2802)
+            #define CG(name) CFG_GET(name, BME28012)
             CG(prAct);
             CG(tmAct);
             CG(huAct);
@@ -137,7 +137,7 @@ class BME280Config : public SensorBase{
             busId = 2;
             addr = 0x76;
             #undef CG
-            #define CG(name) CFG_GET(name, BME2803)
+            #define CG(name) CFG_GET(name, BME28021)
             CG(prAct);
             CG(tmAct);
             CG(huAct);
@@ -157,7 +157,7 @@ class BME280Config : public SensorBase{
             busId = 1;
             addr = 0x77;
             #undef CG
-            #define CG(name) CFG_GET(name, BME2804)
+            #define CG(name) CFG_GET(name, BME28022)
             CG(prAct);
             CG(tmAct);
             CG(huAct);
@@ -177,25 +177,25 @@ class BME280Config : public SensorBase{
 };
 
 void registerBME280(GwApi *api,SensorList &sensors){
-    #if defined(GWBME280) || defined(GWBME2801)
+    #if defined(GWBME280) || defined(GWBME28011)
     {
         BME280Config *cfg=new BME280Config(api,PRFX1);
         sensors.add(api,cfg);
     }
     #endif
-    #if defined(GWBME2802)
+    #if defined(GWBME28012)
     {
         BME280Config *cfg=new BME280Config(api,PRFX2);
         sensors.add(api,cfg);
     }
     #endif
-    #if defined(GWBME2803)
+    #if defined(GWBME28021)
     {
         BME280Config *cfg=new BME280Config(api,PRFX3);
         sensors.add(api,cfg);
     }
     #endif
-    #if defined(GWBME2804)
+    #if defined(GWBME28022)
     {
         BME280Config *cfg=new BME280Config(api,PRFX4);
         sensors.add(api,cfg);
