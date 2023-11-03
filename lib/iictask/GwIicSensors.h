@@ -7,18 +7,6 @@
 #ifdef _GWIIC
     #include <Wire.h>
 #endif
-#ifndef GWIIC_SDA
-    #define GWIIC_SDA -1
-#endif
-#ifndef GWIIC_SCL
-    #define GWIIC_SCL -1
-#endif
-#ifndef GWIIC_SDA2
-    #define GWIIC_SDA2 -1
-#endif
-#ifndef GWIIC_SCL2
-    #define GWIIC_SCL2 -1
-#endif
 
 #define CFG_GET(name,prefix) \
     cfg->getValue(name, GwConfigDefinitions::prefix ## name)
