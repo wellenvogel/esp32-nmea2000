@@ -13,6 +13,11 @@
     #else
         #undef _GWQMP6988
     #endif
+    #if defined(GWBME280) || defined(GWBME2801) || defined(GWBME2802)|| defined(GWBME2803)|| defined(GWBME2804)
+        #define _GWBME280
+    #else
+        #undef _GWBME280
+    #endif
 #else
     #undef _GWSHT3X
     #undef GWSHT3X
@@ -26,6 +31,12 @@
     #undef GWQMP69882
     #undef GWQMP69883
     #undef GWQMP69884
+    #undef _GWBME280
+    #undef GWBME280
+    #undef GWBME2801
+    #undef GWBME2802
+    #undef GWBME2803
+    #undef GWBME2804
 #endif
 #ifdef _GWSHT3X
     #include "SHT3X.h"
@@ -37,7 +48,7 @@
 #include "N2kMessages.h"
 #include "GwHardware.h"
 #include "GwXdrTypeMappings.h"
-#ifdef GWBME280
+#ifdef _GWBME280
     #include <Adafruit_BME280.h>
 #endif
 
@@ -146,6 +157,8 @@ class SensorBase{
     virtual ~SensorBase(){}
 };
 
+using SensorList=std::vector<SensorBase*>;
+
 #ifndef GWIIC_SDA
     #define GWIIC_SDA -1
 #endif
@@ -162,8 +175,6 @@ class SensorBase{
 #define CFG_GET(name,prefix) \
     cfg->getValue(name, GwConfigDefinitions::prefix ## name)
 
-#define CBME280(name) \
-    CFG_GET(name,BME2801)    
 
 #ifdef _GWSHT3X
 class SHT3XConfig : public SensorBase{
@@ -374,43 +385,190 @@ class QMP6988Config : public SensorBase{
 };
 #endif
 
-class BME280Config{
+#ifdef _GWBME280
+class BME280Config : public SensorBase{
     public:
-    const String prefix="BME2801";
     bool prAct=true;
     bool tmAct=true;
     bool huAct=true;
     tN2kTempSource tmSrc=tN2kTempSource::N2kts_InsideTemperature;
     tN2kHumiditySource huSrc=tN2kHumiditySource::N2khs_InsideHumidity;
     tN2kPressureSource prSrc=tN2kPressureSource::N2kps_Atmospheric;
-    int iid=99;
-    long intv=2000;
     String tmNam="Temperature";
     String huNam="Humidity";
     String prNam="Pressure";
     float tmOff=0;
     float prOff=0;
-    BME280Config(GwConfigHandler *cfg){
-        CBME280(prAct);
-        CBME280(tmAct);
-        CBME280(huAct);
-        CBME280(tmSrc);
-        CBME280(huSrc);
-        CBME280(iid);
-        CBME280(intv);
-        intv*=1000;
-        CBME280(tmNam);
-        CBME280(huNam);
-        CBME280(prNam);
-        CBME280(tmOff);
-        CBME280(prOff);
+    Adafruit_BME280 *device=nullptr;
+    uint32_t sensorId=-1;
+    BME280Config(GwApi * api, const String &prfx):SensorBase(api,prfx){
+        }
+    virtual bool isActive(){return prAct||huAct||tmAct;}
+    virtual bool initDevice(GwApi *api,TwoWire *wire){
+        GwLog *logger=api->getLogger();
+        device= new Adafruit_BME280();
+        if (! device->begin(addr,wire)){
+            LOG_DEBUG(GwLog::ERROR,"unable to initialize %s at %d",prefix.c_str(),addr);
+            delete device;
+            device=nullptr;
+            return false;
+        }
+        if (tmOff != 0){
+            device->setTemperatureCompensation(tmOff);
+        }
+        sensorId=device->sensorID();
+        LOG_DEBUG(GwLog::LOG, "initialized %s at %d, sensorId 0x%x", prefix.c_str(), addr, sensorId);
+        return (huAct &&  sensorId == 0x60) || tmAct || prAct;
+    }
+    virtual bool preinit(GwApi * api){
+        GwLog *logger=api->getLogger();
+        LOG_DEBUG(GwLog::LOG,"%s configured",prefix.c_str());
+        api->addCapability(prefix,"true");
+        addPressureXdr(api,*this);
+        addTempXdr(api,*this);
+        addHumidXdr(api,*this);
+        return isActive();
+    }
+    virtual void measure(GwApi *api, TwoWire *wire, int counterId)
+    {
+        if (!device)
+            return;
+        GwLog *logger = api->getLogger();
+        if (prAct)
+        {
+            float pressure = device->readPressure();
+            float computed = pressure + prOff;
+            LOG_DEBUG(GwLog::DEBUG, "%s measure %2.0fPa, computed %2.0fPa", prefix.c_str(), pressure, computed);
+            sendN2kPressure(api, *this, computed, counterId);
+        }
+        if (tmAct)
+        {
+            float temperature = device->readTemperature(); // offset is handled internally
+            temperature = CToKelvin(temperature);
+            LOG_DEBUG(GwLog::DEBUG, "%s measure temp=%2.1f", prefix.c_str(), temperature);
+            sendN2kTemperature(api, *this, temperature, counterId);
+        }
+        if (huAct && sensorId == 0x60)
+        {
+            float humidity = device->readHumidity();
+            LOG_DEBUG(GwLog::DEBUG, "%s read humid=%02.0f", prefix.c_str(), humidity);
+            sendN2kHumidity(api, *this, humidity, counterId);
+        }
+    }
+    virtual void readConfig(GwConfigHandler *cfg)
+    {
+        if (prefix == "BME2801")
+        {
+            busId = 1;
+            addr = 0x76;
+            #undef CG
+            #define CG(name) CFG_GET(name, BME2801)
+            CG(prAct);
+            CG(tmAct);
+            CG(huAct);
+            CG(tmSrc);
+            CG(huSrc);
+            CG(iid);
+            CG(intv);
+            CG(tmNam);
+            CG(huNam);
+            CG(prNam);
+            CG(tmOff);
+            CG(prOff);
+        }
+        if (prefix == "BME2802")
+        {
+            busId = 1;
+            addr = 0x77;
+            #undef CG
+            #define CG(name) CFG_GET(name, BME2802)
+            CG(prAct);
+            CG(tmAct);
+            CG(huAct);
+            CG(tmSrc);
+            CG(huSrc);
+            CG(iid);
+            CG(intv);
+            CG(tmNam);
+            CG(huNam);
+            CG(prNam);
+            CG(tmOff);
+            CG(prOff);
+        }
+        if (prefix == "BME2803")
+        {
+            busId = 2;
+            addr = 0x76;
+            #undef CG
+            #define CG(name) CFG_GET(name, BME2803)
+            CG(prAct);
+            CG(tmAct);
+            CG(huAct);
+            CG(tmSrc);
+            CG(huSrc);
+            CG(iid);
+            CG(intv);
+            CG(tmNam);
+            CG(huNam);
+            CG(prNam);
+            CG(tmOff);
+            CG(prOff);
+        }
+        if (prefix == "BME2804")
+        {
+            busId = 1;
+            addr = 0x77;
+            #undef CG
+            #define CG(name) CFG_GET(name, BME2804)
+            CG(prAct);
+            CG(tmAct);
+            CG(huAct);
+            CG(tmSrc);
+            CG(huSrc);
+            CG(iid);
+            CG(intv);
+            CG(tmNam);
+            CG(huNam);
+            CG(prNam);
+            CG(tmOff);
+            CG(prOff);
+        }
+        intv *= 1000;
     }
 };
 
+void registerBME280(GwApi *api,SensorList &sensors){
+    GwLog *logger=api->getLogger();
+    #if defined(GWBME280) || defined(GWBME2801)
+        BME280Config *cfg=new BME280Config(api,"BME2801");
+        LOG_DEBUG(GwLog::LOG,"%s configured",cfg->prefix.c_str());
+        sensors.push_back(cfg);
+    #endif
+    #if defined(GWBME2802)
+        BME280Config *cfg=new BME280Config(api,"BME2802");
+        LOG_DEBUG(GwLog::LOG,"%s configured",cfg->prefix.c_str());
+        sensors.push_back(cfg);
+    #endif
+    #if defined(GWBME2803)
+        BME280Config *cfg=new BME280Config(api,"BME2803");
+        LOG_DEBUG(GwLog::LOG,"%s configured",cfg->prefix.c_str());
+        sensors.push_back(cfg);
+    #endif
+    #if defined(GWBME2804)
+        BME280Config *cfg=new BME280Config(api,"BME2804");
+        LOG_DEBUG(GwLog::LOG,"%s configured",cfg->prefix.c_str());
+        sensors.push_back(cfg);
+    #endif
+}
+#else
+void registerBME280(GwApi *api,SensorList &sensors){   
+}
+
+#endif
 
 void runIicTask(GwApi *api);
 
-static std::vector<SensorBase*> sensors;
+static SensorList sensors;
 
 void initIicTask(GwApi *api){
     GwLog *logger=api->getLogger();
@@ -476,21 +634,7 @@ void initIicTask(GwApi *api){
         sensors.push_back(scfg);
     }
     #endif
-    #ifdef GWBME280
-        LOG_DEBUG(GwLog::LOG,"BME280 configured");
-        BME280Config bme280Config(api->getConfig());
-        api->addCapability(bme280Config.prefix,"true");
-        bool bme280Active=false;
-        if (addPressureXdr(api,bme280Config)) bme280Active=true;
-        if (addTempXdr(api,bme280Config)) bme280Active=true;
-        if (addHumidXdr(api,bme280Config)) bme280Active=true;
-        if (! bme280Active){
-            LOG_DEBUG(GwLog::DEBUG,"BME280 configured but disabled");
-        }
-        else{
-            addTask=true;
-        }
-    #endif
+    registerBME280(api,sensors);
     for (auto it=sensors.begin();it != sensors.end();it++){
         if ((*it)->preinit(api)) addTask=true;
     }
@@ -518,29 +662,46 @@ void runIicTask(GwApi *api){
             {
             case 1:
             {
-                bool rt = Wire.begin(GWIIC_SDA, GWIIC_SCL);
-                if (!rt)
+                if (GWIIC_SDA < 0 || GWIIC_SCL < 0)
                 {
-                    LOG_DEBUG(GwLog::ERROR, "unable to initialize IIC 1 at %d,%d",
+                    LOG_DEBUG(GwLog::ERROR, "IIC 1 invalid config %d,%d",
                               (int)GWIIC_SDA, (int)GWIIC_SCL);
                 }
                 else
                 {
-                    buses[busId] = &Wire;
+                    bool rt = Wire.begin(GWIIC_SDA, GWIIC_SCL);
+                    if (!rt)
+                    {
+                        LOG_DEBUG(GwLog::ERROR, "unable to initialize IIC 1 at %d,%d",
+                                  (int)GWIIC_SDA, (int)GWIIC_SCL);
+                    }
+                    else
+                    {
+                        buses[busId] = &Wire;
+                    }
                 }
             }
             break;
             case 2:
             {
-                bool rt = Wire1.begin(GWIIC_SDA2, GWIIC_SCL2);
-                if (!rt)
+                if (GWIIC_SDA2 < 0 || GWIIC_SCL2 < 0)
                 {
-                    LOG_DEBUG(GwLog::ERROR, "unable to initialize IIC 2 at %d,%d",
+                    LOG_DEBUG(GwLog::ERROR, "IIC 2 invalid config %d,%d",
                               (int)GWIIC_SDA2, (int)GWIIC_SCL2);
                 }
                 else
                 {
-                    buses[busId] = &Wire1;
+
+                    bool rt = Wire1.begin(GWIIC_SDA2, GWIIC_SCL2);
+                    if (!rt)
+                    {
+                        LOG_DEBUG(GwLog::ERROR, "unable to initialize IIC 2 at %d,%d",
+                                  (int)GWIIC_SDA2, (int)GWIIC_SCL2);
+                    }
+                    else
+                    {
+                        buses[busId] = &Wire1;
+                    }
                 }
             }
             break;
@@ -571,51 +732,7 @@ void runIicTask(GwApi *api){
             });
         }
     }
-    #ifdef GWBME280
-        int baddr=GWBME280;
-        if (baddr < 0) baddr=0x76;
-        BME280Config bme280Config(api->getConfig());
-        if (bme280Config.tmAct || bme280Config.prAct|| bme280Config.huAct){
-            Adafruit_BME280 *bme280=new Adafruit_BME280();
-            if (bme280->begin(baddr,&Wire)){
-                uint32_t sensorId=bme280->sensorID();
-                bool hasHumidity=sensorId == 0x60; //BME280, else BMP280
-                if (bme280Config.tmOff != 0){
-                    bme280->setTemperatureCompensation(bme280Config.tmOff);
-                }
-                if (hasHumidity || bme280Config.tmAct || bme280Config.prAct)
-                {
-                    LOG_DEBUG(GwLog::LOG, "initialized BME280 at %d, sensorId 0x%x", baddr, sensorId);
-                    timers.addAction(bme280Config.intv, [logger, api, bme280, bme280Config, counterId, hasHumidity](){
-                        if (bme280Config.prAct){
-                            float pressure=bme280->readPressure();
-                            float computed=pressure+bme280Config.prOff;
-                            LOG_DEBUG(GwLog::DEBUG,"BME280 measure %2.0fPa, computed %2.0fPa",pressure,computed);
-                            sendN2kPressure(api,bme280Config,computed,counterId);
-                        }
-                        if (bme280Config.tmAct){
-                            float temperature=bme280->readTemperature(); //offset is handled internally
-                            temperature=CToKelvin(temperature);
-                            LOG_DEBUG(GwLog::DEBUG,"BME280 measure temp=%2.1f",temperature);
-                            sendN2kTemperature(api,bme280Config,temperature,counterId);
-                        }
-                        if (bme280Config.huAct && hasHumidity){
-                            float humidity=bme280->readHumidity();
-                            LOG_DEBUG(GwLog::DEBUG,"BME280 read humid=%02.0f",humidity);
-                            sendN2kHumidity(api,bme280Config,humidity,counterId);
-                        }
-                    });
-                    runLoop = true;
-                }
-                else{
-                    LOG_DEBUG(GwLog::ERROR,"BME280 only humidity active, but sensor does not have it");
-                }
-            }
-            else{
-                LOG_DEBUG(GwLog::ERROR,"unable to initialize BME280 sensor at address %d",baddr);
-            }
-        }
-    #endif
+    
     if (! runLoop){
         LOG_DEBUG(GwLog::LOG,"nothing to do for IIC task, finish");
         vTaskDelete(NULL);

@@ -277,6 +277,17 @@
   #endif
   #define _GWIIC
 #endif
+#ifdef GWIIC_SDA2
+  #ifndef GWIIC_SCL2
+    #error "you must both define GWIIC_SDA2 and GWIIC_SCL2"
+  #endif
+#endif
+#ifdef GWIIC_SCL2
+  #ifndef GWIIC_SDA2
+    #error "you must both define GWIIC_SDA and GWIIC_SCL2"
+  #endif
+  #define _GWIIC
+#endif
 
 
 #ifndef GWLED_TYPE
