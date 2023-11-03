@@ -366,6 +366,7 @@ types:
             description: "SHT30 temperature and humidity sensor 0x44"
             key: sht3x1
             target: define
+            url: "https://m5stack.oss-cn-shenzhen.aliyuncs.com/resource/docs/datasheet/unit/SHT3x_Datasheet_digital.pdf"
             values: 
               - key: true
                 value: GWSHT3X#busname#1
@@ -374,6 +375,7 @@ types:
             description: "SHT30 temperature and humidity sensor 0x45"
             key: sht3x2
             target: define
+            url: "https://m5stack.oss-cn-shenzhen.aliyuncs.com/resource/docs/datasheet/unit/SHT3x_Datasheet_digital.pdf"
             values: 
               - key: true
                 value: GWSHT3X#busname#2
@@ -382,6 +384,7 @@ types:
             description: "QMP6988 pressure sensor addr 86"
             key: qmp69881
             target: define
+            url: "https://m5stack.oss-cn-shenzhen.aliyuncs.com/resource/docs/datasheet/unit/enviii/QMP6988%20Datasheet.pdf"
             values: 
               - key: true
                 value: GWQMP6988#busname#1
@@ -390,22 +393,25 @@ types:
             description: "QMP6988 pressure sensor addr 112"
             key: qmp69882
             target: define
+            url: "https://m5stack.oss-cn-shenzhen.aliyuncs.com/resource/docs/datasheet/unit/enviii/QMP6988%20Datasheet.pdf"
             values: 
               - key: true
                 value: GWQMP6988#busname#2
           - type: checkbox
             label: BME280-#busname#-1
-            description: "BME280 temperature/humidity/pressure sensor"
+            description: "BME280 temperature/humidity/pressure sensor 0x76"
             key: bme2801
             target: define
+            url: "https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bme280-ds002.pdf"
             values: 
               - key: true
                 value: GWBME280#busname#1
           - type: checkbox
             label: BME280-#busname#-2
-            description: "BME280 temperature/humidity/pressure sensor"
+            description: "BME280 temperature/humidity/pressure sensor 0x77"
             key: bme2802
             target: define
+            url: "https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bme280-ds002.pdf"
             values: 
               - key: true
                 value: GWBME280#busname#2
