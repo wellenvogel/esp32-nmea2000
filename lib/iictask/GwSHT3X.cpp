@@ -18,6 +18,10 @@
 #endif
 
 #ifdef _GWSHT3X
+#define PRFX1 "SHT3X1"
+#define PRFX2 "SHT3X2"
+#define PRFX3 "SHT3X3"
+#define PRFX4 "SHT3X4"
 class SHT3XConfig : public SensorBase{
     public:
     String tmNam;
@@ -74,8 +78,13 @@ class SHT3XConfig : public SensorBase{
             LOG_DEBUG(GwLog::DEBUG, "unable to query SHT3X: %d", rt);
         }
     }
+    /**
+     * we do not dynamically compute the config names
+     * just to get compile time errors if something does not fit
+     * correctly
+    */
     virtual void readConfig(GwConfigHandler *cfg){
-        if (prefix == "SHT3X1"){
+        if (prefix == PRFX1){
             busId=1;
             addr=0x44;
             #undef CG
@@ -90,7 +99,7 @@ class SHT3XConfig : public SensorBase{
             CG(tmSrc);
             ok=true; 
         }
-        if (prefix == "SHT3X2"){
+        if (prefix == PRFX2){
             busId=1;
             addr=0x45;
             #undef CG
@@ -105,7 +114,7 @@ class SHT3XConfig : public SensorBase{
             CG(tmSrc); 
             ok=true;
         }
-        if (prefix == "SHT3X3"){
+        if (prefix == PRFX3){
             busId=2;
             addr=0x44;
             #undef CG
@@ -120,7 +129,7 @@ class SHT3XConfig : public SensorBase{
             CG(tmSrc); 
             ok=true;
         }
-        if (prefix == "SHT3X4"){
+        if (prefix == PRFX4){
             busId=2;
             addr=0x45;
             #undef CG
@@ -142,29 +151,25 @@ void registerSHT3X(GwApi *api,SensorList &sensors){
     GwLog *logger=api->getLogger();
     #if defined(GWSHT3X) || defined (GWSHT3X1)
     {
-        SHT3XConfig *scfg=new SHT3XConfig(api,"SHT3X1");
-        LOG_DEBUG(GwLog::LOG,"%s configured",scfg->prefix.c_str());
+        SHT3XConfig *scfg=new SHT3XConfig(api,PRFX1);
         sensors.add(api,scfg);
     }
     #endif
     #if defined(GWSHT3X2)
     {
-        SHT3XConfig *scfg=new SHT3XConfig(api,"SHT3X2");
-        LOG_DEBUG(GwLog::LOG,"%s configured",scfg->prefix.c_str());
+        SHT3XConfig *scfg=new SHT3XConfig(api,PRFX2);
         sensors.add(api,scfg);
     }
     #endif
     #if defined(GWSHT3X3)
     {
-        SHT3XConfig *scfg=new SHT3XConfig(api,"SHT3X3");
-        LOG_DEBUG(GwLog::LOG,"%s configured",scfg->prefix.c_str());
+        SHT3XConfig *scfg=new SHT3XConfig(api,PRFX3);
         sensors.add(api,scfg);
     }
     #endif
     #if defined(GWSHT3X4)
     {
-        SHT3XConfig *scfg=new SHT3XConfig(api,"SHT3X4");
-        LOG_DEBUG(GwLog::LOG,"%s configured",scfg->prefix.c_str());
+        SHT3XConfig *scfg=new SHT3XConfig(api,PRFX4);
         sensors.add(api,scfg);
     }
     #endif

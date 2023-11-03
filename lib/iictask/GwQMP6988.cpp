@@ -17,6 +17,10 @@
     #include "QMP6988.h"
 #endif
 #ifdef _GWQMP6988
+#define PRFX1 "QMP69881"
+#define PRFX2 "QMP69882"
+#define PRFX3 "QMP69883"
+#define PRFX4 "QMP69884"
 class QMP6988Config : public SensorBase{
     public:
         String prNam="Pressure";
@@ -54,7 +58,7 @@ class QMP6988Config : public SensorBase{
             sendN2kPressure(api,*this,computed,counterId);
         }
         virtual void readConfig(GwConfigHandler *cfg){
-            if (prefix == "QMP69881"){
+            if (prefix == PRFX1){
                 busId=1;
                 addr=86;
                 #undef CG
@@ -66,7 +70,7 @@ class QMP6988Config : public SensorBase{
                 CG(prOff);
                 ok=true;
             }
-            if (prefix == "QMP69882"){
+            if (prefix == PRFX2){
                 busId=1;
                 addr=112;
                 #undef CG
@@ -78,7 +82,7 @@ class QMP6988Config : public SensorBase{
                 CG(prOff);
                 ok=true;
             }
-            if (prefix == "QMP69883"){
+            if (prefix == PRFX3){
                 busId=2;
                 addr=86;
                 #undef CG
@@ -90,7 +94,7 @@ class QMP6988Config : public SensorBase{
                 CG(prOff);
                 ok=true;
             }
-            if (prefix == "QMP69884"){
+            if (prefix == PRFX4){
                 busId=2;
                 addr=112;
                 #undef CG
@@ -110,29 +114,25 @@ void registerQMP6988(GwApi *api,SensorList &sensors){
     GwLog *logger=api->getLogger();
     #if defined(GWQMP6988) || defined(GWQMP69881)
     {
-        QMP6988Config *scfg=new QMP6988Config(api,"QMP69881");
-        LOG_DEBUG(GwLog::LOG,"%s configured",scfg->prefix.c_str());
+        QMP6988Config *scfg=new QMP6988Config(api,PRFX1);
         sensors.add(api,scfg);
     }
     #endif
     #if defined(GWQMP69882)
     {
-        QMP6988Config *scfg=new QMP6988Config(api,"QMP69882");
-        LOG_DEBUG(GwLog::LOG,"%s configured",scfg->prefix.c_str());
+        QMP6988Config *scfg=new QMP6988Config(api,PRFX2);
         sensors.add(api,scfg);
     }
     #endif
     #if defined(GWQMP69883)
     {
-        QMP6988Config *scfg=new QMP6988Config(api,"QMP69883");
-        LOG_DEBUG(GwLog::LOG,"%s configured",scfg->prefix.c_str());
+        QMP6988Config *scfg=new QMP6988Config(api,PRFX3);
         sensors.add(api,scfg);
     }
     #endif
     #if defined(GWQMP69884)
     {
-        QMP6988Config *scfg=new QMP6988Config(api,"QMP69884");
-        LOG_DEBUG(GwLog::LOG,"%s configured",scfg->prefix.c_str());
+        QMP6988Config *scfg=new QMP6988Config(api,PRFX4);
         sensors.add(api,scfg);
     }
     #endif

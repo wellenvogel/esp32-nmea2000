@@ -17,6 +17,10 @@
     #include <Adafruit_BME280.h>
 #endif
 #ifdef _GWBME280
+#define PRFX1 "BME2801"
+#define PRFX2 "BME2802"
+#define PRFX3 "BME2803"
+#define PRFX4 "BME2804"
 class BME280Config : public SensorBase{
     public:
     bool prAct=true;
@@ -88,7 +92,7 @@ class BME280Config : public SensorBase{
     }
     virtual void readConfig(GwConfigHandler *cfg) override
     {
-        if (prefix == "BME2801")
+        if (prefix == PRFX1)
         {
             busId = 1;
             addr = 0x76;
@@ -108,7 +112,7 @@ class BME280Config : public SensorBase{
             CG(prOff);
             ok=true;
         }
-        if (prefix == "BME2802")
+        if (prefix == PRFX2)
         {
             busId = 1;
             addr = 0x77;
@@ -128,7 +132,7 @@ class BME280Config : public SensorBase{
             CG(prOff);
             ok=true;
         }
-        if (prefix == "BME2803")
+        if (prefix == PRFX3)
         {
             busId = 2;
             addr = 0x76;
@@ -148,7 +152,7 @@ class BME280Config : public SensorBase{
             CG(prOff);
             ok=true;
         }
-        if (prefix == "BME2804")
+        if (prefix == PRFX4)
         {
             busId = 1;
             addr = 0x77;
@@ -173,23 +177,29 @@ class BME280Config : public SensorBase{
 };
 
 void registerBME280(GwApi *api,SensorList &sensors){
-    GwLog *logger=api->getLogger();
     #if defined(GWBME280) || defined(GWBME2801)
-        BME280Config *cfg=new BME280Config(api,"BME2801");
+    {
+        BME280Config *cfg=new BME280Config(api,PRFX1);
         sensors.add(api,cfg);
-        LOG_DEBUG(GwLog::LOG,"%s configured %d",cfg->prefix.c_str(),(int)cfg->ok);
+    }
     #endif
     #if defined(GWBME2802)
-        BME280Config *cfg=new BME280Config(api,"BME2802");
+    {
+        BME280Config *cfg=new BME280Config(api,PRFX2);
         sensors.add(api,cfg);
+    }
     #endif
     #if defined(GWBME2803)
-        BME280Config *cfg=new BME280Config(api,"BME2803");
+    {
+        BME280Config *cfg=new BME280Config(api,PRFX3);
         sensors.add(api,cfg);
+    }
     #endif
     #if defined(GWBME2804)
-        BME280Config *cfg=new BME280Config(api,"BME2804");
+    {
+        BME280Config *cfg=new BME280Config(api,PRFX4);
         sensors.add(api,cfg);
+    }
     #endif
 }
 #else

@@ -120,6 +120,7 @@ class SensorList : public std::vector<SensorBase*>{
     public:
     void add(GwApi *api, SensorBase *sensor){
         sensor->readConfig(api->getConfig());
+        api->getLogger()->logDebug(GwLog::LOG,"configured sensor %s, status %d",sensor->prefix.c_str(),(int)sensor->ok);
         push_back(sensor);
     }
     using std::vector<SensorBase*>::vector;
