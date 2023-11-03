@@ -238,7 +238,7 @@ class PipelineInfo{
         name+=".json";
         fileDownload(JSON.stringify(config),name);
     }
-    const showOverlay=(text, isHtml)=>{
+    const showOverlay=(text, isHtml, secondButton)=>{
         let el = document.getElementById('overlayContent');
         if (isHtml) {
             el.innerHTML = text;
@@ -250,6 +250,17 @@ class PipelineInfo{
         }
         let container = document.getElementById('overlayContainer');
         container.classList.remove('hidden');
+        let db=document.getElementById("secondDialogButton");
+        if (db) {
+            if (secondButton && secondButton.callback) {
+                db.classList.remove("hidden");
+                if (secondButton.title){db.textContent=secondButton.title}
+                db.onclick=secondButton.callback;
+            }
+            else {
+                db.classList.add("hidden");
+            }
+        }
     }
     const hideOverlay=()=> {
         let container = document.getElementById('overlayContainer');
@@ -263,14 +274,24 @@ class PipelineInfo{
         let parsed=yamlLoad(config);
         return parsed;
     }
-    const showBuildCommand=()=>{
+    const showBuildCommand= async ()=>{
         let v={};
         fillValues(v,['environment','buildflags']);
         if (v.environment !== ""){
-            let help="Run the build from a command line:\nPLATFORMIO_BUILD_FLAGS=\"";
-            help+=v.buildflags;
-            help+="\" pio run -e "+v.environment;
-            showOverlay(help);
+            let help="Run the build from a command line:\n";
+            let cmd="PLATFORMIO_BUILD_FLAGS=\"";
+            cmd+=v.buildflags;
+            cmd+="\" pio run -e "+v.environment;
+            help+=cmd;
+            showOverlay(help,false,{title:"Copy",callback:(ev)=>{
+                try{
+                    navigator.clipboard.writeText(cmd);
+                    //alert("copied:"+cmd);
+                }
+                catch (e){
+                    alert("Unable to copy:"+e);
+                }
+            }});
         }
     }
     const btConfig={
