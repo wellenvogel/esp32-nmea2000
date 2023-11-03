@@ -139,6 +139,7 @@ void sendN2kTemperature(GwApi *api,CFG &cfg,double value, int counterId){
     api->increment(counterId,cfg.prefix+String("temp"));
 }
 
+
 class SensorBase{
     public:
     int busId=0;
@@ -146,9 +147,9 @@ class SensorBase{
     int addr=-1;
     String prefix;
     long intv=0;
-    virtual void readConfig(GwConfigHandler *cfg){};
+    bool ok=false;
+    virtual void readConfig(GwConfigHandler *cfg)=0;
     SensorBase(GwApi *api,const String &prfx):prefix(prfx){
-        readConfig(api->getConfig());
     }
     virtual bool isActive(){return false;};
     virtual bool initDevice(GwApi *api,TwoWire *wire){return false;};
@@ -157,7 +158,14 @@ class SensorBase{
     virtual ~SensorBase(){}
 };
 
-using SensorList=std::vector<SensorBase*>;
+class SensorList : public std::vector<SensorBase*>{
+    public:
+    void add(GwApi *api, SensorBase *sensor){
+        sensor->readConfig(api->getConfig());
+        push_back(sensor);
+    }
+    using std::vector<SensorBase*>::vector;
+};
 
 #ifndef GWIIC_SDA
     #define GWIIC_SDA -1
@@ -246,7 +254,8 @@ class SHT3XConfig : public SensorBase{
             CG(huAct);
             CG(intv);
             CG(huSrc);
-            CG(tmSrc); 
+            CG(tmSrc);
+            ok=true; 
         }
         if (prefix == "SHT3X2"){
             busId=1;
@@ -261,6 +270,7 @@ class SHT3XConfig : public SensorBase{
             CG(intv);
             CG(huSrc);
             CG(tmSrc); 
+            ok=true;
         }
         if (prefix == "SHT3X3"){
             busId=2;
@@ -275,6 +285,7 @@ class SHT3XConfig : public SensorBase{
             CG(intv);
             CG(huSrc);
             CG(tmSrc); 
+            ok=true;
         }
         if (prefix == "SHT3X4"){
             busId=2;
@@ -289,6 +300,7 @@ class SHT3XConfig : public SensorBase{
             CG(intv);
             CG(huSrc);
             CG(tmSrc); 
+            ok=true;
         }
         intv*=1000;
     }
@@ -345,6 +357,7 @@ class QMP6988Config : public SensorBase{
                 CG(prAct);
                 CG(intv);
                 CG(prOff);
+                ok=true;
             }
             if (prefix == "QMP69882"){
                 busId=1;
@@ -356,6 +369,7 @@ class QMP6988Config : public SensorBase{
                 CG(prAct);
                 CG(intv);
                 CG(prOff);
+                ok=true;
             }
             if (prefix == "QMP69883"){
                 busId=2;
@@ -367,6 +381,7 @@ class QMP6988Config : public SensorBase{
                 CG(prAct);
                 CG(intv);
                 CG(prOff);
+                ok=true;
             }
             if (prefix == "QMP69884"){
                 busId=2;
@@ -378,6 +393,7 @@ class QMP6988Config : public SensorBase{
                 CG(prAct);
                 CG(intv);
                 CG(prOff);
+                ok=true;
             }
             intv*=1000;
 
@@ -455,7 +471,7 @@ class BME280Config : public SensorBase{
             sendN2kHumidity(api, *this, humidity, counterId);
         }
     }
-    virtual void readConfig(GwConfigHandler *cfg)
+    virtual void readConfig(GwConfigHandler *cfg) override
     {
         if (prefix == "BME2801")
         {
@@ -475,6 +491,7 @@ class BME280Config : public SensorBase{
             CG(prNam);
             CG(tmOff);
             CG(prOff);
+            ok=true;
         }
         if (prefix == "BME2802")
         {
@@ -494,6 +511,7 @@ class BME280Config : public SensorBase{
             CG(prNam);
             CG(tmOff);
             CG(prOff);
+            ok=true;
         }
         if (prefix == "BME2803")
         {
@@ -513,6 +531,7 @@ class BME280Config : public SensorBase{
             CG(prNam);
             CG(tmOff);
             CG(prOff);
+            ok=true;
         }
         if (prefix == "BME2804")
         {
@@ -532,6 +551,7 @@ class BME280Config : public SensorBase{
             CG(prNam);
             CG(tmOff);
             CG(prOff);
+            ok=true;
         }
         intv *= 1000;
     }
@@ -541,23 +561,20 @@ void registerBME280(GwApi *api,SensorList &sensors){
     GwLog *logger=api->getLogger();
     #if defined(GWBME280) || defined(GWBME2801)
         BME280Config *cfg=new BME280Config(api,"BME2801");
-        LOG_DEBUG(GwLog::LOG,"%s configured",cfg->prefix.c_str());
-        sensors.push_back(cfg);
+        sensors.add(api,cfg);
+        LOG_DEBUG(GwLog::LOG,"%s configured %d",cfg->prefix.c_str(),(int)cfg->ok);
     #endif
     #if defined(GWBME2802)
         BME280Config *cfg=new BME280Config(api,"BME2802");
-        LOG_DEBUG(GwLog::LOG,"%s configured",cfg->prefix.c_str());
-        sensors.push_back(cfg);
+        sensors.add(api,cfg);
     #endif
     #if defined(GWBME2803)
         BME280Config *cfg=new BME280Config(api,"BME2803");
-        LOG_DEBUG(GwLog::LOG,"%s configured",cfg->prefix.c_str());
-        sensors.push_back(cfg);
+        sensors.add(api,cfg);
     #endif
     #if defined(GWBME2804)
         BME280Config *cfg=new BME280Config(api,"BME2804");
-        LOG_DEBUG(GwLog::LOG,"%s configured",cfg->prefix.c_str());
-        sensors.push_back(cfg);
+        sensors.add(api,cfg);
     #endif
 }
 #else
@@ -582,56 +599,56 @@ void initIicTask(GwApi *api){
     {
         SHT3XConfig *scfg=new SHT3XConfig(api,"SHT3X1");
         LOG_DEBUG(GwLog::LOG,"%s configured",scfg->prefix.c_str());
-        sensors.push_back(scfg);
+        sensors.add(api,scfg);
     }
     #endif
     #if defined(GWSHT3X2)
     {
         SHT3XConfig *scfg=new SHT3XConfig(api,"SHT3X2");
         LOG_DEBUG(GwLog::LOG,"%s configured",scfg->prefix.c_str());
-        sensors.push_back(scfg);
+        sensors.add(api,scfg);
     }
     #endif
     #if defined(GWSHT3X3)
     {
         SHT3XConfig *scfg=new SHT3XConfig(api,"SHT3X3");
         LOG_DEBUG(GwLog::LOG,"%s configured",scfg->prefix.c_str());
-        sensors.push_back(scfg);
+        sensors.add(api,scfg);
     }
     #endif
     #if defined(GWSHT3X4)
     {
         SHT3XConfig *scfg=new SHT3XConfig(api,"SHT3X4");
         LOG_DEBUG(GwLog::LOG,"%s configured",scfg->prefix.c_str());
-        sensors.push_back(scfg);
+        sensors.add(api,scfg);
     }
     #endif
     #if defined(GWQMP6988) || defined(GWQMP69881)
     {
         QMP6988Config *scfg=new QMP6988Config(api,"QMP69881");
         LOG_DEBUG(GwLog::LOG,"%s configured",scfg->prefix.c_str());
-        sensors.push_back(scfg);
+        sensors.add(api,scfg);
     }
     #endif
     #if defined(GWQMP69882)
     {
         QMP6988Config *scfg=new QMP6988Config(api,"QMP69882");
         LOG_DEBUG(GwLog::LOG,"%s configured",scfg->prefix.c_str());
-        sensors.push_back(scfg);
+        sensors.add(api,scfg);
     }
     #endif
     #if defined(GWQMP69883)
     {
         QMP6988Config *scfg=new QMP6988Config(api,"QMP69883");
         LOG_DEBUG(GwLog::LOG,"%s configured",scfg->prefix.c_str());
-        sensors.push_back(scfg);
+        sensors.add(api,scfg);
     }
     #endif
     #if defined(GWQMP69884)
     {
         QMP6988Config *scfg=new QMP6988Config(api,"QMP69884");
         LOG_DEBUG(GwLog::LOG,"%s configured",scfg->prefix.c_str());
-        sensors.push_back(scfg);
+        sensors.add(api,scfg);
     }
     #endif
     registerBME280(api,sensors);
