@@ -8,6 +8,11 @@
     #else
         #undef _GWSHT3X
     #endif
+    #if defined(GWQMP6988) || defined(GWQMP69881) || defined(GWQMP69882) || defined(GWQMP69883) || defined(GWQMP69884)
+        #define _GWQMP6988
+    #else
+        #undef _GWQMP6988
+    #endif
 #else
     #undef _GWSHT3X
     #undef GWSHT3X
@@ -15,11 +20,17 @@
     #undef GWSHT3X2
     #undef GWSHT3X3
     #undef GWSHT3X4
+    #undef _GWQMP6988
+    #undef GWQMP6988
+    #undef GWQMP69881
+    #undef GWQMP69882
+    #undef GWQMP69883
+    #undef GWQMP69884
 #endif
 #ifdef _GWSHT3X
     #include "SHT3X.h"
 #endif
-#ifdef GWQMP6988
+#ifdef _GWQMP6988
     #include "QMP6988.h"
 #endif
 #include "GwTimer.h"
@@ -224,24 +235,48 @@ class SHT3XConfig : public SensorBase{
 
 #endif
 
-class QMP6988Config{
+#ifdef _GWQMP6988
+class QMP6988Config : public SensorBase{
     public:
-        const String prefix="QMP69881";
         String prNam="Pressure";
-        int iid=99;
         bool prAct=true;
-        long intv=2000;
         tN2kPressureSource prSrc=tN2kPressureSource::N2kps_Atmospheric;
         float prOff=0;
-        QMP6988Config(GwConfigHandler *config){
-            CQMP6988(prNam);
-            CQMP6988(iid);
-            CQMP6988(prAct);
-            CQMP6988(intv);
-            intv*=1000;
-            CQMP6988(prOff);
+        QMP6988 *device=nullptr;
+        QMP6988Config(GwApi* api,const String &prefix,int bus, int addr):SensorBase(api,prefix){
+            busId=bus;
+            this->addr=addr;
         }
+        virtual bool isActive(){return prAct;};
+        virtual bool initDevice(GwApi *api,TwoWire *wire){
+            if (!isActive()) return false;
+            GwLog *logger=api->getLogger(); 
+            device=new QMP6988();
+            if (!device->init(addr,wire)){
+                LOG_DEBUG(GwLog::ERROR,"unable to initialize %s at address %d, intv %ld",prefix.c_str(),addr,intv);
+                delete device;
+                device=nullptr;
+                return false;
+            }
+            LOG_DEBUG(GwLog::LOG,"initialized %s at address %d, intv %ld",prefix.c_str(),addr,intv);
+            return true;
+        };
+        virtual bool preinit(GwApi * api){
+            GwLog *logger=api->getLogger();
+            LOG_DEBUG(GwLog::LOG,"QMP6988 configured");
+            api->addCapability(prefix,"true");
+            addPressureXdr(api,*this);
+            return isActive();
+        }
+        virtual void measure(GwApi * api,TwoWire *wire, int counterId){
+            GwLog *logger=api->getLogger();
+            float pressure=device->calcPressure();
+            float computed=pressure+prOff;
+            LOG_DEBUG(GwLog::DEBUG,"%s measure %2.0fPa, computed %2.0fPa",prefix.c_str(), pressure,computed);
+            sendN2kPressure(api,*this,computed,counterId);
+        };
 };
+#endif
 
 class BME280Config{
     public:
@@ -290,8 +325,9 @@ void initIicTask(GwApi *api){
     bool addTask=false;
     GwConfigHandler *config=api->getConfig();
     #if defined(GWSHT3X) || defined (GWSHT3X1)
-        LOG_DEBUG(GwLog::LOG,"SHT3X1 configured");
+    {
         SHT3XConfig *scfg=new SHT3XConfig(api,"SHT3X1",1,0x44);
+        LOG_DEBUG(GwLog::LOG,"%s configured",scfg->prefix.c_str());
         #undef _SET
         #define _SET(name) \
             CFG_SET(scfg,config,name,SHT3X1)
@@ -305,10 +341,12 @@ void initIicTask(GwApi *api){
         _SET(huSrc);
         _SET(tmSrc);
         sensors.push_back(scfg);
+    }
     #endif
     #if defined(GWSHT3X2)
-        LOG_DEBUG(GwLog::LOG,"SHT3X2 configured");
+    {
         SHT3XConfig *scfg=new SHT3XConfig(api,"SHT3X2",1,0x45);
+        LOG_DEBUG(GwLog::LOG,"%s configured",scfg->prefix.c_str());
         #undef _SET
         #define _SET(name) \
             CFG_SET(scfg,config,name,SHT3X2)
@@ -322,10 +360,12 @@ void initIicTask(GwApi *api){
         _SET(huSrc);
         _SET(tmSrc);
         sensors.push_back(scfg);
+    }
     #endif
     #if defined(GWSHT3X3)
-        LOG_DEBUG(GwLog::LOG,"SHT3X3 configured");
+    {
         SHT3XConfig *scfg=new SHT3XConfig(api,"SHT3X3",2,0x44);
+        LOG_DEBUG(GwLog::LOG,"%s configured",scfg->prefix.c_str());
         #undef _SET
         #define _SET(name) \
             CFG_SET(scfg,config,name,SHT3X3)
@@ -339,10 +379,12 @@ void initIicTask(GwApi *api){
         _SET(huSrc);
         _SET(tmSrc);
         sensors.push_back(scfg);
+    }
     #endif
     #if defined(GWSHT3X4)
-        LOG_DEBUG(GwLog::LOG,"SHT3X4 configured");
+    {
         SHT3XConfig *scfg=new SHT3XConfig(api,"SHT3X4",2,0x45);
+        LOG_DEBUG(GwLog::LOG,"%s configured",scfg->prefix.c_str());
         #undef _SET
         #define _SET(name) \
             CFG_SET(scfg,config,name,SHT3X4)
@@ -356,12 +398,71 @@ void initIicTask(GwApi *api){
         _SET(huSrc);
         _SET(tmSrc);
         sensors.push_back(scfg);
+    }
     #endif
-    #ifdef GWQMP6988
-        LOG_DEBUG(GwLog::LOG,"QMP6988 configured");
-        QMP6988Config qmp6988Config(api->getConfig());
-        api->addCapability(qmp6988Config.prefix,"true");
-        addPressureXdr(api,qmp6988Config);
+    #if defined(GWQMP6988) || defined(GWQMP69881)
+    {
+        QMP6988Config *scfg=new QMP6988Config(api,"QMP69881",1,86);
+        LOG_DEBUG(GwLog::LOG,"%s configured",scfg->prefix.c_str());
+        #undef _SET
+        #define _SET(name) \
+            CFG_SET(scfg,config,name,QMP69881)
+        _SET(prNam);
+        _SET(iid);
+        _SET(prAct);
+        _SET(intv);
+        scfg->intv*=1000;
+        _SET(prOff);
+        sensors.push_back(scfg);
+    }
+    #endif
+    #if defined(GWQMP69882)
+    {
+        QMP6988Config *scfg=new QMP6988Config(api,"QMP69882",1,112);
+        LOG_DEBUG(GwLog::LOG,"%s configured",scfg->prefix.c_str());
+        #undef _SET
+        #define _SET(name) \
+            CFG_SET(scfg,config,name,QMP69882)
+        _SET(prNam);
+        _SET(iid);
+        _SET(prAct);
+        _SET(intv);
+        scfg->intv*=1000;
+        _SET(prOff);
+        sensors.push_back(scfg);
+    }
+    #endif
+    #if defined(GWQMP69883)
+    {
+        QMP6988Config *scfg=new QMP6988Config(api,"QMP69883",2,86);
+        LOG_DEBUG(GwLog::LOG,"%s configured",scfg->prefix.c_str());
+        #undef _SET
+        #define _SET(name) \
+            CFG_SET(scfg,config,name,QMP69883)
+        _SET(prNam);
+        _SET(iid);
+        _SET(prAct);
+        _SET(intv);
+        scfg->intv*=1000;
+        _SET(prOff);
+        sensors.push_back(scfg);
+    }
+    #endif
+    #if defined(GWQMP69884)
+    {
+        QMP6988Config *scfg=new QMP6988Config(api,"QMP69884",2,112);
+        LOG_DEBUG(GwLog::LOG,"%s configured",scfg->prefix.c_str());
+        #undef _SET
+        #define _SET(name) \
+            CFG_SET(scfg,config,name,QMP69884)
+        _SET(prNam);
+        _SET(iid);
+        _SET(prAct);
+        _SET(intv);
+        scfg->intv*=1000;
+        _SET(prOff);
+        sensors.push_back(scfg);
+    }
     #endif
     #ifdef GWBME280
         LOG_DEBUG(GwLog::LOG,"BME280 configured");
@@ -458,24 +559,6 @@ void runIicTask(GwApi *api){
             });
         }
     }
-    #ifdef GWQMP6988
-        int qaddr=GWQMP6988;
-        if (qaddr < 0) qaddr=0x56;
-        QMP6988Config qmp6988Config(api->getConfig());
-        QMP6988 *qmp6988=nullptr;
-        if (qmp6988Config.prAct){
-            runLoop=true;
-            qmp6988=new QMP6988();
-            qmp6988->init(qaddr,&Wire);
-            LOG_DEBUG(GwLog::LOG,"initialized QMP6988 at address %d, intv %ld",qaddr,qmp6988Config.intv);
-            timers.addAction(qmp6988Config.intv,[logger,api,qmp6988,qmp6988Config,counterId](){
-                float pressure=qmp6988->calcPressure();
-                float computed=pressure+qmp6988Config.prOff;
-                LOG_DEBUG(GwLog::DEBUG,"qmp6988 measure %2.0fPa, computed %2.0fPa",pressure,computed);
-                sendN2kPressure(api,qmp6988Config,computed,counterId);
-            });
-        }
-    #endif
     #ifdef GWBME280
         int baddr=GWBME280;
         if (baddr < 0) baddr=0x76;
