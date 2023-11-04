@@ -29,7 +29,7 @@ class SHT3XConfig : public SensorBase{
     }
     virtual bool preinit(GwApi * api){
         GwLog *logger=api->getLogger();
-        LOG_DEBUG(GwLog::LOG,"SHT3X configured");
+        LOG_DEBUG(GwLog::LOG,"%s configured",prefix.c_str());
         api->addCapability(prefix,"true");
         addHumidXdr(api,*this);
         addTempXdr(api,*this);
@@ -46,7 +46,7 @@ class SHT3XConfig : public SensorBase{
             double temp = device->cTemp;
             temp = CToKelvin(temp);
             double humid = device->humidity;
-            LOG_DEBUG(GwLog::DEBUG, "SHT3X measure temp=%2.1f, humid=%2.0f", (float)temp, (float)humid);
+            LOG_DEBUG(GwLog::DEBUG, "%s measure temp=%2.1f, humid=%2.0f",prefix.c_str(), (float)temp, (float)humid);
             if (huAct)
             {
                 sendN2kHumidity(api, *this, humid, counterId);
@@ -58,7 +58,7 @@ class SHT3XConfig : public SensorBase{
         }
         else
         {
-            LOG_DEBUG(GwLog::DEBUG, "unable to query SHT3X: %d", rt);
+            LOG_DEBUG(GwLog::DEBUG, "unable to query %s: %d",prefix.c_str(), rt);
         }
     }
     /**

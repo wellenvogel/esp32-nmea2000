@@ -1,6 +1,6 @@
 #include "GwBME280.h"
 #ifdef _GWIIC
-    #if defined(GWBME280) || defined(GWBME2801) || defined(GWBME2802)|| defined(GWBME2803)|| defined(GWBME2804)
+    #if defined(GWBME280) || defined(GWBME28011) || defined(GWBME28012)|| defined(GWBME28021)|| defined(GWBME28022)
         #define _GWBME280
     #else
         #undef _GWBME280
@@ -19,8 +19,8 @@
 #ifdef _GWBME280
 #define PRFX1 "BME28011"
 #define PRFX2 "BME28012"
-#define PRFX3 "BME28013"
-#define PRFX4 "BME28014"
+#define PRFX3 "BME28021"
+#define PRFX4 "BME28022"
 class BME280Config : public SensorBase{
     public:
     bool prAct=true;
@@ -154,7 +154,7 @@ class BME280Config : public SensorBase{
         }
         if (prefix == PRFX4)
         {
-            busId = 1;
+            busId = 2;
             addr = 0x77;
             #undef CG
             #define CG(name) CFG_GET(name, BME28022)
@@ -181,24 +181,28 @@ void registerBME280(GwApi *api,SensorList &sensors){
     {
         BME280Config *cfg=new BME280Config(api,PRFX1);
         sensors.add(api,cfg);
+        #pragma message "GWBME28011 defined"
     }
     #endif
     #if defined(GWBME28012)
     {
         BME280Config *cfg=new BME280Config(api,PRFX2);
         sensors.add(api,cfg);
+        #pragma message "GWBME28012 defined"
     }
     #endif
     #if defined(GWBME28021)
     {
         BME280Config *cfg=new BME280Config(api,PRFX3);
         sensors.add(api,cfg);
+        #pragma message "GWBME28021 defined"
     }
     #endif
     #if defined(GWBME28022)
     {
         BME280Config *cfg=new BME280Config(api,PRFX4);
         sensors.add(api,cfg);
+        #pragma message "GWBME28022 defined"
     }
     #endif
 }
