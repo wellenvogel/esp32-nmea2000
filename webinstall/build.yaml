@@ -133,22 +133,49 @@ types:
     help: 'Select the number of the GPIO pin for this function'
     values:
       - {label: unset,value:}
-      - 0
+      - {label: "0: Low at boot!",value: 0}
       - 1
-      - 2
+      - {label: "2: Float/Low at boot!", value: 2}
       - 3
-      - 4
-      - 5
-      - 6
-      - 7
-      - 8
-      - 9
-      - 10
-      - 11
-      - 12
+      - {label: "4: Strapping!",value: 4}
+      - {label: "5: Hight at boot!", value: 5}
+      - {label: "12: Low at boot!", value: 12}
       - 13
       - 14
-      - 15
+      - {label: "15: High at boot!", value: 15}
+      - 16
+      - 17
+      - 18
+      - 19
+      - 21
+      - 22
+      - 23
+      - 25
+      - 26
+      - 27
+      - 32
+      - 31
+      - 32
+      - 33
+      - 37
+      - 38
+
+  - &gpioinput
+    type: dropdown
+    resource: "gpio:"
+    help: 'Select the number of the GPIO pin for this function'
+    values:
+      - {label: unset,value:}
+      - {label: "0: Low at boot!",value: 0}
+      - 1
+      - {label: "2: Float/Low at boot!", value: 2}
+      - 3
+      - {label: "4: Strapping!",value: 4}
+      - {label: "5: Hight at boot!", value: 5}
+      - {label: "12: Low at boot!", value: 12}
+      - 13
+      - 14
+      - {label: "15: High at boot!", value: 15}
       - 16
       - 17
       - 18
@@ -171,7 +198,7 @@ types:
       - 39
   
   - &serialRX
-    <<: *gpiopin
+    <<: *gpioinput
     key: RX
     help: 'number of the GPIO pin for the receive function'
     target: "define:#serial#RX"
@@ -241,7 +268,7 @@ types:
     values:
       - key: true
         children:
-          - <<: *gpiopin
+          - <<: *gpioinput
             label: RX
             key: rx
             mandatory: true
