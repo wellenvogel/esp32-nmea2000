@@ -176,11 +176,13 @@ class BME280Config : public SensorBase{
     }
 };
 
+
 void registerBME280(GwApi *api,SensorList &sensors){
     #if defined(GWBME280) || defined(GWBME28011)
     {
         BME280Config *cfg=new BME280Config(api,PRFX1);
         sensors.add(api,cfg);
+        CHECK_IIC1();
         #pragma message "GWBME28011 defined"
     }
     #endif
@@ -188,6 +190,7 @@ void registerBME280(GwApi *api,SensorList &sensors){
     {
         BME280Config *cfg=new BME280Config(api,PRFX2);
         sensors.add(api,cfg);
+        CHECK_IIC1();
         #pragma message "GWBME28012 defined"
     }
     #endif
@@ -195,6 +198,7 @@ void registerBME280(GwApi *api,SensorList &sensors){
     {
         BME280Config *cfg=new BME280Config(api,PRFX3);
         sensors.add(api,cfg);
+        CHECK_IIC2();
         #pragma message "GWBME28021 defined"
     }
     #endif
@@ -202,6 +206,7 @@ void registerBME280(GwApi *api,SensorList &sensors){
     {
         BME280Config *cfg=new BME280Config(api,PRFX4);
         sensors.add(api,cfg);
+        CHECK_IIC1();
         #pragma message "GWBME28022 defined"
     }
     #endif

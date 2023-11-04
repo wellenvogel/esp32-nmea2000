@@ -191,6 +191,14 @@ class GwApi{
         virtual GwBoatData *getBoatData()=0;
         virtual ~GwApi(){}
 };
+
+/**
+ * a simple generic function to create runtime errors if some necessary values are not defined
+*/
+template<typename... T>
+static void checkDef(T... args){};
+
+
 #ifndef DECLARE_USERTASK
 #define DECLARE_USERTASK(task)
 #endif

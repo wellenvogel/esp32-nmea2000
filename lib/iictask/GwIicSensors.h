@@ -126,4 +126,7 @@ class SensorList : public std::vector<SensorBase*>{
     using std::vector<SensorBase*>::vector;
 };
 
+#define CHECK_IIC1() checkDef(GWIIC_SCL,GWIIC_SDA)
+#define CHECK_IIC2() checkDef(GWIIC_SCL2,GWIIC_SDA2)
+
 #endif

@@ -95,28 +95,36 @@ class QMP6988Config : public SensorBase{
 };
 void registerQMP6988(GwApi *api,SensorList &sensors){
     GwLog *logger=api->getLogger();
-    #if defined(GWQMP6988) || defined(GWQMP69881)
+    #if defined(GWQMP6988) || defined(GWQMP698811)
     {
         QMP6988Config *scfg=new QMP6988Config(api,PRFX1);
         sensors.add(api,scfg);
+        CHECK_IIC1();
+        #pragma message "GWQMP698811 defined"
     }
     #endif
-    #if defined(GWQMP69882)
+    #if defined(GWQMP698812)
     {
         QMP6988Config *scfg=new QMP6988Config(api,PRFX2);
         sensors.add(api,scfg);
+        CHECK_IIC1();
+        #pragma message "GWQMP698812 defined"
     }
     #endif
-    #if defined(GWQMP69883)
+    #if defined(GWQMP698821)
     {
         QMP6988Config *scfg=new QMP6988Config(api,PRFX3);
         sensors.add(api,scfg);
+        CHECK_IIC2();
+        #pragma message "GWQMP698821 defined"
     }
     #endif
-    #if defined(GWQMP69884)
+    #if defined(GWQMP698822)
     {
         QMP6988Config *scfg=new QMP6988Config(api,PRFX4);
         sensors.add(api,scfg);
+        CHECK_IIC2();
+        #pragma message "GWQMP698822 defined"
     }
     #endif
 }

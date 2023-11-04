@@ -136,24 +136,32 @@ void registerSHT3X(GwApi *api,SensorList &sensors){
     {
         SHT3XConfig *scfg=new SHT3XConfig(api,PRFX1);
         sensors.add(api,scfg);
+        CHECK_IIC1();
+        #pragma message "GWSHT3X11 defined"
     }
     #endif
     #if defined(GWSHT3X12)
     {
         SHT3XConfig *scfg=new SHT3XConfig(api,PRFX2);
         sensors.add(api,scfg);
+        CHECK_IIC1();
+        #pragma message "GWSHT3X12 defined"
     }
     #endif
     #if defined(GWSHT3X21)
     {
         SHT3XConfig *scfg=new SHT3XConfig(api,PRFX3);
         sensors.add(api,scfg);
+        CHECK_IIC2();
+        #pragma message "GWSHT3X21 defined"
     }
     #endif
     #if defined(GWSHT3X22)
     {
         SHT3XConfig *scfg=new SHT3XConfig(api,PRFX4);
         sensors.add(api,scfg);
+        CHECK_IIC2();
+        #pragma message "GWSHT3X22 defined"
     }
     #endif
 }
