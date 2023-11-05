@@ -26,7 +26,7 @@ class MyFinder(importlib.abc.MetaPathFinder):
    def find_spec(self,fullname, path, target=None):
        if fullname == self.pkg:
             if self.debug:
-                print("F:matching %"%fullname)
+                print("F:matching %s"%fullname)
             spec=importlib.util.spec_from_file_location(fullname, self.dir,loader=MyLoader(), submodule_search_locations=[self.dir])
             if self.debug:
                 print("F:injecting:",spec)

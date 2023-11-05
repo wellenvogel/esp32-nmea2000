@@ -1,7 +1,9 @@
-
-import flashtool.esptool as esptool
+try:
+    import esptool
+except:
+    import flashtool.esptool as esptool
 import os
-from flashtool.version import VERSION
+VERSION="2.1"
 
 class Flasher():
     def getVersion(self):
