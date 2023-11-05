@@ -6,6 +6,8 @@
 #include "GwHardware.h"
 #ifdef _GWIIC
     #include <Wire.h>
+#else
+    class TwoWire;
 #endif
 
 #define CFG_GET(name,prefix) \
