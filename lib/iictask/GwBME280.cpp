@@ -90,87 +90,48 @@ class BME280Config : public SensorBase{
             sendN2kHumidity(api, *this, humidity, counterId);
         }
     }
+    #define CFG280(prefix) \
+        CFG_GET(prAct,prefix); \
+        CFG_GET(tmAct,prefix);\
+        CFG_GET(huAct,prefix);\
+        CFG_GET(tmSrc,prefix);\
+        CFG_GET(huSrc,prefix);\
+        CFG_GET(iid,prefix);\
+        CFG_GET(intv,prefix);\
+        CFG_GET(tmNam,prefix);\
+        CFG_GET(huNam,prefix);\
+        CFG_GET(prNam,prefix);\
+        CFG_GET(tmOff,prefix);\
+        CFG_GET(prOff,prefix);
+
     virtual void readConfig(GwConfigHandler *cfg) override
     {
         if (prefix == PRFX1)
         {
             busId = 1;
             addr = 0x76;
-            #undef CG
-            #define CG(name) CFG_GET(name, BME28011)
-            CG(prAct);
-            CG(tmAct);
-            CG(huAct);
-            CG(tmSrc);
-            CG(huSrc);
-            CG(iid);
-            CG(intv);
-            CG(tmNam);
-            CG(huNam);
-            CG(prNam);
-            CG(tmOff);
-            CG(prOff);
+            CFG280(BME28011);
             ok=true;
         }
         if (prefix == PRFX2)
         {
             busId = 1;
             addr = 0x77;
-            #undef CG
-            #define CG(name) CFG_GET(name, BME28012)
-            CG(prAct);
-            CG(tmAct);
-            CG(huAct);
-            CG(tmSrc);
-            CG(huSrc);
-            CG(iid);
-            CG(intv);
-            CG(tmNam);
-            CG(huNam);
-            CG(prNam);
-            CG(tmOff);
-            CG(prOff);
+            CFG280(BME28012);
             ok=true;
         }
         if (prefix == PRFX3)
         {
             busId = 2;
             addr = 0x76;
-            #undef CG
-            #define CG(name) CFG_GET(name, BME28021)
-            CG(prAct);
-            CG(tmAct);
-            CG(huAct);
-            CG(tmSrc);
-            CG(huSrc);
-            CG(iid);
-            CG(intv);
-            CG(tmNam);
-            CG(huNam);
-            CG(prNam);
-            CG(tmOff);
-            CG(prOff);
+            CFG280(BME28021);
             ok=true;
         }
         if (prefix == PRFX4)
         {
             busId = 2;
             addr = 0x77;
-            #undef CG
-            #define CG(name) CFG_GET(name, BME28022)
-            CG(prAct);
-            CG(tmAct);
-            CG(huAct);
-            CG(tmSrc);
-            CG(huSrc);
-            CG(iid);
-            CG(intv);
-            CG(tmNam);
-            CG(huNam);
-            CG(prNam);
-            CG(tmOff);
-            CG(prOff);
-            ok=true;
+            CFG280(BME28022);
         }
         intv *= 1000;
     }

@@ -40,53 +40,36 @@ class QMP6988Config : public SensorBase{
             LOG_DEBUG(GwLog::DEBUG,"%s measure %2.0fPa, computed %2.0fPa",prefix.c_str(), pressure,computed);
             sendN2kPressure(api,*this,computed,counterId);
         }
+        #define CFG6988(prefix)\
+            CFG_GET(prNam,prefix); \
+            CFG_GET(iid,prefix); \
+            CFG_GET(prAct,prefix); \
+            CFG_GET(intv,prefix); \
+            CFG_GET(prOff,prefix);
+        
         virtual void readConfig(GwConfigHandler *cfg){
             if (prefix == PRFX1){
                 busId=1;
                 addr=86;
-                #undef CG
-                #define CG(name) CFG_GET(name,QMP698811)
-                CG(prNam);
-                CG(iid);
-                CG(prAct);
-                CG(intv);
-                CG(prOff);
+                CFG6988(QMP698811);
                 ok=true;
             }
             if (prefix == PRFX2){
                 busId=1;
                 addr=112;
-                #undef CG
-                #define CG(name) CFG_GET(name,QMP698812)
-                CG(prNam);
-                CG(iid);
-                CG(prAct);
-                CG(intv);
-                CG(prOff);
+                CFG6988(QMP698812);
                 ok=true;
             }
             if (prefix == PRFX3){
                 busId=2;
                 addr=86;
-                #undef CG
-                #define CG(name) CFG_GET(name,QMP698821)
-                CG(prNam);
-                CG(iid);
-                CG(prAct);
-                CG(intv);
-                CG(prOff);
+                CFG6988(QMP698821);
                 ok=true;
             }
             if (prefix == PRFX4){
                 busId=2;
                 addr=112;
-                #undef CG
-                #define CG(name) CFG_GET(name,QMP698822)
-                CG(prNam);
-                CG(iid);
-                CG(prAct);
-                CG(intv);
-                CG(prOff);
+                CFG6988(QMP698822);
                 ok=true;
             }
             intv*=1000;

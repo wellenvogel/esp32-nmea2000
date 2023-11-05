@@ -66,65 +66,39 @@ class SHT3XConfig : public SensorBase{
      * just to get compile time errors if something does not fit
      * correctly
     */
+    #define CFG3X(prefix) \
+        CFG_GET(tmNam,prefix); \
+        CFG_GET(huNam,prefix); \
+        CFG_GET(iid,prefix); \
+        CFG_GET(tmAct,prefix); \
+        CFG_GET(huAct,prefix); \
+        CFG_GET(intv,prefix); \
+        CFG_GET(huSrc,prefix); \
+        CFG_GET(tmSrc,prefix);
+
     virtual void readConfig(GwConfigHandler *cfg){
         if (prefix == PRFX1){
             busId=1;
             addr=0x44;
-            #undef CG
-            #define CG(name) CFG_GET(name,SHT3X11)
-            CG(tmNam);
-            CG(huNam);
-            CG(iid);
-            CG(tmAct);
-            CG(huAct);
-            CG(intv);
-            CG(huSrc);
-            CG(tmSrc);
+            CFG3X(SHT3X11);
             ok=true; 
         }
         if (prefix == PRFX2){
             busId=1;
             addr=0x45;
-            #undef CG
-            #define CG(name) CFG_GET(name,SHT3X12)
-            CG(tmNam);
-            CG(huNam);
-            CG(iid);
-            CG(tmAct);
-            CG(huAct);
-            CG(intv);
-            CG(huSrc);
-            CG(tmSrc); 
+            CFG3X(SHT3X12);
             ok=true;
         }
         if (prefix == PRFX3){
             busId=2;
             addr=0x44;
-            #undef CG
-            #define CG(name) CFG_GET(name,SHT3X21)
-            CG(tmNam);
-            CG(huNam);
-            CG(iid);
-            CG(tmAct);
-            CG(huAct);
-            CG(intv);
-            CG(huSrc);
-            CG(tmSrc); 
+            CFG3X(SHT3X21);
             ok=true;
         }
         if (prefix == PRFX4){
             busId=2;
             addr=0x45;
-            #undef CG
-            #define CG(name) CFG_GET(name,SHT3X22)
-            CG(tmNam);
-            CG(huNam);
-            CG(iid);
-            CG(tmAct);
-            CG(huAct);
-            CG(intv);
-            CG(huSrc);
-            CG(tmSrc); 
+            CFG3X(SHT3X22);
             ok=true;
         }
         intv*=1000;
