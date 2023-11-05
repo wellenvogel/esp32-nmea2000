@@ -24,15 +24,16 @@ class MyFinder(importlib.abc.MetaPathFinder):
        self.dir=basedir
        self.debug=debug
    def find_spec(self,fullname, path, target=None):
+       if self.debug:
+           print("F:fullname=%s"%fullname)
        if fullname == self.pkg:
             if self.debug:
-                print("F:matching %s"%fullname)
+                print("F:matching %s(%s)"%(fullname,self.dir))
             spec=importlib.util.spec_from_file_location(fullname, self.dir,loader=MyLoader(), submodule_search_locations=[self.dir])
             if self.debug:
                 print("F:injecting:",spec)
             return spec
 sys.meta_path.insert(0,MyFinder('flashtool'))
-
 
 try:
     import serial
@@ -48,7 +49,10 @@ import tkinter.font as tkFont
 import os
 import serial.tools.list_ports
 from tkinter import filedialog as FileDialog
-from flashtool.flasher import Flasher
+try:
+    from flasher import Flasher
+except:
+    from flashtool.flasher import Flasher
 
 
 def main():
