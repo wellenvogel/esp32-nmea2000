@@ -31,7 +31,6 @@ static SensorList sensors;
 void initIicTask(GwApi *api){
     GwLog *logger=api->getLogger();
     #ifndef _GWIIC
-        vTaskDelete(NULL);
         return;
     #else
     bool addTask=false;
