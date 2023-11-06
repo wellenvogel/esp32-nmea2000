@@ -94,13 +94,16 @@ class Flasher():
             print("check failed")
             return
         imageChipId=param['info']['chipid']
-        chip=esptool.ESPLoader.detect_chip(param['port'])
-        print("Detected chip %s, id=%d"%(chip.CHIP_NAME,chip.IMAGE_CHIP_ID))
-        if (chip.IMAGE_CHIP_ID != imageChipId):
-            print("##Error: chip id in image %d does not match detected chip"%imageChipId)
-            return
-        print("Checks OK")
-        param['chipname']=chip.CHIP_NAME
+        try:
+            chip=esptool.ESPLoader.detect_chip(param['port'],trace_enabled=True)
+            print("Detected chip %s, id=%d"%(chip.CHIP_NAME,chip.IMAGE_CHIP_ID))
+            if (chip.IMAGE_CHIP_ID != imageChipId):
+                print("##Error: chip id in image %d does not match detected chip"%imageChipId)
+                return
+            print("Checks OK")
+            param['chipname']=chip.CHIP_NAME
+        except Exception as e:
+            print("ERROR: ",str(e))
         return param
     def runCheck(self,port,fileName,isFull):
         param = self.checkSettings(port,fileName,isFull)
