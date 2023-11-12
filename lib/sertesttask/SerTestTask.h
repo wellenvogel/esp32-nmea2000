@@ -5,7 +5,10 @@
 void sertestInit(GwApi *param);
 DECLARE_INITFUNCTION(sertestInit);
 #define M5_CAN_KIT
-#define GWSERIAL_RX GROOVE_PIN_1
+/*used ATOM pins
+22,19,23,33,21,25 GR 26,32
+*/
+#define GWSERIAL_RX 13
 #define GWSERIAL_TYPE GWSERIAL_TYPE_RX
 #define CFGDEFAULT_serialBaud "9600"
 #endif
