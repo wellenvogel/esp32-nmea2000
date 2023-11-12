@@ -23,9 +23,17 @@ void sertest(GwApi *api){
                     if (avail){
                         size_t rd=client.readBytes(buffer,avail);
                         if (rd > 0){
-                            LOG_DEBUG(GwLog::DEBUG,"SerTest read %d bytes",(int)rd);
-                            size_t wr=Serial2.write(buffer,rd);
-                            LOG_DEBUG(GwLog::DEBUG,"SerTest written %d bytes",(int)wr);
+                            int numWr=0;
+                            ESP_LOGE("SERTEST","SerTest read %d bytes",(int)rd);
+                            while (numWr < rd){
+                                int max=Serial2.availableForWrite();
+                                int remain=rd-numWr;
+                                //if (remain > max) remain=max;
+                                size_t wr=Serial2.write(buffer+numWr,remain);
+                                ESP_LOGE("SERTEST","SerTest written %d bytes",(int)wr);
+                                numWr+=wr;
+                                delay(10);
+                            }
 
                         }
                         else{

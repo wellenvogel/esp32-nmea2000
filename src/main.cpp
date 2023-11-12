@@ -13,7 +13,7 @@
 */
 #include "GwAppInfo.h"
 // #define GW_MESSAGE_DEBUG_ENABLED
-//#define FALLBACK_SERIAL
+#define FALLBACK_SERIAL
 const unsigned long HEAP_REPORT_TIME=2000; //set to 0 to disable heap reporting
 #include <Arduino.h>
 #include "Preferences.h"
@@ -715,7 +715,18 @@ class DefaultLogWriter: public GwLogWriter{
             USBSerial.print(data);
         }
 };
-
+void loop(){
+  vTaskDelete(NULL);
+  return;
+  //delay(10);
+}
+void loopRun();
+void loopFunction(void *){
+  while (true){
+    loopRun();
+    delay(1);
+  }
+}
 void setup() {
   mainLock=xSemaphoreCreateMutex();
   uint8_t chipid[6];
@@ -877,6 +888,7 @@ void setup() {
   logger.logString("wifi AP pass: %s",fixedApPass? gwWifi.AP_password:config.getString(config.apPassword).c_str());
   logger.logString("admin pass: %s",config.getString(config.adminPassword).c_str());
   logger.logDebug(GwLog::LOG,"setup done");
+  xTaskCreate(loopFunction,"loop",8192,NULL,1,NULL);
 }  
 //*****************************************************************************
 void handleSendAndRead(bool handleRead){
@@ -885,7 +897,8 @@ void handleSendAndRead(bool handleRead){
   });
 }
 
-void loop() {
+void loopRun() {
+  //logger.logDebug(GwLog::DEBUG,"main loop start");
   monitor.reset();
   GWSYNCHRONIZED(&mainLock);
   logger.flush();
@@ -894,20 +907,21 @@ void loop() {
   unsigned long now=millis();
   monitor.setTime(2);
   timers.loop();
-  NMEA2000.loop();
   monitor.setTime(3);
+  NMEA2000.loop();
+  monitor.setTime(4);
   channels.allChannels([](GwChannel *c){
     c->loop(true,false);
   });
   //reads
-  monitor.setTime(4);
+  monitor.setTime(5);
   channels.allChannels([](GwChannel *c){
     c->loop(false,true);
   });
   //writes
-  monitor.setTime(5);  
+  monitor.setTime(6);  
   NMEA2000.ParseMessages();
-  monitor.setTime(6);
+  monitor.setTime(7);
 
   int SourceAddress = NMEA2000.GetN2kSource();
   if (SourceAddress != NodeAddress) { // Save potentially changed Source Address to NVS memory
@@ -918,7 +932,7 @@ void loop() {
     logger.logDebug(GwLog::LOG,"Address Change: New Address=%d\n", SourceAddress);
   }
   nmea0183Converter->loop();
-  monitor.setTime(7);
+  monitor.setTime(8);
 
   //read channels
   channels.allChannels([](GwChannel *c){
@@ -945,13 +959,13 @@ void loop() {
       }
     });
   });
-  monitor.setTime(8);
+  monitor.setTime(9);
   channels.allChannels([](GwChannel *c){
     c->parseActisense([](const tN2kMsg &msg,int source){
       handleN2kMessage(msg,source);
     });
   });
-  monitor.setTime(9);
+  monitor.setTime(10);
 
   //handle message requests
   GwMessage *msg=mainQueue.fetchMessage(0);
@@ -959,5 +973,7 @@ void loop() {
     msg->process();
     msg->unref();
   }
-  monitor.setTime(10);
+  monitor.setTime(11);
+  //logger.logDebug(GwLog::DEBUG,"main loop end");
 }
+
