@@ -32,7 +32,7 @@ void sertest(GwApi *api){
                                 size_t wr=Serial2.write(buffer+numWr,remain);
                                 ESP_LOGE("SERTEST","SerTest written %d bytes",(int)wr);
                                 numWr+=wr;
-                                delay(10);
+                                //delay(10);
                             }
 
                         }

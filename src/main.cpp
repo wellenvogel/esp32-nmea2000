@@ -13,7 +13,8 @@
 */
 #include "GwAppInfo.h"
 // #define GW_MESSAGE_DEBUG_ENABLED
-#define FALLBACK_SERIAL
+//#define FALLBACK_SERIAL
+#define OWN_LOOP
 const unsigned long HEAP_REPORT_TIME=2000; //set to 0 to disable heap reporting
 #include <Arduino.h>
 #include "Preferences.h"
@@ -715,16 +716,27 @@ class DefaultLogWriter: public GwLogWriter{
             USBSerial.print(data);
         }
 };
+void loopRun();
 void loop(){
+  #ifdef OWN_LOOP
   vTaskDelete(NULL);
   return;
-  //delay(10);
+  #else
+  loopRun();
+  #endif
 }
-void loopRun();
 void loopFunction(void *){
   while (true){
     loopRun();
-    delay(1);
+    //we don not call the serialEvent stuff as in the original
+    //main loop as this could cause some sort of a deadlock
+    //if serial writing or reading is done in a different thread
+    //and it remains inside some read/write routine with the uart being
+    //locked
+    //if(Serial1.available()) {}
+    //if(Serial.available()) {}
+    //if(Serial2.available()) {}
+    //delay(1);
   }
 }
 void setup() {
@@ -888,7 +900,10 @@ void setup() {
   logger.logString("wifi AP pass: %s",fixedApPass? gwWifi.AP_password:config.getString(config.apPassword).c_str());
   logger.logString("admin pass: %s",config.getString(config.adminPassword).c_str());
   logger.logDebug(GwLog::LOG,"setup done");
-  xTaskCreate(loopFunction,"loop",8192,NULL,1,NULL);
+  #ifdef OWN_LOOP
+  logger.logDebug(GwLog::LOG,"starting own main loop");
+  xTaskCreateUniversal(loopFunction,"loop",8192,NULL,1,NULL,ARDUINO_RUNNING_CORE);
+  #endif
 }  
 //*****************************************************************************
 void handleSendAndRead(bool handleRead){
