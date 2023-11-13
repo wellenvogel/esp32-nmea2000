@@ -14,6 +14,7 @@
 #include "GwAppInfo.h"
 // #define GW_MESSAGE_DEBUG_ENABLED
 //#define FALLBACK_SERIAL
+#define OWN_LOOP
 const unsigned long HEAP_REPORT_TIME=2000; //set to 0 to disable heap reporting
 #include <Arduino.h>
 #include "Preferences.h"
@@ -315,7 +316,7 @@ public:
     return &boatData;
   }
   virtual const char* getTalkerId(){
-    return config.getString(config.talkerId,String("GP")).c_str();
+    return config.getCString(config.talkerId,"GP");
   }
   virtual ~ApiImpl(){}
   virtual TaskInterfaces *taskInterfaces(){ return nullptr;}
@@ -715,7 +716,29 @@ class DefaultLogWriter: public GwLogWriter{
             USBSerial.print(data);
         }
 };
-
+void loopRun();
+void loop(){
+  #ifdef OWN_LOOP
+  vTaskDelete(NULL);
+  return;
+  #else
+  loopRun();
+  #endif
+}
+void loopFunction(void *){
+  while (true){
+    loopRun();
+    //we don not call the serialEvent stuff as in the original
+    //main loop as this could cause some sort of a deadlock
+    //if serial writing or reading is done in a different thread
+    //and it remains inside some read/write routine with the uart being
+    //locked
+    //if(Serial1.available()) {}
+    //if(Serial.available()) {}
+    //if(Serial2.available()) {}
+    //delay(1);
+  }
+}
 void setup() {
   mainLock=xSemaphoreCreateMutex();
   uint8_t chipid[6];
@@ -877,6 +900,10 @@ void setup() {
   logger.logString("wifi AP pass: %s",fixedApPass? gwWifi.AP_password:config.getString(config.apPassword).c_str());
   logger.logString("admin pass: %s",config.getString(config.adminPassword).c_str());
   logger.logDebug(GwLog::LOG,"setup done");
+  #ifdef OWN_LOOP
+  logger.logDebug(GwLog::LOG,"starting own main loop");
+  xTaskCreateUniversal(loopFunction,"loop",8192,NULL,1,NULL,ARDUINO_RUNNING_CORE);
+  #endif
 }  
 //*****************************************************************************
 void handleSendAndRead(bool handleRead){
@@ -885,7 +912,8 @@ void handleSendAndRead(bool handleRead){
   });
 }
 
-void loop() {
+void loopRun() {
+  //logger.logDebug(GwLog::DEBUG,"main loop start");
   monitor.reset();
   GWSYNCHRONIZED(&mainLock);
   logger.flush();
@@ -894,20 +922,21 @@ void loop() {
   unsigned long now=millis();
   monitor.setTime(2);
   timers.loop();
-  NMEA2000.loop();
   monitor.setTime(3);
+  NMEA2000.loop();
+  monitor.setTime(4);
   channels.allChannels([](GwChannel *c){
     c->loop(true,false);
   });
   //reads
-  monitor.setTime(4);
+  monitor.setTime(5);
   channels.allChannels([](GwChannel *c){
     c->loop(false,true);
   });
   //writes
-  monitor.setTime(5);  
+  monitor.setTime(6);  
   NMEA2000.ParseMessages();
-  monitor.setTime(6);
+  monitor.setTime(7);
 
   int SourceAddress = NMEA2000.GetN2kSource();
   if (SourceAddress != NodeAddress) { // Save potentially changed Source Address to NVS memory
@@ -918,7 +947,7 @@ void loop() {
     logger.logDebug(GwLog::LOG,"Address Change: New Address=%d\n", SourceAddress);
   }
   nmea0183Converter->loop();
-  monitor.setTime(7);
+  monitor.setTime(8);
 
   //read channels
   channels.allChannels([](GwChannel *c){
@@ -945,13 +974,13 @@ void loop() {
       }
     });
   });
-  monitor.setTime(8);
+  monitor.setTime(9);
   channels.allChannels([](GwChannel *c){
     c->parseActisense([](const tN2kMsg &msg,int source){
       handleN2kMessage(msg,source);
     });
   });
-  monitor.setTime(9);
+  monitor.setTime(10);
 
   //handle message requests
   GwMessage *msg=mainQueue.fetchMessage(0);
@@ -959,5 +988,7 @@ void loop() {
     msg->process();
     msg->unref();
   }
-  monitor.setTime(10);
+  monitor.setTime(11);
+  //logger.logDebug(GwLog::DEBUG,"main loop end");
 }
+

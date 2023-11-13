@@ -27,6 +27,7 @@ class GwConfigHandler: public GwConfigDefinitions{
         String getString(const String name,const String defaultv="") const;
         bool getBool(const String name,bool defaultv=false) const ;
         int getInt(const String name,int defaultv=0) const;
+        const char * getCString(const String name, const char *defaultv="") const;
         GwConfigInterface * getConfigItem(const String name, bool dummy=false) const;
         bool checkPass(String hash);
         std::vector<String> getSpecial() const;
