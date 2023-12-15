@@ -42,7 +42,7 @@ void initIicTask(GwApi *api){
         if ((*it)->preinit(api)) addTask=true;
     }
     if (addTask){
-        api->addUserTask(runIicTask,"iicTask",3000);
+        api->addUserTask(runIicTask,"iicTask",4000);
     }
     #endif
 }
