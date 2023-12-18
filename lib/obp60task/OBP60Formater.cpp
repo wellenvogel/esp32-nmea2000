@@ -1,3 +1,5 @@
+#ifdef BOARD_NODEMCU32S_OBP60
+
 #include <Arduino.h>
 #include "GwApi.h"
 #include "Pagedata.h"
@@ -7,10 +9,13 @@
 // hold values by missing data
 
 FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
+    GwLog *logger = commondata.logger;
     FormatedData result;
+    static int dayoffset = 0;
 
     // Load configuration values
-    int timeZone = commondata.config->getInt(commondata.config->timeZone);                      // [UTC -12...+12]
+    String stimeZone = commondata.config->getString(commondata.config->timeZone);               // [UTC -14.00...+12.00]
+    double timeZone = stimeZone.toDouble();
     String lengthFormat = commondata.config->getString(commondata.config->lengthFormat);        // [m|ft]
     String distanceFormat = commondata.config->getString(commondata.config->distanceFormat);    // [m|km|nm]
     String speedFormat = commondata.config->getString(commondata.config->speedFormat);          // [m/s|km/h|kn]
@@ -24,13 +29,25 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
         result.svalue = "---";
         return result;
     }
+    
+//    LOG_DEBUG(GwLog::DEBUG,"formatValue init: getFormat: %s date->value: %f time->value: %f", value->getFormat(), commondata.date->value, commondata.time->value);
     static const int bsize = 30;
     char buffer[bsize+1];
     buffer[0]=0;
+
+    //########################################################
+    // Formats for several boat data
     //########################################################
     if (value->getFormat() == "formatDate"){
-        time_t tv=tNMEA0183Msg::daysToTime_t(value->value);
+        
+        int dayoffset = 0;
+        if (commondata.time->value + int(timeZone*3600) > 86400) {dayoffset = 1;}
+        if (commondata.time->value + int(timeZone*3600) < 0) {dayoffset = -1;}
+
+//        LOG_DEBUG(GwLog::DEBUG,"... formatDate value->value: %f tz: %f dayoffset: %d", value->value, timeZone, dayoffset);
+
         tmElements_t parts;
+        time_t tv=tNMEA0183Msg::daysToTime_t(value->value + dayoffset);
         tNMEA0183Msg::breakTime(tv,parts);
         if(usesimudata == false) { 
             if(String(dateFormat) == "DE"){
@@ -58,13 +75,18 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
     }
     //########################################################
     else if(value->getFormat() == "formatTime"){
-        double inthr;
-        double intmin;
-        double intsec;
-        double val;
-        if(usesimudata == false) {    
-            val=modf(value->value/3600.0,&inthr);
-            inthr += timeZone; 
+        double timeInSeconds = 0;
+        double inthr = 0;
+        double intmin = 0;
+        double intsec = 0;
+        double val = 0;
+
+        timeInSeconds = value->value + int(timeZone * 3600);
+        if (timeInSeconds > 86400) {timeInSeconds = timeInSeconds - 86400;}
+        if (timeInSeconds <  0) {timeInSeconds = timeInSeconds + 86400;}
+//        LOG_DEBUG(GwLog::DEBUG,"... formatTime value: %f tz: %f corrected timeInSeconds: %f ", value->value, timeZone, timeInSeconds);
+        if(usesimudata == false) {
+            val=modf(timeInSeconds/3600.0,&inthr);
             val=modf(val*3600.0/60.0,&intmin);
             modf(val*60.0,&intsec);
             snprintf(buffer,bsize,"%02.0f:%02.0f:%02.0f",inthr,intmin,intsec);
@@ -89,10 +111,10 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
     //########################################################
     else if (value->getFormat() == "formatFixed0"){
         if(usesimudata == false) {
-            snprintf(buffer,bsize,"%.0f",value->value);
+            snprintf(buffer,bsize,"%3.0f",value->value);
         }
         else{
-            snprintf(buffer,bsize,"%.0f", 8.0 + float(random(0, 10)) / 10.0);
+            snprintf(buffer,bsize,"%3.0f", 8.0 + float(random(0, 10)) / 10.0);
         }
         result.unit = "";
     }
@@ -112,7 +134,7 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
         result.unit = "Deg";
     }
     //########################################################
-    else if (value->getFormat() == "formatKnots"){
+    else if (value->getFormat() == "formatKnots" && (value->getName() == "SOG" || value->getName() == "STW")){
         double speed = 0;
         if(usesimudata == false) {
             speed = value->value;
@@ -120,11 +142,42 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
         else{
             speed = 4.0 + float(random(0, 40));
         }
-        if((String(speedFormat) == "km/h" || String(windspeedFormat) == "km/h") && String(windspeedFormat) != "bft"){
-        speed = speed * 3.6;        // Unit conversion form m/s to km/h
+        if(String(speedFormat) == "km/h"){
+        speed = speed * 3.6;            // Unit conversion form m/s to km/h
+            result.unit = "km/h";
+        }
+        else if(String(speedFormat) == "kn"){
+            speed = speed * 1.94384;    // Unit conversion form m/s to kn
+            result.unit = "kn";
+        }
+        else{
+            speed = speed;              // Unit conversion form m/s to m/s
             result.unit = "m/s";
         }
-        else if((String(speedFormat) == "kn" || String(windspeedFormat) == "kn") && String(windspeedFormat) != "bft"){
+        if(speed < 10){
+            snprintf(buffer,bsize,"%3.2f",speed);
+        }
+        if(speed >= 10 && speed < 100){
+            snprintf(buffer,bsize,"%3.1f",speed);
+        }
+        if(speed >= 100){
+            snprintf(buffer,bsize,"%3.0f",speed);
+        }
+    }
+    //########################################################
+    else if (value->getFormat() == "formatKnots" && (value->getName() == "AWS" || value->getName() == "TWS" || value->getName() == "MaxAws" || value->getName() == "MaxTws")){
+        double speed = 0;
+        if(usesimudata == false) {
+            speed = value->value;
+        }
+        else{
+            speed = 4.0 + float(random(0, 40));
+        }
+        if(String(windspeedFormat) == "km/h"){
+        speed = speed * 3.6;        // Unit conversion form m/s to km/h
+            result.unit = "km/h";
+        }
+        else if(String(windspeedFormat) == "kn"){
             speed = speed * 1.94384;      // Unit conversion form m/s to kn
             result.unit = "kn";
         }
@@ -179,10 +232,10 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
         }
         else{
             if(speed < 10){
-                snprintf(buffer,bsize,"%2.1f",speed);
+                snprintf(buffer,bsize,"%3.2f",speed);
             }
             if(speed >= 10 && speed < 100){
-                snprintf(buffer,bsize,"%2.1f",speed);
+                snprintf(buffer,bsize,"%3.1f",speed);
             }
             if(speed >= 100){
                 snprintf(buffer,bsize,"%3.0f",speed);
@@ -207,10 +260,10 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
             rotation = 99;
         }
         if(rotation > -10 && rotation < 10){
-            snprintf(buffer,bsize,"%1.1f",rotation);
+            snprintf(buffer,bsize,"%3.2f",rotation);
         }
         if(rotation <= -10 || rotation >= 10){
-            snprintf(buffer,bsize,"%2.0f",rotation);
+            snprintf(buffer,bsize,"%3.0f",rotation);
         }
     }
     //########################################################
@@ -227,10 +280,10 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
             dop = 99.9;
         }
         if(dop < 10){
-            snprintf(buffer,bsize,"%2.1f",dop);
+            snprintf(buffer,bsize,"%3.2f",dop);
         }
         if(dop >= 10 && dop < 100){
-            snprintf(buffer,bsize,"%2.1f",dop);
+            snprintf(buffer,bsize,"%3.1f",dop);
         }
     }
     //########################################################
@@ -294,7 +347,7 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
             result.unit = "m";
         }
         if(depth < 10){
-            snprintf(buffer,bsize,"%2.1f",depth);
+            snprintf(buffer,bsize,"%3.2f",depth);
         }
         if(depth >= 10 && depth < 100){
             snprintf(buffer,bsize,"%3.1f",depth);
@@ -324,7 +377,7 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
             result.unit = "K";
         }
         if(temp < 10){
-            snprintf(buffer,bsize,"%2.1f",temp);
+            snprintf(buffer,bsize,"%3.2f",temp);
         }
         if(temp >= 10 && temp < 100){
             snprintf(buffer,bsize,"%3.1f",temp);
@@ -354,7 +407,7 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
             result.unit = "m";
         }
         if(distance < 10){
-            snprintf(buffer,bsize,"%2.1f",distance);
+            snprintf(buffer,bsize,"%3.2f",distance);
         }
         if(distance >= 10 && distance < 100){
             snprintf(buffer,bsize,"%3.1f",distance);
@@ -363,9 +416,276 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
             snprintf(buffer,bsize,"%3.0f",distance);
         }
     }
+    //########################################################
+    // Special XDR formats
+    // Refer XDR formats in GwXDRMappings.cpp line 40
+    //########################################################
+     else if (value->getFormat() == "formatXdr:P:P"){
+        double pressure = 0;
+        if(usesimudata == false) {
+            pressure = value->value;
+            pressure = pressure;                // Unit conversion form Pa to mBar
+        }
+        else{
+            pressure = 968 + float(random(0, 10));
+        }
+        snprintf(buffer,bsize,"%4.0f",pressure);
+        result.unit = "mBar";
+    }
+    //########################################################
+    else if (value->getFormat() == "formatXdr:P:B"){
+        double pressure = 0;
+        if(usesimudata == false) {
+            pressure = value->value;
+            pressure = pressure / 100.0;      // Unit conversion form Pa to mBar
+        }
+        else{
+            pressure = 968 + float(random(0, 10));
+        }
+        snprintf(buffer,bsize,"%4.0f",pressure);
+        result.unit = "mBar";
+    }
+    //########################################################
+    else if (value->getFormat() == "formatXdr:U:V"){
+        double voltage = 0;
+        if(usesimudata == false) {
+            voltage = value->value;
+        }
+        else{
+            voltage = 12 + float(random(0, 30)) / 10.0;
+        }
+        if(voltage < 10){
+            snprintf(buffer,bsize,"%3.2f",voltage);
+        }
+        else{
+            snprintf(buffer,bsize,"%3.1f",voltage);
+        }
+        result.unit = "V";
+    }
+    //########################################################
+    else if (value->getFormat() == "formatXdr:I:A"){
+        double current = 0;
+        if(usesimudata == false) {
+            current = value->value;
+        }
+        else{
+            current = 8.2 + float(random(0, 50)) / 10.0;
+        }
+        if(current < 10){
+            snprintf(buffer,bsize,"%3.2f",current);
+        }
+        if(current >= 10 && current < 100){
+            snprintf(buffer,bsize,"%3.1f",current);
+        }
+        if(current >= 100){
+            snprintf(buffer,bsize,"%3.0f",current);
+        }
+        result.unit = "A";
+    }
+    //########################################################
+    else if (value->getFormat() == "formatXdr:C:K"){
+        double temperature = 0;
+        if(usesimudata == false) {
+            temperature = value->value - 273.15;    // Convert K to C
+        }
+        else{
+            temperature = 21.8 + float(random(0, 50)) / 10.0;
+        }
+        if(temperature < 10){
+            snprintf(buffer,bsize,"%3.2f",temperature);
+        }
+        if(temperature >= 10 && temperature < 100){
+            snprintf(buffer,bsize,"%3.1f",temperature);
+        }
+        if(temperature >= 100){
+            snprintf(buffer,bsize,"%3.0f",temperature);
+        }
+        result.unit = "Deg C";
+    }
+    //########################################################
+    else if (value->getFormat() == "formatXdr:C:C"){
+        double temperature = 0;
+        if(usesimudata == false) {
+            temperature = value->value;    // Value in C
+        }
+        else{
+            temperature = 21.8 + float(random(0, 50)) / 10.0;
+        }
+        if(temperature < 10){
+            snprintf(buffer,bsize,"%3.2f",temperature);
+        }
+        if(temperature >= 10 && temperature < 100){
+            snprintf(buffer,bsize,"%3.1f",temperature);
+        }
+        if(temperature >= 100){
+            snprintf(buffer,bsize,"%3.0f",temperature);
+        }
+        result.unit = "Deg C";
+    }
+    //########################################################
+    else if (value->getFormat() == "formatXdr:H:P"){
+        double humidity = 0;
+        if(usesimudata == false) {
+            humidity = value->value;    // Value in %
+        }
+        else{
+            humidity = 41.3 + float(random(0, 50)) / 10.0;
+        }
+        if(humidity < 10){
+            snprintf(buffer,bsize,"%3.2f",humidity);
+        }
+        if(humidity >= 10 && humidity < 100){
+            snprintf(buffer,bsize,"%3.1f",humidity);
+        }
+        if(humidity >= 100){
+            snprintf(buffer,bsize,"%3.0f",humidity);
+        }
+        result.unit = "%";
+    }
+    //########################################################
+    else if (value->getFormat() == "formatXdr:V:P"){
+        double volume = 0;
+        if(usesimudata == false) {
+            volume = value->value;    // Value in %
+        }
+        else{
+            volume = 85.8 + float(random(0, 50)) / 10.0;
+        }
+        if(volume < 10){
+            snprintf(buffer,bsize,"%3.2f",volume);
+        }
+        if(volume >= 10 && volume < 100){
+            snprintf(buffer,bsize,"%3.1f",volume);
+        }
+        if(volume >= 100){
+            snprintf(buffer,bsize,"%3.0f",volume);
+        }
+        result.unit = "%";
+    }
+    //########################################################
+    else if (value->getFormat() == "formatXdr:V:M"){
+        double volume = 0;
+        if(usesimudata == false) {
+            volume = value->value;    // Value in l
+        }
+        else{
+            volume = 75.2 + float(random(0, 50)) / 10.0;
+        }
+        if(volume < 10){
+            snprintf(buffer,bsize,"%3.2f",volume);
+        }
+        if(volume >= 10 && volume < 100){
+            snprintf(buffer,bsize,"%3.1f",volume);
+        }
+        if(volume >= 100){
+            snprintf(buffer,bsize,"%3.0f",volume);
+        }
+        result.unit = "l";
+    }
+    //########################################################
+    else if (value->getFormat() == "formatXdr:R:I"){
+        double flow = 0;
+        if(usesimudata == false) {
+            flow = value->value;    // Value in l/min
+        }
+        else{
+            flow = 7.5 + float(random(0, 20)) / 10.0;
+        }
+        if(flow < 10){
+            snprintf(buffer,bsize,"%3.2f",flow);
+        }
+        if(flow >= 10 && flow < 100){
+            snprintf(buffer,bsize,"%3.1f",flow);
+        }
+        if(flow >= 100){
+            snprintf(buffer,bsize,"%3.0f",flow);
+        }
+        result.unit = "l/min";
+    }
+    //########################################################
+    else if (value->getFormat() == "formatXdr:G:"){
+        double generic = 0;
+        if(usesimudata == false) {
+            generic = value->value;    // Value in l/min
+        }
+        else{
+            generic = 18.5 + float(random(0, 20)) / 10.0;
+        }
+        if(generic < 10){
+            snprintf(buffer,bsize,"%3.2f",generic);
+        }
+        if(generic >= 10 && generic < 100){
+            snprintf(buffer,bsize,"%3.1f",generic);
+        }
+        if(generic >= 100){
+            snprintf(buffer,bsize,"%3.0f",generic);
+        }
+        result.unit = "";
+    }
+    //########################################################
+    else if (value->getFormat() == "formatXdr:A:P"){
+        double dplace = 0;
+        if(usesimudata == false) {
+            dplace = value->value;    // Value in %
+        }
+        else{
+            dplace = 55.3 + float(random(0, 20)) / 10.0;
+        }
+        if(dplace < 10){
+            snprintf(buffer,bsize,"%3.2f",dplace);
+        }
+        if(dplace >= 10 && dplace < 100){
+            snprintf(buffer,bsize,"%3.1f",dplace);
+        }
+        if(dplace >= 100){
+            snprintf(buffer,bsize,"%3.0f",dplace);
+        }
+        result.unit = "%";
+    }
+    //########################################################
+    else if (value->getFormat() == "formatXdr:A:D"){
+        double angle = 0;
+        if(usesimudata == false) {
+            angle = value->value;
+            angle = angle * 57.2958;      // Unit conversion form rad to deg
+        }
+        else{
+            angle = 20 + random(-5, 5);
+        }
+        if(angle > -10 && angle < 10){
+            snprintf(buffer,bsize,"%3.1f",angle);
+        }
+        else{
+            snprintf(buffer,bsize,"%3.0f",angle);
+        }
+        result.unit = "Deg";
+    }
+    //########################################################
+    else if (value->getFormat() == "formatXdr:T:R"){
+        double rpm = 0;
+        if(usesimudata == false) {
+            rpm = value->value;    // Value in rpm
+        }
+        else{
+            rpm = 2505 + random(0, 20);
+        }
+        if(rpm < 10){
+            snprintf(buffer,bsize,"%3.2f",rpm);
+        }
+        if(rpm >= 10 && rpm < 100){
+            snprintf(buffer,bsize,"%3.1f",rpm);
+        }
+        if(rpm >= 100){
+            snprintf(buffer,bsize,"%3.0f",rpm);
+        }
+        result.unit = "rpm";
+    }
+    //########################################################
+    // Default format
+    //########################################################
     else{
         if(value->value < 10){
-            snprintf(buffer,bsize,"%2.1f",value->value);
+            snprintf(buffer,bsize,"%3.2f",value->value);
         }
         if(value->value >= 10 && value->value < 100){
             snprintf(buffer,bsize,"%3.1f",value->value);
@@ -379,3 +699,5 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
     result.svalue = String(buffer);
     return result;
 }
+
+#endif

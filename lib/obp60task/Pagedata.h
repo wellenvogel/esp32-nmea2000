@@ -4,7 +4,6 @@
 #include <functional>
 #include <vector>
 
-#define MAX_PAGE_NUMBER 4
 typedef std::vector<GwApi::BoatValue *> ValueList;
 typedef struct{
   String pageName;
@@ -18,6 +17,15 @@ typedef struct{
   double batteryVoltage = 0;
   double batteryCurrent = 0;
   double batteryPower = 0;
+  double batteryVoltage10 = 0;
+  double batteryCurrent10 = 0;
+  double batteryPower10 = 0;
+  double batteryVoltage60 = 0;
+  double batteryCurrent60 = 0;
+  double batteryPower60 = 0;
+  double batteryVoltage300 = 0;
+  double batteryCurrent300 = 0;
+  double batteryPower300 = 0;
   double solarVoltage = 0;
   double solarCurrent = 0;
   double solarPower = 0;
@@ -33,13 +41,31 @@ typedef struct{
   double onewireTemp4 = 0;
   double onewireTemp5 = 0; 
   double onewireTemp6 = 0;
+  double rotationAngle = 0;       // Rotation angle in radiant
+  bool validRotAngle = false;     // Valid flag for magnet present
+  int sunsetHour = 0;
+  int sunsetMinute = 0;
+  int sunriseHour = 0;
+  int sunriseMinute = 0;
+  bool sunDown = true;
 } SensorData;
+
+typedef struct{
+  int sunsetHour = 0;
+  int sunsetMinute = 0;
+  int sunriseHour = 0;
+  int sunriseMinute = 0;
+  bool sunDown = true;
+} SunData;
 
 typedef struct{
   GwApi::Status status;
   GwLog *logger=NULL;
   GwConfigHandler *config=NULL;
   SensorData data;
+  SunData sundata;
+  GwApi::BoatValue *time=NULL;
+  GwApi::BoatValue *date=NULL;
 } CommonData;
 
 //a base class that all pages must inherit from

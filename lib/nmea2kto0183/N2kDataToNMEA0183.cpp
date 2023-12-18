@@ -32,7 +32,6 @@
 
 
 
-
 N2kDataToNMEA0183::N2kDataToNMEA0183(GwLog * logger, GwBoatData *boatData, 
   SendNMEA0183MessageCallback callback, String talkerId) 
     {
@@ -1055,7 +1054,7 @@ private:
         }
         if (!updateDouble(boatData->ROT,ROT)) return;
         tNMEA0183Msg nmeamsg;
-        if (NMEA0183SetROT(nmeamsg,ROT,talkerId)){
+        if (NMEA0183SetROT(nmeamsg,ROT * ROT_WA_FACTOR,talkerId)){
             SendMessage(nmeamsg);
         }
     }
@@ -1389,6 +1388,22 @@ private:
         }
         finalizeXdr();
     }
+    void Handle127257(const tN2kMsg &msg){
+        unsigned char instance=-1;
+        double values[3];
+        for (int i=0;i<3;i++) values[i]=N2kDoubleNA;
+        //yaw,pitch,roll
+        if (! ParseN2kPGN127257(msg,instance,
+            values[0],values[1],values[2])){
+           LOG_DEBUG(GwLog::DEBUG,"unable to parse PGN %d",msg.PGN); 
+        }
+        for (int i=0;i<3;i++){
+            GwXDRFoundMapping mapping=xdrMappings->getMapping(XDRATTITUDE,0,i,instance);
+            if (! updateDouble(&mapping,values[i])) continue; 
+            addToXdr(mapping.buildXdrEntry(values[i])); 
+        }
+        finalizeXdr();
+    }
     void Handle127488(const tN2kMsg &msg){
         unsigned char instance=-1;
         double speed=N2kDoubleNA,pressure=N2kDoubleNA;
@@ -1478,6 +1493,7 @@ private:
       converters.registerConverter(127489UL, &N2kToNMEA0183Functions::Handle127489);
       converters.registerConverter(127488UL, &N2kToNMEA0183Functions::Handle127488);
       converters.registerConverter(130316UL, &N2kToNMEA0183Functions::Handle130316);
+      converters.registerConverter(127257UL, &N2kToNMEA0183Functions::Handle127257);
 #define HANDLE_AIS
 #ifdef HANDLE_AIS
       converters.registerConverter(129038UL, &N2kToNMEA0183Functions::HandleAISClassAPosReport);  // AIS Class A Position Report, Message Type 1

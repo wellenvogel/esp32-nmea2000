@@ -68,7 +68,7 @@ GwWebServer::~GwWebServer(){
 }
 void GwWebServer::handleAsyncWebRequest(AsyncWebServerRequest *request, GwRequestMessage *msg)
 {
-  GwRequestQueue::MessageSendStatus st=queue->sendAndWait(msg,500);      
+  GwRequestQueue::MessageSendStatus st=queue->sendAndWait(msg,msg->getTimeout());      
   if (st == GwRequestQueue::MSG_ERR)
   {
     msg->unref(); //our
@@ -115,6 +115,14 @@ bool GwWebServer::registerMainHandler(const char *url,RequestCreator creator){
         }
         handleAsyncWebRequest(request,msg);
     });
+    return true;
+}
+
+bool GwWebServer::registerPostHandler(const char *url, ArRequestHandlerFunction requestHandler,
+ ArBodyHandlerFunction bodyHandler){
+    server->on(url,HTTP_POST,requestHandler,
+    [](AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final){},
+    bodyHandler);
     return true;
 }
 

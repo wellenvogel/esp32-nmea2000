@@ -41,18 +41,20 @@ double ps2ph(double v)
 GwXDRType *types[] = {
     new GwXDRType(GwXDRType::PRESS, "P", "P"),
     new GwXDRType(GwXDRType::PRESS, "P", "B",
+                  BarToP,
                   PtoBar,
-                  BarToP),
+                  "P"),
     new GwXDRType(GwXDRType::VOLT, "U", "V"),
     new GwXDRType(GwXDRType::AMP, "I", "A"),
     new GwXDRType(GwXDRType::TEMP, "C", "K"),
-    new GwXDRType(GwXDRType::TEMP, "C", "C", CToKelvin, KelvinToC),
+    new GwXDRType(GwXDRType::TEMP, "C", "C", CToKelvin, KelvinToC,"K"),
     new GwXDRType(GwXDRType::HUMID, "H", "P"), //percent
     new GwXDRType(GwXDRType::VOLPERCENT, "V", "P"),
-    new GwXDRType(GwXDRType::VOLUME, "V", "M", m3ToL, ltrTom3),
+    new GwXDRType(GwXDRType::VOLUME, "V", "M", m3ToL, ltrTom3,"L"),
     new GwXDRType(GwXDRType::FLOW, "R", "I", ps2ph, ph2ps),
     new GwXDRType(GwXDRType::GENERIC, "G", ""),
     new GwXDRType(GwXDRType::DISPLACEMENT, "A", "P"),
+    new GwXDRType(GwXDRType::DISPLACEMENTD, "A", "D",DegToRad,RadToDeg,"rd"),
     new GwXDRType(GwXDRType::RPM,"T","R"),
     //important to have 2x NULL!
     NULL,
@@ -121,7 +123,7 @@ bool GwXDRMappingDef::handleToken(String tok, int index, GwXDRMappingDef *def)
     case 0:
         //category
         i = tok.toInt();
-        if (i < XDRTEMP || i > XDRENGINE)
+        if (i < XDRTEMP || i > XDRATTITUDE)
             return false;
         def->category = (GwXDRCategory)i;
         return true;

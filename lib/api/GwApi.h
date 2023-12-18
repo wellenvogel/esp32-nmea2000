@@ -15,6 +15,7 @@ class GwApi{
             public:
                 double value=0;
                 bool valid=false;
+                int source=-1;
                 bool changed=false; //will be set by getBoatDataValues
                 BoatValue(){}
                 BoatValue(const String &n):name(n){

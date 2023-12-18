@@ -1,5 +1,7 @@
+#ifdef BOARD_NODEMCU32S_OBP60
+
 #include "Pagedata.h"
-#include "OBP60ExtensionPort.h"
+#include "OBP60Extensions.h"
 
 class PageWhite : public Page{
     bool keylock = false;               // Keylock
@@ -57,3 +59,5 @@ PageDescription registerPageWhite(
     0,              // Number of bus values depends on selection in Web configuration
     false           // Show display header on/off
 );
+
+#endif

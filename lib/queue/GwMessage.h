@@ -56,6 +56,7 @@ class GwRequestMessage : public GwMessage{
     String getContentType(){
       return contentType;
     }
+    virtual int getTimeout(){return 500;}
 
 };
 

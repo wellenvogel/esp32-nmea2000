@@ -1,10 +1,11 @@
+#ifdef BOARD_NODEMCU32S_OBP60
+
 #include "Pagedata.h"
-#include "OBP60ExtensionPort.h"
+#include "OBP60Extensions.h"
 
 class PageClock : public Page
 {
 bool keylock = false;               // Keylock
-int16_t lp = 80;                    // Pointer length
 
 public:
     PageClock(CommonData &common){
@@ -30,6 +31,11 @@ public:
         static String unit1old = "";
         static String svalue2old = "";
         static String unit2old = "";
+        static String svalue3old = "";
+        static String svalue4old = "";
+
+        double value1 = 0;
+        double value2 = 0;
 
         // Get config data
         String lengthformat = config->getString(config->lengthFormat);
@@ -38,13 +44,19 @@ public:
         bool holdvalues = config->getBool(config->holdvalues);
         String flashLED = config->getString(config->flashLED);
         String backlightMode = config->getString(config->backlight);
-        int timezone = config->getInt(config->timeZone);
+        String stimezone = config->getString(config->timeZone);
+        double timezone = stimezone.toDouble();
 
         // Get boat values for GPS time
         GwApi::BoatValue *bvalue1 = pageData.values[0]; // First element in list (only one value by PageOneValue)
         String name1 = bvalue1->getName().c_str();      // Value name
         name1 = name1.substring(0, 6);                  // String length limit for value name
-        double value1 = bvalue1->value;                 // Value as double in SI unit
+        if(simulation == false){
+            value1 = bvalue1->value;                    // Value as double in SI unit
+        }
+        else{
+            value1 = 38160;                             // Simulation data for time value 11:36 in seconds
+        }                                               // Other simulation data see OBP60Formater.cpp
         bool valid1 = bvalue1->valid;                   // Valid information 
         String svalue1 = formatValue(bvalue1, commonData).svalue;    // Formatted value as string including unit conversion and switching decimal places
         String unit1 = formatValue(bvalue1, commonData).unit;        // Unit of value
@@ -57,7 +69,7 @@ public:
         GwApi::BoatValue *bvalue2 = pageData.values[1]; // First element in list (only one value by PageOneValue)
         String name2 = bvalue2->getName().c_str();      // Value name
         name2 = name2.substring(0, 6);                  // String length limit for value name
-        double value2 = bvalue2->value;                 // Value as double in SI unit
+        value2 = bvalue2->value;                        // Value as double in SI unit
         bool valid2 = bvalue2->valid;                   // Valid information 
         String svalue2 = formatValue(bvalue2, commonData).svalue;    // Formatted value as string including unit conversion and switching decimal places
         String unit2 = formatValue(bvalue2, commonData).unit;        // Unit of value
@@ -97,111 +109,77 @@ public:
 
         // Show values GPS date
         display.setTextColor(textcolor);
-        if(holdvalues == false){
-            display.setFont(&Ubuntu_Bold8pt7b);
-            display.setCursor(10, 65);
-            display.print(svalue2);                     // Value
-            display.setFont(&Ubuntu_Bold12pt7b);
-            display.setCursor(10, 95);
-            display.print("Date");                      // Name
-
-            display.setFont(&Ubuntu_Bold12pt7b);
-            display.setCursor(185, 100);
-            display.print(" ");
-            display.print(unit2);                       // Unit
-        }
-        else{
-            display.setFont(&Ubuntu_Bold8pt7b);
-            display.setCursor(10, 65);
-            display.print(svalue2old);                     // Value
-            display.setFont(&Ubuntu_Bold12pt7b);
-            display.setCursor(10, 95);
-            display.print("Date");                       // Name
-
-            display.setFont(&Ubuntu_Bold12pt7b);
-            display.setCursor(185, 100);
-            display.print(" ");
-            display.print(unit2old);                       // Unit
-        }
+        display.setFont(&Ubuntu_Bold8pt7b);
+        display.setCursor(10, 65);
+        if(holdvalues == false) display.print(svalue2); // Value
+        else display.print(svalue2old);
+        display.setFont(&Ubuntu_Bold12pt7b);
+        display.setCursor(10, 95);
+        display.print("Date");                          // Name
 
         // Horizintal separator left
         display.fillRect(0, 149, 60, 3, pixelcolor);
 
         // Show values GPS time
         display.setTextColor(textcolor);
-        if(holdvalues == false){
-            display.setFont(&Ubuntu_Bold8pt7b);
-            display.setCursor(10, 250);
-            display.print(svalue1);                     // Value
-            display.setFont(&Ubuntu_Bold12pt7b);
-            display.setCursor(10, 220);
-            display.print("Time");                       // Name
-        }
-        else{
-            display.setFont(&Ubuntu_Bold8pt7b);
-            display.setCursor(10, 250);
-            display.print(svalue1old);                     // Value
-            display.setFont(&Ubuntu_Bold12pt7b);
-            display.setCursor(10, 220);
-            display.print("Time");                       // Name
-        }
+        display.setFont(&Ubuntu_Bold8pt7b);
+        display.setCursor(10, 250);
+        if(holdvalues == false) display.print(svalue1); // Value
+        else display.print(svalue1old);
+        display.setFont(&Ubuntu_Bold12pt7b);
+        display.setCursor(10, 220);
+        display.print("Time");                          // Name
 
         // Show values sunrise
+        String sunrise = "---";
+        if(valid1 == true && valid2 == true){
+            sunrise = String(commonData.sundata.sunriseHour) + ":" + String(commonData.sundata.sunriseMinute + 100).substring(1);
+            svalue3old = sunrise;
+        }
+
         display.setTextColor(textcolor);
-        if(holdvalues == false){
-            display.setFont(&Ubuntu_Bold8pt7b);
-            display.setCursor(335, 65);
-            display.print("06:32");                     // Value
-            display.setFont(&Ubuntu_Bold12pt7b);
-            display.setCursor(335, 95);
-            display.print("SunR");                       // Name
-        }
-        else{
-            display.setFont(&Ubuntu_Bold8pt7b);
-            display.setCursor(335, 65);
-            display.print("06:32");                     // Value
-            display.setFont(&Ubuntu_Bold12pt7b);
-            display.setCursor(335, 95);
-            display.print("SunR");                       // Name
-        }
+        display.setFont(&Ubuntu_Bold8pt7b);
+        display.setCursor(335, 65);
+        if(holdvalues == false) display.print(sunrise); // Value
+        else display.print(svalue3old);
+        display.setFont(&Ubuntu_Bold12pt7b);
+        display.setCursor(335, 95);
+        display.print("SunR");                          // Name
 
         // Horizintal separator right
         display.fillRect(340, 149, 80, 3, pixelcolor);
 
         // Show values sunset
+        String sunset = "---";
+        if(valid1 == true && valid2 == true){
+            sunset = String(commonData.sundata.sunsetHour) + ":" +  String(commonData.sundata.sunsetMinute + 100).substring(1);
+            svalue4old = sunset;
+        }
+
         display.setTextColor(textcolor);
-        if(holdvalues == false){
-            display.setFont(&Ubuntu_Bold8pt7b);
-            display.setCursor(335, 250);
-            display.print("18:22");                     // Value
-            display.setFont(&Ubuntu_Bold12pt7b);
-            display.setCursor(335, 220);
-            display.print("SunS");                       // Name
-        }
-        else{
-            display.setFont(&Ubuntu_Bold8pt7b);
-            display.setCursor(335, 250);
-            display.print("18:22");                     // Value
-            display.setFont(&Ubuntu_Bold12pt7b);
-            display.setCursor(335, 220);
-            display.print("SunS");                       // Name
-        }
+        display.setFont(&Ubuntu_Bold8pt7b);
+        display.setCursor(335, 250);
+        if(holdvalues == false) display.print(sunset);  // Value
+        else display.print(svalue4old);
+        display.setFont(&Ubuntu_Bold12pt7b);
+        display.setCursor(335, 220);
+        display.print("SunS");                          // Name
 
 //*******************************************************************************************
         
-        // Draw wind rose
-        int rWindGraphic = 110;     // Radius of grafic instrument
+        // Draw clock
+        int rInstrument = 110;     // Radius of clock
         float pi = 3.141592;
 
-        display.fillCircle(200, 150, rWindGraphic + 10, pixelcolor);    // Outer circle
-        display.fillCircle(200, 150, rWindGraphic + 7, bgcolor);        // Outer circle     
+        display.fillCircle(200, 150, rInstrument + 10, pixelcolor);    // Outer circle
+        display.fillCircle(200, 150, rInstrument + 7, bgcolor);        // Outer circle     
 
-        for(int i=0; i<360; i=i+10)
+        for(int i=0; i<360; i=i+1)
         {
             // Scaling values
-            float x = 200 + (rWindGraphic-30)*sin(i/180.0*pi);  //  x-coordinate dots
-            float y = 150 - (rWindGraphic-30)*cos(i/180.0*pi);  //  y-coordinate cots 
-            const char *ii;
+            float x = 200 + (rInstrument-30)*sin(i/180.0*pi);  //  x-coordinate dots
+            float y = 150 - (rInstrument-30)*cos(i/180.0*pi);  //  y-coordinate cots 
+            const char *ii = "";
             switch (i)
             {
             case 0: ii="12"; break;
@@ -230,19 +208,23 @@ public:
             }
 
             // Draw sub scale with dots
-            float x1c = 200 + rWindGraphic*sin(i/180.0*pi);
-            float y1c = 150 - rWindGraphic*cos(i/180.0*pi);
-            display.fillCircle((int)x1c, (int)y1c, 2, pixelcolor);
-            float sinx=sin(i/180.0*pi);
-            float cosx=cos(i/180.0*pi); 
+            float sinx = 0;
+            float cosx = 0;
+             if(i % 6 == 0){
+                float x1c = 200 + rInstrument*sin(i/180.0*pi);
+                float y1c = 150 - rInstrument*cos(i/180.0*pi);
+                display.fillCircle((int)x1c, (int)y1c, 2, pixelcolor);
+                sinx=sin(i/180.0*pi);
+                cosx=cos(i/180.0*pi);
+             }
 
             // Draw sub scale with lines (two triangles)
             if(i % 30 == 0){
                 float dx=2;   // Line thickness = 2*dx+1
                 float xx1 = -dx;
                 float xx2 = +dx;
-                float yy1 =  -(rWindGraphic-10);
-                float yy2 =  -(rWindGraphic+10);
+                float yy1 =  -(rInstrument-10);
+                float yy2 =  -(rInstrument+10);
                 display.fillTriangle(200+(int)(cosx*xx1-sinx*yy1),150+(int)(sinx*xx1+cosx*yy1),
                         200+(int)(cosx*xx2-sinx*yy1),150+(int)(sinx*xx2+cosx*yy1),
                         200+(int)(cosx*xx1-sinx*yy2),150+(int)(sinx*xx1+cosx*yy2),pixelcolor);
@@ -252,17 +234,34 @@ public:
             }
         }
 
+        // Print Unit in clock
+        display.setTextColor(textcolor);
+        if(holdvalues == false){
+            display.setFont(&Ubuntu_Bold12pt7b);
+            display.setCursor(175, 110);
+            display.print(unit2);                       // Unit
+        }
+        else{
+            display.setFont(&Ubuntu_Bold12pt7b);
+            display.setCursor(175, 110);
+            display.print(unit2old);                    // Unit
+        }
+
         // Clock values
         double hour = 0;
         double minute = 0;
+        value1 = value1 + int(timezone*3600);
+        if (value1 > 86400) {value1 = value1 - 86400;}
+        if (value1 < 0) {value1 = value1 + 86400;}
         hour = (value1 / 3600.0);
         if(hour > 12) hour = hour - 12.0;
-        hour = hour + timezone;
-        minute = (hour - int(hour)) * 3600.0 / 60.0;
-
+//        minute = (hour - int(hour)) * 3600.0 / 60.0;        // Analog minute pointer smoth moving
+        minute = int((hour - int(hour)) * 3600.0 / 60.0);   // Jumping minute pointer from minute to minute
+        LOG_DEBUG(GwLog::DEBUG,"... PageClock, value1: %f hour: %f minute:%f", value1, hour, minute);
+        
         // Draw hour pointer
         float startwidth = 8;       // Start width of pointer
-        if(valid1 == true || holdvalues == true){
+        if(valid1 == true || holdvalues == true || simulation == true){
             float sinx=sin(hour * 30.0 * pi / 180);     // Hour
             float cosx=cos(hour * 30.0 * pi / 180);
             // Normal pointer
@@ -270,7 +269,7 @@ public:
             float xx1 = -startwidth;
             float xx2 = startwidth;
             float yy1 = -startwidth;
-            float yy2 = -(rWindGraphic * 0.5); 
+            float yy2 = -(rInstrument * 0.5); 
             display.fillTriangle(200+(int)(cosx*xx1-sinx*yy1),150+(int)(sinx*xx1+cosx*yy1),
                 200+(int)(cosx*xx2-sinx*yy1),150+(int)(sinx*xx2+cosx*yy1),
                 200+(int)(cosx*0-sinx*yy2),150+(int)(sinx*0+cosx*yy2),pixelcolor);   
@@ -279,7 +278,7 @@ public:
             float endwidth = 2;         // End width of pointer
             float ix1 = endwidth;
             float ix2 = -endwidth;
-            float iy1 = -(rWindGraphic * 0.5);
+            float iy1 = -(rInstrument * 0.5);
             float iy2 = -endwidth;
             display.fillTriangle(200+(int)(cosx*ix1-sinx*iy1),150+(int)(sinx*ix1+cosx*iy1),
                 200+(int)(cosx*ix2-sinx*iy1),150+(int)(sinx*ix2+cosx*iy1),
@@ -288,7 +287,7 @@ public:
 
         // Draw minute pointer
         startwidth = 8;       // Start width of pointer
-        if(valid1 == true || holdvalues == true){
+        if(valid1 == true || holdvalues == true || simulation == true){
             float sinx=sin(minute * 6.0 * pi / 180);     // Minute
             float cosx=cos(minute * 6.0 * pi / 180);
             // Normal pointer
@@ -296,7 +295,7 @@ public:
             float xx1 = -startwidth;
             float xx2 = startwidth;
             float yy1 = -startwidth;
-            float yy2 = -(rWindGraphic - 15); 
+            float yy2 = -(rInstrument - 15); 
             display.fillTriangle(200+(int)(cosx*xx1-sinx*yy1),150+(int)(sinx*xx1+cosx*yy1),
                 200+(int)(cosx*xx2-sinx*yy1),150+(int)(sinx*xx2+cosx*yy1),
                 200+(int)(cosx*0-sinx*yy2),150+(int)(sinx*0+cosx*yy2),pixelcolor);   
@@ -305,7 +304,7 @@ public:
             float endwidth = 2;         // End width of pointer
             float ix1 = endwidth;
             float ix2 = -endwidth;
-            float iy1 = -(rWindGraphic - 15);
+            float iy1 = -(rInstrument - 15);
             float iy2 = -endwidth;
             display.fillTriangle(200+(int)(cosx*ix1-sinx*iy1),150+(int)(sinx*ix1+cosx*iy1),
                 200+(int)(cosx*ix2-sinx*iy1),150+(int)(sinx*ix2+cosx*iy1),
@@ -320,15 +319,16 @@ public:
         // Key Layout
         display.setTextColor(textcolor);
         display.setFont(&Ubuntu_Bold8pt7b);
-        display.setCursor(130, 290);
         if(keylock == false){
+            display.setCursor(130, 290);
             display.print("[  <<<<  " + String(commonData.data.actpage) + "/" + String(commonData.data.maxpage) + "  >>>>  ]");
-            if(String(backlightMode) == "Control by Key"){              // Key for illumination
+            if(String(backlightMode) == "Control by Key"){                  // Key for illumination
                 display.setCursor(343, 290);
                 display.print("[ILUM]");
             }
         }
         else{
+            display.setCursor(130, 290);
             display.print(" [    Keylock active    ]");
         }
 
@@ -355,3 +355,5 @@ PageDescription registerPageClock(
     {"GPST", "GPSD"},    // Bus values we need in the page
     true                // Show display header on/off
 );
+
+#endif

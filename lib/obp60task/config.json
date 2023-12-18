@@ -1,23 +1,12 @@
 [
     {
-        "name": "obp60Config",
-        "label": "Logging",
-        "type": "boolean",
-        "default": "false",
-        "description": "Switch on logging of position acquired/failed",
-        "category": "OBP60 Settings",
-        "capabilities": {
-            "obp60":"true"
-        }
-    },
-    {
         "name": "timeZone",
         "label": "Time Zone",
         "type": "number",
-        "default": "0",
+        "default": "0.00",
         "check": "checkMinMax",
-        "min": -12,
-        "max": 14,
+        "min": -12.00,
+        "max": 14.00,
         "description": "Time zone [UTC -12...+14]",
         "category": "OBP60 Settings",
         "capabilities": {
@@ -28,11 +17,11 @@
         "name": "draft",
         "label": "Boat Draft [m]",
         "type": "number",
-        "default": "0",
+        "default": "0.00",
         "check": "checkMinMax",
-        "min": 0,
-        "max": 10,
-        "description": "The draft of the boat [0...10m]",
+        "min": 0.00,
+        "max": 50.00,
+        "description": "The draft of the boat [0...50m]",
         "category": "OBP60 Settings",
         "capabilities": {
             "obp60":"true"
@@ -56,10 +45,10 @@
         "name": "fuelConsumption",
         "label": "Fuel Consuption [l/h]",
         "type": "number",
-        "default": "0",
+        "default": "0.00",
         "check": "checkMinMax",
-        "min": 0,
-        "max": 1000,
+        "min": 0.00,
+        "max": 1000.00,
         "description": "Medium fuel consumption [0...1000l/h]",
         "category": "OBP60 Settings",
         "capabilities": {
@@ -88,7 +77,7 @@
         "check": "checkMinMax",
         "min": 0,
         "max": 5000,
-        "description": "Water tank capacity [0...5000l]",
+        "description": "Waste tank capacity [0...5000l]",
         "category": "OBP60 Settings",
         "capabilities": {
             "obp60":"true"
@@ -114,7 +103,7 @@
         "label": "Battery Type",
         "type": "list",
         "default": "Pb",
-        "description": "Type of battery",
+        "description": "Type of battery [Pb|Gel|AGM|LiFePo4]",
         "list": [
             "Pb",
             "Gel",
@@ -130,11 +119,39 @@
         "name": "batteryCapacity",
         "label": "Battery Capacity [Ah]",
         "type": "number",
-        "default": "0",
+        "default": "0.0",
         "check": "checkMinMax",
-        "min": 0,
-        "max": 10000,
-        "description": "Fuel tank capacity [0...10000Ah]",
+        "min": 0.0,
+        "max": 10000.0,
+        "description": "Battery capacity [0...10000Ah]",
+        "category": "OBP60 Settings",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "solarPower",
+        "label": "Solar Power [W]",
+        "type": "number",
+        "default": "0.0",
+        "check": "checkMinMax",
+        "min": 0.0,
+        "max": 10000.0,
+        "description": "Solar power [0...10000W]",
+        "category": "OBP60 Settings",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "genPower",
+        "label": "Genarator Power [W]",
+        "type": "number",
+        "default": "0.0",
+        "check": "checkMinMax",
+        "min": 0.0,
+        "max": 10000.0,
+        "description": "Generator power [0...10000W]",
         "category": "OBP60 Settings",
         "capabilities": {
             "obp60":"true"
@@ -192,7 +209,7 @@
         "label": "Wind Speed Format",
         "type": "list",
         "default": "m/s",
-        "description": "Distance format [m/s|km/h|kn|bft]",
+        "description": "Wind speed format [m/s|km/h|kn|bft]",
         "list": [
             "m/s",
             "km/h",
@@ -209,7 +226,7 @@
         "label": "Temperature Format",
         "type": "list",
         "default": "C",
-        "description": "Length format [K|°C|°F]",
+        "description": "Temperature format [K|C|F]",
         "list": [
             "K",
             "C",
@@ -241,7 +258,7 @@
         "label": "GPS Sensor",
         "type": "list",
         "default": "off",
-        "description": "Using internal GPS modul NEO-6M or NEO-M8N",
+        "description": "Use internal GPS module type [off|NEO-6M|NEO-M8N]",
         "list": [
             "off",
             "NEO-6M",
@@ -257,13 +274,215 @@
         "label": "Env. Sensor",
         "type": "list",
         "default": "off",
-        "description": "Using internal or external environment sensors BME280, BMP280 or SHT21",
+        "description": "Use internal or external environment sensor via I2C bus [off|BME280|BMP280|SHT21]",
         "list": [
             "off",
             "BME280",
             "BMP280",
+            "BMP180",
+            "BMP085",
+            "HTU21",
             "SHT21"
         ],
+        "category": "OBP60 Hardware",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "usePowSensor1",
+        "label": "Battery Sensor",
+        "type": "list",
+        "default": "off",
+        "description": "Use external power management sensor via I2C bus for battery [off|INA219|INA226|]",
+        "list": [
+            "off",
+            "INA219",
+            "INA226"
+        ],
+        "category": "OBP60 Hardware",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "shunt1",
+        "label": "Battery Shunt",
+        "type": "list",
+        "default": "10",
+        "description": "Shunt current value [10A|50A|100A|200A|300A|400A|500A]",
+        "list": [
+            "10",
+            "50",
+            "100",
+            "200",
+            "300",
+            "400",
+            "500"
+        ],
+        "category": "OBP60 Hardware",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "usePowSensor2",
+        "label": "Solar Sensor",
+        "type": "list",
+        "default": "off",
+        "description": "Use external power management sensor via I2C bus for solar panels [off|INA219|INA226|]",
+        "list": [
+            "off",
+            "INA219",
+            "INA226"
+        ],
+        "category": "OBP60 Hardware",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "shunt2",
+        "label": "Solar Shunt",
+        "type": "list",
+        "default": "10",
+        "description": "Shunt current value [10A|50A|100A|200A|300A|400A|500A]",
+        "list": [
+            "10",
+            "50",
+            "100",
+            "200",
+            "300",
+            "400",
+            "500"
+        ],
+        "category": "OBP60 Hardware",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "usePowSensor3",
+        "label": "Gen. Sensor",
+        "type": "list",
+        "default": "off",
+        "description": "Use external power management sensor via I2C bus for generator [off|INA219|INA226|]",
+        "list": [
+            "off",
+            "INA219",
+            "INA226"
+        ],
+        "category": "OBP60 Hardware",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "shunt3",
+        "label": "Gen. Shunt",
+        "type": "list",
+        "default": "10",
+        "description": "Shunt current value [10A|50A|100A|200A|300A|400A|500A] @ 75mV",
+        "list": [
+            "10",
+            "50",
+            "100",
+            "200",
+            "300",
+            "400",
+            "500"
+        ],
+        "category": "OBP60 Hardware",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "useRotSensor",
+        "label": "Rot. Sensor",
+        "type": "list",
+        "default": "off",
+        "description": "Use external rotation sensor via I2C bus [off|AS5600]",
+        "list": [
+            "off",
+            "AS5600"
+        ],
+        "category": "OBP60 Hardware",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "rotFunction",
+        "label": "Rot. Function",
+        "type": "list",
+        "default": "off",
+        "description": "Function for rotation sensor [off|Rudder|Wind|Mast|Keel|Trim|Boom]",
+        "list": [
+            "off",
+            "Rudder",
+            "Wind",
+            "Mast",
+            "Keel",
+            "Trim",
+            "Boom"
+        ],
+        "category": "OBP60 Hardware",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "rotOffset",
+        "label": "Rot. Offset",
+        "type": "number",
+        "default": "0",
+        "check": "checkMinMax",
+        "min": -180,
+        "max": 180,
+        "description": "Offset for rotation sensor [-180°...+180°]",
+        "category": "OBP60 Hardware",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "rollLimit",
+        "label": "Roll Limit",
+        "type": "number",
+        "default": "40",
+        "check": "checkMinMax",
+        "min": -90,
+        "max": 90,
+        "description": "Limit violation for roll angle [-90°...+90°]",
+        "category": "OBP60 Hardware",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "rollOffset",
+        "label": "Roll Offset",
+        "type": "number",
+        "default": "0",
+        "check": "checkMinMax",
+        "min": -45,
+        "max": 45,
+        "description": "Roll offset angle [-45°...+45°]",
+        "category": "OBP60 Hardware",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "pitchOffset",
+        "label": "Pitch Offset",
+        "type": "number",
+        "default": "0",
+        "check": "checkMinMax",
+        "min": -45,
+        "max": 45,
+        "description": "Pitch offset angle [-45°...+45°]",
         "category": "OBP60 Hardware",
         "capabilities": {
             "obp60":"true"
@@ -274,7 +493,7 @@
         "label": "Temp. Sensor",
         "type": "boolean",
         "default": "off",
-        "description": "Using external 1Wirew devices (DS18B20)",
+        "description": "Use external 1Wire device [off|DS18B20]",
         "list": [
             "off",
             "DS18B20"
@@ -305,8 +524,8 @@
         "name": "underVoltage",
         "label": "Undervoltage",
         "type": "boolean",
-        "default": "true",
-        "description": "If undervoltage detection [on|off] lower than 9V then switch off the device",
+        "default": "false",
+        "description": "Switch off device if voltage drops below 9V [on|off]",
         "category": "OBP60 Hardware",
         "capabilities": {
             "obp60":"true"
@@ -317,8 +536,30 @@
         "label": "Simulation Data",
         "type": "boolean",
         "default": "false",
-        "description": "Can use for simulation data by missing bus data.",
+        "description": "Use simulation data when bus data are missing [on|off]",
         "category": "OBP60 Hardware",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "vOffset",
+        "label": "VSensor Offset",
+        "type": "number",
+        "default": "0.00",
+        "description": "Offset for internal voltage sensor (ESP32)",
+        "category": "OBP60 Calibrations",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "vSlope",
+        "label": "VSensor Slope",
+        "type": "number",
+        "default": "1.00",
+        "description": "Slope for internal voltage sensor (ESP32)",
+        "category": "OBP60 Calibrations",
         "capabilities": {
             "obp60":"true"
         }
@@ -328,7 +569,7 @@
         "label": "Display Mode",
         "type": "list",
         "default": "Logo + QR Code",
-        "description": "Settings for display mode",
+        "description": "Settings for startup display",
         "list": [
             "White Screen",
             "Logo",
@@ -342,10 +583,10 @@
     },
     {
         "name": "displaycolor",
-        "label": "Display Color",
+        "label": "Inverted Display Mode",
         "type": "list",
         "default": "Normal",
-        "description": "If display color inverse then is background black and all other white",
+        "description": "Invert display to white letters on black background [Normal|Inverse]",
         "list": [
             "Normal",
             "Inverse"
@@ -370,8 +611,8 @@
         "name": "refresh",
         "label": "Refresh",
         "type": "boolean",
-        "default": "false",
-        "description": "Refresh E-Ink display after each new page request [on|off]. A refresh reduce background shaddows from older pages.",
+        "default": "true",
+        "description": "Refresh E-Ink display after each new page request to reduce shadows [on|off]",
         "category": "OBP60 Display",
         "capabilities": {
             "obp60":"true"
@@ -382,7 +623,7 @@
         "label": "Hold Values",
         "type": "boolean",
         "default": "false",
-        "description": "Hold old measuring values by missing data stream [on|off]",
+        "description": "Retain old values when data stream stops [on|off]",
         "category": "OBP60 Display",
         "capabilities": {
             "obp60":"true"
@@ -393,7 +634,7 @@
         "label": "Backlight Mode",
         "type": "list",
         "default": "Control by Key",
-        "description": "Settings for display mode",
+        "description": "Settings for automatic backlight mode",
         "list": [
             "Off",
             "Control by Sun",
@@ -416,7 +657,7 @@
         "list": [
             "Off",
             "Bus Data",
-            "GPS Fix",
+            "GPS Fix Lost",
             "Limit Violation"
         ],
         "category": "OBP60 Display",
@@ -429,7 +670,7 @@
         "label": "Buzzer Error",
         "type": "boolean",
         "default": "false",
-        "description": "Sound on error",
+        "description": "Sound on error [on|off]",
         "category": "OBP60 Buzzer",
         "capabilities": {
             "obp60":"true"
@@ -451,7 +692,7 @@
         "label": "Buzzer by Limits",
         "type": "boolean",
         "default": "false",
-        "description": "Sound on limit overrun",
+        "description": "Sound on limit violation",
         "category": "OBP60 Buzzer",
         "capabilities": {
             "obp60":"true"
@@ -462,7 +703,7 @@
         "label": "Buzzer Mode",
         "type": "list",
         "default": "Off",
-        "description": "Settings for Buzzer Mode",
+        "description": "Settings for buzzer behaviour",
         "list": [
             "Off",
             "Short Single Beep",
@@ -482,7 +723,7 @@
         "check": "checkMinMax",
         "min": 0,
         "max": 100,
-        "description": "Buzzer Loudness [0...100%]",
+        "description": "Buzzer loudness [0...100%]",
         "category": "OBP60 Buzzer",
         "capabilities": {
             "obp60":"true"
@@ -494,8 +735,8 @@
         "type": "number",
         "check": "checkMinMax",
         "min": 1,
-        "max": 4,
-        "default":"4",
+        "max": 10,
+        "default":"5",
         "category":"OBP60 Pages",
         "capabilities": {
             "obp60":"true"
@@ -507,7 +748,7 @@
         "type": "list",
         "default": "Voltage",
         "description": "Type of page for page 1",
-        "list":["oneValue","twoValues","threeValues","forValues","forValues2","apparentWind","WindRose","Voltage","DST810","Clock","WhitePage","BME280"],
+        "list":["OneValue","TwoValues","ThreeValues","FourValues","FourValues2","ApparentWind","WindRose","Voltage","DST810","Clock","WhitePage","BME280","RudderPosition","KeelPosition","Battery","Battery2","RollPitch","Solar","Generator"],
         "category": "OBP60 Page 1",
         "capabilities": {
             "obp60":"true"
@@ -523,7 +764,7 @@
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"page1type":"oneValue"},{"page1type":"twoValues"},{"page1type":"threeValues"},{"page1type":"forValues"},{"page1type":"forValues2"}]
+        "condition":[{"page1type":"OneValue"},{"page1type":"TwoValues"},{"page1type":"ThreeValues"},{"page1type":"FourValues"},{"page1type":"FourValues2"}]
     },
     {
         "name": "page1value2",
@@ -535,7 +776,7 @@
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"page1type":"twoValues"},{"page1type":"threeValues"},{"page1type":"forValues"},{"page1type":"forValues2"}]
+        "condition":[{"page1type":"TwoValues"},{"page1type":"ThreeValues"},{"page1type":"FourValues"},{"page1type":"FourValues2"}]
     },
     {
         "name": "page1value3",
@@ -547,7 +788,7 @@
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"page1type":"threeValues"},{"page1type":"forValues"},{"page1type":"forValues2"}]
+        "condition":[{"page1type":"ThreeValues"},{"page1type":"FourValues"},{"page1type":"FourValues2"}]
     },
     {
         "name": "page1value4",
@@ -559,20 +800,20 @@
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"page1type":"forValues"},{"page1type":"forValues2"}]
+        "condition":[{"page1type":"FourValues"},{"page1type":"FourValues2"}]
     },
     {
         "name": "page2type",
         "label": "Type",
         "type": "list",
-        "default": "apparantWind",
+        "default": "ApparentWind",
         "description": "Type of page for page 2",
-        "list":["oneValue","twoValues","threeValues","forValues","forValues2","apparentWind","WindRose","Voltage","DST810","Clock","WhitePage","BME280"],
+        "list":["OneValue","TwoValues","ThreeValues","FourValues","FourValues2","ApparentWind","WindRose","Voltage","DST810","Clock","WhitePage","BME280","RudderPosition","KeelPosition","Battery","Battery2","RollPitch","Solar","Generator"],
         "category": "OBP60 Page 2",
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"visiblePages":"2"},{"visiblePages":"3"},{"visiblePages":"4"}]
+        "condition":[{"visiblePages":"2"},{"visiblePages":"3"},{"visiblePages":"4"},{"visiblePages":"5"},{"visiblePages":"6"},{"visiblePages":"7"},{"visiblePages":"8"},{"visiblePages":"9"},{"visiblePages":"10"}]
     },
     {
         "name": "page2value1",
@@ -584,7 +825,7 @@
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"page2type":"oneValue"},{"page2type":"twoValues"},{"page2type":"threeValues"},{"page2type":"forValues"},{"page2type":"forValues2"}]
+        "condition":[{"page2type":"OneValue"},{"page2type":"TwoValues"},{"page2type":"ThreeValues"},{"page2type":"FourValues"},{"page2type":"FourValues2"}]
     },
     {
         "name": "page2value2",
@@ -596,7 +837,7 @@
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"page2type":"twoValues"},{"page2type":"threeValues"},{"page2type":"forValues"},{"page2type":"forValues2"}]
+        "condition":[{"page2type":"TwoValues"},{"page2type":"ThreeValues"},{"page2type":"FourValues"},{"page2type":"FourValues2"}]
     },
     {
         "name": "page2value3",
@@ -608,7 +849,7 @@
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"page2type":"threeValues"},{"page2type":"forValues"},{"page2type":"forValues2"}]
+        "condition":[{"page2type":"ThreeValues"},{"page2type":"FourValues"},{"page2type":"FourValues2"}]
     },
     {
         "name": "page2value4",
@@ -620,20 +861,20 @@
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"page2type":"forValues"},{"page2type":"forValues2"}]
+        "condition":[{"page2type":"FourValues"},{"page2type":"FourValues2"}]
     },
     {
         "name": "page3type",
         "label": "Type",
         "type": "list",
-        "default": "oneValue",
+        "default": "OneValue",
         "description": "Type of page for page 3",
-        "list":["oneValue","twoValues","threeValues","forValues","forValues2","apparentWind","WindRose","Voltage","DST810","Clock","WhitePage","BME280"],
+        "list":["OneValue","TwoValues","ThreeValues","FourValues","FourValues2","ApparentWind","WindRose","Voltage","DST810","Clock","WhitePage","BME280","RudderPosition","KeelPosition","Battery","Battery2","RollPitch","Solar","Generator"],
         "category": "OBP60 Page 3",
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"visiblePages":"3"},{"visiblePages":"4"}]
+        "condition":[{"visiblePages":"3"},{"visiblePages":"4"},{"visiblePages":"5"},{"visiblePages":"6"},{"visiblePages":"7"},{"visiblePages":"8"},{"visiblePages":"9"},{"visiblePages":"10"}]
     },
     {
         "name": "page3value1",
@@ -645,7 +886,7 @@
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"page3type":"oneValue"},{"page3type":"twoValues"},{"page3type":"threeValues"},{"page3type":"forValues"},{"page3type":"forValues2"}]
+        "condition":[{"page3type":"OneValue"},{"page3type":"TwoValues"},{"page3type":"ThreeValues"},{"page3type":"FourValues"},{"page3type":"FourValues2"}]
     },
     {
         "name": "page3value2",
@@ -657,7 +898,7 @@
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"page3type":"twoValues"},{"page3type":"threeValues"},{"page3type":"forValues"},{"page3type":"forValues2"}]
+        "condition":[{"page3type":"TwoValues"},{"page3type":"ThreeValues"},{"page3type":"FourValues"},{"page3type":"FourValues2"}]
     },
     {
         "name": "page3value3",
@@ -669,7 +910,7 @@
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"page3type":"threeValues"},{"page3type":"forValues"},{"page3type":"forValues2"}]
+        "condition":[{"page3type":"ThreeValues"},{"page3type":"FourValues"},{"page3type":"FourValues2"}]
     },
     {
         "name": "page3value4",
@@ -681,20 +922,20 @@
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"page3type":"forValues"},{"page3type":"forValues2"}]
+        "condition":[{"page3type":"FourValues"},{"page3type":"FourValues2"}]
     },
     {
         "name": "page4type",
         "label": "Type",
         "type": "list",
-        "default": "oneValue",
+        "default": "OneValue",
         "description": "Type of page for page 4",
-        "list":["oneValue","twoValues","threeValues","forValues","forValues2","apparentWind","WindRose","Voltage","DST810","Clock","WhitePage","BME280"],
+        "list":["OneValue","TwoValues","ThreeValues","FourValues","FourValues2","ApparentWind","WindRose","Voltage","DST810","Clock","WhitePage","BME280","RudderPosition","KeelPosition","Battery","Battery2","RollPitch","Solar","Generator"],
         "category": "OBP60 Page 4",
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"visiblePages":"4"}]
+        "condition":[{"visiblePages":"4"},{"visiblePages":"5"},{"visiblePages":"6"},{"visiblePages":"7"},{"visiblePages":"8"},{"visiblePages":"9"},{"visiblePages":"10"}]
     },
     {
         "name": "page4value1",
@@ -706,7 +947,7 @@
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"page4type":"oneValue"},{"page4type":"twoValues"},{"page4type":"threeValues"},{"page4type":"forValues"},{"page4type":"forValues2"}]
+        "condition":[{"page4type":"OneValue"},{"page4type":"TwoValues"},{"page4type":"ThreeValues"},{"page4type":"FourValues"},{"page4type":"FourValues2"}]
     },
     {
         "name": "page4value2",
@@ -718,7 +959,7 @@
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"page4type":"twoValues"},{"page4type":"threeValues"},{"page4type":"forValues"},{"page4type":"forValues2"}]
+        "condition":[{"page4type":"TwoValues"},{"page4type":"ThreeValues"},{"page4type":"FourValues"},{"page4type":"FourValues2"}]
     },
     {
         "name": "page4value3",
@@ -730,7 +971,7 @@
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"page4type":"threeValues"},{"page4type":"forValues"},{"page4type":"forValues2"}]
+        "condition":[{"page4type":"ThreeValues"},{"page4type":"FourValues"},{"page4type":"FourValues2"}]
     },
     {
         "name": "page4value4",
@@ -742,6 +983,372 @@
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"page4type":"forValues"},{"page4type":"forValues2"}]
-    }
+        "condition":[{"page4type":"FourValues"},{"page4type":"FourValues2"}]
+    },
+    {
+        "name": "page5type",
+        "label": "Type",
+        "type": "list",
+        "default": "OneValue",
+        "description": "Type of page for page 5",
+        "list":["OneValue","TwoValues","ThreeValues","FourValues","FourValues2","ApparentWind","WindRose","Voltage","DST810","Clock","WhitePage","BME280","RudderPosition","KeelPosition","Battery","Battery2","RollPitch","Solar","Generator"],
+        "category": "OBP60 Page 5",
+        "capabilities": {
+            "obp60":"true"
+        },
+        "condition":[{"visiblePages":"5"},{"visiblePages":"6"},{"visiblePages":"7"},{"visiblePages":"8"},{"visiblePages":"9"},{"visiblePages":"10"}]
+    },
+    {
+        "name": "page5value1",
+        "label": "Field 1",
+        "type": "boatData",
+        "default": "AWS",
+        "description": "The display for field one",
+        "category": "OBP60 Page 5",
+        "capabilities": {
+            "obp60":"true"
+        },
+        "condition":[{"page5type":"OneValue"},{"page5type":"TwoValues"},{"page5type":"ThreeValues"},{"page5type":"FourValues"},{"page5type":"FourValues2"}]
+    },
+    {
+        "name": "page5value2",
+        "label": "Field 2",
+        "type": "boatData",
+        "default": "",
+        "description": "The display for field two",
+        "category": "OBP60 Page 5",
+        "capabilities": {
+            "obp60":"true"
+        },
+        "condition":[{"page5type":"TwoValues"},{"page5type":"ThreeValues"},{"page5type":"FourValues"},{"page5type":"FourValues2"}]
+    },
+    {
+        "name": "page5value3",
+        "label": "Field 3",
+        "type": "boatData",
+        "default": "",
+        "description": "The display for field 3",
+        "category": "OBP60 Page 5",
+        "capabilities": {
+            "obp60":"true"
+        },
+        "condition":[{"page5type":"ThreeValues"},{"page5type":"FourValues"},{"page5type":"FourValues2"}]
+    },
+    {
+        "name": "page5value4",
+        "label": "Field 4",
+        "type": "boatData",
+        "default": "",
+        "description": "The display for field 4",
+        "category": "OBP60 Page 5",
+        "capabilities": {
+            "obp60":"true"
+        },
+        "condition":[{"page5type":"FourValues"},{"page5type":"FourValues2"}]
+    },
+    {
+        "name": "page6type",
+        "label": "Type",
+        "type": "list",
+        "default": "OneValue",
+        "description": "Type of page for page 6",
+        "list":["OneValue","TwoValues","ThreeValues","FourValues","FourValues2","ApparentWind","WindRose","Voltage","DST810","Clock","WhitePage","BME280","RudderPosition","KeelPosition","Battery","Battery2","RollPitch","Solar","Generator"],
+        "category": "OBP60 Page 6",
+        "capabilities": {
+            "obp60":"true"
+        },
+        "condition":[{"visiblePages":"6"},{"visiblePages":"7"},{"visiblePages":"8"},{"visiblePages":"9"},{"visiblePages":"10"}]
+    },
+    {
+        "name": "page6value1",
+        "label": "Field 1",
+        "type": "boatData",
+        "default": "AWS",
+        "description": "The display for field one",
+        "category": "OBP60 Page 6",
+        "capabilities": {
+            "obp60":"true"
+        },
+        "condition":[{"page6type":"OneValue"},{"page6type":"TwoValues"},{"page6type":"ThreeValues"},{"page6type":"FourValues"},{"page6type":"FourValues2"}]
+    },
+    {
+        "name": "page6value2",
+        "label": "Field 2",
+        "type": "boatData",
+        "default": "",
+        "description": "The display for field two",
+        "category": "OBP60 Page 6",
+        "capabilities": {
+            "obp60":"true"
+        },
+        "condition":[{"page6type":"TwoValues"},{"page6type":"ThreeValues"},{"page6type":"FourValues"},{"page6type":"FourValues2"}]
+    },
+    {
+        "name": "page6value3",
+        "label": "Field 3",
+        "type": "boatData",
+        "default": "",
+        "description": "The display for field 3",
+        "category": "OBP60 Page 6",
+        "capabilities": {
+            "obp60":"true"
+        },
+        "condition":[{"page6type":"ThreeValues"},{"page6type":"FourValues"},{"page6type":"FourValues2"}]
+    },
+    {
+        "name": "page6value4",
+        "label": "Field 4",
+        "type": "boatData",
+        "default": "",
+        "description": "The display for field 4",
+        "category": "OBP60 Page 6",
+        "capabilities": {
+            "obp60":"true"
+        },
+        "condition":[{"page6type":"FourValues"},{"page6type":"FourValues2"}]
+    },
+    {
+        "name": "page7type",
+        "label": "Type",
+        "type": "list",
+        "default": "OneValue",
+        "description": "Type of page for page 7",
+        "list":["OneValue","TwoValues","ThreeValues","FourValues","FourValues2","ApparentWind","WindRose","Voltage","DST810","Clock","WhitePage","BME280","RudderPosition","KeelPosition","Battery","Battery2","RollPitch","Solar","Generator"],
+        "category": "OBP60 Page 7",
+        "capabilities": {
+            "obp60":"true"
+        },
+        "condition":[{"visiblePages":"7"},{"visiblePages":"8"},{"visiblePages":"9"},{"visiblePages":"10"}]
+    },
+    {
+        "name": "page7value1",
+        "label": "Field 1",
+        "type": "boatData",
+        "default": "AWS",
+        "description": "The display for field one",
+        "category": "OBP60 Page 7",
+        "capabilities": {
+            "obp60":"true"
+        },
+        "condition":[{"page7type":"OneValue"},{"page7type":"TwoValues"},{"page7type":"ThreeValues"},{"page7type":"FourValues"},{"page7type":"FourValues2"}]
+    },
+    {
+        "name": "page7value2",
+        "label": "Field 2",
+        "type": "boatData",
+        "default": "",
+        "description": "The display for field two",
+        "category": "OBP60 Page 7",
+        "capabilities": {
+            "obp60":"true"
+        },
+        "condition":[{"page7type":"TwoValues"},{"page7type":"ThreeValues"},{"page7type":"FourValues"},{"page7type":"FourValues2"}]
+    },
+    {
+        "name": "page7value3",
+        "label": "Field 3",
+        "type": "boatData",
+        "default": "",
+        "description": "The display for field 3",
+        "category": "OBP60 Page 7",
+        "capabilities": {
+            "obp60":"true"
+        },
+        "condition":[{"page7type":"ThreeValues"},{"page7type":"FourValues"},{"page7type":"FourValues2"}]
+    },
+    {
+        "name": "page7value4",
+        "label": "Field 4",
+        "type": "boatData",
+        "default": "",
+        "description": "The display for field 4",
+        "category": "OBP60 Page 7",
+        "capabilities": {
+            "obp60":"true"
+        },
+        "condition":[{"page7type":"FourValues"},{"page7type":"FourValues2"}]
+    },
+    {
+        "name": "page8type",
+        "label": "Type",
+        "type": "list",
+        "default": "OneValue",
+        "description": "Type of page for page 8",
+        "list":["OneValue","TwoValues","ThreeValues","FourValues","FourValues2","ApparentWind","WindRose","Voltage","DST810","Clock","WhitePage","BME280","RudderPosition","KeelPosition","Battery","Battery2","RollPitch","Solar","Generator"],
+        "category": "OBP60 Page 8",
+        "capabilities": {
+            "obp60":"true"
+        },
+        "condition":[{"visiblePages":"8"},{"visiblePages":"9"},{"visiblePages":"10"}]
+    },
+    {
+        "name": "page8value1",
+        "label": "Field 1",
+        "type": "boatData",
+        "default": "AWS",
+        "description": "The display for field one",
+        "category": "OBP60 Page 8",
+        "capabilities": {
+            "obp60":"true"
+        },
+        "condition":[{"page8type":"OneValue"},{"page8type":"TwoValues"},{"page8type":"ThreeValues"},{"page8type":"FourValues"},{"page8type":"FourValues2"}]
+    },
+    {
+        "name": "page8value2",
+        "label": "Field 2",
+        "type": "boatData",
+        "default": "",
+        "description": "The display for field two",
+        "category": "OBP60 Page 8",
+        "capabilities": {
+            "obp60":"true"
+        },
+        "condition":[{"page8type":"TwoValues"},{"page8type":"ThreeValues"},{"page8type":"FourValues"},{"page8type":"FourValues2"}]
+    },
+    {
+        "name": "page8value3",
+        "label": "Field 3",
+        "type": "boatData",
+        "default": "",
+        "description": "The display for field 3",
+        "category": "OBP60 Page 8",
+        "capabilities": {
+            "obp60":"true"
+        },
+        "condition":[{"page8type":"ThreeValues"},{"page8type":"FourValues"},{"page8type":"FourValues2"}]
+    },
+    {
+        "name": "page8value4",
+        "label": "Field 4",
+        "type": "boatData",
+        "default": "",
+        "description": "The display for field 4",
+        "category": "OBP60 Page 8",
+        "capabilities": {
+            "obp60":"true"
+        },
+        "condition":[{"page8type":"FourValues"},{"page8type":"FourValues2"}]
+    },
+    {
+        "name": "page9type",
+        "label": "Type",
+        "type": "list",
+        "default": "OneValue",
+        "description": "Type of page for page 9",
+        "list":["OneValue","TwoValues","ThreeValues","FourValues","FourValues2","ApparentWind","WindRose","Voltage","DST810","Clock","WhitePage","BME280","RudderPosition","KeelPosition","Battery","Battery2","RollPitch","Solar","Generator"],
+        "category": "OBP60 Page 9",
+        "capabilities": {
+            "obp60":"true"
+        },
+        "condition":[{"visiblePages":"9"},{"visiblePages":"10"}]
+    },
+    {
+        "name": "page9value1",
+        "label": "Field 1",
+        "type": "boatData",
+        "default": "AWS",
+        "description": "The display for field one",
+        "category": "OBP60 Page 9",
+        "capabilities": {
+            "obp60":"true"
+        },
+        "condition":[{"page9type":"OneValue"},{"page9type":"TwoValues"},{"page9type":"ThreeValues"},{"page9type":"FourValues"},{"page9type":"FourValues2"}]
+    },
+    {
+        "name": "page9value2",
+        "label": "Field 2",
+        "type": "boatData",
+        "default": "",
+        "description": "The display for field two",
+        "category": "OBP60 Page 9",
+        "capabilities": {
+            "obp60":"true"
+        },
+        "condition":[{"page9type":"TwoValues"},{"page9type":"ThreeValues"},{"page9type":"FourValues"},{"page9type":"FourValues2"}]
+    },
+    {
+        "name": "page9value3",
+        "label": "Field 3",
+        "type": "boatData",
+        "default": "",
+        "description": "The display for field 3",
+        "category": "OBP60 Page 9",
+        "capabilities": {
+            "obp60":"true"
+        },
+        "condition":[{"page9type":"ThreeValues"},{"page9type":"FourValues"},{"page9type":"FourValues2"}]
+    },
+    {
+        "name": "page9value4",
+        "label": "Field 4",
+        "type": "boatData",
+        "default": "",
+        "description": "The display for field 4",
+        "category": "OBP60 Page 9",
+        "capabilities": {
+            "obp60":"true"
+        },
+        "condition":[{"page9type":"FourValues"},{"page9type":"FourValues2"}]
+    },
+    {
+        "name": "page10type",
+        "label": "Type",
+        "type": "list",
+        "default": "OneValue",
+        "description": "Type of page for page 10",
+        "list":["OneValue","TwoValues","ThreeValues","FourValues","FourValues2","ApparentWind","WindRose","Voltage","DST810","Clock","WhitePage","BME280","RudderPosition","KeelPosition","Battery","Battery2","RollPitch","Solar","Generator"],
+        "category": "OBP60 Page 10",
+        "capabilities": {
+            "obp60":"true"
+        },
+        "condition":[{"visiblePages":"10"}]
+    },
+    {
+        "name": "page10value1",
+        "label": "Field 1",
+        "type": "boatData",
+        "default": "AWS",
+        "description": "The display for field one",
+        "category": "OBP60 Page 10",
+        "capabilities": {
+            "obp60":"true"
+        },
+        "condition":[{"page10type":"OneValue"},{"page10type":"TwoValues"},{"page10type":"ThreeValues"},{"page10type":"FourValues"},{"page10type":"FourValues2"}]
+    },
+    {
+        "name": "page10value2",
+        "label": "Field 2",
+        "type": "boatData",
+        "default": "",
+        "description": "The display for field two",
+        "category": "OBP60 Page 10",
+        "capabilities": {
+            "obp60":"true"
+        },
+        "condition":[{"page10type":"TwoValues"},{"page10type":"ThreeValues"},{"page10type":"FourValues"},{"page10type":"FourValues2"}]
+    },
+    {
+        "name": "page10value3",
+        "label": "Field 3",
+        "type": "boatData",
+        "default": "",
+        "description": "The display for field 3",
+        "category": "OBP60 Page 10",
+        "capabilities": {
+            "obp60":"true"
+        },
+        "condition":[{"page10type":"ThreeValues"},{"page10type":"FourValues"},{"page10type":"FourValues2"}]
+    },
+    {
+        "name": "page10value4",
+        "label": "Field 4",
+        "type": "boatData",
+        "default": "",
+        "description": "The display for field 4",
+        "category": "OBP60 Page 10",
+        "capabilities": {
+            "obp60":"true"
+        },
+        "condition":[{"page10type":"FourValues"},{"page10type":"FourValues2"}]
+    }    
 ]

@@ -12,11 +12,20 @@
     // Extension Port MCP23017
     #define MCP23017_I2C_ADDR 0x20  // Addr. 0 is 0x20
     // BME280
-    #define BME280_I2C_ADDR 0x76    // Addr. 0x76
+    #define BME280_I2C_ADDR 0x76    // Addr. 0x76 (0x77)
     // BMP280
-    #define BMP280_I2C_ADDR 0x77    // Addr. 0x77
-    // SHT21
-    #define SHT21_I2C_ADDR 0x40     // Addr. 0x40
+    #define BMP280_I2C_ADDR 0x76    // Addr. 0x76 (0x77)
+    // BMP085 / BMP180
+    #define BMP180_I2C_ADDR 0x77    // Addr. 0x77 (fix)
+    // SHT21 / HUT21
+    #define SHT21_I2C_ADDR 0x40     // Addr. 0x40 (fix)
+    // AS5600
+    #define AS5600_I2C_ADDR 0x36    // Addr. 0x36 (fix)
+    // INA226
+    #define SHUNT_VOLTAGE 0.075     // Shunt voltage in V by max. current (75mV)
+    #define INA226_I2C_ADDR1 0x41   // Addr. 0x41 (fix A0 = 5V, A1 = GND) for battery
+    #define INA226_I2C_ADDR2 0x44   // Addr. 0x44 (fix A0 = GND, A1 = 5V) for solar panels
+    #define INA226_I2C_ADDR3 0x45   // Addr. 0x45 (fix A0 = 5V, A1 = 5V) for generator
     // SPI (E-Ink display, Extern Bus)
     #define OBP_SPI_CS 5
     #define OBP_SPI_DC 17
@@ -26,13 +35,13 @@
     #define OBP_SPI_DIN 23
     #define SHOW_TIME 6000        // Show time for logo and WiFi QR code
     #define FULL_REFRESH_TIME 600 // Refresh cycle time in [s][600...3600] for full display update (very important healcy function)
-    #define MAX_PAGE_NUMBER 4     // Max number of pages for show data
+    #define MAX_PAGE_NUMBER 10    // Max number of pages for show data
     #define FONT1 "Ubuntu_Bold8pt7b"
     #define FONT2 "Ubuntu_Bold24pt7b"
     #define FONT3 "Ubuntu_Bold32pt7b"
     #define FONT4 "DSEG7Classic_BoldItalic80pt7b"
 
-    // GPS (NEO-6M)
+    // GPS (NEO-6M, NEO-M8N)
      #define OBP_GPS_TX 35      // Read only GPS data
     // TTP229 Touch Pad Controller (!!No I2C!!)
     #define TTP_SDO 25

@@ -1,5 +1,7 @@
+#ifdef BOARD_NODEMCU32S_OBP60
+
 #include "Pagedata.h"
-#include "OBP60ExtensionPort.h"
+#include "OBP60Extensions.h"
 
 class PageBME280 : public Page
 {
@@ -89,7 +91,7 @@ class PageBME280 : public Page
         else{
             svalue3 = "---";
         }
-        String unit3 = "mBar";                          // Unit of value
+        String unit3 = "hPa";                          // Unit of value
 
         // Optical warning by limit violation (unused)
         if(String(flashLED) == "Limit Violation"){
@@ -194,15 +196,16 @@ class PageBME280 : public Page
         // Key Layout
         display.setTextColor(textcolor);
         display.setFont(&Ubuntu_Bold8pt7b);
-        display.setCursor(130, 290);
         if(keylock == false){
+            display.setCursor(130, 290);
             display.print("[  <<<<  " + String(commonData.data.actpage) + "/" + String(commonData.data.maxpage) + "  >>>>  ]");
-            if(String(backlightMode) == "Control by Key"){              // Key for illumination
+            if(String(backlightMode) == "Control by Key"){                  // Key for illumination
                 display.setCursor(343, 290);
                 display.print("[ILUM]");
             }
         }
         else{
+            display.setCursor(130, 290);
             display.print(" [    Keylock active    ]");
         }
 
@@ -228,3 +231,5 @@ PageDescription registerPageBME280(
     {},             // Names of bus values undepends on selection in Web configuration (refer GwBoatData.h)
     true            // Show display header on/off
 );
+
+#endif

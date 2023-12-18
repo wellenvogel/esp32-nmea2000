@@ -54,6 +54,19 @@ They are devided into binaries for an initial flash (xxx-all.bin) and binaries f
 
 Initial Flash
 *************
+
+__Browser__
+
+If you run a system with a modern Chrome or Edge Browser you can directly flash your device from within the browser.
+Just go to the [Flash Page](https://wellenvogel.github.io/esp32-nmea2000/install.html) and select the "Initial" flash for your Hardware. This will install the most current software to your device.
+If you are on Windows you will need to have the correct driver installed before (see below at [windows users](#windows) - only install the driver, not the flashtool).
+
+You can also install an update from the flash page but normally it is easier to do this from the Web Gui of the device (see [below](#update)).
+
+The [Flash Page](https://wellenvogel.github.io/esp32-nmea2000/install.html) will also allow you to open a console window to your ESP32.
+
+__Tool based__
+
 To initially flash a deviceyou can use [ESPTool](https://github.com/espressif/esptool).
 The flash command must be (example for m5stack-atom):
 
@@ -77,12 +90,14 @@ Afterwards run flashtool.pyz with
 ```
 python3 flashtool.pyz
 ```
+<span id="windows"/>
 
 __windows users__<br> 
-You can find a prebuild executable in tools: [esptool.exe](tools/esptool.exe).
-Just create an empty directory on your machine, download the esptool to this directory and also download the binary (xxx-all.bin) from [releases](../../releases).
-Afterwards you need to install the driver for the serial port to connect your ESP32 board. For a modern windows the driver at [FTDI](https://ftdichip.com/drivers/d2xx-drivers/) should be working.
+You need to install the driver for the serial port to connect your ESP32 board. For a modern windows the driver at [FTDI](https://ftdichip.com/drivers/d2xx-drivers/) should be working.
 After installing the driver check with your device manager for the com port that is assigned to your connected esp device.
+
+For the flashtool you can find a prebuild executable in tools: [esptool.exe](tools/esptool.exe).
+Just create an empty directory on your machine, download the esptool to this directory and also download the binary (xxx-all.bin) from [releases](../../releases).
 
 Open a command prompt and change into the directory you downloaded the esptool.exe and the firmware binary.
 Flash with the command
@@ -97,7 +112,7 @@ There is no installation needed - just start the downloaded exe.
 Some Anti Virus Software may (accidently) tag this as infected. In this case you can still install the UI in two steps:
  *  you first need to install python3 from the [download page](https://www.python.org/downloads/windows/) - use the Windows 64 Bit installer. Install using the default settings. 
 *  Afterwards download [flashtool.pyz](../../raw/master/tools/flashtool.pyz) and run it with a double click.
-
+<span id="update"/>
 
 Update
 ******
@@ -145,6 +160,35 @@ For details refer to the [example description](lib/exampletask/Readme.md).
 
 Changelog
 ---------
+[20230317](../../releases/tag/20230317)
+**********
+* correctly convert bar to Pascal in XDR records
+
+[20230309](../../releases/tag/20230308)
+**********
+* use underscores in settings file names [#40](../../issues/40)
+* pin platform and lib versions
+* add rs232 and rs485 atom boards
+* use less memory when saving new config
+* correct factor for ROT [#44](../../issues/44)
+* better handling of VHW - send STW (128259) even if no heading, additionally send 127250 (magnetic/true) if included in VHW [#49](../../issues/49)
+* parse MTW and convert to 130310 [#49](../../issues/49)
+
+[20220403](../../releases/tag/20220403)
+*********
+* add support for PGN 127257 pitch/roll/yaw
+* only convert RMC and GGA if valid status [#38](../../issues/38)
+* only send 129539 if GSA fix mode is 2 or 3 [#39](../../issues/39)
+
+[20220320](../../releases/tag/20220320)
+*********
+* accept lowercase characters in NMEA0183 checksum [#33](../../issues/33)
+* only show apPassword in UI if change is allowed [#34](../../issues/34)
+* optimize memory usage for set config values
+* add a source field to GwApi::BoatValue
+* make NMEA0183 messages robust against to much fields
+* reset the can bus driver if the queue remains full for 2s (avoid problems if initially no other device is at the bus)
+
 [20220308](../../releases/tag/20220308)
 *********
 * correctly handle select fields when importing the config

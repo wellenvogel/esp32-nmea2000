@@ -7,6 +7,7 @@
 #include <strings.h>
 #include "NMEA0183AIStoNMEA2000.h"
 #include "GwXDRMappings.h"
+#include "GwNmea0183Msg.h"
 
 static const double mToFathoms=0.546806649;
 static const double mToFeet=3.2808398950131;
@@ -21,114 +22,6 @@ NMEA0183DataToN2K::NMEA0183DataToN2K(GwLog *logger, GwBoatData *boatData,N2kSend
 
 
 
-class SNMEA0183Msg : public tNMEA0183Msg{
-        public:
-            int sourceId;
-            const char *line;
-            bool isAis=false;
-            SNMEA0183Msg(const char *line, int sourceId){
-                this->sourceId=sourceId;
-                this->line=line;
-                int len=strlen(line);
-                if (len >6){
-                    if (strncasecmp(line,"!AIVDM",6) == 0
-                        ||
-                        strncasecmp(line,"!AIVDO",6) == 0
-                    ) isAis=true;
-                }
-            }
-            String getKey(){
-                if (!isAis) return MessageCode();
-                char buf[6];
-                strncpy(buf,line+1,5);
-                buf[5]=0;
-                return String(buf);
-            }
-            char fromHex(char v){
-                if (v >= '0' && v <= '9') return v-'0';
-                if (v >= 'A' && v <= 'F') return v-'A'+10;
-                if (v >= 'a' && v <= 'f') return v-'a'+10;
-                return 0;
-            }
-            bool SetMessageCor(const char *buf)
-            {
-                unsigned char csMsg;
-                int i = 0;
-                uint8_t iData = 0;
-                bool result = false;
-
-                Clear();
-                _MessageTime = millis();
-
-                if (buf[i] != '$' && buf[i] != '!')
-                    return result; // Invalid message
-                Prefix = buf[i];
-                i++; // Pass start prefix
-
-                //  Serial.println(buf);
-                // Set sender
-                for (; iData < 2 && buf[i] != 0; i++, iData++)
-                {
-                    CheckSum ^= buf[i];
-                    Data[iData] = buf[i];
-                }
-
-                if (buf[i] == 0)
-                {
-                    Clear();
-                    return result;
-                } // Invalid message
-
-                Data[iData] = 0;
-                iData++; // null termination for sender
-                // Set message code. Read until next comma
-                for (; buf[i] != ',' && buf[i] != 0 && iData < MAX_NMEA0183_MSG_LEN; i++, iData++)
-                {
-                    CheckSum ^= buf[i];
-                    Data[iData] = buf[i];
-                }
-                if (buf[i] != ',')
-                {
-                    Clear();
-                    return result;
-                } // No separation after message code -> invalid message
-
-                // Set the data and calculate checksum. Read until '*'
-                for (; buf[i] != '*' && buf[i] != 0 && iData < MAX_NMEA0183_MSG_LEN; i++, iData++)
-                {
-                    CheckSum ^= buf[i];
-                    Data[iData] = buf[i];
-                    if (buf[i] == ',')
-                    {                                    // New field
-                        Data[iData] = 0;                 // null termination for previous field
-                        Fields[_FieldCount] = iData + 1; // Set start of field
-                        _FieldCount++;
-                    }
-                }
-
-                if (buf[i] != '*')
-                {
-                    Clear();
-                    return false;
-                }                // No checksum -> invalid message
-                Data[iData] = 0; // null termination for previous field
-                i++;             // Pass '*';
-                csMsg = fromHex(buf[i])<< 4;
-                i++;
-                csMsg |= fromHex(buf[i]);
-
-                if (csMsg == CheckSum)
-                {
-                    result = true;
-                }
-                else
-                {
-                    Clear();
-                }
-
-                return result;
-            }
-};
 
 class NMEA0183DataToN2KFunctions : public NMEA0183DataToN2K
 {
@@ -395,6 +288,11 @@ private:
                     }
                 }
                 break;
+            case XDRATTITUDE:
+                if (fillFieldList(current,fields,3)){
+                    SetN2kPGN127257(n2kMsg,current.mapping.instanceId,fields[0],fields[1],fields[2]);
+                    send(n2kMsg,msg.sourceId,buildN2KKey(n2kMsg,current.mapping));
+                }    
             default:
                 continue;
             }
@@ -455,6 +353,10 @@ private:
         if (!NMEA0183ParseRMC_nc(msg, GPST, status, LAT, LON, COG, SOG, GPSD, VAR, &DateTime))
         {
             LOG_DEBUG(GwLog::DEBUG, "failed to parse RMC %s", msg.line);
+            return;
+        }
+        if (status != 'A' && status != 'a'){
+            LOG_DEBUG(GwLog::DEBUG, "invalid status %c for RMC %s",status, msg.line);
             return;
         }
         tN2kMsg n2kMsg;
@@ -624,7 +526,7 @@ private:
             boatData->VAR->getDataWithDefault(N2kDoubleNA),
             boatData->DEV->getDataWithDefault(N2kDoubleNA)
         );
-        send(n2kMsg,msg.sourceId);    
+        send(n2kMsg,msg.sourceId,"127250M");    
     }
     
     void convertHDT(const SNMEA0183Msg &msg){
@@ -668,7 +570,7 @@ private:
         UD(DEV);
         tN2kMsg n2kMsg;
         SetN2kMagneticHeading(n2kMsg,1,MHDG,DEV,VAR);
-        send(n2kMsg,msg.sourceId);    
+        send(n2kMsg,msg.sourceId,"127250M");    
     }
 
     void convertDPT(const SNMEA0183Msg &msg){
@@ -790,10 +692,19 @@ private:
             LOG_DEBUG(GwLog::DEBUG, "failed to parse VHW %s", msg.line);
             return;
         }
-        if (! updateDouble(boatData->STW,STW,msg.sourceId)) return;
-        if (! updateDouble(boatData->HDG,TrueHeading,msg.sourceId)) return;
-        if (MagneticHeading == NMEA0183DoubleNA) MagneticHeading=N2kDoubleNA;
         tN2kMsg n2kMsg;
+        if (updateDouble(boatData->HDG,TrueHeading,msg.sourceId)){
+            SetN2kTrueHeading(n2kMsg,1,TrueHeading);
+            send(n2kMsg,msg.sourceId); 
+        }
+        if(updateDouble(boatData->MHDG,MagneticHeading,msg.sourceId)){
+            SetN2kMagneticHeading(n2kMsg,1,MagneticHeading,
+                boatData->DEV->getDataWithDefault(N2kDoubleNA),
+                boatData->VAR->getDataWithDefault(N2kDoubleNA)
+                );
+            send(n2kMsg,msg.sourceId,"127250M"); //ensure both mag and true are sent
+        }
+        if (! updateDouble(boatData->STW,STW,msg.sourceId)) return;
         SetN2kBoatSpeed(n2kMsg,1,STW);
         send(n2kMsg,msg.sourceId);
 
@@ -857,6 +768,10 @@ private:
             LOG_DEBUG(GwLog::DEBUG, "failed to parse GGA %s", msg.line);
             return;   
         }
+        if (GPSQualityIndicator == 0){
+            LOG_DEBUG(GwLog::DEBUG, "quality 0 (no fix) for GGA %s", msg.line);
+            return;   
+        }
         if (! updateDouble(boatData->GPST,GPSTime,msg.sourceId)) return;
         if (! updateDouble(boatData->LAT,Latitude,msg.sourceId)) return;        
         if (! updateDouble(boatData->LON,Longitude,msg.sourceId)) return;    
@@ -881,7 +796,10 @@ private:
             return;
         }
         int fixMode=atoi(msg.Field(1));
-
+        if (fixMode != 2 && fixMode != 3){
+            LOG_DEBUG(GwLog::DEBUG,"no fix in GSA, mode=%d",fixMode);
+            return;
+        }
         tN2kMsg n2kMsg;
         tN2kGNSSDOPmode mode=N2kGNSSdm_Unavailable;
         if (fixMode >= 0 && fixMode <=3) mode=(tN2kGNSSDOPmode)fixMode;
@@ -978,6 +896,7 @@ private:
             LOG_DEBUG(GwLog::DEBUG,"unable to parse ROT %s",msg.line);
             return;
         }
+        ROT=ROT / ROT_WA_FACTOR; 
         if (! updateDouble(boatData->ROT,ROT,msg.sourceId)) return;
         tN2kMsg n2kMsg;
         SetN2kRateOfTurn(n2kMsg,1,ROT);
@@ -1000,6 +919,23 @@ private:
         tN2kMsg n2kMsg;
         tN2kXTEMode mode=xteMode(msg.Field(5)[0]);
         SetN2kXTE(n2kMsg,1,mode,false,xte);
+        send(n2kMsg,msg.sourceId);
+    }
+
+    void convertMTW(const SNMEA0183Msg &msg){
+        if (msg.FieldCount() < 2){
+            LOG_DEBUG(GwLog::DEBUG,"unable to parse MTW %s",msg.line);
+            return;   
+        }
+        if (msg.Field(1)[0] != 'C'){
+            LOG_DEBUG(GwLog::DEBUG,"invalid temp unit in MTW %s",msg.line);   
+            return; 
+        }
+        if (msg.FieldLen(0) < 1) return;
+        double WTemp=CToKelvin(atof(msg.Field(0)));
+        UD(WTemp);
+        tN2kMsg n2kMsg;
+        SetN2kPGN130310(n2kMsg,1,WTemp);
         send(n2kMsg,msg.sourceId);
     }
 
@@ -1071,10 +1007,13 @@ private:
             String(F("ROT")), &NMEA0183DataToN2KFunctions::convertROT);
         converters.registerConverter(
             129283UL,
-            String(F("XTE")), &NMEA0183DataToN2KFunctions::convertXTE);         
-        unsigned long *xdrpgns=new unsigned long[7]{127505UL,127508UL,130312UL,130313UL,130314UL,127489UL,127488UL};    
+            String(F("XTE")), &NMEA0183DataToN2KFunctions::convertXTE); 
         converters.registerConverter(
-            7,
+            130310UL,
+            String(F("MTW")), &NMEA0183DataToN2KFunctions::convertMTW);             
+        unsigned long *xdrpgns=new unsigned long[8]{127505UL,127508UL,130312UL,130313UL,130314UL,127489UL,127488UL,127257UL};    
+        converters.registerConverter(
+            8,
             xdrpgns,
             F("XDR"), &NMEA0183DataToN2KFunctions::convertXDR);
         unsigned long *aispgns=new unsigned long[7]{129810UL,129809UL,129040UL,129039UL,129802UL,129794UL,129038UL};

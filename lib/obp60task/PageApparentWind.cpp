@@ -1,5 +1,7 @@
+#ifdef BOARD_NODEMCU32S_OBP60
+
 #include "Pagedata.h"
-#include "OBP60ExtensionPort.h"
+#include "OBP60Extensions.h"
 
 class PageApparentWind : public Page
 {
@@ -51,7 +53,7 @@ public:
 
         // Get config data
         String lengthformat = config->getString(config->lengthFormat);
-        bool simulation = config->getBool(config->useSimuData);
+        // bool simulation = config->getBool(config->useSimuData);
         String displaycolor = config->getString(config->displaycolor);
         bool holdvalues = config->getBool(config->holdvalues);
         String flashLED = config->getString(config->flashLED);
@@ -62,7 +64,7 @@ public:
         String name1 = bvalue1->getName().c_str();      // Value name
         name1 = name1.substring(0, 6);                  // String length limit for value name
         double value1 = bvalue1->value;                 // Value as double in SI unit
-        bool valid1 = bvalue1->valid;                   // Valid information 
+        // bool valid1 = bvalue1->valid;                   // Valid information 
         String svalue1 = formatValue(bvalue1, commonData).svalue;    // Formatted value as string including unit conversion and switching decimal places
         String unit1 = formatValue(bvalue1, commonData).unit;        // Unit of value
 
@@ -71,7 +73,7 @@ public:
         String name2 = bvalue2->getName().c_str();      // Value name
         name2 = name2.substring(0, 6);                  // String length limit for value name
         double value2 = bvalue2->value;                 // Value as double in SI unit
-        bool valid2 = bvalue2->valid;                   // Valid information 
+        // bool valid2 = bvalue2->valid;                   // Valid information 
         String svalue2 = formatValue(bvalue2, commonData).svalue;    // Formatted value as string including unit conversion and switching decimal places
         String unit2 = formatValue(bvalue2, commonData).unit;        // Unit of value
 
@@ -165,15 +167,16 @@ public:
         // Key Layout
         display.setTextColor(textcolor);
         display.setFont(&Ubuntu_Bold8pt7b);
-        display.setCursor(130, 290);
         if(keylock == false){
+            display.setCursor(130, 290);
             display.print("[  <<<<  " + String(commonData.data.actpage) + "/" + String(commonData.data.maxpage) + "  >>>>  ]");
-            if(String(backlightMode) == "Control by Key"){              // Key for illumination
+            if(String(backlightMode) == "Control by Key"){                  // Key for illumination
                 display.setCursor(343, 290);
                 display.print("[ILUM]");
             }
         }
         else{
+            display.setCursor(130, 290);
             display.print(" [    Keylock active    ]");
         }
 
@@ -194,9 +197,11 @@ static Page *createPage(CommonData &common){
  * and will will provide the names of the fixed values we need
  */
 PageDescription registerPageApparentWind(
-    "apparentWind",     // Page name
+    "ApparentWind",     // Page name
     createPage,         // Action
     0,                  // Number of bus values depends on selection in Web configuration
     {"AWS","AWA"},      // Bus values we need in the page
     true                // Show display header on/off
 );
+
+#endif
