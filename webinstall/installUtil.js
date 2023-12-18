@@ -61,6 +61,7 @@ class ESPInstaller{
         this.base=import.meta.url.replace(/[^/]*$/,"install.php");
         this.consoleDevice=undefined;
         this.consoleReader=undefined;
+        this.imageChipId=undefined;
     }
     /**
      * get an URL query parameter
@@ -72,39 +73,6 @@ class ESPInstaller{
         // Return the unescaped value minus everything starting from the equals sign or an empty string
         return decodeURIComponent(!!value ? value.toString().replace(/^[^=]+./,"") : "");
     };
-    /**
-     * add an HTML element
-     * @param {*} type 
-     * @param {*} clazz 
-     * @param {*} parent 
-     * @param {*} text 
-     * @returns 
-     */
-    static addEl(type, clazz, parent, text) {
-        let el = document.createElement(type);
-        if (clazz) {
-            if (!(clazz instanceof Array)) {
-                clazz = clazz.split(/  */);
-            }
-            clazz.forEach(function (ce) {
-                el.classList.add(ce);
-            });
-        }
-        if (text) el.textContent = text;
-        if (parent) parent.appendChild(el);
-        return el;
-    }
-    /**
-     * call a function for each matching element
-     * @param {*} selector 
-     * @param {*} cb 
-     */
-    static forEachEl(selector,cb){
-        let arr=document.querySelectorAll(selector);
-        for (let i=0;i<arr.length;i++){
-            cb(arr[i]);
-        }
-    }
     static checkAvailable(){
         if (! navigator.serial || ! navigator.serial.requestPort) return false;
         return true;
@@ -166,6 +134,7 @@ class ESPInstaller{
             this.espLoaderTerminal.writeLine(`chip: ${foundChip}`);
             await this.esploader.flash_id();
             this.chipFamily = this.esploader.chip.CHIP_NAME;
+            this.imageChipId = this.esploader.chip.IMAGE_CHIP_ID;
             this.espLoaderTerminal.writeLine(`chipFamily: ${this.chipFamily}`);
         } catch (e) {
             this.disconnect();
@@ -218,6 +187,10 @@ class ESPInstaller{
         this.checkConnected();
         return this.chipFamily;
     }
+    getChipId(){
+        this.checkConnected();
+        return this.imageChipId;
+    }
     /**
      * flass the device
      * @param {*} fileList : an array of entries {data:blob,address:number}
@@ -268,25 +241,21 @@ class ESPInstaller{
      * @param {*} user 
      * @param {*} repo 
      * @param {*} version 
-     * @param {*} address 
-     * @param {*} assetName the name of the asset file.
-     *                      can be a function - will be called with the chip family
-     *                      and must return the asset file name
+     * @param {*} assetName
+     * @param {*} checkChip will be called with the found chipId and the data and the isFull flag
+     *            must return an info with the flashStart being set
      * @returns 
      */
-    async installClicked(isFull, user, repo, version, address, assetName) {
+    async installClicked(isFull, user, repo, version, assetName,checkChip) {
         try {
             await this.connect();
-            let assetFileName = assetName;
-            if (typeof (assetName) === 'function') {
-                assetFileName = assetName(this.getChipFamily());
-            }
-            let imageData = await this.getReleaseAsset(user, repo, version, assetFileName);
+            let imageData = await this.getReleaseAsset(user, repo, version, assetName);
             if (!imageData || imageData.length == 0) {
                 throw new Error(`no image data fetched`);
             }
+            let info=await checkChip(this.getChipId(),imageData,isFull);
             let fileList = [
-                { data: imageData, address: address }
+                { data: imageData, address: info.flashStart }
             ];
             let txt = isFull ? "baseImage (all data will be erased)" : "update";
             if (!confirm(`ready to install ${version}\n${txt}`)) {
@@ -300,6 +269,35 @@ class ESPInstaller{
             this.espLoaderTerminal.writeLine(`Error: ${e}`);
             alert(`Error: ${e}`);
         }
+    }
+    /**
+     * directly run the flash
+     * @param {*} isFull 
+     * @param {*} imageData the data to be flashed
+     * @param {*} version the info shown in the dialog
+     * @param {*} checkChip will be called with the found chipId and the data
+     *            must return an info with flashStart
+     * @returns 
+     */
+    async runFlash(isFull,imageData,version,checkChip){
+        try {
+            await this.connect();
+            let info= await checkChip(this.getChipId(),imageData,isFull); //just check
+            let fileList = [
+                { data: imageData, address: info.flashStart }
+            ];
+            let txt = isFull ? "baseImage (all data will be erased)" : "update";
+            if (!confirm(`ready to install ${version}\n${txt}`)) {
+                this.espLoaderTerminal.writeLine("aborted by user...");
+                await this.disconnect();
+                return;
+            }
+            await this.writeFlash(fileList);
+            await this.disconnect();
+        } catch (e) {
+            this.espLoaderTerminal.writeLine(`Error: ${e}`);
+            alert(`Error: ${e}`);
+        }    
     }
     /**
      * fetch the release info from the github API

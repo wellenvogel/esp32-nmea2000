@@ -59,7 +59,7 @@ int GwSocketServer::available()
     int client_sock;
     struct sockaddr_in _client;
     int cs = sizeof(struct sockaddr_in);
-    client_sock = lwip_accept_r(listener, (struct sockaddr *)&_client, (socklen_t *)&cs);
+    client_sock = accept(listener, (struct sockaddr *)&_client, (socklen_t *)&cs);
     if (client_sock >= 0)
     {
         int val = 1;

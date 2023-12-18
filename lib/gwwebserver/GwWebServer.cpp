@@ -64,7 +64,6 @@ void GwWebServer::begin(){
 GwWebServer::~GwWebServer(){
     server->end();
     delete server;
-    vQueueDelete(queue);
 }
 void GwWebServer::handleAsyncWebRequest(AsyncWebServerRequest *request, GwRequestMessage *msg)
 {

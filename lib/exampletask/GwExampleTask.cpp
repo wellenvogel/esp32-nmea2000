@@ -3,20 +3,86 @@
 #ifdef BOARD_TEST
 #include "GwExampleTask.h"
 #include "GwApi.h"
+#include "GWConfig.h"
 #include <vector>
-
+#include "N2kMessages.h"
+#include "GwXdrTypeMappings.h"
+/**
+ * INVALID!!! - the next interface declaration will not work
+ *              as it is not in the correct header file
+ *              it is just included here to show you how errors
+ *              could be created.
+ *              if you call the apiSetExampleNotWorkingIf method
+ *              it will always return false
+*/
+class ExampleNotWorkingIf: public GwApi::TaskInterfaces::Base{
+    public:
+    int someValue=99;
+};
+DECLARE_TASKIF(ExampleNotWorkingIf);
+void exampleTask(GwApi *param);
 /**
  * an init function that ist being called before other initializations from the core
  */
 void exampleInit(GwApi *api){
     api->getLogger()->logDebug(GwLog::LOG,"example init running");
-    //this example is a more or less useless example how you could set some
-    //config value to a fixed value
-    //you can only set config values within the init function
-    //you could also compute this value from some own configuration
-    //for this example it would make a lot of sense to declare a capability
-    //to hide this config item from the UI - see header file 
-    api->getConfig()->setValue(api->getConfig()->minXdrInterval,"50"); 
+    // make the task known to the core
+    // the task function should not return (unless you delete the task - see example code)
+    const String taskName("exampleTask");
+    api->addUserTask(exampleTask, taskName, 4000);
+    // this would create our task with a stack size of 4000 bytes
+
+    // we declare some capabilities that we can
+    // use in config.json to only show some
+    // elements when this capability is set correctly
+    api->addCapability("testboard", "true");
+    api->addCapability("testboard2", "true");
+    // hide some config value
+    // and force it's default value
+    auto current=api->getConfig()->getConfigItem(GwConfigDefinitions::minXdrInterval,false);
+    String defaultXdrInt="50";
+    if (current){
+        defaultXdrInt=current->getDefault();
+    }
+    //with the true parameter this config value will be hidden
+    //if you would like the user to be able to see this item, omit the "true", the config value will be read only
+    api->getConfig()->setValue(GwConfigDefinitions::minXdrInterval,defaultXdrInt,true);
+    // example for a user defined help url that will be shown when clicking the help button
+    api->addCapability("HELP_URL", "https://www.wellenvogel.de");
+
+    //we would like to store data with the interfaces that we defined
+    //the name must match the one we used for addUserTask
+    api->taskInterfaces()->claim<ExampleTaskIf>(taskName);
+    //not working interface
+    if (!api->taskInterfaces()->claim<ExampleNotWorkingIf>(taskName)){
+        api->getLogger()->logDebug(GwLog::ERROR,"unable to claim ExampleNotWorkingIf");
+    }
+    //check if we should simulate some voltage measurements
+    //add an XDR mapping in this case
+    String voltageTransducer=api->getConfig()->getString(GwConfigDefinitions::exTransducer); 
+    if (!voltageTransducer.isEmpty()){
+        int instance=api->getConfig()->getInt(GwConfigDefinitions::exInstanceId);
+        GwXDRMappingDef xdr;
+        //we send a battery message - so it is category battery
+        xdr.category=GwXDRCategory::XDRBAT;
+        //we only need a conversion from N2K to NMEA0183
+        xdr.direction=GwXDRMappingDef::Direction::M_FROM2K;
+        //you can find the XDR field and selector definitions
+        //in the generated GwXdrTypeMappings.h
+        xdr.field=GWXDRFIELD_BATTERY_BATTERYVOLTAGE;
+        //xdr.selector=-1; //refer to xdrconfig.json - there is no selector under Battery, so we can leave it empty
+        //we just map exactly our instance
+        xdr.instanceMode=GwXDRMappingDef::IS_SINGLE; 
+        
+        //those are the user configured values
+        //this instance is the one we use for the battery instance when we set up 
+        //the N2K message
+        xdr.instanceId=instance;
+        xdr.xdrName=voltageTransducer;
+        if (!api->addXdrMapping(xdr)){
+            api->getLogger()->logDebug(GwLog::ERROR,"unable to set our xdr mapping %s",xdr.toString().c_str());
+        }
+    }
 }
 #define INVALID_COORD -99999
 class GetBoatDataRequest: public GwMessage{
@@ -97,6 +163,15 @@ void exampleTask(GwApi *api){
     GwApi::BoatValue *testValue=new GwApi::BoatValue(boatItemName);
     GwApi::BoatValue *valueList[]={longitude,latitude,testValue};
     GwApi::Status status;
+    int counter=api->addCounter("usertest");
+    int apiResult=0;
+    ExampleTaskIf e1=api->taskInterfaces()->get<ExampleTaskIf>(apiResult);
+    LOG_DEBUG(GwLog::LOG,"exampleIf before rs=%d,v=%d,s=%s",apiResult,e1.count,e1.someValue.c_str());
+    ExampleNotWorkingIf nw1;
+    bool nwrs=api->taskInterfaces()->set(nw1);
+    LOG_DEBUG(GwLog::LOG,"exampleNotWorking update returned %d",(int)nwrs);
+    String voltageTransducer=api->getConfig()->getString(GwConfigDefinitions::exTransducer);
+    int voltageInstance=api->getConfig()->getInt(GwConfigDefinitions::exInstanceId);
     while(true){
         delay(1000);
         /*
@@ -193,8 +268,29 @@ void exampleTask(GwApi *api){
             status.tcpClRx,
             status.tcpClTx,
             status.n2kRx,
-            status.n2kTx);        
-
+            status.n2kTx); 
+        //increment some counter
+        api->increment(counter,"Test");       
+        ExampleTaskIf e2=api->taskInterfaces()->get<ExampleTaskIf>(apiResult);
+        LOG_DEBUG(GwLog::LOG,"exampleIf before update rs=%d,v=%d,s=%s",apiResult,e2.count,e2.someValue.c_str());
+        e1.count+=1;
+        e1.someValue="running";
+        bool rs=api->taskInterfaces()->set(e1);
+        LOG_DEBUG(GwLog::LOG,"exampleIf update rs=%d,v=%d,s=%s",(int)rs,e1.count,e1.someValue.c_str());
+        ExampleTaskIf e3=api->taskInterfaces()->get<ExampleTaskIf>(apiResult);
+        LOG_DEBUG(GwLog::LOG,"exampleIf after update rs=%d,v=%d,s=%s",apiResult,e3.count,e3.someValue.c_str());
+        if (!voltageTransducer.isEmpty()){
+            //simulate some voltage measurements...
+            double offset=100.0*(double)std::rand()/RAND_MAX - 50.0;
+            double simVoltage=(1200.0+offset)/100;
+            LOG_DEBUG(GwLog::LOG,"simulated voltage %f",(float)simVoltage);
+            tN2kMsg msg;
+            SetN2kDCBatStatus(msg,voltageInstance,simVoltage);
+            //we send out an N2K message
+            //and as we added an XDR mapping, we will see this in the data dashboard
+            //and on the NMEA0183 stream
+            api->sendN2kMessage(msg);
+        }
     }
     vTaskDelete(NULL);
     

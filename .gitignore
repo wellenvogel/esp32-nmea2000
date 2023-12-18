@@ -5,3 +5,4 @@
 .vscode/ipch
 generated/*
 lib/generated
+webinstall/token.php

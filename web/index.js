@@ -3,6 +3,8 @@ let lastUpdate = (new Date()).getTime();
 let reloadConfig = false;
 let needAdminPass=true;
 let lastSalt="";
+let channelList={};
+let minUser=200;
 function addEl(type, clazz, parent, text) {
     let el = document.createElement(type);
     if (clazz) {
@@ -65,21 +67,38 @@ function update() {
     }
     getJson('/api/status')
         .then(function (jsonData) {
+            let statusPage=document.getElementById('statusPageContent');
+            let even=true; //first counter
             for (let k in jsonData) {
                 if (k == "salt"){
                     lastSalt=jsonData[k];
+                    continue;
                 }
+                if (k == "minUser"){
+                    minUser=parseInt(jsonData[k]);
+                    continue;
+                }
+                if (! statusPage) continue;
                 if (typeof (jsonData[k]) === 'object') {
-                    for (let sk in jsonData[k]) {
-                        let key = k + "." + sk;
-                        if (typeof (jsonData[k][sk]) === 'object') {
-                            //msg details
-                            updateMsgDetails(key, jsonData[k][sk]);
+                    if (k.indexOf('count') == 0) {
+                        createCounterDisplay(statusPage, k.replace("count", "").replace(/in$/," in").replace(/out$/," out"), k, even);
+                        even = !even;
+                        for (let sk in jsonData[k]) {
+                            let key = k + "." + sk;
+                            if (typeof (jsonData[k][sk]) === 'object') {
+                                //msg details
+                                updateMsgDetails(key, jsonData[k][sk]);
+                            }
+                            else {
+                                let el = document.getElementById(key);
+                                if (el) el.textContent = jsonData[k][sk];
+                            }
                         }
-                        else {
-                            let el = document.getElementById(key);
-                            if (el) el.textContent = jsonData[k][sk];
-                        }
+                    }
+                    if (k.indexOf("ch")==0){
+                        //channel def
+                        let name=k.substring(2);
+                        channelList[name]=jsonData[k];
                     }
                 }
                 else {
@@ -167,6 +186,21 @@ function checkAdminPass(v){
     return checkApPass(v);
 }
 
+function checkApIp(v,allValues){
+    if (! v) return "cannot be empty";
+    let err1="must be in the form 192.168.x.x";
+    if (! v.match(/[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+/))return err1;
+    let parts=v.split(".");
+    if (parts.length != 4) return err1;
+    for (let idx=0;idx < 4;idx++){
+        let iv=parseInt(parts[idx]);
+        if (iv < 0 || iv > 255) return err1;
+    }
+}
+function checkNetMask(v,allValues){
+    return checkApIp(v,allValues);
+}
+
 function checkIpAddress(v,allValues,def){
     if (allValues.tclEnabled != "true") return;
     if (! v) return "cannot be empty";
@@ -212,6 +246,7 @@ function getAllConfigs(omitPass) {
         let name = v.getAttribute('name');
         if (!name) continue;
         if (name.indexOf("_") >= 0) continue;
+        if (v.getAttribute('disabled')) continue;
         let def = getConfigDefition(name);
         if (def.type === 'password' && ( v.value == '' || omitPass)) {
             continue;
@@ -286,9 +321,13 @@ function factoryReset() {
         .catch(function (e) { });
 }
 function createCounterDisplay(parent,label,key,isEven){
+    if (parent.querySelector("#"+key)){
+        return;
+    }
     let clazz="row icon-row counter-row";
     if (isEven) clazz+=" even";
     let row=addEl('div',clazz,parent);
+    row.setAttribute("id",key);
     let icon=addEl('span','icon icon-more',row);
     addEl('span','label',row,label);
     let value=addEl('span','value',row,'---');
@@ -331,18 +370,7 @@ function updateMsgDetails(key, details) {
         },frame);
     });
 }
-let counters={
-    count2Kin: 'NMEA2000 in',
-    count2Kout: 'NMEA2000 out',
-    countTCPin: 'TCPserver in',
-    countTCPout: 'TCPserver out',
-    countTCPClientin: 'TCPclient in',
-    countTCPClientout: 'TCPclient out',
-    countUSBin: 'USB in',
-    countUSBout: 'USB out',
-    countSERin: 'Serial in',
-    countSERout: 'Serial out'
-}
+
 function showOverlay(text, isHtml) {
     let el = document.getElementById('overlayContent');
     if (isHtml) {
@@ -432,6 +460,7 @@ function createInput(configItem, frame,clazz) {
     let el;
     if (configItem.type === 'boolean' || configItem.type === 'list' || configItem.type == 'boatData') {
         el=addEl('select',clazz,frame);
+        if (configItem.readOnly) el.setAttribute('disabled',true);
         el.setAttribute('name', configItem.name)
         let slist = [];
         if (configItem.list) {
@@ -464,6 +493,7 @@ function createInput(configItem, frame,clazz) {
         return createXdrInput(configItem,frame,clazz);
     }
     el = addEl('input',clazz,frame);
+    if (configItem.readOnly) el.setAttribute('disabled',true);
     el.setAttribute('name', configItem.name)
     if (configItem.type === 'password') {
         el.setAttribute('type', 'password');
@@ -579,25 +609,29 @@ function createXdrInput(configItem,frame){
             {l:'bidir',v:1},
             {l:'to2K',v:2},
             {l:'from2K',v:3}
-        ]
+        ],
+        readOnly: configItem.readOnly
     },d,'xdrdir');
     d=createXdrLine(el,'Category');
     let category=createInput({
         type: 'list',
         name: configItem.name+"_cat",
-        list:getXdrCategories()
+        list:getXdrCategories(),
+        readOnly: configItem.readOnly
     },d,'xdrcat');
     d=createXdrLine(el,'Source');
     let selector=createInput({
         type: 'list',
         name: configItem.name+"_sel",
-        list:[]
+        list:[],
+        readOnly: configItem.readOnly
     },d,'xdrsel');
     d=createXdrLine(el,'Field');
     let field=createInput({
         type:'list',
         name: configItem.name+'_field',
-        list: []
+        list: [],
+        readOnly: configItem.readOnly
     },d,'xdrfield');
     d=createXdrLine(el,'Instance');
     let imode=createInput({
@@ -608,22 +642,26 @@ function createXdrInput(configItem,frame){
             {l:'single',v:0},
             {l:'ignore',v:1},
             {l:'auto',v:2}
-        ]
+        ],
+        readOnly: configItem.readOnly
     },d,'xdrimode');
     let instance=createInput({
         type:'number',
         name: configItem.name+"_instance",
+        readOnly: configItem.readOnly
     },d,'xdrinstance');
     d=createXdrLine(el,'Transducer');
     let xdrName=createInput({
         type:'text',
-        name: configItem.name+"_xdr"
+        name: configItem.name+"_xdr",
+        readOnly: configItem.readOnly
     },d,'xdrname');
     d=createXdrLine(el,'Example');
     let example=addEl('div','xdrexample',d,'');
     let data = addEl('input','xdrvalue',el);
     data.setAttribute('type', 'hidden');
     data.setAttribute('name', configItem.name);
+    if (configItem.readOnly) data.setAttribute('disabled',true);
     let changeFunction = function () {
         let parts=data.value.split(',');
         direction.value=parts[1] || 0;
@@ -718,16 +756,19 @@ function createFilterInput(configItem, frame) {
     let ais = createInput({
         type: 'list',
         name: configItem.name + "_ais",
-        list: ['aison', 'aisoff']
+        list: ['aison', 'aisoff'],
+        readOnly: configItem.readOnly
     }, el);
     let mode = createInput({
         type: 'list',
         name: configItem.name + "_mode",
-        list: ['whitelist', 'blacklist']
+        list: ['whitelist', 'blacklist'],
+        readOnly: configItem.readOnly
     }, el);
     let sentences = createInput({
         type: 'text',
         name: configItem.name + "_sentences",
+        readOnly: configItem.readOnly
     }, el);
     let data = addEl('input',undefined,el);
     data.setAttribute('type', 'hidden');
@@ -755,6 +796,7 @@ function createFilterInput(configItem, frame) {
         changeFunction();
     });
     data.setAttribute('name', configItem.name);
+    if (configItem.readOnly) data.setAttribute('disabled',true);
     return data;
 }
 let moreicons=['icon-more','icon-less'];
@@ -978,9 +1020,7 @@ function toggleClass(el,id,classList){
 }
 
 function createConfigDefinitions(parent, capabilities, defs,includeXdr) {
-    let category;
-    let categoryEl;
-    let categoryFrame;
+    let categories={};
     let frame = parent.querySelector('.configFormRows');
     if (!frame) throw Error("no config form");
     frame.innerHTML = '';
@@ -993,23 +1033,25 @@ function createConfigDefinitions(parent, capabilities, defs,includeXdr) {
         }
         else{
             if(includeXdr) return;
-        } 
-        if (item.category != category || !categoryEl) {
-            if (categoryFrame && ! currentCategoryPopulated){
-                categoryFrame.remove();
+        }
+        let catEntry;
+        if (categories[item.category] === undefined){
+            catEntry={
+                populated:false,
+                frame: undefined,
+                element: undefined
             }
-            currentCategoryPopulated=false;
-            categoryFrame = addEl('div', 'category', frame);
-            categoryFrame.setAttribute('data-category',item.category)
-            let categoryTitle = addEl('div', 'title', categoryFrame);
+            categories[item.category]=catEntry
+            catEntry.frame = addEl('div', 'category', frame);
+            catEntry.frame.setAttribute('data-category',item.category)
+            let categoryTitle = addEl('div', 'title', catEntry.frame);
             let categoryButton = addEl('span', 'icon icon-more', categoryTitle);
             addEl('span', 'label', categoryTitle, item.category);
             addEl('span','categoryAdd',categoryTitle);
-            categoryEl = addEl('div', 'content', categoryFrame);
-            categoryEl.classList.add('hidden');
-            let currentEl = categoryEl;
+            catEntry.element = addEl('div', 'content', catEntry.frame);
+            catEntry.element.classList.add('hidden');
             categoryTitle.addEventListener('click', function (ev) {
-                let rs = currentEl.classList.toggle('hidden');
+                let rs = catEntry.element.classList.toggle('hidden');
                 if (rs) {
                     toggleClass(categoryButton,0,moreicons);
                 }
@@ -1017,7 +1059,9 @@ function createConfigDefinitions(parent, capabilities, defs,includeXdr) {
                     toggleClass(categoryButton,1,moreicons);
                 }
             })
-            category = item.category;
+        }
+        else{
+            catEntry=categories[item.category];
         }
         let showItem=true;
         let itemCapabilities=item.capabilities||{};
@@ -1036,17 +1080,26 @@ function createConfigDefinitions(parent, capabilities, defs,includeXdr) {
             });
             if (!found) showItem=false;
         }
-        
+        let readOnly=false;
+        let mode=capabilities['CFGMODE'+item.name];
+        if (mode == 1) {
+            //hide
+            showItem=false;
+        }
+        if (mode == 2){
+            readOnly=true;
+        }
         if (showItem) {
-            currentCategoryPopulated=true;
-            let row = addEl('div', 'row', categoryEl);
+            item.readOnly=readOnly;
+            catEntry.populated=true;
+            let row = addEl('div', 'row', catEntry.element);
             let label = item.label || item.name;
             addEl('span', 'label', row, label);
             let valueFrame = addEl('div', 'value', row);
             let valueEl = createInput(item, valueFrame);
             if (!valueEl) return;
             valueEl.setAttribute('data-default', item.default);
-            valueEl.addEventListener('change', function (ev) {
+            if (! readOnly) valueEl.addEventListener('change', function (ev) {
                 let el = ev.target;
                 checkChange(el, row, item.name);
             })
@@ -1063,13 +1116,15 @@ function createConfigDefinitions(parent, capabilities, defs,includeXdr) {
             }
             if (item.check) valueEl.setAttribute('data-check', item.check);
             let btContainer = addEl('div', 'buttonContainer', row);
-            let bt = addEl('button', 'defaultButton', btContainer, 'X');
-            bt.setAttribute('data-default', item.default);
-            bt.addEventListener('click', function (ev) {
-                valueEl.value = valueEl.getAttribute('data-default');
-                let changeEvent = new Event('change');
-                valueEl.dispatchEvent(changeEvent);
-            })
+            if (!readOnly) {
+                let bt = addEl('button', 'defaultButton', btContainer, 'X');
+                bt.setAttribute('data-default', item.default);
+                bt.addEventListener('click', function (ev) {
+                    valueEl.value = valueEl.getAttribute('data-default');
+                    let changeEvent = new Event('change');
+                    valueEl.dispatchEvent(changeEvent);
+                })
+            }
             bt = addEl('button', 'infoButton', btContainer, '?');
             bt.addEventListener('click', function (ev) {
                 if (item.description) {
@@ -1083,8 +1138,11 @@ function createConfigDefinitions(parent, capabilities, defs,includeXdr) {
             });
         }
     });
-    if (categoryFrame && ! currentCategoryPopulated){
-        categoryFrame.remove();
+    for (let cat in categories){
+        let catEntry=categories[cat];
+        if (! catEntry.populated){
+            catEntry.frame.remove();
+        }
     }
 }
 function loadConfigDefinitions() {
@@ -1448,13 +1506,13 @@ function createDashboard() {
     frame.innerHTML = '';
 }
 function sourceName(v){
-    if (v == 0) return "N2K";
-    if (v == 1) return "USB";
-    if (v == 2) return "SER";
-    if (v == 3) return "TCPcl"
-    if (v >= 4 && v <= 20) return "TCPser";
-    if (v >= 200) return "USER";
-    return "---";
+    for (let n in channelList){
+        if (v >= channelList[n].id && v <= channelList[n].max){
+            return n;
+        }
+    }
+    if (v < minUser) return "---";
+    return "USER["+v+"]";
 }
 let lastSelectList=[];
 function updateDashboard(data) {
@@ -1552,9 +1610,15 @@ function uploadBin(ev){
         .then(function (result) {
             let currentType;
             let currentVersion;
+            let chipid;
             forEl('.status-version', function (el) { currentVersion = el.textContent });
             forEl('.status-fwtype', function (el) { currentType = el.textContent });
+            forEl('.status-chipid', function (el) { chipid = el.textContent });
             let confirmText = 'Ready to update firmware?\n';
+            if (result.chipId != chipid){
+                confirmText += "WARNING: the chipid in the image ("+result.chipId;
+                confirmText +=") does not match the current chip id ("+chipid+").\n";
+            }
             if (currentType != result.fwtype) {
                 confirmText += "WARNING: image has different type: " + result.fwtype + "\n";
                 confirmText += "** Really update anyway? - device can become unusable **";
@@ -1631,7 +1695,8 @@ function uploadBin(ev){
 let HDROFFSET=288;
 let VERSIONOFFSET=16;
 let NAMEOFFSET=48;
-let MINSIZE=HDROFFSET+NAMEOFFSET+32;
+let MINSIZE = HDROFFSET + NAMEOFFSET + 32;
+let CHIPIDOFFSET=12; //2 bytes chip id here
 let imageCheckBytes={
     0: 0xe9, //image magic
     288: 0x32, //app header magic
@@ -1650,6 +1715,10 @@ function decodeFromBuffer(buffer,start,length){
             start+length));
     return rt;        
 }
+function getChipId(buffer){
+    if (buffer.length < CHIPIDOFFSET+2) return -1;
+    return buffer[CHIPIDOFFSET]+256*buffer[CHIPIDOFFSET+1];
+}
 function checkImageFile(file){
     return new Promise(function(resolve,reject){
         if (! file) reject("no file");
@@ -1666,9 +1735,11 @@ function checkImageFile(file){
         }
         let version=decodeFromBuffer(content,HDROFFSET+VERSIONOFFSET,32);
         let fwtype=decodeFromBuffer(content,HDROFFSET+NAMEOFFSET,32);
+        let chipId=getChipId(content);
         let rt={
             fwtype:fwtype,
             version: version,
+            chipId:chipId
         };
         resolve(rt);    
     });
@@ -1716,13 +1787,13 @@ window.addEventListener('load', function () {
         }
     }catch(e){}
     let statusPage=document.getElementById('statusPageContent');
-    if (statusPage){
+    /*if (statusPage){
         let even=true;
         for (let c in counters){
             createCounterDisplay(statusPage,counters[c],c,even);
             even=!even;
         }
-    }
+    }*/
     forEl('#uploadFile',function(el){
         el.addEventListener('change',function(ev){
             if (ev.target.files.length < 1) return;
@@ -1730,7 +1801,9 @@ window.addEventListener('load', function () {
             checkImageFile(file)
                 .then(function(res){
                     forEl('#imageProperties',function(iel){
-                        iel.textContent=res.fwtype+", "+res.version;
+                        let txt="["+res.chipId+"] ";
+                        txt+=res.fwtype+", "+res.version;
+                        iel.textContent=txt;
                         iel.classList.remove("error");
                     })    
                 })

@@ -42,11 +42,16 @@ def post(source,target,env):
     print("found fwname=%s, fwversion=%s"%(fwname,version))
     python=env.subst("$PYTHONEXE")
     print("base=%s,esptool=%s,appoffset=%s,uploaderflags=%s"%(base,esptool,appoffset,uploaderflags))
+    chip="esp32"
     uploadparts=uploaderflags.split(" ")
     #currently hardcoded last 8 parameters...
     if len(uploadparts) < 6:
         print("uploaderflags does not have enough parameter")
         return
+    for i in range(0,len(uploadparts)):
+        if uploadparts[i]=="--chip":
+            if i < (len(uploadparts) -1):
+                chip=uploadparts[i+1]
     uploadfiles=uploadparts[-6:]
     for i in range(1,len(uploadfiles),2):
         if not os.path.isfile(uploadfiles[i]):
@@ -58,17 +63,17 @@ def post(source,target,env):
     for f in glob.glob(os.path.join(outdir,base+"*.bin")):
         print("removing old file %s"%f)
         os.unlink(f)
-    ofversion=''
-    if not version.startswith('dev'):
-        ofversion="-"+version
-        versionedFile=os.path.join(outdir,"%s%s-update.bin"%(base,ofversion))
-        shutil.copyfile(firmware,versionedFile)
-    outfile=os.path.join(outdir,"%s%s-all.bin"%(base,ofversion))
-    cmd=[python,esptool,"--chip","esp32","merge_bin","--target-offset",offset,"-o",outfile]
+    outfile=os.path.join(outdir,"%s-all.bin"%(base))
+    cmd=[python,esptool,"--chip",chip,"merge_bin","--target-offset",offset,"-o",outfile]
     cmd+=uploadfiles
     cmd+=[appoffset,firmware]        
     print("running %s"%" ".join(cmd))
     env.Execute(" ".join(cmd),"#testpost")
+    ofversion="-"+version
+    versionedFile=os.path.join(outdir,"%s%s-update.bin"%(base,ofversion))
+    shutil.copyfile(firmware,versionedFile)
+    versioneOutFile=os.path.join(outdir,"%s%s-all.bin"%(base,ofversion))
+    shutil.copyfile(outfile,versioneOutFile)
 env.AddPostAction(
     "$BUILD_DIR/${PROGNAME}.bin",
     post

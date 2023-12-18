@@ -38,6 +38,7 @@ What is included
 * a WEB UI to configure the gateway and to show the data that has been received
 * a USB Actisense to NMEA2000 gateway
 * a NMEA2000 to USB Actisense gateway
+* starting with 201311xx some I2C Sensors
 
 For the details of the mapped PGNs and NMEA sentences refer to [Conversions](doc/Conversions.pdf).
 
@@ -46,11 +47,15 @@ Hardware
 The software is prepared to run on different kinds of ESP32 based modules and accessoirs. For some of them prebuild binaries are available that only need to be flashed, others would require to add some definitions of the used PINs and features and to build the binary.
 For the list of hardware set ups refer to [Hardware](doc/Hardware.md).
 
+There is a couple of prebuild binaries that you can directly flash to your device. For other combinations of hardware there is an [online build service](doc/BuildService.md) that will allow you to select your hardware and trigger a build.
+
 
 Installation
 ------------
 In the [release section](../../releases) you can find a couple of pre-build binaries.<br>
-They are devided into binaries for an initial flash (xxx-all.bin) and binaries for updating an existing device (xxx-update.bin).
+They are devided into binaries for an initial flash (xxx-all.bin) and binaries for updating an existing device (xxx-update.bin). 
+
+For other Hardware refer to the [online build service](https://circleci.com/).
 
 Initial Flash
 *************
@@ -160,6 +165,17 @@ For details refer to the [example description](lib/exampletask/Readme.md).
 
 Changelog
 ---------
+[20231105](../../releases/tag/20231105)
+**********
+* support for ESP32-S3
+* own [TWAI](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/twai.html) based driver for the NMEA2000 bus
+* add NMEA2000 node address and status to the status tab
+* ability to change the AP ip address 
+* [online build service ](doc/BuildService.md) to select the components you need
+* restructuring of the lib_deps handling (much shorter compile time <br>__Hint__: if this introduces problems for your build, revert back the [lib_ldf_mode](https://github.com/wellenvogel/esp32-nmea2000/blob/9b955d135d74937a60f2926e8bfb9395585ff8cd/platformio.ini#L50) to chain+ 
+* integration of a couple of I2C sensors (e.g. M5 ENVIII, BME280)
+* More functionality for user tasks (counter, interface between tasks, dynamic registration, adding fixed XDR mappings) - refer to the [example description](lib/exampletask/Readme.md)
+
 [20230317](../../releases/tag/20230317)
 **********
 * correctly convert bar to Pascal in XDR records

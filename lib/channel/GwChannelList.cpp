@@ -58,13 +58,135 @@ void GwChannelList::allChannels(ChannelAction action){
         action(*it);
     }
 }
+typedef struct {
+    int id;
+    const char *baud;
+    const char *receive;
+    const char *send;
+    const char *direction;
+    const char *toN2K;
+    const char *readF;
+    const char *writeF;
+    const char *name;
+} SerialParam;
+
+static  SerialParam serialParameters[]={
+    {
+        .id=SERIAL1_CHANNEL_ID,
+        .baud=GwConfigDefinitions::serialBaud,
+        .receive=GwConfigDefinitions::receiveSerial,
+        .send=GwConfigDefinitions::sendSerial,
+        .direction=GwConfigDefinitions::serialDirection,
+        .toN2K=GwConfigDefinitions::serialToN2k,
+        .readF=GwConfigDefinitions::serialReadF,
+        .writeF=GwConfigDefinitions::serialWriteF,
+        .name="Serial"
+    },
+    {
+        .id=SERIAL2_CHANNEL_ID,
+        .baud=GwConfigDefinitions::serial2Baud,
+        .receive=GwConfigDefinitions::receiveSerial2,
+        .send=GwConfigDefinitions::sendSerial2,
+        .direction=GwConfigDefinitions::serial2Dir,
+        .toN2K=GwConfigDefinitions::serial2ToN2k,
+        .readF=GwConfigDefinitions::serial2ReadF,
+        .writeF=GwConfigDefinitions::serial2WriteF,
+        .name="Serial2"
+    }
+};
+
+static SerialParam *getSerialParam(int id){
+    for (size_t idx=0;idx<sizeof(serialParameters)/sizeof(SerialParam*);idx++){
+        if (serialParameters[idx].id == id) return &serialParameters[idx];
+    }
+    return nullptr;
+}
+
+void GwChannelList:: addSerial(HardwareSerial *stream,int id,int type,int rx,int tx){
+    const char *mode=nullptr;
+    switch (type)
+    {
+    case GWSERIAL_TYPE_UNI:
+        mode="UNI";
+        break;
+    case GWSERIAL_TYPE_BI:
+        mode="BI";
+        break;
+    case GWSERIAL_TYPE_RX:
+        mode="RX";
+        break;
+    case GWSERIAL_TYPE_TX:
+        mode="TX";
+        break;
+    }
+    if (mode == nullptr) {
+        LOG_DEBUG(GwLog::ERROR,"unknown serial type %d",type);
+        return;
+    }
+    addSerial(stream,id,mode,rx,tx);
+}
+void GwChannelList::addSerial(HardwareSerial *serialStream,int id,const String &mode,int rx,int tx){
+    SerialParam *param=getSerialParam(id);
+    if (param == nullptr){
+        logger->logDebug(GwLog::ERROR,"trying to set up an unknown serial channel: %d",id);
+        return;
+    }
+    if (rx < 0 && tx < 0){
+        logger->logDebug(GwLog::ERROR,"useless config for serial %d: both rx/tx undefined");
+        return;
+    }
+    modes[id]=String(mode);
+    bool canRead=false;
+    bool canWrite=false;
+    if (mode == "BI"){
+        canRead=config->getBool(param->receive);
+        canWrite=config->getBool(param->send);
+    }
+    if (mode == "TX"){
+        canWrite=true;
+    }
+    if (mode == "RX"){
+        canRead=true;
+    }
+    if (mode == "UNI"){
+        String cfgMode=config->getString(param->direction);
+        if (cfgMode == "receive"){
+            canRead=true;
+        }
+        if (cfgMode == "send"){
+            canWrite=true;
+        }
+    }
+    if (rx < 0) canRead=false;
+    if (tx < 0) canWrite=false;
+    LOG_DEBUG(GwLog::DEBUG,"serial set up: mode=%s,rx=%d,canRead=%d,tx=%d,canWrite=%d",
+        mode.c_str(),rx,(int)canRead,tx,(int)canWrite);
+    serialStream->begin(config->getInt(param->baud,115200),SERIAL_8N1,rx,tx);
+    GwSerial *serial = new GwSerial(logger, serialStream, id, canRead);
+    LOG_DEBUG(GwLog::LOG, "starting serial %d ", id);
+    GwChannel *channel = new GwChannel(logger, param->name, id);
+    channel->setImpl(serial);
+    channel->begin(
+        canRead || canWrite,
+        canWrite,
+        canRead,
+        config->getString(param->readF),
+        config->getString(param->writeF),
+        false,
+        config->getBool(param->toN2K),
+        false,
+        false);
+    LOG_DEBUG(GwLog::LOG, "%s", channel->toString().c_str());
+    theChannels.push_back(channel);
+}
+
 void GwChannelList::begin(bool fallbackSerial){
     LOG_DEBUG(GwLog::DEBUG,"GwChannelList::begin");
     GwChannel *channel=NULL;
     //usb
     if (! fallbackSerial){
-        GwSerial *usb=new GwSerial(NULL,0,USB_CHANNEL_ID);
-        usb->setup(config->getInt(config->usbBaud),3,1);
+        GwSerial *usb=new GwSerial(NULL,&USBSerial,USB_CHANNEL_ID);
+        USBSerial.begin(config->getInt(config->usbBaud));
         logger->setWriter(new GwSerialLog(usb,config->getBool(config->usbActisense)));
         logger->prefix="GWSERIAL:";
         channel=new GwChannel(logger,"USB",USB_CHANNEL_ID);
@@ -85,7 +207,7 @@ void GwChannelList::begin(bool fallbackSerial){
     //TCP server
     sockets=new GwSocketServer(config,logger,MIN_TCP_CHANNEL_ID);
     sockets->begin();
-    channel=new GwChannel(logger,"TCP",MIN_TCP_CHANNEL_ID,MIN_TCP_CHANNEL_ID+10);
+    channel=new GwChannel(logger,"TCPserver",MIN_TCP_CHANNEL_ID,MIN_TCP_CHANNEL_ID+10);
     channel->setImpl(sockets);
     channel->begin(
         true,
@@ -102,57 +224,33 @@ void GwChannelList::begin(bool fallbackSerial){
     theChannels.push_back(channel);
 
     //serial 1
-    bool serCanRead=true;
-    bool serCanWrite=true;
-    int serialrx=-1;
-    int serialtx=-1;
-    #ifdef GWSERIAL_MODE
-        #ifdef GWSERIAL_TX
-            serialtx=GWSERIAL_TX;
-        #endif
-        #ifdef GWSERIAL_RX
-            serialrx=GWSERIAL_RX;
-        #endif
-        if (serialrx != -1 && serialtx != -1){
-            serialMode=GWSERIAL_MODE;
-        }
+    #ifndef GWSERIAL_TX
+      #define GWSERIAL_TX -1
     #endif
-    //the serial direction is from the config (only valid for mode UNI)
-    String serialDirection=config->getString(config->serialDirection);
-    //we only consider the direction if mode is UNI
-    if (serialMode != String("UNI")){
-        serialDirection=String("");
-        //if mode is UNI it depends on the selection
-        serCanRead=config->getBool(config->receiveSerial);
-        serCanWrite=config->getBool(config->sendSerial);
-    }
-    if (serialDirection == "receive" || serialDirection == "off" || serialMode == "RX") serCanWrite=false;
-    if (serialDirection == "send" || serialDirection == "off" || serialMode == "TX") serCanRead=false;
-    LOG_DEBUG(GwLog::DEBUG,"serial set up: mode=%s,direction=%s,rx=%d,tx=%d",
-        serialMode.c_str(),serialDirection.c_str(),serialrx,serialtx
-        );
-    if (serialtx != -1 || serialrx != -1 ){
-        LOG_DEBUG(GwLog::LOG,"creating serial interface rx=%d, tx=%d",serialrx,serialtx);
-        GwSerial *serial=new GwSerial(logger,1,SERIAL1_CHANNEL_ID,serCanRead);
-        int rt=serial->setup(config->getInt(config->serialBaud,115200),serialrx,serialtx);
-        LOG_DEBUG(GwLog::LOG,"starting serial returns %d",rt);
-        channel=new GwChannel(logger,"SER",SERIAL1_CHANNEL_ID);
-        channel->setImpl(serial);
-        channel->begin(
-            serCanRead || serCanWrite,
-            serCanWrite,
-            serCanRead,
-            config->getString(config->serialReadF),
-            config->getString(config->serialWriteF),
-            false,
-            config->getBool(config->serialToN2k),
-            false,
-            false    
-        );
-        LOG_DEBUG(GwLog::LOG,"%s",channel->toString().c_str());
-        theChannels.push_back(channel);
-    }
-
+    #ifndef GWSERIAL_RX
+      #define GWSERIAL_RX -1
+    #endif
+    #ifdef GWSERIAL_TYPE
+        addSerial(&Serial1,SERIAL1_CHANNEL_ID,GWSERIAL_TYPE,GWSERIAL_RX,GWSERIAL_TX);
+    #else
+        #ifdef GWSERIAL_MODE
+            addSerial(&Serial1,SERIAL1_CHANNEL_ID,GWSERIAL_MODE,GWSERIAL_RX,GWSERIAL_TX);
+        #endif
+    #endif
+    //serial 2
+    #ifndef GWSERIAL2_TX
+      #define GWSERIAL2_TX -1
+    #endif
+    #ifndef GWSERIAL2_RX
+      #define GWSERIAL2_RX -1
+    #endif
+    #ifdef GWSERIAL2_TYPE
+        addSerial(&Serial2,SERIAL2_CHANNEL_ID,GWSERIAL2_TYPE,GWSERIAL2_RX,GWSERIAL2_TX);
+    #else
+        #ifdef GWSERIAL2_MODE
+            addSerial(&Serial2,SERIAL2_CHANNEL_ID,GWSERIAL2_MODE,GWSERIAL2_RX,GWSERIAL2_TX);
+        #endif
+    #endif
     //tcp client
     bool tclEnabled=config->getBool(config->tclEnabled);
     channel=new GwChannel(logger,"TCPClient",TCP_CLIENT_CHANNEL_ID);
@@ -179,6 +277,11 @@ void GwChannelList::begin(bool fallbackSerial){
     theChannels.push_back(channel);
     LOG_DEBUG(GwLog::LOG,"%s",channel->toString().c_str());  
     logger->flush();
+}
+String GwChannelList::getMode(int id){
+    auto it=modes.find(id);
+    if (it != modes.end()) return it->second;
+    return "UNKNOWN";
 }
 int GwChannelList::getJsonSize(){
     int rt=0;
@@ -218,6 +321,11 @@ void GwChannelList::fillStatus(GwApi::Status &status){
     if (channel){
         status.serRx=channel->countRx();
         status.serTx=channel->countTx();
+    }
+    channel=getChannelById(SERIAL2_CHANNEL_ID);
+    if (channel){
+        status.ser2Rx=channel->countRx();
+        status.ser2Tx=channel->countTx();
     }
     channel=getChannelById(MIN_TCP_CHANNEL_ID);
     if (channel){

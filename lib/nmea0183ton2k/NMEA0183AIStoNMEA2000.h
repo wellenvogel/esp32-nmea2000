@@ -160,7 +160,7 @@ class MyAisDecoder : public AIS::AisDecoder
                             _uToPort + _uToStarboard, _uToStarboard, _uToBow, eta_days,
                             (_uEtaHour * 3600) + (_uEtaMinute * 60), _uDraught / 10.0, Dest,
                             (tN2kAISVersion) _ais_version, (tN2kGNSStype) _uFixType,
-                            (tN2kAISDTE) _dte, (tN2kAISTranceiverInfo) _ais_version);
+                            (tN2kAISDTE) _dte, (tN2kAISTransceiverInformation) _ais_version);
 
       send(N2kMsg);
     }

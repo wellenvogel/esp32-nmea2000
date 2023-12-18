@@ -14,9 +14,10 @@
 #include "GwAppInfo.h"
 // #define GW_MESSAGE_DEBUG_ENABLED
 //#define FALLBACK_SERIAL
-//#define CAN_ESP_DEBUG
+#define OWN_LOOP
 const unsigned long HEAP_REPORT_TIME=2000; //set to 0 to disable heap reporting
 #include <Arduino.h>
+#include "Preferences.h"
 #include "GwApi.h"
 #include "GwHardware.h"
 
@@ -54,8 +55,6 @@ const unsigned long HEAP_REPORT_TIME=2000; //set to 0 to disable heap reporting
 #include "GwSerial.h"
 #include "GwWebServer.h"
 #include "NMEA0183DataToN2K.h"
-#include "GwButtons.h"
-#include "GwLeds.h"
 #include "GwCounter.h"
 #include "GwXDRMappings.h"
 #include "GwSynchronized.h"
@@ -65,18 +64,7 @@ const unsigned long HEAP_REPORT_TIME=2000; //set to 0 to disable heap reporting
 #include "GwTcpClient.h"
 #include "GwChannel.h"
 #include "GwChannelList.h"
-
-#include <NMEA2000_esp32.h>       // forked from https://github.com/ttlappalainen/NMEA2000_esp32
-#ifdef FALLBACK_SERIAL
-  #ifdef CAN_ESP_DEBUG
-    #define CDBS &Serial
-  #else
-    #define CDBS NULL
-  #endif
-  tNMEA2000 &NMEA2000=*(new tNMEA2000_esp32(ESP32_CAN_TX_PIN,ESP32_CAN_RX_PIN,CDBS));
-#else
-  tNMEA2000 &NMEA2000=*(new tNMEA2000_esp32());
-#endif
+#include "GwTimer.h"
 
 
 #define MAX_NMEA2000_MESSAGE_SEASMART_SIZE 500
@@ -88,6 +76,7 @@ const unsigned long HEAP_REPORT_TIME=2000; //set to 0 to disable heap reporting
 //assert length of firmware name and version
 CASSERT(strlen(FIRMWARE_TYPE) <= 32, "environment name (FIRMWARE_TYPE) must not exceed 32 chars");
 CASSERT(strlen(VERSION) <= 32, "VERSION must not exceed 32 chars");
+CASSERT(strlen(IDF_VERSION) <= 32,"IDF_VERSION must not exceed 32 chars");
 //https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/system/app_image_format.html
 //and removed the bugs in the doc...
 __attribute__((section(".rodata_custom_desc"))) esp_app_desc_t custom_app_desc = { 
@@ -98,7 +87,7 @@ __attribute__((section(".rodata_custom_desc"))) esp_app_desc_t custom_app_desc =
   FIRMWARE_TYPE,
   "00:00:00",
   "2021/12/13",
-  "0000",
+  IDF_VERSION,
   {},
   {}
 };
@@ -111,6 +100,35 @@ typedef std::map<String,String> StringMap;
 
 GwLog logger(LOGLEVEL,NULL);
 GwConfigHandler config(&logger);
+
+#include "Nmea2kTwai.h"
+static const unsigned long CAN_RECOVERY_PERIOD=3000; //ms
+static const unsigned long NMEA2000_HEARTBEAT_INTERVAL=5000;
+class Nmea2kTwaiLog : public Nmea2kTwai{
+  private:
+    GwLog* logger;
+  public:
+    Nmea2kTwaiLog(gpio_num_t _TxPin,  gpio_num_t _RxPin, unsigned long recoveryPeriod,GwLog *l):
+      Nmea2kTwai(_TxPin,_RxPin,recoveryPeriod,recoveryPeriod),logger(l){}
+    virtual void logDebug(int level, const char *fmt,...){
+      va_list args;
+      va_start(args,fmt);
+      if (level > 2) level++; //error+info+debug are similar, map msg to 4
+      logger->logDebug(level,fmt,args);
+    }
+};
+
+#ifndef ESP32_CAN_TX_PIN
+ #pragma message "WARNING: ESP32_CAN_TX_PIN not defined"
+ #define ESP32_CAN_TX_PIN GPIO_NUM_NC
+#endif
+#ifndef ESP32_CAN_RX_PIN
+ #pragma message "WARNING: ESP32_CAN_RX_PIN not defined"
+ #define ESP32_CAN_RX_PIN GPIO_NUM_NC
+#endif
+
+Nmea2kTwai &NMEA2000=*(new Nmea2kTwaiLog((gpio_num_t)ESP32_CAN_TX_PIN,(gpio_num_t)ESP32_CAN_RX_PIN,CAN_RECOVERY_PERIOD,&logger));
+
 #ifdef GWBUTTON_PIN
 bool fixedApPass=false;
 #else
@@ -138,9 +156,9 @@ SemaphoreHandle_t mainLock;
 GwRequestQueue mainQueue(&logger,20);
 GwWebServer webserver(&logger,&mainQueue,80);
 
-GwCounter<unsigned long> countNMEA2KIn("count2Kin");
-GwCounter<unsigned long> countNMEA2KOut("count2Kout");
-
+GwCounter<unsigned long> countNMEA2KIn("countNMEA2000in");
+GwCounter<unsigned long> countNMEA2KOut("countNMEA2000out");
+GwIntervalRunner timers;
 
 bool checkPass(String hash){
   return config.checkPass(hash);
@@ -187,7 +205,6 @@ void handleN2kMessage(const tN2kMsg &n2kMsg,int sourceId, bool isConverted=false
     nmea0183Converter->HandleMsg(n2kMsg,sourceId);
   }
   if (sourceId != N2K_CHANNEL_ID && sendOutN2k){
-    countNMEA2KOut.add(n2kMsg.PGN);
     if (NMEA2000.SendMsg(n2kMsg)){
       countNMEA2KOut.add(n2kMsg.PGN);
     }
@@ -217,7 +234,7 @@ void SendNMEA0183Message(const tNMEA0183Msg &NMEA0183Msg, int sourceId,bool conv
   });
 }
 
-class ApiImpl : public GwApi
+class ApiImpl : public GwApiInternal
 {
 private:
   int sourceId = -1;
@@ -299,9 +316,21 @@ public:
     return &boatData;
   }
   virtual const char* getTalkerId(){
-    return config.getString(config.talkerId,String("GP")).c_str();
+    return config.getCString(config.talkerId,"GP");
   }
   virtual ~ApiImpl(){}
+  virtual TaskInterfaces *taskInterfaces(){ return nullptr;}
+  virtual bool addXdrMapping(const GwXDRMappingDef &mapping){
+    if (! config.userChangesAllowed()){
+      logger.logDebug(GwLog::ERROR,"trying to add an XDR mapping %s after the init phase",mapping.toString().c_str());
+      return false;
+    }
+    return xdrMappings.addFixedMapping(mapping);
+  }
+  virtual void addCapability(const String &name, const String &value){}
+  virtual bool addUserTask(GwUserTaskFunction task,const String Name, int stackSize=2000){
+    return false;
+  }
 };
 
 bool delayedRestart(){
@@ -353,10 +382,11 @@ public:
 protected:
   virtual void processRequest()
   {
-    GwJsonDocument status(256 + 
+    GwJsonDocument status(300 + 
       countNMEA2KIn.getJsonSize()+
       countNMEA2KOut.getJsonSize() +
-      channels.getJsonSize()
+      channels.getJsonSize()+
+      userCodeHandler.getJsonSize()
       );
     status["version"] = VERSION;
     status["wifiConnected"] = gwWifi.clientConnected();
@@ -368,11 +398,27 @@ protected:
     GwConfigHandler::toHex(base,buffer,bsize);
     status["salt"] = buffer;
     status["fwtype"]= firmwareType;
+    status["chipid"]=CONFIG_IDF_FIRMWARE_CHIP_ID;
     status["heap"]=(long)xPortGetFreeHeapSize();
+    Nmea2kTwai::Status n2kState=NMEA2000.getStatus();
+    Nmea2kTwai::STATE driverState=n2kState.state;
+    if (driverState == Nmea2kTwai::ST_RUNNING){
+      unsigned long lastRec=NMEA2000.getLastRecoveryStart();
+      if (lastRec > 0 && (lastRec+NMEA2000_HEARTBEAT_INTERVAL*2) > millis()){
+        //we still report bus off at least for 2 heartbeat intervals
+        //this avoids always reporting BUS_OFF-RUNNING-BUS_OFF if the bus off condition
+        //remains
+        driverState=Nmea2kTwai::ST_BUS_OFF;
+      }
+    }
+    status["n2kstate"]=NMEA2000.stateStr(driverState);
+    status["n2knode"]=NodeAddress;
+    status["minUser"]=MIN_USER_TASK;
     //nmea0183Converter->toJson(status);
     countNMEA2KIn.toJson(status);
     countNMEA2KOut.toJson(status);
     channels.toJson(status);
+    userCodeHandler.fillStatus(status);
     serializeJson(status, result);
   }
 };
@@ -397,17 +443,23 @@ class CapabilitiesRequest : public GwRequestMessage{
   protected:
     virtual void processRequest(){
       int numCapabilities=userCodeHandler.getCapabilities()->size();
-      GwJsonDocument json(JSON_OBJECT_SIZE(numCapabilities*3+6));
+      int numSpecial=config.numSpecial();
+      logger.logDebug(GwLog::LOG,"capabilities user=%d, config=%d",numCapabilities,numSpecial);
+      GwJsonDocument json(JSON_OBJECT_SIZE(numCapabilities*3+numSpecial*2+8));
       for (auto it=userCodeHandler.getCapabilities()->begin();
         it != userCodeHandler.getCapabilities()->end();it++){
           json[it->first]=it->second;
         }
-      #ifdef GWSERIAL_MODE
-      String serial(F(GWSERIAL_MODE));
-      #else
-      String serial(F("NONE"));
-      #endif
-      json["serialmode"]=serial;
+      std::vector<String> specialCfg=config.getSpecial();
+      for (auto it=specialCfg.begin();it != specialCfg.end();it++){
+        GwConfigInterface *cfg=config.getConfigItem(*it);
+        if (cfg){
+          logger.logDebug(GwLog::LOG,"config mode %s=%d",it->c_str(),(int)(cfg->getType()));
+          json["CFGMODE"+*it]=(int)cfg->getType();
+        }
+      }
+      json["serialmode"]=channels.getMode(SERIAL1_CHANNEL_ID);
+      json["serial2mode"]=channels.getMode(SERIAL2_CHANNEL_ID);
       #ifdef GWBUTTON_PIN
       json["hardwareReset"]="true";
       #endif
@@ -656,7 +708,37 @@ void handleConfigRequestData(AsyncWebServerRequest *request, uint8_t *data, size
   }
 }
 
-
+TimeMonitor monitor(20,0.2);
+class DefaultLogWriter: public GwLogWriter{
+    public:
+        virtual ~DefaultLogWriter(){};
+        virtual void write(const char *data){
+            USBSerial.print(data);
+        }
+};
+void loopRun();
+void loop(){
+  #ifdef OWN_LOOP
+  vTaskDelete(NULL);
+  return;
+  #else
+  loopRun();
+  #endif
+}
+void loopFunction(void *){
+  while (true){
+    loopRun();
+    //we don not call the serialEvent stuff as in the original
+    //main loop as this could cause some sort of a deadlock
+    //if serial writing or reading is done in a different thread
+    //and it remains inside some read/write routine with the uart being
+    //locked
+    //if(Serial1.available()) {}
+    //if(Serial.available()) {}
+    //if(Serial2.available()) {}
+    //delay(1);
+  }
+}
 void setup() {
   mainLock=xSemaphoreCreateMutex();
   uint8_t chipid[6];
@@ -668,9 +750,10 @@ void setup() {
 #ifdef FALLBACK_SERIAL
   fallbackSerial=true;
     //falling back to old style serial for logging
-    Serial.begin(115200);
-    Serial.printf("fallback serial enabled\n");
+    USBSerial.begin(115200);
+    USBSerial.printf("fallback serial enabled\n");
     logger.prefix="FALLBACK:";
+  logger.setWriter(new DefaultLogWriter());
 #endif
   userCodeHandler.startInitTasks(MIN_USER_TASK);
   config.stopChanges();
@@ -780,6 +863,7 @@ void setup() {
   logger.flush();
   NMEA2000.SetMode(tNMEA2000::N2km_ListenAndNode, NodeAddress);
   NMEA2000.SetForwardOwnMessages(false);
+  NMEA2000.SetHeartbeatInterval(NMEA2000_HEARTBEAT_INTERVAL);
   if (sendOutN2k){
     // Set the information for other bus devices, which messages we support
     unsigned long *pgns=toN2KConverter->handledPgns();
@@ -800,16 +884,26 @@ void setup() {
   NMEA2000.Open();
   logger.logDebug(GwLog::LOG,"starting addon tasks");
   logger.flush();
-  userCodeHandler.startAddonTask(F("handleButtons"),handleButtons,100);
-  setLedMode(LED_GREEN);
-  userCodeHandler.startAddonTask(F("handleLeds"),handleLeds,101);
   {
     GWSYNCHRONIZED(&mainLock);
     userCodeHandler.startUserTasks(MIN_USER_TASK);
   }
+  timers.addAction(HEAP_REPORT_TIME,[](){
+    if (logger.isActive(GwLog::DEBUG)){
+      logger.logDebug(GwLog::DEBUG,"Heap free=%ld, minFree=%ld",
+          (long)xPortGetFreeHeapSize(),
+          (long)xPortGetMinimumEverFreeHeapSize()
+      );
+      logger.logDebug(GwLog::DEBUG,"Main loop %s",monitor.getLog().c_str());
+    }
+  });
   logger.logString("wifi AP pass: %s",fixedApPass? gwWifi.AP_password:config.getString(config.apPassword).c_str());
   logger.logString("admin pass: %s",config.getString(config.adminPassword).c_str());
   logger.logDebug(GwLog::LOG,"setup done");
+  #ifdef OWN_LOOP
+  logger.logDebug(GwLog::LOG,"starting own main loop");
+  xTaskCreateUniversal(loopFunction,"loop",8192,NULL,1,NULL,ARDUINO_RUNNING_CORE);
+  #endif
 }  
 //*****************************************************************************
 void handleSendAndRead(bool handleRead){
@@ -818,9 +912,8 @@ void handleSendAndRead(bool handleRead){
   });
 }
 
-TimeMonitor monitor(20,0.2);
-unsigned long lastHeapReport=0;
-void loop() {
+void loopRun() {
+  //logger.logDebug(GwLog::DEBUG,"main loop start");
   monitor.reset();
   GWSYNCHRONIZED(&mainLock);
   logger.flush();
@@ -828,29 +921,22 @@ void loop() {
   gwWifi.loop();
   unsigned long now=millis();
   monitor.setTime(2);
-  if (HEAP_REPORT_TIME > 0 && now > (lastHeapReport+HEAP_REPORT_TIME)){
-    lastHeapReport=now;
-    if (logger.isActive(GwLog::DEBUG)){
-      logger.logDebug(GwLog::DEBUG,"Heap free=%ld, minFree=%ld",
-          (long)xPortGetFreeHeapSize(),
-          (long)xPortGetMinimumEverFreeHeapSize()
-      );
-      logger.logDebug(GwLog::DEBUG,"Main loop %s",monitor.getLog().c_str());
-    }
-  }
+  timers.loop();
   monitor.setTime(3);
+  NMEA2000.loop();
+  monitor.setTime(4);
   channels.allChannels([](GwChannel *c){
     c->loop(true,false);
   });
   //reads
-  monitor.setTime(4);
+  monitor.setTime(5);
   channels.allChannels([](GwChannel *c){
     c->loop(false,true);
   });
   //writes
-  monitor.setTime(5);  
+  monitor.setTime(6);  
   NMEA2000.ParseMessages();
-  monitor.setTime(6);
+  monitor.setTime(7);
 
   int SourceAddress = NMEA2000.GetN2kSource();
   if (SourceAddress != NodeAddress) { // Save potentially changed Source Address to NVS memory
@@ -861,7 +947,7 @@ void loop() {
     logger.logDebug(GwLog::LOG,"Address Change: New Address=%d\n", SourceAddress);
   }
   nmea0183Converter->loop();
-  monitor.setTime(7);
+  monitor.setTime(8);
 
   //read channels
   channels.allChannels([](GwChannel *c){
@@ -888,13 +974,13 @@ void loop() {
       }
     });
   });
-  monitor.setTime(8);
+  monitor.setTime(9);
   channels.allChannels([](GwChannel *c){
     c->parseActisense([](const tN2kMsg &msg,int source){
       handleN2kMessage(msg,source);
     });
   });
-  monitor.setTime(9);
+  monitor.setTime(10);
 
   //handle message requests
   GwMessage *msg=mainQueue.fetchMessage(0);
@@ -902,5 +988,7 @@ void loop() {
     msg->process();
     msg->unref();
   }
-  monitor.setTime(10);
+  monitor.setTime(11);
+  //logger.logDebug(GwLog::DEBUG,"main loop end");
 }
+

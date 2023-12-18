@@ -22,3 +22,24 @@ body {
     font-family: system-ui;
     line-height: 1.5em;
 }
+#loading{
+    height: 6em;
+}
+#loadingText{
+    text-align: center;
+}
+#loadingFrame{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.hidden{
+    display: none !important;
+}
+.uploadFile{
+    width: 0;
+    height: 0;
+}
+.uploadButton{
+    margin-left: 0.5em;
+}

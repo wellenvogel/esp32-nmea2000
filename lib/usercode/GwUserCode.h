@@ -2,16 +2,23 @@
 #define _GWUSERCODE_H
 #include <Arduino.h>
 #include <map>
+#include "GwApi.h"
+#include "GwJsonDocument.h"
 class GwLog;
-class GwApi;
-typedef void (*GwUserTaskFunction)(GwApi *);
+
+class GwApiInternal : public GwApi{
+    public:
+    ~GwApiInternal(){}
+    virtual void fillStatus(GwJsonDocument &status){};
+    virtual int getJsonSize(){return 0;};
+};
 class GwUserTask{
     public:
         String name;
         TaskFunction_t task=NULL;
         GwUserTaskFunction usertask=NULL;
         bool isUserTask=false;
-        GwApi *api=NULL;
+        GwApiInternal *api=NULL;
         int stackSize=2000;
         GwUserTask(String name,TaskFunction_t task,int stackSize=2000){
             this->name=name;
@@ -25,17 +32,23 @@ class GwUserTask{
             this->stackSize=stackSize;
         }
 };
+
+class TaskInterfacesStorage;
 class GwUserCode{
     GwLog *logger;
-    GwApi *api;
+    GwApiInternal *api;
     SemaphoreHandle_t *mainLock;
-    void startAddOnTask(GwApi *api,GwUserTask *task,int sourceId,String name);
+    TaskInterfacesStorage *taskData;
+    void startAddOnTask(GwApiInternal *api,GwUserTask *task,int sourceId,String name);
     public:
+        ~GwUserCode();
         typedef std::map<String,String> Capabilities;
-        GwUserCode(GwApi *api, SemaphoreHandle_t *mainLock);
+        GwUserCode(GwApiInternal *api, SemaphoreHandle_t *mainLock);
         void startUserTasks(int baseId);
         void startInitTasks(int baseId);
         void startAddonTask(String name,TaskFunction_t task, int id);
         Capabilities *getCapabilities();
+        void fillStatus(GwJsonDocument &status);
+        int getJsonSize();
 };
 #endif

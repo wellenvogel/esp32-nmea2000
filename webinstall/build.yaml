@@ -1,0 +1,504 @@
+# structure
+# below config we define the structure to be displayed
+# basically there are 2 object types:
+#   children - a list of cfg objects that define the inputs to be shown
+#              if the parent is selected
+#              parameters:
+#                 key: unique key - defines the name(part) in the cfg
+#                      if not set a potential "value" is taken
+#                      null (empty) is a valid key
+#                 label: title to be shown, if unset key will be used
+#                 resorce: a resource that is used by the value children
+#                          simple string use as is
+#                          string + ':' - add value to the resource
+#                 type: if empty or 'frame' only the children are considered
+#                 children: only for type empty or 'frame' - list of child objects
+#                 target: how the selected child value should be stored:
+#                     environment - set the environment to the child value
+#                     define      - add -D<childValue> to the flags
+#                     define:name - add -D<name>=<childValue> to the flags
+#  values    - a list of value objects for a particular config
+#              if the object is just a string it is converted to an object
+#              with value being set to the string
+#              parameters:
+#                 key: unique key, defines the name(part) and the value store in cfg
+#                      for the parent
+#                      if not set, value is used
+#                      null (empty) is a valid key
+#                 value: the value (mandatory)
+#                      if null the value will be set to undefined and ignored
+#                 label: text to be shown
+#                        if not set value will be used
+#                 description,url
+#                 resource: for parent-target environment:
+#                           an object with allowed resource counts
+#                           for other values: the resource to be counted
+#
+#
+types:
+  - &m5base
+      type: select
+      target: define
+      label: 'M5 Atom light Base'
+      key: m5lightbase
+      values:
+        - label: "CAN KIT"
+          value: M5_CAN_KIT
+          description: "M5 Stack CAN Kit"
+          url: "https://docs.m5stack.com/en/atom/atom_can"
+          resource: can
+        - value: M5_SERIAL_KIT_232
+          description: "M5 Stack RS232 Base"
+          label: "Atomic RS232 Base"
+          url: "https://docs.m5stack.com/en/atom/Atomic%20RS232%20Base"
+          resource: serial
+        - value: M5_SERIAL_KIT_485
+          description: "M5 Stack RS485 Base"
+          label: "Atomic RS485 Base"
+          url: "https://docs.m5stack.com/en/atom/Atomic%20RS485%20Base"
+          resource: serial
+        - value: M5_GPS_KIT
+          description: "M5 Stack Gps Kit"
+          label: "Gps Base"
+          url: "https://docs.m5stack.com/en/atom/atomicgps"
+          resource: serial
+
+  - &m5groovei2c
+    type: frame
+    key: m5groovei2c
+    label: "M5 I2C Groove Units"
+    children:
+      - label: "M5 ENV3"
+        type: checkbox
+        key: m5env3
+        target: define
+        url: "https://docs.m5stack.com/en/unit/envIII"
+        description: "M5 sensor module temperature, humidity, pressure"
+        values:
+          - value: M5_ENV3
+            key: true
+  - &m5groovecan
+    type: select
+    key: m5groovecan
+    target: define
+    label: "M5 Groove CAN Units"
+    values:
+      - label: "CAN Unit"
+        url: "https://docs.m5stack.com/en/unit/can"
+        description: "M5 Can unit"
+        value: M5_CANUNIT
+        resource: can    
+  - &m5grooveserial
+    type: select
+    label: "M5 Groove Serial Unit"
+    target: define
+    key: m5grooveserial
+    values:
+      - label: "RS485"
+        key: unit485
+        value: SERIAL_GROOVE_485
+        description: "M5 RS485 unit"
+        url: "https://docs.m5stack.com/en/unit/rs485"
+        resource: serial
+      - label: "Tail485"
+        value: SERIAL_GROOVE_485
+        key: tail485
+        description: "M5 Tail 485"
+        url: "https://docs.m5stack.com/en/atom/tail485"
+        resource: serial
+      - label: "Gps Unit"
+        value: M5_GPS_UNIT
+        description: "M5 Gps Unit"
+        url: "https://docs.m5stack.com/en/unit/gps"
+        resource: serial
+
+  - &m5groove
+    type: select
+    key: m5groove
+    label: 'M5 groove type'
+    help: 'Select the functionality that should be available at the M5 groove pins'
+    values:
+      - key: 'CAN'
+        children:
+        - *m5groovecan 
+      - key: 'I2C'
+        children:
+        - *m5groovei2c
+      - key: 'Serial'
+        children:
+        - *m5grooveserial
+  - &gpiopin
+    type: dropdown
+    resource: "gpio:"
+    help: 'Select the number of the GPIO pin for this function'
+    values:
+      - {label: unset,value:}
+      - {label: "0: Low at boot!",value: 0}
+      - 1
+      - {label: "2: Float/Low at boot!", value: 2}
+      - 3
+      - {label: "4: Strapping!",value: 4}
+      - {label: "5: Hight at boot!", value: 5}
+      - {label: "12: Low at boot!", value: 12}
+      - 13
+      - 14
+      - {label: "15: High at boot!", value: 15}
+      - 16
+      - 17
+      - 18
+      - 19
+      - 21
+      - 22
+      - 23
+      - 25
+      - 26
+      - 27
+      - 32
+      - 31
+      - 32
+      - 33
+      - 37
+      - 38
+
+  - &gpioinput
+    type: dropdown
+    resource: "gpio:"
+    help: 'Select the number of the GPIO pin for this function'
+    values:
+      - {label: unset,value:}
+      - {label: "0: Low at boot!",value: 0}
+      - 1
+      - {label: "2: Float/Low at boot!", value: 2}
+      - 3
+      - {label: "4: Strapping!",value: 4}
+      - {label: "5: Hight at boot!", value: 5}
+      - {label: "12: Low at boot!", value: 12}
+      - 13
+      - 14
+      - {label: "15: High at boot!", value: 15}
+      - 16
+      - 17
+      - 18
+      - 19
+      - 21
+      - 22
+      - 23
+      - 25
+      - 26
+      - 27
+      - 32
+      - 31
+      - 32
+      - 33
+      - 34
+      - 35
+      - 36
+      - 37
+      - 38
+      - 39
+  
+  - &serialRX
+    <<: *gpioinput
+    key: RX
+    help: 'number of the GPIO pin for the receive function'
+    target: "define:#serial#RX"
+    mandatory: true
+  - &serialTX
+    <<: *gpiopin
+    key: TX
+    help: 'number of the GPIO pin for the transmit function'
+    target: "define:#serial#TX"
+    mandatory: true
+  - &serialValues
+      - key: true
+        children:
+        - type: select
+          key: type
+          target: "define:#serial#TYPE"
+          label: "Serial Type"
+          values:
+            - key: uni
+              value: 1
+              label: "UNI"
+              description: "Select direction at Config UI"
+              help: 'On the config UI you can select if the serial should be a transmitter or a receiver'    
+              children:
+                - *serialRX
+                - *serialTX
+            - key: bi
+              value: 2
+              label: "BiDir" 
+              description: "Input and Output"
+              help: 'The serial device can run both receive and transmit. Typically for RS232.'   
+              children:
+                - *serialRX
+                - *serialTX
+            - key: rx
+              value: 3
+              label: "RX"    
+              description: "Input only"
+              children:
+                - *serialRX
+            - key: tx
+              value: 1
+              label: "TX"
+              description: "output only"    
+              children:
+                - *serialTX
+  - &serial1
+    type: checkbox
+    label: 'Serial 1'
+    key: serial1
+    base: 
+      serial: GWSERIAL_
+    values: *serialValues
+      
+  - &serial2
+    type: checkbox
+    label: 'Serial 2'
+    key: serial2
+    base:
+      serial: GWSERIAL2_
+    values: *serialValues
+
+  - &can
+    type: checkbox
+    label: CAN(NMEA2000)
+    key: can
+    values:
+      - key: true
+        children:
+          - <<: *gpioinput
+            label: RX
+            key: rx
+            mandatory: true
+            help: 'set the number of the GPIO pin for the CAN(NMEA2000) RX function'
+            target: "define:ESP32_CAN_RX_PIN"
+          - <<: *gpiopin
+            label: TX
+            key: tx
+            mandatory: true
+            help: 'set the number of the GPIO pin for the CAN(NMEA2000) TX function'
+            target: "define:ESP32_CAN_TX_PIN"
+
+  - &resetButton
+    type: checkbox
+    label: reset button
+    key: resetButton
+    values:
+      - key: true
+        children:
+        - <<: *gpiopin
+          label: Button
+          key: button
+          target: "define:GWBUTTON_PIN"
+          help: 'the gpio pin for a reset to factory settings'
+        - type: dropdown
+          label: active mode
+          help: 'select if the button should be active high or low'
+          key: resetButtonMode
+          target: "define:GWBUTTON_ACTIVE"
+          values:
+            - label: unset
+              value:
+            - label: LOW
+              value: 0
+            - label: HIGH
+              value: 1
+        - type: checkbox
+          label: pullupdown
+          description: "pull up/pull down resistor"
+          key: resetButtonPUD
+          values:
+            - key: true
+              target: define
+              value: GWBUTTON_PULLUPDOWN
+
+  - &led
+    type: checkbox
+    label: Led
+    key: led
+    description: 'RGB LED'
+    values:
+      - key: true
+        children:
+          - <<: *gpiopin
+            label: LedPin
+            key: ledpin
+            mandatory: true
+            target: "define:GWLED_PIN"
+          - type: dropdown
+            label: ledtype
+            help: "the type of the led"
+            key: ledtype
+            target: "define:GWLED_CODE"
+            mandatory: true
+            values:
+              - label: unset
+                value:
+              - label: SK6812
+                value: 0
+                key: sk6812
+              - label: WS2812
+                key: ws2812
+                value: 1
+          - type: dropdown
+            key: ledorder
+            label: color order
+            target: "define:GWLED_SCHEMA"
+            mandatory: true
+            values:
+              - label: unset
+                value: 
+              - label: RGB
+                value: 10  
+              - label: RBG
+                value: 17
+              - label: GRB
+                value: 66
+              - label: GBR
+                value: 80
+              - label: BRG
+                value: 129
+              - label: BGR
+                value: 136
+          - type: range
+            label: brigthness
+            target: "define:GWLED_BRIGHTNESS"
+            key: brightness
+            min: 0
+            max: 255
+            
+
+  - &iicsensors
+    type: checkbox
+    label: "I2C #busname#"
+    key: "i2c#busname#"
+    description: "I2C Bus #busname#"
+    values:
+      - key: true
+        children:
+          - <<: *gpiopin
+            label: SDA
+            key: sda
+            mandatory: true
+            target: "define:GWIIC_SDA#bus#"
+          - <<: *gpiopin
+            label: SCL
+            key: scl
+            mandatory: true
+            target: "define:GWIIC_SCL#bus#"
+          - type: checkbox
+            label: SHT3X-#busname#-1
+            description: "SHT30 temperature and humidity sensor 0x44"
+            key: sht3x1
+            target: define
+            url: "https://m5stack.oss-cn-shenzhen.aliyuncs.com/resource/docs/datasheet/unit/SHT3x_Datasheet_digital.pdf"
+            values: 
+              - key: true
+                value: GWSHT3X#busname#1
+          - type: checkbox
+            label: SHT3X-#busname#-1
+            description: "SHT30 temperature and humidity sensor 0x45"
+            key: sht3x2
+            target: define
+            url: "https://m5stack.oss-cn-shenzhen.aliyuncs.com/resource/docs/datasheet/unit/SHT3x_Datasheet_digital.pdf"
+            values: 
+              - key: true
+                value: GWSHT3X#busname#2
+          - type: checkbox
+            label: QMP6988-#busname#-1
+            description: "QMP6988 pressure sensor addr 86"
+            key: qmp69881
+            target: define
+            url: "https://m5stack.oss-cn-shenzhen.aliyuncs.com/resource/docs/datasheet/unit/enviii/QMP6988%20Datasheet.pdf"
+            values: 
+              - key: true
+                value: GWQMP6988#busname#1
+          - type: checkbox
+            label: QMP6988-#busname#-2
+            description: "QMP6988 pressure sensor addr 112"
+            key: qmp69882
+            target: define
+            url: "https://m5stack.oss-cn-shenzhen.aliyuncs.com/resource/docs/datasheet/unit/enviii/QMP6988%20Datasheet.pdf"
+            values: 
+              - key: true
+                value: GWQMP6988#busname#2
+          - type: checkbox
+            label: BME280-#busname#-1
+            description: "BME280 temperature/humidity/pressure sensor 0x76"
+            key: bme2801
+            target: define
+            url: "https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bme280-ds002.pdf"
+            values: 
+              - key: true
+                value: GWBME280#busname#1
+          - type: checkbox
+            label: BME280-#busname#-2
+            description: "BME280 temperature/humidity/pressure sensor 0x77"
+            key: bme2802
+            target: define
+            url: "https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bme280-ds002.pdf"
+            values: 
+              - key: true
+                value: GWBME280#busname#2
+                
+
+resources:
+  default: &esp32default
+    serial: 2
+    can: 1
+    i2c: 1
+    gpio: 1 
+
+config:
+  children:
+    - type: select
+      target: environment
+      label: 'Board'
+      key: board
+      values: 
+        - value: m5stack-atom-generic
+          label: m5stack-atom
+          description: "M5 Stack Atom light"
+          url: "http://docs.m5stack.com/en/core/atom_lite"
+          resource: *esp32default
+          children:
+            - *m5base
+            - *m5groove
+        - value: m5stack-atoms3-generic
+          label: m5stack-atoms3
+          description: "M5 Stack AtomS3 light"
+          url: "http://docs.m5stack.com/en/core/AtomS3%20Lite"
+          resource: *esp32default
+          children:
+            - *m5base    
+            - *m5groove
+        - value: m5stickc-atom-generic
+          label: m5stick+ atom
+          description: "M5 Stick C+"
+          url: "http://docs.m5stack.com/en/core/m5stickc_plus"
+          resource: *esp32default
+          children:
+            - *m5groove
+
+
+        - value: nodemcu-generic
+          label: nodemcu
+          description: "Node mcu esp32"
+          url: "https://docs.platformio.org/en/stable/boards/espressif32/nodemcu-32s.html"
+          resource: *esp32default
+          children:
+            - *serial1
+            - *serial2
+            - *can
+            - *resetButton
+            - *led
+            - <<: *iicsensors
+              base: 
+                busname: "1"
+                bus: ""
+            - <<: *iicsensors
+              base: 
+                busname: "2"
+                bus: "2"

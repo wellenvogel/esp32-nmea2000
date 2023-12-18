@@ -5,17 +5,25 @@
 
 class GwConfigHandler;
 class GwConfigInterface{
+    public:
+        typedef enum {
+            NORMAL=0,
+            HIDDEN=1,
+            READONLY=2
+        } ConfigType;
     private:
         String name;
         const char * initialValue;
         String value;
         bool secret=false;
+        ConfigType type=NORMAL;
     public:
-        GwConfigInterface(const String &name, const char * initialValue, bool secret=false){
+        GwConfigInterface(const String &name, const char * initialValue, bool secret=false,ConfigType type=NORMAL){
             this->name=name;
             this->initialValue=initialValue;
             this->value=initialValue;
             this->secret=secret;
+            this->type=type;
         }
         virtual String asString() const{
             return value;
@@ -41,6 +49,9 @@ class GwConfigInterface{
         String getDefault() const {
             return initialValue;
         }
+        ConfigType getType() const {
+            return type;
+        }
         friend class GwConfigHandler;
 };
 
@@ -62,5 +73,7 @@ class GwNmeaFilter{
         String toString();    
 };
 
-
+#define __XSTR(x) __STR(x)
+#define __STR(x) #x
+#define __MSG(x) _Pragma (__STR(message (x)))
 #endif

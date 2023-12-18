@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<script type="module" src="cibuild.js"></script>
+	<link rel="stylesheet" href="cibuild.css"/>
+</head>
+
+<body>
+    <div class="configui cibuild container">
+    <h1>Build your own ESP32-NMEA2000</h1>
+    <h3>New Build</h3>
+    <div class="row">
+        <span class="label" id="branchOrTag"></span>
+        <span class="value" id="branchOrTagValue">---</span>
+    </div>
+    <div class="row">
+        <span class="label" >GitSha</span>
+        <span class="value" id="gitSha">---</span>
+    </div>
+    <div class="row">
+        <span class="label" >Version</span>
+        <span class="value" id="buildVersion"></span>
+    </div>
+    <div class="row">
+        <button id="downloadConfig">SaveCfg</button>
+        <button id="uploadConfig">LoadCfg</button>
+    </div>
+    <div id="selectors">
+
+    </div>
+    <div class="row">
+        <span class="label">Board type</span>
+        <div class="value" id="environment" ></div>
+    </div>
+    <div class="row">
+        <span class="label">Build Flags</span>
+        <div class="value" id="buildflags"></div>
+        <button class="help" id="buildCommand">?</button>
+    </div>
+    <div class="row hidden error">
+        <span class="label">Error</span>
+        <span class="value" id="configError"></span>
+    </div>
+    <div class="row">
+        <button id="start">Start</button>
+    </div>
+    <h3 id="resultTitle">Last Build</h3>
+    <div class="row">
+        <span class="label">Job Id</span>
+        <div id="pipeline">---</div>
+    </div>
+    <div class="row">
+        <span class="label">Status</span>
+        <div id="status">---</div>
+    </div>
+    <div class="row hidden error">
+        <span class="label">Error</span>
+        <div class="value" id="error"></div>
+    </div>
+    <div class="row hidden">
+        <span class="label">Web Status</span>
+        <a target="_" id="status_url">Link</a>
+    </div>
+    <div class="row hidden">
+        <button id="download">Download</button>
+        <button id="webinstall">Install</button>
+    </div>
+    <div class="overlayContainer hidden" id="overlayContainer">
+        <div id="overlay" class="overlay">
+          <div id="overlayContent" class="overlayContent">
+            AHA
+          </div>
+          <div class="overlayButtons">
+            <button id="secondDialogButton"></button>
+            <button id="hideOverlay">Close</button>
+          </div>
+        </div>
+      </div>
+    <iframe id="dlframe" width="1" height="1"></iframe>
+    <form id="upload">
+        <input type="file" id="fileSelect"/>
+    </form>
+</div>
+</body>
+</html>

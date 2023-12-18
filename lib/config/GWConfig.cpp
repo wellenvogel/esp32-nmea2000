@@ -1,7 +1,11 @@
+#define CFG_MESSAGES
+#include <Preferences.h>
 #include "GWConfig.h"
 #include <ArduinoJson.h>
 #include <string.h>
 #include <MD5Builder.h>
+#include "GwHardware.h"
+#include "GwConfigDefImpl.h"
 
 #define B(v) (v?"true":"false")
 
@@ -55,14 +59,20 @@ GwConfigInterface * GwConfigHandler::getConfigItem(const String name, bool dummy
 GwConfigHandler::GwConfigHandler(GwLog *logger): GwConfigDefinitions(){
     this->logger=logger;
     saltBase=esp_random();
+    configs=new GwConfigInterface*[getNumConfig()];
+    populateConfigs(configs);
+    prefs=new Preferences();
+}
+GwConfigHandler::~GwConfigHandler(){
+    delete prefs;
 }
 bool GwConfigHandler::loadConfig(){
-    prefs.begin(PREF_NAME,true);
+    prefs->begin(PREF_NAME,true);
     for (int i=0;i<getNumConfig();i++){
-        String v=prefs.getString(configs[i]->getName().c_str(),configs[i]->getDefault());
+        String v=prefs->getString(configs[i]->getName().c_str(),configs[i]->getDefault());
         configs[i]->value=v;
     }
-    prefs.end();
+    prefs->end();
     return true;
 }
 
@@ -77,25 +87,30 @@ bool GwConfigHandler::updateValue(String name, String value){
             return false;
         }
         LOG_DEBUG(GwLog::LOG,"update config %s=>%s",name.c_str(),i->isSecret()?"***":value.c_str());
-        prefs.begin(PREF_NAME,false);
-        prefs.putString(i->getName().c_str(),value);
-        prefs.end();
+        prefs->begin(PREF_NAME,false);
+        prefs->putString(i->getName().c_str(),value);
+        prefs->end();
     }
     return true;
 }
 bool GwConfigHandler::reset(){
     LOG_DEBUG(GwLog::LOG,"reset config");
-    prefs.begin(PREF_NAME,false);
+    prefs->begin(PREF_NAME,false);
     for (int i=0;i<getNumConfig();i++){
-        prefs.putString(configs[i]->getName().c_str(),configs[i]->getDefault());
+        prefs->putString(configs[i]->getName().c_str(),configs[i]->getDefault());
     }
-    prefs.end();
+    prefs->end();
     return true;
 }
 String GwConfigHandler::getString(const String name, String defaultv) const{
     GwConfigInterface *i=getConfigItem(name,false);
     if (!i) return defaultv;
     return i->asString();
+}
+const char * GwConfigHandler::getCString(const String name, const char *defaultv) const{
+    GwConfigInterface *i=getConfigItem(name,false);
+    if (!i) return defaultv;
+    return i->asCString();
 }
 bool GwConfigHandler::getBool(const String name, bool defaultv) const{
     GwConfigInterface *i=getConfigItem(name,false);
@@ -110,11 +125,12 @@ int GwConfigHandler::getInt(const String name,int defaultv) const{
 void GwConfigHandler::stopChanges(){
     allowChanges=false;
 }
-bool GwConfigHandler::setValue(String name,String value){
+bool GwConfigHandler::setValue(String name,String value, bool hide){
     if (! allowChanges) return false;
     GwConfigInterface *i=getConfigItem(name,false);
     if (!i) return false;
     i->value=value;
+    i->type=hide?GwConfigInterface::HIDDEN:GwConfigInterface::READONLY;
     return true;
 }
 
@@ -157,6 +173,24 @@ void GwConfigHandler::toHex(unsigned long v, char *buffer, size_t bsize)
     }
     if ((2 * i) < bsize)
         buffer[2 * i] = 0;
+}
+
+std::vector<String> GwConfigHandler::getSpecial() const{
+    std::vector<String> rt;
+    rt.reserve(numSpecial());
+    for (int i=0L;i<getNumConfig();i++){
+        if (configs[i]->getType() != GwConfigInterface::NORMAL){
+            rt.push_back(configs[i]->getName());
+        };
+    }
+    return rt;
+}
+int GwConfigHandler::numSpecial() const{
+    int rt=0;
+    for (int i=0L;i<getNumConfig();i++){
+        if (configs[i]->getType() != GwConfigInterface::NORMAL) rt++;
+    }
+    return rt;
 }
 
 void GwNmeaFilter::handleToken(String token, int index){

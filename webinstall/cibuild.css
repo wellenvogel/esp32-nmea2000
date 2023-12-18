@@ -1,0 +1,214 @@
+.hidden{
+    display: none;
+}
+
+/* reused stuff from configui */
+.configui.container{
+    margin-left: auto;
+    margin-right: auto;
+    position: relative;
+}
+.configui .info{
+    margin-bottom: 1em;
+    opacity: 0.6;
+    white-space: pre-line;
+}
+.configui .parameters {
+    border-bottom: 1px solid grey;
+    margin-bottom: 1em;
+}
+.configui .row input[type="checkbox"] {
+    flex-grow: 1;
+    appearance: auto;
+}
+
+.configui .row {
+    display: flex;
+    flex-direction: row;
+    margin: 0.5em;
+    flex-wrap: unset;
+    padding:   0;
+}
+
+.configui .row .label {
+    width: 10em;
+    opacity: 0.6;
+    padding: 0;
+    flex-shrink: 0;
+}
+.configui .row .value{
+    padding-left: 0;
+}
+.configui .since {
+    display: block;
+    font-size: 0.8em;
+}
+.configui input[type=checkbox] {
+    width: 1.5em;
+    height: 1.5em;
+    opacity: 1;
+    z-index: unset;
+    appearance: auto;
+    float:none;
+    margin-right: 0.5em;
+}
+
+.configui .buttons {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+}
+.configui button {
+    padding: 0.5em;
+}
+.configui .footer {
+    text-align: right;
+    margin-top: 1em;
+    font-size: 0.8em;
+}
+.configui .visually-hidden {
+    position: absolute !important;
+    height: 1px;
+    width: 1px;
+    overflow: hidden;
+    clip: rect(1px, 1px, 1px, 1px);
+  }
+
+.configui .dialogBack {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 10;
+    background-color: #8a8c8ec7;
+    display: flex;
+}
+.configui .hidden{
+    display: none !important;
+}
+.configui .dialog{
+    max-width: 35em;
+    margin: auto;
+    background-color: white;
+    padding: 2em;
+}
+.configui #warn{
+    display: none;
+    color: red;
+}
+.configui .error .value{
+    color: red;
+}
+.configui #warn.warn{
+    display: block;
+}
+.configui .radioFrame {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+.configui input.radioCi {
+    appearance: auto;
+    float: none;
+    opacity: 1;
+    margin-left: 0.5em;
+    margin-right: 0.5em;
+    z-index: unset;
+}
+
+.configui .selector .title {
+    font-weight: bold;
+}
+.configui .selector.level2 {
+    margin-left: 0.5em;
+}
+.configui .selector.level3 {
+    margin-left: 1em;
+}
+.configui .selector.level4 {
+    margin-left: 1.5em;
+}
+.configui .selector.tframe {
+    padding-bottom: 0;
+    border-bottom: unset;
+}
+.configui .childFrame {
+    border-top: 1px solid grey;
+    margin-top: 0.3em;
+}
+.configui .tframe>.childFrame {
+    border-top: unset;
+    margin-top: 0.3em;
+}
+
+.configui .tcheckbox>.inputFrame, 
+.configui .tdropdown>.inputFrame,
+.configui .trange>.inputFrame {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+.configui .title.tdropdown,
+.configui .title.tcheckbox,
+.configui .title.trange {
+    width: 10em;
+    font-weight: normal !important;
+}
+.configui .titleFrame {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.configui form#upload {
+    width: 0;
+    height: 0;
+    /* display: flex; */
+    overflow: hidden;
+}
+.configui .label {
+    width: 10em;
+}
+.configui .row input{
+    flex-grow: 1;
+    width: initial;
+}
+.configui .overlayContainer {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: #80808070;
+    display: flex;
+    overflow-y: auto;
+    padding: 0.5em;
+}
+
+.configui .overlay {
+    margin: auto;
+    background-color: white;
+    padding: 0.5em;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+.configui .overlayContent {
+    padding: 0.5em;
+}
+.configui div#overlayContent.text{
+  white-space: pre-line;
+}
+.configui .overlayButtons {
+    border-top: 1px solid grey;
+    padding-top: 0.5em;
+    display: flex;
+    flex-direction: row;
+    justify-content: end;
+}
+.configui button.help {
+    margin-left: 1em;
+    width: 2em;
+    height: 2em;
+    line-height: 1em;
+}
