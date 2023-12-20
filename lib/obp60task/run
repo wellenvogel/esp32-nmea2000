@@ -1,0 +1,32 @@
+#!/bin/bash
+
+# This script compile the software and loads the bin files into the web flash tool
+# in the Gitpod Docker container.
+# The web flashtool can be started from the Github website with: 
+# http://YourGitHubName.github.io/LoRa-Boat-Monitor/flash_tool/esp_flash_tool.html
+
+# Attention! Start this cript only in the Gitpod Docker container.
+# Start the script with: bash run
+
+# Path definitions
+projectpath="./.pio/build/nodemcu-32s"
+toolpath="./docs/flash_tool"
+
+# Install tools
+echo "Installing tools"
+pip3 install -U esptool
+pip3 install -platformio
+
+# Compile the firmware
+echo "Compiling Firmware"
+platformio run
+
+# Copy all bin files in docs folder for online flash tool
+echo "Copy bin files"
+cp $projectpath/bootloader.bin $toolpath/bootloader.bin
+cp $projectpath/partitions.bin $toolpath/partitions.bin
+cp $projectpath/firmware.bin $toolpath/firmware.bin
+
+# Merge all bin files to one merge file
+echo "Merge all bin files"
+esptool.py --chip ESP32 merge_bin -o $toolpath/merged-firmware.bin --flash_mode dio --flash_size 4MB 0x1000 $toolpath/bootloader.bin 0x8000 $toolpath/partitions.bin 0x10000 $toolpath/firmware.bin

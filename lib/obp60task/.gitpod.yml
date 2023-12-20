@@ -1,5 +1,4 @@
 tasks:
-#  - command: pip3 install -U platformio && platformio run -e heltec_wifi_lora_32_V2
 - command: pip3 install -U platformio && platformio run
 
 image:
