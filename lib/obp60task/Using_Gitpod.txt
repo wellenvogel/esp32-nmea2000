@@ -1,0 +1,19 @@
+Using Gitpod
+############
+
+https://gitpod.io/#https://github.com/norbert-walter/esp32-nmea2000/tree/master/lib/obp60task
+
+Input in terminal:
+
+cd /workspace/esp32-nmea2000/lib/obp60task/
+bash run
+
+/workspace/esp32-nmea2000/.pio/build/nodemcu32s_obp60/nodemcu32s_obp60-all.bin, ready to flash to offset 0x1000
+
+/workspace/esp32-nmea2000/.pio/build/nodemcu32s_obp60/bootloader.bin
+/workspace/esp32-nmea2000/.pio/build/nodemcu32s_obp60/firmware.bin
+/workspace/esp32-nmea2000/.pio/build/nodemcu32s_obp60/partitions.bin
+
+/workspace/esp32-nmea2000/.pio/build/nodemcu32s_obp60/nodemcu32s_obp60-all.bin
+/workspace/esp32-nmea2000/.pio/build/nodemcu32s_obp60/nodemcu32s_obp60-dev20231220-all.bin
+/workspace/esp32-nmea2000/.pio/build/nodemcu32s_obp60/nodemcu32s_obp60-dev20231220-update.bin
