@@ -20,7 +20,7 @@ pip3 install  platformio
 
 # Compile the firmware
 echo "Compiling Firmware"
-platformio run -e nodemcu32s_obp60
+platformio run -e obp60_s3
 
 # Copy all bin files in docs folder for online flash tool
 #echo "Copy bin files"
