@@ -1,5 +1,5 @@
     // General hardware definitions
-    // CAN bus pin definitions see GwOBP60Task.h
+    // CAN bus pin definitions see obp60task.h
 
     // Direction pin for RS485 NMEA0183
     #define OBP_DIRECTION_PIN 27
