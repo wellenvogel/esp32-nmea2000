@@ -14,19 +14,20 @@ toolpath="./docs/flash_tool"
 
 # Install tools
 echo "Installing tools"
+cd /workspace/esp32-nmea2000
 pip3 install -U esptool
-pip3 install -platformio
+pip3 install  platformio
 
 # Compile the firmware
 echo "Compiling Firmware"
-platformio run
+platformio run -e nodemcu32s_obp60
 
 # Copy all bin files in docs folder for online flash tool
-echo "Copy bin files"
-cp $projectpath/bootloader.bin $toolpath/bootloader.bin
-cp $projectpath/partitions.bin $toolpath/partitions.bin
-cp $projectpath/firmware.bin $toolpath/firmware.bin
+#echo "Copy bin files"
+#cp $projectpath/bootloader.bin $toolpath/bootloader.bin
+#cp $projectpath/partitions.bin $toolpath/partitions.bin
+#cp $projectpath/firmware.bin $toolpath/firmware.bin
 
 # Merge all bin files to one merge file
-echo "Merge all bin files"
-esptool.py --chip ESP32 merge_bin -o $toolpath/merged-firmware.bin --flash_mode dio --flash_size 4MB 0x1000 $toolpath/bootloader.bin 0x8000 $toolpath/partitions.bin 0x10000 $toolpath/firmware.bin
+#echo "Merge all bin files"
+#esptool.py --chip ESP32 merge_bin -o $toolpath/merged-firmware.bin --flash_mode dio --flash_size 4MB 0x1000 $toolpath/bootloader.bin 0x8000 $toolpath/partitions.bin 0x10000 $toolpath/firmware.bin
