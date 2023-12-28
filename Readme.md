@@ -55,7 +55,7 @@ Installation
 In the [release section](../../releases) you can find a couple of pre-build binaries.<br>
 They are devided into binaries for an initial flash (xxx-all.bin) and binaries for updating an existing device (xxx-update.bin). 
 
-For other Hardware refer to the [online build service](https://circleci.com/).
+For other Hardware refer to the [online build service](doc/BuildService.md).
 
 Initial Flash
 *************
