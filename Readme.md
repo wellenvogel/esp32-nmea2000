@@ -168,6 +168,7 @@ Changelog
 [20231228](../../releases/tag/20231228)
 **********
 * lock AsyncTCP-esphome to 2.0.1 to avoid compile errors
+* own main loop to avoid deadlocks with serial send in user tasks
 [20231105](../../releases/tag/20231105)
 **********
 * support for ESP32-S3
