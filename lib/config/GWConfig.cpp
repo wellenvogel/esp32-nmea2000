@@ -107,6 +107,11 @@ String GwConfigHandler::getString(const String name, String defaultv) const{
     if (!i) return defaultv;
     return i->asString();
 }
+const char * GwConfigHandler::getCString(const String name, const char *defaultv) const{
+    GwConfigInterface *i=getConfigItem(name,false);
+    if (!i) return defaultv;
+    return i->asCString();
+}
 bool GwConfigHandler::getBool(const String name, bool defaultv) const{
     GwConfigInterface *i=getConfigItem(name,false);
     if (!i) return defaultv;
