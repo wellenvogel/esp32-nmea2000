@@ -55,7 +55,7 @@ Installation
 In the [release section](../../releases) you can find a couple of pre-build binaries.<br>
 They are devided into binaries for an initial flash (xxx-all.bin) and binaries for updating an existing device (xxx-update.bin). 
 
-For other Hardware refer to the [online build service](https://circleci.com/).
+For other Hardware refer to the [online build service](doc/BuildService.md).
 
 Initial Flash
 *************
@@ -165,6 +165,10 @@ For details refer to the [example description](lib/exampletask/Readme.md).
 
 Changelog
 ---------
+[20231228](../../releases/tag/20231228)
+**********
+* lock AsyncTCP-esphome to 2.0.1 to avoid compile errors
+* own main loop to avoid deadlocks with serial send in user tasks
 [20231105](../../releases/tag/20231105)
 **********
 * support for ESP32-S3
