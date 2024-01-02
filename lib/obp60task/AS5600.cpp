@@ -1,4 +1,4 @@
-#ifdef BOARD_NODEMCU32S_OBP60
+#ifdef BOARD_OBP60S3
 
 /****************************************************
   AMS 5600 class for Arduino platform

@@ -1,4 +1,4 @@
-#ifdef BOARD_NODEMCU32S_OBP60
+#ifdef BOARD_OBP60S3
 #include <Adafruit_Sensor.h>            // Adafruit Lib for sensors
 #include <Adafruit_BME280.h>            // Adafruit Lib for BME280
 #include <Adafruit_BMP280.h>            // Adafruit Lib for BMP280

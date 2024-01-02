@@ -1,4 +1,4 @@
-#ifdef BOARD_NODEMCU32S_OBP60
+#ifdef BOARD_OBP60S3
 #include "obp60task.h"
 #include "Pagedata.h"
 #include "OBP60Hardware.h"              // PIN definitions

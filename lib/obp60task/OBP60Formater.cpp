@@ -1,4 +1,4 @@
-#ifdef BOARD_NODEMCU32S_OBP60
+#ifdef BOARD_OBP60S3
 
 #include <Arduino.h>
 #include "GwApi.h"
