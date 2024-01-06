@@ -357,7 +357,7 @@ void sensorTask(void *param){
             }
         }
 
-        // Send data from environment sensor all 1s
+        // Send data from environment sensor all 2s
         if(millis() > starttime6 + 2000){
             starttime6 = millis();
             unsigned char TempSource = 2;       // Inside temperature

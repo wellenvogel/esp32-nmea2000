@@ -95,6 +95,7 @@ public:
             // Limits for Pb battery
             if(String(batType) == "Pb" && (raw < 11.8 || raw > 14.8)){
                 setBlinkingLED(true);
+                setFlashLED(true);
             }
             if(String(batType) == "Pb" && (raw >= 11.8 && raw <= 14.8)){
                 setBlinkingLED(false);

@@ -39,6 +39,7 @@ CRGB backlight[NUM_BACKLIGHT_LED];  // Backlight
 // Global vars
 bool blinkingLED = false;       // Enable / disable blinking flash LED
 bool statusLED = false;         // Actual status of flash LED on/off
+
 int uvDuration = 0;             // Under voltage duration in n x 100ms
 
 void hardwareInit()
@@ -49,9 +50,6 @@ void hardwareInit()
     // Init RGB LEDs
     FastLED.addLeds<WS2812B, OBP_FLASH_LED, GRB>(fled, NUM_FLASH_LED);
     FastLED.addLeds<WS2812B, OBP_BACKLIGHT_LED, GRB>(backlight, NUM_BACKLIGHT_LED);
-    FastLED.setBrightness(255);
-    fled[0] = CRGB::Red;
-    FastLED.show();
 
     // Init PCF8574 digital outputs
     Wire.setClock(I2C_SPEED);       // Set I2C clock on 10 kHz
@@ -63,7 +61,7 @@ void hardwareInit()
     if(ds1388.begin()){
         uint year = ds1388.now().year();
         if(year < 2023){
-        ds1388.adjust(DateTime(__DATE__, __TIME__));  // Set date and time from PC file time
+            ds1388.adjust(DateTime(__DATE__, __TIME__));  // Set date and time from PC file time
         }
     }
 }
@@ -82,10 +80,10 @@ void setFlashLED(bool status){
     statusLED = status;
     FastLED.setBrightness(255); // Brightness for flash LED
     if(statusLED == true){
-        fled[0] = CRGB::Red;    // Backlight LED on in red
+        fled[0] = CRGB::Red;    // Flash LED on in red
     }
     else{
-        fled[0] = CRGB::Black;  // Backlight LED off
+        fled[0] = CRGB::Black;  // Flash LED off
     }
     FastLED.show();  
 }
@@ -95,10 +93,10 @@ void blinkingFlashLED(){
         statusLED != statusLED;
         FastLED.setBrightness(255); // Brightness for flash LED
         if(statusLED == true){
-            fled[0] = CRGB::Red;    // Backlight LED on in red
+            fled[0] = CRGB::Red;    // Flash LED on in red
         }
         else{
-            fled[0] = CRGB::Black;  // Backlight LED off
+            fled[0] = CRGB::Black;  // Flash LED off
         }
         FastLED.show();
     }    
@@ -114,13 +112,14 @@ void buzzer(uint frequency, uint duration){
     if(frequency > 8000){   // Max 8000Hz
         frequency = 8000;
     }
-    if(buzzerpower > 100){        // Max 100%
+    if(buzzerpower > 100){  // Max 100%
         buzzerpower = 100;
     }
     if(duration > 1000){    // Max 1000ms
         duration = 1000;
     }
     
+    // Using LED PWM function for sound generation
     pinMode(OBP_BUZZER, OUTPUT);
     ledcSetup(0, frequency, 8);         // Ch 0, ferquency in Hz, 8 Bit resolution of PWM
     ledcAttachPin(OBP_BUZZER, 0);

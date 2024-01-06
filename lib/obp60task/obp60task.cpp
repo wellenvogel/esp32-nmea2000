@@ -394,11 +394,11 @@ void OBP60Task(GwApi *api){
             
             // If GPS fix then LED off (HDOP)
             if(String(gpsFix) == "GPS Fix Lost" && date->valid == true){
-                setPortPin(OBP_FLASH_LED, false);
+                setFlashLED(false);
             }
             // Ifmissing GPS fix then LED on
             if(String(gpsFix) == "GPS Fix Lost" && date->valid == false){
-                setPortPin(OBP_FLASH_LED, true);
+                setFlashLED(true);
             }
          
             // Check the keyboard message
