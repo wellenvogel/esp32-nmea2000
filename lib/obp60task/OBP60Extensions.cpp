@@ -39,6 +39,7 @@ CRGB backlight[NUM_BACKLIGHT_LED];  // Backlight
 // Global vars
 bool blinkingLED = false;       // Enable / disable blinking flash LED
 bool statusLED = false;         // Actual status of flash LED on/off
+bool statusBacklightLED = false;// Actual status of flash LED on/off
 
 int uvDuration = 0;             // Under voltage duration in n x 100ms
 
@@ -76,6 +77,28 @@ void togglePortPin(uint pin){
     digitalWrite(pin, !digitalRead(pin));
 }
 
+void toggleBacklightLED(){
+    statusBacklightLED = !statusBacklightLED;
+    FastLED.setBrightness(255); // Brightness for flash LED
+    if(statusBacklightLED == true){
+        backlight[0] = CRGB::White; // Backlight LEDs on
+        backlight[1] = CRGB::White;
+        backlight[2] = CRGB::White;
+        backlight[3] = CRGB::White;
+        backlight[4] = CRGB::White;
+        backlight[5] = CRGB::White;
+    }
+    else{
+        backlight[0] = CRGB::Black; // Backlight LEDs off
+        backlight[1] = CRGB::Black;
+        backlight[2] = CRGB::Black;
+        backlight[3] = CRGB::Black;
+        backlight[4] = CRGB::Black;
+        backlight[5] = CRGB::Black;
+    }
+    FastLED.show(); 
+}
+
 void setFlashLED(bool status){
     statusLED = status;
     FastLED.setBrightness(255); // Brightness for flash LED
@@ -90,7 +113,7 @@ void setFlashLED(bool status){
 
 void blinkingFlashLED(){
     if(blinkingLED == true){
-        statusLED != statusLED;
+        statusLED = !statusLED;
         FastLED.setBrightness(255); // Brightness for flash LED
         if(statusLED == true){
             fled[0] = CRGB::Red;    // Flash LED on in red

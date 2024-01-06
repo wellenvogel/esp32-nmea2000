@@ -417,7 +417,7 @@ void OBP60Task(GwApi *api){
                     if(String(backlight) == "Control by Key"){
                         if(keyboardMessage == 6){
                             LOG_DEBUG(GwLog::LOG,"Toggle Backlight LED");
-                            togglePortPin(OBP_BACKLIGHT_LED);
+                            toggleBacklightLED();
                         }
                     }
                     // #9 Swipe right

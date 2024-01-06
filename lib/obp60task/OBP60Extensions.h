@@ -4,6 +4,7 @@
 #include <Arduino.h>
 #include "OBP60Hardware.h"
 #include <MCP23017.h>
+#include <FastLED.h>                    // Driver for WS2812 RGB LED
 #include <GxGDEW042T2/GxGDEW042T2.h>    // 4.2" Waveshare S/W 300 x 400 pixel
 #include <GxIO/GxIO_SPI/GxIO_SPI.h>     // GxEPD lip for SPI display communikation
 #include <GxIO/GxIO.h>                  // GxEPD lip for SPI
@@ -29,6 +30,8 @@ void hardwareInit();
 void setPortPin(uint pin, bool value);          // Set port pin for extension port
 
 void togglePortPin(uint pin);                   // Toggle extension port pin
+
+void toggleBacklightLED();                      // Toggle backlight LEDs
 
 void setFlashLED(bool status);                  // Set flash LED
 void blinkingFlashLED();                        // Blinking function for flash LED
