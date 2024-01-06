@@ -1,16 +1,14 @@
     // General hardware definitions
-    // CAN bus pin definitions see obp60task.h
+    // CAN and RS485 bus pin definitions see obp60task.h
 
     // Direction pin for RS485 NMEA0183
-    #define OBP_DIRECTION_PIN 27
-    // SeaTalk
-    #define OBP_SEATALK_TX 2
-    #define OBP_SEATALK_RX 15
-    // I2C (MCP23017, BME280, BMP280, SHT21)
-    #define OBP_I2C_SDA 21
-    #define OBP_I2C_SCL 22
-    // Extension Port MCP23017
-    #define MCP23017_I2C_ADDR 0x20  // Addr. 0 is 0x20
+    #define OBP_DIRECTION_PIN 18
+    // I2C
+    #define I2C_SPEED 10000UL       // 10kHz clock speed on I2C bus
+    #define OBP_I2C_SDA 47
+    #define OBP_I2C_SCL 21
+    // DS1388 RTC
+    #define DS1388_I2C_ADDR 0xD0    // Addr. 0xD0
     // BME280
     #define BME280_I2C_ADDR 0x76    // Addr. 0x76 (0x77)
     // BMP280
@@ -26,13 +24,15 @@
     #define INA226_I2C_ADDR1 0x41   // Addr. 0x41 (fix A0 = 5V, A1 = GND) for battery
     #define INA226_I2C_ADDR2 0x44   // Addr. 0x44 (fix A0 = GND, A1 = 5V) for solar panels
     #define INA226_I2C_ADDR3 0x45   // Addr. 0x45 (fix A0 = 5V, A1 = 5V) for generator
+    // Horter modules
+    #define PCF8574_I2C_ADDR1 0x20  // First digital out module
     // SPI (E-Ink display, Extern Bus)
-    #define OBP_SPI_CS 5
-    #define OBP_SPI_DC 17
-    #define OBP_SPI_RST 16
-    #define OBP_SPI_BUSY 4
-    #define OBP_SPI_CLK 18
-    #define OBP_SPI_DIN 23
+    #define OBP_SPI_CS 39
+    #define OBP_SPI_DC 40
+    #define OBP_SPI_RST 41
+    #define OBP_SPI_BUSY 42
+    #define OBP_SPI_CLK 38
+    #define OBP_SPI_DIN 48
     #define SHOW_TIME 6000        // Show time for logo and WiFi QR code
     #define FULL_REFRESH_TIME 600 // Refresh cycle time in [s][600...3600] for full display update (very important healcy function)
     #define MAX_PAGE_NUMBER 10    // Max number of pages for show data
@@ -42,54 +42,36 @@
     #define FONT4 "DSEG7Classic_BoldItalic80pt7b"
 
     // GPS (NEO-6M, NEO-M8N)
-     #define OBP_GPS_TX 35      // Read only GPS data
-    // TTP229 Touch Pad Controller (!!No I2C!!)
-    #define TTP_SDO 25
-    #define TTP_SCL 33
+    #define OBP_GPS_RX 2
+    #define OBP_GPS_TX 1
     // 1Wire (DS18B20)
-    #define OBP_1WIRE 32        // External 1Wire
+    #define OBP_1WIRE 6         // External 1Wire
     // Buzzer
-    #define OBP_BUZZER 19
+    #define OBP_BUZZER 16
     #define TONE1 1500          // 1500Hz
     #define TONE2 2500          // 2500Hz
     #define TONE3 3500          // 3500Hz
     #define TONE4 4000          // 4000Hz
     // Analog Input
-    #define OBP_ANALOG0 34      // Voltage power supplay
-    #define OBP_ANALOG1 36      // Analog In 1
-    #define OBP_ANALOG2 39      // Analog In 2
+    #define OBP_ANALOG0 4       // Voltage power supplay
     #define MIN_VOLTAGE 9.0     // Min voltage for under voltage detection (then goto deep sleep)
     #define POWER_FAIL_TIME 2   // in [ms] Accept min voltage until 2 x 1ms (for under voltage gaps by engine start)
-    // Extension Port PA
-    #define PA0 0               // Digital Out 1
-    #define PA1 1               // Digital Out 2
-    #define PA2 2               // Flash LED
-    #define PA3 3               // Backlight LEDs
-    #define PA4 4               // Digital In 1
-    #define PA5 5               // Digital In 2
-    #define PA6 6               // Power Rail 5.0V
-    #define PA7 7               // Power Rail 3.3V
-    // Extension Port PB
-    #define PB0 8               // Extension Connector
-    #define PB1 9               // Extension Connector
-    #define PB2 10              // Extension Connector
-    #define PB3 11              // Extension Connector
-    #define PB4 12              // Extension Connector
-    #define PB5 13              // Extension Connector
-    #define PB6 14              // Extension Connector
-    #define PB7 15              // Extension Connector
+    // Touch buttons
+    #define TOUCHTHRESHOLD 50000// Touch sensitivity, lower values more sensitiv
+    #define TP1 14              // Left outside
+    #define TP2 13
+    #define TP3 12
+    #define TP4 11
+    #define TP5 10
+    #define TP6 9               // Right ouside
 
-    // Extension Port Digital Out
-    #define OBP_DIGITAL_OUT1 PA0
-    #define OBP_DIGITAL_OUT2 PA1
-    // Extension Port LED
-    #define OBP_FLASH_LED PA2
-    // Extension Port Backlight LEDs
-    #define OBP_BACKLIGHT_LED PA3
-    // Extension Port Digital In
-    #define OBP_DIGITAL_IN1 PA4
-    #define OBP_DIGITAL_IN2 PA5
-    // Extension Port Power Rails
-    #define OBP_POWER_50 PA6
-    #define OBP_POWER_33 PA7
+    // Flash LED (1x WS2812B)
+    #define NUM_FLASH_LED 1         // Number of flash LED
+    #define OBP_FLASH_LED 7         // GPIO port
+    // Backlight LEDs (6x WS2812B)
+    #define NUM_BACKLIGHT_LED 6     // Numebr of Backlight LEDs
+    #define OBP_BACKLIGHT_LED 15    // GPIO port
+    // Power Rail
+    #define OBP_POWER_50 5
+
 

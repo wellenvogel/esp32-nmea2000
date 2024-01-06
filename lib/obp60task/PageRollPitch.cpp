@@ -115,7 +115,7 @@ public:
             // Limits for roll
             if(value1*360/(2*PI) > -1*rolllimit && value1*360/(2*PI) < rolllimit){
                 setBlinkingLED(false);
-                setPortPin(OBP_FLASH_LED, false);
+                setFlashLED(false);
             }
             else{
                 setBlinkingLED(true);

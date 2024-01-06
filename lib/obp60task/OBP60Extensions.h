@@ -8,9 +8,6 @@
 #include <GxIO/GxIO_SPI/GxIO_SPI.h>     // GxEPD lip for SPI display communikation
 #include <GxIO/GxIO.h>                  // GxEPD lip for SPI
 
-// Extension port
-void MCP23017Init();
-
 // E-Ink display
 extern GxEPD_Class display;                     // E-Ink display functions
 
@@ -27,12 +24,15 @@ extern const GFXfont DSEG7Classic_BoldItalic42pt7b;
 extern const GFXfont DSEG7Classic_BoldItalic60pt7b;
 
 // Gloabl functions
+void hardwareInit();
+
 void setPortPin(uint pin, bool value);          // Set port pin for extension port
 
 void togglePortPin(uint pin);                   // Toggle extension port pin
 
-void blinkingFlashLED();                        // Blinking function for LED on extension port
-void setBlinkingLED(bool on);                   // Set blinking LED active
+void setFlashLED(bool status);                  // Set flash LED
+void blinkingFlashLED();                        // Blinking function for flash LED
+void setBlinkingLED(bool on);                   // Set blinking flash LED active
 
 void buzzer(uint frequency, uint duration);     // Buzzer function
 void setBuzzerPower(uint power);                // Set buzzer power

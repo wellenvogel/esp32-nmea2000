@@ -1,6 +1,10 @@
 #ifdef BOARD_OBP60S3
 
 #include <Arduino.h>
+#include <FastLED.h>      // Driver for WS2812 RGB LED
+#include <PCF8574.h>      // Driver for PCF8574 output modul from Horter
+#include <Wire.h>         // I2C
+#include <RTClib.h>       // Driver for DS1388 RTC
 #include "SunRise.h"                    // Lib for sunrise and sunset calculation
 #include "Pagedata.h"
 #include "OBP60Hardware.h"
@@ -18,68 +22,85 @@
 #include "DSEG7Classic-BoldItalic42pt7b.h"
 #include "DSEG7Classic-BoldItalic60pt7b.h"
 
-MCP23017 mcp = MCP23017(MCP23017_I2C_ADDR);
-
 // SPI pin definitions for E-Ink display
 GxIO_Class io(SPI, OBP_SPI_CS, OBP_SPI_DC, OBP_SPI_RST);  // SPI, CS, DC, RST
 GxEPD_Class display(io, OBP_SPI_RST, OBP_SPI_BUSY);       // io, RST, BUSY
 
+// Horter I2C moduls
+PCF8574 pcf8574_Out(PCF8574_I2C_ADDR1); // First digital output modul PCF8574 from Horter
+
+// RTC DS1388
+RTC_DS1388 ds1388;
+
+// Define the array of leds
+CRGB fled[NUM_FLASH_LED];           // Flash LED
+CRGB backlight[NUM_BACKLIGHT_LED];  // Backlight
+
 // Global vars
-int outA = 0;                   // Outport Byte A
-int outB = 0;                   // Outport Byte B
 bool blinkingLED = false;       // Enable / disable blinking flash LED
+bool statusLED = false;         // Actual status of flash LED on/off
 int uvDuration = 0;             // Under voltage duration in n x 100ms
 
-void MCP23017Init()
+void hardwareInit()
 {
-    mcp.init();
-    mcp.portMode(MCP23017Port::A, 0b00110000); // Port A, 0 = out, 1 = in
-    mcp.portMode(MCP23017Port::B, 0b11110000); // Port B, 0 = out, 1 = in
+    // Init power rail 5.0V
+    setPortPin(OBP_POWER_50, true);
 
-    // Extension Port A set defaults
-    setPortPin(OBP_DIGITAL_OUT1, false);  // PA0
-    setPortPin(OBP_DIGITAL_OUT2, false);  // PA1
-    setPortPin(OBP_FLASH_LED, false);     // PA2
-    setPortPin(OBP_BACKLIGHT_LED, false); // PA3
-    setPortPin(OBP_POWER_50, true);       // PA6
-    setPortPin(OBP_POWER_33, true);       // PA7
+    // Init RGB LEDs
+    FastLED.addLeds<WS2812B, OBP_FLASH_LED, GRB>(fled, NUM_FLASH_LED);
+    FastLED.addLeds<WS2812B, OBP_BACKLIGHT_LED, GRB>(backlight, NUM_BACKLIGHT_LED);
+    FastLED.setBrightness(255);
+    fled[0] = CRGB::Red;
+    FastLED.show();
 
-    // Extension Port B set defaults
-    setPortPin(PB0, false); // PB0
-    setPortPin(PB1, false); // PB1
-    setPortPin(PB2, false); // PB2
-    setPortPin(PB3, false); // PB3
+    // Init PCF8574 digital outputs
+    Wire.setClock(I2C_SPEED);       // Set I2C clock on 10 kHz
+    if(pcf8574_Out.begin()){        // Initialize PCF8574
+        pcf8574_Out.write8(255);    // Clear all outputs
+    }
+
+    // Init DS1388 RTC
+    if(ds1388.begin()){
+        uint year = ds1388.now().year();
+        if(year < 2023){
+        ds1388.adjust(DateTime(__DATE__, __TIME__));  // Set date and time from PC file time
+        }
+    }
 }
 
 void setPortPin(uint pin, bool value){
-    if(pin <=7){    
-        outA &= ~(1 << pin);     // Clear bit    
-        outA |= (value << pin);  // Set bit
-        mcp.writeRegister(MCP23017Register::GPIO_A, outA);
-    }
-    else{
-        pin = pin - 8;
-        outB &= ~(1 << pin);     // Clear bit
-        outB |= (value << pin);  // Set bit
-        mcp.writeRegister(MCP23017Register::GPIO_B, outB);
-    }
+    pinMode(pin, OUTPUT);
+    digitalWrite(pin, value);
 }
 
 void togglePortPin(uint pin){
-    if(pin <=7){
-        outA ^= (1 << pin);     // Set bit
-        mcp.writeRegister(MCP23017Register::GPIO_A, outA);
+    pinMode(pin, OUTPUT);
+    digitalWrite(pin, !digitalRead(pin));
+}
+
+void setFlashLED(bool status){
+    statusLED = status;
+    FastLED.setBrightness(255); // Brightness for flash LED
+    if(statusLED == true){
+        fled[0] = CRGB::Red;    // Backlight LED on in red
     }
     else{
-        pin = pin - 8;
-        outB ^= (1 << pin);     // Set bit
-        mcp.writeRegister(MCP23017Register::GPIO_B, outB);
+        fled[0] = CRGB::Black;  // Backlight LED off
     }
+    FastLED.show();  
 }
 
 void blinkingFlashLED(){
     if(blinkingLED == true){
-        togglePortPin(OBP_FLASH_LED);
+        statusLED != statusLED;
+        FastLED.setBrightness(255); // Brightness for flash LED
+        if(statusLED == true){
+            fled[0] = CRGB::Red;    // Backlight LED on in red
+        }
+        else{
+            fled[0] = CRGB::Black;  // Backlight LED off
+        }
+        FastLED.show();
     }    
 }
 

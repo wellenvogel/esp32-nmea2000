@@ -47,7 +47,7 @@ class PageOneValue : public Page{
         // Optical warning by limit violation (unused)
         if(String(flashLED) == "Limit Violation"){
             setBlinkingLED(false);
-            setPortPin(OBP_FLASH_LED, false); 
+            setFlashLED(false); 
         }
 
         // Logging boat values

@@ -6,13 +6,8 @@
   
 // Global vars
 
-// Routine for TTP229-BSF (!!! IC use not a I2C bus !!!)
-// 
-// 8 Key Mode
-//
-// Key number        {0, 1, 2, 3, 4, 5, 6, 7, 8}
-// Scan code         {0, 8, 7, 1, 6, 2, 5, 3, 4}
-int keyposition[9] = {0, 3, 5, 7, 8, 6, 4, 2, 1};   // Position of key in raw data, 0 = nothing touched
+// Touch keypad over ESP32 touch sensor inputs  
+
 int keypad[9];          // Raw data array from TTP229
 int key;                // Value of key [0|1], 0 = touched, 1 = not touched
 int keycode = 0;        // Keycode of pressed key [0...8], 0 = nothing touched
@@ -27,32 +22,65 @@ long starttime = 0;     // Start time point for pressed key
 
 int readKeypad() {
   int keystatus = 0;      // Status of key [0...11], 0 = processed, 1...8 = key 1..8, 9 = right swipe , 10 = left swipe, 11 keys disabled
-
-  pinMode(TTP_SDO, INPUT);
-  pinMode(TTP_SCL, OUTPUT);
   keycode = 0;
-  // Read key code from raw data
+
+  // Read key code
+  if(touchRead(14) > TOUCHTHRESHOLD){ // Touch pad 1
+    keypad[1] = 1;
+  }
+  else{
+    keypad[1] = 0;
+  }
+  if(touchRead(13) > TOUCHTHRESHOLD){ // Touch pad 2
+    keypad[2] = 1;
+  }
+  else{
+    keypad[2] = 0;
+  }
+  if(touchRead(12) > TOUCHTHRESHOLD){ // Touch pad 3
+    keypad[3] = 1;
+  }
+  else{
+    keypad[3] = 0;
+  }
+  if(touchRead(11) > TOUCHTHRESHOLD){ // Touch pad 4
+    keypad[4] = 1;
+  }
+  else{
+    keypad[4] = 0;
+  }
+  if(touchRead(10) > TOUCHTHRESHOLD){ // Touch pad 5
+    keypad[5] = 1;
+  }
+  else{
+    keypad[5] = 0;
+  }
+  if(touchRead(9) > TOUCHTHRESHOLD){  // Touch pad 6
+    keypad[6] = 1;
+  }
+  else{
+    keypad[6] = 0;
+  }
+  // Nothing touched
+  if(keypad[1] == 0 && keypad[2] == 0 && keypad[3] == 0 &&  keypad[4] == 0 && keypad[5] == 0 && keypad[6] == 0){
+    keypad[0] = 1;
+  }
+  else{
+    keypad[0] = 0;
+  } 
+
   for (int i = 0; i < 9; i++) {
-      digitalWrite(TTP_SCL, LOW);
-//      delay(1);  // 0ms clock
-      delayMicroseconds(100);
-      keypad[i] = digitalRead(TTP_SDO);
       if(i > 0){
-          // Invert keypad
+          // Convert keypad to keycode
           if(keypad[i] == 1){
-            key = 0;
+            key = 1;
           }
           else{
-            key = 1;
+            key = 0;
           }
           keycode += key * i;
       }
-      digitalWrite(TTP_SCL, HIGH);
-//      delay(1);   // 0ms clock
-       delayMicroseconds(100);
   }
-  // Remapping keycode
-  keycode = keyposition[keycode];
 
   // Detect short keynumber
   if (keycode > 0 ){ 

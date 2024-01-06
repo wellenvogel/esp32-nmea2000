@@ -98,7 +98,7 @@ public:
             }
             if(String(batType) == "Pb" && (raw >= 11.8 && raw <= 14.8)){
                 setBlinkingLED(false);
-                setPortPin(OBP_FLASH_LED, false);
+                setFlashLED(false);
             }
             // Limits for Gel battery
             if(String(batType) == "Gel" && (raw < 11.8 || raw > 14.4)){
@@ -106,7 +106,7 @@ public:
             }
             if(String(batType) == "Gel" && (raw >= 11.8 && raw <= 14.4)){
                 setBlinkingLED(false);
-                setPortPin(OBP_FLASH_LED, false);
+                setFlashLED(false);
             }
             // Limits for AGM battery
             if(String(batType) == "AGM" && (raw < 11.8 || raw > 14.7)){
@@ -114,7 +114,7 @@ public:
             }
             if(String(batType) == "AGM" && (raw >= 11.8 && raw <= 14.7)){
                 setBlinkingLED(false);
-                setPortPin(OBP_FLASH_LED, false);
+                setFlashLED(false);
             }
             // Limits for LiFePo4 battery
             if(String(batType) == "LiFePo4" && (raw < 12.0 || raw > 14.6)){
@@ -122,7 +122,7 @@ public:
             }
             if(String(batType) == "LiFePo4" && (raw >= 12.0 && raw <= 14.6)){
                 setBlinkingLED(false);
-                setPortPin(OBP_FLASH_LED, false);
+                setFlashLED(false);
             }
         }
         

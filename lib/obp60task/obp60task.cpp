@@ -32,47 +32,48 @@ int taskRunCounter = 0;         // Task couter for loop section
 void OBP60Init(GwApi *api){
     api->getLogger()->logDebug(GwLog::LOG,"obp60init running");
     
-    // Extension port MCP23017
-    // Check I2C devices MCP23017
+    // Check I2C devices
     Wire.begin(OBP_I2C_SDA, OBP_I2C_SCL);
-    Wire.beginTransmission(MCP23017_I2C_ADDR);
+    Wire.beginTransmission(DS1388_I2C_ADDR);
     if (Wire.endTransmission() != 0) {
-        api->getLogger()->logDebug(GwLog::ERROR,"MCP23017 not found, check wiring");
+        api->getLogger()->logDebug(GwLog::ERROR,"DS1388 not found, check wiring");
         initComplete = false;
     }
-    else{ 
-        // Init extension port
-        MCP23017Init();
-        
-        // Settings for backlight
-        String backlightMode = api->getConfig()->getConfigItem(api->getConfig()->backlight,true)->asString();
-        api->getLogger()->logDebug(GwLog::DEBUG,"Backlight Mode is: %s", backlightMode);
-        if(String(backlightMode) == "On"){
-            setPortPin(OBP_BACKLIGHT_LED, true);
-        }
-        if(String(backlightMode) == "Off"){
-            setPortPin(OBP_BACKLIGHT_LED, false);
-        }
-        if(String(backlightMode) == "Control by Key"){
-            setPortPin(OBP_BACKLIGHT_LED, false);
-        }
-
-        // Settings flash LED mode
-        String ledMode = api->getConfig()->getConfigItem(api->getConfig()->flashLED,true)->asString();
-        api->getLogger()->logDebug(GwLog::DEBUG,"Backlight Mode is: %s", ledMode);
-        if(String(ledMode) == "Off"){
-            setBlinkingLED(false);
-        }
-
-        // Marker for init complete
-        // Used in OBP60Task()
-        initComplete = true;
-
-        // Buzzer tone for initialization finish
-        setBuzzerPower(uint(api->getConfig()->getConfigItem(api->getConfig()->buzzerPower,true)->asInt()));
-        buzzer(TONE4, 500);
-
+    else{
+        // Init code for DS1388
     }
+
+    // Init hardware
+    hardwareInit();
+    
+    // Settings for backlight
+    String backlightMode = api->getConfig()->getConfigItem(api->getConfig()->backlight,true)->asString();
+    api->getLogger()->logDebug(GwLog::DEBUG,"Backlight Mode is: %s", backlightMode);
+    if(String(backlightMode) == "On"){
+//           setPortPin(OBP_BACKLIGHT_LED, true);
+    }
+    if(String(backlightMode) == "Off"){
+//           setPortPin(OBP_BACKLIGHT_LED, false);
+    }
+    if(String(backlightMode) == "Control by Key"){
+//           setPortPin(OBP_BACKLIGHT_LED, false);
+    }
+
+    // Settings flash LED mode
+    String ledMode = api->getConfig()->getConfigItem(api->getConfig()->flashLED,true)->asString();
+    api->getLogger()->logDebug(GwLog::DEBUG,"Backlight Mode is: %s", ledMode);
+    if(String(ledMode) == "Off"){
+        setBlinkingLED(false);
+    }
+
+    // Marker for init complete
+    // Used in OBP60Task()
+    initComplete = true;
+
+    // Buzzer tone for initialization finish
+    setBuzzerPower(uint(api->getConfig()->getConfigItem(api->getConfig()->buzzerPower,true)->asInt()));
+    buzzer(TONE4, 500);
+
 }
 
 typedef struct {

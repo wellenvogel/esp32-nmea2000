@@ -33,9 +33,10 @@ void underVoltageDetection(){
         }
         if(millis() > starttime + POWER_FAIL_TIME){
             Timer1.stop();                          // Stop Timer1
+/*
             setPortPin(OBP_BACKLIGHT_LED, false);   // Backlight Off
-            setPortPin(OBP_FLASH_LED, false);       // Flash LED Off
-            setPortPin(OBP_POWER_33, false);        // Power rail 3.3V Off
+            setFlashLED(false);       // Flash LED Off
+*/            
             buzzer(TONE4, 20);                      // Buzzer tone 4kHz 20ms
             setPortPin(OBP_POWER_50, false);        // Power rail 5.0V Off
             // Shutdown EInk display
