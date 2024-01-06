@@ -463,8 +463,14 @@ void OBP60Task(GwApi *api){
                     // Provide sundata to all pages
                     commonData.sundata = calcSunsetSunrise(api, time->value , date->value, lat->value, lon->value, tz.toDouble());
                     // Backlight with sun control
-                    if(String(backlight) == "Control by Sun"){                       
-                       setPortPin(OBP_BACKLIGHT_LED, commonData.sundata.sunDown);
+                    if(String(backlight) == "Control by Sun"){
+                        if(commonData.sundata.sunDown == true){
+                            setBacklightLED(brightness, color);
+                        }
+                        else{
+                            setBacklightLED(brightness, CRGB::Black);
+                        }           
+
                     }
                 }
             }
