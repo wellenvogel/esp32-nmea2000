@@ -77,16 +77,41 @@ void togglePortPin(uint pin){
     digitalWrite(pin, !digitalRead(pin));
 }
 
-void toggleBacklightLED(){
+CRGB colorMapping(String colorString){
+    CRGB color = CRGB::Red;
+    if(colorString == "Red"){color = CRGB::Red;}
+    if(colorString == "Orange"){color = CRGB::Orange;}
+    if(colorString == "Yellow"){color = CRGB::Yellow;}
+    if(colorString == "Green"){color = CRGB::Green;}
+    if(colorString == "Blue"){color = CRGB::Blue;}
+    if(colorString == "Aqua"){color = CRGB::Aqua;}
+    if(colorString == "Violet"){color = CRGB::Violet;}
+    if(colorString == "White"){color = CRGB::White;}
+    return color;
+}
+
+// All defined colors see pixeltypes.h in FastLED lib
+void setBacklightLED(uint brightness, CRGB color){
+    FastLED.setBrightness(brightness); // Brightness for flash LED
+    backlight[0] = color; // Backlight LEDs on with color
+    backlight[1] = color;
+    backlight[2] = color;
+    backlight[3] = color;
+    backlight[4] = color;
+    backlight[5] = color;
+    FastLED.show(); 
+}
+
+void toggleBacklightLED(uint brightness, CRGB color){
     statusBacklightLED = !statusBacklightLED;
-    FastLED.setBrightness(255); // Brightness for flash LED
+    FastLED.setBrightness(brightness); // Brightness for flash LED
     if(statusBacklightLED == true){
-        backlight[0] = CRGB::White; // Backlight LEDs on
-        backlight[1] = CRGB::White;
-        backlight[2] = CRGB::White;
-        backlight[3] = CRGB::White;
-        backlight[4] = CRGB::White;
-        backlight[5] = CRGB::White;
+        backlight[0] = color; // Backlight LEDs on
+        backlight[1] = color;
+        backlight[2] = color;
+        backlight[3] = color;
+        backlight[4] = color;
+        backlight[5] = color;
     }
     else{
         backlight[0] = CRGB::Black; // Backlight LEDs off

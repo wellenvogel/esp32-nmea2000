@@ -49,14 +49,16 @@ void OBP60Init(GwApi *api){
     // Settings for backlight
     String backlightMode = api->getConfig()->getConfigItem(api->getConfig()->backlight,true)->asString();
     api->getLogger()->logDebug(GwLog::DEBUG,"Backlight Mode is: %s", backlightMode);
+    String backlightColor = api->getConfig()->getConfigItem(api->getConfig()->blColor,true)->asString();
+    uint brightness = uint(api->getConfig()->getConfigItem(api->getConfig()->blBrightness,true)->asInt());
     if(String(backlightMode) == "On"){
-//           setPortPin(OBP_BACKLIGHT_LED, true);
+           setBacklightLED(brightness, CRGB::Red);
     }
     if(String(backlightMode) == "Off"){
-//           setPortPin(OBP_BACKLIGHT_LED, false);
+           setBacklightLED(0, CRGB::Black);
     }
     if(String(backlightMode) == "Control by Key"){
-//           setPortPin(OBP_BACKLIGHT_LED, false);
+           setBacklightLED(0, CRGB::Black);
     }
 
     // Settings flash LED mode
@@ -351,6 +353,9 @@ void OBP60Task(GwApi *api){
     String backlight = api->getConfig()->getConfigItem(api->getConfig()->backlight,true)->asString();
     String gpsOn=api->getConfig()->getConfigItem(api->getConfig()->useGPS,true)->asString();
     String tz = api->getConfig()->getConfigItem(api->getConfig()->timeZone,true)->asString();
+    String backlightColor = api->getConfig()->getConfigItem(api->getConfig()->blColor,true)->asString();
+    CRGB color = colorMapping(backlightColor);
+    uint brightness = 2.55 * uint(api->getConfig()->getConfigItem(api->getConfig()->blBrightness,true)->asInt());
 
     // refreshmode defined in init section
     // displaycolor defined in init section
@@ -417,7 +422,7 @@ void OBP60Task(GwApi *api){
                     if(String(backlight) == "Control by Key"){
                         if(keyboardMessage == 6){
                             LOG_DEBUG(GwLog::LOG,"Toggle Backlight LED");
-                            toggleBacklightLED();
+                            toggleBacklightLED(brightness, color);
                         }
                     }
                     // #9 Swipe right

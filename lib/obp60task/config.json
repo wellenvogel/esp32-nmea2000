@@ -649,6 +649,41 @@
         }
     },
     {
+        "name": "blColor",
+        "label": "Backlight Color",
+        "type": "list",
+        "default": "Red",
+        "description": "Backlight color",
+        "list": [
+            "Red",
+            "Orange",
+            "Yellow",
+            "Green",
+            "Blue",
+            "Aqua",
+            "Violet",
+            "White"
+        ],
+        "category": "OBP60 Display",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "blBrightness",
+        "label": "Brightness [%]",
+        "type": "number",
+        "default": "50",
+        "check": "checkMinMax",
+        "min": 0,
+        "max": 100,
+        "description": "Backlight brightness [0...100%]",
+        "category": "OBP60 Display",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
         "name": "flashLED",
         "label": "Flash LED Mode",
         "type": "list",
