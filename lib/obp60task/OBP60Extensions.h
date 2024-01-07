@@ -31,9 +31,9 @@ void setPortPin(uint pin, bool value);          // Set port pin for extension po
 
 void togglePortPin(uint pin);                   // Toggle extension port pin
 
-CRGB colorMapping(String colorString);          // Color mapping string to CRGB colors
-void setBacklightLED(uint brightness, CRGB color);// Set backlight LEDs
-void toggleBacklightLED(uint brightness, CRGB color);// Toggle backlight LEDs
+CHSV colorMapping(String colorString);          // Color mapping string to CHSV colors
+void setBacklightLED(uint brightness, CHSV color);// Set backlight LEDs
+void toggleBacklightLED(uint brightness, CHSV color);// Toggle backlight LEDs
 
 void setFlashLED(bool status);                  // Set flash LED
 void blinkingFlashLED();                        // Blinking function for flash LED

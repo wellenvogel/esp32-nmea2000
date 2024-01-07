@@ -77,23 +77,25 @@ void togglePortPin(uint pin){
     digitalWrite(pin, !digitalRead(pin));
 }
 
-CRGB colorMapping(String colorString){
-    CRGB color = CRGB::Red;
-    if(colorString == "Red"){color = CRGB::Red;}
-    if(colorString == "Orange"){color = CRGB::Orange;}
-    if(colorString == "Yellow"){color = CRGB::Yellow;}
-    if(colorString == "Green"){color = CRGB::Green;}
-    if(colorString == "Blue"){color = CRGB::Blue;}
-    if(colorString == "Aqua"){color = CRGB::Aqua;}
-    if(colorString == "Violet"){color = CRGB::Violet;}
-    if(colorString == "White"){color = CRGB::White;}
+// Valid colors see hue
+CHSV colorMapping(String colorString){
+    CHSV color = CHSV(HUE_RED, 255, 255);
+    if(colorString == "Red"){color = CHSV(HUE_RED, 255, 255);}
+    if(colorString == "Orange"){color = CHSV(HUE_ORANGE, 255, 255);}
+    if(colorString == "Yellow"){color = CHSV(HUE_YELLOW, 255, 255);}
+    if(colorString == "Green"){color = CHSV(HUE_GREEN, 255, 255);}
+    if(colorString == "Blue"){color = CHSV(HUE_BLUE, 255, 255);}
+    if(colorString == "Aqua"){color = CHSV(HUE_AQUA, 255, 255);}
+    if(colorString == "Violet"){color = CHSV(HUE_PURPLE, 255, 255);}
+    if(colorString == "White"){color = CHSV(HUE_AQUA, 0, 255);}
     return color;
 }
 
 // All defined colors see pixeltypes.h in FastLED lib
-void setBacklightLED(uint brightness, CRGB color){
-    FastLED.setBrightness(brightness); // Brightness for flash LED
-    backlight[0] = color; // Backlight LEDs on with color
+void setBacklightLED(uint brightness, CHSV color){
+    FastLED.setBrightness(255); // Brightness for flash LED
+    color.value = brightness;
+    backlight[0] = color;       // Backlight LEDs on with color
     backlight[1] = color;
     backlight[2] = color;
     backlight[3] = color;
@@ -102,11 +104,12 @@ void setBacklightLED(uint brightness, CRGB color){
     FastLED.show(); 
 }
 
-void toggleBacklightLED(uint brightness, CRGB color){
+void toggleBacklightLED(uint brightness, CHSV color){
     statusBacklightLED = !statusBacklightLED;
-    FastLED.setBrightness(brightness); // Brightness for flash LED
+    FastLED.setBrightness(255); // Brightness for flash LED
     if(statusBacklightLED == true){
-        backlight[0] = color; // Backlight LEDs on
+        color.value = brightness;
+        backlight[0] = color;   // Backlight LEDs on with color
         backlight[1] = color;
         backlight[2] = color;
         backlight[3] = color;
@@ -114,12 +117,12 @@ void toggleBacklightLED(uint brightness, CRGB color){
         backlight[5] = color;
     }
     else{
-        backlight[0] = CRGB::Black; // Backlight LEDs off
-        backlight[1] = CRGB::Black;
-        backlight[2] = CRGB::Black;
-        backlight[3] = CRGB::Black;
-        backlight[4] = CRGB::Black;
-        backlight[5] = CRGB::Black;
+        backlight[0] = CHSV(HUE_BLUE, 255, 0); // Backlight LEDs off (blue without britghness)
+        backlight[1] = CHSV(HUE_BLUE, 255, 0);
+        backlight[2] = CHSV(HUE_BLUE, 255, 0);
+        backlight[3] = CHSV(HUE_BLUE, 255, 0);
+        backlight[4] = CHSV(HUE_BLUE, 255, 0);
+        backlight[5] = CHSV(HUE_BLUE, 255, 0);
     }
     FastLED.show(); 
 }

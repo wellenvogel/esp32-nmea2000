@@ -49,16 +49,16 @@ void OBP60Init(GwApi *api){
     // Settings for backlight
     String backlightMode = api->getConfig()->getConfigItem(api->getConfig()->backlight,true)->asString();
     api->getLogger()->logDebug(GwLog::DEBUG,"Backlight Mode is: %s", backlightMode);
-    String backlightColor = api->getConfig()->getConfigItem(api->getConfig()->blColor,true)->asString();
     uint brightness = uint(api->getConfig()->getConfigItem(api->getConfig()->blBrightness,true)->asInt());
+    String backlightColor = api->getConfig()->getConfigItem(api->getConfig()->blColor,true)->asString();
     if(String(backlightMode) == "On"){
-           setBacklightLED(brightness, CRGB::Red);
+           setBacklightLED(brightness, colorMapping(backlightColor));
     }
     if(String(backlightMode) == "Off"){
-           setBacklightLED(0, CRGB::Black);
+           setBacklightLED(0, CHSV(HUE_BLUE, 255, 0)); // Backlight LEDs off (blue without britghness)
     }
     if(String(backlightMode) == "Control by Key"){
-           setBacklightLED(0, CRGB::Black);
+           setBacklightLED(0, CHSV(HUE_BLUE, 255, 0)); // Backlight LEDs off (blue without britghness)
     }
 
     // Settings flash LED mode
@@ -354,7 +354,7 @@ void OBP60Task(GwApi *api){
     String gpsOn=api->getConfig()->getConfigItem(api->getConfig()->useGPS,true)->asString();
     String tz = api->getConfig()->getConfigItem(api->getConfig()->timeZone,true)->asString();
     String backlightColor = api->getConfig()->getConfigItem(api->getConfig()->blColor,true)->asString();
-    CRGB color = colorMapping(backlightColor);
+    CHSV color = colorMapping(backlightColor);
     uint brightness = 2.55 * uint(api->getConfig()->getConfigItem(api->getConfig()->blBrightness,true)->asInt());
 
     // refreshmode defined in init section
@@ -371,7 +371,6 @@ void OBP60Task(GwApi *api){
 
     LOG_DEBUG(GwLog::LOG,"obp60task: start mainloop");
     // Set start page
-    // int pageNumber = 0;
     int pageNumber = int(api->getConfig()->getConfigItem(api->getConfig()->startPage,true)->asInt()) - 1;
     int lastPage=pageNumber;
     
@@ -470,7 +469,7 @@ void OBP60Task(GwApi *api){
                             setBacklightLED(brightness, color);
                         }
                         else{
-                            setBacklightLED(brightness, CRGB::Black);
+                            setBacklightLED(0, CHSV(HUE_BLUE, 255, 0)); // Backlight LEDs off (blue without britghness)
                         }           
 
                     }
