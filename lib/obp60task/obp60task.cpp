@@ -370,7 +370,9 @@ void OBP60Task(GwApi *api){
     GwApi::BoatValue *lon = boatValues.findValueOrCreate("LON");        // Load GpsLongitude
 
     LOG_DEBUG(GwLog::LOG,"obp60task: start mainloop");
-    int pageNumber=0;
+    // Set start page
+    // int pageNumber = 0;
+    int pageNumber = int(api->getConfig()->getConfigItem(api->getConfig()->startPage,true)->asInt()) - 1;
     int lastPage=pageNumber;
     
     commonData.time = boatValues.findValueOrCreate("GPST");      // Load GpsTime

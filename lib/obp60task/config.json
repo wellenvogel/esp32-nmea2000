@@ -766,12 +766,25 @@
       },
       {
         "name": "visiblePages",
-        "label": "number of pages",
+        "label": "Number of Pages",
         "type": "number",
         "check": "checkMinMax",
         "min": 1,
         "max": 10,
         "default":"5",
+        "category":"OBP60 Pages",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "startPage",
+        "label": "Start Page",
+        "type": "number",
+        "check": "checkMinMax",
+        "min": 1,
+        "max": 10,
+        "default":"1",
         "category":"OBP60 Pages",
         "capabilities": {
             "obp60":"true"
