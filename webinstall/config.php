@@ -1,7 +1,7 @@
 <?php
 $allowed=array(
-    'user'=> array('wellenvogel'),
-    'repo'=> array('esp32-nmea2000')
+    'user'=> array('wellenvogel','norbert-walter'),
+    'repo'=> array('esp32-nmea2000','esp32-nmea2000-obp60')
 );
 
 
