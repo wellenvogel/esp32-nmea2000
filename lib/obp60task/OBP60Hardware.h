@@ -72,6 +72,6 @@
     #define NUM_BACKLIGHT_LED 6     // Numebr of Backlight LEDs
     #define OBP_BACKLIGHT_LED 15    // GPIO port
     // Power Rail
-    #define OBP_POWER_50 5
+    #define OBP_POWER_50 5          // 5.0V power rail
 
 
