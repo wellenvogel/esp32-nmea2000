@@ -12,11 +12,13 @@
 #define NUM_ANALOG_INPUTS       20
 
 // Multi Function Display OBP60 V2.0
+/*
 static const uint8_t LED_BUILTIN = SOC_GPIO_PIN_COUNT+48;
 #define BUILTIN_LED  LED_BUILTIN // backward compatibility
 #define LED_BUILTIN LED_BUILTIN
 #define RGB_BUILTIN LED_BUILTIN
 #define RGB_BRIGHTNESS 64
+*/
 
 #define analogInputToDigitalPin(p)  (((p)<20)?(analogChannelToDigitalPin(p)):-1)
 #define digitalPinToInterrupt(p)    (((p)<48)?(p):-1)
