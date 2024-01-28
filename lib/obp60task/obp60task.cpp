@@ -101,8 +101,7 @@ void keyboardTask(void *param){
             xQueueSend(data->queue, &keycode, 0);
             data->logger->logDebug(GwLog::LOG,"Send keycode: %d", keycode);
         }
-
-        delay(20);      // TP229-BSF working in 8 key mode with 64Hz update rate (15.6ms)
+        delay(20);      // 50Hz update rate (20ms)
     }
     vTaskDelete(NULL);
 }
