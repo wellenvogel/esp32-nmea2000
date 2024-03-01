@@ -14,8 +14,7 @@
 using BusType=TwoWire;
 using IICSensorList=SensorList<BusType>;
 using IICSensorBase=SensorBase<BusType>;
-#define CFG_GET(name,prefix) \
-    cfg->getValue(name, GwConfigDefinitions::prefix ## name)
+
 
 template <class CFG>
 bool addPressureXdr(GwApi *api, CFG &cfg)

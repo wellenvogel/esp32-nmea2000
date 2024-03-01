@@ -19,7 +19,6 @@
 template<typename BUS>
 class SensorBase{
     public:
-    using BusType=BUS;
     int busId=0;
     int iid=99; //N2K instanceId
     int addr=-1;
@@ -46,4 +45,8 @@ class SensorList : public std::vector<SensorBase<BUS>*>{
     }
     using std::vector<SensorBase<BUS>*>::vector;
 };
+
+#define CFG_GET(name,prefix) \
+    cfg->getValue(name, GwConfigDefinitions::prefix ## name)
+    
 #endif

@@ -322,4 +322,11 @@
   #define CFGMODE_ledBrightness GwConfigInterface::HIDDEN
 #endif
 
+#ifdef GWSPI0_CLK
+  #define _GWSPI
+#endif
+#ifdef GWSPI1_CLK
+  #define _GWSPI
+#endif
+
 #endif

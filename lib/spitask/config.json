@@ -1,0 +1,92 @@
+[
+    {
+        "type": "array",
+        "name": "DMS22B",
+        "replace": [
+            {
+                "b": "1",
+                "i": "11",
+                "n": "11"
+            },
+            {
+                "b": "1",
+                "i": "12",
+                "n": "12"
+            },
+            {
+                "b": "1",
+                "i": "13",
+                "n": "13"
+            },
+            {
+                "b": "2",
+                "i": "21",
+                "n": "21"
+            },
+            {
+                "b": "2",
+                "i": "22",
+                "n": "22"
+            },
+            {
+                "b": "2",
+                "i": "23",
+                "n": "23"
+            }
+
+
+        ],
+        "children": [
+            {
+                "name": "DMS22B$iact",
+                "label": "DMS22BX$i enable",
+                "type": "boolean",
+                "default": "true",
+                "description": "Enable the $i. SSI DMS22B rotary encoder (bus $b)",
+                "category": "spisensors$b",
+                "capabilities": {
+                    "DMS22B$i": "true"
+                }
+            },
+            {
+                "name": "DMS22B$iiid",
+                "label": "DMS22B$i N2K iid",
+                "type": "number",
+                "default": "$n",
+                "description": "the N2K instance id for the $i. DMS22B Rotary Encoder ",
+                "category": "spisensors$b",
+                "min": 0,
+                "max": 253,
+                "check": "checkMinMax",
+                "capabilities": {
+                    "DMS22B$i": "true"
+                }
+            },
+            {
+                "name": "DMS22B$iintv",
+                "label": "DMS22B$i Interval",
+                "type": "number",
+                "default": 2,
+                "description": "Interval(s) to query DMS22B rotation (0.5...10)",
+                "category": "spisensors$b",
+                "min": 0.5,
+                "max": 10,
+                "check": "checkMinMax",
+                "capabilities": {
+                    "DMS22B$i": "true"
+                }
+            },
+            {
+                "name": "DMS22B$izero",
+                "label": "DMS22B$i Zero",
+                "type": "number",
+                "default": 2,
+                "description": "Zero position (0...2^bits-1)",
+                "category": "spisensors$b",
+                "capabilities": {
+                    "DMS22B$i": "true"
+                }
+            }
+        ]
+    }
+]
