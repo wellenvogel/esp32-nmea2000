@@ -18,5 +18,5 @@
 #ifdef _GWQMP6988
     #include "QMP6988.h"
 #endif
-void registerQMP6988(GwApi *api,SensorList &sensors);
+void registerQMP6988(GwApi *api,IICSensorList &sensors);
 #endif

@@ -21,7 +21,7 @@
 #define PRFX2 "BME28012"
 #define PRFX3 "BME28021"
 #define PRFX4 "BME28022"
-class BME280Config : public SensorBase{
+class BME280Config : public IICSensorBase{
     public:
     bool prAct=true;
     bool tmAct=true;
@@ -138,7 +138,7 @@ class BME280Config : public SensorBase{
 };
 
 
-void registerBME280(GwApi *api,SensorList &sensors){
+void registerBME280(GwApi *api,IICSensorList &sensors){
     #if defined(GWBME280) || defined(GWBME28011)
     {
         BME280Config *cfg=new BME280Config(api,PRFX1);
@@ -173,7 +173,7 @@ void registerBME280(GwApi *api,SensorList &sensors){
     #endif
 }
 #else
-void registerBME280(GwApi *api,SensorList &sensors){   
+void registerBME280(GwApi *api,IICSensorList &sensors){   
 }
 
 #endif

@@ -5,7 +5,7 @@
 #define PRFX2 "SHT3X12"
 #define PRFX3 "SHT3X21"
 #define PRFX4 "SHT3X22"
-class SHT3XConfig : public SensorBase{
+class SHT3XConfig : public IICSensorBase{
     public:
     String tmNam;
     String huNam;
@@ -104,7 +104,7 @@ class SHT3XConfig : public SensorBase{
         intv*=1000;
     }
 };
-void registerSHT3X(GwApi *api,SensorList &sensors){
+void registerSHT3X(GwApi *api,IICSensorList &sensors){
     GwLog *logger=api->getLogger();
     #if defined(GWSHT3X) || defined (GWSHT3X11)
     {
@@ -140,7 +140,7 @@ void registerSHT3X(GwApi *api,SensorList &sensors){
     #endif
 }
 #else
-void registerSHT3X(GwApi *api,SensorList &sensors){
+void registerSHT3X(GwApi *api,IICSensorList &sensors){
 
 }
 

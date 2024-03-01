@@ -26,7 +26,7 @@
 
 void runIicTask(GwApi *api);
 
-static SensorList sensors;
+static IICSensorList sensors;
 
 void initIicTask(GwApi *api){
     GwLog *logger=api->getLogger();
@@ -124,7 +124,7 @@ void runIicTask(GwApi *api){
     GwIntervalRunner timers;
     int counterId=api->addCounter("iicsensors");
     for (auto it=sensors.begin();it != sensors.end();it++){
-        SensorBase *cfg=*it;
+        IICSensorBase *cfg=*it;
         auto bus=buses.find(cfg->busId);
         if (! cfg->isActive()) continue;
         if (bus == buses.end()){

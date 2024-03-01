@@ -18,5 +18,5 @@
 #ifdef _GWSHT3X
     #include "SHT3X.h"
 #endif
-void registerSHT3X(GwApi *api,SensorList &sensors);
+void registerSHT3X(GwApi *api,IICSensorList &sensors);
 #endif

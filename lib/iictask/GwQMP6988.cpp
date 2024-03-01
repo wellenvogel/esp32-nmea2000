@@ -4,7 +4,7 @@
 #define PRFX2 "QMP698812"
 #define PRFX3 "QMP698821"
 #define PRFX4 "QMP698822"
-class QMP6988Config : public SensorBase{
+class QMP6988Config : public IICSensorBase{
     public:
         String prNam="Pressure";
         bool prAct=true;
@@ -76,7 +76,7 @@ class QMP6988Config : public SensorBase{
 
         }
 };
-void registerQMP6988(GwApi *api,SensorList &sensors){
+void registerQMP6988(GwApi *api,IICSensorList &sensors){
     GwLog *logger=api->getLogger();
     #if defined(GWQMP6988) || defined(GWQMP698811)
     {
@@ -113,5 +113,5 @@ void registerQMP6988(GwApi *api,SensorList &sensors){
 }
 
 #else
-    void registerQMP6988(GwApi *api,SensorList &sensors){}
+    void registerQMP6988(GwApi *api,IICSensorList &sensors){}
 #endif
