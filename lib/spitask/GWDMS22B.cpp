@@ -13,14 +13,86 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 #include "GWDMS22B.h"
-#define PREFIX1 "DMS22B11"
+#include "GwApi.h"
+
+
+#define CHECK_BUS(BUS) \
+    checkDef("missing config for " #BUS,GW ## BUS ## _CLK ,GW ## BUS ## _MISO);
+
+#define ADD22B(PRFX,BUS) \
+        CHECK_BUS(BUS); \
+        GWDMS22B *dms=new GWDMS22B(api,#PRFX,GW ## BUS ## _HOST);\
+        sensors.add(api,dms);
+
+#ifdef GWDMS22B11
+    #define ADD22B11 ADD22B(DMS22B11,SPI0)
+    #ifndef GWDMS22B11_CS
+        #define GWDMS22B11_CS -1
+    #endif
+#else
+    #define GWDMS22B11_CS -1
+    #define ADD22B11
+#endif
+
+#ifdef GWDMS22B12
+    #define ADD22B12 ADD22B(DMS22B12,SPI0)
+    #ifndef GWDMS22B12_CS
+        #define GWDMS22B12_CS -1
+    #endif
+#else
+    #define GWDMS22B12_CS -1
+    #define ADD22B12
+#endif
+
+#ifdef GWDMS22B13
+    #define ADD22B13 ADD22B(DMS22B13,SPI0)
+    #ifndef GWDMS22B13_CS
+        #define GWDMS22B13_CS -1
+    #endif
+#else
+    #define GWDMS22B13_CS -1
+    #define ADD22B13
+#endif
+
+#ifdef GWDMS22B21
+    #define ADD22B21 ADD22B(DMS22B21,SPI1)
+    #ifndef GWDMS22B21_CS
+        #define GWDMS22B21_CS -1
+    #endif
+#else
+    #define GWDMS22B21_CS -1
+    #define ADD22B21
+#endif
+
+#ifdef GWDMS22B22
+    #define ADD22B22 ADD22B(DMS22B22,SPI1)
+    #ifndef GWDMS22B22_CS
+        #define GWDMS22B22_CS -1
+    #endif
+#else
+    #define GWDMS22B22_CS -1
+    #define ADD22B22
+#endif
+
+#ifdef GWDMS22B23
+    #define ADD22B23 ADD22B(DMS22B23,SPI1)
+    #ifndef GWDMS22B23_CS
+        #define GWDMS22B23_CS -1
+    #endif
+#else
+    #define GWDMS22B23_CS -1
+    #define ADD22B23
+#endif
+
+
+
 class GWDMS22B : public SSISensor{
     uint32_t zero=2047;
     public:
     using SSISensor::SSISensor;
     virtual bool preinit(GwApi * api){
         GwLog *logger=api->getLogger();
-        LOG_DEBUG(GwLog::LOG,"DMS22B configured, prefix=%s",prefix.c_str());
+        LOG_DEBUG(GwLog::LOG,"DMS22B configured, prefix=%s, intv=%f",prefix.c_str());
         api->addCapability(prefix,"true");
         return true;
     }
@@ -33,30 +105,36 @@ class GWDMS22B : public SSISensor{
         }
         LOG_DEBUG(GwLog::LOG,"measure %s : %d",prefix.c_str(),value);
     }
-    #define DMS22B(prefix)\
-        CFG_GET(act,prefix); \
-        CFG_GET(iid,prefix); \
-        CFG_GET(intv,prefix); \
-        CFG_GET(zero,prefix);
-    virtual void readConfig(GwConfigHandler *cfg){
-        if (prefix == PREFIX1){
-            DMS22B(DMS22B11);
-            busId=GWSPIHOST1;
-            bits=12;
-            clock=500000;
-            #ifdef GWDMS22B11_CS
-            cs=GWDMS22B11_CS;
-            #else
-            cs=-1;
-            #endif
+    #define DMS22B(PRFX,...) \
+        if (prefix == #PRFX) {\
+            CFG_GET(act,PRFX); \
+            CFG_GET(iid,PRFX); \
+            CFG_GET(fintv,PRFX); \
+            CFG_GET(zero,PRFX); \
+            bits=12; \
+            clock=500000; \
+            cs=GW ## PRFX ## _CS; \
+            __VA_ARGS__ \
         }
-        //TODO: other
+    
+    
+    virtual void readConfig(GwConfigHandler *cfg){
+        DMS22B(DMS22B11);
+        DMS22B(DMS22B12);
+        DMS22B(DMS22B13);
+        DMS22B(DMS22B21);
+        DMS22B(DMS22B22);
+        DMS22B(DMS22B23);
+        intv=1000*fintv;
     }
 };
 
 void registerDMS22B(GwApi *api,SpiSensorList &sensors){
-    #ifdef GWDMS22B11
-        GWDMS22B *dms=new GWDMS22B(api,PREFIX1);
-        sensors.add(dms);
-    #endif
+    ADD22B11
+    ADD22B12
+    ADD22B13
+    ADD22B21
+    ADD22B22
+    ADD22B23
+
 }

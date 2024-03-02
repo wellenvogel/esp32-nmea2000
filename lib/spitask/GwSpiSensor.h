@@ -97,6 +97,7 @@ class SSISensor : public SensorBase<BusType>{
     int cs=-1;
     int clock=0;
     bool act=false;
+    float fintv=0;
     virtual bool initSSI(GwLog*logger,const SPIBus *bus,
         int clock,int cs, int bits){
             mask= (1 << bits)-1;
@@ -123,7 +124,10 @@ class SSISensor : public SensorBase<BusType>{
         }
 
     public:
-    using SensorBase<BusType>::SensorBase;
+    SSISensor(GwApi *api,const String &prfx, int host):SensorBase(api,prfx)
+    {
+        busId=host;
+    }
     virtual bool isActive(){return act;};
     virtual bool initDevice(GwApi *api,BusType *bus){
         return initSSI(api->getLogger(),bus, clock,cs,bits);
@@ -131,6 +135,6 @@ class SSISensor : public SensorBase<BusType>{
     
 };
 using SpiSensorList=SensorList<BusType>;
-#define GWSPIHOST1 SPI2_HOST
-#define GWSPIHOST2 SPI3_HOST
+#define GWSPI0_HOST SPI2_HOST
+#define GWSPI1_HOST SPI3_HOST
 #endif

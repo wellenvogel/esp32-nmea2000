@@ -63,7 +63,7 @@
                 }
             },
             {
-                "name": "DMS22B$iintv",
+                "name": "DMS22B$ifintv",
                 "label": "DMS22B$i Interval",
                 "type": "number",
                 "default": 2,

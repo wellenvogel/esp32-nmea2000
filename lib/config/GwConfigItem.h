@@ -37,6 +37,9 @@ class GwConfigInterface{
         virtual int asInt() const{
             return (int)value.toInt();
         }
+        virtual float asFloat() const{
+            return value.toFloat();
+        }
         String getName() const{
             return name;
         }

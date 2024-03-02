@@ -70,6 +70,15 @@ class GwConfigHandler: public GwConfigDefinitions{
             target=i->asInt();
             return true;
         }
+        bool getValue(float &target, const String &name, float defaultv=0){
+            GwConfigInterface *i=getConfigItem(name);
+            if (!i){
+                target=defaultv;
+                return false;
+            }
+            target=i->asFloat();
+            return true;
+        }
         bool getValue(bool &target, const String name, bool defaultv=false){
             GwConfigInterface *i=getConfigItem(name);
             if (!i){
