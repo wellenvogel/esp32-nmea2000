@@ -62,7 +62,6 @@ class N2kToNMEA0183Functions : public N2kDataToNMEA0183
 {
 
 private:
-    int minXdrInterval=100; //minimal interval between 2 sends of the same transducer
     GwXDRMappings *xdrMappings;
     ConverterList<N2kToNMEA0183Functions,tN2kMsg> converters;
     std::map<String,unsigned long> lastSendTransducers;
@@ -75,7 +74,7 @@ private:
         auto it=lastSendTransducers.find(entry.transducer);
         unsigned long now=millis();
         if (it != lastSendTransducers.end()){
-            if ((it->second + minXdrInterval) > now) return false;
+            if ((it->second + config.minXdrInterval) > now) return false;
         }
         lastSendTransducers[entry.transducer]=now;
         if (! xdrOpened){
@@ -611,24 +610,34 @@ private:
 
         if (ParseN2kRudder(N2kMsg, RudderPosition, Instance, RudderDirectionOrder, AngleOrder))
         {
-
-            updateDouble(boatData->RPOS, RudderPosition);
-            if (Instance != 0)
+            bool main=false;
+            if (Instance == config.starboardRudderInstance){
+                updateDouble(boatData->RPOS, RudderPosition);
+                main=true;
+            }
+            else if (Instance == config.portRudderInstance){
+                updateDouble(boatData->PRPOS, RudderPosition);
+            }
+            else{
                 return;
+            }
 
             tNMEA0183Msg NMEA0183Msg;
 
             if (!NMEA0183Msg.Init("RSA", talkerId))
                 return;
-            if (!NMEA0183Msg.AddDoubleField(formatCourse(RudderPosition)))
-                return;
-            if (!NMEA0183Msg.AddStrField("A"))
-                return;
-            if (!NMEA0183Msg.AddDoubleField(0.0))
-                return;
-            if (!NMEA0183Msg.AddStrField("A"))
-                return;
-
+            if (main){
+                if (!NMEA0183Msg.AddDoubleField(formatWind(RudderPosition)))return;
+                if (!NMEA0183Msg.AddStrField("A"))return;
+                if (!NMEA0183Msg.AddDoubleField(0.0))return;
+                if (!NMEA0183Msg.AddStrField("V"))return;
+            }
+            else{
+                if (!NMEA0183Msg.AddDoubleField(0.0))return;
+                if (!NMEA0183Msg.AddStrField("V"))return;
+                if (!NMEA0183Msg.AddDoubleField(formatWind(RudderPosition)))return;
+                if (!NMEA0183Msg.AddStrField("A"))return;
+            }
             SendMessage(NMEA0183Msg);
         }
     }
@@ -1508,7 +1517,7 @@ private:
   public:
     N2kToNMEA0183Functions(GwLog *logger, GwBoatData *boatData, 
         SendNMEA0183MessageCallback callback,
-        String talkerId, GwXDRMappings *xdrMappings, int minXdrInterval) 
+        String talkerId, GwXDRMappings *xdrMappings, const Config &cfg) 
     : N2kDataToNMEA0183(logger, boatData, callback,talkerId)
     {
         LastPosSend = 0;
@@ -1518,7 +1527,7 @@ private:
         this->logger = logger;
         this->boatData = boatData;
         this->xdrMappings=xdrMappings;
-        this->minXdrInterval=minXdrInterval;
+        this->config=cfg;
         registerConverters();
     }
     virtual void loop()
@@ -1535,8 +1544,8 @@ private:
 
 N2kDataToNMEA0183* N2kDataToNMEA0183::create(GwLog *logger, GwBoatData *boatData, 
     SendNMEA0183MessageCallback callback, String talkerId, GwXDRMappings *xdrMappings,
-    int minXdrInterval){
+    const N2kDataToNMEA0183::Config &cfg){
   LOG_DEBUG(GwLog::LOG,"creating N2kToNMEA0183");    
-  return new N2kToNMEA0183Functions(logger,boatData,callback, talkerId,xdrMappings,minXdrInterval);
+  return new N2kToNMEA0183Functions(logger,boatData,callback, talkerId,xdrMappings,cfg);
 }
 //*****************************************************************************

@@ -808,7 +808,10 @@ void setup() {
   webserver.begin();
   xdrMappings.begin();
   logger.flush();
-  
+  N2kDataToNMEA0183::Config n2kTo183cfg;
+  n2kTo183cfg.minXdrInterval=config.getInt(config.minXdrInterval,100);
+  n2kTo183cfg.starboardRudderInstance=config.getInt(config.stbRudderI,0);
+  n2kTo183cfg.portRudderInstance=config.getInt(config.portRudderI,-1);
   nmea0183Converter= N2kDataToNMEA0183::create(&logger, &boatData, 
     [](const tNMEA0183Msg &msg, int sourceId){
       SendNMEA0183Message(msg,sourceId,false);
@@ -816,7 +819,7 @@ void setup() {
     , 
     config.getString(config.talkerId,String("GP")),
     &xdrMappings,
-    config.getInt(config.minXdrInterval,100)
+    n2kTo183cfg
     );
 
   toN2KConverter= NMEA0183DataToN2K::create(&logger,&boatData,[](const tN2kMsg &msg, int sourceId)->bool{

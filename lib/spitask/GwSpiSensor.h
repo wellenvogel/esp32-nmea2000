@@ -12,6 +12,7 @@
   License along with this library; if not, write to the Free Software
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
+//for SSI refer to https://www.posital.com/media/posital_media/documents/AbsoluteEncoders_Context_Technology_SSI_AppNote.pdf
 #ifndef _GWSPISENSOR_H
 #define _GWSPISENSOR_H
 #include <driver/spi_master.h>

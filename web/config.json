@@ -210,6 +210,28 @@
          "description":"send out the converted data on the NMEA2000 bus\nIf set to off the converted data will still be shown at the data tab.",
          "category":"converter"
      },
+     {
+        "name": "stbRudderI",
+        "label":"stb rudder instance",
+        "type": "number",
+        "default": "0",
+        "check": "checkMinMax",
+        "min": 0,
+        "max": 253,
+        "description": "the n2k instance to be used as starboard(main) rudder 0...253",
+        "category": "converter"
+    },
+    {
+        "name": "portRudderI",
+        "label":"port rudder instance",
+        "type": "number",
+        "default": "-1",
+        "check": "checkMinMax",
+        "min": -1,
+        "max": 253,
+        "description": "the n2k instance to be used as port rudder 0...253, -1 to disable",
+        "category": "converter"
+    },
     {
         "name": "usbActisense",
         "label": "USB mode",

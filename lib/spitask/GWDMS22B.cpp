@@ -89,6 +89,7 @@
 
 class GWDMS22B : public SSISensor{
     int zero=2047;
+    bool invt=false;
     public:
     using SSISensor::SSISensor;
     virtual bool preinit(GwApi * api){
@@ -105,7 +106,8 @@ class GWDMS22B : public SSISensor{
             LOG_DEBUG(GwLog::ERROR,"unable to measure %s: %d",prefix.c_str(),(int)res);
         }
         double resolved=(((int)value-zero)*360.0/mask);
-        LOG_DEBUG(GwLog::LOG,"measure %s : %d, resolved: %f",prefix.c_str(),value,(float)resolved);
+        if (invt) resolved=-resolved;
+        LOG_DEBUG(GwLog::DEBUG,"measure %s : %d, resolved: %f",prefix.c_str(),value,(float)resolved);
         tN2kMsg msg;
         SetN2kRudder(msg,DegToRad(resolved),iid);
         api->sendN2kMessage(msg);
@@ -116,6 +118,7 @@ class GWDMS22B : public SSISensor{
             CFG_GET(iid,PRFX); \
             CFG_GET(fintv,PRFX); \
             CFG_GET(zero,PRFX); \
+            CFG_GET(invt,PRFX); \
             bits=12; \
             clock=500000; \
             cs=GW ## PRFX ## _CS; \

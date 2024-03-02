@@ -36,8 +36,14 @@ class N2kDataToNMEA0183
 {
 public:
   typedef std::function<void(const tNMEA0183Msg &NMEA0183Msg,int id)> SendNMEA0183MessageCallback;
-
+  class Config{
+    public:
+      int minXdrInterval=100;
+      int starboardRudderInstance=0; 
+      int portRudderInstance=-1; //ignore
+  };
 protected:
+  Config config;
   GwLog *logger;
   GwBoatData *boatData;
   int sourceId=0;
@@ -49,7 +55,7 @@ protected:
 
 public:
   static N2kDataToNMEA0183* create(GwLog *logger, GwBoatData *boatData,  SendNMEA0183MessageCallback callback, 
-    String talkerId, GwXDRMappings *xdrMappings,int minXdrInterval=100);
+    String talkerId, GwXDRMappings *xdrMappings,const Config &cfg);
   virtual void HandleMsg(const tN2kMsg &N2kMsg, int sourceId) = 0;
   virtual void loop();
   virtual ~N2kDataToNMEA0183(){}
