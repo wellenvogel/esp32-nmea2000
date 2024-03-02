@@ -14,6 +14,7 @@
 */
 #include "GWDMS22B.h"
 #include "GwApi.h"
+#include "N2kMessages.h"
 
 
 #define CHECK_BUS(BUS) \
@@ -87,12 +88,12 @@
 
 
 class GWDMS22B : public SSISensor{
-    uint32_t zero=2047;
+    int zero=2047;
     public:
     using SSISensor::SSISensor;
     virtual bool preinit(GwApi * api){
         GwLog *logger=api->getLogger();
-        LOG_DEBUG(GwLog::LOG,"DMS22B configured, prefix=%s, intv=%f",prefix.c_str());
+        LOG_DEBUG(GwLog::LOG,"DMS22B configured, prefix=%s, intv=%f",prefix.c_str(),fintv);
         api->addCapability(prefix,"true");
         return true;
     }
@@ -103,7 +104,11 @@ class GWDMS22B : public SSISensor{
         if (res != ESP_OK){
             LOG_DEBUG(GwLog::ERROR,"unable to measure %s: %d",prefix.c_str(),(int)res);
         }
-        LOG_DEBUG(GwLog::LOG,"measure %s : %d",prefix.c_str(),value);
+        double resolved=(((int)value-zero)*360.0/mask);
+        LOG_DEBUG(GwLog::LOG,"measure %s : %d, resolved: %f",prefix.c_str(),value,(float)resolved);
+        tN2kMsg msg;
+        SetN2kRudder(msg,DegToRad(resolved),iid);
+        api->sendN2kMessage(msg);
     }
     #define DMS22B(PRFX,...) \
         if (prefix == #PRFX) {\
