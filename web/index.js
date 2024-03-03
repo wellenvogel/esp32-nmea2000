@@ -1506,7 +1506,9 @@ function createDashboard() {
     frame.innerHTML = '';
 }
 function sourceName(v){
+    if (v == 0) return "N2K";
     for (let n in channelList){
+        if (v == channelList[n].id) return n;
         if (v >= channelList[n].id && v <= channelList[n].max){
             return n;
         }
