@@ -21,9 +21,11 @@
     checkDef("missing config for " #BUS,GW ## BUS ## _CLK ,GW ## BUS ## _MISO);
 
 #define ADD22B(PRFX,BUS) \
+        {\
         CHECK_BUS(BUS); \
         GWDMS22B *dms=new GWDMS22B(api,#PRFX,GW ## BUS ## _HOST);\
-        sensors.add(api,dms);
+        sensors.add(api,dms); \
+        }
 
 #ifdef GWDMS22B11
     #define ADD22B11 ADD22B(DMS22B11,SPI0)
@@ -38,7 +40,10 @@
 #ifdef GWDMS22B12
     #define ADD22B12 ADD22B(DMS22B12,SPI0)
     #ifndef GWDMS22B12_CS
-        #define GWDMS22B12_CS -1
+        #error "you need to define GWDMS22B12_CS"
+    #endif
+    #if GWDMS22B11_CS == -1
+        #error "multiple devices on one SPI bus need chip select defines - GWDMS22B11_CS is unset"
     #endif
 #else
     #define GWDMS22B12_CS -1
@@ -48,7 +53,10 @@
 #ifdef GWDMS22B13
     #define ADD22B13 ADD22B(DMS22B13,SPI0)
     #ifndef GWDMS22B13_CS
-        #define GWDMS22B13_CS -1
+        #error "you need to define GWDMS22B13_CS"
+    #endif
+    #if GWDMS22B11_CS == -1
+        #error "multiple devices on one SPI bus need chip select defines - GWDMS22B11_CS is unset"
     #endif
 #else
     #define GWDMS22B13_CS -1
@@ -68,7 +76,10 @@
 #ifdef GWDMS22B22
     #define ADD22B22 ADD22B(DMS22B22,SPI1)
     #ifndef GWDMS22B22_CS
-        #define GWDMS22B22_CS -1
+        #error "you need to define GWDMS22B22_CS"
+    #endif
+    #if GWDMS22B21_CS == -1
+        #error "multiple devices on one SPI bus need chip select defines - GWDMS22B21_CS is unset"
     #endif
 #else
     #define GWDMS22B22_CS -1
@@ -78,7 +89,10 @@
 #ifdef GWDMS22B23
     #define ADD22B23 ADD22B(DMS22B23,SPI1)
     #ifndef GWDMS22B23_CS
-        #define GWDMS22B23_CS -1
+        #error "you need to define GWDMS22B23_CS"
+    #endif
+    #if GWDMS22B21_CS == -1
+        #error "multiple devices on one SPI bus need chip select defines - GWDMS22B11_CS is unset"
     #endif
 #else
     #define GWDMS22B23_CS -1
