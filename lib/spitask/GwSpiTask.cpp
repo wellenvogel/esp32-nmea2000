@@ -16,27 +16,12 @@
 #include "GwSpiSensor.h"
 #include "GWDMS22B.h"
 #include "GwTimer.h"
+#include "GwHardware.h"
 
-static SPIBus bus1(GWSPI0_HOST);
-static SPIBus bus2(GWSPI1_HOST);
+static SPIBus bus1(GWSPI1_HOST);
+static SPIBus bus2(GWSPI2_HOST);
 
 static SpiSensorList sensors;
-
-#ifdef GWSPI0_CLK
-static const int spi0clk=GWSPI0_CLK;
-#else
-static const int spi0clk=-1;
-#endif
-#ifdef GWSPI0_MISO
-static const int spi0miso=GWSPI0_MISO;
-#else
-static const int spi0miso=-1;
-#endif
-#ifdef GWSPI0_MOSI
-static const int spi0mosi=GWSPI0_MOSI;
-#else
-static const int spi0mosi=-1;
-#endif
 
 #ifdef GWSPI1_CLK
 static const int spi1clk=GWSPI1_CLK;
@@ -54,6 +39,22 @@ static const int spi1mosi=GWSPI1_MOSI;
 static const int spi1mosi=-1;
 #endif
 
+#ifdef GWSPI2_CLK
+static const int spi2clk=GWSPI2_CLK;
+#else
+static const int spi2clk=-1;
+#endif
+#ifdef GWSPI2_MISO
+static const int spi2miso=GWSPI2_MISO;
+#else
+static const int spi2miso=-1;
+#endif
+#ifdef GWSPI2_MOSI
+static const int spi2mosi=GWSPI2_MOSI;
+#else
+static const int spi2mosi=-1;
+#endif
+
 void runSpiTask(GwApi *api){
     GwLog *logger=api->getLogger();
     std::map<int,SPIBus *> buses;
@@ -63,22 +64,22 @@ void runSpiTask(GwApi *api){
         if (bus == buses.end()){
             switch (busId)
             {
-            case GWSPI0_HOST:
-                if (spi0clk < 0){
+            case GWSPI1_HOST:
+                if (spi1clk < 0){
                     LOG_DEBUG(GwLog::ERROR,"SPI bus 1 not configured, cannot create %s",sensor->prefix.c_str());
                 }
                 else{
-                    if (bus1.init(logger,spi0mosi,spi0miso,spi0clk)){
+                    if (bus1.init(logger,spi1mosi,spi1miso,spi1clk)){
                         buses[busId]=&bus1;
                     }
                 }
                 break;
-            case GWSPI1_HOST:
-                if (spi1clk < 0){
+            case GWSPI2_HOST:
+                if (spi2clk < 0){
                     LOG_DEBUG(GwLog::ERROR,"SPI bus 2 not configured, cannot create %s",sensor->prefix.c_str());
                 }
                 else{
-                    if (bus2.init(logger,spi1mosi,spi1miso,spi1clk)){
+                    if (bus2.init(logger,spi2mosi,spi2miso,spi2clk)){
                         buses[busId]=&bus2;
                     }
                 }

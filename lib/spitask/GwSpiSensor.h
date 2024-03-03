@@ -136,6 +136,6 @@ class SSISensor : public SensorBase<BusType>{
     
 };
 using SpiSensorList=SensorList<BusType>;
-#define GWSPI0_HOST SPI2_HOST
-#define GWSPI1_HOST SPI3_HOST
+#define GWSPI1_HOST SPI2_HOST
+#define GWSPI2_HOST SPI3_HOST
 #endif

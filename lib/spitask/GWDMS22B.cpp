@@ -15,6 +15,7 @@
 #include "GWDMS22B.h"
 #include "GwApi.h"
 #include "N2kMessages.h"
+#include "GwHardware.h"
 
 
 #define CHECK_BUS(BUS) \
@@ -28,7 +29,7 @@
         }
 
 #ifdef GWDMS22B11
-    #define ADD22B11 ADD22B(DMS22B11,SPI0)
+    #define ADD22B11 ADD22B(DMS22B11,SPI1)
     #ifndef GWDMS22B11_CS
         #define GWDMS22B11_CS -1
     #endif
@@ -38,7 +39,7 @@
 #endif
 
 #ifdef GWDMS22B12
-    #define ADD22B12 ADD22B(DMS22B12,SPI0)
+    #define ADD22B12 ADD22B(DMS22B12,SPI1)
     #ifndef GWDMS22B12_CS
         #error "you need to define GWDMS22B12_CS"
     #endif
@@ -51,7 +52,7 @@
 #endif
 
 #ifdef GWDMS22B13
-    #define ADD22B13 ADD22B(DMS22B13,SPI0)
+    #define ADD22B13 ADD22B(DMS22B13,SPI1)
     #ifndef GWDMS22B13_CS
         #error "you need to define GWDMS22B13_CS"
     #endif
@@ -64,7 +65,7 @@
 #endif
 
 #ifdef GWDMS22B21
-    #define ADD22B21 ADD22B(DMS22B21,SPI1)
+    #define ADD22B21 ADD22B(DMS22B21,SPI2)
     #ifndef GWDMS22B21_CS
         #define GWDMS22B21_CS -1
     #endif
@@ -74,7 +75,7 @@
 #endif
 
 #ifdef GWDMS22B22
-    #define ADD22B22 ADD22B(DMS22B22,SPI1)
+    #define ADD22B22 ADD22B(DMS22B22,SPI2)
     #ifndef GWDMS22B22_CS
         #error "you need to define GWDMS22B22_CS"
     #endif
@@ -87,7 +88,7 @@
 #endif
 
 #ifdef GWDMS22B23
-    #define ADD22B23 ADD22B(DMS22B23,SPI1)
+    #define ADD22B23 ADD22B(DMS22B23,SPI2)
     #ifndef GWDMS22B23_CS
         #error "you need to define GWDMS22B23_CS"
     #endif

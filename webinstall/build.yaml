@@ -428,6 +428,78 @@ types:
             values: 
               - key: true
                 value: GWBME280#busname#2
+  
+  - &spisensors
+    type: checkbox
+    label: "SPI/SSI #busname#"
+    key: "spi#busname#"
+    description: "SPI(SSI) Bus #busname#"
+    values:
+      - key: true
+        children:
+          - <<: *gpiopin
+            label: CLK
+            key: clk
+            mandatory: true
+            target: "define:GWSPI#bus#_CLK"
+          - <<: *gpiopin
+            label: MISO
+            key: miso
+            mandatory: false
+            target: "define:GWSPI#bus#_MISO"
+          - <<: *gpiopin
+            label: MOSI
+            key: mosi
+            mandatory: false
+            target: "define:GWSPI#bus#_MOSI"
+            description: "GPIO pin for MOSI, not necessary for SSI"
+          - type: checkbox
+            label: GWDMS22B-#busname#-1
+            description: "DMS22B rotatory encoder (SSI)"
+            key: dms22b#busname#1
+            target: define
+            url: "https://www.mouser.de/datasheet/2/54/bour_s_a0011704065_1-2262614.pdf"
+            values: 
+              - key: true
+                value: GWDMS22B#busname#1
+                children:
+                  - <<: *gpiopin
+                    label: CS
+                    key: dms22b#busname#1cs
+                    description: "chip select pin, only necessary for multiple devices on this bus"
+                    target: "define:GWDMS22B#busname#1_CS"
+          - type: checkbox
+            label: GWDMS22B-#busname#-2
+            description: "DMS22B rotatory encoder (SSI)"
+            key: dms22b#busname#2
+            target: define
+            url: "https://www.mouser.de/datasheet/2/54/bour_s_a0011704065_1-2262614.pdf"
+            values: 
+              - key: true
+                value: GWDMS22B#busname#2
+                children:
+                  - <<: *gpiopin
+                    label: CS
+                    key: dms22b#busname#2cs
+                    description: "chip select pin, only necessary for multiple devices on this bus"
+                    target: "define:GWDMS22B#busname#2_CS"
+          - type: checkbox
+            label: GWDMS22B-#busname#-3
+            description: "DMS22B rotatory encoder (SSI)"
+            key: dms22b#busname#3
+            target: define
+            url: "https://www.mouser.de/datasheet/2/54/bour_s_a0011704065_1-2262614.pdf"
+            values: 
+              - key: true
+                value: GWDMS22B#busname#3
+                children:
+                  - <<: *gpiopin
+                    label: CS
+                    key: dms22b#busname#3cs
+                    description: "chip select pin, only necessary for multiple devices on this bus"
+                    target: "define:GWDMS22B#busname#3_CS"
+  
+  
   - &m5protochildren
       - *serial1
       - *serial2
@@ -440,7 +512,14 @@ types:
         base: 
           busname: "2"
           bus: "2"
-        
+      - <<: *spisensors
+        base:
+          busname: "1"
+          bus: "1"
+      - <<: *spisensors
+        base:
+          busname: "2"
+          bus: "2"        
 
                 
   - &m5base
@@ -538,5 +617,13 @@ config:
                 bus: ""
             - <<: *iicsensors
               base: 
+                busname: "2"
+                bus: "2"
+            - <<: *spisensors
+              base:
+                busname: "1"
+                bus: "1"
+            - <<: *spisensors
+              base:
                 busname: "2"
                 bus: "2"
