@@ -42,6 +42,10 @@
   #define GWBUTTON_PULLUPDOWN
   #define BOARD_LEFT1 GPIO_NUM_22
   #define BOARD_LEFT2 GPIO_NUM_19
+  #define BOARD_LEFT3 GPIO_NUM_23
+  #define BOARD_LEFT4 GPIO_NUM_33
+  #define BOARD_RIGHT1 GPIO_NUM_21
+  #define BOARD_RIGHT2 GPIO_NUM_25
   #define USBSerial Serial
 #endif
 //general definitiones for M5AtomS3
@@ -59,6 +63,10 @@
   #define GWBUTTON_PULLUPDOWN
   #define BOARD_LEFT1 GPIO_NUM_5
   #define BOARD_LEFT2 GPIO_NUM_6
+  #define BOARD_LEFT3 GPIO_NUM_7
+  #define BOARD_LEFT4 GPIO_NUM_8
+  #define BOARD_RIGHT1 GPIO_NUM_39
+  #define BOARD_RIGHT2 GPIO_NUM_38
 #endif
 
 //M5Stick C
@@ -165,6 +173,16 @@
   #define GWSERIAL_TYPE GWSERIAL_TYPE_RX
   #define CFGDEFAULT_serialBaud "9600"
   #define CFGMODE_serialBaud GwConfigInterface::READONLY
+#endif
+
+//M5 ProtoHub
+#ifdef M5_PROTO_HUB
+  #define PPIN22 BOARD_LEFT1
+  #define PPIN19 BOARD_LEFT2
+  #define PPIN23 BOARD_LEFT3
+  #define PPIN33 BOARD_LEFT4
+  #define PPIN21 BOARD_RIGHT1
+  #define PPIN25 BOARD_RIGHT2
 #endif
 
 //below we define the final device config based on the above

@@ -573,7 +573,7 @@ class PipelineInfo{
                 (child,initial,opt_frame)=>{
                     if(cfg.key !== undefined) removeSelectors(name,!initial);
                     if (! initial) isModified=true;
-                    buildSelectors(name,child.children,initial,currentBase,opt_frame||childFrame);
+                    buildSelectors(name,child.children,initial,Object.assign({},currentBase,child.base),opt_frame||childFrame);
                     if (cfg.key !== undefined) configStruct[name]={cfg:child,base:currentBase};
                     buildValues(initial);
             })
@@ -583,8 +583,17 @@ class PipelineInfo{
         if (! base) return str;
         if (typeof(str) === 'string'){
             for (let k in base){
-                let r=new RegExp("#"+k+"#","g");
-                str=str.replace(r,base[k]);
+                if (typeof(base[k]) !== 'string'){
+                    //special replacement
+                    //for complete parts
+                    if (str === '#'+k+'#'){
+                        return base[k];
+                    }
+                }
+                else{
+                    let r=new RegExp("#"+k+"#","g");
+                    str=str.replace(r,base[k]);
+                }
             }
             return str;
         }
@@ -598,7 +607,8 @@ class PipelineInfo{
         if (str instanceof Object){
             let rt={};
             for (let k in str){
-                rt[k]=replaceValues(str[k],base);
+                if (k == 'children') rt[k]=str[k];
+                else rt[k]=replaceValues(str[k],base);
             }
             return rt;
         }

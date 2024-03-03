@@ -36,33 +36,6 @@
 #
 #
 types:
-  - &m5base
-      type: select
-      target: define
-      label: 'M5 Atom light Base'
-      key: m5lightbase
-      values:
-        - label: "CAN KIT"
-          value: M5_CAN_KIT
-          description: "M5 Stack CAN Kit"
-          url: "https://docs.m5stack.com/en/atom/atom_can"
-          resource: can
-        - value: M5_SERIAL_KIT_232
-          description: "M5 Stack RS232 Base"
-          label: "Atomic RS232 Base"
-          url: "https://docs.m5stack.com/en/atom/Atomic%20RS232%20Base"
-          resource: serial
-        - value: M5_SERIAL_KIT_485
-          description: "M5 Stack RS485 Base"
-          label: "Atomic RS485 Base"
-          url: "https://docs.m5stack.com/en/atom/Atomic%20RS485%20Base"
-          resource: serial
-        - value: M5_GPS_KIT
-          description: "M5 Stack Gps Kit"
-          label: "Gps Base"
-          url: "https://docs.m5stack.com/en/atom/atomicgps"
-          resource: serial
-
   - &m5groovei2c
     type: frame
     key: m5groovei2c
@@ -131,7 +104,9 @@ types:
     type: dropdown
     resource: "gpio:"
     help: 'Select the number of the GPIO pin for this function'
-    values:
+    values: "#gpiopinv#"
+      
+  - &gpiopinv    
       - {label: unset,value:}
       - {label: "0: Low at boot!",value: 0}
       - 1
@@ -164,7 +139,9 @@ types:
     type: dropdown
     resource: "gpio:"
     help: 'Select the number of the GPIO pin for this function'
-    values:
+    values: "#gpiopinv#"
+      
+  - &gpioinputv    
       - {label: unset,value:}
       - {label: "0: Low at boot!",value: 0}
       - 1
@@ -196,6 +173,15 @@ types:
       - 37
       - 38
       - 39
+  
+  - &protogpio
+      - {label: unset,value:}
+      - PPIN19
+      - PPIN21
+      - PPIN22
+      - PPIN23
+      - PPIN25
+      - PPIN33
   
   - &serialRX
     <<: *gpioinput
@@ -442,7 +428,56 @@ types:
             values: 
               - key: true
                 value: GWBME280#busname#2
+  - &m5protochildren
+      - *serial1
+      - *serial2
+      - *can
+      - <<: *iicsensors
+        base: 
+          busname: "1"
+          bus: ""
+      - <<: *iicsensors
+        base: 
+          busname: "2"
+          bus: "2"
+        
+
                 
+  - &m5base
+      type: select
+      target: define
+      label: 'M5 Atom light Base'
+      key: m5lightbase
+      values:
+        - label: "CAN KIT"
+          value: M5_CAN_KIT
+          description: "M5 Stack CAN Kit"
+          url: "https://docs.m5stack.com/en/atom/atom_can"
+          resource: can
+        - value: M5_SERIAL_KIT_232
+          description: "M5 Stack RS232 Base"
+          label: "Atomic RS232 Base"
+          url: "https://docs.m5stack.com/en/atom/Atomic%20RS232%20Base"
+          resource: serial
+        - value: M5_SERIAL_KIT_485
+          description: "M5 Stack RS485 Base"
+          label: "Atomic RS485 Base"
+          url: "https://docs.m5stack.com/en/atom/Atomic%20RS485%20Base"
+          resource: serial
+        - value: M5_GPS_KIT
+          description: "M5 Stack Gps Kit"
+          label: "Gps Base"
+          url: "https://docs.m5stack.com/en/atom/atomicgps"
+          resource: serial
+        - value: M5_PROTO_HUB
+          description: "M5 Stack HUB PROTO"
+          url: "https://docs.m5stack.com/en/atom/atomhub"
+          label: "Hub Proto"
+          base:
+            gpioinputv: *protogpio
+            gpiopinv: *protogpio
+          children:
+            *m5protochildren
 
 resources:
   default: &esp32default
@@ -457,6 +492,9 @@ config:
       target: environment
       label: 'Board'
       key: board
+      base:
+        gpiopinv: *gpiopinv
+        gpioinputv: *gpioinputv
       values: 
         - value: m5stack-atom-generic
           label: m5stack-atom
