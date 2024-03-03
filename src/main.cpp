@@ -808,10 +808,8 @@ void setup() {
   webserver.begin();
   xdrMappings.begin();
   logger.flush();
-  N2kDataToNMEA0183::Config n2kTo183cfg;
-  n2kTo183cfg.minXdrInterval=config.getInt(config.minXdrInterval,100);
-  n2kTo183cfg.starboardRudderInstance=config.getInt(config.stbRudderI,0);
-  n2kTo183cfg.portRudderInstance=config.getInt(config.portRudderI,-1);
+  GwConverterConfig converterConfig;
+  converterConfig.init(&config);
   nmea0183Converter= N2kDataToNMEA0183::create(&logger, &boatData, 
     [](const tNMEA0183Msg &msg, int sourceId){
       SendNMEA0183Message(msg,sourceId,false);
@@ -819,7 +817,7 @@ void setup() {
     , 
     config.getString(config.talkerId,String("GP")),
     &xdrMappings,
-    n2kTo183cfg
+    converterConfig
     );
 
   toN2KConverter= NMEA0183DataToN2K::create(&logger,&boatData,[](const tN2kMsg &msg, int sourceId)->bool{
@@ -828,7 +826,7 @@ void setup() {
     return true;
   },
   &xdrMappings,
-  config.getInt(config.min2KInterval,50)
+  converterConfig
   );  
   
   NMEA2000.SetN2kCANMsgBufSize(8);
@@ -950,7 +948,8 @@ void loopRun() {
     preferences.end();
     logger.logDebug(GwLog::LOG,"Address Change: New Address=%d\n", SourceAddress);
   }
-  nmea0183Converter->loop();
+  //potentially send out an own RMC if we did not receive one
+  nmea0183Converter->loop(toN2KConverter->getLastRmc());
   monitor.setTime(8);
 
   //read channels

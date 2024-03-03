@@ -4,6 +4,7 @@
 #include "GwBoatData.h"
 #include "N2kMessages.h"
 #include "GwXDRMappings.h"
+#include "GwConverterConfig.h"
 
 class NMEA0183DataToN2K{
     public:
@@ -12,14 +13,17 @@ class NMEA0183DataToN2K{
         GwLog * logger;
         GwBoatData *boatData;
         N2kSender sender;
+        GwConverterConfig config;
+        unsigned long lastRmc=millis();
     public:
         NMEA0183DataToN2K(GwLog *logger,GwBoatData *boatData,N2kSender callback);
         virtual bool parseAndSend(const char *buffer, int sourceId)=0;
         virtual unsigned long *handledPgns()=0;
         virtual int numConverters()=0;
         virtual String handledKeys()=0;
+        unsigned long getLastRmc()const {return lastRmc; }
         static NMEA0183DataToN2K* create(GwLog *logger,GwBoatData *boatData,N2kSender callback,
             GwXDRMappings *xdrMappings,
-            unsigned long minSendInterval);
+            const GwConverterConfig &config);
 };
 #endif

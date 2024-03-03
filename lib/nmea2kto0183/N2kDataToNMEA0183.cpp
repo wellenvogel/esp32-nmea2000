@@ -43,7 +43,7 @@ N2kDataToNMEA0183::N2kDataToNMEA0183(GwLog * logger, GwBoatData *boatData,
 
 
 //*****************************************************************************
-void N2kDataToNMEA0183::loop() {
+void N2kDataToNMEA0183::loop(unsigned long) {
 }
 
 //*****************************************************************************
@@ -65,10 +65,10 @@ private:
     GwXDRMappings *xdrMappings;
     ConverterList<N2kToNMEA0183Functions,tN2kMsg> converters;
     std::map<String,unsigned long> lastSendTransducers;
-    static const unsigned long RMCPeriod = 500;
     tNMEA0183Msg xdrMessage;
     bool xdrOpened=false;
     int xdrCount=0;
+    unsigned long lastRmcSent=0;
 
     bool addToXdr(GwXDRFoundMapping::XdrEntry entry){
         auto it=lastSendTransducers.find(entry.transducer);
@@ -133,9 +133,6 @@ private:
         return boatData->update((double)value,sourceId,mapping);
     }
     
-    unsigned long LastPosSend;
-    unsigned long NextRMCSend;
-    unsigned long lastLoopTime;
     
     virtual unsigned long *handledPgns()
     {
@@ -165,7 +162,6 @@ private:
     {
         return converters.numConverters();
     }
-    void SetNextRMCSend() { NextRMCSend = millis() + RMCPeriod; }
 
     //*************** the converters ***********************
     void HandleHeading(const tN2kMsg &N2kMsg)
@@ -545,11 +541,9 @@ private:
     void SendRMC()
     {
         long now = millis();
-        if (NextRMCSend <= millis() && 
-          boatData->LAT->isValid(now) && 
-          boatData->LAT->getLastSource() == sourceId
-          )
+        if (boatData->LAT->isValid(now) && boatData->LON->isValid(now))
         {
+            lastRmcSent=now;
             tNMEA0183Msg NMEA0183Msg;
             if (NMEA0183SetRMC(NMEA0183Msg,
 
@@ -564,7 +558,6 @@ private:
             {
                 SendMessage(NMEA0183Msg);
             }
-            SetNextRMCSend();
         }
     }
 
@@ -610,10 +603,8 @@ private:
 
         if (ParseN2kRudder(N2kMsg, RudderPosition, Instance, RudderDirectionOrder, AngleOrder))
         {
-            bool main=false;
             if (Instance == config.starboardRudderInstance){
                 updateDouble(boatData->RPOS, RudderPosition);
-                main=true;
             }
             else if (Instance == config.portRudderInstance){
                 updateDouble(boatData->PRPOS, RudderPosition);
@@ -626,17 +617,23 @@ private:
 
             if (!NMEA0183Msg.Init("RSA", talkerId))
                 return;
-            if (main){
-                if (!NMEA0183Msg.AddDoubleField(formatWind(RudderPosition)))return;
+            auto rpos=boatData->RPOS;
+            if (rpos->isValid()){
+                if (!NMEA0183Msg.AddDoubleField(formatWind(rpos->getData())))return;
                 if (!NMEA0183Msg.AddStrField("A"))return;
-                if (!NMEA0183Msg.AddDoubleField(0.0))return;
-                if (!NMEA0183Msg.AddStrField("V"))return;
             }
             else{
                 if (!NMEA0183Msg.AddDoubleField(0.0))return;
                 if (!NMEA0183Msg.AddStrField("V"))return;
-                if (!NMEA0183Msg.AddDoubleField(formatWind(RudderPosition)))return;
+            }
+            auto prpos=boatData->PRPOS;
+            if (prpos->isValid()){
+                if (!NMEA0183Msg.AddDoubleField(formatWind(prpos->getData())))return;
                 if (!NMEA0183Msg.AddStrField("A"))return;
+            }
+            else{
+                if (!NMEA0183Msg.AddDoubleField(0.0))return;
+                if (!NMEA0183Msg.AddStrField("V"))return;
             }
             SendMessage(NMEA0183Msg);
         }
@@ -1517,34 +1514,29 @@ private:
   public:
     N2kToNMEA0183Functions(GwLog *logger, GwBoatData *boatData, 
         SendNMEA0183MessageCallback callback,
-        String talkerId, GwXDRMappings *xdrMappings, const Config &cfg) 
+        String talkerId, GwXDRMappings *xdrMappings, const GwConverterConfig &cfg) 
     : N2kDataToNMEA0183(logger, boatData, callback,talkerId)
     {
-        LastPosSend = 0;
-        lastLoopTime = 0;
-        NextRMCSend = millis() + RMCPeriod;
-
         this->logger = logger;
         this->boatData = boatData;
         this->xdrMappings=xdrMappings;
         this->config=cfg;
         registerConverters();
     }
-    virtual void loop()
+    virtual void loop(unsigned long lastExtRmc) override
     {
-        N2kDataToNMEA0183::loop();
+        N2kDataToNMEA0183::loop(lastExtRmc);
         unsigned long now = millis();
-        if (now < (lastLoopTime + 100))
-            return;
-        lastLoopTime = now;
-        SendRMC();
+        if (config.rmcInterval > 0 && (lastExtRmc + config.rmcCheckTime) <= now && (lastRmcSent + config.rmcInterval) <= now){
+            SendRMC();
+        }
     }
 };
 
 
 N2kDataToNMEA0183* N2kDataToNMEA0183::create(GwLog *logger, GwBoatData *boatData, 
     SendNMEA0183MessageCallback callback, String talkerId, GwXDRMappings *xdrMappings,
-    const N2kDataToNMEA0183::Config &cfg){
+    const GwConverterConfig &cfg){
   LOG_DEBUG(GwLog::LOG,"creating N2kToNMEA0183");    
   return new N2kToNMEA0183Functions(logger,boatData,callback, talkerId,xdrMappings,cfg);
 }
