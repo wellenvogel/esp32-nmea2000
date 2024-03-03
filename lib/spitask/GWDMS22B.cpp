@@ -108,9 +108,9 @@ class GWDMS22B : public SSISensor{
     using SSISensor::SSISensor;
     virtual bool preinit(GwApi * api){
         GwLog *logger=api->getLogger();
-        LOG_DEBUG(GwLog::LOG,"DMS22B configured, prefix=%s, intv=%f",prefix.c_str(),fintv);
+        LOG_DEBUG(GwLog::LOG,"DMS22B configured, prefix=%s, intv=%f, active=%d",prefix.c_str(),fintv,(int)act);
         api->addCapability(prefix,"true");
-        return true;
+        return act;
     }
     virtual void measure(GwApi * api,BusType *bus, int counterId){
         GwLog *logger=api->getLogger();

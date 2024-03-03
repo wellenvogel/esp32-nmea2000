@@ -54,7 +54,6 @@ static const int spi1mosi=GWSPI1_MOSI;
 static const int spi1mosi=-1;
 #endif
 
-#define _GWSPI
 void runSpiTask(GwApi *api){
     GwLog *logger=api->getLogger();
     std::map<int,SPIBus *> buses;
@@ -122,9 +121,6 @@ void runSpiTask(GwApi *api){
 
 void initSpiTask(GwApi *api){
     GwLog *logger=api->getLogger();
-    #ifndef _GWSPI
-        return;
-    #endif
     registerDMS22B(api,sensors);
     bool addTask=false;
     for (auto && sensor:sensors){
@@ -134,6 +130,6 @@ void initSpiTask(GwApi *api){
         api->addUserTask(runSpiTask,"spiTask",3000);   
     }
     else{
-        LOG_DEBUG(GwLog::LOG,"no SPI sensors defined");
+        LOG_DEBUG(GwLog::LOG,"no SPI sensors defined/active");
     }
 }
