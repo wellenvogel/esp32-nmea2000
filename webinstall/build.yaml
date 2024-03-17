@@ -483,22 +483,6 @@ types:
                     key: dms22b#busname#2cs
                     description: "chip select pin, only necessary for multiple devices on this bus"
                     target: "define:GWDMS22B#busname#2_CS"
-          - type: checkbox
-            label: GWDMS22B-#busname#-3
-            description: "DMS22B rotatory encoder (SSI)"
-            key: dms22b#busname#3
-            target: define
-            url: "https://www.mouser.de/datasheet/2/54/bour_s_a0011704065_1-2262614.pdf"
-            values: 
-              - key: true
-                value: GWDMS22B#busname#3
-                children:
-                  - <<: *gpiopin
-                    label: CS
-                    key: dms22b#busname#3cs
-                    description: "chip select pin, only necessary for multiple devices on this bus"
-                    target: "define:GWDMS22B#busname#3_CS"
-  
   
   - &m5protochildren
       - *serial1

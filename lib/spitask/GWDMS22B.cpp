@@ -51,18 +51,6 @@
     #define ADD22B12
 #endif
 
-#ifdef GWDMS22B13
-    #define ADD22B13 ADD22B(DMS22B13,SPI1)
-    #ifndef GWDMS22B13_CS
-        #error "you need to define GWDMS22B13_CS"
-    #endif
-    #if GWDMS22B11_CS == -1
-        #error "multiple devices on one SPI bus need chip select defines - GWDMS22B11_CS is unset"
-    #endif
-#else
-    #define GWDMS22B13_CS -1
-    #define ADD22B13
-#endif
 
 #ifdef GWDMS22B21
     #define ADD22B21 ADD22B(DMS22B21,SPI2)
@@ -87,18 +75,6 @@
     #define ADD22B22
 #endif
 
-#ifdef GWDMS22B23
-    #define ADD22B23 ADD22B(DMS22B23,SPI2)
-    #ifndef GWDMS22B23_CS
-        #error "you need to define GWDMS22B23_CS"
-    #endif
-    #if GWDMS22B21_CS == -1
-        #error "multiple devices on one SPI bus need chip select defines - GWDMS22B11_CS is unset"
-    #endif
-#else
-    #define GWDMS22B23_CS -1
-    #define ADD22B23
-#endif
 
 
 
@@ -144,10 +120,8 @@ class GWDMS22B : public SSISensor{
     virtual void readConfig(GwConfigHandler *cfg){
         DMS22B(DMS22B11);
         DMS22B(DMS22B12);
-        DMS22B(DMS22B13);
         DMS22B(DMS22B21);
         DMS22B(DMS22B22);
-        DMS22B(DMS22B23);
         intv=1000*fintv;
     }
 };
@@ -155,9 +129,7 @@ class GWDMS22B : public SSISensor{
 void registerDMS22B(GwApi *api,SpiSensorList &sensors){
     ADD22B11
     ADD22B12
-    ADD22B13
     ADD22B21
     ADD22B22
-    ADD22B23
 
 }
