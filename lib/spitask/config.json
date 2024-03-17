@@ -69,7 +69,7 @@
                 "label": "DMS22B$i Zero",
                 "type": "calset",
                 "default": 2048,
-                "description": "Zero position (0...2^bits-1)",
+                "description": "Zero position (0...2^bits-1)\nuse the \"C\" button to open a calibrate dialog",
                 "category": "spisensors$b",
                 "capabilities": {
                     "DMS22B$i": "true"

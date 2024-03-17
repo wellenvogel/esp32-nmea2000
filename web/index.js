@@ -479,7 +479,7 @@ function createCalSetInput(configItem,frame,clazz){
     cb.addEventListener('click',(ev)=>{
         let cs=document.getElementById("calset").cloneNode(true);
         cs.classList.remove("hidden");
-        cs.querySelector(".heading").textContent=configItem.name;
+        cs.querySelector(".heading").textContent=configItem.label||configItem.name;
         let vel=cs.querySelector(".val");
         if (caliv != 0) window.clearInterval(caliv);
         caliv=window.setInterval(()=>{
@@ -503,6 +503,55 @@ function createCalSetInput(configItem,frame,clazz){
         },200);        
         showOverlay(cs,false,[{label:'Set',click:()=>{
             el.value=vel.textContent;
+            let cev=new Event('change');
+            el.dispatchEvent(cev);
+        }}]);
+    })
+    el.setAttribute('name', configItem.name)
+    return el;    
+}
+function createCalValInput(configItem,frame,clazz){
+    let el = addEl('input',clazz,frame);
+    let cb = addEl('button','',frame,'C');
+    //el.disabled=true;
+    cb.addEventListener('click',(ev)=>{
+        const sv=function(val,cfg){
+            if (configItem.eval){
+                let v=parseFloat(val);
+                let c=parseFloat(cfg);
+                return(eval(configItem.eval));
+            }
+            return v;
+        };
+        let cs=document.getElementById("calval").cloneNode(true);
+        cs.classList.remove("hidden");
+        cs.querySelector(".heading").textContent=configItem.label||configItem.name;
+        let vel=cs.querySelector(".val");
+        let vinp=cs.querySelector("input");
+        vinp.value=el.value;
+        if (caliv != 0) window.clearInterval(caliv);
+        caliv=window.setInterval(()=>{
+            if (document.body.contains(cs)){
+                fetch("/api/calibrate?name="+encodeURIComponent(configItem.name))
+                .then((r)=>r.text())
+                .then((txt)=>{
+                    txt=sv(txt,vinp.value);
+                    if (txt != vel.textContent){
+                        vel.textContent=txt;
+                    }
+                })
+                .catch((e)=>{
+                    alert(e);
+                    hideOverlay();
+                    window.clearInterval(caliv);
+                })
+            }
+            else{
+                window.clearInterval(caliv);
+            }
+        },200);        
+        showOverlay(cs,false,[{label:'Set',click:()=>{
+            el.value=vinp.value;
             let cev=new Event('change');
             el.dispatchEvent(cev);
         }}]);
@@ -548,6 +597,9 @@ function createInput(configItem, frame,clazz) {
     }
     if (configItem.type === "calset"){
         return createCalSetInput(configItem,frame,clazz);
+    }
+    if (configItem.type === "calval"){
+        return createCalValInput(configItem,frame,clazz);
     }
     el = addEl('input',clazz,frame);
     if (configItem.readOnly) el.setAttribute('disabled',true);

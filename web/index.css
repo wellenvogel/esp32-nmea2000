@@ -114,6 +114,9 @@ body {
       display: flex;
       align-items: center;
   }
+  .value button {
+    margin-left: 0.5em;
+  }
   .hidden{
     display: none !important;
   }
