@@ -235,15 +235,38 @@ void SendNMEA0183Message(const tNMEA0183Msg &NMEA0183Msg, int sourceId,bool conv
   });
 }
 
+class CalibrationValues {
+  using Map=std::map<String,double>;
+  Map values;
+  SemaphoreHandle_t lock;
+  public:
+    CalibrationValues(){
+      lock=xSemaphoreCreateMutex();
+    }
+    void set(const String &name,double value){
+      GWSYNCHRONIZED(&lock);
+      values[name]=value;
+    }
+    bool get(const String &name, double &value){
+      GWSYNCHRONIZED(&lock);
+      auto it=values.find(name);
+      if (it==values.end()) return false;
+      value=it->second;
+      return true;
+    }
+};
+
 class ApiImpl : public GwApiInternal
 {
 private:
   int sourceId = -1;
+  std::unique_ptr<CalibrationValues> calibrations;
 
 public:
   ApiImpl(int sourceId)
   {
     this->sourceId = sourceId;
+    calibrations.reset(new CalibrationValues());
   }
   virtual GwRequestQueue *getQueue()
   {
@@ -331,6 +354,13 @@ public:
   virtual void addCapability(const String &name, const String &value){}
   virtual bool addUserTask(GwUserTaskFunction task,const String Name, int stackSize=2000){
     return false;
+  }
+  virtual void setCalibrationValue(const String &name, double value){
+    calibrations->set(name,value);
+  }
+
+  bool getCalibrationValue(const String &name,double &value){
+    return calibrations->get(name,value);
   }
 };
 
@@ -803,7 +833,19 @@ void setup() {
                               [](AsyncWebServerRequest *request){
 
                               },
-                              handleConfigRequestData);                                                        
+                              handleConfigRequestData);
+  webserver.registerHandler("/api/calibrate",[](AsyncWebServerRequest *request){
+                              const String name=request->arg("name");
+                              double value;
+                              if (! apiImpl->getCalibrationValue(name,value)){
+                                request->send(400, "text/plain", "name not found");
+                                return;
+                              }
+                              char buffer[30];
+                              snprintf(buffer,29,"%g",value);
+                              buffer[29]=0;
+                              request->send(200,"text/plain",buffer);    
+  });                                                        
 
   webserver.begin();
   xdrMappings.begin();

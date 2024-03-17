@@ -67,7 +67,7 @@
             {
                 "name": "DMS22B$izero",
                 "label": "DMS22B$i Zero",
-                "type": "number",
+                "type": "calset",
                 "default": 2048,
                 "description": "Zero position (0...2^bits-1)",
                 "category": "spisensors$b",

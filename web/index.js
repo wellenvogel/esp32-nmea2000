@@ -371,22 +371,37 @@ function updateMsgDetails(key, details) {
     });
 }
 
-function showOverlay(text, isHtml) {
+function showOverlay(text, isHtml,buttons) {
     let el = document.getElementById('overlayContent');
-    if (isHtml) {
-        el.innerHTML = text;
-        el.classList.remove("text");
+    if (text instanceof Object){
+        el.textContent='';
+        el.appendChild(text);
     }
     else {
-        el.textContent = text;
-        el.classList.add("text");
+        if (isHtml) {
+            el.innerHTML = text;
+            el.classList.remove("text");
+        }
+        else {
+            el.textContent = text;
+            el.classList.add("text");
+        }
     }
+    buttons=(buttons?buttons:[]).concat([{label:"Close",click:hideOverlay}]);
     let container = document.getElementById('overlayContainer');
+    let btframe=container.querySelector('.overlayButtons');
+    btframe.textContent='';
+    buttons.forEach((btconfig)=>{
+        let bt=addEl('button','',btframe,btconfig.label);
+        bt.addEventListener("click",btconfig.click);
+    });
     container.classList.remove('hidden');
 }
 function hideOverlay() {
     let container = document.getElementById('overlayContainer');
     container.classList.add('hidden');
+    let el = document.getElementById('overlayContent');
+    el.textContent='';
 }
 function checkChange(el, row,name) {
     let loaded = el.getAttribute('data-loaded');
@@ -456,6 +471,45 @@ function checkCondition(element){
     if (visible) row.classList.remove('hidden');
     else row.classList.add('hidden');
 }
+let caliv=0;
+function createCalSetInput(configItem,frame,clazz){
+    let el = addEl('input',clazz,frame);
+    let cb = addEl('button','',frame,'C');
+    //el.disabled=true;
+    cb.addEventListener('click',(ev)=>{
+        let cs=document.getElementById("calset").cloneNode(true);
+        cs.classList.remove("hidden");
+        cs.querySelector(".heading").textContent=configItem.name;
+        let vel=cs.querySelector(".val");
+        if (caliv != 0) window.clearInterval(caliv);
+        caliv=window.setInterval(()=>{
+            if (document.body.contains(cs)){
+                fetch("/api/calibrate?name="+encodeURIComponent(configItem.name))
+                .then((r)=>r.text())
+                .then((txt)=>{
+                    if (txt != vel.textContent){
+                        vel.textContent=txt;
+                    }
+                })
+                .catch((e)=>{
+                    alert(e);
+                    hideOverlay();
+                    window.clearInterval(caliv);
+                })
+            }
+            else{
+                window.clearInterval(caliv);
+            }
+        },200);        
+        showOverlay(cs,false,[{label:'Set',click:()=>{
+            el.value=vel.textContent;
+            let cev=new Event('change');
+            el.dispatchEvent(cev);
+        }}]);
+    })
+    el.setAttribute('name', configItem.name)
+    return el;    
+}
 function createInput(configItem, frame,clazz) {
     let el;
     if (configItem.type === 'boolean' || configItem.type === 'list' || configItem.type == 'boatData') {
@@ -491,6 +545,9 @@ function createInput(configItem, frame,clazz) {
     }
     if (configItem.type === 'xdr'){
         return createXdrInput(configItem,frame,clazz);
+    }
+    if (configItem.type === "calset"){
+        return createCalSetInput(configItem,frame,clazz);
     }
     el = addEl('input',clazz,frame);
     if (configItem.readOnly) el.setAttribute('disabled',true);

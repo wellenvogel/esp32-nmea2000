@@ -81,6 +81,7 @@
 class GWDMS22B : public SSISensor{
     int zero=2047;
     bool invt=false;
+    String zeroConfigName;
     public:
     using SSISensor::SSISensor;
     virtual bool preinit(GwApi * api){
@@ -102,6 +103,8 @@ class GWDMS22B : public SSISensor{
         tN2kMsg msg;
         SetN2kRudder(msg,DegToRad(resolved),iid);
         api->sendN2kMessage(msg);
+        api->increment(counterId,prefix);
+        api->setCalibrationValue(zeroConfigName,(double)value);
     }
     #define DMS22B(PRFX,...) \
         if (prefix == #PRFX) {\
@@ -109,6 +112,7 @@ class GWDMS22B : public SSISensor{
             CFG_GET(iid,PRFX); \
             CFG_GET(fintv,PRFX); \
             CFG_GET(zero,PRFX); \
+            zeroConfigName=GwConfigDefinitions::PRFX ## zero;\
             CFG_GET(invt,PRFX); \
             bits=12; \
             clock=500000; \

@@ -332,6 +332,9 @@ public:
         api->getLogger()->logDebug(GwLog::LOG,"adding user task %s",tname.c_str());
         return true;
     }
+    virtual void setCalibrationValue(const String &name, double value){
+        api->setCalibrationValue(name,value);
+    }
 
 };
 

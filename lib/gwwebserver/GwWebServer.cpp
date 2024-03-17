@@ -116,6 +116,10 @@ bool GwWebServer::registerMainHandler(const char *url,RequestCreator creator){
     });
     return true;
 }
+bool GwWebServer::registerHandler(const char * url,GwWebServer::HandlerFunction handler){
+  server->on(url,HTTP_GET,handler);
+  return true;
+}
 
 bool GwWebServer::registerPostHandler(const char *url, ArRequestHandlerFunction requestHandler,
  ArBodyHandlerFunction bodyHandler){
