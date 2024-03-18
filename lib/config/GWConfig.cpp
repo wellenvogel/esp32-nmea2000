@@ -6,15 +6,9 @@
 #include <MD5Builder.h>
 using CfgInit=std::function<void(GwConfigHandler *)>;
 static std::vector<CfgInit> cfgInits;
-class CfgInitializer{
-    public:
-        CfgInitializer(CfgInit f){
-            cfgInits.push_back(f);
-        }
-};
 #define CFG_INIT(name,value,mode) \
     __MSG("config set " #name " " #value " " #mode); \
-    static CfgInitializer _ ## name ## _init([](GwConfigHandler *cfg){ \
+    static GwInitializer<CfgInit> _ ## name ## _init(cfgInits,[](GwConfigHandler *cfg){ \
         cfg->setValue(GwConfigDefinitions::name,value,GwConfigInterface::mode); \
       });
 #include "GwHardware.h"

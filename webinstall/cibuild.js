@@ -119,7 +119,7 @@ class PipelineInfo{
                 .then((st)=>{
                     if (queryPipeline !== currentPipeline.id) return;
                     let stid=st.pipeline_id||st.id;
-                    if (currentPipeline.id !== stid) return;
+                    if (stid !== undefined &&  currentPipeline.id !== stid) return;
                     if (st.status === undefined) st.status=st.state;
                     currentPipeline.update(st);
                     updateStatus();
@@ -515,6 +515,11 @@ class PipelineInfo{
                     }
                 });
             }
+        }
+        if (expandedValues.length > 0 && config.type === 'display'){
+            let cb=addEl('div','t'+config.type,inputFrame);
+            addDescription(config,inputFrame);
+            initialConfig=expandedValues[0];
         }
         let childFrame=addEl('div','childFrame',frame);
         if (initialConfig !== undefined){

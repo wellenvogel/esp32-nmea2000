@@ -101,7 +101,7 @@ types:
         children:
         - *m5grooveserial
   - &gpiopin
-    type: dropdown
+    type: "#gpiotype#"
     resource: "gpio:"
     help: 'Select the number of the GPIO pin for this function'
     values: "#gpiopinv#"
@@ -136,7 +136,7 @@ types:
       - 38
 
   - &gpioinput
-    type: dropdown
+    type: "#gpiotype#"
     resource: "gpio:"
     help: 'Select the number of the GPIO pin for this function'
     values: "#gpiopinv#"
@@ -182,6 +182,16 @@ types:
       - PPIN23
       - PPIN25
       - PPIN33
+  
+  - &abcgpio
+      - {label:unset, value:}
+      - ABC_PAYELLOW
+      - ABC_PAYWHITE
+      - ABC_PBYELLOW
+      - ABC_PBYWHITE
+      - ABC_PBYELLOW
+      - ABC_PBYWHITE
+    
   
   - &serialRX
     <<: *gpioinput
@@ -235,6 +245,7 @@ types:
     type: checkbox
     label: 'Serial 1'
     key: serial1
+    resource: serial1
     base: 
       serial: GWSERIAL_
     values: *serialValues
@@ -243,6 +254,7 @@ types:
     type: checkbox
     label: 'Serial 2'
     key: serial2
+    resource: serial2
     base:
       serial: GWSERIAL2_
     values: *serialValues
@@ -360,6 +372,7 @@ types:
     type: checkbox
     label: "I2C #busname#"
     key: "i2c#busname#"
+    resource: "i2c#busname#"
     description: "I2C Bus #busname#"
     values:
       - key: true
@@ -433,6 +446,7 @@ types:
     type: checkbox
     label: "SPI/SSI #busname#"
     key: "spi#busname#"
+    resource: "spi#busname#"
     description: "SPI(SSI) Bus #busname#"
     values:
       - key: true
@@ -541,6 +555,11 @@ types:
             gpiopinv: *protogpio
           children:
             *m5protochildren
+        - value: M5_PORTABC
+          description: "M5 Stack Port ABC extension base"
+          url: "https://docs.m5stack.com/en/unit/AtomPortABC"
+          label: "ABC Ext"
+          base: 
 
 resources:
   default: &esp32default
@@ -558,6 +577,7 @@ config:
       base:
         gpiopinv: *gpiopinv
         gpioinputv: *gpioinputv
+        gpiotype: dropdown
       values: 
         - value: m5stack-atom-generic
           label: m5stack-atom

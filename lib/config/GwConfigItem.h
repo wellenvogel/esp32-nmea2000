@@ -2,7 +2,6 @@
 #define _GWCONFIGITEM_H
 #include "WString.h"
 #include <vector>
-
 class GwConfigHandler;
 class GwConfigInterface{
     public:
@@ -79,4 +78,14 @@ class GwNmeaFilter{
 #define __XSTR(x) __STR(x)
 #define __STR(x) #x
 #define __MSG(x) _Pragma (__STR(message (x)))
+
+template<typename F>
+class GwInitializer{
+    public:
+        using List=std::vector<F>;
+        GwInitializer(List &l,F f){
+            l.push_back(f);
+        }
+};
+
 #endif

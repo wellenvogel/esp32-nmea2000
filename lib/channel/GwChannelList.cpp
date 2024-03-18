@@ -1,5 +1,19 @@
 #include "GwChannelList.h"
 #include "GwApi.h"
+
+using SerInitFunction=std::function<void(GwChannelList *)>;
+std::vector<SerInitFunction> initFunctions;
+
+#define CFG_EXP(ser) GwChannelList::ser
+#define CFG_SERIAL(ser,rx,tx,mode) \
+    __MSG("serial config " __STR(ser) " rx=" __STR(rx) ", tx=" __STR(tx) ",mode=" __STR(mode)); \
+    static GwInitializer<SerInitFunction> _ ## name ## _init( \
+        initFunctions,[](GwChannelList *cl){cl->addSerial(CFG_EXP(ser),rx,tx,mode);});
+//check for duplicate groove usages
+#define __GR_EXP(GROOVE) __groveuse_ ## GROOVE
+#define GROVE_USE(USER) \
+    __MSG("grove " __STR(USER) " used by " #USER) \
+    static int __GR_EXP(USER) =1;
 #include "GwHardware.h"
 #include "GwSocketServer.h"
 #include "GwSerial.h"
@@ -101,8 +115,18 @@ static SerialParam *getSerialParam(int id){
     }
     return nullptr;
 }
-
-void GwChannelList:: addSerial(HardwareSerial *stream,int id,int type,int rx,int tx){
+void GwChannelList::addSerial(const String &name, int rx, int tx, int type){
+    if (name == serial){
+        addSerial(&Serial1,SERIAL1_CHANNEL_ID,type,rx,tx);
+        return;   
+    }
+    if (name == serial2){
+        addSerial(&Serial2,SERIAL2_CHANNEL_ID,type,rx,tx);
+        return;   
+    }
+    LOG_DEBUG(GwLog::ERROR,"invalid serial config")
+}
+void GwChannelList::addSerial(HardwareSerial *stream,int id,int type,int rx,int tx){
     const char *mode=nullptr;
     switch (type)
     {
@@ -126,6 +150,12 @@ void GwChannelList:: addSerial(HardwareSerial *stream,int id,int type,int rx,int
     addSerial(stream,id,mode,rx,tx);
 }
 void GwChannelList::addSerial(HardwareSerial *serialStream,int id,const String &mode,int rx,int tx){
+    for (auto &&it:theChannels){
+        if (it->isOwnSource(id)){
+            LOG_DEBUG(GwLog::ERROR,"trying to re-add serial id=%d, ignoring",id);
+            return;
+        }
+    }
     SerialParam *param=getSerialParam(id);
     if (param == nullptr){
         logger->logDebug(GwLog::ERROR,"trying to set up an unknown serial channel: %d",id);
@@ -223,6 +253,11 @@ void GwChannelList::begin(bool fallbackSerial){
     LOG_DEBUG(GwLog::LOG,"%s",channel->toString().c_str());
     theChannels.push_back(channel);
 
+    //new serial config handling
+    for (auto &&init:initFunctions){
+        init(this);
+    }
+    //handle separate defines
     //serial 1
     #ifndef GWSERIAL_TX
       #define GWSERIAL_TX -1

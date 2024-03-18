@@ -25,9 +25,16 @@
 #include "GwAppInfo.h"
 #include "GwUserTasks.h"
 #ifndef CFG_INIT
-  #define CFG_INIT(name,value,mode)
+  #define CFG_INIT(...)
 #endif
-
+#define CFG_INITP(prefix,suffix,value,mode) CFG_INIT(prefix ## suffix,value,mode)
+#ifndef CFG_SERIAL
+  #define CFG_SERIAL(...)
+#endif
+#ifndef GROVE_USE
+  #define GROVE_USE(...)
+#endif
+#define _GW_GROOVE_SERIAL serial
 //general definitions for M5AtomLite
 //hint for groove pins:
 //according to some schematics the numbering is 1,2,3(VCC),4(GND)
@@ -71,7 +78,6 @@
   #define BOARD_RIGHT1 GPIO_NUM_39
   #define BOARD_RIGHT2 GPIO_NUM_38
 #endif
-
 //M5Stick C
 #ifdef PLATFORM_BOARD_M5STICK_C
   #define GROOVE_PIN_2 GPIO_NUM_32
@@ -150,9 +156,9 @@
 //M5 Serial (Atomic RS232 Base)
 #ifdef M5_SERIAL_KIT_232 
   #define _GWM5_BOARD
-  #define GWSERIAL_TX BOARD_LEFT2
-  #define GWSERIAL_RX BOARD_LEFT1
-  #define GWSERIAL_TYPE GWSERIAL_TYPE_BI
+  CFG_SERIAL(serial,BOARD_LEFT1,BOARD_LEFT2,GWSERIAL_TYPE_BI)
+  #undef _GW_GROOVE_SERIAL
+  #define _GW_GROOVE_SERIAL serial2
 #endif
 
 //M5 Serial (Atomic RS485 Base)
@@ -161,19 +167,19 @@
     #error "can only define one M5 base"
   #endif
   #define _GWM5_BOARD
-  #define GWSERIAL_TX BOARD_LEFT2
-  #define GWSERIAL_RX BOARD_LEFT1
-  #define GWSERIAL_TYPE GWSERIAL_TYPE_UNI
+  CFG_SERIAL(serial,BOARD_LEFT1,BOARD_LEFT2,GWSERIAL_TYPE_UNI)
+  #undef _GW_GROOVE_SERIAL
+  #define _GW_GROOVE_SERIAL serial2
 #endif
-CFG_INIT(serialBaud,"9600",READONLY)
 //M5 GPS (Atomic GPS Base)
 #ifdef M5_GPS_KIT
   #ifdef _GWM5_BOARD
     #error "can only define one M5 base"
   #endif
   #define _GWM5_BOARD
-  #define GWSERIAL_RX BOARD_LEFT1
-  #define GWSERIAL_TYPE GWSERIAL_TYPE_RX
+  CFG_SERIAL(serial,BOARD_LEFT1,-1,GWSERIAL_TYPE_UNI)
+  #undef _GW_GROOVE_SERIAL
+  #define _GW_GROOVE_SERIAL serial2
   CFG_INIT(serialBaud,"9600",READONLY)
 #endif
 
@@ -212,48 +218,19 @@ CFG_INIT(serialBaud,"9600",READONLY)
 //we use serial2 for groove serial if serial1 is already defined
 //before (e.g. by serial kit)
 #ifdef SERIAL_GROOVE_485
-  #define _GWM5_GROOVE
-  #ifdef GWSERIAL_TYPE
-    #define GWSERIAL2_TX GROOVE_PIN_2
-    #define GWSERIAL2_RX GROOVE_PIN_1
-    #define GWSERIAL2_TYPE GWSERIAL_TYPE_UNI
-  #else
-    #define GWSERIAL_TX GROOVE_PIN_2
-    #define GWSERIAL_RX GROOVE_PIN_1
-    #define GWSERIAL_TYPE GWSERIAL_TYPE_UNI
-  #endif 
+  GROVE_USE(SERIAL_GROOVE_485)
+  CFG_SERIAL(_GW_GROOVE_SERIAL,GROOVE_PIN_1,GROOVE_PIN_2,GWSERIAL_TYPE_UNI)
 #endif
 #ifdef SERIAL_GROOVE_232
-  #ifdef _GWM5_GROOVE
-    #error "can only have one groove device"
-  #endif
-  #define _GWM5_GROOVE
-  #ifdef GWSERIAL_TYPE
-    #define GWSERIAL2_TX GROOVE_PIN_2
-    #define GWSERIAL2_RX GROOVE_PIN_1
-    #define GWSERIAL2_TYPE GWSERIAL_TYPE_BI
-  #else
-    #define GWSERIAL_TX GROOVE_PIN_2
-    #define GWSERIAL_RX GROOVE_PIN_1
-    #define GWSERIAL_TYPE GWSERIAL_TYPE_BI
-  #endif
+  GROVE_USE(SERIAL_GROOVE_232)
+  CFG_SERIAL(_GW_GROOVE_SERIAL,GROOVE_PIN_1,GROOVE_PIN_2,GWSERIAL_TYPE_BI)
 #endif
 
 //http://docs.m5stack.com/en/unit/gps
 #ifdef M5_GPS_UNIT
-  #ifdef _GWM5_GROOVE
-    #error "can only have one M5 groove"
-  #endif
-  #define _GWM5_GROOVE
-  #ifdef GWSERIAL_TYPE
-    #define GWSERIAL2_RX GROOVE_PIN_1
-    #define GWSERIAL2_TYPE GWSERIAL_TYPE_RX
-    CFG_INIT(serialBaud,"9600",READONLY)
-  #else
-    #define GWSERIAL_RX GROOVE_PIN_1
-    #define GWSERIAL_TYPE GWSERIAL_TYPE_RX
-    CFG_INIT(serial2Baud,"9600",READONLY)
-  #endif 
+  GROVE_USE(M5_GPS_UNIT)
+  CFG_SERIAL(_GW_GROOVE_SERIAL,GROOVE_PIN_1,-1,GWSERIAL_TYPE_RX)
+  CFG_INITP(_GW_GROOVE_SERIAL,Baud,"9600",READONLY)
 #endif
 
 //can kit for M5 Atom
@@ -267,17 +244,14 @@ CFG_INIT(serialBaud,"9600",READONLY)
 #endif
 //CAN via groove 
 #ifdef M5_CANUNIT
-  #ifdef _GWM5_GROOVE
-    #error "can only have one M5 groove"
-  #endif
-  #define _GWM5_GROOVE
+  GROVE_USE(M5_CANUNIT)
   #define ESP32_CAN_TX_PIN GROOVE_PIN_2
   #define ESP32_CAN_RX_PIN GROOVE_PIN_1
 #endif
 
 #ifdef M5_ENV3
   #ifndef M5_GROOVEIIC
-    #define M5_GROOVEIIC
+    #define M5_GROOVEIIC M5_ENV3
   #endif
   #ifndef GWSHT3X
     #define GWSHT3X -1
@@ -288,10 +262,7 @@ CFG_INIT(serialBaud,"9600",READONLY)
 #endif
 
 #ifdef M5_GROOVEIIC
-  #ifdef _GWM5_GROOVE
-    #error "can only have one M5 groove"
-  #endif
-  #define _GWM5_GROOVE
+  GROVE_USE(M5_GROOVEIIC)
   #ifdef GWIIC_SCL
     #error "you cannot define both GWIIC_SCL and M5_GROOVEIIC"
   #endif

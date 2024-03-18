@@ -33,6 +33,9 @@ class GwChannelList{
         void addSerial(HardwareSerial *stream,int id,const String &mode,int rx,int tx);
         void addSerial(HardwareSerial *stream,int id,int type,int rx,int tx);
     public:
+        static constexpr const char* serial="serial";
+        static constexpr const char* serial2="serial2";
+        void addSerial(const String &name, int rx, int tx, int type);
         GwChannelList(GwLog *logger, GwConfigHandler *config);
         typedef std::function<void(GwChannel *)> ChannelAction;
         void allChannels(ChannelAction action);
