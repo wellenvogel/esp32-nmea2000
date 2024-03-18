@@ -38,6 +38,7 @@ class GwConfigHandler: public GwConfigDefinitions{
          * !use with care! no checks of the value
          */
         bool setValue(String name, String value, bool hide=false);
+        bool setValue(String name, String value, GwConfigInterface::ConfigType type);
         static void toHex(unsigned long v,char *buffer,size_t bsize);
         unsigned long getSaltBase(){return saltBase;}
         ~GwConfigHandler();

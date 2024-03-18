@@ -185,34 +185,13 @@ def generateCfg(inFile,outFile,impl):
                 name=item.get('name')
                 if name is None:
                     continue
-                data+='  configs[%d]=\n'%(idx)
+                data+='  configs[%d]='%(idx)
                 idx+=1
                 secret="false";
                 if item.get('type') == 'password':
                     secret="true"
-                data+="    #undef __CFGMODE\n"
-                data+="    #ifdef CFGMODE_%s\n"%(name)
-                data+="      #define __CFGMODE CFGMODE_%s\n"%(name)
-                data+="    #else\n"
-                data+="      #define __CFGMODE GwConfigInterface::NORMAL\n"
-                data+="    #endif\n"    
-                data+="    #ifdef CFGDEFAULT_%s\n"%(name)
-                data+="     new GwConfigInterface(%s,CFGDEFAULT_%s,%s,__CFGMODE)\n"%(name,name,secret)
-                data+="    #else\n"
-                data+="     new GwConfigInterface(%s,\"%s\",%s,__CFGMODE)\n"%(name,item.get('default'),secret)
-                data+="    #endif\n"
-                data+=";\n"
+                data+="     new GwConfigInterface(%s,\"%s\",%s);\n"%(name,item.get('default'),secret)
             data+='}\n'  
-            for item in config:
-                name=item.get('name')
-                if name is None:
-                    continue
-                data+="#ifdef CFGMODE_%s\n"%(name)
-                data+=" __MSG(\"CFGMODE_%s=\" __XSTR(CFGMODE_%s))\n"%(name,name)
-                data+="#endif\n"
-                data+="#ifdef CFGDEFAULT_%s\n"%(name)
-                data+=" __MSG(\"CFGDEFAULT_%s=\" CFGDEFAULT_%s)\n"%(name,name)
-                data+="#endif\n"
     writeFileIfChanged(outFile,data)    
                     
 def labelFilter(label):

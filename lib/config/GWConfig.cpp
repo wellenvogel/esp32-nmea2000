@@ -4,6 +4,19 @@
 #include <ArduinoJson.h>
 #include <string.h>
 #include <MD5Builder.h>
+using CfgInit=std::function<void(GwConfigHandler *)>;
+static std::vector<CfgInit> cfgInits;
+class CfgInitializer{
+    public:
+        CfgInitializer(CfgInit f){
+            cfgInits.push_back(f);
+        }
+};
+#define CFG_INIT(name,value,mode) \
+    __MSG("config set " #name " " #value " " #mode); \
+    static CfgInitializer _ ## name ## _init([](GwConfigHandler *cfg){ \
+        cfg->setValue(GwConfigDefinitions::name,value,GwConfigInterface::mode); \
+      });
 #include "GwHardware.h"
 #include "GwConfigDefImpl.h"
 
@@ -61,6 +74,9 @@ GwConfigHandler::GwConfigHandler(GwLog *logger): GwConfigDefinitions(){
     saltBase=esp_random();
     configs=new GwConfigInterface*[getNumConfig()];
     populateConfigs(configs);
+    for (auto &&init:cfgInits){
+        init(this);
+    }
     prefs=new Preferences();
 }
 GwConfigHandler::~GwConfigHandler(){
@@ -126,11 +142,16 @@ void GwConfigHandler::stopChanges(){
     allowChanges=false;
 }
 bool GwConfigHandler::setValue(String name,String value, bool hide){
+    return setValue(name,value,hide?GwConfigInterface::HIDDEN:GwConfigInterface::READONLY);
+}
+bool GwConfigHandler::setValue(String name, String value, GwConfigInterface::ConfigType type){    
     if (! allowChanges) return false;
+    LOG_DEBUG(GwLog::LOG,"setValue for %s to %s, mode %d",
+        name.c_str(),value.c_str(),(int)type);
     GwConfigInterface *i=getConfigItem(name,false);
     if (!i) return false;
     i->value=value;
-    i->type=hide?GwConfigInterface::HIDDEN:GwConfigInterface::READONLY;
+    i->type=type;
     return true;
 }
 

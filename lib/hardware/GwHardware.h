@@ -24,6 +24,9 @@
 #include <HardwareSerial.h>
 #include "GwAppInfo.h"
 #include "GwUserTasks.h"
+#ifndef CFG_INIT
+  #define CFG_INIT(name,value,mode)
+#endif
 
 //general definitions for M5AtomLite
 //hint for groove pins:
@@ -162,7 +165,7 @@
   #define GWSERIAL_RX BOARD_LEFT1
   #define GWSERIAL_TYPE GWSERIAL_TYPE_UNI
 #endif
-
+CFG_INIT(serialBaud,"9600",READONLY)
 //M5 GPS (Atomic GPS Base)
 #ifdef M5_GPS_KIT
   #ifdef _GWM5_BOARD
@@ -171,18 +174,35 @@
   #define _GWM5_BOARD
   #define GWSERIAL_RX BOARD_LEFT1
   #define GWSERIAL_TYPE GWSERIAL_TYPE_RX
-  #define CFGDEFAULT_serialBaud "9600"
-  #define CFGMODE_serialBaud GwConfigInterface::READONLY
+  CFG_INIT(serialBaud,"9600",READONLY)
 #endif
 
 //M5 ProtoHub
 #ifdef M5_PROTO_HUB
+  #ifdef _GWM5_BOARD
+    #error "can only define one M5 base"
+  #endif
+  #define _GWM5_BOARD
   #define PPIN22 BOARD_LEFT1
   #define PPIN19 BOARD_LEFT2
   #define PPIN23 BOARD_LEFT3
   #define PPIN33 BOARD_LEFT4
   #define PPIN21 BOARD_RIGHT1
   #define PPIN25 BOARD_RIGHT2
+#endif
+
+//M5 PortABC extension
+#ifdef M5_PORTABC
+  #ifdef _GWM5_BOARD
+    #error "can only define one M5 base"
+  #endif
+  #define _GWM5_BOARD
+  #define ABC_PAYELLOW BOARD_RIGHT2
+  #define ABC_PAWHITE  BOARD_RIGHT1
+  #define ABC_PBYELLOW BOARD_LEFT3
+  #define ABC_PBWHITE  BOARD_LEFT4
+  #define ABC_PCYELLOW BOARD_LEFT1
+  #define ABC_PCWHITE  BOARD_LEFT2 
 #endif
 
 //below we define the final device config based on the above
@@ -228,13 +248,11 @@
   #ifdef GWSERIAL_TYPE
     #define GWSERIAL2_RX GROOVE_PIN_1
     #define GWSERIAL2_TYPE GWSERIAL_TYPE_RX
-    #define CFGDEFAULT_serialBaud "9600"
-    #define CFGMODE_serialBaud GwConfigInterface::READONLY
+    CFG_INIT(serialBaud,"9600",READONLY)
   #else
     #define GWSERIAL_RX GROOVE_PIN_1
     #define GWSERIAL_TYPE GWSERIAL_TYPE_RX
-    #define CFGDEFAULT_serial2Baud "9600"
-    #define CFGMODE_serial2Baud GwConfigInterface::READONLY
+    CFG_INIT(serial2Baud,"9600",READONLY)
   #endif 
 #endif
 
@@ -332,12 +350,13 @@
 #endif
 
 #ifdef GWLED_FASTLED
-  #define CFGMODE_ledBrightness GwConfigInterface::NORMAL
   #ifdef GWLED_BRIGHTNESS
-    #define CFGDEFAULT_ledBrightness GWSTRINGIFY(GWLED_BRIGHTNESS)
+    CFG_INIT(ledBrightness,GWSTRINGIFY(GWLED_BRIGHTNESS),NORMAL)
+  #else
+    CFG_INIT(ledBrightness,"64",NORMAL)
   #endif
 #else
-  #define CFGMODE_ledBrightness GwConfigInterface::HIDDEN
+  CFG_INIT(ledBrightness,"64",HIDDEN)
 #endif
 
 
