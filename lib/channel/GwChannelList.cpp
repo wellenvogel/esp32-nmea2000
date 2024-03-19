@@ -4,16 +4,12 @@
 using SerInitFunction=std::function<void(GwChannelList *)>;
 std::vector<SerInitFunction> initFunctions;
 
-#define CFG_EXP(ser) GwChannelList::ser
-#define CFG_SERIAL(ser,rx,tx,mode) \
-    __MSG("serial config " __STR(ser) " rx=" __STR(rx) ", tx=" __STR(tx) ",mode=" __STR(mode)); \
-    static GwInitializer<SerInitFunction> _ ## name ## _init( \
-        initFunctions,[](GwChannelList *cl){cl->addSerial(CFG_EXP(ser),rx,tx,mode);});
+#define CFG_SERIAL(id,ser,rx,tx,mode) \
+    __MSG("serial config " #id __XSTR(ser) "(" #ser ")" " rx=" __XSTR(rx) ", tx=" __XSTR(tx) ",mode=" __STR(mode)); \
+    static GwInitializer<SerInitFunction> __serial ## id ## _init \
+        (initFunctions,[](GwChannelList *cl){cl->addSerial(ser,rx,tx,mode);});
 //check for duplicate groove usages
-#define __GR_EXP(GROOVE) __groveuse_ ## GROOVE
-#define GROVE_USE(USER) \
-    __MSG("grove " __STR(USER) " used by " #USER) \
-    static int __GR_EXP(USER) =1;
+#define GW_PINDEFS
 #include "GwHardware.h"
 #include "GwSocketServer.h"
 #include "GwSerial.h"
@@ -115,16 +111,16 @@ static SerialParam *getSerialParam(int id){
     }
     return nullptr;
 }
-void GwChannelList::addSerial(const String &name, int rx, int tx, int type){
-    if (name == serial){
+void GwChannelList::addSerial(int id, int rx, int tx, int type){
+    if (id == 1){
         addSerial(&Serial1,SERIAL1_CHANNEL_ID,type,rx,tx);
         return;   
     }
-    if (name == serial2){
+    if (id == 2){
         addSerial(&Serial2,SERIAL2_CHANNEL_ID,type,rx,tx);
         return;   
     }
-    LOG_DEBUG(GwLog::ERROR,"invalid serial config")
+    LOG_DEBUG(GwLog::ERROR,"invalid serial config with id %d",id);
 }
 void GwChannelList::addSerial(HardwareSerial *stream,int id,int type,int rx,int tx){
     const char *mode=nullptr;

@@ -20,6 +20,7 @@ const unsigned long HEAP_REPORT_TIME=2000; //set to 0 to disable heap reporting
 #include <Arduino.h>
 #include "Preferences.h"
 #include "GwApi.h"
+#define GW_PINDEFS
 #include "GwHardware.h"
 
 #ifndef N2K_LOAD_LEVEL
@@ -70,10 +71,6 @@ const unsigned long HEAP_REPORT_TIME=2000; //set to 0 to disable heap reporting
 
 #define MAX_NMEA2000_MESSAGE_SEASMART_SIZE 500
 #define MAX_NMEA0183_MESSAGE_SIZE MAX_NMEA2000_MESSAGE_SEASMART_SIZE
-//https://curiouser.cheshireeng.com/2014/08/19/c-compile-time-assert/
-#define CASSERT(predicate, text) _impl_CASSERT_LINE(predicate,__LINE__) 
-#define _impl_PASTE(a,b) a##b
-#define _impl_CASSERT_LINE(predicate, line) typedef char _impl_PASTE(assertion_failed_CASSERT_,line)[(predicate)?1:-1];
 //assert length of firmware name and version
 CASSERT(strlen(FIRMWARE_TYPE) <= 32, "environment name (FIRMWARE_TYPE) must not exceed 32 chars");
 CASSERT(strlen(VERSION) <= 32, "VERSION must not exceed 32 chars");

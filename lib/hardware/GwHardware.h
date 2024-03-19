@@ -31,16 +31,36 @@
 #ifndef CFG_SERIAL
   #define CFG_SERIAL(...)
 #endif
-#ifndef GROVE_USE
-  #define GROVE_USE(...)
-#endif
-#define _GW_GROOVE_SERIAL serial
+
+#ifdef GW_PINDEFS
+  #define GWRESOURCE_USE(RES,USER) \
+    __MSG(__STR(RES) __STR(USER) " used by " #USER) \
+    static int __EXPAND3(_resourceUsed,RES,USER) =1;
+  #define GWBASE_USE(USER) \
+    __MSG("base unit " #USER) \
+    static int _resourceUsedBase=1;  
+  #define GW_SETGROOVE(prfx,p1,p2) \
+    static int __EXPAND3(GROOVEPIN_,prfx,1) = p1; \
+    static int __EXPAND3(GROOVEPIN_,prfx,2) = p2;
+  #define GW_GETGROOVE(prfx,pin) \
+    __EXPAND3(GROOVEPIN_,prfx,pin)
+  #define GW_SETRES(res,groove,val) \
+    static int __EXPAND3(_resource,res,groove) = val;
+  #define GW_GETRES(res,groove) \
+    __EXPAND3(_resource,res,groove)
+#else
+  #define GW_SETGROOVE(...)
+  #define GW_GETGROOVE(...)
+  #define GW_SETRES(...) 
+  #define GW_GETRES(...) 
+  #define GWRESOURCE_USE(...)
+  #define GWBASE_USE(...)
+#endif    
 //general definitions for M5AtomLite
 //hint for groove pins:
 //according to some schematics the numbering is 1,2,3(VCC),4(GND)
 #ifdef PLATFORM_BOARD_M5STACK_ATOM
-  #define GROOVE_PIN_2 GPIO_NUM_26
-  #define GROOVE_PIN_1 GPIO_NUM_32
+  GW_SETGROOVE(1,GPIO_NUM_32,GPIO_NUM_26)
   #define GWBUTTON_PIN GPIO_NUM_39
   #define GWLED_FASTLED
   #define GWLED_TYPE SK6812
@@ -58,10 +78,10 @@
   #define BOARD_RIGHT2 GPIO_NUM_25
   #define USBSerial Serial
 #endif
+
 //general definitiones for M5AtomS3
 #ifdef PLATFORM_BOARD_M5STACK_ATOMS3
-  #define GROOVE_PIN_2 GPIO_NUM_2
-  #define GROOVE_PIN_1 GPIO_NUM_1
+  GW_SETGROOVE(1,GPIO_NUM_1,GPIO_NUM_2)
   #define GWBUTTON_PIN GPIO_NUM_41
   #define GWLED_FASTLED
   #define GWLED_TYPE WS2812
@@ -80,8 +100,7 @@
 #endif
 //M5Stick C
 #ifdef PLATFORM_BOARD_M5STICK_C
-  #define GROOVE_PIN_2 GPIO_NUM_32
-  #define GROOVE_PIN_1 GPIO_NUM_31
+  GW_SETGROOVE(1,GPIO_NUM_31,GPIO_NUM_32)
   #define USBSerial Serial
 #endif
 
@@ -95,13 +114,13 @@
 //150mA if we power from the bus
 #define N2K_LOAD_LEVEL 3 
 //if using tail485
-#define SERIAL_GROOVE_485
+#define SERIAL_GROOVE_485 1
 //brightness 0...255
 #define GWLED_BRIGHTNESS 64
 #endif
 
 #ifdef BOARD_M5ATOMS3
-#define M5_CAN_KIT
+#define M5_CAN_KIT 1
 //150mA if we power from the bus
 #define N2K_LOAD_LEVEL 3 
 //if using tail485
@@ -111,33 +130,33 @@
 #endif
 
 #ifdef BOARD_M5ATOM_CANUNIT
-#define M5_CANUNIT
+#define M5_CANUNIT 1
 #define GWLED_BRIGHTNESS 64
 //150mA if we power from the bus
 #define N2K_LOAD_LEVEL 3 
 #endif
 
 #ifdef BOARD_M5ATOMS3_CANUNIT
-#define M5_CANUNIT
+#define M5_CANUNIT 1
 #define GWLED_BRIGHTNESS 64
 #endif
 
 
 #ifdef BOARD_M5ATOM_RS232_CANUNIT
-#define M5_CANUNIT
+#define M5_CANUNIT 1
 #define M5_SERIAL_KIT_232
 #define GWLED_BRIGHTNESS 64
 #endif
 
 #ifdef BOARD_M5ATOM_RS485_CANUNIT
 #define M5_SERIAL_KIT_485
-#define M5_CANUNIT
+#define M5_CANUNIT 1
 #define GWLED_BRIGHTNESS 64
 #endif
 
 
 #ifdef BOARD_M5STICK_CANUNIT
-#define M5_CANUNIT
+#define M5_CANUNIT 1
 #endif
 
 #ifdef BOARD_HOMBERGER
@@ -155,40 +174,28 @@
 
 //M5 Serial (Atomic RS232 Base)
 #ifdef M5_SERIAL_KIT_232 
-  #define _GWM5_BOARD
-  CFG_SERIAL(serial,BOARD_LEFT1,BOARD_LEFT2,GWSERIAL_TYPE_BI)
-  #undef _GW_GROOVE_SERIAL
-  #define _GW_GROOVE_SERIAL serial2
+  GWBASE_USE(M5_SERIAL_KIT_232)
+  CFG_SERIAL(BASE,1,BOARD_LEFT1,BOARD_LEFT2,GWSERIAL_TYPE_BI)
+  #define _GW_BASE_SERIAL
 #endif
 
 //M5 Serial (Atomic RS485 Base)
 #ifdef M5_SERIAL_KIT_485
-  #ifdef _GWM5_BOARD
-    #error "can only define one M5 base"
-  #endif
-  #define _GWM5_BOARD
-  CFG_SERIAL(serial,BOARD_LEFT1,BOARD_LEFT2,GWSERIAL_TYPE_UNI)
-  #undef _GW_GROOVE_SERIAL
-  #define _GW_GROOVE_SERIAL serial2
+  GWBASE_USE(M5_SERIAL_KIT_485)
+  CFG_SERIAL(BASE,1,BOARD_LEFT1,BOARD_LEFT2,GWSERIAL_TYPE_UNI)
+  #define _GW_BASE_SERIAL
 #endif
-//M5 GPS (Atomic GPS Base)
+//M5 GPS (Atomic GPS Base)#define GW_GETGROOVE(prfx,pin
 #ifdef M5_GPS_KIT
-  #ifdef _GWM5_BOARD
-    #error "can only define one M5 base"
-  #endif
-  #define _GWM5_BOARD
-  CFG_SERIAL(serial,BOARD_LEFT1,-1,GWSERIAL_TYPE_UNI)
-  #undef _GW_GROOVE_SERIAL
-  #define _GW_GROOVE_SERIAL serial2
+  GWBASE_USE(M5_GPS_KIT)
+  CFG_SERIAL(BASE,1,BOARD_LEFT1,-1,GWSERIAL_TYPE_UNI)
   CFG_INIT(serialBaud,"9600",READONLY)
+  #define _GW_BASE_SERIAL
 #endif
 
 //M5 ProtoHub
 #ifdef M5_PROTO_HUB
-  #ifdef _GWM5_BOARD
-    #error "can only define one M5 base"
-  #endif
-  #define _GWM5_BOARD
+  GWBASE_USE(M5_PROTO_HUB)
   #define PPIN22 BOARD_LEFT1
   #define PPIN19 BOARD_LEFT2
   #define PPIN23 BOARD_LEFT3
@@ -199,17 +206,39 @@
 
 //M5 PortABC extension
 #ifdef M5_PORTABC
-  #ifdef _GWM5_BOARD
-    #error "can only define one M5 base"
-  #endif
-  #define _GWM5_BOARD
-  #define ABC_PAYELLOW BOARD_RIGHT2
-  #define ABC_PAWHITE  BOARD_RIGHT1
-  #define ABC_PBYELLOW BOARD_LEFT3
-  #define ABC_PBWHITE  BOARD_LEFT4
-  #define ABC_PCYELLOW BOARD_LEFT1
-  #define ABC_PCWHITE  BOARD_LEFT2 
+  GWBASE_USE(M5_PORTABC)
+  //yellow pings are grove2
+  GW_SETGROOVE(2,BOARD_RIGHT1,BOARD_RIGHT2)
+  GW_SETGROOVE(3,BOARD_LEFT4,BOARD_LEFT3)
+  GW_SETGROOVE(4,BOARD_LEFT2,BOARD_LEFT1)
 #endif
+
+#ifndef GW_GROOVE_SERIAL
+  //GW_GROOVE_SERIAL can be 1,2
+  #ifdef _GW_BASE_SERIAL
+    #define GW_GROOVE_SERIAL 2
+  #else
+    #define GW_GROOVE_SERIAL 1
+  #endif
+#endif
+#ifdef GW_GROOVE_SERIAL
+  GW_SETRES(serial,1,GW_GROOVE_SERIAL)
+#endif
+#ifdef GW_GROOVE2_SERIAL
+  GW_SETRES(serial,2,GW_GROOVE1_SERIAL)
+#endif
+#ifdef GW_GROOVE3_SERIAL
+  GW_SETRES(serial,3,GW_GROOVE2_SERIAL)
+#endif
+#ifdef GW_GROOVE4_SERIAL
+  GW_SETRES(serial,4,GW_GROOVE3_SERIAL)
+#endif
+
+static constexpr const char * serial2cfg(const int serial){
+  CASSERT(serial==1 || serial == 2,"invalid serial");
+  return (serial==1)?"serial":(serial==2)?"serial2":"";
+}
+
 
 //below we define the final device config based on the above
 //boards and peripherals
@@ -218,35 +247,32 @@
 //we use serial2 for groove serial if serial1 is already defined
 //before (e.g. by serial kit)
 #ifdef SERIAL_GROOVE_485
-  GROVE_USE(SERIAL_GROOVE_485)
-  CFG_SERIAL(_GW_GROOVE_SERIAL,GROOVE_PIN_1,GROOVE_PIN_2,GWSERIAL_TYPE_UNI)
+  GWRESOURCE_USE(GROVE,SERIAL_GROOVE_485)
+  CFG_SERIAL(SERIAL_GROOVE_485,GW_GETRES(serial,SERIAL_GROOVE_485),GW_GETGROOVE(SERIAL_GROOVE_485,1),GW_GETGROOVE(SERIAL_GROOVE_485,2),GWSERIAL_TYPE_UNI)
 #endif
 #ifdef SERIAL_GROOVE_232
-  GROVE_USE(SERIAL_GROOVE_232)
-  CFG_SERIAL(_GW_GROOVE_SERIAL,GROOVE_PIN_1,GROOVE_PIN_2,GWSERIAL_TYPE_BI)
+  GWRESOURCE_USE(GROVE,SERIAL_GROOVE_232)
+  CFG_SERIAL(SERIAL_GROOVE_232,GW_GETRES(serial,SERIAL_GROOVE_232),GW_GETGROOVE(SERIAL_GROOVE_232,1),GW_GETGROOVE(SERIAL_GROOVE_232,2),GWSERIAL_TYPE_BI)
 #endif
 
 //http://docs.m5stack.com/en/unit/gps
 #ifdef M5_GPS_UNIT
-  GROVE_USE(M5_GPS_UNIT)
-  CFG_SERIAL(_GW_GROOVE_SERIAL,GROOVE_PIN_1,-1,GWSERIAL_TYPE_RX)
-  CFG_INITP(_GW_GROOVE_SERIAL,Baud,"9600",READONLY)
+  GWRESOURCE_USE(GROVE,M5_GPS_UNIT)
+  CFG_SERIAL(M5_GPS_UNIT,GW_GETRES(serial,M5_GPS_UNIT),GW_GETGROOVE(M5_GPS_UNIT,1),-1,GWSERIAL_TYPE_RX)
+  CFG_INITP(GW_GETRES(serial,M5_GPS_UNIT),Baud,"9600",READONLY)
 #endif
 
 //can kit for M5 Atom
 #ifdef M5_CAN_KIT
-  #ifdef _GWM5_BOARD
-    #error "can only define one M5 base"
-  #endif
-  #define _GWM5_BOARD
+  GWBASE_USE(M5_CAN_KIT)
   #define ESP32_CAN_TX_PIN BOARD_LEFT1
   #define ESP32_CAN_RX_PIN BOARD_LEFT2
 #endif
 //CAN via groove 
 #ifdef M5_CANUNIT
-  GROVE_USE(M5_CANUNIT)
-  #define ESP32_CAN_TX_PIN GROOVE_PIN_2
-  #define ESP32_CAN_RX_PIN GROOVE_PIN_1
+  GWRESOURCE_USE(GROVE,M5_CANUNIT)
+  #define ESP32_CAN_TX_PIN GW_GETGROOVE(M5_CANUNIT,2)
+  #define ESP32_CAN_RX_PIN GW_GETGROOVE(M5_CANUNIT,1)
 #endif
 
 #ifdef M5_ENV3
@@ -329,6 +355,5 @@
 #else
   CFG_INIT(ledBrightness,"64",HIDDEN)
 #endif
-
 
 #endif

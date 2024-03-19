@@ -77,8 +77,13 @@ class GwNmeaFilter{
 
 #define __XSTR(x) __STR(x)
 #define __STR(x) #x
+#define __EXPAND(x,sf) x ## sf
+#define __EXPAND3(prfx,x,sf) prfx ## x ## sf
 #define __MSG(x) _Pragma (__STR(message (x)))
-
+//https://curiouser.cheshireeng.com/2014/08/19/c-compile-time-assert/
+#define CASSERT(predicate, text) _impl_CASSERT_LINE(predicate,__LINE__) 
+#define _impl_PASTE(a,b) a##b
+#define _impl_CASSERT_LINE(predicate, line) typedef char _impl_PASTE(assertion_failed_CASSERT_,line)[(predicate)?1:-1];
 template<typename F>
 class GwInitializer{
     public:
