@@ -40,6 +40,9 @@
 #ifndef CFG_INIT
   #define CFG_INIT(...)
 #endif
+#ifndef GROOVE_IIC
+  #define GROOVE_IIC(...)
+#endif
 //general definitions for M5AtomLite
 //hint for groove pins:
 //according to some schematics the numbering is 1,2,3(VCC),4(GND)
@@ -301,26 +304,79 @@
 
 #ifdef M5_ENV3
   #ifndef M5_GROOVEIIC
-    #define M5_GROOVEIIC M5_ENV3
+    #define M5_GROOVEIIC
   #endif
-  #ifndef GWSHT3X
-    #define GWSHT3X -1
+  GROOVE_IIC(GWSHT3X,Z,1)
+  GROOVE_IIC(GWQMP6988,Z,1)
+  #define _GWSHT3X
+#endif
+#ifdef M5_ENV3_A
+  #ifndef M5_GROOVEIIC_A
+    #define M5_GROOVEIIC_A
   #endif
-  #ifndef GWQMP6988
-    #define GWQMP6988 -1
+  GROOVE_IIC(GWSHT3X,A,1)
+  GROOVE_IIC(GWQMP6988,A,1)
+  #define _GWSHT3X
+#endif
+#ifdef M5_ENV3_B
+  #ifndef M5_GROOVEIIC_B
+    #define M5_GROOVEIIC_B
   #endif
+  GROOVE_IIC(GWSHT3X,B,1)
+  GROOVE_IIC(GWQMP6988,B,1)
+  #define _GWSHT3X
+#endif
+#ifdef M5_ENV3_C
+  #ifndef M5_GROOVEIIC_C
+    #define M5_GROOVEIIC_C
+  #endif
+  GROOVE_IIC(GWSHT3X,C,1)
+  GROOVE_IIC(GWQMP6988,C,1)
+  #define _GWSHT3X
 #endif
 
 #ifdef M5_GROOVEIIC
-  GROOVE_USE(M5_GROOVEIIC)
-  #ifdef GWIIC_SCL
-    #error "you cannot define both GWIIC_SCL and M5_GROOVEIIC"
+  GWRESOURCE_USE(GROOVE,M5_GROOVEIIC)
+  #ifndef _GWI_IIC1
+    #define _GWI_IIC1 "Z",GROOVE_PIN_1,GROOVE_PIN_2
+  #elif ! defined(_GWI_IIC2)
+    #define _GWI_IIC2 "Z",GROOVE_PIN_1,GROOVE_PIN_2
+  #else
+    #error "both iic buses already in use"
   #endif
-  #define GWIIC_SCL GROOVE_PIN_1
-  #ifdef GWIIC_SDA
-    #error "you cannot define both GWIIC_SDA and M5_GROOVEIIC"
+#endif
+#ifdef M5_GROOVEIIC_A
+  GWRESOURCE_USE(GROOVA,M5_GROOVEIIC_A)
+  #ifndef _GWI_IIC1
+    #define _GWI_IIC1 A,GROOVEA_PIN_1,GROOVEA_PIN_2
+  #elif ! defined(_GWI_IIC2)
+    #define _GWI_IIC2 A,GROOVEA_PIN_1,GROOVEA_PIN_2
+  #else
+    #error "both iic buses already in use"
   #endif
-  #define GWIIC_SDA GROOVE_PIN_2
+#endif
+#ifdef M5_GROOVEIIC_B
+  GWRESOURCE_USE(GROOVB,M5_GROOVEIIC_B)
+  #ifndef _GWI_IIC1
+    #define _GWI_IIC1 B,GROOVEB_PIN_1,GROOVEB_PIN_2
+  #elif ! defined(_GWI_IIC2)
+    #define _GWI_IIC2 B,GROOVEB_PIN_1,GROOVEB_PIN_2
+  #else
+    #error "both iic buses already in use"
+  #endif
+#endif
+#ifdef M5_GROOVEIIC_C
+  GWRESOURCE_USE(GROOVC,M5_GROOVEIIC_C)
+  #ifndef _GWI_IIC1
+    #define _GWI_IIC1 C,GROOVEC_PIN_1,GROOVEC_PIN_2
+  #elif ! defined(_GWI_IIC2)
+    #define _GWI_IIC2 C,GROOVEC_PIN_1,GROOVEC_PIN_2
+  #else
+    #error "both iic buses already in use"
+  #endif
+#endif
+#if defined(_GWI_IIC1) || defined (_GWI_IIC2)
+  #define _GWIIC
 #endif
 
 #ifdef _GWI_SERIAL_GROOVE

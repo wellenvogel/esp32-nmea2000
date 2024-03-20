@@ -1,3 +1,4 @@
+#define _IIC_GROOVE_LIST
 #include "GwSHT3X.h"
 
 #ifdef _GWSHT3X
@@ -5,6 +6,8 @@
 #define PRFX2 "SHT3X12"
 #define PRFX3 "SHT3X21"
 #define PRFX4 "SHT3X22"
+static void addGroveItems(GwApi *api, IICSensorList &sensors, const String &bus,const String &grove, int, int);
+
 class SHT3XConfig : public IICSensorBase{
     public:
     String tmNam;
@@ -77,6 +80,7 @@ class SHT3XConfig : public IICSensorBase{
         CFG_GET(tmSrc,prefix);
 
     virtual void readConfig(GwConfigHandler *cfg){
+        if (ok) return;
         if (prefix == PRFX1){
             busId=1;
             addr=0x44;
@@ -138,6 +142,34 @@ void registerSHT3X(GwApi *api,IICSensorList &sensors){
         #pragma message "GWSHT3X22 defined"
     }
     #endif
+    #ifdef _GWI_IIC1
+        addGroveItems(api,sensors,"1",_GWI_IIC1);    
+    #endif
+    #ifdef _GWI_IIC2
+        addGroveItems(api,sensors,"2",_GWI_IIC2);    
+    #endif
+};
+static void addGroveItems(GwApi *api, IICSensorList &sensors, const String &bus,const String &grove, int, int)
+{
+    GwLog *logger=api->getLogger();
+    for (auto &&init : iicGroveList)
+    {
+        String prfx = init.item(grove, bus);
+        if (!prfx.isEmpty())
+        {
+            SHT3XConfig *scfg = new SHT3XConfig(api, prfx);
+            scfg->readConfig(api->getConfig());
+            if (scfg->ok)
+            {
+                LOG_DEBUG(GwLog::LOG, "adding %s from grove config", prfx.c_str());
+                sensors.add(api, scfg);
+            }
+            else
+            {
+                LOG_DEBUG(GwLog::ERROR, "invalid grove sensor config %s", prfx.c_str());
+            }
+        }
+    }
 }
 #else
 void registerSHT3X(GwApi *api,IICSensorList &sensors){

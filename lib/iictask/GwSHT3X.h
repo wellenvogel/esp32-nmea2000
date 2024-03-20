@@ -4,8 +4,6 @@
 #ifdef _GWIIC
     #if defined(GWSHT3X) || defined(GWSHT3X11) || defined(GWSHT3X12) || defined(GWSHT3X21) || defined(GWSHT3X22)
         #define _GWSHT3X
-    #else
-        #undef _GWSHT3X
     #endif
 #else
     #undef _GWSHT3X

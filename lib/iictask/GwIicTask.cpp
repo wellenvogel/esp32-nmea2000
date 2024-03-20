@@ -6,6 +6,9 @@
 #include "GwSHT3X.h"
 #include <map>
 
+#include "GwTimer.h"
+#include "GwHardware.h"
+
 #ifndef GWIIC_SDA
     #define GWIIC_SDA -1
 #endif
@@ -18,11 +21,6 @@
 #ifndef GWIIC_SCL2
     #define GWIIC_SCL2 -1
 #endif
-
-#include "GwTimer.h"
-#include "GwHardware.h"
-
-
 
 void runIicTask(GwApi *api);
 
@@ -54,6 +52,39 @@ void runIicTask(GwApi *api){
    return; 
 }
 #else
+bool initWireDo(GwLog *logger, TwoWire &wire, int num, const String &dummy, int scl, int sda)
+{
+    if (sda < 0 || scl < 0)
+    {
+        LOG_DEBUG(GwLog::ERROR, "IIC %d invalid config sda=%d,scl=%d",
+                  num, sda, scl);
+        return false;
+    }
+    bool rt = Wire.begin(sda, scl);
+    if (!rt)
+    {
+        LOG_DEBUG(GwLog::ERROR, "unable to initialize IIC %d at sad=%d,scl=%d",
+                  num, sda, scl);
+        return rt;
+    }
+    LOG_DEBUG(GwLog::ERROR, "initialized IIC %d at sda=%d,scl=%d",
+                                  num,sda,scl);
+    return true;                                
+}
+bool initWire(GwLog *logger, TwoWire &wire, int num){
+    if (num == 1){
+        #ifdef _GWI_IIC1
+            return initWireDo(logger,wire,num,_GWI_IIC1);
+        #endif
+        return initWireDo(logger,wire,num,"",GWIIC_SDA,GWIIC_SCL);
+    }
+    if (num == 2){
+        #ifdef _GWI_IIC2
+            return initWireDo(logger,wire,num,_GWI_IIC2);
+        #endif
+        return initWireDo(logger,wire,num,"",GWIIC_SDA2,GWIIC_SCL2);
+    }
+}
 void runIicTask(GwApi *api){
     GwLog *logger=api->getLogger();
     std::map<int,TwoWire *> buses;
@@ -66,50 +97,15 @@ void runIicTask(GwApi *api){
             {
             case 1:
             {
-                if (GWIIC_SDA < 0 || GWIIC_SCL < 0)
-                {
-                    LOG_DEBUG(GwLog::ERROR, "IIC 1 invalid config sda=%d,scl=%d",
-                              (int)GWIIC_SDA, (int)GWIIC_SCL);
-                }
-                else
-                {
-                    bool rt = Wire.begin(GWIIC_SDA, GWIIC_SCL);
-                    if (!rt)
-                    {
-                        LOG_DEBUG(GwLog::ERROR, "unable to initialize IIC 1 at sad=%d,scl=%d",
-                                  (int)GWIIC_SDA, (int)GWIIC_SCL);
-                    }
-                    else
-                    {
-                        buses[busId] = &Wire;
-                        LOG_DEBUG(GwLog::ERROR, "initialized IIC 1 at sda=%d,scl=%d",
-                                  (int)GWIIC_SDA, (int)GWIIC_SCL);
-                    }
+                if (initWire(logger,Wire,1)){
+                    buses[busId] = &Wire;
                 }
             }
             break;
             case 2:
             {
-                if (GWIIC_SDA2 < 0 || GWIIC_SCL2 < 0)
-                {
-                    LOG_DEBUG(GwLog::ERROR, "IIC 2 invalid config sda=%d,scl=%d",
-                              (int)GWIIC_SDA2, (int)GWIIC_SCL2);
-                }
-                else
-                {
-
-                    bool rt = Wire1.begin(GWIIC_SDA2, GWIIC_SCL2);
-                    if (!rt)
-                    {
-                        LOG_DEBUG(GwLog::ERROR, "unable to initialize IIC 2 at sda=%d,scl=%d",
-                                  (int)GWIIC_SDA2, (int)GWIIC_SCL2);
-                    }
-                    else
-                    {
-                        buses[busId] = &Wire1;
-                        LOG_DEBUG(GwLog::LOG, "initialized IIC 2 at sda=%d,scl=%d",
-                                  (int)GWIIC_SDA2, (int)GWIIC_SCL2);
-                    }
+                if (initWire(logger,Wire1,2)){
+                    buses[busId] = &Wire1;
                 }
             }
             break;
