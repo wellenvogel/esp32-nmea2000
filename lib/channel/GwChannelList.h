@@ -37,6 +37,9 @@ class GwChannelList{
         GwChannelList(GwLog *logger, GwConfigHandler *config);
         typedef std::function<void(GwChannel *)> ChannelAction;
         void allChannels(ChannelAction action);
+        //called to allow setting some predefined configs
+        //e.g. from serial definitions
+        void preinit();
         //initialize
         void begin(bool fallbackSerial=false);
         //status

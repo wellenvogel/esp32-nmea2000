@@ -784,6 +784,7 @@ void setup() {
   logger.setWriter(new DefaultLogWriter());
 #endif
   userCodeHandler.startInitTasks(MIN_USER_TASK);
+  channels.preinit();
   config.stopChanges();
   //maybe the user code changed the level
   level=config.getInt(config.logLevel,LOGLEVEL);

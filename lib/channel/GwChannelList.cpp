@@ -1,19 +1,33 @@
 #include "GwChannelList.h"
 #include "GwApi.h"
-
-using SerInitFunction=std::function<void(GwChannelList *)>;
-std::vector<SerInitFunction> initFunctions;
-
-#define CFG_SERIAL(id,ser,rx,tx,mode) \
-    __MSG("serial config " #id __XSTR(ser) "(" #ser ")" " rx=" __XSTR(rx) ", tx=" __XSTR(tx) ",mode=" __STR(mode)); \
-    static GwInitializer<SerInitFunction> __serial ## id ## _init \
-        (initFunctions,[](GwChannelList *cl){cl->addSerial(ser,rx,tx,mode);});
 //check for duplicate groove usages
 #define GW_PINDEFS
 #include "GwHardware.h"
 #include "GwSocketServer.h"
 #include "GwSerial.h"
 #include "GwTcpClient.h"
+class SerInit{
+    public:
+        int serial=-1;
+        int rx=-1;
+        int tx=-1;
+        int mode=-1;
+        int fixedBaud=-1;
+        SerInit(int s,int r,int t, int m, int b=-1):
+            serial(s),rx(r),tx(t),mode(m),fixedBaud(b){}
+};
+std::vector<SerInit> serialInits;
+
+#define CFG_SERIAL(ser,...) \
+    __MSG("serial config " #ser); \
+    static GwInitializer<SerInit> __serial ## ser ## _init \
+        (serialInits,SerInit(ser,__VA_ARGS__));
+#ifdef _GWI_SERIAL1
+    CFG_SERIAL(1,_GWI_SERIAL1)
+#endif
+#ifdef _GWI_SERIAL2
+    CFG_SERIAL(2,_GWI_SERIAL2)
+#endif
 class GwSerialLog : public GwLogWriter
 {
     static const size_t bufferSize = 4096;
@@ -205,7 +219,28 @@ void GwChannelList::addSerial(HardwareSerial *serialStream,int id,const String &
     LOG_DEBUG(GwLog::LOG, "%s", channel->toString().c_str());
     theChannels.push_back(channel);
 }
-
+void GwChannelList::preinit(){
+    for (auto &&init:serialInits){
+        if (init.fixedBaud >= 0){
+            switch(init.serial){
+              case 1:
+              {
+                LOG_DEBUG(GwLog::DEBUG,"setting fixed baud %d for serial",init.fixedBaud);
+                config->setValue(GwConfigDefinitions::serialBaud,String(init.fixedBaud),GwConfigInterface::READONLY);
+              }
+              break;
+              case 2:
+              {
+                LOG_DEBUG(GwLog::DEBUG,"setting fixed baud %d for serial2",init.fixedBaud);
+                config->setValue(GwConfigDefinitions::serial2Baud,String(init.fixedBaud),GwConfigInterface::READONLY);
+              }
+              break;
+              default:
+                LOG_DEBUG(GwLog::ERROR,"invalid serial definition %d found",init.serial)
+            }
+        }
+    }
+}
 void GwChannelList::begin(bool fallbackSerial){
     LOG_DEBUG(GwLog::DEBUG,"GwChannelList::begin");
     GwChannel *channel=NULL;
@@ -250,8 +285,8 @@ void GwChannelList::begin(bool fallbackSerial){
     theChannels.push_back(channel);
 
     //new serial config handling
-    for (auto &&init:initFunctions){
-        init(this);
+    for (auto &&init:serialInits){
+        addSerial(init.serial,init.rx,init.tx,init.mode);
     }
     //handle separate defines
     //serial 1
