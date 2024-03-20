@@ -3,23 +3,6 @@
 #include "GwApi.h"
 #include "N2kMessages.h"
 #include "GwXdrTypeMappings.h"
-#ifdef _IIC_GROOVE_LIST
-    class IICGrove{
-        public:
-            String base;
-            String grove;
-            String suffix;
-            IICGrove(const String &b,const String &g,const String &s):
-                base(b),grove(g),suffix(s){}
-            String item(const String &grove, const String &bus){
-                if (grove == this->grove) return base+bus+suffix;
-                return "";
-            }
-    };
-    static std::vector<IICGrove> iicGroveList;
-    #define GROOVE_IIC(base,grove,suffix) \
-        static GwInitializer<IICGrove> base ## grove ## suffix(iicGroveList,IICGrove(#base,#grove,#suffix));
-#endif
 #include "GwHardware.h"
 #include "GwSensor.h"
 #ifdef _GWIIC

@@ -28,6 +28,7 @@ class SensorBase{
     virtual void readConfig(GwConfigHandler *cfg)=0;
     SensorBase(GwApi *api,const String &prfx):prefix(prfx){
     }
+    using Creator=std::function<SensorBase<BUS> *(GwApi *api,const String &prfx)>;
     virtual bool isActive(){return false;};
     virtual bool initDevice(GwApi *api,BUS *wire){return false;};
     virtual bool preinit(GwApi * api){return false;}
@@ -45,6 +46,7 @@ class SensorList : public std::vector<SensorBase<BUS>*>{
     }
     using std::vector<SensorBase<BUS>*>::vector;
 };
+
 
 #define CFG_GET(name,prefix) \
     cfg->getValue(name, GwConfigDefinitions::prefix ## name)

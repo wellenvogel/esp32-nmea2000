@@ -306,33 +306,37 @@
   #ifndef M5_GROOVEIIC
     #define M5_GROOVEIIC
   #endif
-  GROOVE_IIC(GWSHT3X,Z,1)
-  GROOVE_IIC(GWQMP6988,Z,1)
+  GROOVE_IIC(SHT3X,Z,1)
+  GROOVE_IIC(QMP6988,Z,1)
   #define _GWSHT3X
+  #define _GWQMP6988
 #endif
 #ifdef M5_ENV3_A
   #ifndef M5_GROOVEIIC_A
     #define M5_GROOVEIIC_A
   #endif
-  GROOVE_IIC(GWSHT3X,A,1)
-  GROOVE_IIC(GWQMP6988,A,1)
+  GROOVE_IIC(SHT3X,A,1)
+  GROOVE_IIC(QMP6988,A,1)
   #define _GWSHT3X
+  #define _GWQMP6988
 #endif
 #ifdef M5_ENV3_B
   #ifndef M5_GROOVEIIC_B
     #define M5_GROOVEIIC_B
   #endif
-  GROOVE_IIC(GWSHT3X,B,1)
-  GROOVE_IIC(GWQMP6988,B,1)
+  GROOVE_IIC(SHT3X,B,1)
+  GROOVE_IIC(QMP6988,B,1)
   #define _GWSHT3X
+  #define _GWQMP6988
 #endif
 #ifdef M5_ENV3_C
   #ifndef M5_GROOVEIIC_C
     #define M5_GROOVEIIC_C
   #endif
-  GROOVE_IIC(GWSHT3X,C,1)
-  GROOVE_IIC(GWQMP6988,C,1)
+  GROOVE_IIC(SHT3X,C,1)
+  GROOVE_IIC(QMP6988,C,1)
   #define _GWSHT3X
+  #define _GWQMP6988
 #endif
 
 #ifdef M5_GROOVEIIC

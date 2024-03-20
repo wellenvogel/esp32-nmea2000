@@ -1,12 +1,9 @@
-#define _IIC_GROOVE_LIST
 #include "GwSHT3X.h"
-
 #ifdef _GWSHT3X
 #define PRFX1 "SHT3X11"
 #define PRFX2 "SHT3X12"
 #define PRFX3 "SHT3X21"
 #define PRFX4 "SHT3X22"
-static void addGroveItems(GwApi *api, IICSensorList &sensors, const String &bus,const String &grove, int, int);
 
 class SHT3XConfig : public IICSensorBase{
     public:
@@ -108,11 +105,14 @@ class SHT3XConfig : public IICSensorBase{
         intv*=1000;
     }
 };
-void registerSHT3X(GwApi *api,IICSensorList &sensors){
+IICSensorBase::Creator creator=[](GwApi *api,const String &prfx){
+    return new SHT3XConfig(api,prfx);
+};
+IICSensorBase::Creator registerSHT3X(GwApi *api,IICSensorList &sensors){
     GwLog *logger=api->getLogger();
     #if defined(GWSHT3X) || defined (GWSHT3X11)
     {
-        SHT3XConfig *scfg=new SHT3XConfig(api,PRFX1);
+        auto *scfg=creator(api,PRFX1);
         sensors.add(api,scfg);
         CHECK_IIC1();
         #pragma message "GWSHT3X11 defined"
@@ -120,7 +120,7 @@ void registerSHT3X(GwApi *api,IICSensorList &sensors){
     #endif
     #if defined(GWSHT3X12)
     {
-        SHT3XConfig *scfg=new SHT3XConfig(api,PRFX2);
+        auto *scfg=creator(api,PRFX2);
         sensors.add(api,scfg);
         CHECK_IIC1();
         #pragma message "GWSHT3X12 defined"
@@ -128,7 +128,7 @@ void registerSHT3X(GwApi *api,IICSensorList &sensors){
     #endif
     #if defined(GWSHT3X21)
     {
-        SHT3XConfig *scfg=new SHT3XConfig(api,PRFX3);
+        auto *scfg=creator(api,PRFX3);
         sensors.add(api,scfg);
         CHECK_IIC2();
         #pragma message "GWSHT3X21 defined"
@@ -136,43 +136,17 @@ void registerSHT3X(GwApi *api,IICSensorList &sensors){
     #endif
     #if defined(GWSHT3X22)
     {
-        SHT3XConfig *scfg=new SHT3XConfig(api,PRFX4);
+        auto *scfg=creator(api,PRFX4);
         sensors.add(api,scfg);
         CHECK_IIC2();
         #pragma message "GWSHT3X22 defined"
     }
     #endif
-    #ifdef _GWI_IIC1
-        addGroveItems(api,sensors,"1",_GWI_IIC1);    
-    #endif
-    #ifdef _GWI_IIC2
-        addGroveItems(api,sensors,"2",_GWI_IIC2);    
-    #endif
+    return creator;
 };
-static void addGroveItems(GwApi *api, IICSensorList &sensors, const String &bus,const String &grove, int, int)
-{
-    GwLog *logger=api->getLogger();
-    for (auto &&init : iicGroveList)
-    {
-        String prfx = init.item(grove, bus);
-        if (!prfx.isEmpty())
-        {
-            SHT3XConfig *scfg = new SHT3XConfig(api, prfx);
-            scfg->readConfig(api->getConfig());
-            if (scfg->ok)
-            {
-                LOG_DEBUG(GwLog::LOG, "adding %s from grove config", prfx.c_str());
-                sensors.add(api, scfg);
-            }
-            else
-            {
-                LOG_DEBUG(GwLog::ERROR, "invalid grove sensor config %s", prfx.c_str());
-            }
-        }
-    }
-}
+
 #else
-void registerSHT3X(GwApi *api,IICSensorList &sensors){
+IICSensorBase::Creator registerSHT3X(GwApi *api,IICSensorList &sensors){
 
 }
 

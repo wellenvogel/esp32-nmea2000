@@ -1,3 +1,4 @@
+#define _IIC_GROOVE_LIST
 #include "GwQMP6988.h"
 #ifdef _GWQMP6988
 #define PRFX1 "QMP698811"
@@ -48,6 +49,7 @@ class QMP6988Config : public IICSensorBase{
             CFG_GET(prOff,prefix);
         
         virtual void readConfig(GwConfigHandler *cfg){
+            if (ok) return;
             if (prefix == PRFX1){
                 busId=1;
                 addr=86;
@@ -76,7 +78,10 @@ class QMP6988Config : public IICSensorBase{
 
         }
 };
-void registerQMP6988(GwApi *api,IICSensorList &sensors){
+static IICSensorBase::Creator creator=[](GwApi *api,const String &prfx){
+    return new QMP6988Config(api,prfx);
+};
+IICSensorBase::Creator registerQMP6988(GwApi *api,IICSensorList &sensors){
     GwLog *logger=api->getLogger();
     #if defined(GWQMP6988) || defined(GWQMP698811)
     {
@@ -110,8 +115,11 @@ void registerQMP6988(GwApi *api,IICSensorList &sensors){
         #pragma message "GWQMP698822 defined"
     }
     #endif
+    return creator;
 }
 
 #else
-    void registerQMP6988(GwApi *api,IICSensorList &sensors){}
+    IICSensorBase::Creator registerQMP6988(GwApi *api,IICSensorList &sensors){
+        return IICSensorBase::Creator();
+    }
 #endif
