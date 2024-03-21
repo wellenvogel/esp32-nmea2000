@@ -410,7 +410,7 @@ public:
 protected:
   virtual void processRequest()
   {
-    GwJsonDocument status(300 + 
+    GwJsonDocument status(305 + 
       countNMEA2KIn.getJsonSize()+
       countNMEA2KOut.getJsonSize() +
       channels.getJsonSize()+
@@ -418,6 +418,7 @@ protected:
       );
     status["version"] = VERSION;
     status["wifiConnected"] = gwWifi.clientConnected();
+    status["wifiSSID"] = config.getString(GwConfigDefinitions::wifiSSID);
     status["clientIP"] = WiFi.localIP().toString();
     status["apIp"] = gwWifi.apIP();
     size_t bsize=2*sizeof(unsigned long)+1;
