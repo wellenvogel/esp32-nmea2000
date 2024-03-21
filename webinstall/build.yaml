@@ -38,57 +38,57 @@
 types:
   - &m5groovei2c
     type: frame
-    key: m5groovei2c
+    key: m5groovei2c#grv#
     label: "M5 I2C Groove Units"
     children:
       - label: "M5 ENV3"
         type: checkbox
-        key: m5env3
+        key: m5env3#grv#
         target: define
         url: "https://docs.m5stack.com/en/unit/envIII"
         description: "M5 sensor module temperature, humidity, pressure"
         values:
-          - value: M5_ENV3
+          - value: M5_ENV3#grv#
             key: true
   - &m5groovecan
     type: select
-    key: m5groovecan
+    key: m5groovecan#grv#
     target: define
     label: "M5 Groove CAN Units"
     values:
       - label: "CAN Unit"
         url: "https://docs.m5stack.com/en/unit/can"
         description: "M5 Can unit"
-        value: M5_CANUNIT
+        value: M5_CANUNIT#grv#
         resource: can    
   - &m5grooveserial
     type: select
     label: "M5 Groove Serial Unit"
     target: define
-    key: m5grooveserial
+    key: m5grooveserial#grv#
     values:
       - label: "RS485"
         key: unit485
-        value: SERIAL_GROOVE_485
+        value: SERIAL_GROOVE_485#grv#
         description: "M5 RS485 unit"
         url: "https://docs.m5stack.com/en/unit/rs485"
         resource: serial
       - label: "Tail485"
-        value: SERIAL_GROOVE_485
+        value: SERIAL_GROOVE_485#grv#
         key: tail485
         description: "M5 Tail 485"
         url: "https://docs.m5stack.com/en/atom/tail485"
         resource: serial
       - label: "Gps Unit"
-        value: M5_GPS_UNIT
+        value: M5_GPS_UNIT#grv#
         description: "M5 Gps Unit"
         url: "https://docs.m5stack.com/en/unit/gps"
         resource: serial
 
   - &m5groove
     type: select
-    key: m5groove
-    label: 'M5 groove type'
+    key: m5groove#grv#
+    label: 'M5 groove#grv# type '
     help: 'Select the functionality that should be available at the M5 groove pins'
     values:
       - key: 'CAN'
@@ -101,7 +101,7 @@ types:
         children:
         - *m5grooveserial
   - &gpiopin
-    type: "#gpiotype#"
+    type: dropdown
     resource: "gpio:"
     help: 'Select the number of the GPIO pin for this function'
     values: "#gpiopinv#"
@@ -136,7 +136,7 @@ types:
       - 38
 
   - &gpioinput
-    type: "#gpiotype#"
+    type: dropdown
     resource: "gpio:"
     help: 'Select the number of the GPIO pin for this function'
     values: "#gpiopinv#"
@@ -182,16 +182,6 @@ types:
       - PPIN23
       - PPIN25
       - PPIN33
-  
-  - &abcgpio
-      - {label:unset, value:}
-      - ABC_PAYELLOW
-      - ABC_PAYWHITE
-      - ABC_PBYELLOW
-      - ABC_PBYWHITE
-      - ABC_PBYELLOW
-      - ABC_PBYWHITE
-    
   
   - &serialRX
     <<: *gpioinput
@@ -518,7 +508,18 @@ types:
         base:
           busname: "2"
           bus: "2"        
-
+  - &m5pabcchildren
+    - <<: *m5groove
+      base:
+        grv: _A
+    - <<: *m5groove
+      base:
+        grv: _B
+    - <<: *m5groove
+      base:
+        grv: _C
+    
+    
                 
   - &m5base
       type: select
@@ -559,7 +560,8 @@ types:
           description: "M5 Stack Port ABC extension base"
           url: "https://docs.m5stack.com/en/unit/AtomPortABC"
           label: "ABC Ext"
-          base: 
+          children:
+            *m5pabcchildren
 
 resources:
   default: &esp32default
@@ -577,7 +579,7 @@ config:
       base:
         gpiopinv: *gpiopinv
         gpioinputv: *gpioinputv
-        gpiotype: dropdown
+        grv: ""
       values: 
         - value: m5stack-atom-generic
           label: m5stack-atom
