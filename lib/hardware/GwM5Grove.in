@@ -65,7 +65,7 @@
 
 #GROVE
 //example: -DSHT3XG1_A : defines STH3Xn1 on grove A - x depends on the other devices
-#ifdef SHT3XG1$GS$
+#ifdef GWSHT3XG1$GS$
   #ifndef M5_GROOVEIIC$GS$
     #define M5_GROOVEIIC$GS$
   #endif
@@ -74,7 +74,7 @@
 #endif
 
 #GROVE
-#ifdef SHT3XG2$GS$
+#ifdef GWSHT3XG2$GS$
   #ifndef M5_GROOVEIIC$GS$
     #define M5_GROOVEIIC$GS$
   #endif
@@ -83,7 +83,7 @@
 #endif
 
 #GROVE
-#ifdef QMP6988G1$GS$
+#ifdef GWQMP6988G1$GS$
   #ifndef M5_GROOVEIIC$GS$
     #define M5_GROOVEIIC$GS$
   #endif
@@ -92,7 +92,7 @@
 #endif
 
 #GROVE
-#ifdef QMP6988G2$GS$
+#ifdef GWQMP6988G2$GS$
   #ifndef M5_GROOVEIIC$GS$
     #define M5_GROOVEIIC$GS$
   #endif
@@ -101,7 +101,7 @@
 #endif
 
 #GROVE
-#ifdef BME280G1$GS$
+#ifdef GWBME280G1$GS$
   #ifndef M5_GROOVEIIC$GS$
     #define M5_GROOVEIIC$GS$
   #endif
@@ -110,7 +110,7 @@
 #endif
 
 #GROVE
-#ifdef BME280G2$GS$
+#ifdef GWBME280G2$GS$
   #ifndef M5_GROOVEIIC$GS$
     #define M5_GROOVEIIC$GS$
   #endif

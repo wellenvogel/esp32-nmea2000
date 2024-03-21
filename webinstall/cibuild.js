@@ -652,12 +652,15 @@ class PipelineInfo{
                     }
                     if (round < 1) continue;
                     if (struct.resource){
-                        let resList=currentResources[struct.resource];
-                        if (! resList){
-                            resList=[];
-                            currentResources[struct.resource]=resList;
-                        }
-                        resList.push(struct);
+                        let splitted=struct.resource.split(",");
+                        splitted.forEach((resource) => {
+                            let resList = currentResources[resource];
+                            if (!resList) {
+                                resList = [];
+                                currentResources[resource] = resList;
+                            }
+                            resList.push(struct);
+                        });
                     }
                     if (target === 'define') {
                         flags += " -D" + struct.value;
@@ -680,11 +683,12 @@ class PipelineInfo{
         for (let k in currentResources){
             let ak=k.replace(/:.*/,'');
             let resList=currentResources[k];
-            if (allowedResources[ak] !== undefined){
-                if (resList.length > allowedResources[ak]){
-                    errors+=" more than "+allowedResources[ak]+" "+k+" device(s) used";
-                }
+            let allowed=allowedResources[ak];
+            if (allowed === undefined) allowed=1;
+            if (resList.length > allowed){
+                errors+=" more than "+allowed+" "+k+" device(s) used";
             }
+            
         }
         if (errors){
             setValue('configError',errors);

@@ -50,6 +50,69 @@ types:
         values:
           - value: M5_ENV3#grv#
             key: true
+            resource: qmp69881#grv#1,sht3x#grv#1
+      - type: checkbox
+        label: SHT3X-1
+        description: "SHT30 temperature and humidity sensor 0x44"
+        key: sht3xg1
+        target: define
+        url: "https://m5stack.oss-cn-shenzhen.aliyuncs.com/resource/docs/datasheet/unit/SHT3x_Datasheet_digital.pdf"
+        values: 
+          - key: true
+            value: GWSHT3XG1#grv#
+            resource: sht3x#grv#1
+      - type: checkbox
+        label: SHT3X-2
+        description: "SHT30 temperature and humidity sensor 0x45"
+        key: sht3xg2
+        target: define
+        url: "https://m5stack.oss-cn-shenzhen.aliyuncs.com/resource/docs/datasheet/unit/SHT3x_Datasheet_digital.pdf"
+        values: 
+          - key: true
+            value: GWSHT3XG2#grv#
+            resource: sht3x#grv#2
+      - type: checkbox
+        label: QMP6988-1
+        description: "QMP6988 pressure sensor addr 86"
+        key: qmp69881g1
+        target: define
+        url: "https://m5stack.oss-cn-shenzhen.aliyuncs.com/resource/docs/datasheet/unit/enviii/QMP6988%20Datasheet.pdf"
+        values: 
+          - key: true
+            value: GWQMP6988G1#grv#
+            resource: qmp69881#grv#1
+      - type: checkbox
+        label: QMP6988-2
+        description: "QMP6988 pressure sensor addr 112"
+        key: qmp69882g2
+        target: define
+        url: "https://m5stack.oss-cn-shenzhen.aliyuncs.com/resource/docs/datasheet/unit/enviii/QMP6988%20Datasheet.pdf"
+        values: 
+          - key: true
+            value: GWQMP6988G2#grv#
+            resource: qmp69881#grv#2
+      - type: checkbox
+        label: BME280-1
+        description: "BME280 temperature/humidity/pressure sensor 0x76"
+        key: bme2801g1
+        target: define
+        url: "https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bme280-ds002.pdf"
+        values: 
+          - key: true
+            value: GWBME280G1#grv#
+            resource: bme280#grv#1
+      - type: checkbox
+        label: BME280-2
+        description: "BME280 temperature/humidity/pressure sensor 0x77"
+        key: bme2802
+        target: define
+        url: "https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bme280-ds002.pdf"
+        values: 
+          - key: true
+            value: GWBME280G2#grv#
+            resource: bme280#grv#2
+  
+
   - &m5groovecan
     type: select
     key: m5groovecan#grv#
