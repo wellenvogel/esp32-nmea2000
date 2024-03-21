@@ -18,7 +18,7 @@
   This file contains M5 grove definitions.
   They will be expanded to match the supported groves
 
-  Each definition must start with a line start starts with  #GROVE
+  Each definition must start with a line that start starts with  #GROVE
   Afterwards you can use normal C header style
   $GS$ will be replaced with a grove suffix with _ (empty for first)
   $G$ will be replaced by the simple grove name (empty for base)
@@ -40,7 +40,7 @@
 //http://docs.m5stack.com/en/unit/gps
 #ifdef M5_GPS_UNIT$GS$
   GWRESOURCE_USE(GROOVE$G$,M5_GPS_UNIT$GS$)
-  #define _GWI_SERIAL_GROOVE$GS$ GWSERIAL_TYPE_RX,"9600"
+  #define _GWI_SERIAL_GROOVE$GS$ GWSERIAL_TYPE_RX,9600
 #endif
 
 #GROVE
