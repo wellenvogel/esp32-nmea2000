@@ -1,9 +1,10 @@
 #include "GwSHT3X.h"
 #ifdef _GWSHT3X
-#define PRFX1 "SHT3X11"
-#define PRFX2 "SHT3X12"
-#define PRFX3 "SHT3X21"
-#define PRFX4 "SHT3X22"
+#define TYPE "SHT3X"
+#define PRFX1 TYPE "11"
+#define PRFX2 TYPE "12"
+#define PRFX3 TYPE "21"
+#define PRFX4 TYPE "22"
 
 class SHT3XConfig : public IICSensorBase{
     public:
@@ -15,7 +16,7 @@ class SHT3XConfig : public IICSensorBase{
     tN2kTempSource tmSrc;
     SHT3X *device=nullptr;
     SHT3XConfig(GwApi *api,const String &prefix):
-        SensorBase(api,prefix){}
+        SensorBase(TYPE,api,prefix){}
     virtual bool isActive(){
         return tmAct || huAct;
     }
@@ -147,7 +148,7 @@ IICSensorBase::Creator registerSHT3X(GwApi *api,IICSensorList &sensors){
 
 #else
 IICSensorBase::Creator registerSHT3X(GwApi *api,IICSensorList &sensors){
-
+    return IICSensorBase::Creator();
 }
 
 #endif

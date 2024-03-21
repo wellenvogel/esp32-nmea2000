@@ -43,29 +43,39 @@ static std::vector<IICGrove> iicGroveList;
 void runIicTask(GwApi *api);
 
 static IICSensorList sensors;
-static void addGroveItems(IICSensorBase::Creator creator,GwApi *api, IICSensorList &sensors, const String &bus,const String &grove, int, int)
+static void addGroveItems(std::vector<IICSensorBase::Creator> &creators,GwApi *api, IICSensorList &sensors, const String &bus,const String &grove, int, int)
 {
     GwLog *logger=api->getLogger();
     for (auto &&init : iicGroveList)
     {
-        LOG_DEBUG(GwLog::LOG, "trying grove item %s:%s:%s for grove %s, bus %s", 
+        LOG_DEBUG(GwLog::DEBUG, "trying grove item %s:%s:%s for grove %s, bus %s", 
             init.base.c_str(),init.grove.c_str(),
             init.suffix.c_str(),grove.c_str(),bus.c_str()
             );
         String prfx = init.item(grove, bus);
         if (!prfx.isEmpty())
         {
-            auto *scfg = creator(api, prfx);
-            scfg->readConfig(api->getConfig());
-            if (scfg->ok)
+            bool found=false;
+            for (auto &&creator : creators)
             {
-                LOG_DEBUG(GwLog::LOG, "adding %s from grove config", prfx.c_str());
-                sensors.add(api, scfg);
+                if (! creator) continue;
+                auto *scfg = creator(api, prfx);
+                scfg->readConfig(api->getConfig());
+                if (scfg->ok)
+                {
+                    LOG_DEBUG(GwLog::LOG, "adding %s from grove config", prfx.c_str());
+                    sensors.add(api, scfg);
+                    found=true;
+                    break;
+                }
+                else
+                {
+                    LOG_DEBUG(GwLog::DEBUG, "unmatched grove sensor config %s for %s", prfx.c_str(), scfg->type.c_str());
+                    delete scfg;
+                }
             }
-            else
-            {
-                LOG_DEBUG(GwLog::ERROR, "invalid grove sensor config %s", prfx.c_str());
-                delete scfg;
+            if (! found){
+                LOG_DEBUG(GwLog::ERROR,"no iic sensor found for %s",prfx.c_str());
             }
         }
     }
@@ -78,21 +88,16 @@ void initIicTask(GwApi *api){
     #else
     bool addTask=false;
     GwConfigHandler *config=api->getConfig();
-    IICSensorBase::Creator sht3xCreator=registerSHT3X(api,sensors);
+    std::vector<IICSensorBase::Creator> creators;
+    creators.push_back(registerSHT3X(api,sensors));
+    creators.push_back(registerQMP6988(api,sensors));
+    creators.push_back(registerBME280(api,sensors));
     #ifdef _GWI_IIC1
-        addGroveItems(sht3xCreator,api,sensors,"1",_GWI_IIC1);    
+        addGroveItems(creators,api,sensors,"1",_GWI_IIC1);    
     #endif
     #ifdef _GWI_IIC2
-        addGroveItems(sht3xCreator,api,sensors,"2",_GWI_IIC2);    
+        addGroveItems(creators,api,sensors,"2",_GWI_IIC2);    
     #endif
-    IICSensorBase::Creator qmp6988Creator=registerQMP6988(api,sensors);
-    #ifdef _GWI_IIC1
-        addGroveItems(qmp6988Creator,api,sensors,"1",_GWI_IIC1);    
-    #endif
-    #ifdef _GWI_IIC2
-        addGroveItems(qmp6988Creator,api,sensors,"2",_GWI_IIC2);    
-    #endif
-    registerBME280(api,sensors);
     for (auto it=sensors.begin();it != sensors.end();it++){
         if ((*it)->preinit(api)) addTask=true;
     }

@@ -103,8 +103,15 @@ void sendN2kTemperature(GwApi *api,CFG &cfg,double value, int counterId){
 }
 
 
-
-#define CHECK_IIC1() checkDef(GWIIC_SCL,GWIIC_SDA)
-#define CHECK_IIC2() checkDef(GWIIC_SCL2,GWIIC_SDA2)
+#ifndef _GWI_IIC1
+    #define CHECK_IIC1() checkDef(GWIIC_SCL,GWIIC_SDA)
+#else
+    #define CHECK_IIC1()
+#endif
+#ifndef _GWI_IIC2
+    #define CHECK_IIC2() checkDef(GWIIC_SCL2,GWIIC_SDA2)
+#else
+    #define CHECK_IIC2()
+#endif
 
 #endif

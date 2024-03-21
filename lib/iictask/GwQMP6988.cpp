@@ -1,10 +1,11 @@
 #define _IIC_GROOVE_LIST
 #include "GwQMP6988.h"
 #ifdef _GWQMP6988
-#define PRFX1 "QMP698811"
-#define PRFX2 "QMP698812"
-#define PRFX3 "QMP698821"
-#define PRFX4 "QMP698822"
+#define TYPE "QMP6988"
+#define PRFX1 TYPE "11"
+#define PRFX2 TYPE "12"
+#define PRFX3 TYPE "21"
+#define PRFX4 TYPE "22"
 class QMP6988Config : public IICSensorBase{
     public:
         String prNam="Pressure";
@@ -12,7 +13,7 @@ class QMP6988Config : public IICSensorBase{
         tN2kPressureSource prSrc=tN2kPressureSource::N2kps_Atmospheric;
         float prOff=0;
         QMP6988 *device=nullptr;
-        QMP6988Config(GwApi* api,const String &prefix):SensorBase(api,prefix){}
+        QMP6988Config(GwApi* api,const String &prefix):SensorBase(TYPE,api,prefix){}
         virtual bool isActive(){return prAct;};
         virtual bool initDevice(GwApi *api,TwoWire *wire){
             if (!isActive()) return false;

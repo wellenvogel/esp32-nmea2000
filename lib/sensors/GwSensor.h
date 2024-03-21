@@ -22,11 +22,12 @@ class SensorBase{
     int busId=0;
     int iid=99; //N2K instanceId
     int addr=-1;
-    String prefix;
+    const String prefix;
+    const String type;
     long intv=0;
     bool ok=false;
     virtual void readConfig(GwConfigHandler *cfg)=0;
-    SensorBase(GwApi *api,const String &prfx):prefix(prfx){
+    SensorBase(const String &tn,GwApi *api,const String &prfx):type(tn),prefix(prfx){
     }
     using Creator=std::function<SensorBase<BUS> *(GwApi *api,const String &prfx)>;
     virtual bool isActive(){return false;};

@@ -125,7 +125,7 @@ class SSISensor : public SensorBase<BusType>{
         }
 
     public:
-    SSISensor(GwApi *api,const String &prfx, int host):SensorBase(api,prfx)
+    SSISensor(const String &type,GwApi *api,const String &prfx, int host):SensorBase(type,api,prfx)
     {
         busId=host;
     }
