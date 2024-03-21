@@ -33,16 +33,16 @@
   #define GWRESOURCE_USE(RES,USER) \
     __MSG(#RES " used by " #USER) \
     static int _resourceUsed ## RES =1;
+  #define __USAGE __MSG
 #else
   #define GWRESOURCE_USE(...)
+  #define __USAGE(...)
 #endif
 
 #ifndef CFG_INIT
   #define CFG_INIT(...)
 #endif
-#ifndef GROOVE_IIC
-  #define GROOVE_IIC(...)
-#endif
+
 //general definitions for M5AtomLite
 //hint for groove pins:
 //according to some schematics the numbering is 1,2,3(VCC),4(GND)
@@ -162,265 +162,14 @@
 #define GWBUTTON_PULLUPDOWN 
 #endif
 
-//M5 Serial (Atomic RS232 Base)
-#ifdef M5_SERIAL_KIT_232 
-  GWRESOURCE_USE(BASE,M5_SERIAL_KIT_232)
-  GWRESOURCE_USE(SERIAL1,M5_SERIAL_KIT_232)
-  #define _GWI_SERIAL1 BOARD_LEFT1,BOARD_LEFT2,GWSERIAL_TYPE_BI
-#endif
+#include "GwM5Base.h"
+#include "GwM5Grove.h"
 
-//M5 Serial (Atomic RS485 Base)
-#ifdef M5_SERIAL_KIT_485
-  GWRESOURCE_USE(BASE,M5_SERIAL_KIT_485)
-  GWRESOURCE_USE(SERIAL1,M5_SERIAL_KIT_485)
-  #define _GWI_SERIAL1 BOARD_LEFT1,BOARD_LEFT2,GWSERIAL_TYPE_UNI
-#endif
-//M5 GPS (Atomic GPS Base)
-#ifdef M5_GPS_KIT
-  GWRESOURCE_USE(BASE,M5_GPS_KIT)
-  GWRESOURCE_USE(SERIAL1,M5_GPS_KIT)
-  #define _GWI_SERIAL1 BOARD_LEFT1,-1,GWSERIAL_TYPE_UNI,"9600"
-#endif
-
-//M5 ProtoHub
-#ifdef M5_PROTO_HUB
-  GWRESOURCE_USE(BASE,M5_PROTO_HUB)
-  #define PPIN22 BOARD_LEFT1
-  #define PPIN19 BOARD_LEFT2
-  #define PPIN23 BOARD_LEFT3
-  #define PPIN33 BOARD_LEFT4
-  #define PPIN21 BOARD_RIGHT1
-  #define PPIN25 BOARD_RIGHT2
-#endif
-
-//M5 PortABC extension
-#ifdef M5_PORTABC
-  GWRESOURCE_USE(BASE,M5_PORTABC)
-  #define GROOVEA_PIN_2 BOARD_RIGHT2
-  #define GROOVEA_PIN_1  BOARD_RIGHT1
-  #define GROOVEB_PIN_2 BOARD_LEFT3
-  #define GROOVEB_PIN_1  BOARD_LEFT4
-  #define GROOVEC_PIN_2 BOARD_LEFT1
-  #define GROOVEC_PIN_1  BOARD_LEFT2 
-#endif
-
-//below we define the final device config based on the above
-//boards and peripherals
-//this allows us to easily also set them from outside
-//serial adapter at the M5 groove pins
-//we use serial2 for groove serial if serial1 is already defined
-//before (e.g. by serial kit)
-#ifdef SERIAL_GROOVE_485
-  GWRESOURCE_USE(GROOVE,SERIAL_GROOVE_485)
-  #define _GWI_SERIAL_GROOVE GWSERIAL_TYPE_UNI
-#endif
-#ifdef SERIAL_GROOVE_485_A
-  GWRESOURCE_USE(GROOVEA,SERIAL_GROOVE_485_A)
-  #define _GWI_SERIAL_GROOVE_A GWSERIAL_TYPE_UNI
-#endif
-#ifdef SERIAL_GROOVE_485_B
-  GWRESOURCE_USE(GROOVEB,SERIAL_GROOVE_485_B)
-  #define _GWI_SERIAL_GROOVE_B GWSERIAL_TYPE_UNI
-#endif
-#ifdef SERIAL_GROOVE_485_C
-  GWRESOURCE_USE(GROOVEC,SERIAL_GROOVE_485_C)
-  #define _GWI_SERIAL_GROOVE_C GWSERIAL_TYPE_UNI
-#endif
-#ifdef SERIAL_GROOVE_232
-  GWRESOURCE_USE(GROOVE,SERIAL_GROOVE_232)
-  #define _GWI_SERIAL_GROOVE GWSERIAL_TYPE_BI
-#endif
-#ifdef SERIAL_GROOVE_232_A
-  GWRESOURCE_USE(GROOVEA,SERIAL_GROOVE_232_A)
-  #define _GWI_SERIAL_GROOVE_A GWSERIAL_TYPE_BI
-#endif
-#ifdef SERIAL_GROOVE_232_B
-  GWRESOURCE_USE(GROOVEB,SERIAL_GROOVE_232_B)
-  #define _GWI_SERIAL_GROOVE_B GWSERIAL_TYPE_BI
-#endif
-#ifdef SERIAL_GROOVE_232_C
-  GWRESOURCE_USE(GROOVEC,SERIAL_GROOVE_232_C)
-  #define _GWI_SERIAL_GROOVE_C GWSERIAL_TYPE_BI
-#endif
-
-
-
-
-//http://docs.m5stack.com/en/unit/gps
-#ifdef M5_GPS_UNIT
-  GWRESOURCE_USE(GROOVE,M5_GPS_UNIT)
-  #define _GWI_SERIAL_GROOVE GWSERIAL_TYPE_RX,"9600"
-#endif
-#ifdef M5_GPS_UNIT_A
-  GWRESOURCE_USE(GROOVEA,M5_GPS_UNIT_A)
-  #define _GWI_SERIAL_GROOVE_A GWSERIAL_TYPE_RX,"9600"
-#endif
-#ifdef M5_GPS_UNIT_B
-  GWRESOURCE_USE(GROOVEB,M5_GPS_UNIT_B)
-  #define _GWI_SERIAL_GROOVE_B GWSERIAL_TYPE_RX,"9600"
-#endif
-#ifdef M5_GPS_UNIT_C
-  GWRESOURCE_USE(GROOVEC,M5_GPS_UNIT)
-  #define _GWI_SERIAL_GROOVE_C GWSERIAL_TYPE_RX,"9600"
-#endif
-
-
-
-
-//can kit for M5 Atom
-#ifdef M5_CAN_KIT
-  GWRESOURCE_USE(BASE,M5_CAN_KIT)
-  GWRESOURCE_USE(CAN,M5_CANKIT)
-  #define ESP32_CAN_TX_PIN BOARD_LEFT1
-  #define ESP32_CAN_RX_PIN BOARD_LEFT2
-#endif
-//CAN via groove 
-#ifdef M5_CANUNIT
-  GWRESOURCE_USE(GROOVE,M5_CANUNIT)
-  GWRESOURCE_USE(CAN,M5_CANUNIT)
-  #define ESP32_CAN_TX_PIN GROOVE_PIN_2
-  #define ESP32_CAN_RX_PIN GROOVE_PIN_1
-#endif
-
-#ifdef M5_CANUNIT_A
-  GWRESOURCE_USE(GROOVEA,M5_CANUNIT_A)
-  GWRESOURCE_USE(CAN,M5_CANUNIT_A)
-  #define ESP32_CAN_TX_PIN GROOVEA_PIN_2
-  #define ESP32_CAN_RX_PIN GROOVEA_PIN_1
-#endif
-#ifdef M5_CANUNIT_B
-  GWRESOURCE_USE(GROOVEB,M5_CANUNIT_B)
-  GWRESOURCE_USE(CAN,M5_CANUNIT_B)
-  #define ESP32_CAN_TX_PIN GROOVEB_PIN_2 
-  #define ESP32_CAN_RX_PIN GROOVEA_PIN_1
-#endif
-#ifdef M5_CANUNIT_C
-  GWRESOURCE_USE(GROOVEC,M5_CANUNIT_C)
-  GWRESOURCE_USE(CAN,M5_CANUNIT_C)
-  #define ESP32_CAN_TX_PIN GROOVEC_PIN_2
-  #define ESP32_CAN_RX_PIN GROOVEC_PIN_1
-#endif
-
-
-#ifdef M5_ENV3
-  #ifndef M5_GROOVEIIC
-    #define M5_GROOVEIIC
-  #endif
-  GROOVE_IIC(SHT3X,Z,1)
-  GROOVE_IIC(QMP6988,Z,1)
-  #define _GWSHT3X
-  #define _GWQMP6988
-#endif
-#ifdef M5_ENV3_A
-  #ifndef M5_GROOVEIIC_A
-    #define M5_GROOVEIIC_A
-  #endif
-  GROOVE_IIC(SHT3X,A,1)
-  GROOVE_IIC(QMP6988,A,1)
-  #define _GWSHT3X
-  #define _GWQMP6988
-#endif
-#ifdef M5_ENV3_B
-  #ifndef M5_GROOVEIIC_B
-    #define M5_GROOVEIIC_B
-  #endif
-  GROOVE_IIC(SHT3X,B,1)
-  GROOVE_IIC(QMP6988,B,1)
-  #define _GWSHT3X
-  #define _GWQMP6988
-#endif
-#ifdef M5_ENV3_C
-  #ifndef M5_GROOVEIIC_C
-    #define M5_GROOVEIIC_C
-  #endif
-  GROOVE_IIC(SHT3X,C,1)
-  GROOVE_IIC(QMP6988,C,1)
-  #define _GWSHT3X
-  #define _GWQMP6988
-#endif
-
-#ifdef M5_GROOVEIIC
-  GWRESOURCE_USE(GROOVE,M5_GROOVEIIC)
-  #ifndef _GWI_IIC1
-    #define _GWI_IIC1 "Z",GROOVE_PIN_1,GROOVE_PIN_2
-  #elif ! defined(_GWI_IIC2)
-    #define _GWI_IIC2 "Z",GROOVE_PIN_1,GROOVE_PIN_2
-  #else
-    #error "both iic buses already in use"
-  #endif
-#endif
-#ifdef M5_GROOVEIIC_A
-  GWRESOURCE_USE(GROOVA,M5_GROOVEIIC_A)
-  #ifndef _GWI_IIC1
-    #define _GWI_IIC1 A,GROOVEA_PIN_1,GROOVEA_PIN_2
-  #elif ! defined(_GWI_IIC2)
-    #define _GWI_IIC2 A,GROOVEA_PIN_1,GROOVEA_PIN_2
-  #else
-    #error "both iic buses already in use"
-  #endif
-#endif
-#ifdef M5_GROOVEIIC_B
-  GWRESOURCE_USE(GROOVB,M5_GROOVEIIC_B)
-  #ifndef _GWI_IIC1
-    #define _GWI_IIC1 B,GROOVEB_PIN_1,GROOVEB_PIN_2
-  #elif ! defined(_GWI_IIC2)
-    #define _GWI_IIC2 B,GROOVEB_PIN_1,GROOVEB_PIN_2
-  #else
-    #error "both iic buses already in use"
-  #endif
-#endif
-#ifdef M5_GROOVEIIC_C
-  GWRESOURCE_USE(GROOVC,M5_GROOVEIIC_C)
-  #ifndef _GWI_IIC1
-    #define _GWI_IIC1 C,GROOVEC_PIN_1,GROOVEC_PIN_2
-  #elif ! defined(_GWI_IIC2)
-    #define _GWI_IIC2 C,GROOVEC_PIN_1,GROOVEC_PIN_2
-  #else
-    #error "both iic buses already in use"
-  #endif
-#endif
-#if defined(_GWI_IIC1) || defined (_GWI_IIC2)
-  #define _GWIIC
-#endif
-
-#ifdef _GWI_SERIAL_GROOVE
-  #ifndef _GWI_SERIAL1
-    #define _GWI_SERIAL1 GROOVE_PIN_1,GROOVE_PIN_2,_GWI_SERIAL_GROOVE
-  #elif ! defined(_GWI_SERIAL2)
-    #define _GWI_SERIAL2 GROOVE_PIN_1,GROOVE_PIN_2,_GWI_SERIAL_GROOVE
-  #else
-    #error "both serial devices already in use"
-  #endif
-#endif
-#ifdef _GWI_SERIAL_GROOVE_A
-  #ifndef _GWI_SERIAL1
-    #define _GWI_SERIAL1 GROOVEA_PIN_1,GROOVEA_PIN_2,_GWI_SERIAL_GROOVE_A
-  #elif ! defined(_GWI_SERIAL2)
-    #define _GWI_SERIAL2 GROOVEA_PIN_1,GROOVEA_PIN_2,_GWI_SERIAL_GROOVE_A
-  #else
-    #error "both serial devices already in use"
-  #endif
-#endif
-#ifdef _GWI_SERIAL_GROOVE_B
-  #ifndef _GWI_SERIAL1
-    #define _GWI_SERIAL1 GROOVEB_PIN_1,GROOVEB_PIN_2,_GWI_SERIAL_GROOVE_B
-  #elif ! defined(_GWI_SERIAL2)
-    #define _GWI_SERIAL2 GROOVEB_PIN_1,GROOVEB_PIN_2,_GWI_SERIAL_GROOVE_B
-  #else
-    #error "both serial devices already in use"
-  #endif
-#endif
-#ifdef _GWI_SERIAL_GROOVE_C
-  #ifndef _GWI_SERIAL1
-    #define _GWI_SERIAL1 GROOVEC_PIN_1,GROOVEC_PIN_2,_GWI_SERIAL_GROOVE_C
-  #elif ! defined(_GWI_SERIAL2)
-    #define _GWI_SERIAL2 GROOVEC_PIN_1,GROOVEC_PIN_2,_GWI_SERIAL_GROOVE_C
-  #else
-    #error "both serial devices already in use"
-  #endif  
-#endif
 
 #ifdef GWIIC_SDA
+  #ifdef _GWI_IIC1
+    #error "you must not define IIC1 on grove and GWIIC_SDA"
+  #endif
   #ifndef GWIIC_SCL
     #error "you must both define GWIIC_SDA and GWIIC_SCL"
   #endif
@@ -432,6 +181,9 @@
   #define _GWIIC
 #endif
 #ifdef GWIIC_SDA2
+  #ifdef _GWI_IIC2
+    #error "you must not define IIC2 on grove and GWIIC_SDA2"
+  #endif
   #ifndef GWIIC_SCL2
     #error "you must both define GWIIC_SDA2 and GWIIC_SCL2"
   #endif

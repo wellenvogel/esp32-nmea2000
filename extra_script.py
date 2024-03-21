@@ -22,6 +22,8 @@ CFG_INCLUDE='GwConfigDefinitions.h'
 CFG_INCLUDE_IMPL='GwConfigDefImpl.h'
 XDR_INCLUDE='GwXdrTypeMappings.h'
 TASK_INCLUDE='GwUserTasks.h'
+GROVE_CONFIG="GwM5GroveGen.h"
+GROVE_CONFIG_IN="lib/hardware/GwM5Grove.in"
 EMBEDDED_INCLUDE="GwEmbeddedFiles.h"
 
 def getEmbeddedFiles(env):
@@ -74,7 +76,7 @@ def generateFile(infile,outfile,callback,inMode='rb',outMode='w'):
     print("creating %s"%outfile)
     oh=None
     with open(infile,inMode) as ch:
-        with open(outfile,'w') as oh:
+        with open(outfile,outMode) as oh:
             try:
                 callback(ch,oh,inFile=infile)
                 oh.close()
@@ -263,6 +265,41 @@ def generateXdrMappings(fp,oh,inFile=''):
                     oh.write("    #define %s %s\n"%(define,str(v)))
                 idx+=1
 
+class Grove:
+    def __init__(self,name) -> None:
+        self.name=name
+    def _ss(self,z=False):
+        if z:
+            return self.name
+        return self.name if self.name is not 'Z' else ''
+    def _suffix(self):
+        return '_'+self.name if self.name is not 'Z' else ''
+    def replace(self,line):
+        if line is None:
+            return line
+        return line.replace('$G$',self._ss()).replace('$Z$',self._ss(True)).replace('$GS$',self._suffix())
+def generateGroveDefs(inh,outh,inFile=''):
+    GROVES=[Grove('Z'),Grove('A'),Grove('B'),Grove('C')]
+    definition=[]
+    started=False
+    def writeConfig():
+        for grove in GROVES:        
+            for cl in definition:
+                outh.write(grove.replace(cl))
+
+    for line in inh:
+        if re.match(" *#GROVE",line):
+            started=True
+            if len(definition) > 0:
+                writeConfig()
+            definition=[]
+            continue
+        if started:
+            definition.append(line)
+    if len(definition) > 0:
+        writeConfig()
+
+
 
 userTaskDirs=[]
 
@@ -423,6 +460,7 @@ def prebuild(env):
     generateEmbedded(filedefs,os.path.join(outPath(),EMBEDDED_INCLUDE))
     genereateUserTasks(os.path.join(outPath(), TASK_INCLUDE))
     generateFile(os.path.join(basePath(),XDR_FILE),os.path.join(outPath(),XDR_INCLUDE),generateXdrMappings)
+    generateFile(os.path.join(basePath(),GROVE_CONFIG_IN),os.path.join(outPath(),GROVE_CONFIG),generateGroveDefs,inMode='r')
     version="dev"+datetime.now().strftime("%Y%m%d")
     env.Append(CPPDEFINES=[('GWDEVVERSION',version)])
 
