@@ -40,7 +40,7 @@ class GwSerialStream: public Stream{
 
 
 
-GwSerial::GwSerial(GwLog *logger, Stream *s, int id,bool allowRead):serial(s)
+GwSerial::GwSerial(GwLog *logger, HardwareSerial *s, int id,bool allowRead):serial(s)
 {
     LOG_DEBUG(GwLog::DEBUG,"creating GwSerial %p id %d",this,id);
     this->id=id;
@@ -54,6 +54,10 @@ GwSerial::GwSerial(GwLog *logger, Stream *s, int id,bool allowRead):serial(s)
         this->readBuffer=new GwBuffer(logger, GwBuffer::RX_BUFFER_SIZE,bufName+"rd");
     }
     buffer->reset("init");
+    serial->onReceiveError([this](hardwareSerial_error_t err){
+        GwLog *logger=this->logger;
+        LOG_DEBUG(GwLog::ERROR,"serial error on id %d: %d",this->id,(int)err);
+    });
     initialized=true;
 }
 GwSerial::~GwSerial()

@@ -16,10 +16,10 @@ class GwSerial : public GwChannelInterface{
         int id=-1;
         int overflows=0;
         size_t enqueue(const uint8_t *data, size_t len,bool partial=false);
-        Stream *serial;
+        HardwareSerial *serial;
     public:
         static const int bufferSize=200;
-        GwSerial(GwLog *logger,Stream *stream,int id,bool allowRead=true);
+        GwSerial(GwLog *logger,HardwareSerial *stream,int id,bool allowRead=true);
         ~GwSerial();
         bool isInitialized();
         virtual size_t sendToClients(const char *buf,int sourceId,bool partial=false);

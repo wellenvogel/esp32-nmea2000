@@ -346,11 +346,15 @@ function createCounterDisplay(parent,label,key,isEven){
         }
     });
 }
-
+function validKey(key){
+    if (! key) return;
+    return key.replace(/[^a-z_:A-Z0-9-]/g,'');
+}
 function updateMsgDetails(key, details) {
     forEl('.msgDetails', function (frame) {
         if (frame.getAttribute('id') !== key) return;
         for (let k in details) {
+            k=validKey(k);
             let el = frame.querySelector("[data-id=\"" + k + "\"] ");
             if (!el) {
                 el = addEl('div', 'row', frame);
