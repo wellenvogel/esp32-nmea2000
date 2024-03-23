@@ -173,7 +173,7 @@ void GwChannel::toJson(GwJsonDocument &doc){
     if (countIn) countIn->toJson(doc);
 }
 String GwChannel::toString(){
-    String rt="CH:"+name;
+    String rt="CH"+name+"("+sourceId+"):";
     rt+=enabled?"[ena]":"[dis]";
     rt+=NMEAin?"in,":"";
     rt+=NMEAout?"out,":"";
