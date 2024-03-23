@@ -354,11 +354,9 @@ void GwChannelList::begin(bool fallbackSerial){
       #define GWSERIAL_RX -1
     #endif
     #ifdef GWSERIAL_TYPE
-        setSerialError(&Serial1,SERIAL1_CHANNEL_ID,this->logger);
         addSerial(new SerialWrapper<decltype(Serial1)>(&Serial1,SERIAL1_CHANNEL_ID),GWSERIAL_TYPE,GWSERIAL_RX,GWSERIAL_TX);
     #else
         #ifdef GWSERIAL_MODE
-            setSerialError(&Serial1,SERIAL1_CHANNEL_ID,this->logger);
             addSerial(new SerialWrapper<decltype(Serial1)>(&Serial1,SERIAL1_CHANNEL_ID),GWSERIAL_MODE,GWSERIAL_RX,GWSERIAL_TX);
         #endif
     #endif
