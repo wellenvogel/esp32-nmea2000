@@ -41,7 +41,7 @@
     #define FONT3 "Ubuntu_Bold32pt7b"
     #define FONT4 "DSEG7Classic_BoldItalic80pt7b"
 
-    // GPS (NEO-6M, NEO-M8N)
+    // GPS (NEO-6M, NEO-M8N, ATGM336H)
     #define OBP_GPS_RX 2
     #define OBP_GPS_TX 1
     // 1Wire (DS18B20)

@@ -3,7 +3,6 @@
 
 #include <Arduino.h>
 #include "OBP60Hardware.h"
-#include <MCP23017.h>
 #include <FastLED.h>                    // Driver for WS2812 RGB LED
 #include <GxGDEW042T2/GxGDEW042T2.h>    // 4.2" Waveshare S/W 300 x 400 pixel
 #include <GxIO/GxIO_SPI/GxIO_SPI.h>     // GxEPD lip for SPI display communikation

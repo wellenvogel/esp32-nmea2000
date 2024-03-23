@@ -142,6 +142,19 @@ void sensorTask(void *param){
                 gps_ready = true;
             }
         }
+        if(String(gpsOn) == "ATGM336H"){
+            Serial2.begin(9600, SERIAL_8N1, OBP_GPS_TX, -1); // GPS RX unused in hardware (-1)
+            if (!Serial2) {     
+                api->getLogger()->logDebug(GwLog::ERROR,"GPS modul ATGM336H not found, check wiring");
+                gps_ready = false;
+                }
+            else{
+                api->getLogger()->logDebug(GwLog::LOG,"GPS modul ATGM336H found");
+                NMEA0183.SetMessageStream(&Serial2);
+                NMEA0183.Open();
+                gps_ready = true;
+            }
+        }
 
     // Settings for temperature sensors
     String tempSensor = api->getConfig()->getConfigItem(api->getConfig()->useTempSensor,true)->asString();
