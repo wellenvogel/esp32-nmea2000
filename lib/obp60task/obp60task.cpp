@@ -245,7 +245,8 @@ void OBP60Task(GwApi *api){
     int pixelcolor = GxEPD_BLACK;
     int bgcolor = GxEPD_WHITE;
 
-    getdisplay().init(115200, true, 2, false);   // Use this for Waveshare boards with "clever" reset circuit, 2ms reset pulse
+    getdisplay().init(115200);   // Init for nolrmal displays
+ //   getdisplay().init(115200, true, 2, false);   // Use this for Waveshare boards with "clever" reset circuit, 2ms reset pulse
     getdisplay().setRotation(0);                 // Set display orientation (horizontal)
     if(displaycolor == "Normal"){
         textcolor = GxEPD_BLACK;
@@ -262,18 +263,26 @@ void OBP60Task(GwApi *api){
     getdisplay().fillScreen(bgcolor);            // Draw white sreen
     getdisplay().setTextColor(textcolor);        // Set display color
     getdisplay().nextPage();                     // Full Refresh
-        
+    getdisplay().setPartialWindow(0, 0, getdisplay().width(), getdisplay().height()); // Set partial update
+    getdisplay().fillScreen(bgcolor);            // Draw white sreen
+    getdisplay().nextPage();                     // Fast Refresh
+    getdisplay().nextPage();                     // Fast Refresh
     if(String(displaymode) == "Logo + QR Code" || String(displaymode) == "Logo"){
+        getdisplay().fillScreen(bgcolor);        // Draw white sreen
         getdisplay().drawBitmap(0, 0, gImage_Logo_OBP_400x300_sw, getdisplay().width(), getdisplay().height(), pixelcolor); // Draw start logo
-        getdisplay().nextPage();                 // Full Refresh
-        delay(SHOW_TIME);                   // Logo show time
-        getdisplay().nextPage();                 // Full Refresh
+        getdisplay().nextPage();                 // Fast Refresh
+        getdisplay().nextPage();                 // Fast Refresh
+        delay(SHOW_TIME);                        // Logo show time
         if(String(displaymode) == "Logo + QR Code"){
-            qrWiFi(systemname, wifipass, displaycolor);  // Show QR code for WiFi connection
-            delay(SHOW_TIME);               // QR code show time
             getdisplay().fillScreen(bgcolor);    // Draw white sreen
-            getdisplay().nextPage();             // Full Refresh
+            qrWiFi(systemname, wifipass, displaycolor);  // Show QR code for WiFi connection
+            getdisplay().nextPage();             // Fast Refresh
+            getdisplay().nextPage();             // Fast Refresh
+            delay(SHOW_TIME);                    // QR code show time
         }
+        getdisplay().fillScreen(bgcolor);        // Draw white sreen
+        getdisplay().nextPage();                 // Fast Refresh
+        getdisplay().nextPage();                 // Fast Refresh
     }
     
     // Init pages

@@ -19,7 +19,21 @@ extern const GFXfont DSEG7Classic_BoldItalic42pt7b;
 extern const GFXfont DSEG7Classic_BoldItalic60pt7b;
 
 // Gloabl functions
+#ifdef DISPLAY_GDEW042T2
 GxEPD2_BW<GxEPD2_420, GxEPD2_420::HEIGHT> & getdisplay();
+#endif
+
+#ifdef DISPLAY_GDEY042T81
+GxEPD2_BW<GxEPD2_420_GDEY042T81, GxEPD2_420_GDEY042T81::HEIGHT> & getdisplay();
+#endif
+
+#ifdef DISPLAY_GYE042A8
+GxEPD2_BW<GxEPD2_420_GYE042A87, GxEPD2_420_GYE042A87::HEIGHT> & getdisplay();
+#endif
+
+#ifdef DISPLAY_SE0420NQ04
+GxEPD2_BW<GxEPD2_420_SE0420NQ04, GxEPD2_420_SE0420NQ04::HEIGHT> & getdisplay();
+#endif
 
 void hardwareInit();
 
