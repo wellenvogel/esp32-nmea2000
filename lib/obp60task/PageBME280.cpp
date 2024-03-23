@@ -108,109 +108,114 @@ class PageBME280 : public Page
         // Set background color and text color
         int textcolor = GxEPD_BLACK;
         int pixelcolor = GxEPD_BLACK;
+        int bgcolor = GxEPD_WHITE;
         if(displaycolor == "Normal"){
             textcolor = GxEPD_BLACK;
             pixelcolor = GxEPD_BLACK;
+            bgcolor = GxEPD_WHITE;
         }
         else{
             textcolor = GxEPD_WHITE;
             pixelcolor = GxEPD_WHITE;
+            bgcolor = GxEPD_BLACK;
         }
-        // Clear display by call in obp60task.cpp in main loop
+        // Set display in partial refresh mode
+        getdisplay().setPartialWindow(0, 0, getdisplay().width(), getdisplay().height()); // Set partial update
+        getdisplay().fillScreen(bgcolor);    // Clear display
 
         // ############### Value 1 ################
 
         // Show name
-        display.setTextColor(textcolor);
-        display.setFont(&Ubuntu_Bold20pt7b);
-        display.setCursor(20, 55);
-        display.print(name1);                           // Page name
+        getdisplay().setTextColor(textcolor);
+        getdisplay().setFont(&Ubuntu_Bold20pt7b);
+        getdisplay().setCursor(20, 55);
+        getdisplay().print(name1);                           // Page name
 
         // Show unit
-        display.setTextColor(textcolor);
-        display.setFont(&Ubuntu_Bold12pt7b);
-        display.setCursor(20, 90);
-        display.print(unit1);                           // Unit
+        getdisplay().setTextColor(textcolor);
+        getdisplay().setFont(&Ubuntu_Bold12pt7b);
+        getdisplay().setCursor(20, 90);
+        getdisplay().print(unit1);                           // Unit
 
         // Switch font if format for any values
-        display.setFont(&DSEG7Classic_BoldItalic30pt7b);
-        display.setCursor(180, 90);
+        getdisplay().setFont(&DSEG7Classic_BoldItalic30pt7b);
+        getdisplay().setCursor(180, 90);
 
         // Show bus data
-        display.print(svalue1);                         // Real value as formated string
+        getdisplay().print(svalue1);                         // Real value as formated string
 
         // ############### Horizontal Line ################
 
         // Horizontal line 3 pix
-        display.fillRect(0, 105, 400, 3, pixelcolor);
+        getdisplay().fillRect(0, 105, 400, 3, pixelcolor);
 
         // ############### Value 2 ################
 
         // Show name
-        display.setTextColor(textcolor);
-        display.setFont(&Ubuntu_Bold20pt7b);
-        display.setCursor(20, 145);
-        display.print(name2);                           // Page name
+        getdisplay().setTextColor(textcolor);
+        getdisplay().setFont(&Ubuntu_Bold20pt7b);
+        getdisplay().setCursor(20, 145);
+        getdisplay().print(name2);                           // Page name
 
         // Show unit
-        display.setTextColor(textcolor);
-        display.setFont(&Ubuntu_Bold12pt7b);
-        display.setCursor(20, 180);
-        display.print(unit2);                           // Unit
+        getdisplay().setTextColor(textcolor);
+        getdisplay().setFont(&Ubuntu_Bold12pt7b);
+        getdisplay().setCursor(20, 180);
+        getdisplay().print(unit2);                           // Unit
 
         // Switch font if format for any values
-        display.setFont(&DSEG7Classic_BoldItalic30pt7b);
-        display.setCursor(180, 180);
+        getdisplay().setFont(&DSEG7Classic_BoldItalic30pt7b);
+        getdisplay().setCursor(180, 180);
 
         // Show bus data
-        display.print(svalue2);                         // Real value as formated string
+        getdisplay().print(svalue2);                         // Real value as formated string
 
         // ############### Horizontal Line ################
 
         // Horizontal line 3 pix
-        display.fillRect(0, 195, 400, 3, pixelcolor);
+        getdisplay().fillRect(0, 195, 400, 3, pixelcolor);
 
         // ############### Value 3 ################
 
         // Show name
-        display.setTextColor(textcolor);
-        display.setFont(&Ubuntu_Bold20pt7b);
-        display.setCursor(20, 235);
-        display.print(name3);                           // Page name
+        getdisplay().setTextColor(textcolor);
+        getdisplay().setFont(&Ubuntu_Bold20pt7b);
+        getdisplay().setCursor(20, 235);
+        getdisplay().print(name3);                           // Page name
 
         // Show unit
-        display.setTextColor(textcolor);
-        display.setFont(&Ubuntu_Bold12pt7b);
-        display.setCursor(20, 270);
-        display.print(unit3);                           // Unit
+        getdisplay().setTextColor(textcolor);
+        getdisplay().setFont(&Ubuntu_Bold12pt7b);
+        getdisplay().setCursor(20, 270);
+        getdisplay().print(unit3);                           // Unit
 
         // Switch font if format for any values
-        display.setFont(&DSEG7Classic_BoldItalic30pt7b);
-        display.setCursor(180, 270);
+        getdisplay().setFont(&DSEG7Classic_BoldItalic30pt7b);
+        getdisplay().setCursor(180, 270);
 
         // Show bus data
-        display.print(svalue3);                         // Real value as formated string
+        getdisplay().print(svalue3);                         // Real value as formated string
 
         // ############### Key Layout ################
 
         // Key Layout
-        display.setTextColor(textcolor);
-        display.setFont(&Ubuntu_Bold8pt7b);
+        getdisplay().setTextColor(textcolor);
+        getdisplay().setFont(&Ubuntu_Bold8pt7b);
         if(keylock == false){
-            display.setCursor(130, 290);
-            display.print("[  <<<<  " + String(commonData.data.actpage) + "/" + String(commonData.data.maxpage) + "  >>>>  ]");
+            getdisplay().setCursor(130, 290);
+            getdisplay().print("[  <<<<  " + String(commonData.data.actpage) + "/" + String(commonData.data.maxpage) + "  >>>>  ]");
             if(String(backlightMode) == "Control by Key"){                  // Key for illumination
-                display.setCursor(343, 290);
-                display.print("[ILUM]");
+                getdisplay().setCursor(343, 290);
+                getdisplay().print("[ILUM]");
             }
         }
         else{
-            display.setCursor(130, 290);
-            display.print(" [    Keylock active    ]");
+            getdisplay().setCursor(130, 290);
+            getdisplay().print(" [    Keylock active    ]");
         }
 
         // Update display
-        display.updateWindow(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, true);    // Partial update (fast)
+        getdisplay().nextPage();    // Partial update (fast)
 
     };
 };

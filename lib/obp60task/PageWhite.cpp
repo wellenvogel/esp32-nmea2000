@@ -33,11 +33,12 @@ class PageWhite : public Page{
         // Set background color
         int bgcolor = GxEPD_WHITE;
 
-        // Clear display by call in obp60task.cpp in main loop
+        // Set display in partial refresh mode
+        getdisplay().setPartialWindow(0, 0, getdisplay().width(), getdisplay().height()); // Set partial update
+        getdisplay().fillScreen(bgcolor);    // Clear display
 
         // Update display
-        display.fillRect(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, bgcolor);     // Draw white sreen
-        display.updateWindow(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, true);    // Partial update (fast)
+        getdisplay().nextPage();    // Partial update (fast)
 
     };
 };

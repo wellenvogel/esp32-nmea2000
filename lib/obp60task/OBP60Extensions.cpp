@@ -5,7 +5,7 @@
 #include <PCF8574.h>      // Driver for PCF8574 output modul from Horter
 #include <Wire.h>         // I2C
 #include <RTClib.h>       // Driver for DS1388 RTC
-#include "SunRise.h"                    // Lib for sunrise and sunset calculation
+#include "SunRise.h"      // Lib for sunrise and sunset calculation
 #include "Pagedata.h"
 #include "OBP60Hardware.h"
 #include "OBP60Extensions.h"
@@ -22,9 +22,13 @@
 #include "DSEG7Classic-BoldItalic42pt7b.h"
 #include "DSEG7Classic-BoldItalic60pt7b.h"
 
-// SPI pin definitions for E-Ink display
-GxIO_Class io(SPI, OBP_SPI_CS, OBP_SPI_DC, OBP_SPI_RST);  // SPI, CS, DC, RST
-GxEPD_Class display(io, OBP_SPI_RST, OBP_SPI_BUSY);       // io, RST, BUSY
+// E-Ink Display
+#define GxEPD_WIDTH 400     // Display width
+#define GxEPD_HEIGHT 300    // Display height
+// Set display type and SPI pins for display
+GxEPD2_BW<GxEPD2_420, GxEPD2_420::HEIGHT> display(GxEPD2_420(OBP_SPI_CS, OBP_SPI_DC, OBP_SPI_RST, OBP_SPI_BUSY)); // GDEW042T2 400x300, UC8176 (IL0398)
+// Export display in new funktion
+GxEPD2_BW<GxEPD2_420, GxEPD2_420::HEIGHT> & getdisplay(){return display;}
 
 // Horter I2C moduls
 PCF8574 pcf8574_Out(PCF8574_I2C_ADDR1); // First digital output modul PCF8574 from Horter
@@ -47,6 +51,10 @@ void hardwareInit()
 {
     // Init power rail 5.0V
     setPortPin(OBP_POWER_50, true);
+
+    // Init E-Ink display
+    //display.init(115200, true, 2, false);   // Use this for Waveshare boards with "clever" reset circuit, 2ms reset pulse
+
 
     // Init RGB LEDs
     FastLED.addLeds<WS2812B, OBP_FLASH_LED, GRB>(fled, NUM_FLASH_LED);

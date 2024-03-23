@@ -9,7 +9,7 @@
 #include <NMEA0183.h>                   // NMEA0183
 #include <NMEA0183Msg.h>
 #include <NMEA0183Messages.h>
-#include <GxEPD.h>                      // GxEPD lib for E-Ink displays
+#include <GxEPD2_BW.h>                  // GxEPD2 lib for black 6 white E-Ink displays
 #include "OBP60Extensions.h"            // Functions lib for extension board
 #include "OBP60Keypad.h"                // Functions for keypad
 
@@ -245,8 +245,8 @@ void OBP60Task(GwApi *api){
     int pixelcolor = GxEPD_BLACK;
     int bgcolor = GxEPD_WHITE;
 
-    display.init();                         // Initialize and clear display
-    display.setRotation(0);                 // Set display orientation (horizontal)
+    getdisplay().init(115200, true, 2, false);   // Use this for Waveshare boards with "clever" reset circuit, 2ms reset pulse
+    getdisplay().setRotation(0);                 // Set display orientation (horizontal)
     if(displaycolor == "Normal"){
         textcolor = GxEPD_BLACK;
         pixelcolor = GxEPD_BLACK;
@@ -257,32 +257,22 @@ void OBP60Task(GwApi *api){
         pixelcolor = GxEPD_WHITE;
         bgcolor = GxEPD_BLACK;
     }
-    display.fillRect(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, bgcolor); // Draw white sreen
-    display.setTextColor(textcolor);        // Set display color
-    display.updateWindow(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, true);
-    display.update();                       // Full update (slow)
-    display.updateWindow(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, true);
+    getdisplay().setFullWindow();                // Set full Refresh
+    getdisplay().firstPage();                    // set first page
+    getdisplay().fillScreen(bgcolor);            // Draw white sreen
+    getdisplay().setTextColor(textcolor);        // Set display color
+    getdisplay().nextPage();                     // Full Refresh
         
     if(String(displaymode) == "Logo + QR Code" || String(displaymode) == "Logo"){
-        display.drawBitmap(gImage_Logo_OBP_400x300_sw, 0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, pixelcolor); // Draw start logo
-        display.updateWindow(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, true);   // Partial update (fast)
-        delay(SHOW_TIME);                                // Logo show time
-        display.fillRect(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, bgcolor); // Draw white sreen
-        if(refreshmode == true){
-            display.fillRect(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, bgcolor); // Draw white sreen
-            display.updateWindow(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, true);    // Needs partial update before full update to refresh the frame buffer
-            display.update(); // Full update
-        }
-        else{
-            display.updateWindow(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, true);    // Partial update (fast)
-        }
+        getdisplay().drawBitmap(0, 0, gImage_Logo_OBP_400x300_sw, getdisplay().width(), getdisplay().height(), pixelcolor); // Draw start logo
+        getdisplay().nextPage();                 // Full Refresh
+        delay(SHOW_TIME);                   // Logo show time
+        getdisplay().nextPage();                 // Full Refresh
         if(String(displaymode) == "Logo + QR Code"){
             qrWiFi(systemname, wifipass, displaycolor);  // Show QR code for WiFi connection
-            delay(SHOW_TIME);                            // Logo show time
-            display.fillRect(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, bgcolor); // Draw white sreen
-            display.updateWindow(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, true);    // Needs partial update before full update to refresh the frame buffer
-            display.update(); // Full update
-            display.updateWindow(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, true);
+            delay(SHOW_TIME);               // QR code show time
+            getdisplay().fillScreen(bgcolor);    // Draw white sreen
+            getdisplay().nextPage();             // Full Refresh
         }
     }
     
@@ -477,7 +467,8 @@ void OBP60Task(GwApi *api){
             
             // Full display update afer a new selected page and 4s wait time
             if(millis() > starttime4 + 4000 && delayedDisplayUpdate == true){
-                display.update(); // Full update
+                getdisplay().setFullWindow();    // Set full update
+                getdisplay().nextPage();         // Full Update
                 delayedDisplayUpdate = false;
             }
 
@@ -486,16 +477,17 @@ void OBP60Task(GwApi *api){
             if(millis() < firststart + (5 * 60 * 1000) && millis() > starttime1 + (60 * 1000)){
                 starttime1 = millis();
                 LOG_DEBUG(GwLog::DEBUG,"E-Ink full refresh first 5 min");
-                display.update(); // Full update
+                getdisplay().setFullWindow();    // Set full update
+                getdisplay().nextPage();         // Full Update
             }
 
             // Subtask E-Ink full refresh
             if(millis() > starttime2 + FULL_REFRESH_TIME * 1000){
                 starttime2 = millis();
                 LOG_DEBUG(GwLog::DEBUG,"E-Ink full refresh");
-                display.update(); // Full update
+                getdisplay().setFullWindow();    // Set full update
+                getdisplay().nextPage();         // Full Update
             }
-
             
             // Refresh display data all 1s
             if(millis() > starttime3 + 1000){
@@ -505,7 +497,7 @@ void OBP60Task(GwApi *api){
                 api->getStatus(commonData.status);
 
                 // Show header if enabled
-                display.fillRect(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, bgcolor);   // Clear display
+                getdisplay().fillRect(0, 0, getdisplay().width(), getdisplay().height(), bgcolor);   // Clear display
                 if (pages[pageNumber].description && pages[pageNumber].description->header){
                     //build some header and footer using commonData
                     displayHeader(commonData, date, time);

@@ -104,44 +104,46 @@ public:
             pixelcolor = GxEPD_WHITE;
             bgcolor = GxEPD_BLACK;
         }
-        // Clear display by call in obp60task.cpp in main loop
+        // Set display in partial refresh mode
+        getdisplay().setPartialWindow(0, 0, getdisplay().width(), getdisplay().height()); // Set partial update
+        getdisplay().fillScreen(bgcolor);    // Clear display
 
         // Show values AWS
-        display.setTextColor(textcolor);
-        display.setFont(&Ubuntu_Bold20pt7b);
-        display.setCursor(20, 50);
+        getdisplay().setTextColor(textcolor);
+        getdisplay().setFont(&Ubuntu_Bold20pt7b);
+        getdisplay().setCursor(20, 50);
         if(holdvalues == false){
-            display.print(name1);                       // Value name
-            display.print(": ");
-            display.print(svalue1);                     // Value
-            display.print(" ");
-            display.print(unit1);                       // Unit
+            getdisplay().print(name1);                       // Value name
+            getdisplay().print(": ");
+            getdisplay().print(svalue1);                     // Value
+            getdisplay().print(" ");
+            getdisplay().print(unit1);                       // Unit
         }
         else{
-            display.print(name1);                       // Value name
-            display.print(": ");
-            display.print(svalue1old);                  // Value old
-            display.print(" ");
-            display.print(unit1old);                    // Unit old
+            getdisplay().print(name1);                       // Value name
+            getdisplay().print(": ");
+            getdisplay().print(svalue1old);                  // Value old
+            getdisplay().print(" ");
+            getdisplay().print(unit1old);                    // Unit old
         }
 
         // Show values AWD
-        display.setTextColor(textcolor);
-        display.setFont(&Ubuntu_Bold20pt7b);
-        display.setCursor(20, 260);
+        getdisplay().setTextColor(textcolor);
+        getdisplay().setFont(&Ubuntu_Bold20pt7b);
+        getdisplay().setCursor(20, 260);
         if(holdvalues == false){
-            display.print(name2);                       // Value name
-            display.print(": ");
-            display.print(svalue2);                     // Value
-            display.print(" ");
-            display.print(unit2);                       // Unit
+            getdisplay().print(name2);                       // Value name
+            getdisplay().print(": ");
+            getdisplay().print(svalue2);                     // Value
+            getdisplay().print(" ");
+            getdisplay().print(unit2);                       // Unit
         }
         else{
-            display.print(name2);                       // Value name
-            display.print(": ");
-            display.print(svalue2old);                  // Value old
-            display.print(" ");
-            display.print(unit2old);                    // Unit old
+            getdisplay().print(name2);                       // Value name
+            getdisplay().print(": ");
+            getdisplay().print(svalue2old);                  // Value old
+            getdisplay().print(" ");
+            getdisplay().print(unit2old);                    // Unit old
         }
 
         // Draw wind pointer
@@ -153,8 +155,8 @@ public:
         static int16_t y2 = y0;
 
         //Draw instrument
-        display.fillCircle(x0, y0, lp + 5, pixelcolor); // Black circle
-        display.fillCircle(x0, y0, lp + 1, bgcolor);    // White circle
+        getdisplay().fillCircle(x0, y0, lp + 5, pixelcolor); // Black circle
+        getdisplay().fillCircle(x0, y0, lp + 1, bgcolor);    // White circle
 
         // Calculation end point of pointer
         value2 = value2 - 3.14 / 2;
@@ -162,26 +164,26 @@ public:
         y1 = y0 + sin(value2) * lp * 0.6;
         x2 = x0 + cos(value2) * lp;
         y2 = y0 + sin(value2) * lp;
-        display.drawLine(x1, y1, x2, y2, pixelcolor);
+        getdisplay().drawLine(x1, y1, x2, y2, pixelcolor);
 
         // Key Layout
-        display.setTextColor(textcolor);
-        display.setFont(&Ubuntu_Bold8pt7b);
+        getdisplay().setTextColor(textcolor);
+        getdisplay().setFont(&Ubuntu_Bold8pt7b);
         if(keylock == false){
-            display.setCursor(130, 290);
-            display.print("[  <<<<  " + String(commonData.data.actpage) + "/" + String(commonData.data.maxpage) + "  >>>>  ]");
+            getdisplay().setCursor(130, 290);
+            getdisplay().print("[  <<<<  " + String(commonData.data.actpage) + "/" + String(commonData.data.maxpage) + "  >>>>  ]");
             if(String(backlightMode) == "Control by Key"){                  // Key for illumination
-                display.setCursor(343, 290);
-                display.print("[ILUM]");
+                getdisplay().setCursor(343, 290);
+                getdisplay().print("[ILUM]");
             }
         }
         else{
-            display.setCursor(130, 290);
-            display.print(" [    Keylock active    ]");
+            getdisplay().setCursor(130, 290);
+            getdisplay().print(" [    Keylock active    ]");
         }
 
         // Update display
-        display.updateWindow(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, true);    // Partial update (fast)
+        getdisplay().nextPage();     // Partial update (fast)
 
     };
 };

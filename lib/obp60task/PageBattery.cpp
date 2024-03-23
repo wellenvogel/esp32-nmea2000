@@ -167,165 +167,167 @@ class PageBattery : public Page
             pixelcolor = GxEPD_WHITE;
             bgcolor = GxEPD_BLACK;
         }
-        // Clear display by call in obp60task.cpp in main loop
+        // Set display in partial refresh mode
+        getdisplay().setPartialWindow(0, 0, getdisplay().width(), getdisplay().height()); // Set partial update
+        getdisplay().fillScreen(bgcolor);    // Clear display
 
         // Show average settings
-        display.setTextColor(textcolor);
-        display.setFont(&Ubuntu_Bold8pt7b);
+        getdisplay().setTextColor(textcolor);
+        getdisplay().setFont(&Ubuntu_Bold8pt7b);
         switch (average) {
             case 0:
-                display.setCursor(60, 90);
-                display.print("Avg: 1s");
-                display.setCursor(60, 180);
-                display.print("Avg: 1s");
-                display.setCursor(60, 270);
-                display.print("Avg: 1s");
+                getdisplay().setCursor(60, 90);
+                getdisplay().print("Avg: 1s");
+                getdisplay().setCursor(60, 180);
+                getdisplay().print("Avg: 1s");
+                getdisplay().setCursor(60, 270);
+                getdisplay().print("Avg: 1s");
                 break;
             case 1:
-                display.setCursor(60, 90);
-                display.print("Avg: 10s");
-                display.setCursor(60, 180);
-                display.print("Avg: 10s");
-                display.setCursor(60, 270);
-                display.print("Avg: 10s");
+                getdisplay().setCursor(60, 90);
+                getdisplay().print("Avg: 10s");
+                getdisplay().setCursor(60, 180);
+                getdisplay().print("Avg: 10s");
+                getdisplay().setCursor(60, 270);
+                getdisplay().print("Avg: 10s");
                 break;
             case 2:
-                display.setCursor(60, 90);
-                display.print("Avg: 60s");
-                display.setCursor(60, 180);
-                display.print("Avg: 60s");
-                display.setCursor(60, 270);
-                display.print("Avg: 60s");
+                getdisplay().setCursor(60, 90);
+                getdisplay().print("Avg: 60s");
+                getdisplay().setCursor(60, 180);
+                getdisplay().print("Avg: 60s");
+                getdisplay().setCursor(60, 270);
+                getdisplay().print("Avg: 60s");
                 break;
             case 3:
-                display.setCursor(60, 90);
-                display.print("Avg: 300s");
-                display.setCursor(60, 180);
-                display.print("Avg: 300s");
-                display.setCursor(60, 270);
-                display.print("Avg: 300s");
+                getdisplay().setCursor(60, 90);
+                getdisplay().print("Avg: 300s");
+                getdisplay().setCursor(60, 180);
+                getdisplay().print("Avg: 300s");
+                getdisplay().setCursor(60, 270);
+                getdisplay().print("Avg: 300s");
                 break;
             default:
-                display.setCursor(60, 90);
-                display.print("Avg: 1s");
-                display.setCursor(60, 180);
-                display.print("Avg: 1s");
-                display.setCursor(60, 270);
-                display.print("Avg: 1s");
+                getdisplay().setCursor(60, 90);
+                getdisplay().print("Avg: 1s");
+                getdisplay().setCursor(60, 180);
+                getdisplay().print("Avg: 1s");
+                getdisplay().setCursor(60, 270);
+                getdisplay().print("Avg: 1s");
                 break;
         } 
 
         // ############### Value 1 ################
 
         // Show name
-        display.setTextColor(textcolor);
-        display.setFont(&Ubuntu_Bold20pt7b);
-        display.setCursor(20, 55);
-        display.print(name1);                           // Value name
+        getdisplay().setTextColor(textcolor);
+        getdisplay().setFont(&Ubuntu_Bold20pt7b);
+        getdisplay().setCursor(20, 55);
+        getdisplay().print(name1);                           // Value name
 
         // Show unit
-        display.setTextColor(textcolor);
-        display.setFont(&Ubuntu_Bold12pt7b);
-        display.setCursor(20, 90);
-        display.print(unit1);                           // Unit
+        getdisplay().setTextColor(textcolor);
+        getdisplay().setFont(&Ubuntu_Bold12pt7b);
+        getdisplay().setCursor(20, 90);
+        getdisplay().print(unit1);                           // Unit
 
         // Show value
-        display.setFont(&DSEG7Classic_BoldItalic30pt7b);
-        display.setCursor(180, 90);
+        getdisplay().setFont(&DSEG7Classic_BoldItalic30pt7b);
+        getdisplay().setCursor(180, 90);
 
         // Show bus data
         if(String(powsensor1) != "off"){
-            display.print(value1,2);                    // Real value as formated string
+            getdisplay().print(value1,2);                    // Real value as formated string
         }
         else{
-            display.print("---");                       // No sensor data (sensor is off)
+            getdisplay().print("---");                       // No sensor data (sensor is off)
         }
 
         // ############### Horizontal Line ################
 
         // Horizontal line 3 pix
-        display.fillRect(0, 105, 400, 3, pixelcolor);
+        getdisplay().fillRect(0, 105, 400, 3, pixelcolor);
 
         // ############### Value 2 ################
 
         // Show name
-        display.setTextColor(textcolor);
-        display.setFont(&Ubuntu_Bold20pt7b);
-        display.setCursor(20, 145);
-        display.print(name2);                           // Value name
+        getdisplay().setTextColor(textcolor);
+        getdisplay().setFont(&Ubuntu_Bold20pt7b);
+        getdisplay().setCursor(20, 145);
+        getdisplay().print(name2);                           // Value name
 
         // Show unit
-        display.setTextColor(textcolor);
-        display.setFont(&Ubuntu_Bold12pt7b);
-        display.setCursor(20, 180);
-        display.print(unit2);                           // Unit
+        getdisplay().setTextColor(textcolor);
+        getdisplay().setFont(&Ubuntu_Bold12pt7b);
+        getdisplay().setCursor(20, 180);
+        getdisplay().print(unit2);                           // Unit
 
         // Show value
-        display.setFont(&DSEG7Classic_BoldItalic30pt7b);
-        display.setCursor(180, 180);
+        getdisplay().setFont(&DSEG7Classic_BoldItalic30pt7b);
+        getdisplay().setCursor(180, 180);
 
         // Show bus data
         if(String(powsensor1) != "off"){
-            display.print(value2,1);                    // Real value as formated string
+            getdisplay().print(value2,1);                    // Real value as formated string
         }
         else{
-            display.print("---");                       // No sensor data (sensor is off)
+            getdisplay().print("---");                       // No sensor data (sensor is off)
         }
 
         // ############### Horizontal Line ################
 
         // Horizontal line 3 pix
-        display.fillRect(0, 195, 400, 3, pixelcolor);
+        getdisplay().fillRect(0, 195, 400, 3, pixelcolor);
 
         // ############### Value 3 ################
 
         // Show name
-        display.setTextColor(textcolor);
-        display.setFont(&Ubuntu_Bold20pt7b);
-        display.setCursor(20, 235);
-        display.print(name3);                           // Value name
+        getdisplay().setTextColor(textcolor);
+        getdisplay().setFont(&Ubuntu_Bold20pt7b);
+        getdisplay().setCursor(20, 235);
+        getdisplay().print(name3);                           // Value name
 
         // Show unit
-        display.setTextColor(textcolor);
-        display.setFont(&Ubuntu_Bold12pt7b);
-        display.setCursor(20, 270);
-        display.print(unit3);                           // Unit
+        getdisplay().setTextColor(textcolor);
+        getdisplay().setFont(&Ubuntu_Bold12pt7b);
+        getdisplay().setCursor(20, 270);
+        getdisplay().print(unit3);                           // Unit
 
         // Show value
-        display.setFont(&DSEG7Classic_BoldItalic30pt7b);
-        display.setCursor(180, 270);
+        getdisplay().setFont(&DSEG7Classic_BoldItalic30pt7b);
+        getdisplay().setCursor(180, 270);
 
         // Show bus data
         if(String(powsensor1) != "off"){
-            display.print(value3,1);                    // Real value as formated string
+            getdisplay().print(value3,1);                    // Real value as formated string
         }
         else{
-            display.print("---");                       // No sensor data (sensor is off)
+            getdisplay().print("---");                       // No sensor data (sensor is off)
         }
 
 
         // ############### Key Layout ################
 
         // Key Layout
-        display.setTextColor(textcolor);
-        display.setFont(&Ubuntu_Bold8pt7b);
+        getdisplay().setTextColor(textcolor);
+        getdisplay().setFont(&Ubuntu_Bold8pt7b);
         if(keylock == false){
-            display.setCursor(10, 290);
-            display.print("[AVG]");
-            display.setCursor(130, 290);
-            display.print("[  <<<<  " + String(commonData.data.actpage) + "/" + String(commonData.data.maxpage) + "  >>>>  ]");
+            getdisplay().setCursor(10, 290);
+            getdisplay().print("[AVG]");
+            getdisplay().setCursor(130, 290);
+            getdisplay().print("[  <<<<  " + String(commonData.data.actpage) + "/" + String(commonData.data.maxpage) + "  >>>>  ]");
             if(String(backlightMode) == "Control by Key"){              // Key for illumination
-                display.setCursor(343, 290);
-                display.print("[ILUM]");
+                getdisplay().setCursor(343, 290);
+                getdisplay().print("[ILUM]");
             }
         }
         else{
-            display.setCursor(130, 290);
-            display.print(" [    Keylock active    ]");
+            getdisplay().setCursor(130, 290);
+            getdisplay().print(" [    Keylock active    ]");
         }
 
         // Update display
-        display.updateWindow(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, true);    // Partial update (fast)
+        getdisplay().nextPage();    // Partial update (fast)
 
     };
 };

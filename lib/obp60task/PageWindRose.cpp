@@ -154,89 +154,91 @@ public:
             pixelcolor = GxEPD_WHITE;
             bgcolor = GxEPD_BLACK;
         }
-        // Clear display by call in obp60task.cpp in main loop
+        // Set display in partial refresh mode
+        getdisplay().setPartialWindow(0, 0, getdisplay().width(), getdisplay().height()); // Set partial update
+        getdisplay().fillScreen(bgcolor);    // Clear display
 
         // Show values AWA
-        display.setTextColor(textcolor);
-        display.setFont(&DSEG7Classic_BoldItalic20pt7b);
-        display.setCursor(10, 65);
-        display.print(svalue1);                     // Value
-        display.setFont(&Ubuntu_Bold12pt7b);
-        display.setCursor(10, 95);
-        display.print(name1);                       // Name
-        display.setFont(&Ubuntu_Bold8pt7b);
-        display.setCursor(10, 115);
-        display.print(" ");
+        getdisplay().setTextColor(textcolor);
+        getdisplay().setFont(&DSEG7Classic_BoldItalic20pt7b);
+        getdisplay().setCursor(10, 65);
+        getdisplay().print(svalue1);                     // Value
+        getdisplay().setFont(&Ubuntu_Bold12pt7b);
+        getdisplay().setCursor(10, 95);
+        getdisplay().print(name1);                       // Name
+        getdisplay().setFont(&Ubuntu_Bold8pt7b);
+        getdisplay().setCursor(10, 115);
+        getdisplay().print(" ");
         if(holdvalues == false){
-            display.print(unit1);                   // Unit
+            getdisplay().print(unit1);                   // Unit
         }
         else{
-            display.print(unit1old);                // Unit
+            getdisplay().print(unit1old);                // Unit
         }
 
         // Horizintal separator left
-        display.fillRect(0, 149, 60, 3, pixelcolor);
+        getdisplay().fillRect(0, 149, 60, 3, pixelcolor);
 
         // Show values AWS
-        display.setTextColor(textcolor);
-        display.setFont(&DSEG7Classic_BoldItalic20pt7b);
-        display.setCursor(10, 270);
-        display.print(svalue2);                     // Value
-        display.setFont(&Ubuntu_Bold12pt7b);
-        display.setCursor(10, 220);
-        display.print(name2);                       // Name
-        display.setFont(&Ubuntu_Bold8pt7b);
-        display.setCursor(10, 190);
-        display.print(" ");
+        getdisplay().setTextColor(textcolor);
+        getdisplay().setFont(&DSEG7Classic_BoldItalic20pt7b);
+        getdisplay().setCursor(10, 270);
+        getdisplay().print(svalue2);                     // Value
+        getdisplay().setFont(&Ubuntu_Bold12pt7b);
+        getdisplay().setCursor(10, 220);
+        getdisplay().print(name2);                       // Name
+        getdisplay().setFont(&Ubuntu_Bold8pt7b);
+        getdisplay().setCursor(10, 190);
+        getdisplay().print(" ");
         if(holdvalues == false){
-            display.print(unit2);                   // Unit
+            getdisplay().print(unit2);                   // Unit
         }
         else{
-            display.print(unit2old);                // Unit
+            getdisplay().print(unit2old);                // Unit
         }
 
         // Show values TWD
-        display.setTextColor(textcolor);
-        display.setFont(&DSEG7Classic_BoldItalic20pt7b);
-        display.setCursor(295, 65);
+        getdisplay().setTextColor(textcolor);
+        getdisplay().setFont(&DSEG7Classic_BoldItalic20pt7b);
+        getdisplay().setCursor(295, 65);
         if(valid3 == true){
-            display.print(abs(value3 * 360 / PI), 0);   // Value
+            getdisplay().print(abs(value3 * 360 / PI), 0);   // Value
         }
         else{
-            display.print("---");                   // Value
+            getdisplay().print("---");                   // Value
         }
-        display.setFont(&Ubuntu_Bold12pt7b);
-        display.setCursor(335, 95);
-        display.print(name3);                       // Name
-        display.setFont(&Ubuntu_Bold8pt7b);
-        display.setCursor(335, 115);
-        display.print(" ");
+        getdisplay().setFont(&Ubuntu_Bold12pt7b);
+        getdisplay().setCursor(335, 95);
+        getdisplay().print(name3);                       // Name
+        getdisplay().setFont(&Ubuntu_Bold8pt7b);
+        getdisplay().setCursor(335, 115);
+        getdisplay().print(" ");
         if(holdvalues == false){
-            display.print(unit3);                   // Unit
+            getdisplay().print(unit3);                   // Unit
         }
         else{
-            display.print(unit3old);                // Unit
+            getdisplay().print(unit3old);                // Unit
         }
 
         // Horizintal separator right
-        display.fillRect(340, 149, 80, 3, pixelcolor);
+        getdisplay().fillRect(340, 149, 80, 3, pixelcolor);
 
         // Show values TWS
-        display.setTextColor(textcolor);
-        display.setFont(&DSEG7Classic_BoldItalic20pt7b);
-        display.setCursor(295, 270);
-        display.print(svalue4);                     // Value
-        display.setFont(&Ubuntu_Bold12pt7b);
-        display.setCursor(335, 220);
-        display.print(name4);                       // Name
-        display.setFont(&Ubuntu_Bold8pt7b);
-        display.setCursor(335, 190);
-        display.print(" ");
+        getdisplay().setTextColor(textcolor);
+        getdisplay().setFont(&DSEG7Classic_BoldItalic20pt7b);
+        getdisplay().setCursor(295, 270);
+        getdisplay().print(svalue4);                     // Value
+        getdisplay().setFont(&Ubuntu_Bold12pt7b);
+        getdisplay().setCursor(335, 220);
+        getdisplay().print(name4);                       // Name
+        getdisplay().setFont(&Ubuntu_Bold8pt7b);
+        getdisplay().setCursor(335, 190);
+        getdisplay().print(" ");
         if(holdvalues == false){
-            display.print(unit4);                   // Unit
+            getdisplay().print(unit4);                   // Unit
         }
         else{  
-            display.print(unit4old);                // Unit
+            getdisplay().print(unit4old);                // Unit
         }
 
 //*******************************************************************************************
@@ -245,10 +247,10 @@ public:
         int rInstrument = 110;     // Radius of grafic instrument
         float pi = 3.141592;
 
-        display.fillCircle(200, 150, rInstrument + 10, pixelcolor);    // Outer circle
-        display.fillCircle(200, 150, rInstrument + 7, bgcolor);        // Outer circle     
-        display.fillCircle(200, 150, rInstrument - 10, pixelcolor);    // Inner circle
-        display.fillCircle(200, 150, rInstrument - 13, bgcolor);       // Inner circle
+        getdisplay().fillCircle(200, 150, rInstrument + 10, pixelcolor);    // Outer circle
+        getdisplay().fillCircle(200, 150, rInstrument + 7, bgcolor);        // Outer circle     
+        getdisplay().fillCircle(200, 150, rInstrument - 10, pixelcolor);    // Inner circle
+        getdisplay().fillCircle(200, 150, rInstrument - 13, bgcolor);       // Inner circle
 
         for(int i=0; i<360; i=i+10)
         {
@@ -276,17 +278,17 @@ public:
             // Print text centered on position x, y
             int16_t x1, y1;     // Return values of getTextBounds
             uint16_t w, h;      // Return values of getTextBounds
-            display.getTextBounds(ii, int(x), int(y), &x1, &y1, &w, &h); // Calc width of new string
-            display.setCursor(x-w/2, y+h/2);
+            getdisplay().getTextBounds(ii, int(x), int(y), &x1, &y1, &w, &h); // Calc width of new string
+            getdisplay().setCursor(x-w/2, y+h/2);
             if(i % 30 == 0){
-                display.setFont(&Ubuntu_Bold8pt7b);
-                display.print(ii);
+                getdisplay().setFont(&Ubuntu_Bold8pt7b);
+                getdisplay().print(ii);
             }
 
             // Draw sub scale with dots
             float x1c = 200 + rInstrument*sin(i/180.0*pi);
             float y1c = 150 - rInstrument*cos(i/180.0*pi);
-            display.fillCircle((int)x1c, (int)y1c, 2, pixelcolor);
+            getdisplay().fillCircle((int)x1c, (int)y1c, 2, pixelcolor);
             float sinx=sin(i/180.0*pi);
             float cosx=cos(i/180.0*pi); 
 
@@ -297,10 +299,10 @@ public:
                 float xx2 = +dx;
                 float yy1 =  -(rInstrument-10);
                 float yy2 =  -(rInstrument+10);
-                display.fillTriangle(200+(int)(cosx*xx1-sinx*yy1),150+(int)(sinx*xx1+cosx*yy1),
+                getdisplay().fillTriangle(200+(int)(cosx*xx1-sinx*yy1),150+(int)(sinx*xx1+cosx*yy1),
                         200+(int)(cosx*xx2-sinx*yy1),150+(int)(sinx*xx2+cosx*yy1),
                         200+(int)(cosx*xx1-sinx*yy2),150+(int)(sinx*xx1+cosx*yy2),pixelcolor);
-                display.fillTriangle(200+(int)(cosx*xx2-sinx*yy1),150+(int)(sinx*xx2+cosx*yy1),
+                getdisplay().fillTriangle(200+(int)(cosx*xx2-sinx*yy1),150+(int)(sinx*xx2+cosx*yy1),
                         200+(int)(cosx*xx1-sinx*yy2),150+(int)(sinx*xx1+cosx*yy2),
                         200+(int)(cosx*xx2-sinx*yy2),150+(int)(sinx*xx2+cosx*yy2),pixelcolor);  
             }
@@ -317,7 +319,7 @@ public:
             float xx2 = startwidth;
             float yy1 = -startwidth;
             float yy2 = -(rInstrument-15); 
-            display.fillTriangle(200+(int)(cosx*xx1-sinx*yy1),150+(int)(sinx*xx1+cosx*yy1),
+            getdisplay().fillTriangle(200+(int)(cosx*xx1-sinx*yy1),150+(int)(sinx*xx1+cosx*yy1),
                 200+(int)(cosx*xx2-sinx*yy1),150+(int)(sinx*xx2+cosx*yy1),
                 200+(int)(cosx*0-sinx*yy2),150+(int)(sinx*0+cosx*yy2),pixelcolor);   
             // Inverted pointer
@@ -327,66 +329,65 @@ public:
             float ix2 = -endwidth;
             float iy1 = -(rInstrument-15);
             float iy2 = -endwidth;
-            display.fillTriangle(200+(int)(cosx*ix1-sinx*iy1),150+(int)(sinx*ix1+cosx*iy1),
+            getdisplay().fillTriangle(200+(int)(cosx*ix1-sinx*iy1),150+(int)(sinx*ix1+cosx*iy1),
                 200+(int)(cosx*ix2-sinx*iy1),150+(int)(sinx*ix2+cosx*iy1),
                 200+(int)(cosx*0-sinx*iy2),150+(int)(sinx*0+cosx*iy2),pixelcolor);
         }
 
         // Center circle
-        display.fillCircle(200, 150, startwidth + 6, bgcolor);
-        display.fillCircle(200, 150, startwidth + 4, pixelcolor);
+        getdisplay().fillCircle(200, 150, startwidth + 6, bgcolor);
+        getdisplay().fillCircle(200, 150, startwidth + 4, pixelcolor);
 
 //*******************************************************************************************
 
         // Show values DBT
-        display.setTextColor(textcolor);
-        display.setFont(&DSEG7Classic_BoldItalic16pt7b);
-        display.setCursor(160, 200);
-        display.print(svalue5);                     // Value
-        display.setFont(&Ubuntu_Bold8pt7b);
-        display.setCursor(190, 215);
-        display.print(" ");
+        getdisplay().setTextColor(textcolor);
+        getdisplay().setFont(&DSEG7Classic_BoldItalic16pt7b);
+        getdisplay().setCursor(160, 200);
+        getdisplay().print(svalue5);                     // Value
+        getdisplay().setFont(&Ubuntu_Bold8pt7b);
+        getdisplay().setCursor(190, 215);
+        getdisplay().print(" ");
         if(holdvalues == false){
-            display.print(unit5);                   // Unit
+            getdisplay().print(unit5);                   // Unit
         }
         else{  
-            display.print(unit5old);                // Unit
+            getdisplay().print(unit5old);                // Unit
         }
 
         // Show values STW
-        display.setTextColor(textcolor);
-        display.setFont(&DSEG7Classic_BoldItalic16pt7b);
-        display.setCursor(160, 130);
-        display.print(svalue6);                     // Value
-        display.setFont(&Ubuntu_Bold8pt7b);
-        display.setCursor(190, 90);
-        display.print(" ");
+        getdisplay().setTextColor(textcolor);
+        getdisplay().setFont(&DSEG7Classic_BoldItalic16pt7b);
+        getdisplay().setCursor(160, 130);
+        getdisplay().print(svalue6);                     // Value
+        getdisplay().setFont(&Ubuntu_Bold8pt7b);
+        getdisplay().setCursor(190, 90);
+        getdisplay().print(" ");
         if(holdvalues == false){
-            display.print(unit6);                   // Unit
+            getdisplay().print(unit6);                   // Unit
         }
         else{  
-            display.print(unit6old);                // Unit
+            getdisplay().print(unit6old);                // Unit
         }
 
         // Key Layout
-        display.setTextColor(textcolor);
-        display.setFont(&Ubuntu_Bold8pt7b);
+        getdisplay().setTextColor(textcolor);
+        getdisplay().setFont(&Ubuntu_Bold8pt7b);
         if(keylock == false){
-            display.setCursor(130, 290);
-            display.print("[  <<<<  " + String(commonData.data.actpage) + "/" + String(commonData.data.maxpage) + "  >>>>  ]");
+            getdisplay().setCursor(130, 290);
+            getdisplay().print("[  <<<<  " + String(commonData.data.actpage) + "/" + String(commonData.data.maxpage) + "  >>>>  ]");
             if(String(backlightMode) == "Control by Key"){                  // Key for illumination
-                display.setCursor(343, 290);
-                display.print("[ILUM]");
+                getdisplay().setCursor(343, 290);
+                getdisplay().print("[ILUM]");
             }
         }
         else{
-            display.setCursor(130, 290);
-            display.print(" [    Keylock active    ]");
+            getdisplay().setCursor(130, 290);
+            getdisplay().print(" [    Keylock active    ]");
         }
 
         // Update display
-        display.updateWindow(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, true);    // Partial update (fast)
-
+        getdisplay().nextPage();    // Partial update (fast)
     };
 };
 

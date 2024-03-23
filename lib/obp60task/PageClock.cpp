@@ -105,30 +105,32 @@ public:
             pixelcolor = GxEPD_WHITE;
             bgcolor = GxEPD_BLACK;
         }
-        // Clear display by call in obp60task.cpp in main loop
+        // Set display in partial refresh mode
+        getdisplay().setPartialWindow(0, 0, getdisplay().width(), getdisplay().height()); // Set partial update
+        getdisplay().fillScreen(bgcolor);    // Clear display
 
         // Show values GPS date
-        display.setTextColor(textcolor);
-        display.setFont(&Ubuntu_Bold8pt7b);
-        display.setCursor(10, 65);
-        if(holdvalues == false) display.print(svalue2); // Value
-        else display.print(svalue2old);
-        display.setFont(&Ubuntu_Bold12pt7b);
-        display.setCursor(10, 95);
-        display.print("Date");                          // Name
+        getdisplay().setTextColor(textcolor);
+        getdisplay().setFont(&Ubuntu_Bold8pt7b);
+        getdisplay().setCursor(10, 65);
+        if(holdvalues == false) getdisplay().print(svalue2); // Value
+        else getdisplay().print(svalue2old);
+        getdisplay().setFont(&Ubuntu_Bold12pt7b);
+        getdisplay().setCursor(10, 95);
+        getdisplay().print("Date");                          // Name
 
         // Horizintal separator left
-        display.fillRect(0, 149, 60, 3, pixelcolor);
+        getdisplay().fillRect(0, 149, 60, 3, pixelcolor);
 
         // Show values GPS time
-        display.setTextColor(textcolor);
-        display.setFont(&Ubuntu_Bold8pt7b);
-        display.setCursor(10, 250);
-        if(holdvalues == false) display.print(svalue1); // Value
-        else display.print(svalue1old);
-        display.setFont(&Ubuntu_Bold12pt7b);
-        display.setCursor(10, 220);
-        display.print("Time");                          // Name
+        getdisplay().setTextColor(textcolor);
+        getdisplay().setFont(&Ubuntu_Bold8pt7b);
+        getdisplay().setCursor(10, 250);
+        if(holdvalues == false) getdisplay().print(svalue1); // Value
+        else getdisplay().print(svalue1old);
+        getdisplay().setFont(&Ubuntu_Bold12pt7b);
+        getdisplay().setCursor(10, 220);
+        getdisplay().print("Time");                          // Name
 
         // Show values sunrise
         String sunrise = "---";
@@ -137,17 +139,17 @@ public:
             svalue3old = sunrise;
         }
 
-        display.setTextColor(textcolor);
-        display.setFont(&Ubuntu_Bold8pt7b);
-        display.setCursor(335, 65);
-        if(holdvalues == false) display.print(sunrise); // Value
-        else display.print(svalue3old);
-        display.setFont(&Ubuntu_Bold12pt7b);
-        display.setCursor(335, 95);
-        display.print("SunR");                          // Name
+        getdisplay().setTextColor(textcolor);
+        getdisplay().setFont(&Ubuntu_Bold8pt7b);
+        getdisplay().setCursor(335, 65);
+        if(holdvalues == false) getdisplay().print(sunrise); // Value
+        else getdisplay().print(svalue3old);
+        getdisplay().setFont(&Ubuntu_Bold12pt7b);
+        getdisplay().setCursor(335, 95);
+        getdisplay().print("SunR");                          // Name
 
         // Horizintal separator right
-        display.fillRect(340, 149, 80, 3, pixelcolor);
+        getdisplay().fillRect(340, 149, 80, 3, pixelcolor);
 
         // Show values sunset
         String sunset = "---";
@@ -156,14 +158,14 @@ public:
             svalue4old = sunset;
         }
 
-        display.setTextColor(textcolor);
-        display.setFont(&Ubuntu_Bold8pt7b);
-        display.setCursor(335, 250);
-        if(holdvalues == false) display.print(sunset);  // Value
-        else display.print(svalue4old);
-        display.setFont(&Ubuntu_Bold12pt7b);
-        display.setCursor(335, 220);
-        display.print("SunS");                          // Name
+        getdisplay().setTextColor(textcolor);
+        getdisplay().setFont(&Ubuntu_Bold8pt7b);
+        getdisplay().setCursor(335, 250);
+        if(holdvalues == false) getdisplay().print(sunset);  // Value
+        else getdisplay().print(svalue4old);
+        getdisplay().setFont(&Ubuntu_Bold12pt7b);
+        getdisplay().setCursor(335, 220);
+        getdisplay().print("SunS");                          // Name
 
 //*******************************************************************************************
         
@@ -171,8 +173,8 @@ public:
         int rInstrument = 110;     // Radius of clock
         float pi = 3.141592;
 
-        display.fillCircle(200, 150, rInstrument + 10, pixelcolor);    // Outer circle
-        display.fillCircle(200, 150, rInstrument + 7, bgcolor);        // Outer circle     
+        getdisplay().fillCircle(200, 150, rInstrument + 10, pixelcolor);    // Outer circle
+        getdisplay().fillCircle(200, 150, rInstrument + 7, bgcolor);        // Outer circle     
 
         for(int i=0; i<360; i=i+1)
         {
@@ -200,11 +202,11 @@ public:
             // Print text centered on position x, y
             int16_t x1, y1;     // Return values of getTextBounds
             uint16_t w, h;      // Return values of getTextBounds
-            display.getTextBounds(ii, int(x), int(y), &x1, &y1, &w, &h); // Calc width of new string
-            display.setCursor(x-w/2, y+h/2);
+            getdisplay().getTextBounds(ii, int(x), int(y), &x1, &y1, &w, &h); // Calc width of new string
+            getdisplay().setCursor(x-w/2, y+h/2);
             if(i % 30 == 0){
-                display.setFont(&Ubuntu_Bold12pt7b);
-                display.print(ii);
+                getdisplay().setFont(&Ubuntu_Bold12pt7b);
+                getdisplay().print(ii);
             }
 
             // Draw sub scale with dots
@@ -213,7 +215,7 @@ public:
              if(i % 6 == 0){
                 float x1c = 200 + rInstrument*sin(i/180.0*pi);
                 float y1c = 150 - rInstrument*cos(i/180.0*pi);
-                display.fillCircle((int)x1c, (int)y1c, 2, pixelcolor);
+                getdisplay().fillCircle((int)x1c, (int)y1c, 2, pixelcolor);
                 sinx=sin(i/180.0*pi);
                 cosx=cos(i/180.0*pi);
              }
@@ -225,26 +227,26 @@ public:
                 float xx2 = +dx;
                 float yy1 =  -(rInstrument-10);
                 float yy2 =  -(rInstrument+10);
-                display.fillTriangle(200+(int)(cosx*xx1-sinx*yy1),150+(int)(sinx*xx1+cosx*yy1),
+                getdisplay().fillTriangle(200+(int)(cosx*xx1-sinx*yy1),150+(int)(sinx*xx1+cosx*yy1),
                         200+(int)(cosx*xx2-sinx*yy1),150+(int)(sinx*xx2+cosx*yy1),
                         200+(int)(cosx*xx1-sinx*yy2),150+(int)(sinx*xx1+cosx*yy2),pixelcolor);
-                display.fillTriangle(200+(int)(cosx*xx2-sinx*yy1),150+(int)(sinx*xx2+cosx*yy1),
+                getdisplay().fillTriangle(200+(int)(cosx*xx2-sinx*yy1),150+(int)(sinx*xx2+cosx*yy1),
                         200+(int)(cosx*xx1-sinx*yy2),150+(int)(sinx*xx1+cosx*yy2),
                         200+(int)(cosx*xx2-sinx*yy2),150+(int)(sinx*xx2+cosx*yy2),pixelcolor);  
             }
         }
 
         // Print Unit in clock
-        display.setTextColor(textcolor);
+        getdisplay().setTextColor(textcolor);
         if(holdvalues == false){
-            display.setFont(&Ubuntu_Bold12pt7b);
-            display.setCursor(175, 110);
-            display.print(unit2);                       // Unit
+            getdisplay().setFont(&Ubuntu_Bold12pt7b);
+            getdisplay().setCursor(175, 110);
+            getdisplay().print(unit2);                       // Unit
         }
         else{
-            display.setFont(&Ubuntu_Bold12pt7b);
-            display.setCursor(175, 110);
-            display.print(unit2old);                    // Unit
+            getdisplay().setFont(&Ubuntu_Bold12pt7b);
+            getdisplay().setCursor(175, 110);
+            getdisplay().print(unit2old);                    // Unit
         }
 
         // Clock values
@@ -270,7 +272,7 @@ public:
             float xx2 = startwidth;
             float yy1 = -startwidth;
             float yy2 = -(rInstrument * 0.5); 
-            display.fillTriangle(200+(int)(cosx*xx1-sinx*yy1),150+(int)(sinx*xx1+cosx*yy1),
+            getdisplay().fillTriangle(200+(int)(cosx*xx1-sinx*yy1),150+(int)(sinx*xx1+cosx*yy1),
                 200+(int)(cosx*xx2-sinx*yy1),150+(int)(sinx*xx2+cosx*yy1),
                 200+(int)(cosx*0-sinx*yy2),150+(int)(sinx*0+cosx*yy2),pixelcolor);   
             // Inverted pointer
@@ -280,7 +282,7 @@ public:
             float ix2 = -endwidth;
             float iy1 = -(rInstrument * 0.5);
             float iy2 = -endwidth;
-            display.fillTriangle(200+(int)(cosx*ix1-sinx*iy1),150+(int)(sinx*ix1+cosx*iy1),
+            getdisplay().fillTriangle(200+(int)(cosx*ix1-sinx*iy1),150+(int)(sinx*ix1+cosx*iy1),
                 200+(int)(cosx*ix2-sinx*iy1),150+(int)(sinx*ix2+cosx*iy1),
                 200+(int)(cosx*0-sinx*iy2),150+(int)(sinx*0+cosx*iy2),pixelcolor);
         }
@@ -296,7 +298,7 @@ public:
             float xx2 = startwidth;
             float yy1 = -startwidth;
             float yy2 = -(rInstrument - 15); 
-            display.fillTriangle(200+(int)(cosx*xx1-sinx*yy1),150+(int)(sinx*xx1+cosx*yy1),
+            getdisplay().fillTriangle(200+(int)(cosx*xx1-sinx*yy1),150+(int)(sinx*xx1+cosx*yy1),
                 200+(int)(cosx*xx2-sinx*yy1),150+(int)(sinx*xx2+cosx*yy1),
                 200+(int)(cosx*0-sinx*yy2),150+(int)(sinx*0+cosx*yy2),pixelcolor);   
             // Inverted pointer
@@ -306,34 +308,34 @@ public:
             float ix2 = -endwidth;
             float iy1 = -(rInstrument - 15);
             float iy2 = -endwidth;
-            display.fillTriangle(200+(int)(cosx*ix1-sinx*iy1),150+(int)(sinx*ix1+cosx*iy1),
+            getdisplay().fillTriangle(200+(int)(cosx*ix1-sinx*iy1),150+(int)(sinx*ix1+cosx*iy1),
                 200+(int)(cosx*ix2-sinx*iy1),150+(int)(sinx*ix2+cosx*iy1),
                 200+(int)(cosx*0-sinx*iy2),150+(int)(sinx*0+cosx*iy2),pixelcolor);
         }
 
         // Center circle
-        display.fillCircle(200, 150, startwidth + 6, bgcolor);
-        display.fillCircle(200, 150, startwidth + 4, pixelcolor);
+        getdisplay().fillCircle(200, 150, startwidth + 6, bgcolor);
+        getdisplay().fillCircle(200, 150, startwidth + 4, pixelcolor);
 
 //*******************************************************************************************
         // Key Layout
-        display.setTextColor(textcolor);
-        display.setFont(&Ubuntu_Bold8pt7b);
+        getdisplay().setTextColor(textcolor);
+        getdisplay().setFont(&Ubuntu_Bold8pt7b);
         if(keylock == false){
-            display.setCursor(130, 290);
-            display.print("[  <<<<  " + String(commonData.data.actpage) + "/" + String(commonData.data.maxpage) + "  >>>>  ]");
+            getdisplay().setCursor(130, 290);
+            getdisplay().print("[  <<<<  " + String(commonData.data.actpage) + "/" + String(commonData.data.maxpage) + "  >>>>  ]");
             if(String(backlightMode) == "Control by Key"){                  // Key for illumination
-                display.setCursor(343, 290);
-                display.print("[ILUM]");
+                getdisplay().setCursor(343, 290);
+                getdisplay().print("[ILUM]");
             }
         }
         else{
-            display.setCursor(130, 290);
-            display.print(" [    Keylock active    ]");
+            getdisplay().setCursor(130, 290);
+            getdisplay().print(" [    Keylock active    ]");
         }
 
         // Update display
-        display.updateWindow(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, true);    // Partial update (fast)
+        getdisplay().nextPage();    // Partial update (fast)
 
     };
 };

@@ -147,52 +147,54 @@ public:
             pixelcolor = GxEPD_WHITE;
             bgcolor = GxEPD_BLACK;
         }
-        //Clear display in obp60task.cpp in main loop
+        // Set display in partial refresh mode
+        getdisplay().setPartialWindow(0, 0, getdisplay().width(), getdisplay().height()); // Set partial update
+        getdisplay().fillScreen(bgcolor);    // Clear display
 
         // Show name
-        display.setTextColor(textcolor);
-        display.setFont(&Ubuntu_Bold32pt7b);
-        display.setCursor(20, 100);
-        display.print(name1);                           // Value name
+        getdisplay().setTextColor(textcolor);
+        getdisplay().setFont(&Ubuntu_Bold32pt7b);
+        getdisplay().setCursor(20, 100);
+        getdisplay().print(name1);                           // Value name
 
         // Show unit
-        display.setTextColor(textcolor);
-        display.setFont(&Ubuntu_Bold20pt7b);
-        display.setCursor(270, 100);
-        display.print("V");
+        getdisplay().setTextColor(textcolor);
+        getdisplay().setFont(&Ubuntu_Bold20pt7b);
+        getdisplay().setCursor(270, 100);
+        getdisplay().print("V");
 
         // Show batery type
-        display.setTextColor(textcolor);
-        display.setFont(&Ubuntu_Bold8pt7b);
-        display.setCursor(295, 100);
-        display.print(batType);
+        getdisplay().setTextColor(textcolor);
+        getdisplay().setFont(&Ubuntu_Bold8pt7b);
+        getdisplay().setCursor(295, 100);
+        getdisplay().print(batType);
 
         // Show average settings
-        display.setTextColor(textcolor);
-        display.setFont(&Ubuntu_Bold8pt7b);
-        display.setCursor(320, 100);
+        getdisplay().setTextColor(textcolor);
+        getdisplay().setFont(&Ubuntu_Bold8pt7b);
+        getdisplay().setCursor(320, 100);
         switch (average) {
             case 0:
-                display.print("Avg: 1s");
+                getdisplay().print("Avg: 1s");
                 break;
             case 1:
-                display.print("Avg: 10s");
+                getdisplay().print("Avg: 10s");
                 break;
             case 2:
-                display.print("Avg: 60s");
+                getdisplay().print("Avg: 60s");
                 break;
             case 3:
-                display.print("Avg: 300s");
+                getdisplay().print("Avg: 300s");
                 break;
             default:
-                display.print("Avg: 1s");
+                getdisplay().print("Avg: 1s");
                 break;
         } 
 
         // Reading bus data or using simulation data
-        display.setTextColor(textcolor);
-        display.setFont(&DSEG7Classic_BoldItalic60pt7b);
-        display.setCursor(20, 240);
+        getdisplay().setTextColor(textcolor);
+        getdisplay().setFont(&DSEG7Classic_BoldItalic60pt7b);
+        getdisplay().setCursor(20, 240);
         if(simulation == true){
             if(batVoltage == "12V"){
                 value1 = 12.0;
@@ -201,32 +203,32 @@ public:
                 value1 = 24.0;
             }
             value1 += float(random(0, 5)) / 10;         // Simulation data
-            display.print(value1,1);
+            getdisplay().print(value1,1);
         }
         else{
             // Check for valid real data, display also if hold values activated
             if(valid1 == true || holdvalues == true){
                 // Resolution switching
                 if(value1 < 10){
-                    display.print(value1,2);
+                    getdisplay().print(value1,2);
                 }
                 if(value1 >= 10 && value1 < 100){
-                    display.print(value1,1);
+                    getdisplay().print(value1,1);
                 }
                 if(value1 >= 100){
-                    display.print(value1,0);
+                    getdisplay().print(value1,0);
                 }
             }
             else{
-            display.print("---");                       // Missing bus data
+            getdisplay().print("---");                       // Missing bus data
             }  
         }
 
         // Trend indicator
         // Show trend indicator
         if(trend == true){
-            display.fillRect(310, 240, 40, 120, bgcolor);   // Clear area
-            display.fillRect(315, 183, 35, 4, textcolor);   // Draw separator
+            getdisplay().fillRect(310, 240, 40, 120, bgcolor);   // Clear area
+            getdisplay().fillRect(315, 183, 35, 4, textcolor);   // Draw separator
             if(int(raw * 10) > int(valueTrend * 10)){
                 displayTrendHigh(320, 174, 11, textcolor);  // Show high indicator
             }
@@ -236,32 +238,32 @@ public:
         }
         // No trend indicator
         else{
-            display.fillRect(310, 240, 40, 120, bgcolor);   // Clear area
+            getdisplay().fillRect(310, 240, 40, 120, bgcolor);   // Clear area
         }
 
 
         // Key Layout
-        display.setTextColor(textcolor);
-        display.setFont(&Ubuntu_Bold8pt7b);
+        getdisplay().setTextColor(textcolor);
+        getdisplay().setFont(&Ubuntu_Bold8pt7b);
         if(keylock == false){
-            display.setCursor(10, 290);
-            display.print("[AVG]");
-            display.setCursor(130, 290);
-            display.print("[  <<<<  " + String(commonData.data.actpage) + "/" + String(commonData.data.maxpage) + "  >>>>  ]");
-            display.setCursor(293, 290);
-                display.print("[TRD]");
+            getdisplay().setCursor(10, 290);
+            getdisplay().print("[AVG]");
+            getdisplay().setCursor(130, 290);
+            getdisplay().print("[  <<<<  " + String(commonData.data.actpage) + "/" + String(commonData.data.maxpage) + "  >>>>  ]");
+            getdisplay().setCursor(293, 290);
+                getdisplay().print("[TRD]");
             if(String(backlightMode) == "Control by Key"){              // Key for illumination
-                display.setCursor(343, 290);
-                display.print("[ILUM]");
+                getdisplay().setCursor(343, 290);
+                getdisplay().print("[ILUM]");
             }
         }
         else{
-            display.setCursor(130, 290);
-            display.print(" [    Keylock active    ]");
+            getdisplay().setCursor(130, 290);
+            getdisplay().print(" [    Keylock active    ]");
         }
 
         // Update display
-        display.updateWindow(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, true);    // Partial update (fast)
+        getdisplay().nextPage();    // Partial update (fast)
     };
 };
 

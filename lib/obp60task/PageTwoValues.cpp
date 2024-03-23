@@ -83,47 +83,49 @@ class PageTwoValues : public Page
             pixelcolor = GxEPD_WHITE;
             bgcolor = GxEPD_BLACK;
         }
-        // Clear display by call in obp60task.cpp in main loop
+        // Set display in partial refresh mode
+        getdisplay().setPartialWindow(0, 0, getdisplay().width(), getdisplay().height()); // Set partial update
+        getdisplay().fillScreen(bgcolor);    // Clear display
 
         // ############### Value 1 ################
 
         // Show name
-        display.setTextColor(textcolor);
-        display.setFont(&Ubuntu_Bold20pt7b);
-        display.setCursor(20, 80);
-        display.print(name1);                           // Page name
+        getdisplay().setTextColor(textcolor);
+        getdisplay().setFont(&Ubuntu_Bold20pt7b);
+        getdisplay().setCursor(20, 80);
+        getdisplay().print(name1);                           // Page name
 
         // Show unit
-        display.setTextColor(textcolor);
-        display.setFont(&Ubuntu_Bold12pt7b);
-        display.setCursor(20, 130);
+        getdisplay().setTextColor(textcolor);
+        getdisplay().setFont(&Ubuntu_Bold12pt7b);
+        getdisplay().setCursor(20, 130);
         if(holdvalues == false){
-            display.print(unit1);                       // Unit
+            getdisplay().print(unit1);                       // Unit
         }
         else{
-            display.print(unit1old);
+            getdisplay().print(unit1old);
         }
 
         // Switch font if format for any values
         if(bvalue1->getFormat() == "formatLatitude" || bvalue1->getFormat() == "formatLongitude"){
-            display.setFont(&Ubuntu_Bold20pt7b);
-            display.setCursor(50, 130);
+            getdisplay().setFont(&Ubuntu_Bold20pt7b);
+            getdisplay().setCursor(50, 130);
         }
         else if(bvalue1->getFormat() == "formatTime" || bvalue1->getFormat() == "formatDate"){
-            display.setFont(&Ubuntu_Bold20pt7b);
-            display.setCursor(170, 105);
+            getdisplay().setFont(&Ubuntu_Bold20pt7b);
+            getdisplay().setCursor(170, 105);
         }
         else{
-            display.setFont(&DSEG7Classic_BoldItalic42pt7b);
-            display.setCursor(180, 130);
+            getdisplay().setFont(&DSEG7Classic_BoldItalic42pt7b);
+            getdisplay().setCursor(180, 130);
         }
 
         // Show bus data
         if(holdvalues == false){
-            display.print(svalue1);                                     // Real value as formated string
+            getdisplay().print(svalue1);                                     // Real value as formated string
         }
         else{
-            display.print(svalue1old);                                  // Old value as formated string
+            getdisplay().print(svalue1old);                                  // Old value as formated string
         }
         if(valid1 == true){
             svalue1old = svalue1;                                       // Save the old value
@@ -133,47 +135,47 @@ class PageTwoValues : public Page
         // ############### Horizontal Line ################
 
         // Horizontal line 3 pix
-        display.fillRect(0, 145, 400, 3, pixelcolor);
+        getdisplay().fillRect(0, 145, 400, 3, pixelcolor);
 
         // ############### Value 2 ################
 
         // Show name
-        display.setTextColor(textcolor);
-        display.setFont(&Ubuntu_Bold20pt7b);
-        display.setCursor(20, 190);
-        display.print(name2);                           // Page name
+        getdisplay().setTextColor(textcolor);
+        getdisplay().setFont(&Ubuntu_Bold20pt7b);
+        getdisplay().setCursor(20, 190);
+        getdisplay().print(name2);                           // Page name
 
         // Show unit
-        display.setTextColor(textcolor);
-        display.setFont(&Ubuntu_Bold12pt7b);
-        display.setCursor(20, 240);
+        getdisplay().setTextColor(textcolor);
+        getdisplay().setFont(&Ubuntu_Bold12pt7b);
+        getdisplay().setCursor(20, 240);
         if(holdvalues == false){
-            display.print(unit2);                       // Unit
+            getdisplay().print(unit2);                       // Unit
         }
         else{
-            display.print(unit2old);
+            getdisplay().print(unit2old);
         }
 
         // Switch font if format for any values
         if(bvalue2->getFormat() == "formatLatitude" || bvalue2->getFormat() == "formatLongitude"){
-            display.setFont(&Ubuntu_Bold20pt7b);
-            display.setCursor(50, 240);
+            getdisplay().setFont(&Ubuntu_Bold20pt7b);
+            getdisplay().setCursor(50, 240);
         }
         else if(bvalue2->getFormat() == "formatTime" || bvalue2->getFormat() == "formatDate"){
-            display.setFont(&Ubuntu_Bold20pt7b);
-            display.setCursor(170, 215);
+            getdisplay().setFont(&Ubuntu_Bold20pt7b);
+            getdisplay().setCursor(170, 215);
         }
         else{
-            display.setFont(&DSEG7Classic_BoldItalic42pt7b);
-            display.setCursor(180, 240);
+            getdisplay().setFont(&DSEG7Classic_BoldItalic42pt7b);
+            getdisplay().setCursor(180, 240);
         }
 
         // Show bus data
         if(holdvalues == false){
-            display.print(svalue2);                                     // Real value as formated string
+            getdisplay().print(svalue2);                                     // Real value as formated string
         }
         else{
-            display.print(svalue2old);                                  // Old value as formated string
+            getdisplay().print(svalue2old);                                  // Old value as formated string
         }
         if(valid2 == true){
             svalue2old = svalue2;                                       // Save the old value
@@ -184,24 +186,23 @@ class PageTwoValues : public Page
         // ############### Key Layout ################
 
         // Key Layout
-        display.setTextColor(textcolor);
-        display.setFont(&Ubuntu_Bold8pt7b);
+        getdisplay().setTextColor(textcolor);
+        getdisplay().setFont(&Ubuntu_Bold8pt7b);
         if(keylock == false){
-            display.setCursor(130, 290);
-            display.print("[  <<<<  " + String(commonData.data.actpage) + "/" + String(commonData.data.maxpage) + "  >>>>  ]");
+            getdisplay().setCursor(130, 290);
+            getdisplay().print("[  <<<<  " + String(commonData.data.actpage) + "/" + String(commonData.data.maxpage) + "  >>>>  ]");
             if(String(backlightMode) == "Control by Key"){                  // Key for illumination
-                display.setCursor(343, 290);
-                display.print("[ILUM]");
+                getdisplay().setCursor(343, 290);
+                getdisplay().print("[ILUM]");
             }
         }
         else{
-            display.setCursor(130, 290);
-            display.print(" [    Keylock active    ]");
+            getdisplay().setCursor(130, 290);
+            getdisplay().print(" [    Keylock active    ]");
         }
 
         // Update display
-        display.updateWindow(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, true);    // Partial update (fast)
-
+        getdisplay().nextPage();    // Partial update (fast)
     };
 };
 

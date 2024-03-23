@@ -79,7 +79,9 @@ public:
             pixelcolor = GxEPD_WHITE;
             bgcolor = GxEPD_BLACK;
         }
-        // Clear display by call in obp60task.cpp in main loop
+        // Set display in partial refresh mode
+        getdisplay().setPartialWindow(0, 0, getdisplay().width(), getdisplay().height()); // Set partial update
+        getdisplay().fillScreen(bgcolor);    // Clear display
 
 
 //*******************************************************************************************
@@ -88,9 +90,9 @@ public:
         int rInstrument = 110;     // Radius of RudderPosition
         float pi = 3.141592;
 
-        display.fillCircle(200, 150, rInstrument + 10, pixelcolor);    // Outer circle
-        display.fillCircle(200, 150, rInstrument + 7, bgcolor);        // Outer circle
-        display.fillRect(0, 30, 400, 122, bgcolor);                      // Delete half top circle
+        getdisplay().fillCircle(200, 150, rInstrument + 10, pixelcolor);    // Outer circle
+        getdisplay().fillCircle(200, 150, rInstrument + 7, bgcolor);        // Outer circle
+        getdisplay().fillRect(0, 30, 400, 122, bgcolor);                      // Delete half top circle
 
         for(int i=90; i<=270; i=i+10)
         {
@@ -118,17 +120,17 @@ public:
             // Print text centered on position x, y
             int16_t x1, y1;     // Return values of getTextBounds
             uint16_t w, h;      // Return values of getTextBounds
-            display.getTextBounds(ii, int(x), int(y), &x1, &y1, &w, &h); // Calc width of new string
-            display.setCursor(x-w/2, y+h/2);
+            getdisplay().getTextBounds(ii, int(x), int(y), &x1, &y1, &w, &h); // Calc width of new string
+            getdisplay().setCursor(x-w/2, y+h/2);
             if(i % 30 == 0){
-                display.setFont(&Ubuntu_Bold8pt7b);
-                display.print(ii);
+                getdisplay().setFont(&Ubuntu_Bold8pt7b);
+                getdisplay().print(ii);
             }
 
             // Draw sub scale with dots
             float x1c = 200 + rInstrument*sin(i/180.0*pi);
             float y1c = 150 - rInstrument*cos(i/180.0*pi);
-            display.fillCircle((int)x1c, (int)y1c, 2, pixelcolor);
+            getdisplay().fillCircle((int)x1c, (int)y1c, 2, pixelcolor);
             float sinx=sin(i/180.0*pi);
             float cosx=cos(i/180.0*pi); 
 
@@ -139,10 +141,10 @@ public:
                 float xx2 = +dx;
                 float yy1 =  -(rInstrument-10);
                 float yy2 =  -(rInstrument+10);
-                display.fillTriangle(200+(int)(cosx*xx1-sinx*yy1),150+(int)(sinx*xx1+cosx*yy1),
+                getdisplay().fillTriangle(200+(int)(cosx*xx1-sinx*yy1),150+(int)(sinx*xx1+cosx*yy1),
                         200+(int)(cosx*xx2-sinx*yy1),150+(int)(sinx*xx2+cosx*yy1),
                         200+(int)(cosx*xx1-sinx*yy2),150+(int)(sinx*xx1+cosx*yy2),pixelcolor);
-                display.fillTriangle(200+(int)(cosx*xx2-sinx*yy1),150+(int)(sinx*xx2+cosx*yy1),
+                getdisplay().fillTriangle(200+(int)(cosx*xx2-sinx*yy1),150+(int)(sinx*xx2+cosx*yy1),
                         200+(int)(cosx*xx1-sinx*yy2),150+(int)(sinx*xx1+cosx*yy2),
                         200+(int)(cosx*xx2-sinx*yy2),150+(int)(sinx*xx2+cosx*yy2),pixelcolor);  
             }
@@ -150,29 +152,29 @@ public:
         }
 
         // Print label
-        display.setTextColor(textcolor);
-        display.setFont(&Ubuntu_Bold16pt7b);
-        display.setCursor(80, 70);
-        display.print("Rudder Position");               // Label
+        getdisplay().setTextColor(textcolor);
+        getdisplay().setFont(&Ubuntu_Bold16pt7b);
+        getdisplay().setCursor(80, 70);
+        getdisplay().print("Rudder Position");               // Label
 
         // Print Unit in RudderPosition
         if(valid1 == true || simulation == true){
             if(holdvalues == false){
-                display.setFont(&Ubuntu_Bold12pt7b);
-                display.setCursor(175, 110);
-                display.print(unit1);                   // Unit
+                getdisplay().setFont(&Ubuntu_Bold12pt7b);
+                getdisplay().setCursor(175, 110);
+                getdisplay().print(unit1);                   // Unit
             }
             else{
-                display.setFont(&Ubuntu_Bold12pt7b);
-                display.setCursor(175, 110);
-                display.print(unit1old);                // Unit
+                getdisplay().setFont(&Ubuntu_Bold12pt7b);
+                getdisplay().setCursor(175, 110);
+                getdisplay().print(unit1old);                // Unit
             }
         }
         else{
             // Print Unit of keel position
-            display.setFont(&Ubuntu_Bold8pt7b);
-            display.setCursor(145, 110);
-            display.print("No sensor data");            // Info missing sensor
+            getdisplay().setFont(&Ubuntu_Bold8pt7b);
+            getdisplay().setCursor(145, 110);
+            getdisplay().print("No sensor data");            // Info missing sensor
             }
 
         // Calculate rudder position
@@ -195,7 +197,7 @@ public:
             float xx2 = startwidth;
             float yy1 = -startwidth;
             float yy2 = -(rInstrument * 0.5); 
-            display.fillTriangle(200+(int)(cosx*xx1-sinx*yy1),150+(int)(sinx*xx1+cosx*yy1),
+            getdisplay().fillTriangle(200+(int)(cosx*xx1-sinx*yy1),150+(int)(sinx*xx1+cosx*yy1),
                 200+(int)(cosx*xx2-sinx*yy1),150+(int)(sinx*xx2+cosx*yy1),
                 200+(int)(cosx*0-sinx*yy2),150+(int)(sinx*0+cosx*yy2),pixelcolor);   
             // Inverted pointer
@@ -205,35 +207,34 @@ public:
             float ix2 = -endwidth;
             float iy1 = -(rInstrument * 0.5);
             float iy2 = -endwidth;
-            display.fillTriangle(200+(int)(cosx*ix1-sinx*iy1),150+(int)(sinx*ix1+cosx*iy1),
+            getdisplay().fillTriangle(200+(int)(cosx*ix1-sinx*iy1),150+(int)(sinx*ix1+cosx*iy1),
                 200+(int)(cosx*ix2-sinx*iy1),150+(int)(sinx*ix2+cosx*iy1),
                 200+(int)(cosx*0-sinx*iy2),150+(int)(sinx*0+cosx*iy2),pixelcolor);
         }
 
         // Center circle
-        display.fillCircle(200, 150, startwidth + 6, bgcolor);
-        display.fillCircle(200, 150, startwidth + 4, pixelcolor);
+        getdisplay().fillCircle(200, 150, startwidth + 6, bgcolor);
+        getdisplay().fillCircle(200, 150, startwidth + 4, pixelcolor);
 
 //*******************************************************************************************
         // Key Layout
-        display.setTextColor(textcolor);
-        display.setFont(&Ubuntu_Bold8pt7b);
+        getdisplay().setTextColor(textcolor);
+        getdisplay().setFont(&Ubuntu_Bold8pt7b);
         if(keylock == false){
-            display.setCursor(130, 290);
-            display.print("[  <<<<  " + String(commonData.data.actpage) + "/" + String(commonData.data.maxpage) + "  >>>>  ]");
+            getdisplay().setCursor(130, 290);
+            getdisplay().print("[  <<<<  " + String(commonData.data.actpage) + "/" + String(commonData.data.maxpage) + "  >>>>  ]");
             if(String(backlightMode) == "Control by Key"){                  // Key for illumination
-                display.setCursor(343, 290);
-                display.print("[ILUM]");
+                getdisplay().setCursor(343, 290);
+                getdisplay().print("[ILUM]");
             }
         }
         else{
-            display.setCursor(130, 290);
-            display.print(" [    Keylock active    ]");
+            getdisplay().setCursor(130, 290);
+            getdisplay().print(" [    Keylock active    ]");
         }
 
         // Update display
-        display.updateWindow(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, true);    // Partial update (fast)
-
+        getdisplay().nextPage();    // Partial update (fast)
     };
 };
 

@@ -40,9 +40,13 @@ void underVoltageDetection(){
             buzzer(TONE4, 20);                      // Buzzer tone 4kHz 20ms
             setPortPin(OBP_POWER_50, false);        // Power rail 5.0V Off
             // Shutdown EInk display
-            display.fillRect(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, GxEPD_WHITE); // Draw white sreen
-            display.updateWindow(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, false); // Partial update
-            display.update();
+            /*
+            display.setPartialWindow(0, 0, display.width(), display.height()); // Set partial update
+            display.fillScreen(GxEPD_WHITE);        // Draw white sreen
+            display.nextPage();                     // Partial update
+            display.powerOff();                     // Power off
+            */
+
             // Stop system
             while(true){
                 esp_deep_sleep_start();             // Deep Sleep without weakup. Weakup only after power cycle (restart).

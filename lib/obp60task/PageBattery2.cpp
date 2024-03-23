@@ -193,113 +193,115 @@ public:
             pixelcolor = GxEPD_WHITE;
             bgcolor = GxEPD_BLACK;
         }
-        // Clear display in obp60task.cpp in main loop
+        // Set display in partial refresh mode
+        getdisplay().setPartialWindow(0, 0, getdisplay().width(), getdisplay().height()); // Set partial update
+        getdisplay().fillScreen(bgcolor);    // Clear display
 
         // Show name
-        display.setTextColor(textcolor);
-        display.setFont(&Ubuntu_Bold20pt7b);
-        display.setCursor(10, 65);
-        display.print("Bat.");
+        getdisplay().setTextColor(textcolor);
+        getdisplay().setFont(&Ubuntu_Bold20pt7b);
+        getdisplay().setCursor(10, 65);
+        getdisplay().print("Bat.");
 
          // Show batery type
-        display.setTextColor(textcolor);
-        display.setFont(&Ubuntu_Bold8pt7b);
-        display.setCursor(90, 65);
-        display.print(batType);
+        getdisplay().setTextColor(textcolor);
+        getdisplay().setFont(&Ubuntu_Bold8pt7b);
+        getdisplay().setCursor(90, 65);
+        getdisplay().print(batType);
 
         // Show voltage type
-        display.setTextColor(textcolor);
-        display.setFont(&DSEG7Classic_BoldItalic20pt7b);
-        display.setCursor(10, 140);
+        getdisplay().setTextColor(textcolor);
+        getdisplay().setFont(&DSEG7Classic_BoldItalic20pt7b);
+        getdisplay().setCursor(10, 140);
         int bvoltage = 0;
         if(String(batVoltage) == "12V") bvoltage = 12;
         else bvoltage = 24;
-        display.print(bvoltage);
-        display.setFont(&Ubuntu_Bold16pt7b);
-        display.print("V");
+        getdisplay().print(bvoltage);
+        getdisplay().setFont(&Ubuntu_Bold16pt7b);
+        getdisplay().print("V");
 
         // Show batery capacity
-        display.setTextColor(textcolor);
-        display.setFont(&DSEG7Classic_BoldItalic20pt7b);
-        display.setCursor(10, 200);
-        if(batCapacity <= 999) display.print(batCapacity, 0);
-        if(batCapacity > 999) display.print(float(batCapacity/1000.0), 1);
-        display.setFont(&Ubuntu_Bold16pt7b);
-        if(batCapacity <= 999) display.print("Ah");
-        if(batCapacity > 999) display.print("kAh");
+        getdisplay().setTextColor(textcolor);
+        getdisplay().setFont(&DSEG7Classic_BoldItalic20pt7b);
+        getdisplay().setCursor(10, 200);
+        if(batCapacity <= 999) getdisplay().print(batCapacity, 0);
+        if(batCapacity > 999) getdisplay().print(float(batCapacity/1000.0), 1);
+        getdisplay().setFont(&Ubuntu_Bold16pt7b);
+        if(batCapacity <= 999) getdisplay().print("Ah");
+        if(batCapacity > 999) getdisplay().print("kAh");
 
         // Show info
-        display.setFont(&Ubuntu_Bold8pt7b);
-        display.setCursor(10, 235);
-        display.print("Installed");
-        display.setCursor(10, 255);
-        display.print("Battery Type");
+        getdisplay().setFont(&Ubuntu_Bold8pt7b);
+        getdisplay().setCursor(10, 235);
+        getdisplay().print("Installed");
+        getdisplay().setCursor(10, 255);
+        getdisplay().print("Battery Type");
 
         // Show battery with fill level
         batteryGraphic(150, 45, batPercentage, pixelcolor, bgcolor);
 
         // Show average settings
-        display.setTextColor(textcolor);
-        display.setFont(&Ubuntu_Bold8pt7b);
-        display.setCursor(150, 145);
+        getdisplay().setTextColor(textcolor);
+        getdisplay().setFont(&Ubuntu_Bold8pt7b);
+        getdisplay().setCursor(150, 145);
         switch (average) {
             case 0:
-                display.print("Avg: 1s");
+                getdisplay().print("Avg: 1s");
                 break;
             case 1:
-                display.print("Avg: 10s");
+                getdisplay().print("Avg: 10s");
                 break;
             case 2:
-                display.print("Avg: 60s");
+                getdisplay().print("Avg: 60s");
                 break;
             case 3:
-                display.print("Avg: 300s");
+                getdisplay().print("Avg: 300s");
                 break;
             default:
-                display.print("Avg: 1s");
+                getdisplay().print("Avg: 1s");
                 break;
         } 
 
         // Show fill level in percent
-        display.setTextColor(textcolor);
-        display.setFont(&DSEG7Classic_BoldItalic20pt7b);
-        display.setCursor(150, 200);
-        display.print(batPercentage);
-        display.setFont(&Ubuntu_Bold16pt7b);
-        display.print("%");
+        getdisplay().setTextColor(textcolor);
+        getdisplay().setFont(&DSEG7Classic_BoldItalic20pt7b);
+        getdisplay().setCursor(150, 200);
+        getdisplay().print(batPercentage);
+        getdisplay().setFont(&Ubuntu_Bold16pt7b);
+        getdisplay().print("%");
 
         // Show time to full discharge
-        display.setTextColor(textcolor);
-        display.setFont(&DSEG7Classic_BoldItalic20pt7b);
-        display.setCursor(150, 260);
+        getdisplay().setTextColor(textcolor);
+        getdisplay().setFont(&DSEG7Classic_BoldItalic20pt7b);
+        getdisplay().setCursor(150, 260);
         if((powerSensor == "INA219" || powerSensor == "INA226") && simulation == false){
-            if(batRange < 9.9) display.print(batRange, 1);
-            else display.print(batRange, 0);
+            if(batRange < 9.9) getdisplay().print(batRange, 1);
+            else getdisplay().print(batRange, 0);
         }
-        else  display.print("--");
-        display.setFont(&Ubuntu_Bold16pt7b);
-        display.print("h");
+        else  getdisplay().print("--");
+        getdisplay().setFont(&Ubuntu_Bold16pt7b);
+        getdisplay().print("h");
 
         // Show sensor type info
         String i2cAddr = "";
-        display.setFont(&Ubuntu_Bold8pt7b);
-        display.setCursor(270, 60);
-        if(powerSensor == "off") display.print("Internal");
+        getdisplay().setFont(&Ubuntu_Bold8pt7b);
+        getdisplay().setCursor(270, 60);
+        if(powerSensor == "off") getdisplay().print("Internal");
         if(powerSensor == "INA219"){
-            display.print("INA219");
+            getdisplay().print("INA219");
         }
         if(powerSensor == "INA226"){
-            display.print("INA226");
+            getdisplay().print("INA226");
             i2cAddr = " (0x" + String(INA226_I2C_ADDR1, HEX) + ")";
         }
-        display.print(i2cAddr);
-        display.setCursor(270, 80);
-        display.print("Sensor Modul");
+        getdisplay().print(i2cAddr);
+        getdisplay().setCursor(270, 80);
+        getdisplay().print("Sensor Modul");
 
         // Reading bus data or using simulation data
-        display.setTextColor(textcolor);
-        display.setFont(&DSEG7Classic_BoldItalic20pt7b);
-        display.setCursor(260, 140);
+        getdisplay().setTextColor(textcolor);
+        getdisplay().setFont(&DSEG7Classic_BoldItalic20pt7b);
+        getdisplay().setCursor(260, 140);
         if(simulation == true){
             if(batVoltage == "12V"){
                 value1 = 12.0;
@@ -308,69 +310,69 @@ public:
                 value1 = 24.0;
             }
             value1 += float(random(0, 5)) / 10;         // Simulation data
-            display.print(value1,1);
+            getdisplay().print(value1,1);
         }
         else{
             // Check for valid real data, display also if hold values activated
             if(valid1 == true || holdvalues == true){
                 // Resolution switching
-                if(value1 <= 9.9) display.print(value1, 2);
-                if(value1 > 9.9 && value1 <= 99.9)display.print(value1, 1);
-                if(value1 > 99.9) display.print(value1, 0);
+                if(value1 <= 9.9) getdisplay().print(value1, 2);
+                if(value1 > 9.9 && value1 <= 99.9)getdisplay().print(value1, 1);
+                if(value1 > 99.9) getdisplay().print(value1, 0);
             }
             else{
-            display.print("---");                       // Missing bus data
+            getdisplay().print("---");                       // Missing bus data
             }
         }
-        display.setFont(&Ubuntu_Bold16pt7b);
-        display.print("V");
+        getdisplay().setFont(&Ubuntu_Bold16pt7b);
+        getdisplay().print("V");
 
         // Show actual current in A
-        display.setTextColor(textcolor);
-        display.setFont(&DSEG7Classic_BoldItalic20pt7b);
-        display.setCursor(260, 200);
+        getdisplay().setTextColor(textcolor);
+        getdisplay().setFont(&DSEG7Classic_BoldItalic20pt7b);
+        getdisplay().setCursor(260, 200);
         if((powerSensor == "INA219" || powerSensor == "INA226") && simulation == false){
-            if(value2 <= 9.9) display.print(value2, 2);
-            if(value2 > 9.9 && value2 <= 99.9)display.print(value2, 1);
-            if(value2 > 99.9) display.print(value2, 0);
+            if(value2 <= 9.9) getdisplay().print(value2, 2);
+            if(value2 > 9.9 && value2 <= 99.9)getdisplay().print(value2, 1);
+            if(value2 > 99.9) getdisplay().print(value2, 0);
         }
-        else  display.print("---");
-        display.setFont(&Ubuntu_Bold16pt7b);
-        display.print("A");
+        else  getdisplay().print("---");
+        getdisplay().setFont(&Ubuntu_Bold16pt7b);
+        getdisplay().print("A");
 
         // Show actual consumption in W
-        display.setTextColor(textcolor);
-        display.setFont(&DSEG7Classic_BoldItalic20pt7b);
-        display.setCursor(260, 260);
+        getdisplay().setTextColor(textcolor);
+        getdisplay().setFont(&DSEG7Classic_BoldItalic20pt7b);
+        getdisplay().setCursor(260, 260);
         if((powerSensor == "INA219" || powerSensor == "INA226") && simulation == false){
-            if(value3 <= 9.9) display.print(value3, 2);
-            if(value3 > 9.9 && value3 <= 99.9)display.print(value3, 1);
-            if(value3 > 99.9) display.print(value3, 0);
+            if(value3 <= 9.9) getdisplay().print(value3, 2);
+            if(value3 > 9.9 && value3 <= 99.9)getdisplay().print(value3, 1);
+            if(value3 > 99.9) getdisplay().print(value3, 0);
         }
-        else  display.print("---");
-        display.setFont(&Ubuntu_Bold16pt7b);
-        display.print("W");
+        else  getdisplay().print("---");
+        getdisplay().setFont(&Ubuntu_Bold16pt7b);
+        getdisplay().print("W");
 
         // Key Layout
-        display.setTextColor(textcolor);
-        display.setFont(&Ubuntu_Bold8pt7b);
+        getdisplay().setTextColor(textcolor);
+        getdisplay().setFont(&Ubuntu_Bold8pt7b);
         if(keylock == false){
-            display.setCursor(10, 290);
-            display.print("[AVG]");
-            display.setCursor(130, 290);
-            display.print("[  <<<<  " + String(commonData.data.actpage) + "/" + String(commonData.data.maxpage) + "  >>>>  ]");
+            getdisplay().setCursor(10, 290);
+            getdisplay().print("[AVG]");
+            getdisplay().setCursor(130, 290);
+            getdisplay().print("[  <<<<  " + String(commonData.data.actpage) + "/" + String(commonData.data.maxpage) + "  >>>>  ]");
             if(String(backlightMode) == "Control by Key"){              // Key for illumination
-                display.setCursor(343, 290);
-                display.print("[ILUM]");
+                getdisplay().setCursor(343, 290);
+                getdisplay().print("[ILUM]");
             }
         }
         else{
-            display.setCursor(130, 290);
-            display.print(" [    Keylock active    ]");
+            getdisplay().setCursor(130, 290);
+            getdisplay().print(" [    Keylock active    ]");
         }
 
         // Update display
-        display.updateWindow(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, true);    // Partial update (fast)
+        getdisplay().nextPage();    // Partial update (fast)
     };
 };
 

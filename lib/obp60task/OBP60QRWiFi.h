@@ -2,6 +2,7 @@
 #define _OBP60QRWIFI_H
 
 #include <Arduino.h>
+#include "OBP60Extensions.h"
 #include "qrcode.h"
   
 void qrWiFi(String ssid, String passwd, String displaycolor){
@@ -39,20 +40,20 @@ void qrWiFi(String ssid, String passwd, String displaycolor){
     // Each horizontal module
     for (uint8_t x = 0; x < qrcode.size; x++) {
       if(qrcode_getModule(&qrcode, x, y)){
-        display.fillRect(box_x, box_y, box_s, box_s, pixelcolor);
+        getdisplay().fillRect(box_x, box_y, box_s, box_s, pixelcolor);
       } else {
-        display.fillRect(box_x, box_y, box_s, box_s, bgcolor);
+        getdisplay().fillRect(box_x, box_y, box_s, box_s, bgcolor);
       }
       box_x = box_x + box_s;
     }
     box_y = box_y + box_s;
     box_x = init_x;
   }
-  display.setFont(&Ubuntu_Bold32pt7b);
-  display.setTextColor(textcolor);
-  display.setCursor(140, 285);
-  display.print("WiFi");
-  display.updateWindow(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, true);   // Partial update (fast)
+  getdisplay().setFont(&Ubuntu_Bold32pt7b);
+  getdisplay().setTextColor(textcolor);
+  getdisplay().setCursor(140, 285);
+  getdisplay().print("WiFi");
+  getdisplay().nextPage();                 // Full Refresh
 }
 
 #endif

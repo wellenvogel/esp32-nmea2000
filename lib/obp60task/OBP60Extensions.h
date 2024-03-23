@@ -4,12 +4,7 @@
 #include <Arduino.h>
 #include "OBP60Hardware.h"
 #include <FastLED.h>                    // Driver for WS2812 RGB LED
-#include <GxGDEW042T2/GxGDEW042T2.h>    // 4.2" Waveshare S/W 300 x 400 pixel
-#include <GxIO/GxIO_SPI/GxIO_SPI.h>     // GxEPD lip for SPI display communikation
-#include <GxIO/GxIO.h>                  // GxEPD lip for SPI
-
-// E-Ink display
-extern GxEPD_Class display;                     // E-Ink display functions
+#include <GxEPD2_BW.h>                  // E-paper lib V2
 
 // Fonts declarations for display (#inclues see OBP60Extensions.cpp)
 extern const GFXfont Ubuntu_Bold8pt7b;
@@ -24,6 +19,8 @@ extern const GFXfont DSEG7Classic_BoldItalic42pt7b;
 extern const GFXfont DSEG7Classic_BoldItalic60pt7b;
 
 // Gloabl functions
+GxEPD2_BW<GxEPD2_420, GxEPD2_420::HEIGHT> & getdisplay();
+
 void hardwareInit();
 
 void setPortPin(uint pin, bool value);          // Set port pin for extension port

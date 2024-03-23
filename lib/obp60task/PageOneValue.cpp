@@ -71,45 +71,47 @@ class PageOneValue : public Page{
             pixelcolor = GxEPD_WHITE;
             bgcolor = GxEPD_BLACK;
         }
-        // Clear display by call in obp60task.cpp in main loop
+        /// Set display in partial refresh mode
+        getdisplay().setPartialWindow(0, 0, getdisplay().width(), getdisplay().height()); // Set partial update
+        getdisplay().fillScreen(bgcolor);    // Clear display
 
         // Show name
-        display.setTextColor(textcolor);
-        display.setFont(&Ubuntu_Bold32pt7b);
-        display.setCursor(20, 100);
-        display.print(name1);                           // Page name
+        getdisplay().setTextColor(textcolor);
+        getdisplay().setFont(&Ubuntu_Bold32pt7b);
+        getdisplay().setCursor(20, 100);
+        getdisplay().print(name1);                           // Page name
 
         // Show unit
-        display.setTextColor(textcolor);
-        display.setFont(&Ubuntu_Bold20pt7b);
-        display.setCursor(270, 100);
+        getdisplay().setTextColor(textcolor);
+        getdisplay().setFont(&Ubuntu_Bold20pt7b);
+        getdisplay().setCursor(270, 100);
         if(holdvalues == false){
-            display.print(unit1);                       // Unit
+            getdisplay().print(unit1);                       // Unit
         }
         else{
-            display.print(unit1old);
+            getdisplay().print(unit1old);
         }
 
         // Switch font if format for any values
         if(bvalue1->getFormat() == "formatLatitude" || bvalue1->getFormat() == "formatLongitude"){
-            display.setFont(&Ubuntu_Bold20pt7b);
-            display.setCursor(20, 180);
+            getdisplay().setFont(&Ubuntu_Bold20pt7b);
+            getdisplay().setCursor(20, 180);
         }
         else if(bvalue1->getFormat() == "formatTime" || bvalue1->getFormat() == "formatDate"){
-            display.setFont(&Ubuntu_Bold32pt7b);
-            display.setCursor(20, 200);
+            getdisplay().setFont(&Ubuntu_Bold32pt7b);
+            getdisplay().setCursor(20, 200);
         }
         else{
-            display.setFont(&DSEG7Classic_BoldItalic60pt7b);
-            display.setCursor(20, 240);
+            getdisplay().setFont(&DSEG7Classic_BoldItalic60pt7b);
+            getdisplay().setCursor(20, 240);
         }
 
         // Show bus data
         if(holdvalues == false){
-            display.print(svalue1);                                     // Real value as formated string
+            getdisplay().print(svalue1);                                     // Real value as formated string
         }
         else{
-            display.print(svalue1old);                                  // Old value as formated string
+            getdisplay().print(svalue1old);                                  // Old value as formated string
         }
         if(valid1 == true){
             svalue1old = svalue1;                                       // Save the old value
@@ -117,23 +119,23 @@ class PageOneValue : public Page{
         }
 
         // Key Layout
-        display.setTextColor(textcolor);
-        display.setFont(&Ubuntu_Bold8pt7b);
+        getdisplay().setTextColor(textcolor);
+        getdisplay().setFont(&Ubuntu_Bold8pt7b);
         if(keylock == false){
-            display.setCursor(130, 290);
-            display.print("[  <<<<  " + String(commonData.data.actpage) + "/" + String(commonData.data.maxpage) + "  >>>>  ]");
+            getdisplay().setCursor(130, 290);
+            getdisplay().print("[  <<<<  " + String(commonData.data.actpage) + "/" + String(commonData.data.maxpage) + "  >>>>  ]");
             if(String(backlightMode) == "Control by Key"){                  // Key for illumination
-                display.setCursor(343, 290);
-                display.print("[ILUM]");
+                getdisplay().setCursor(343, 290);
+                getdisplay().print("[ILUM]");
             }
         }
         else{
-            display.setCursor(130, 290);
-            display.print(" [    Keylock active    ]");
+            getdisplay().setCursor(130, 290);
+            getdisplay().print(" [    Keylock active    ]");
         }
 
         // Update display
-        display.updateWindow(0, 0, GxEPD_WIDTH, GxEPD_HEIGHT, true);    // Partial update (fast)
+        getdisplay().nextPage();    // Partial update (fast)
 
     };
 };
