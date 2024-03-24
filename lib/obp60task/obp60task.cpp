@@ -30,6 +30,11 @@ int taskRunCounter = 0;         // Task couter for loop section
 // Hardware initialization before start all services
 //####################################################################################
 void OBP60Init(GwApi *api){
+
+    // Set a new device name and hidden the original name in the main config
+    String devicename = api->getConfig()->getConfigItem(api->getConfig()->deviceName,true)->asString();
+    api->getConfig()->setValue(GwConfigDefinitions::systemName, devicename, GwConfigInterface::ConfigType::HIDDEN);
+
     api->getLogger()->logDebug(GwLog::LOG,"obp60init running");
     
     // Check I2C devices
@@ -477,7 +482,7 @@ void OBP60Task(GwApi *api){
             // Full display update afer a new selected page and 4s wait time
             if(millis() > starttime4 + 4000 && delayedDisplayUpdate == true){
                 getdisplay().setFullWindow();    // Set full update
-                getdisplay().nextPage();         // Full Update
+                getdisplay().nextPage();         // Full update
                 delayedDisplayUpdate = false;
             }
 
@@ -487,7 +492,7 @@ void OBP60Task(GwApi *api){
                 starttime1 = millis();
                 LOG_DEBUG(GwLog::DEBUG,"E-Ink full refresh first 5 min");
                 getdisplay().setFullWindow();    // Set full update
-                getdisplay().nextPage();         // Full Update
+                getdisplay().nextPage();         // Full update
             }
 
             // Subtask E-Ink full refresh
@@ -495,7 +500,7 @@ void OBP60Task(GwApi *api){
                 starttime2 = millis();
                 LOG_DEBUG(GwLog::DEBUG,"E-Ink full refresh");
                 getdisplay().setFullWindow();    // Set full update
-                getdisplay().nextPage();         // Full Update
+                getdisplay().nextPage();         // Full update
             }
             
             // Refresh display data all 1s
@@ -509,7 +514,8 @@ void OBP60Task(GwApi *api){
                 getdisplay().fillRect(0, 0, getdisplay().width(), getdisplay().height(), bgcolor);   // Clear display
                 if (pages[pageNumber].description && pages[pageNumber].description->header){
                     //build some header and footer using commonData
-                    displayHeader(commonData, date, time);
+                    getdisplay().fillScreen(bgcolor);       // Clear display
+                    displayHeader(commonData, date, time);  // Sown header
                 }
                 
                 // Call the particular page

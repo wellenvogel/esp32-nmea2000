@@ -77,7 +77,7 @@ void hardwareInit()
     setPortPin(OBP_POWER_50, true);
 
     // Init E-Ink display
-    //display.init(115200, true, 2, false);   // Use this for Waveshare boards with "clever" reset circuit, 2ms reset pulse
+    //getdisplay().init(115200, true, 2, false);   // Use this for Waveshare boards with "clever" reset circuit, 2ms reset pulse
 
 
     // Init RGB LEDs
@@ -225,12 +225,12 @@ String xdrDelete(String input){
 
 // Show a triangle for trend direction high (x, y is the left edge)
 void displayTrendHigh(int16_t x, int16_t y, uint16_t size, uint16_t color){
-    display.fillTriangle(x, y, x+size*2, y, x+size, y-size*2, color);
+    getdisplay().fillTriangle(x, y, x+size*2, y, x+size, y-size*2, color);
 }
 
 // Show a triangle for trend direction low (x, y is the left edge)
 void displayTrendLow(int16_t x, int16_t y, uint16_t size, uint16_t color){
-    display.fillTriangle(x, y, x+size*2, y, x+size, y+size*2, color);
+    getdisplay().fillTriangle(x, y, x+size*2, y, x+size, y+size*2, color);
 }
 
 // Show header informations
@@ -259,27 +259,27 @@ void displayHeader(CommonData &commonData, GwApi::BoatValue *date, GwApi::BoatVa
         }
 
         // Show status info
-        display.setTextColor(textcolor);
-        display.setFont(&Ubuntu_Bold8pt7b);
-        display.setCursor(0, 15);
+        getdisplay().setTextColor(textcolor);
+        getdisplay().setFont(&Ubuntu_Bold8pt7b);
+        getdisplay().setCursor(0, 15);
         if(commonData.status.wifiApOn){
-        display.print(" AP ");
+        getdisplay().print(" AP ");
         }
         // If receive new telegram data then display bus name
         if(commonData.status.tcpClRx != tcpClRxOld || commonData.status.tcpClTx != tcpClTxOld || commonData.status.tcpSerRx != tcpSerRxOld || commonData.status.tcpSerTx != tcpSerTxOld){
-        display.print("TCP ");
+        getdisplay().print("TCP ");
         }
         if(commonData.status.n2kRx != n2kRxOld || commonData.status.n2kTx != n2kTxOld){
-        display.print("N2K ");
+        getdisplay().print("N2K ");
         }
         if(commonData.status.serRx != serRxOld || commonData.status.serTx != serTxOld){
-        display.print("183 ");
+        getdisplay().print("183 ");
         }
         if(commonData.status.usbRx != usbRxOld || commonData.status.usbTx != usbTxOld){
-        display.print("USB ");
+        getdisplay().print("USB ");
         }
         if(commonData.config->getBool(commonData.config->useGPS) == true && date->valid == true){
-        display.print("GPS");
+        getdisplay().print("GPS");
         }
         // Save old telegram counter
         tcpClRxOld = commonData.status.tcpClRx;
@@ -294,38 +294,38 @@ void displayHeader(CommonData &commonData, GwApi::BoatValue *date, GwApi::BoatVa
         usbTxOld = commonData.status.usbTx;
 
         // Heartbeat as dot
-        display.setTextColor(textcolor);
-        display.setFont(&Ubuntu_Bold32pt7b);
-        display.setCursor(205, 14);
+        getdisplay().setTextColor(textcolor);
+        getdisplay().setFont(&Ubuntu_Bold32pt7b);
+        getdisplay().setCursor(205, 14);
         if(heartbeat == true){
-        display.print(".");
+        getdisplay().print(".");
         }
         else{
-        display.print(" ");
+        getdisplay().print(" ");
         }
         heartbeat = !heartbeat; 
 
         // Date and time
-        display.setTextColor(textcolor);
-        display.setFont(&Ubuntu_Bold8pt7b);
-        display.setCursor(230, 15);
+        getdisplay().setTextColor(textcolor);
+        getdisplay().setFont(&Ubuntu_Bold8pt7b);
+        getdisplay().setCursor(230, 15);
         if(date->valid == true){
             String acttime = formatValue(time, commonData).svalue;
             acttime = acttime.substring(0, 5);
             String actdate = formatValue(date, commonData).svalue;
-            display.print(acttime);
-            display.print(" ");
-            display.print(actdate);
-            display.print(" ");
+            getdisplay().print(acttime);
+            getdisplay().print(" ");
+            getdisplay().print(actdate);
+            getdisplay().print(" ");
             if(commonData.config->getInt(commonData.config->timeZone) == 0){
-                display.print("UTC");
+                getdisplay().print("UTC");
             }
             else{
-                display.print("LOT");
+                getdisplay().print("LOT");
             }
         }
         else{
-        display.print("No GPS data");
+        getdisplay().print("No GPS data");
         }
     }
 }
@@ -385,20 +385,20 @@ void batteryGraphic(uint x, uint y, float percent, int pcolor, int bcolor){
         }
         // Battery corpus 100x80 with fill level
         int level = int((100.0 - percent) * (80-(2*t)) / 100.0);
-        display.fillRect(xb, yb, 100, 80, pcolor);
+        getdisplay().fillRect(xb, yb, 100, 80, pcolor);
         if(percent < 99){
-            display.fillRect(xb+t, yb+t, 100-(2*t), level, bcolor);
+            getdisplay().fillRect(xb+t, yb+t, 100-(2*t), level, bcolor);
         }
         // Plus pol 20x15
         int xp = xb + 20;
         int yp = yb - 15 + t;
-        display.fillRect(xp, yp, 20, 15, pcolor);
-        display.fillRect(xp+t, yp+t, 20-(2*t), 15-(2*t), bcolor);
+        getdisplay().fillRect(xp, yp, 20, 15, pcolor);
+        getdisplay().fillRect(xp+t, yp+t, 20-(2*t), 15-(2*t), bcolor);
         // Minus pol 20x15
         int xm = xb + 60;
         int ym = yb -15 + t;
-        display.fillRect(xm, ym, 20, 15, pcolor);
-        display.fillRect(xm+t, ym+t, 20-(2*t), 15-(2*t), bcolor);
+        getdisplay().fillRect(xm, ym, 20, 15, pcolor);
+        getdisplay().fillRect(xm+t, ym+t, 20-(2*t), 15-(2*t), bcolor);
 }
 
 #endif

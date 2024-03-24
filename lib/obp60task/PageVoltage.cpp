@@ -149,7 +149,6 @@ public:
         }
         // Set display in partial refresh mode
         getdisplay().setPartialWindow(0, 0, getdisplay().width(), getdisplay().height()); // Set partial update
-        getdisplay().fillScreen(bgcolor);    // Clear display
 
         // Show name
         getdisplay().setTextColor(textcolor);

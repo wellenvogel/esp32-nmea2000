@@ -106,7 +106,6 @@ public:
         }
         // Set display in partial refresh mode
         getdisplay().setPartialWindow(0, 0, getdisplay().width(), getdisplay().height()); // Set partial update
-        getdisplay().fillScreen(bgcolor);    // Clear display
 
         // Show values AWS
         getdisplay().setTextColor(textcolor);

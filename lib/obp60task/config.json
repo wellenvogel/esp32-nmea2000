@@ -1,5 +1,14 @@
 [
     {
+        "name": "deviceName",
+        "label": "system name",
+        "type": "string",
+        "default": "OBP60V2",
+        "check": "checkSystemName",
+        "description": "system name, used for the access point and for services",
+        "category": "system"
+    },
+    {
         "name": "timeZone",
         "label": "Time Zone",
         "type": "number",

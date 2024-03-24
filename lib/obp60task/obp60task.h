@@ -21,6 +21,7 @@
 
     // OBP60 Task
     void OBP60Task(GwApi *param);
-    DECLARE_USERTASK_PARAM(OBP60Task, 10000)    // Need 8k RAM as stack size
+    DECLARE_USERTASK_PARAM(OBP60Task, 10000);   // Need 8k RAM as stack size
     DECLARE_CAPABILITY(obp60,true);
+    DECLARE_STRING_CAPABILITY(HELP_URL, "https://obp60-v2-docu.readthedocs.io/de/latest/"); // Link to help pages
 #endif
