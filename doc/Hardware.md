@@ -3,6 +3,7 @@ Hardware Configurations
 This pages describes a couple of the potential hardware configurations you could use with the code.
 Finally this list is not complete and you can easily define your own set up by adding definitions.
 Hint: all prebuild binaries can be found at [releases](https://github.com/wellenvogel/esp32-nmea2000/releases).
+Additionally you can use the [online build service](BuildService.md) to create binaries for a lot of hardware combinations. 
 The "Build Defines" describe which of the hardware definitions from [Hardware.h](../lib/hardware/Hardware.h) are used.
 
 M5 Atom CAN
