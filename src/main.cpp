@@ -1,4 +1,5 @@
 /*
+  (C) Andreas Vogel andreas@wellenvogel.de
   This code is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
   License as published by the Free Software Foundation; either
@@ -19,6 +20,7 @@ const unsigned long HEAP_REPORT_TIME=2000; //set to 0 to disable heap reporting
 #include <Arduino.h>
 #include "Preferences.h"
 #include "GwApi.h"
+#define GW_PINDEFS
 #include "GwHardware.h"
 
 #ifndef N2K_LOAD_LEVEL
@@ -69,10 +71,6 @@ const unsigned long HEAP_REPORT_TIME=2000; //set to 0 to disable heap reporting
 
 #define MAX_NMEA2000_MESSAGE_SEASMART_SIZE 500
 #define MAX_NMEA0183_MESSAGE_SIZE MAX_NMEA2000_MESSAGE_SEASMART_SIZE
-//https://curiouser.cheshireeng.com/2014/08/19/c-compile-time-assert/
-#define CASSERT(predicate, text) _impl_CASSERT_LINE(predicate,__LINE__) 
-#define _impl_PASTE(a,b) a##b
-#define _impl_CASSERT_LINE(predicate, line) typedef char _impl_PASTE(assertion_failed_CASSERT_,line)[(predicate)?1:-1];
 //assert length of firmware name and version
 CASSERT(strlen(FIRMWARE_TYPE) <= 32, "environment name (FIRMWARE_TYPE) must not exceed 32 chars");
 CASSERT(strlen(VERSION) <= 32, "VERSION must not exceed 32 chars");
@@ -234,15 +232,38 @@ void SendNMEA0183Message(const tNMEA0183Msg &NMEA0183Msg, int sourceId,bool conv
   });
 }
 
+class CalibrationValues {
+  using Map=std::map<String,double>;
+  Map values;
+  SemaphoreHandle_t lock;
+  public:
+    CalibrationValues(){
+      lock=xSemaphoreCreateMutex();
+    }
+    void set(const String &name,double value){
+      GWSYNCHRONIZED(&lock);
+      values[name]=value;
+    }
+    bool get(const String &name, double &value){
+      GWSYNCHRONIZED(&lock);
+      auto it=values.find(name);
+      if (it==values.end()) return false;
+      value=it->second;
+      return true;
+    }
+};
+
 class ApiImpl : public GwApiInternal
 {
 private:
   int sourceId = -1;
+  std::unique_ptr<CalibrationValues> calibrations;
 
 public:
   ApiImpl(int sourceId)
   {
     this->sourceId = sourceId;
+    calibrations.reset(new CalibrationValues());
   }
   virtual GwRequestQueue *getQueue()
   {
@@ -331,6 +352,13 @@ public:
   virtual bool addUserTask(GwUserTaskFunction task,const String Name, int stackSize=2000){
     return false;
   }
+  virtual void setCalibrationValue(const String &name, double value){
+    calibrations->set(name,value);
+  }
+
+  bool getCalibrationValue(const String &name,double &value){
+    return calibrations->get(name,value);
+  }
 };
 
 bool delayedRestart(){
@@ -382,7 +410,7 @@ public:
 protected:
   virtual void processRequest()
   {
-    GwJsonDocument status(300 + 
+    GwJsonDocument status(305 + 
       countNMEA2KIn.getJsonSize()+
       countNMEA2KOut.getJsonSize() +
       channels.getJsonSize()+
@@ -390,6 +418,7 @@ protected:
       );
     status["version"] = VERSION;
     status["wifiConnected"] = gwWifi.clientConnected();
+    status["wifiSSID"] = config.getString(GwConfigDefinitions::wifiSSID);
     status["clientIP"] = WiFi.localIP().toString();
     status["apIp"] = gwWifi.apIP();
     size_t bsize=2*sizeof(unsigned long)+1;
@@ -756,6 +785,7 @@ void setup() {
   logger.setWriter(new DefaultLogWriter());
 #endif
   userCodeHandler.startInitTasks(MIN_USER_TASK);
+  channels.preinit();
   config.stopChanges();
   //maybe the user code changed the level
   level=config.getInt(config.logLevel,LOGLEVEL);
@@ -802,12 +832,25 @@ void setup() {
                               [](AsyncWebServerRequest *request){
 
                               },
-                              handleConfigRequestData);                                                        
+                              handleConfigRequestData);
+  webserver.registerHandler("/api/calibrate",[](AsyncWebServerRequest *request){
+                              const String name=request->arg("name");
+                              double value;
+                              if (! apiImpl->getCalibrationValue(name,value)){
+                                request->send(400, "text/plain", "name not found");
+                                return;
+                              }
+                              char buffer[30];
+                              snprintf(buffer,29,"%g",value);
+                              buffer[29]=0;
+                              request->send(200,"text/plain",buffer);    
+  });                                                        
 
   webserver.begin();
   xdrMappings.begin();
   logger.flush();
-  
+  GwConverterConfig converterConfig;
+  converterConfig.init(&config);
   nmea0183Converter= N2kDataToNMEA0183::create(&logger, &boatData, 
     [](const tNMEA0183Msg &msg, int sourceId){
       SendNMEA0183Message(msg,sourceId,false);
@@ -815,7 +858,7 @@ void setup() {
     , 
     config.getString(config.talkerId,String("GP")),
     &xdrMappings,
-    config.getInt(config.minXdrInterval,100)
+    converterConfig
     );
 
   toN2KConverter= NMEA0183DataToN2K::create(&logger,&boatData,[](const tN2kMsg &msg, int sourceId)->bool{
@@ -824,7 +867,7 @@ void setup() {
     return true;
   },
   &xdrMappings,
-  config.getInt(config.min2KInterval,50)
+  converterConfig
   );  
   
   NMEA2000.SetN2kCANMsgBufSize(8);
@@ -946,7 +989,8 @@ void loopRun() {
     preferences.end();
     logger.logDebug(GwLog::LOG,"Address Change: New Address=%d\n", SourceAddress);
   }
-  nmea0183Converter->loop();
+  //potentially send out an own RMC if we did not receive one
+  nmea0183Converter->loop(toN2KConverter->getLastRmc());
   monitor.setTime(8);
 
   //read channels

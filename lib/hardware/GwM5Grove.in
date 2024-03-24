@@ -1,0 +1,145 @@
+/*
+  This code is free software; you can redistribute it and/or
+  modify it under the terms of the GNU Lesser General Public
+  License as published by the Free Software Foundation; either
+  version 2.1 of the License, or (at your option) any later version.
+  This code is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  Lesser General Public License for more details.
+  You should have received a copy of the GNU Lesser General Public
+  License along with this library; if not, write to the Free Software
+  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+
+  unfortunately there is some typo here: M5 uses GROVE for their connections
+  but we have GROOVE here.
+  But to maintain compatibility to older build commands we keep the (wrong) wording
+
+  This file contains M5 grove definitions.
+  They will be expanded to match the supported groves
+
+  Each definition must start with a line that start starts with  #GROVE
+  Afterwards you can use normal C header style
+  $GS$ will be replaced with a grove suffix with _ (empty for first)
+  $G$ will be replaced by the simple grove name (empty for base)
+  $Z$ will be replaced by the simple name using "Z" for the first grove 
+*/
+#GROVE
+#ifdef SERIAL_GROOVE_485$GS$
+  GWRESOURCE_USE(GROOVE$G$,SERIAL_GROOVE_485$GS$)
+  #define _GWI_SERIAL_GROOVE$GS$ GWSERIAL_TYPE_UNI
+#endif
+
+#GROVE
+#ifdef SERIAL_GROOVE_232$GS$
+  GWRESOURCE_USE(GROOVE$G$,SERIAL_GROOVE_232$GS$)
+  #define _GWI_SERIAL_GROOVE$GS$ GWSERIAL_TYPE_BI
+#endif
+
+#GROVE
+//http://docs.m5stack.com/en/unit/gps
+#ifdef M5_GPS_UNIT$GS$
+  GWRESOURCE_USE(GROOVE$G$,M5_GPS_UNIT$GS$)
+  #define _GWI_SERIAL_GROOVE$GS$ GWSERIAL_TYPE_RX,9600
+#endif
+
+#GROVE
+//CAN via groove 
+#ifdef M5_CANUNIT$GS$
+  GWRESOURCE_USE(GROOVE$G$,M5_CANUNIT$GS$)
+  GWRESOURCE_USE(CAN,M5_CANUNIT$GS$)
+  #define ESP32_CAN_TX_PIN GROOVE$G$_PIN_2
+  #define ESP32_CAN_RX_PIN GROOVE$G$_PIN_1
+#endif
+
+#GROVE
+#ifdef M5_ENV3$GS$
+  #ifndef M5_GROOVEIIC$GS$
+    #define M5_GROOVEIIC$GS$
+  #endif
+  GROOVE_IIC(SHT3X,$Z$,1)
+  GROOVE_IIC(QMP6988,$Z$,1)
+  #define _GWSHT3X
+  #define _GWQMP6988
+#endif
+
+#GROVE
+//example: -DSHT3XG1_A : defines STH3Xn1 on grove A - x depends on the other devices
+#ifdef GWSHT3XG1$GS$
+  #ifndef M5_GROOVEIIC$GS$
+    #define M5_GROOVEIIC$GS$
+  #endif
+  GROOVE_IIC(SHT3X,$Z$,1)
+  #define _GWSHT3X
+#endif
+
+#GROVE
+#ifdef GWSHT3XG2$GS$
+  #ifndef M5_GROOVEIIC$GS$
+    #define M5_GROOVEIIC$GS$
+  #endif
+  GROOVE_IIC(SHT3X,$Z$,2)
+  #define _GWSHT3X
+#endif
+
+#GROVE
+#ifdef GWQMP6988G1$GS$
+  #ifndef M5_GROOVEIIC$GS$
+    #define M5_GROOVEIIC$GS$
+  #endif
+  GROOVE_IIC(QMP6988,$Z$,1)
+  #define _GWQMP6988
+#endif
+
+#GROVE
+#ifdef GWQMP6988G2$GS$
+  #ifndef M5_GROOVEIIC$GS$
+    #define M5_GROOVEIIC$GS$
+  #endif
+  GROOVE_IIC(QMP6988,$Z$,2)
+  #define _GWQMP6988
+#endif
+
+#GROVE
+#ifdef GWBME280G1$GS$
+  #ifndef M5_GROOVEIIC$GS$
+    #define M5_GROOVEIIC$GS$
+  #endif
+  GROOVE_IIC(BME280,$Z$,1)
+  #define _GWBME280
+#endif
+
+#GROVE
+#ifdef GWBME280G2$GS$
+  #ifndef M5_GROOVEIIC$GS$
+    #define M5_GROOVEIIC$GS$
+  #endif
+  GROOVE_IIC(BME280,$Z$,2)
+  #define _GWBME280
+#endif
+
+#GROVE
+//select up to 2 IIC devices for grove usage
+#ifdef M5_GROOVEIIC$GS$
+  GWRESOURCE_USE(GROOVE$G$,M5_GROOVEIIC$GS$)
+  #ifndef _GWI_IIC1
+    __USAGE("IIC1 used by GROVE$GS$")
+    #define _GWI_IIC1 "$Z$",GROOVE$G$_PIN_1,GROOVE$G$_PIN_2
+  #elif ! defined(_GWI_IIC2)
+    __USAGE("IIC2 used by GROVE$GS$")
+    #define _GWI_IIC2 "$Z$",GROOVE$G$_PIN_1,GROOVE$G$_PIN_2
+  #else
+    #error "both iic buses already in use"
+  #endif
+#endif
+
+#GROVE
+#ifdef _GWI_SERIAL_GROOVE$GS$
+  #ifndef _GWI_SERIAL1
+    #define _GWI_SERIAL1 GROOVE$G$_PIN_1,GROOVE$G$_PIN_2,_GWI_SERIAL_GROOVE$GS$
+  #elif ! defined(_GWI_SERIAL2)
+    #define _GWI_SERIAL2 GROOVE$G$_PIN_1,GROOVE$G$_PIN_2,_GWI_SERIAL_GROOVE$GS$
+  #else
+    #error "both serial devices already in use"
+  #endif
+#endif

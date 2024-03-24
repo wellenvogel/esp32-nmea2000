@@ -346,11 +346,15 @@ function createCounterDisplay(parent,label,key,isEven){
         }
     });
 }
-
+function validKey(key){
+    if (! key) return;
+    return key.replace(/[^a-z_:A-Z0-9-]/g,'');
+}
 function updateMsgDetails(key, details) {
     forEl('.msgDetails', function (frame) {
         if (frame.getAttribute('id') !== key) return;
         for (let k in details) {
+            k=validKey(k);
             let el = frame.querySelector("[data-id=\"" + k + "\"] ");
             if (!el) {
                 el = addEl('div', 'row', frame);
@@ -371,22 +375,37 @@ function updateMsgDetails(key, details) {
     });
 }
 
-function showOverlay(text, isHtml) {
+function showOverlay(text, isHtml,buttons) {
     let el = document.getElementById('overlayContent');
-    if (isHtml) {
-        el.innerHTML = text;
-        el.classList.remove("text");
+    if (text instanceof Object){
+        el.textContent='';
+        el.appendChild(text);
     }
     else {
-        el.textContent = text;
-        el.classList.add("text");
+        if (isHtml) {
+            el.innerHTML = text;
+            el.classList.remove("text");
+        }
+        else {
+            el.textContent = text;
+            el.classList.add("text");
+        }
     }
+    buttons=(buttons?buttons:[]).concat([{label:"Close",click:hideOverlay}]);
     let container = document.getElementById('overlayContainer');
+    let btframe=container.querySelector('.overlayButtons');
+    btframe.textContent='';
+    buttons.forEach((btconfig)=>{
+        let bt=addEl('button','',btframe,btconfig.label);
+        bt.addEventListener("click",btconfig.click);
+    });
     container.classList.remove('hidden');
 }
 function hideOverlay() {
     let container = document.getElementById('overlayContainer');
     container.classList.add('hidden');
+    let el = document.getElementById('overlayContent');
+    el.textContent='';
 }
 function checkChange(el, row,name) {
     let loaded = el.getAttribute('data-loaded');
@@ -456,6 +475,94 @@ function checkCondition(element){
     if (visible) row.classList.remove('hidden');
     else row.classList.add('hidden');
 }
+let caliv=0;
+function createCalSetInput(configItem,frame,clazz){
+    let el = addEl('input',clazz,frame);
+    let cb = addEl('button','',frame,'C');
+    //el.disabled=true;
+    cb.addEventListener('click',(ev)=>{
+        let cs=document.getElementById("calset").cloneNode(true);
+        cs.classList.remove("hidden");
+        cs.querySelector(".heading").textContent=configItem.label||configItem.name;
+        let vel=cs.querySelector(".val");
+        if (caliv != 0) window.clearInterval(caliv);
+        caliv=window.setInterval(()=>{
+            if (document.body.contains(cs)){
+                fetch("/api/calibrate?name="+encodeURIComponent(configItem.name))
+                .then((r)=>r.text())
+                .then((txt)=>{
+                    if (txt != vel.textContent){
+                        vel.textContent=txt;
+                    }
+                })
+                .catch((e)=>{
+                    alert(e);
+                    hideOverlay();
+                    window.clearInterval(caliv);
+                })
+            }
+            else{
+                window.clearInterval(caliv);
+            }
+        },200);        
+        showOverlay(cs,false,[{label:'Set',click:()=>{
+            el.value=vel.textContent;
+            let cev=new Event('change');
+            el.dispatchEvent(cev);
+        }}]);
+    })
+    el.setAttribute('name', configItem.name)
+    return el;    
+}
+function createCalValInput(configItem,frame,clazz){
+    let el = addEl('input',clazz,frame);
+    let cb = addEl('button','',frame,'C');
+    //el.disabled=true;
+    cb.addEventListener('click',(ev)=>{
+        const sv=function(val,cfg){
+            if (configItem.eval){
+                let v=parseFloat(val);
+                let c=parseFloat(cfg);
+                return(eval(configItem.eval));
+            }
+            return v;
+        };
+        let cs=document.getElementById("calval").cloneNode(true);
+        cs.classList.remove("hidden");
+        cs.querySelector(".heading").textContent=configItem.label||configItem.name;
+        let vel=cs.querySelector(".val");
+        let vinp=cs.querySelector("input");
+        vinp.value=el.value;
+        if (caliv != 0) window.clearInterval(caliv);
+        caliv=window.setInterval(()=>{
+            if (document.body.contains(cs)){
+                fetch("/api/calibrate?name="+encodeURIComponent(configItem.name))
+                .then((r)=>r.text())
+                .then((txt)=>{
+                    txt=sv(txt,vinp.value);
+                    if (txt != vel.textContent){
+                        vel.textContent=txt;
+                    }
+                })
+                .catch((e)=>{
+                    alert(e);
+                    hideOverlay();
+                    window.clearInterval(caliv);
+                })
+            }
+            else{
+                window.clearInterval(caliv);
+            }
+        },200);        
+        showOverlay(cs,false,[{label:'Set',click:()=>{
+            el.value=vinp.value;
+            let cev=new Event('change');
+            el.dispatchEvent(cev);
+        }}]);
+    })
+    el.setAttribute('name', configItem.name)
+    return el;    
+}
 function createInput(configItem, frame,clazz) {
     let el;
     if (configItem.type === 'boolean' || configItem.type === 'list' || configItem.type == 'boatData') {
@@ -491,6 +598,12 @@ function createInput(configItem, frame,clazz) {
     }
     if (configItem.type === 'xdr'){
         return createXdrInput(configItem,frame,clazz);
+    }
+    if (configItem.type === "calset"){
+        return createCalSetInput(configItem,frame,clazz);
+    }
+    if (configItem.type === "calval"){
+        return createCalValInput(configItem,frame,clazz);
     }
     el = addEl('input',clazz,frame);
     if (configItem.readOnly) el.setAttribute('disabled',true);
@@ -1506,7 +1619,9 @@ function createDashboard() {
     frame.innerHTML = '';
 }
 function sourceName(v){
+    if (v == 0) return "N2K";
     for (let n in channelList){
+        if (v == channelList[n].id) return n;
         if (v >= channelList[n].id && v <= channelList[n].max){
             return n;
         }

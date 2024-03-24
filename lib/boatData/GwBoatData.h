@@ -192,7 +192,8 @@ class GwBoatData{
     GWBOATDATA(double,HDOP,4000,formatDop)
     GWBOATDATA(double,PDOP,4000,formatDop)
     GWBOATDATA(double,VDOP,4000,formatDop)
-    GWBOATDATA(double,RPOS,4000,formatCourse) //RudderPosition
+    GWBOATDATA(double,RPOS,4000,formatWind) //RudderPosition
+    GWBOATDATA(double,PRPOS,4000,formatWind) //second rudder pos
     GWBOATDATA(double,LAT,4000,formatLatitude)
     GWBOATDATA(double,LON,4000,formatLongitude)
     GWBOATDATA(double,ALT,4000,formatFixed0) //altitude

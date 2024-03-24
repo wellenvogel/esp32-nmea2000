@@ -51,7 +51,8 @@ EXCEPTIONS = [
 
 PLATFORMS = {
     "ESP8266": "lx106",
-    "ESP32": "esp32"
+    "ESP32": "esp32",
+    "ESP32S3": "esp32s3"
 }
 
 BACKTRACE_REGEX = re.compile(r"(?:\s+(0x40[0-2](?:\d|[a-f]|[A-F]){5}):0x(?:\d|[a-f]|[A-F]){8})\b")
@@ -142,7 +143,7 @@ class ExceptionDataParser(object):
         return None
 
     def parse_file(self, file, platform, stack_only=False):
-        if platform == 'ESP32':
+        if platform == 'ESP32' or platform == 'ESP32S3':
             func = self._parse_backtrace
         else:
             func = self._parse_exception

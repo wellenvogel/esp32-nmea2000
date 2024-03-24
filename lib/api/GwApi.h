@@ -182,6 +182,13 @@ class GwApi{
          * The name should be similar to the function name of the user task (although not mandatory)
         */
         virtual bool addUserTask(GwUserTaskFunction task,const String Name, int stackSize=2000)=0;
+        /**
+         * set a value that is used for calibration in config values
+         * for cfg types calset, calvalue
+         * @param name: the config name this value is used for
+         * @param value: the current value
+        */
+        virtual void setCalibrationValue(const String &name, double value);
 
         /**
          * not thread safe methods

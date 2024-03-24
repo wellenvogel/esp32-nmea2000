@@ -26,9 +26,10 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <NMEA0183.h>
 #include <NMEA2000.h>
 
-#include <GwLog.h>
-#include <GwBoatData.h>
-#include <GwXDRMappings.h>
+#include "GwLog.h"
+#include "GwBoatData.h"
+#include "GwXDRMappings.h"
+#include "GwConverterConfig.h"
 
 //------------------------------------------------------------------------------
 class GwJsonDocument;
@@ -36,8 +37,8 @@ class N2kDataToNMEA0183
 {
 public:
   typedef std::function<void(const tNMEA0183Msg &NMEA0183Msg,int id)> SendNMEA0183MessageCallback;
-
 protected:
+  GwConverterConfig config;
   GwLog *logger;
   GwBoatData *boatData;
   int sourceId=0;
@@ -49,9 +50,9 @@ protected:
 
 public:
   static N2kDataToNMEA0183* create(GwLog *logger, GwBoatData *boatData,  SendNMEA0183MessageCallback callback, 
-    String talkerId, GwXDRMappings *xdrMappings,int minXdrInterval=100);
+    String talkerId, GwXDRMappings *xdrMappings,const GwConverterConfig &cfg);
   virtual void HandleMsg(const tN2kMsg &N2kMsg, int sourceId) = 0;
-  virtual void loop();
+  virtual void loop(unsigned long lastRmc);
   virtual ~N2kDataToNMEA0183(){}
   virtual unsigned long* handledPgns()=0;
   virtual int numPgns()=0;

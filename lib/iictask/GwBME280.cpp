@@ -2,8 +2,6 @@
 #ifdef _GWIIC
     #if defined(GWBME280) || defined(GWBME28011) || defined(GWBME28012)|| defined(GWBME28021)|| defined(GWBME28022)
         #define _GWBME280
-    #else
-        #undef _GWBME280
     #endif
 #else
     #undef _GWBME280
@@ -17,11 +15,12 @@
     #include <Adafruit_BME280.h>
 #endif
 #ifdef _GWBME280
-#define PRFX1 "BME28011"
-#define PRFX2 "BME28012"
-#define PRFX3 "BME28021"
-#define PRFX4 "BME28022"
-class BME280Config : public SensorBase{
+#define TYPE "BME280"
+#define PRFX1 TYPE "11"
+#define PRFX2 TYPE "12"
+#define PRFX3 TYPE "21"
+#define PRFX4 TYPE "22"
+class BME280Config : public IICSensorBase{
     public:
     bool prAct=true;
     bool tmAct=true;
@@ -36,7 +35,7 @@ class BME280Config : public SensorBase{
     float prOff=0;
     Adafruit_BME280 *device=nullptr;
     uint32_t sensorId=-1;
-    BME280Config(GwApi * api, const String &prfx):SensorBase(api,prfx){
+    BME280Config(GwApi * api, const String &prfx):SensorBase(TYPE,api,prfx){
         }
     virtual bool isActive(){return prAct||huAct||tmAct;}
     virtual bool initDevice(GwApi *api,TwoWire *wire){
@@ -106,6 +105,7 @@ class BME280Config : public SensorBase{
 
     virtual void readConfig(GwConfigHandler *cfg) override
     {
+        if (ok) return;
         if (prefix == PRFX1)
         {
             busId = 1;
@@ -137,11 +137,13 @@ class BME280Config : public SensorBase{
     }
 };
 
-
-void registerBME280(GwApi *api,SensorList &sensors){
+static IICSensorBase::Creator creator([](GwApi *api, const String &prfx){
+    return new BME280Config(api,prfx);
+});
+IICSensorBase::Creator registerBME280(GwApi *api,IICSensorList &sensors){
     #if defined(GWBME280) || defined(GWBME28011)
     {
-        BME280Config *cfg=new BME280Config(api,PRFX1);
+        auto *cfg=creator(api,PRFX1);
         sensors.add(api,cfg);
         CHECK_IIC1();
         #pragma message "GWBME28011 defined"
@@ -149,7 +151,7 @@ void registerBME280(GwApi *api,SensorList &sensors){
     #endif
     #if defined(GWBME28012)
     {
-        BME280Config *cfg=new BME280Config(api,PRFX2);
+        auto *cfg=creator(api,PRFX2);
         sensors.add(api,cfg);
         CHECK_IIC1();
         #pragma message "GWBME28012 defined"
@@ -157,7 +159,7 @@ void registerBME280(GwApi *api,SensorList &sensors){
     #endif
     #if defined(GWBME28021)
     {
-        BME280Config *cfg=new BME280Config(api,PRFX3);
+        auto *cfg=creator(api,PRFX3);
         sensors.add(api,cfg);
         CHECK_IIC2();
         #pragma message "GWBME28021 defined"
@@ -165,15 +167,17 @@ void registerBME280(GwApi *api,SensorList &sensors){
     #endif
     #if defined(GWBME28022)
     {
-        BME280Config *cfg=new BME280Config(api,PRFX4);
+        auto *cfg=creator(api,PRFX4);
         sensors.add(api,cfg);
         CHECK_IIC1();
         #pragma message "GWBME28022 defined"
     }
     #endif
+    return creator;
 }
 #else
-void registerBME280(GwApi *api,SensorList &sensors){   
+IICSensorBase::Creator registerBME280(GwApi *api,IICSensorList &sensors){ 
+    return IICSensorBase::Creator(); 
 }
 
 #endif

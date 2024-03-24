@@ -29,7 +29,6 @@ private:
     MyAisDecoder *aisDecoder=NULL;
     ConverterList<NMEA0183DataToN2KFunctions, SNMEA0183Msg> converters;
     std::map<String,unsigned long> lastSends;
-    unsigned long minSendInterval=50;
     GwXDRMappings *xdrMappings;
     class WaypointNumber{
         public:
@@ -92,7 +91,7 @@ private:
         return false;
     }
     bool send(tN2kMsg &msg, int sourceId,String key=""){
-        return send(msg,key,minSendInterval,sourceId);
+        return send(msg,key,config.min2KInterval,sourceId);
     }
     bool updateDouble(GwBoatItem<double> *target,double v, int sourceId){
         if (v != NMEA0183DoubleNA){
@@ -304,7 +303,7 @@ private:
         LOG_DEBUG(GwLog::DEBUG + 1, "convert RMB");
         tRMB rmb;
         if (! NMEA0183ParseRMB_nc(msg,rmb)){
-            LOG_DEBUG(GwLog::DEBUG, "failed to parse RMC %s", msg.line);
+            LOG_DEBUG(GwLog::DEBUG, "failed to parse RMB %s", msg.line);
             return;   
         }
         tN2kMsg n2kMsg;
@@ -359,6 +358,7 @@ private:
             LOG_DEBUG(GwLog::DEBUG, "invalid status %c for RMC %s",status, msg.line);
             return;
         }
+        lastRmc=millis(); //we received an RMC that is not from us
         tN2kMsg n2kMsg;
         if (
             UD(GPST) &&
@@ -666,21 +666,33 @@ private:
     void convertDBT(const SNMEA0183Msg &msg){
         return convertDBKx(msg,DBT);
     }
-
+    #define validInstance(name) (name >= 0 && name <= 253)
     void convertRSA(const SNMEA0183Msg &msg){
         double RPOS=NMEA0183DoubleNA;
+        double PRPOS=NMEA0183DoubleNA;
         if (msg.FieldCount() < 4)
         {
             LOG_DEBUG(GwLog::DEBUG, "failed to parse RSA %s", msg.line);
             return;
         }
+        tN2kMsg n2kMsg;
         if (msg.FieldLen(0)>0){
-            if (msg.Field(1)[0] != 'A') return;
-            RPOS=degToRad*atof(msg.Field(0));
-            tN2kMsg n2kMsg;
-            if (! UD(RPOS)) return;
-            SetN2kRudder(n2kMsg,RPOS);
-            send(n2kMsg,msg.sourceId);
+            if (msg.Field(1)[0] == 'A'){
+                RPOS=degToRad*atof(msg.Field(0));
+                if (UD(RPOS) && validInstance(config.starboardRudderInstance)) {
+                    SetN2kRudder(n2kMsg,RPOS,config.starboardRudderInstance);
+                    send(n2kMsg,msg.sourceId,"127245S");
+                }
+            }
+        }
+        if (msg.FieldLen(2)>0){
+            if (msg.Field(3)[0] == 'A'){
+                PRPOS=degToRad*atof(msg.Field(2));
+                if (UD(PRPOS) && validInstance(config.portRudderInstance)){
+                    SetN2kRudder(n2kMsg,PRPOS,config.portRudderInstance);
+                    send(n2kMsg,msg.sourceId,"127245P");
+                }
+            }
         }
           
     }
@@ -1061,10 +1073,10 @@ public:
 
     NMEA0183DataToN2KFunctions(GwLog *logger, GwBoatData *boatData, N2kSender callback, 
         GwXDRMappings *xdrMappings,
-        unsigned long minSendInterval)
+        const GwConverterConfig &cfg)
         : NMEA0183DataToN2K(logger, boatData, callback)
     {
-        this->minSendInterval=minSendInterval;
+        this->config=cfg;
         this->xdrMappings=xdrMappings;
         aisDecoder= new MyAisDecoder(logger,this->sender);
         registerConverters();
@@ -1074,7 +1086,7 @@ public:
 
 NMEA0183DataToN2K* NMEA0183DataToN2K::create(GwLog *logger,GwBoatData *boatData,N2kSender callback,
     GwXDRMappings *xdrMappings,
-    unsigned long minSendInterval){
-    return new NMEA0183DataToN2KFunctions(logger, boatData,callback,xdrMappings,minSendInterval);
+    const GwConverterConfig &config){
+    return new NMEA0183DataToN2KFunctions(logger, boatData,callback,xdrMappings,config);
 
 }

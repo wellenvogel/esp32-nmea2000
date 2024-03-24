@@ -1,10 +1,31 @@
 #include "GwIicTask.h"
+class IICGrove
+{
+public:
+    String base;
+    String grove;
+    String suffix;
+    IICGrove(const String &b, const String &g, const String &s) : base(b), grove(g), suffix(s) {}
+    String item(const String &grove, const String &bus)
+    {
+        if (grove == this->grove)
+            return base + bus + suffix;
+        return "";
+    }
+};
+static std::vector<IICGrove> iicGroveList;
+#define GROOVE_IIC(base, grove, suffix) \
+    static GwInitializer<IICGrove> base##grove##suffix(iicGroveList, IICGrove(#base, #grove, #suffix));
+
+
 #include "GwIicSensors.h"
 #include "GwHardware.h"
 #include "GwBME280.h"
 #include "GwQMP6988.h"
 #include "GwSHT3X.h"
 #include <map>
+
+#include "GwTimer.h"
 
 #ifndef GWIIC_SDA
     #define GWIIC_SDA -1
@@ -19,14 +40,46 @@
     #define GWIIC_SCL2 -1
 #endif
 
-#include "GwTimer.h"
-#include "GwHardware.h"
-
-
-
 void runIicTask(GwApi *api);
 
-static SensorList sensors;
+static IICSensorList sensors;
+static void addGroveItems(std::vector<IICSensorBase::Creator> &creators,GwApi *api, IICSensorList &sensors, const String &bus,const String &grove, int, int)
+{
+    GwLog *logger=api->getLogger();
+    for (auto &&init : iicGroveList)
+    {
+        LOG_DEBUG(GwLog::DEBUG, "trying grove item %s:%s:%s for grove %s, bus %s", 
+            init.base.c_str(),init.grove.c_str(),
+            init.suffix.c_str(),grove.c_str(),bus.c_str()
+            );
+        String prfx = init.item(grove, bus);
+        if (!prfx.isEmpty())
+        {
+            bool found=false;
+            for (auto &&creator : creators)
+            {
+                if (! creator) continue;
+                auto *scfg = creator(api, prfx);
+                scfg->readConfig(api->getConfig());
+                if (scfg->ok)
+                {
+                    LOG_DEBUG(GwLog::LOG, "adding %s from grove config", prfx.c_str());
+                    sensors.add(api, scfg);
+                    found=true;
+                    break;
+                }
+                else
+                {
+                    LOG_DEBUG(GwLog::DEBUG, "unmatched grove sensor config %s for %s", prfx.c_str(), scfg->type.c_str());
+                    delete scfg;
+                }
+            }
+            if (! found){
+                LOG_DEBUG(GwLog::ERROR,"no iic sensor found for %s",prfx.c_str());
+            }
+        }
+    }
+}
 
 void initIicTask(GwApi *api){
     GwLog *logger=api->getLogger();
@@ -35,14 +88,21 @@ void initIicTask(GwApi *api){
     #else
     bool addTask=false;
     GwConfigHandler *config=api->getConfig();
-    registerSHT3X(api,sensors);
-    registerQMP6988(api,sensors);
-    registerBME280(api,sensors);
+    std::vector<IICSensorBase::Creator> creators;
+    creators.push_back(registerSHT3X(api,sensors));
+    creators.push_back(registerQMP6988(api,sensors));
+    creators.push_back(registerBME280(api,sensors));
+    #ifdef _GWI_IIC1
+        addGroveItems(creators,api,sensors,"1",_GWI_IIC1);    
+    #endif
+    #ifdef _GWI_IIC2
+        addGroveItems(creators,api,sensors,"2",_GWI_IIC2);    
+    #endif
     for (auto it=sensors.begin();it != sensors.end();it++){
         if ((*it)->preinit(api)) addTask=true;
     }
     if (addTask){
-        api->addUserTask(runIicTask,"iicTask",3000);
+        api->addUserTask(runIicTask,"iicTask",4000);
     }
     #endif
 }
@@ -54,6 +114,40 @@ void runIicTask(GwApi *api){
    return; 
 }
 #else
+bool initWireDo(GwLog *logger, TwoWire &wire, int num, const String &dummy, int scl, int sda)
+{
+    if (sda < 0 || scl < 0)
+    {
+        LOG_DEBUG(GwLog::ERROR, "IIC %d invalid config sda=%d,scl=%d",
+                  num, sda, scl);
+        return false;
+    }
+    bool rt = Wire.begin(sda, scl);
+    if (!rt)
+    {
+        LOG_DEBUG(GwLog::ERROR, "unable to initialize IIC %d at sad=%d,scl=%d",
+                  num, sda, scl);
+        return rt;
+    }
+    LOG_DEBUG(GwLog::ERROR, "initialized IIC %d at sda=%d,scl=%d",
+                                  num,sda,scl);
+    return true;                                
+}
+bool initWire(GwLog *logger, TwoWire &wire, int num){
+    if (num == 1){
+        #ifdef _GWI_IIC1
+            return initWireDo(logger,wire,num,_GWI_IIC1);
+        #endif
+        return initWireDo(logger,wire,num,"",GWIIC_SDA,GWIIC_SCL);
+    }
+    if (num == 2){
+        #ifdef _GWI_IIC2
+            return initWireDo(logger,wire,num,_GWI_IIC2);
+        #endif
+        return initWireDo(logger,wire,num,"",GWIIC_SDA2,GWIIC_SCL2);
+    }
+    return false;
+}
 void runIicTask(GwApi *api){
     GwLog *logger=api->getLogger();
     std::map<int,TwoWire *> buses;
@@ -66,50 +160,15 @@ void runIicTask(GwApi *api){
             {
             case 1:
             {
-                if (GWIIC_SDA < 0 || GWIIC_SCL < 0)
-                {
-                    LOG_DEBUG(GwLog::ERROR, "IIC 1 invalid config sda=%d,scl=%d",
-                              (int)GWIIC_SDA, (int)GWIIC_SCL);
-                }
-                else
-                {
-                    bool rt = Wire.begin(GWIIC_SDA, GWIIC_SCL);
-                    if (!rt)
-                    {
-                        LOG_DEBUG(GwLog::ERROR, "unable to initialize IIC 1 at sad=%d,scl=%d",
-                                  (int)GWIIC_SDA, (int)GWIIC_SCL);
-                    }
-                    else
-                    {
-                        buses[busId] = &Wire;
-                        LOG_DEBUG(GwLog::ERROR, "initialized IIC 1 at sda=%d,scl=%d",
-                                  (int)GWIIC_SDA, (int)GWIIC_SCL);
-                    }
+                if (initWire(logger,Wire,1)){
+                    buses[busId] = &Wire;
                 }
             }
             break;
             case 2:
             {
-                if (GWIIC_SDA2 < 0 || GWIIC_SCL2 < 0)
-                {
-                    LOG_DEBUG(GwLog::ERROR, "IIC 2 invalid config sda=%d,scl=%d",
-                              (int)GWIIC_SDA2, (int)GWIIC_SCL2);
-                }
-                else
-                {
-
-                    bool rt = Wire1.begin(GWIIC_SDA2, GWIIC_SCL2);
-                    if (!rt)
-                    {
-                        LOG_DEBUG(GwLog::ERROR, "unable to initialize IIC 2 at sda=%d,scl=%d",
-                                  (int)GWIIC_SDA2, (int)GWIIC_SCL2);
-                    }
-                    else
-                    {
-                        buses[busId] = &Wire1;
-                        LOG_DEBUG(GwLog::LOG, "initialized IIC 2 at sda=%d,scl=%d",
-                                  (int)GWIIC_SDA2, (int)GWIIC_SCL2);
-                    }
+                if (initWire(logger,Wire1,2)){
+                    buses[busId] = &Wire1;
                 }
             }
             break;
@@ -124,7 +183,7 @@ void runIicTask(GwApi *api){
     GwIntervalRunner timers;
     int counterId=api->addCounter("iicsensors");
     for (auto it=sensors.begin();it != sensors.end();it++){
-        SensorBase *cfg=*it;
+        IICSensorBase *cfg=*it;
         auto bus=buses.find(cfg->busId);
         if (! cfg->isActive()) continue;
         if (bus == buses.end()){

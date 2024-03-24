@@ -36,86 +36,122 @@
 #
 #
 types:
-  - &m5base
-      type: select
-      target: define
-      label: 'M5 Atom light Base'
-      key: m5lightbase
-      values:
-        - label: "CAN KIT"
-          value: M5_CAN_KIT
-          description: "M5 Stack CAN Kit"
-          url: "https://docs.m5stack.com/en/atom/atom_can"
-          resource: can
-        - value: M5_SERIAL_KIT_232
-          description: "M5 Stack RS232 Base"
-          label: "Atomic RS232 Base"
-          url: "https://docs.m5stack.com/en/atom/Atomic%20RS232%20Base"
-          resource: serial
-        - value: M5_SERIAL_KIT_485
-          description: "M5 Stack RS485 Base"
-          label: "Atomic RS485 Base"
-          url: "https://docs.m5stack.com/en/atom/Atomic%20RS485%20Base"
-          resource: serial
-        - value: M5_GPS_KIT
-          description: "M5 Stack Gps Kit"
-          label: "Gps Base"
-          url: "https://docs.m5stack.com/en/atom/atomicgps"
-          resource: serial
-
   - &m5groovei2c
     type: frame
-    key: m5groovei2c
+    key: m5groovei2c#grv#
     label: "M5 I2C Groove Units"
     children:
       - label: "M5 ENV3"
         type: checkbox
-        key: m5env3
+        key: m5env3#grv#
         target: define
         url: "https://docs.m5stack.com/en/unit/envIII"
         description: "M5 sensor module temperature, humidity, pressure"
         values:
-          - value: M5_ENV3
+          - value: M5_ENV3#grv#
             key: true
+            resource: qmp69881#grv#1,sht3x#grv#1
+      - type: checkbox
+        label: SHT3X-1
+        description: "SHT30 temperature and humidity sensor 0x44"
+        key: sht3xg1
+        target: define
+        url: "https://m5stack.oss-cn-shenzhen.aliyuncs.com/resource/docs/datasheet/unit/SHT3x_Datasheet_digital.pdf"
+        values: 
+          - key: true
+            value: GWSHT3XG1#grv#
+            resource: sht3x#grv#1
+      - type: checkbox
+        label: SHT3X-2
+        description: "SHT30 temperature and humidity sensor 0x45"
+        key: sht3xg2
+        target: define
+        url: "https://m5stack.oss-cn-shenzhen.aliyuncs.com/resource/docs/datasheet/unit/SHT3x_Datasheet_digital.pdf"
+        values: 
+          - key: true
+            value: GWSHT3XG2#grv#
+            resource: sht3x#grv#2
+      - type: checkbox
+        label: QMP6988-1
+        description: "QMP6988 pressure sensor addr 86"
+        key: qmp69881g1
+        target: define
+        url: "https://m5stack.oss-cn-shenzhen.aliyuncs.com/resource/docs/datasheet/unit/enviii/QMP6988%20Datasheet.pdf"
+        values: 
+          - key: true
+            value: GWQMP6988G1#grv#
+            resource: qmp69881#grv#1
+      - type: checkbox
+        label: QMP6988-2
+        description: "QMP6988 pressure sensor addr 112"
+        key: qmp69882g2
+        target: define
+        url: "https://m5stack.oss-cn-shenzhen.aliyuncs.com/resource/docs/datasheet/unit/enviii/QMP6988%20Datasheet.pdf"
+        values: 
+          - key: true
+            value: GWQMP6988G2#grv#
+            resource: qmp69881#grv#2
+      - type: checkbox
+        label: BME280-1
+        description: "BME280 temperature/humidity/pressure sensor 0x76"
+        key: bme2801g1
+        target: define
+        url: "https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bme280-ds002.pdf"
+        values: 
+          - key: true
+            value: GWBME280G1#grv#
+            resource: bme280#grv#1
+      - type: checkbox
+        label: BME280-2
+        description: "BME280 temperature/humidity/pressure sensor 0x77"
+        key: bme2802
+        target: define
+        url: "https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bme280-ds002.pdf"
+        values: 
+          - key: true
+            value: GWBME280G2#grv#
+            resource: bme280#grv#2
+  
+
   - &m5groovecan
     type: select
-    key: m5groovecan
+    key: m5groovecan#grv#
     target: define
     label: "M5 Groove CAN Units"
     values:
       - label: "CAN Unit"
         url: "https://docs.m5stack.com/en/unit/can"
         description: "M5 Can unit"
-        value: M5_CANUNIT
+        value: M5_CANUNIT#grv#
         resource: can    
   - &m5grooveserial
     type: select
     label: "M5 Groove Serial Unit"
     target: define
-    key: m5grooveserial
+    key: m5grooveserial#grv#
     values:
       - label: "RS485"
         key: unit485
-        value: SERIAL_GROOVE_485
+        value: SERIAL_GROOVE_485#grv#
         description: "M5 RS485 unit"
         url: "https://docs.m5stack.com/en/unit/rs485"
         resource: serial
       - label: "Tail485"
-        value: SERIAL_GROOVE_485
+        value: SERIAL_GROOVE_485#grv#
         key: tail485
         description: "M5 Tail 485"
         url: "https://docs.m5stack.com/en/atom/tail485"
         resource: serial
       - label: "Gps Unit"
-        value: M5_GPS_UNIT
+        value: M5_GPS_UNIT#grv#
         description: "M5 Gps Unit"
         url: "https://docs.m5stack.com/en/unit/gps"
         resource: serial
 
   - &m5groove
     type: select
-    key: m5groove
-    label: 'M5 groove type'
+    key: m5groove#grv#
+    label: 'M5 groove#grv# type '
     help: 'Select the functionality that should be available at the M5 groove pins'
     values:
       - key: 'CAN'
@@ -131,7 +167,9 @@ types:
     type: dropdown
     resource: "gpio:"
     help: 'Select the number of the GPIO pin for this function'
-    values:
+    values: "#gpiopinv#"
+      
+  - &gpiopinv    
       - {label: unset,value:}
       - {label: "0: Low at boot!",value: 0}
       - 1
@@ -164,7 +202,9 @@ types:
     type: dropdown
     resource: "gpio:"
     help: 'Select the number of the GPIO pin for this function'
-    values:
+    values: "#gpiopinv#"
+      
+  - &gpioinputv    
       - {label: unset,value:}
       - {label: "0: Low at boot!",value: 0}
       - 1
@@ -196,6 +236,15 @@ types:
       - 37
       - 38
       - 39
+  
+  - &protogpio
+      - {label: unset,value:}
+      - PPIN19
+      - PPIN21
+      - PPIN22
+      - PPIN23
+      - PPIN25
+      - PPIN33
   
   - &serialRX
     <<: *gpioinput
@@ -249,6 +298,7 @@ types:
     type: checkbox
     label: 'Serial 1'
     key: serial1
+    resource: serial1
     base: 
       serial: GWSERIAL_
     values: *serialValues
@@ -257,6 +307,7 @@ types:
     type: checkbox
     label: 'Serial 2'
     key: serial2
+    resource: serial2
     base:
       serial: GWSERIAL2_
     values: *serialValues
@@ -374,6 +425,7 @@ types:
     type: checkbox
     label: "I2C #busname#"
     key: "i2c#busname#"
+    resource: "i2c#busname#"
     description: "I2C Bus #busname#"
     values:
       - key: true
@@ -442,7 +494,137 @@ types:
             values: 
               - key: true
                 value: GWBME280#busname#2
+  
+  - &spisensors
+    type: checkbox
+    label: "SPI/SSI #busname#"
+    key: "spi#busname#"
+    resource: "spi#busname#"
+    description: "SPI(SSI) Bus #busname#"
+    values:
+      - key: true
+        children:
+          - <<: *gpiopin
+            label: CLK
+            key: clk
+            mandatory: true
+            target: "define:GWSPI#bus#_CLK"
+          - <<: *gpiopin
+            label: MISO
+            key: miso
+            mandatory: false
+            target: "define:GWSPI#bus#_MISO"
+          - <<: *gpiopin
+            label: MOSI
+            key: mosi
+            mandatory: false
+            target: "define:GWSPI#bus#_MOSI"
+            description: "GPIO pin for MOSI, not necessary for SSI"
+          - type: checkbox
+            label: GWDMS22B-#busname#-1
+            description: "DMS22B rotatory encoder (SSI)"
+            key: dms22b#busname#1
+            target: define
+            url: "https://www.mouser.de/datasheet/2/54/bour_s_a0011704065_1-2262614.pdf"
+            values: 
+              - key: true
+                value: GWDMS22B#busname#1
+                children:
+                  - <<: *gpiopin
+                    label: CS
+                    key: dms22b#busname#1cs
+                    description: "chip select pin, only necessary for multiple devices on this bus"
+                    target: "define:GWDMS22B#busname#1_CS"
+          - type: checkbox
+            label: GWDMS22B-#busname#-2
+            description: "DMS22B rotatory encoder (SSI)"
+            key: dms22b#busname#2
+            target: define
+            url: "https://www.mouser.de/datasheet/2/54/bour_s_a0011704065_1-2262614.pdf"
+            values: 
+              - key: true
+                value: GWDMS22B#busname#2
+                children:
+                  - <<: *gpiopin
+                    label: CS
+                    key: dms22b#busname#2cs
+                    description: "chip select pin, only necessary for multiple devices on this bus"
+                    target: "define:GWDMS22B#busname#2_CS"
+  
+  - &m5protochildren
+      - *serial1
+      - *serial2
+      - *can
+      - <<: *iicsensors
+        base: 
+          busname: "1"
+          bus: ""
+      - <<: *iicsensors
+        base: 
+          busname: "2"
+          bus: "2"
+      - <<: *spisensors
+        base:
+          busname: "1"
+          bus: "1"
+      - <<: *spisensors
+        base:
+          busname: "2"
+          bus: "2"        
+  - &m5pabcchildren
+    - <<: *m5groove
+      base:
+        grv: _A
+    - <<: *m5groove
+      base:
+        grv: _B
+    - <<: *m5groove
+      base:
+        grv: _C
+    
+    
                 
+  - &m5base
+      type: select
+      target: define
+      label: 'M5 Atom light Base'
+      key: m5lightbase
+      values:
+        - label: "CAN KIT"
+          value: M5_CAN_KIT
+          description: "M5 Stack CAN Kit"
+          url: "https://docs.m5stack.com/en/atom/atom_can"
+          resource: can
+        - value: M5_SERIAL_KIT_232
+          description: "M5 Stack RS232 Base"
+          label: "Atomic RS232 Base"
+          url: "https://docs.m5stack.com/en/atom/Atomic%20RS232%20Base"
+          resource: serial
+        - value: M5_SERIAL_KIT_485
+          description: "M5 Stack RS485 Base"
+          label: "Atomic RS485 Base"
+          url: "https://docs.m5stack.com/en/atom/Atomic%20RS485%20Base"
+          resource: serial
+        - value: M5_GPS_KIT
+          description: "M5 Stack Gps Kit"
+          label: "Gps Base"
+          url: "https://docs.m5stack.com/en/atom/atomicgps"
+          resource: serial
+        - value: M5_PROTO_HUB
+          description: "M5 Stack HUB PROTO"
+          url: "https://docs.m5stack.com/en/atom/atomhub"
+          label: "Hub Proto"
+          base:
+            gpioinputv: *protogpio
+            gpiopinv: *protogpio
+          children:
+            *m5protochildren
+        - value: M5_PORTABC
+          description: "M5 Stack Port ABC extension base"
+          url: "https://docs.m5stack.com/en/unit/AtomPortABC"
+          label: "ABC Ext"
+          children:
+            *m5pabcchildren
 
 resources:
   default: &esp32default
@@ -457,6 +639,10 @@ config:
       target: environment
       label: 'Board'
       key: board
+      base:
+        gpiopinv: *gpiopinv
+        gpioinputv: *gpioinputv
+        grv: ""
       values: 
         - value: m5stack-atom-generic
           label: m5stack-atom
@@ -500,5 +686,13 @@ config:
                 bus: ""
             - <<: *iicsensors
               base: 
+                busname: "2"
+                bus: "2"
+            - <<: *spisensors
+              base:
+                busname: "1"
+                bus: "1"
+            - <<: *spisensors
+              base:
                 busname: "2"
                 bus: "2"

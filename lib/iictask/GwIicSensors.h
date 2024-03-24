@@ -4,14 +4,17 @@
 #include "N2kMessages.h"
 #include "GwXdrTypeMappings.h"
 #include "GwHardware.h"
+#include "GwSensor.h"
 #ifdef _GWIIC
     #include <Wire.h>
 #else
     class TwoWire;
 #endif
 
-#define CFG_GET(name,prefix) \
-    cfg->getValue(name, GwConfigDefinitions::prefix ## name)
+using BusType=TwoWire;
+using IICSensorList=SensorList<BusType>;
+using IICSensorBase=SensorBase<BusType>;
+
 
 template <class CFG>
 bool addPressureXdr(GwApi *api, CFG &cfg)
@@ -100,35 +103,15 @@ void sendN2kTemperature(GwApi *api,CFG &cfg,double value, int counterId){
 }
 
 
-class SensorBase{
-    public:
-    int busId=0;
-    int iid=99; //N2K instanceId
-    int addr=-1;
-    String prefix;
-    long intv=0;
-    bool ok=false;
-    virtual void readConfig(GwConfigHandler *cfg)=0;
-    SensorBase(GwApi *api,const String &prfx):prefix(prfx){
-    }
-    virtual bool isActive(){return false;};
-    virtual bool initDevice(GwApi *api,TwoWire *wire){return false;};
-    virtual bool preinit(GwApi * api){return false;}
-    virtual void measure(GwApi * api,TwoWire *wire, int counterId){};
-    virtual ~SensorBase(){}
-};
-
-class SensorList : public std::vector<SensorBase*>{
-    public:
-    void add(GwApi *api, SensorBase *sensor){
-        sensor->readConfig(api->getConfig());
-        api->getLogger()->logDebug(GwLog::LOG,"configured sensor %s, status %d",sensor->prefix.c_str(),(int)sensor->ok);
-        push_back(sensor);
-    }
-    using std::vector<SensorBase*>::vector;
-};
-
-#define CHECK_IIC1() checkDef(GWIIC_SCL,GWIIC_SDA)
-#define CHECK_IIC2() checkDef(GWIIC_SCL2,GWIIC_SDA2)
+#ifndef _GWI_IIC1
+    #define CHECK_IIC1() checkDef(GWIIC_SCL,GWIIC_SDA)
+#else
+    #define CHECK_IIC1()
+#endif
+#ifndef _GWI_IIC2
+    #define CHECK_IIC2() checkDef(GWIIC_SCL2,GWIIC_SDA2)
+#else
+    #define CHECK_IIC2()
+#endif
 
 #endif

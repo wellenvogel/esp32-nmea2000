@@ -2,7 +2,6 @@
 #define _GWCONFIGITEM_H
 #include "WString.h"
 #include <vector>
-
 class GwConfigHandler;
 class GwConfigInterface{
     public:
@@ -36,6 +35,9 @@ class GwConfigInterface{
         }
         virtual int asInt() const{
             return (int)value.toInt();
+        }
+        virtual float asFloat() const{
+            return value.toFloat();
         }
         String getName() const{
             return name;
@@ -75,5 +77,20 @@ class GwNmeaFilter{
 
 #define __XSTR(x) __STR(x)
 #define __STR(x) #x
+#define __EXPAND(x,sf) x ## sf
+#define __EXPAND3(prfx,x,sf) prfx ## x ## sf
 #define __MSG(x) _Pragma (__STR(message (x)))
+//https://curiouser.cheshireeng.com/2014/08/19/c-compile-time-assert/
+#define CASSERT(predicate, text) _impl_CASSERT_LINE(predicate,__LINE__) 
+#define _impl_PASTE(a,b) a##b
+#define _impl_CASSERT_LINE(predicate, line) typedef char _impl_PASTE(assertion_failed_CASSERT_,line)[(predicate)?1:-1];
+template<typename F>
+class GwInitializer{
+    public:
+        using List=std::vector<F>;
+        GwInitializer(List &l,F f){
+            l.push_back(f);
+        }
+};
+
 #endif

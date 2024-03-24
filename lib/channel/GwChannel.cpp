@@ -106,20 +106,34 @@ void GwChannel::setImpl(GwChannelInterface *impl){
 }
 void GwChannel::updateCounter(const char *msg, bool out)
 {
-    char key[6];
+    char key[7];
+    key[0]=0;
     if (msg[0] == '$')
     {
-        strncpy(key, &msg[3], 3);
+        for (int i=0;i<6 && msg[i] != 0;i++){
+            if (i>=3) {
+                if (isalnum(msg[i]))key[i-3]=msg[i];
+                else key[i-3]='_';
+            }
+            key[i-2]=0;
+        }
         key[3] = 0;
     }
     else if (msg[0] == '!')
     {
-        strncpy(key, &msg[1], 5);
+        for (int i=0;i<6 && msg[i] != 0;i++){
+            if (i>=1) {
+                if (isalnum(msg[i]))key[i-1]=msg[i];
+                else key[i-1]='_';
+            }
+            key[i]=0;
+        }
         key[5] = 0;
     }
     else{
         return;
     }
+    if (key[0] == 0) return;
     if (out){
         countOut->add(key);
     }
@@ -159,7 +173,7 @@ void GwChannel::toJson(GwJsonDocument &doc){
     if (countIn) countIn->toJson(doc);
 }
 String GwChannel::toString(){
-    String rt="CH:"+name;
+    String rt="CH"+name+"("+sourceId+"):";
     rt+=enabled?"[ena]":"[dis]";
     rt+=NMEAin?"in,":"";
     rt+=NMEAout?"out,":"";

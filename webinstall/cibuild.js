@@ -119,7 +119,7 @@ class PipelineInfo{
                 .then((st)=>{
                     if (queryPipeline !== currentPipeline.id) return;
                     let stid=st.pipeline_id||st.id;
-                    if (currentPipeline.id !== stid) return;
+                    if (stid !== undefined &&  currentPipeline.id !== stid) return;
                     if (st.status === undefined) st.status=st.state;
                     currentPipeline.update(st);
                     updateStatus();
@@ -516,6 +516,11 @@ class PipelineInfo{
                 });
             }
         }
+        if (expandedValues.length > 0 && config.type === 'display'){
+            let cb=addEl('div','t'+config.type,inputFrame);
+            addDescription(config,inputFrame);
+            initialConfig=expandedValues[0];
+        }
         let childFrame=addEl('div','childFrame',frame);
         if (initialConfig !== undefined){
             callback(initialConfig,true,childFrame);
@@ -573,7 +578,7 @@ class PipelineInfo{
                 (child,initial,opt_frame)=>{
                     if(cfg.key !== undefined) removeSelectors(name,!initial);
                     if (! initial) isModified=true;
-                    buildSelectors(name,child.children,initial,currentBase,opt_frame||childFrame);
+                    buildSelectors(name,child.children,initial,Object.assign({},currentBase,child.base),opt_frame||childFrame);
                     if (cfg.key !== undefined) configStruct[name]={cfg:child,base:currentBase};
                     buildValues(initial);
             })
@@ -583,8 +588,17 @@ class PipelineInfo{
         if (! base) return str;
         if (typeof(str) === 'string'){
             for (let k in base){
-                let r=new RegExp("#"+k+"#","g");
-                str=str.replace(r,base[k]);
+                if (typeof(base[k]) !== 'string'){
+                    //special replacement
+                    //for complete parts
+                    if (str === '#'+k+'#'){
+                        return base[k];
+                    }
+                }
+                else{
+                    let r=new RegExp("#"+k+"#","g");
+                    str=str.replace(r,base[k]);
+                }
             }
             return str;
         }
@@ -598,7 +612,8 @@ class PipelineInfo{
         if (str instanceof Object){
             let rt={};
             for (let k in str){
-                rt[k]=replaceValues(str[k],base);
+                if (k == 'children') rt[k]=str[k];
+                else rt[k]=replaceValues(str[k],base);
             }
             return rt;
         }
@@ -637,12 +652,15 @@ class PipelineInfo{
                     }
                     if (round < 1) continue;
                     if (struct.resource){
-                        let resList=currentResources[struct.resource];
-                        if (! resList){
-                            resList=[];
-                            currentResources[struct.resource]=resList;
-                        }
-                        resList.push(struct);
+                        let splitted=struct.resource.split(",");
+                        splitted.forEach((resource) => {
+                            let resList = currentResources[resource];
+                            if (!resList) {
+                                resList = [];
+                                currentResources[resource] = resList;
+                            }
+                            resList.push(struct);
+                        });
                     }
                     if (target === 'define') {
                         flags += " -D" + struct.value;
@@ -665,11 +683,12 @@ class PipelineInfo{
         for (let k in currentResources){
             let ak=k.replace(/:.*/,'');
             let resList=currentResources[k];
-            if (allowedResources[ak] !== undefined){
-                if (resList.length > allowedResources[ak]){
-                    errors+=" more than "+allowedResources[ak]+" "+k+" device(s) used";
-                }
+            let allowed=allowedResources[ak];
+            if (allowed === undefined) allowed=1;
+            if (resList.length > allowed){
+                errors+=" more than "+allowed+" "+k+" device(s) used";
             }
+            
         }
         if (errors){
             setValue('configError',errors);

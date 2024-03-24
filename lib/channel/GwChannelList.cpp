@@ -1,9 +1,33 @@
 #include "GwChannelList.h"
 #include "GwApi.h"
+//check for duplicate groove usages
+#define GW_PINDEFS
 #include "GwHardware.h"
 #include "GwSocketServer.h"
 #include "GwSerial.h"
 #include "GwTcpClient.h"
+class SerInit{
+    public:
+        int serial=-1;
+        int rx=-1;
+        int tx=-1;
+        int mode=-1;
+        int fixedBaud=-1;
+        SerInit(int s,int r,int t, int m, int b=-1):
+            serial(s),rx(r),tx(t),mode(m),fixedBaud(b){}
+};
+std::vector<SerInit> serialInits;
+
+#define CFG_SERIAL(ser,...) \
+    __MSG("serial config " #ser); \
+    static GwInitializer<SerInit> __serial ## ser ## _init \
+        (serialInits,SerInit(ser,__VA_ARGS__));
+#ifdef _GWI_SERIAL1
+    CFG_SERIAL(1,_GWI_SERIAL1)
+#endif
+#ifdef _GWI_SERIAL2
+    CFG_SERIAL(2,_GWI_SERIAL2)
+#endif
 class GwSerialLog : public GwLogWriter
 {
     static const size_t bufferSize = 4096;
@@ -11,12 +35,13 @@ class GwSerialLog : public GwLogWriter
     int wp = 0;
     GwSerial *writer;
     bool disabled = false;
-
+    long flushTimeout=200;
 public:
-    GwSerialLog(GwSerial *writer, bool disabled)
+    GwSerialLog(GwSerial *writer, bool disabled,long flushTimeout=200)
     {
         this->writer = writer;
         this->disabled = disabled;
+        this->flushTimeout=flushTimeout;
         logBuffer = new char[bufferSize];
         wp = 0;
     }
@@ -39,15 +64,62 @@ public:
         {
             while (handled < wp)
             {
-                writer->flush();
+                if ( !writer->flush(flushTimeout)) break;
                 size_t rt = writer->sendToClients(logBuffer + handled, -1, true);
                 handled += rt;
+            }
+            if (handled < wp){
+                if (handled > 0){
+                    memmove(logBuffer,logBuffer+handled,wp-handled);
+                    wp-=handled;
+                    logBuffer[handled]=0;
+                }
+                return;
             }
         }
         wp = 0;
         logBuffer[0] = 0;
     }
 };
+
+template<typename T>
+    class SerialWrapper : public GwChannelList::SerialWrapperBase{
+        private:
+        template<class C>
+        void beginImpl(C *s,unsigned long baud, uint32_t config=SERIAL_8N1, int8_t rxPin=-1, int8_t txPin=-1){}
+        void beginImpl(HardwareSerial *s,unsigned long baud, uint32_t config=SERIAL_8N1, int8_t rxPin=-1, int8_t txPin=-1){
+            s->begin(baud,config,rxPin,txPin);
+        }
+        template<class C>
+        void setError(C* s, GwLog *logger){}
+        void setError(HardwareSerial *s,GwLog *logger){
+            LOG_DEBUG(GwLog::LOG,"enable serial errors for channel %d",id);
+            s->onReceiveError([logger,this](hardwareSerial_error_t err){
+                LOG_DEBUG(GwLog::ERROR,"serial error on id %d: %d",this->id,(int)err);
+            });
+        }
+        #if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S3
+            void beginImpl(HWCDC *s,unsigned long baud, uint32_t config=SERIAL_8N1, int8_t rxPin=-1, int8_t txPin=-1){
+            s->begin(baud);
+        }
+        #endif
+        T *serial;
+        int id;
+        public:
+        SerialWrapper(T* s,int i):serial(s),id(i){}
+        virtual void begin(GwLog* logger,unsigned long baud, uint32_t config=SERIAL_8N1, int8_t rxPin=-1, int8_t txPin=-1) override{
+            beginImpl(serial,baud,config,rxPin,txPin);
+            setError(serial,logger);
+        };
+        virtual Stream *getStream() override{
+            return serial;
+        }
+        virtual int getId() override{
+            return id;
+        }
+
+    };
+
 
 GwChannelList::GwChannelList(GwLog *logger, GwConfigHandler *config){
     this->logger=logger;
@@ -101,8 +173,18 @@ static SerialParam *getSerialParam(int id){
     }
     return nullptr;
 }
-
-void GwChannelList:: addSerial(HardwareSerial *stream,int id,int type,int rx,int tx){
+void GwChannelList::addSerial(int id, int rx, int tx, int type){
+    if (id == 1){
+        addSerial(new SerialWrapper<decltype(Serial1)>(&Serial1,SERIAL1_CHANNEL_ID),type,rx,tx);
+        return;   
+    }
+    if (id == 2){
+        addSerial(new SerialWrapper<decltype(Serial2)>(&Serial2,SERIAL2_CHANNEL_ID),type,rx,tx);
+        return;   
+    }
+    LOG_DEBUG(GwLog::ERROR,"invalid serial config with id %d",id);
+}
+void GwChannelList::addSerial(GwChannelList::SerialWrapperBase *stream,int type,int rx,int tx){
     const char *mode=nullptr;
     switch (type)
     {
@@ -123,9 +205,16 @@ void GwChannelList:: addSerial(HardwareSerial *stream,int id,int type,int rx,int
         LOG_DEBUG(GwLog::ERROR,"unknown serial type %d",type);
         return;
     }
-    addSerial(stream,id,mode,rx,tx);
+    addSerial(stream,mode,rx,tx);
 }
-void GwChannelList::addSerial(HardwareSerial *serialStream,int id,const String &mode,int rx,int tx){
+void GwChannelList::addSerial(GwChannelList::SerialWrapperBase *serialStream,const String &mode,int rx,int tx){
+    int id=serialStream->getId();
+    for (auto &&it:theChannels){
+        if (it->isOwnSource(id)){
+            LOG_DEBUG(GwLog::ERROR,"trying to re-add serial id=%d, ignoring",id);
+            return;
+        }
+    }
     SerialParam *param=getSerialParam(id);
     if (param == nullptr){
         logger->logDebug(GwLog::ERROR,"trying to set up an unknown serial channel: %d",id);
@@ -161,8 +250,8 @@ void GwChannelList::addSerial(HardwareSerial *serialStream,int id,const String &
     if (tx < 0) canWrite=false;
     LOG_DEBUG(GwLog::DEBUG,"serial set up: mode=%s,rx=%d,canRead=%d,tx=%d,canWrite=%d",
         mode.c_str(),rx,(int)canRead,tx,(int)canWrite);
-    serialStream->begin(config->getInt(param->baud,115200),SERIAL_8N1,rx,tx);
-    GwSerial *serial = new GwSerial(logger, serialStream, id, canRead);
+    serialStream->begin(logger,config->getInt(param->baud,115200),SERIAL_8N1,rx,tx);
+    GwSerial *serial = new GwSerial(logger, serialStream->getStream(), id, canRead);
     LOG_DEBUG(GwLog::LOG, "starting serial %d ", id);
     GwChannel *channel = new GwChannel(logger, param->name, id);
     channel->setImpl(serial);
@@ -179,7 +268,36 @@ void GwChannelList::addSerial(HardwareSerial *serialStream,int id,const String &
     LOG_DEBUG(GwLog::LOG, "%s", channel->toString().c_str());
     theChannels.push_back(channel);
 }
-
+void GwChannelList::preinit(){
+    for (auto &&init:serialInits){
+        if (init.fixedBaud >= 0){
+            switch(init.serial){
+              case 1:
+              {
+                LOG_DEBUG(GwLog::DEBUG,"setting fixed baud %d for serial",init.fixedBaud);
+                config->setValue(GwConfigDefinitions::serialBaud,String(init.fixedBaud),GwConfigInterface::READONLY);
+              }
+              break;
+              case 2:
+              {
+                LOG_DEBUG(GwLog::DEBUG,"setting fixed baud %d for serial2",init.fixedBaud);
+                config->setValue(GwConfigDefinitions::serial2Baud,String(init.fixedBaud),GwConfigInterface::READONLY);
+              }
+              break;
+              default:
+                LOG_DEBUG(GwLog::ERROR,"invalid serial definition %d found",init.serial)
+            }
+        }
+    }
+}
+template<typename S>
+long getFlushTimeout(S &s){
+    return 200;
+}
+template<>
+long getFlushTimeout(HardwareSerial &s){
+    return 2000;
+}
 void GwChannelList::begin(bool fallbackSerial){
     LOG_DEBUG(GwLog::DEBUG,"GwChannelList::begin");
     GwChannel *channel=NULL;
@@ -187,7 +305,7 @@ void GwChannelList::begin(bool fallbackSerial){
     if (! fallbackSerial){
         GwSerial *usb=new GwSerial(NULL,&USBSerial,USB_CHANNEL_ID);
         USBSerial.begin(config->getInt(config->usbBaud));
-        logger->setWriter(new GwSerialLog(usb,config->getBool(config->usbActisense)));
+        logger->setWriter(new GwSerialLog(usb,config->getBool(config->usbActisense),getFlushTimeout(USBSerial)));
         logger->prefix="GWSERIAL:";
         channel=new GwChannel(logger,"USB",USB_CHANNEL_ID);
         channel->setImpl(usb);
@@ -223,6 +341,11 @@ void GwChannelList::begin(bool fallbackSerial){
     LOG_DEBUG(GwLog::LOG,"%s",channel->toString().c_str());
     theChannels.push_back(channel);
 
+    //new serial config handling
+    for (auto &&init:serialInits){
+        addSerial(init.serial,init.rx,init.tx,init.mode);
+    }
+    //handle separate defines
     //serial 1
     #ifndef GWSERIAL_TX
       #define GWSERIAL_TX -1
@@ -231,10 +354,10 @@ void GwChannelList::begin(bool fallbackSerial){
       #define GWSERIAL_RX -1
     #endif
     #ifdef GWSERIAL_TYPE
-        addSerial(&Serial1,SERIAL1_CHANNEL_ID,GWSERIAL_TYPE,GWSERIAL_RX,GWSERIAL_TX);
+        addSerial(new SerialWrapper<decltype(Serial1)>(&Serial1,SERIAL1_CHANNEL_ID),GWSERIAL_TYPE,GWSERIAL_RX,GWSERIAL_TX);
     #else
         #ifdef GWSERIAL_MODE
-            addSerial(&Serial1,SERIAL1_CHANNEL_ID,GWSERIAL_MODE,GWSERIAL_RX,GWSERIAL_TX);
+            addSerial(new SerialWrapper<decltype(Serial1)>(&Serial1,SERIAL1_CHANNEL_ID),GWSERIAL_MODE,GWSERIAL_RX,GWSERIAL_TX);
         #endif
     #endif
     //serial 2
@@ -245,10 +368,10 @@ void GwChannelList::begin(bool fallbackSerial){
       #define GWSERIAL2_RX -1
     #endif
     #ifdef GWSERIAL2_TYPE
-        addSerial(&Serial2,SERIAL2_CHANNEL_ID,GWSERIAL2_TYPE,GWSERIAL2_RX,GWSERIAL2_TX);
+        addSerial(new SerialWrapper<decltype(Serial2)>(&Serial2,SERIAL2_CHANNEL_ID),GWSERIAL2_TYPE,GWSERIAL2_RX,GWSERIAL2_TX);
     #else
         #ifdef GWSERIAL2_MODE
-            addSerial(&Serial2,SERIAL2_CHANNEL_ID,GWSERIAL2_MODE,GWSERIAL2_RX,GWSERIAL2_TX);
+            addSerial(new SerialWrapper<decltype(Serial2)>(&Serial2,SERIAL2_CHANNEL_ID),GWSERIAL2_MODE,GWSERIAL2_RX,GWSERIAL2_TX);
         #endif
     #endif
     //tcp client

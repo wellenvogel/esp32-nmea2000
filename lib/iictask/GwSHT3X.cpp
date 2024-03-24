@@ -1,11 +1,12 @@
 #include "GwSHT3X.h"
-
 #ifdef _GWSHT3X
-#define PRFX1 "SHT3X11"
-#define PRFX2 "SHT3X12"
-#define PRFX3 "SHT3X21"
-#define PRFX4 "SHT3X22"
-class SHT3XConfig : public SensorBase{
+#define TYPE "SHT3X"
+#define PRFX1 TYPE "11"
+#define PRFX2 TYPE "12"
+#define PRFX3 TYPE "21"
+#define PRFX4 TYPE "22"
+
+class SHT3XConfig : public IICSensorBase{
     public:
     String tmNam;
     String huNam;
@@ -15,7 +16,7 @@ class SHT3XConfig : public SensorBase{
     tN2kTempSource tmSrc;
     SHT3X *device=nullptr;
     SHT3XConfig(GwApi *api,const String &prefix):
-        SensorBase(api,prefix){}
+        SensorBase(TYPE,api,prefix){}
     virtual bool isActive(){
         return tmAct || huAct;
     }
@@ -77,6 +78,7 @@ class SHT3XConfig : public SensorBase{
         CFG_GET(tmSrc,prefix);
 
     virtual void readConfig(GwConfigHandler *cfg){
+        if (ok) return;
         if (prefix == PRFX1){
             busId=1;
             addr=0x44;
@@ -104,11 +106,14 @@ class SHT3XConfig : public SensorBase{
         intv*=1000;
     }
 };
-void registerSHT3X(GwApi *api,SensorList &sensors){
+IICSensorBase::Creator creator=[](GwApi *api,const String &prfx){
+    return new SHT3XConfig(api,prfx);
+};
+IICSensorBase::Creator registerSHT3X(GwApi *api,IICSensorList &sensors){
     GwLog *logger=api->getLogger();
     #if defined(GWSHT3X) || defined (GWSHT3X11)
     {
-        SHT3XConfig *scfg=new SHT3XConfig(api,PRFX1);
+        auto *scfg=creator(api,PRFX1);
         sensors.add(api,scfg);
         CHECK_IIC1();
         #pragma message "GWSHT3X11 defined"
@@ -116,7 +121,7 @@ void registerSHT3X(GwApi *api,SensorList &sensors){
     #endif
     #if defined(GWSHT3X12)
     {
-        SHT3XConfig *scfg=new SHT3XConfig(api,PRFX2);
+        auto *scfg=creator(api,PRFX2);
         sensors.add(api,scfg);
         CHECK_IIC1();
         #pragma message "GWSHT3X12 defined"
@@ -124,7 +129,7 @@ void registerSHT3X(GwApi *api,SensorList &sensors){
     #endif
     #if defined(GWSHT3X21)
     {
-        SHT3XConfig *scfg=new SHT3XConfig(api,PRFX3);
+        auto *scfg=creator(api,PRFX3);
         sensors.add(api,scfg);
         CHECK_IIC2();
         #pragma message "GWSHT3X21 defined"
@@ -132,16 +137,18 @@ void registerSHT3X(GwApi *api,SensorList &sensors){
     #endif
     #if defined(GWSHT3X22)
     {
-        SHT3XConfig *scfg=new SHT3XConfig(api,PRFX4);
+        auto *scfg=creator(api,PRFX4);
         sensors.add(api,scfg);
         CHECK_IIC2();
         #pragma message "GWSHT3X22 defined"
     }
     #endif
-}
-#else
-void registerSHT3X(GwApi *api,SensorList &sensors){
+    return creator;
+};
 
+#else
+IICSensorBase::Creator registerSHT3X(GwApi *api,IICSensorList &sensors){
+    return IICSensorBase::Creator();
 }
 
 #endif

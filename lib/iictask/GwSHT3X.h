@@ -4,8 +4,6 @@
 #ifdef _GWIIC
     #if defined(GWSHT3X) || defined(GWSHT3X11) || defined(GWSHT3X12) || defined(GWSHT3X21) || defined(GWSHT3X22)
         #define _GWSHT3X
-    #else
-        #undef _GWSHT3X
     #endif
 #else
     #undef _GWSHT3X
@@ -18,5 +16,5 @@
 #ifdef _GWSHT3X
     #include "SHT3X.h"
 #endif
-void registerSHT3X(GwApi *api,SensorList &sensors);
+IICSensorBase::Creator registerSHT3X(GwApi *api,IICSensorList &sensors);
 #endif

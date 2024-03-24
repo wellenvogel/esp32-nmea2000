@@ -37,7 +37,7 @@
     </div>
     <div class="row ">
       <span class="label">wifi client connected</span>
-      <span class="value" id="wifiConnected">---</span>
+      <span class="value" id="wifiConnected">---</span>&nbsp;[<span class="value" id="wifiSSID">---</span>]
     </div>
     <div class="row even">
       <span class="label">wifi client IP</span>
@@ -102,7 +102,7 @@
   </div>
   <div class="row">
     <span class="label">chip type</span>
-    <span class="value status-chiptype">---</span>
+    <span class="value status-chipid">---</span>
   </div>
   <div class="row">
     <span class="label">currentVersion</span>
@@ -131,7 +131,6 @@
       AHA
     </div>
     <div class="overlayButtons">
-      <button id="hideOverlay">Close</button>
     </div>
   </div>
 </div>
@@ -189,6 +188,17 @@
 </div>
 <div class="hidden">
   <a id="downloadXdr"></a>
+</div>
+<div class="hidden" id="calset">
+  <h2 class="heading"></h2>
+  <p class="val"></p>
+</div>
+<div class="hidden" id="calval">
+  <h2 class="heading"></h2>
+  <p class="val"></p>
+  <label>config
+    <input type="number"/>
+  </label>
 </div>
 </body>
 </html>

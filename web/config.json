@@ -9,6 +9,86 @@
         "category": "system"
     },
     {
+        "name": "stopApTime",
+        "type": "number",
+        "default": "0",
+        "check": "checkMinMax",
+        "description": "stop the access point after that many minutes if not used",
+        "category": "system"
+    },
+    {
+        "name": "apPassword",
+        "type": "password",
+        "default": "esp32nmea2k",
+        "check": "checkApPass",
+        "description": "set the password for the Wifi access point",
+        "category": "system",
+        "capabilities":{"apPwChange":["true"]}
+    },
+    {
+        "name": "apIp",
+        "type": "string",
+        "default":"192.168.15.1",
+        "check": "checkApIp",
+        "description": "The IP address for the access point. Clients will get addresses within the same subnet.",
+        "category":"system"
+    },
+    {
+        "name": "apMask",
+        "type": "string",
+        "default":"255.255.255.0",
+        "check": "checkNetMask",
+        "description": "The net mask for the access point",
+        "category":"system"
+    },
+    {
+        "name": "useAdminPass",
+        "type": "boolean",
+        "default": "true",
+        "description": "use a password for config modifications",
+        "category": "system"
+    },
+    {
+        "name": "adminPassword",
+        "type": "password",
+        "default": "esp32admin",
+        "check": "checkAdminPass",
+        "description": "set the password for config modifications",
+        "category": "system"
+    },
+    {
+        "name": "showInvalidData",
+        "label": "show all data",
+        "type": "boolean",
+        "default": "true",
+        "description": "show also not received items on data page",
+        "category": "system"
+    },
+    {
+        "name":"logLevel",
+        "label": "log level",
+        "type":"list",
+        "default":"0",
+        "list": [
+            {"l":"off","v":"-1"},
+            {"l":"error","v":"0"},
+            {"l":"log","v":"1"},
+            {"l":"debug","v":"3"}
+        ],
+        "description": "log level at the USB port",
+        "category":"system"
+    },
+    {
+        "name":"ledBrightness",
+        "label":"led brightness",
+        "type":"number",
+        "default":64,
+        "min":0,
+        "max":255,
+        "description":"the brightness of the led (0..255)",
+        "category":"system"
+    },
+    {
         "name": "talkerId",
         "label": "NMEA0183 ID",
         "type": "list",
@@ -100,87 +180,7 @@
             "ZV"
         ],
         "description": "the talkerId used in generated NMEA0183 records",
-        "category": "system"
-    },
-    {
-        "name": "stopApTime",
-        "type": "number",
-        "default": "0",
-        "check": "checkMinMax",
-        "description": "stop the access point after that many minutes if not used",
-        "category": "system"
-    },
-    {
-        "name": "apPassword",
-        "type": "password",
-        "default": "esp32nmea2k",
-        "check": "checkApPass",
-        "description": "set the password for the Wifi access point",
-        "category": "system",
-        "capabilities":{"apPwChange":["true"]}
-    },
-    {
-        "name": "apIp",
-        "type": "string",
-        "default":"192.168.15.1",
-        "check": "checkApIp",
-        "description": "The IP address for the access point. Clients will get addresses within the same subnet.",
-        "category":"system"
-    },
-    {
-        "name": "apMask",
-        "type": "string",
-        "default":"255.255.255.0",
-        "check": "checkNetMask",
-        "description": "The net mask for the access point",
-        "category":"system"
-    },
-    {
-        "name": "useAdminPass",
-        "type": "boolean",
-        "default": "true",
-        "description": "use a password for config modifications",
-        "category": "system"
-    },
-    {
-        "name": "adminPassword",
-        "type": "password",
-        "default": "esp32admin",
-        "check": "checkAdminPass",
-        "description": "set the password for config modifications",
-        "category": "system"
-    },
-    {
-        "name": "showInvalidData",
-        "label": "show all data",
-        "type": "boolean",
-        "default": "true",
-        "description": "show also not received items on data page",
-        "category": "system"
-    },
-    {
-        "name":"logLevel",
-        "label": "log level",
-        "type":"list",
-        "default":"0",
-        "list": [
-            {"l":"off","v":"-1"},
-            {"l":"error","v":"0"},
-            {"l":"log","v":"1"},
-            {"l":"debug","v":"3"}
-        ],
-        "description": "log level at the USB port",
-        "category":"system"
-    },
-    {
-        "name":"ledBrightness",
-        "label":"led brightness",
-        "type":"number",
-        "default":64,
-        "min":0,
-        "max":255,
-        "description":"the brightness of the led (0..255)",
-        "category":"system"
+        "category": "converter"
     },
     {
         "name": "minXdrInterval",
@@ -210,6 +210,46 @@
          "description":"send out the converted data on the NMEA2000 bus\nIf set to off the converted data will still be shown at the data tab.",
          "category":"converter"
      },
+     {
+        "name":"sendRMCi",
+        "label":"send RMC interval",
+        "type": "number",
+        "description":"interval (ms) to automatically send an RMC if we have valid position data (min 100ms, set to 0 to disable)",
+        "default":"1000",
+        "category":"converter"
+     },
+     {
+        "name":"checkRMCt",
+        "label": "check RMC time",
+        "type": "number",
+        "description": "start sending RMC if we did not see an external RMC after this much ms",
+        "default":"4000",
+        "min": 1000,
+        "check":"checkMinMax",
+        "category":"converter"
+     },
+     {
+        "name": "stbRudderI",
+        "label":"stb rudder instance",
+        "type": "number",
+        "default": "0",
+        "check": "checkMinMax",
+        "min": 0,
+        "max": 253,
+        "description": "the n2k instance to be used as starboard(main) rudder 0...253",
+        "category": "converter"
+    },
+    {
+        "name": "portRudderI",
+        "label":"port rudder instance",
+        "type": "number",
+        "default": "-1",
+        "check": "checkMinMax",
+        "min": -1,
+        "max": 253,
+        "description": "the n2k instance to be used as port rudder 0...253, -1 to disable",
+        "category": "converter"
+    },
     {
         "name": "usbActisense",
         "label": "USB mode",

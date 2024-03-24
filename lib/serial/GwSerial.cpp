@@ -115,11 +115,21 @@ void GwSerial::readMessages(GwMessageFetcher *writer){
     writer->handleBuffer(readBuffer);
 }
 
-void GwSerial::flush(){
-   if (! isInitialized()) return; 
-   while (write() == GwBuffer::AGAIN){
-       vTaskDelay(1);
+bool GwSerial::flush(long max){
+   if (! isInitialized()) return false;
+   if (! availableWrite) {
+    if ( serial->availableForWrite() < 1){
+        return false;
+    }
+    availableWrite=true;
    }
+   auto start=millis();
+   while (millis() < (start+max)){
+        if (write() != GwBuffer::AGAIN) return true;
+        vTaskDelay(1);
+   }
+   availableWrite=(serial->availableForWrite() > 0);
+   return false;
 }
 Stream * GwSerial::getStream(bool partialWrite){
     return new GwSerialStream(this,partialWrite);
