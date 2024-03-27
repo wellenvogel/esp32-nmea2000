@@ -147,6 +147,11 @@ types:
         description: "M5 Gps Unit"
         url: "https://docs.m5stack.com/en/unit/gps"
         resource: serial
+      - label: "RS232/RS422"
+        value: SERIAL_GROOVE_232#grv#
+        description: "Generic RS232/RS422 Unit"
+        url: "https://github.com/oxbown/esp32-nmea2000/tree/master/doc"
+        resource: serial
 
   - &m5groove
     type: select
