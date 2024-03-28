@@ -460,7 +460,7 @@
         "name": "rollLimit",
         "label": "Roll Limit",
         "type": "number",
-        "default": "40",
+        "default": "25",
         "check": "checkMinMax",
         "min": -90,
         "max": 90,
@@ -622,7 +622,7 @@
         "label": "Refresh",
         "type": "boolean",
         "default": "true",
-        "description": "Refresh E-Ink display after each new page request to reduce shadows [on|off]",
+        "description": "Refresh E-Ink display after each new page request to reduce ghost effects [on|off]",
         "category": "OBP60 Display",
         "capabilities": {
             "obp60":"true"

@@ -325,7 +325,12 @@ void displayHeader(CommonData &commonData, GwApi::BoatValue *date, GwApi::BoatVa
             }
         }
         else{
-        getdisplay().print("No GPS data");
+            if(commonData.config->getBool(commonData.config->useSimuData) == true){
+                getdisplay().print("12:00 01.01.2024 LOT");
+            }
+            else{
+                getdisplay().print("No GPS data");
+            }
         }
     }
 }

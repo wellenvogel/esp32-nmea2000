@@ -27,17 +27,13 @@ public:
         GwConfigHandler *config = commonData.config;
         GwLog *logger=commonData.logger;
 
-        static String svalue1old = "";
-        static String unit1old = "";
-        static String svalue2old = "";
-        static String unit2old = "";
-
         double value1 = 0;
         double value2 = 0;
         String svalue1 = "";
-        String unit1 = "";
+        String svalue1old = "";
         String svalue2 = "";
-        String unit2 = "";
+        String svalue2old = "";
+
 
         // Get config data
         String lengthformat = config->getString(config->lengthFormat);
@@ -63,7 +59,6 @@ public:
         else{
             if(simulation == true){
                 value1 = (20 + float(random(0, 50)) / 10.0)/360*2*PI;
-                unit1 = "Deg";
             }
             else{
                 value1 = 0;
@@ -74,11 +69,6 @@ public:
         }
         else{
             svalue1 = String(value1/(2*PI)*360,0);
-        }
-        unit1 = formatValue(bvalue1, commonData).unit;  // Unit of value
-        if(valid1 == true){
-            svalue1old = svalue1;   	                // Save old value
-            unit1old = unit1;                           // Save old unit
         }
 
         // Get boat values for pitch
@@ -92,7 +82,6 @@ public:
         else{
              if(simulation == true){
                 value2 = (float(random(-5, 5)))/360*2*PI;
-                unit2 = "Deg";
             }
             else{
                 value2 = 0;
@@ -104,16 +93,11 @@ public:
         else{
             svalue2 = String(value2/(2*PI)*360,0);
         }
-        unit2 = formatValue(bvalue2, commonData).unit;  // Unit of value
-        if(valid2 == true){
-            svalue2old = svalue2;   	                // Save old value
-            unit2old = unit2;                           // Save old unit
-        }
 
         // Optical warning by limit violation
         if(String(flashLED) == "Limit Violation"){
             // Limits for roll
-            if(value1*360/(2*PI) > -1*rolllimit && value1*360/(2*PI) < rolllimit){
+            if(value1*360/(2*PI) >= -1*rolllimit && value1*360/(2*PI) <= rolllimit){
                 setBlinkingLED(false);
                 setFlashLED(false);
             }
@@ -146,6 +130,18 @@ public:
         // Set display in partial refresh mode
         getdisplay().setPartialWindow(0, 0, getdisplay().width(), getdisplay().height()); // Set partial update
 
+        // Show roll limit
+        getdisplay().setTextColor(textcolor);
+        getdisplay().setFont(&DSEG7Classic_BoldItalic20pt7b);
+        getdisplay().setCursor(10, 65);
+        getdisplay().print(rolllimit);                   // Value
+        getdisplay().setFont(&Ubuntu_Bold12pt7b);
+        getdisplay().setCursor(10, 95);
+        getdisplay().print("Limit");                     // Name
+        getdisplay().setFont(&Ubuntu_Bold8pt7b);
+        getdisplay().setCursor(10, 115);
+        getdisplay().print("DEG");
+        
         // Horizintal separator left
         getdisplay().fillRect(0, 149, 60, 3, pixelcolor);
 
@@ -160,9 +156,7 @@ public:
         getdisplay().print(name1);                           // Name
         getdisplay().setFont(&Ubuntu_Bold8pt7b);
         getdisplay().setCursor(10, 190);
-        getdisplay().print(" ");
-        if(holdvalues == false) getdisplay().print(unit1);   // Unit
-        else getdisplay().print(unit1old);
+        getdisplay().print("Deg");
 
         // Horizintal separator right
         getdisplay().fillRect(340, 149, 80, 3, pixelcolor);
@@ -178,9 +172,7 @@ public:
         getdisplay().print(name2);                           // Name
         getdisplay().setFont(&Ubuntu_Bold8pt7b);
         getdisplay().setCursor(335, 190);
-        getdisplay().print(" ");
-        if(holdvalues == false) getdisplay().print(unit1);   // Unit
-        else getdisplay().print(unit1old);
+        getdisplay().print("Deg");
 
 //*******************************************************************************************
         

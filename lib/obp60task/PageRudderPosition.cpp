@@ -52,6 +52,15 @@ public:
             unit1old = unit1;                           // Save old unit
         }
 
+        if(simulation == true){
+            value1 = (3 + float(random(0, 50)) / 10.0)/360*2*PI;
+            unit1 = "Deg";
+        }
+        else{
+            value1 = 0;
+        }
+
+
         // Optical warning by limit violation (unused)
         if(String(flashLED) == "Limit Violation"){
             setBlinkingLED(false);

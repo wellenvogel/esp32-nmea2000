@@ -43,7 +43,7 @@ public:
 
         // Get config data
         String lengthformat = config->getString(config->lengthFormat);
-        // bool simulation = config->getBool(config->useSimuData);
+        bool simulation = config->getBool(config->useSimuData);
         String displaycolor = config->getString(config->displaycolor);
         bool holdvalues = config->getBool(config->holdvalues);
         String flashLED = config->getString(config->flashLED);
@@ -54,7 +54,8 @@ public:
         String name1 = xdrDelete(bvalue1->getName());   // Value name
         name1 = name1.substring(0, 6);                  // String length limit for value name
         double value1 = bvalue1->value;                 // Value as double in SI unit
-        bool valid1 = bvalue1->valid;                   // Valid information 
+        bool valid1 = bvalue1->valid;                   // Valid information
+        value1 = formatValue(bvalue1, commonData).value;// Format only nesaccery for simulation data for pointer
         String svalue1 = formatValue(bvalue1, commonData).svalue;    // Formatted value as string including unit conversion and switching decimal places
         String unit1 = formatValue(bvalue1, commonData).unit;        // Unit of value
         if(valid1 == true){
@@ -309,7 +310,7 @@ public:
 
         // Draw wind pointer
         float startwidth = 8;       // Start width of pointer
-        if(valid2 == true || holdvalues == true){
+        if(valid2 == true || holdvalues == true || simulation == true){
             float sinx=sin(value1);     // Wind direction
             float cosx=cos(value1);
             // Normal pointer

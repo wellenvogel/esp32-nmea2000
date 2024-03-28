@@ -171,7 +171,7 @@ public:
         // Draw keel position pointer
         float startwidth = 8;       // Start width of pointer
 
-        if(rotsensor == "AS5600" && rotfunction == "Keel" && (valid1 == true || holdvalues == true || simulation == true)){
+        if((rotsensor == "AS5600" && rotfunction == "Keel" && (valid1 == true || holdvalues == true)) || simulation == true){
             float sinx=sin(value1);
             float cosx=cos(value1);
             // Normal pointer
@@ -210,7 +210,7 @@ public:
         getdisplay().setCursor(100, 70);
         getdisplay().print("Keel Position");                 // Label
 
-        if(rotsensor == "AS5600" && rotfunction == "Keel" && (valid1 == true || holdvalues == true || simulation == true)){
+        if((rotsensor == "AS5600" && rotfunction == "Keel" && (valid1 == true || holdvalues == true)) || simulation == true){
             // Print Unit of keel position
             getdisplay().setFont(&Ubuntu_Bold12pt7b);
             getdisplay().setCursor(175, 110);

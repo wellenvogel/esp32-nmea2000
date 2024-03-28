@@ -11,19 +11,20 @@ typedef struct{
   ValueList values;
 } PageData;
 
+// Sensor data structure (only for extended sensors, not for NMEA bus sensors)
 typedef struct{
   int actpage = 0;
   int maxpage = 0;
   double batteryVoltage = 0;
   double batteryCurrent = 0;
   double batteryPower = 0;
-  double batteryVoltage10 = 0;
+  double batteryVoltage10 = 0;  // Sliding average over 10 values
   double batteryCurrent10 = 0;
   double batteryPower10 = 0;
-  double batteryVoltage60 = 0;
+  double batteryVoltage60 = 0;  // Sliding average over 60 values
   double batteryCurrent60 = 0;
   double batteryPower60 = 0;
-  double batteryVoltage300 = 0;
+  double batteryVoltage300 = 0; // Sliding average over 300 values
   double batteryCurrent300 = 0;
   double batteryPower300 = 0;
   double solarVoltage = 0;
@@ -42,7 +43,7 @@ typedef struct{
   double onewireTemp5 = 0; 
   double onewireTemp6 = 0;
   double rotationAngle = 0;       // Rotation angle in radiant
-  bool validRotAngle = false;     // Valid flag for magnet present
+  bool validRotAngle = false;     // Valid flag magnet present for potation sensor
   int sunsetHour = 0;
   int sunsetMinute = 0;
   int sunriseHour = 0;
@@ -112,6 +113,7 @@ class PageDescription{
 
 // Structure for formated boat values
 typedef struct{
+  double value;
   String svalue;
   String unit;
 } FormatedData;

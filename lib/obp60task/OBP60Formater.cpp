@@ -12,6 +12,7 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
     GwLog *logger = commondata.logger;
     FormatedData result;
     static int dayoffset = 0;
+    double rawvalue = 0;
 
     // Load configuration values
     String stimeZone = commondata.config->getString(commondata.config->timeZone);               // [UTC -14.00...+12.00]
@@ -112,9 +113,11 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
     else if (value->getFormat() == "formatFixed0"){
         if(usesimudata == false) {
             snprintf(buffer,bsize,"%3.0f",value->value);
+            rawvalue = value->value;
         }
         else{
-            snprintf(buffer,bsize,"%3.0f", 8.0 + float(random(0, 10)) / 10.0);
+            rawvalue = 8.0 + float(random(0, 10)) / 10.0;
+            snprintf(buffer,bsize,"%3.0f", rawvalue);
         }
         result.unit = "";
     }
@@ -123,9 +126,11 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
         double course = 0;
         if(usesimudata == false) {
             course = value->value;
+            rawvalue = value->value;
         }
         else{
             course = 2.53 + float(random(0, 10) / 100.0);
+            rawvalue = course;
         }    
         course = course * 57.2958;      // Unit conversion form rad to deg
 
@@ -138,9 +143,11 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
         double speed = 0;
         if(usesimudata == false) {
             speed = value->value;
+            rawvalue = value->value;
         }
         else{
-            speed = 4.0 + float(random(0, 40));
+            rawvalue = 4.0 + float(random(0, 40));
+            speed = rawvalue;
         }
         if(String(speedFormat) == "km/h"){
         speed = speed * 3.6;            // Unit conversion form m/s to km/h
@@ -169,9 +176,11 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
         double speed = 0;
         if(usesimudata == false) {
             speed = value->value;
+            rawvalue = value->value;
         }
         else{
-            speed = 4.0 + float(random(0, 40));
+            rawvalue = 4.0 + float(random(0, 40));
+            speed = rawvalue;
         }
         if(String(windspeedFormat) == "km/h"){
         speed = speed * 3.6;        // Unit conversion form m/s to km/h
@@ -247,9 +256,11 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
         double rotation = 0;
         if(usesimudata == false) {
             rotation = value->value;
+            rawvalue = value->value;
         }
         else{
-            rotation = 0.04 + float(random(0, 10)) / 100.0;
+            rawvalue = 0.04 + float(random(0, 10)) / 100.0;
+            rotation = rawvalue;
         }
         rotation = rotation * 57.2958;      // Unit conversion form rad/s to deg/s
         result.unit = "Deg/s";
@@ -271,9 +282,11 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
         double dop = 0;
         if(usesimudata == false) {
             dop = value->value;
+            rawvalue = value->value;
         }
         else{
-            dop = 2.0 + float(random(0, 40)) / 10.0;
+            rawvalue = 2.0 + float(random(0, 40)) / 10.0;
+            dop = rawvalue;
         }
         result.unit = "m";
         if(dop > 99.9){
@@ -290,6 +303,7 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
     else if (value->getFormat() == "formatLatitude"){
         if(usesimudata == false) {
             double lat = value->value;
+            rawvalue = value->value;
             String latitude = "";
             String latdir = "";
             float degree = abs(int(lat));
@@ -305,13 +319,15 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
             strcpy(buffer, latitude.c_str());
         }
         else{
-            snprintf(buffer,bsize," 51\" %2.4f' N", 35.0 + float(random(0, 10)) / 10000.0);
+            rawvalue = 35.0 + float(random(0, 10)) / 10000.0;
+            snprintf(buffer,bsize," 51\" %2.4f' N", rawvalue);
         }
     }
     //########################################################
     else if (value->getFormat() == "formatLongitude"){
         if(usesimudata == false) {
             double lon = value->value;
+            rawvalue = value->value;
             String longitude = "";
             String londir = "";
             float degree = abs(int(lon));
@@ -327,7 +343,8 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
             strcpy(buffer, longitude.c_str());
         }
         else{
-            snprintf(buffer,bsize," 15\" %2.4f'", 6.0 + float(random(0, 10)) / 100000.0);
+            rawvalue = 6.0 + float(random(0, 10)) / 100000.0;
+            snprintf(buffer,bsize," 15\" %2.4f'", rawvalue);
         }
     }
     //########################################################
@@ -335,9 +352,11 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
         double depth = 0;
         if(usesimudata == false) {
             depth = value->value;
+            rawvalue = value->value;
         }
         else{
-            depth = 18.0 + float(random(0, 100)) / 10.0;
+            rawvalue = 18.0 + float(random(0, 100)) / 10.0;
+            depth = rawvalue;
         }
         if(String(lengthFormat) == "ft"){
             depth = depth * 3.28084;
@@ -361,9 +380,11 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
         double temp = 0;
         if(usesimudata == false) {
             temp = value->value;
+            rawvalue = value->value;
         }
         else{
-            temp = 296.0 + float(random(0, 10)) / 10.0;
+            rawvalue = 296.0 + float(random(0, 10)) / 10.0;
+            temp = rawvalue;
         }
         if(String(tempFormat) == "C"){
             temp = temp - 273.15;
@@ -391,9 +412,11 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
         double distance = 0;
         if(usesimudata == false) {
             distance = value->value;
+            rawvalue = value->value;
         }
         else{
-            distance = 2960.0 + float(random(0, 10));
+            rawvalue = 2960.0 + float(random(0, 10));
+            distance = rawvalue;
         }
         if(String(distanceFormat) == "km"){
             distance = distance * 0.001;
@@ -424,22 +447,26 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
         double pressure = 0;
         if(usesimudata == false) {
             pressure = value->value;
-            pressure = pressure;                // Unit conversion form Pa to mBar
+            rawvalue = value->value;
+            pressure = pressure / 100.0;        // Unit conversion form Pa to hPa
         }
         else{
-            pressure = 968 + float(random(0, 10));
+            rawvalue = 968 + float(random(0, 10));
+            pressure = rawvalue;
         }
         snprintf(buffer,bsize,"%4.0f",pressure);
-        result.unit = "mBar";
+        result.unit = "hPa";
     }
     //########################################################
     else if (value->getFormat() == "formatXdr:P:B"){
         double pressure = 0;
         if(usesimudata == false) {
             pressure = value->value;
+            rawvalue = value->value;
             pressure = pressure / 100.0;      // Unit conversion form Pa to mBar
         }
         else{
+            rawvalue = value->value;
             pressure = 968 + float(random(0, 10));
         }
         snprintf(buffer,bsize,"%4.0f",pressure);
@@ -450,9 +477,11 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
         double voltage = 0;
         if(usesimudata == false) {
             voltage = value->value;
+            rawvalue = value->value;
         }
         else{
-            voltage = 12 + float(random(0, 30)) / 10.0;
+            rawvalue = 12 + float(random(0, 30)) / 10.0;
+            voltage = rawvalue;
         }
         if(voltage < 10){
             snprintf(buffer,bsize,"%3.2f",voltage);
@@ -467,9 +496,11 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
         double current = 0;
         if(usesimudata == false) {
             current = value->value;
+            rawvalue = value->value;
         }
         else{
-            current = 8.2 + float(random(0, 50)) / 10.0;
+            rawvalue = 8.2 + float(random(0, 50)) / 10.0;
+            current = rawvalue;
         }
         if(current < 10){
             snprintf(buffer,bsize,"%3.2f",current);
@@ -487,9 +518,11 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
         double temperature = 0;
         if(usesimudata == false) {
             temperature = value->value - 273.15;    // Convert K to C
+            rawvalue = value->value - 273.15;
         }
         else{
-            temperature = 21.8 + float(random(0, 50)) / 10.0;
+            rawvalue = 21.8 + float(random(0, 50)) / 10.0;
+            temperature = rawvalue;
         }
         if(temperature < 10){
             snprintf(buffer,bsize,"%3.2f",temperature);
@@ -507,9 +540,11 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
         double temperature = 0;
         if(usesimudata == false) {
             temperature = value->value;    // Value in C
+            rawvalue = value->value;
         }
         else{
-            temperature = 21.8 + float(random(0, 50)) / 10.0;
+            rawvalue = 21.8 + float(random(0, 50)) / 10.0;
+            temperature = rawvalue;
         }
         if(temperature < 10){
             snprintf(buffer,bsize,"%3.2f",temperature);
@@ -527,9 +562,11 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
         double humidity = 0;
         if(usesimudata == false) {
             humidity = value->value;    // Value in %
+            rawvalue = value->value;
         }
         else{
-            humidity = 41.3 + float(random(0, 50)) / 10.0;
+            rawvalue = 41.3 + float(random(0, 50)) / 10.0;
+            humidity = rawvalue;
         }
         if(humidity < 10){
             snprintf(buffer,bsize,"%3.2f",humidity);
@@ -547,9 +584,11 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
         double volume = 0;
         if(usesimudata == false) {
             volume = value->value;    // Value in %
+            rawvalue = value->value;
         }
         else{
-            volume = 85.8 + float(random(0, 50)) / 10.0;
+            rawvalue = 85.8 + float(random(0, 50)) / 10.0;
+            volume = rawvalue;
         }
         if(volume < 10){
             snprintf(buffer,bsize,"%3.2f",volume);
@@ -567,9 +606,11 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
         double volume = 0;
         if(usesimudata == false) {
             volume = value->value;    // Value in l
+            rawvalue = value->value;
         }
         else{
-            volume = 75.2 + float(random(0, 50)) / 10.0;
+            rawvalue = 75.2 + float(random(0, 50)) / 10.0;
+            volume = rawvalue;
         }
         if(volume < 10){
             snprintf(buffer,bsize,"%3.2f",volume);
@@ -587,9 +628,11 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
         double flow = 0;
         if(usesimudata == false) {
             flow = value->value;    // Value in l/min
+            rawvalue = value->value;
         }
         else{
-            flow = 7.5 + float(random(0, 20)) / 10.0;
+            rawvalue = 7.5 + float(random(0, 20)) / 10.0;
+            flow = rawvalue;
         }
         if(flow < 10){
             snprintf(buffer,bsize,"%3.2f",flow);
@@ -607,9 +650,11 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
         double generic = 0;
         if(usesimudata == false) {
             generic = value->value;    // Value in l/min
+            rawvalue = value->value;
         }
         else{
-            generic = 18.5 + float(random(0, 20)) / 10.0;
+            rawvalue = 18.5 + float(random(0, 20)) / 10.0;
+            generic = rawvalue;
         }
         if(generic < 10){
             snprintf(buffer,bsize,"%3.2f",generic);
@@ -627,9 +672,11 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
         double dplace = 0;
         if(usesimudata == false) {
             dplace = value->value;    // Value in %
+            rawvalue = value->value;
         }
         else{
-            dplace = 55.3 + float(random(0, 20)) / 10.0;
+            rawvalue = 55.3 + float(random(0, 20)) / 10.0;
+            dplace = rawvalue;
         }
         if(dplace < 10){
             snprintf(buffer,bsize,"%3.2f",dplace);
@@ -648,9 +695,11 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
         if(usesimudata == false) {
             angle = value->value;
             angle = angle * 57.2958;      // Unit conversion form rad to deg
+            rawvalue = value->value;
         }
         else{
-            angle = 20 + random(-5, 5);
+            rawvalue = PI / 100 + (random(-5, 5) / 360 * 2* PI);
+            angle = rawvalue * 57.2958;
         }
         if(angle > -10 && angle < 10){
             snprintf(buffer,bsize,"%3.1f",angle);
@@ -665,9 +714,11 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
         double rpm = 0;
         if(usesimudata == false) {
             rpm = value->value;    // Value in rpm
+            rawvalue = value->value;
         }
         else{
-            rpm = 2505 + random(0, 20);
+            rawvalue = 2505 + random(0, 20);
+            rpm = rawvalue;
         }
         if(rpm < 10){
             snprintf(buffer,bsize,"%3.2f",rpm);
@@ -696,6 +747,7 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
         result.unit = "";
     }
     buffer[bsize]=0;
+    result.value = rawvalue;        // Return value is only necessary in case of simulation of graphic pointer
     result.svalue = String(buffer);
     return result;
 }
