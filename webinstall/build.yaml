@@ -149,8 +149,7 @@ types:
         resource: serial
       - label: "RS232/RS422"
         value: SERIAL_GROOVE_232#grv#
-        description: "Generic RS232/RS422 Unit"
-        url: "https://github.com/oxbown/esp32-nmea2000/tree/master/doc"
+        description: "Generic RS232/RS422 Unit (bidirectional)"
         resource: serial
 
   - &m5groove

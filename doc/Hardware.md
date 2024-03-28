@@ -79,7 +79,7 @@ Can be used e.g. as an NMEA2000 Adapter for a laptop running e.g. OpenCPN with t
 ![OpenCPN on Laptop via USB and MFD on Android via WiFi](in_action1.jpg) 
 ![OpenCPN on Laptop via USB and AvNav on Android via WiFi](in_action2.jpg)
 
-M5 Stack AtomS3Lite Canunit (experimental since dev20230826)
+M5 Stack AtomS3Lite Canunit 
 ---------------------
 * Hardware: [M5_ATOMS3 Lite](http://docs.m5stack.com/en/core/AtomS3%20Lite) + [CAN Unit](http://docs.m5stack.com/en/unit/can)
 * Prebuild Binary: m5stack-atoms3-canunit-all.bin
