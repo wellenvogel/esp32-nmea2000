@@ -121,7 +121,7 @@ void sensorTask(void *param){
     // Setting for GPS sensors
     String gpsOn=api->getConfig()->getConfigItem(api->getConfig()->useGPS,true)->asString();
         if(String(gpsOn) == "NEO-6M"){
-            Serial2.begin(9600, SERIAL_8N1, OBP_GPS_TX, -1); // GPS RX unused in hardware (-1)
+            Serial2.begin(9600, SERIAL_8N1, OBP_GPS_RX, OBP_GPS_TX, false); // not inverted (false)
             if (!Serial2) {     
                 api->getLogger()->logDebug(GwLog::ERROR,"GPS modul NEO-6M not found, check wiring");
                 gps_ready = false;
@@ -134,7 +134,7 @@ void sensorTask(void *param){
             }
         }
         if(String(gpsOn) == "NEO-M8N"){
-            Serial2.begin(9600, SERIAL_8N1, OBP_GPS_TX, -1); // GPS RX unused in hardware (-1)
+            Serial2.begin(9600, SERIAL_8N1, OBP_GPS_RX, OBP_GPS_TX, false); // not inverted (false)
             if (!Serial2) {     
                 api->getLogger()->logDebug(GwLog::ERROR,"GPS modul NEO-M8N not found, check wiring");
                 gps_ready = false;
@@ -147,7 +147,7 @@ void sensorTask(void *param){
             }
         }
         if(String(gpsOn) == "ATGM336H"){
-            Serial2.begin(9600, SERIAL_8N1, OBP_GPS_TX, -1); // GPS RX unused in hardware (-1)
+            Serial2.begin(9600, SERIAL_8N1, OBP_GPS_RX, OBP_GPS_TX, false); // not inverted (false)
             if (!Serial2) {     
                 api->getLogger()->logDebug(GwLog::ERROR,"GPS modul ATGM336H not found, check wiring");
                 gps_ready = false;
