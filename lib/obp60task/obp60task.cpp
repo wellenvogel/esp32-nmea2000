@@ -497,7 +497,7 @@ void OBP60Task(GwApi *api){
                 delayedDisplayUpdate = false;
             }
 
-            // Subtask E-Ink full refresh all 1 min for the first 5min after power on or restart
+            // Subtask E-Ink full refresh all 1 min for the first 5 min after power on or restart
             // This needs for a better display contrast after power on in cold or warm environments
             if(millis() < firststart + (5 * 60 * 1000) && millis() > starttime1 + (60 * 1000)){
                 starttime1 = millis();

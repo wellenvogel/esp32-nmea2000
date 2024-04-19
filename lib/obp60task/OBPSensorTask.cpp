@@ -322,7 +322,7 @@ void sensorTask(void *param){
     double voffset = (api->getConfig()->getConfigItem(api->getConfig()->vOffset,true)->asString()).toFloat();
     double vslope = (api->getConfig()->getConfigItem(api->getConfig()->vSlope,true)->asString()).toFloat();
 
-    long starttime0 = millis();     // GPS update all 1s
+    long starttime0 = millis();     // GPS update all 100ms
     long starttime5 = millis();     // Voltage update all 1s
     long starttime6 = millis();     // Environment sensor update all 1s
     long starttime7 = millis();     // Rotation sensor update all 500ms
@@ -341,10 +341,10 @@ void sensorTask(void *param){
         delay(100);                 // Loop time 100ms
         Timer1.update();            // Update for Timer1
         Timer2.update();            // Update for Timer2
-        if (millis() > starttime0 + 1000)
+        if (millis() > starttime0 + 100)
         {
             starttime0 = millis();
-            // Send NMEA0183 GPS data on several bus systems all 1000ms
+            // Send NMEA0183 GPS data on several bus systems all 100ms
             if (gps_ready == true)
             {
                 SNMEA0183Msg NMEA0183Msg;

@@ -12,7 +12,7 @@
     // BME280
     #define BME280_I2C_ADDR 0x76    // Addr. 0x76 (0x77)
     // BMP280
-    #define BMP280_I2C_ADDR 0x77    // Addr. 0x76 (0x77)
+    #define BMP280_I2C_ADDR 0x77    // Addr. 0x77 (0x76) Attention: Pull up resistor
     // BMP085 / BMP180
     #define BMP180_I2C_ADDR 0x77    // Addr. 0x77 (fix)
     // SHT21 / HUT21
@@ -63,7 +63,7 @@
     #define TP3 12
     #define TP4 11
     #define TP5 10
-    #define TP6 9               // Right ouside
+    #define TP6 9               // Right outside
 
     // Flash LED (1x WS2812B)
     #define NUM_FLASH_LED 1         // Number of flash LED
