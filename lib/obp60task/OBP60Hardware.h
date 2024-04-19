@@ -8,7 +8,7 @@
     #define OBP_I2C_SDA 47
     #define OBP_I2C_SCL 21
     // DS1388 RTC
-    #define DS1388_I2C_ADDR 0x00    // Addr. 0x00 (Range 0x00-0x0C)
+    #define DS1388_I2C_ADDR 0x68    // Addr. 0x68
     // BME280
     #define BME280_I2C_ADDR 0x76    // Addr. 0x76 (0x77)
     // BMP280
