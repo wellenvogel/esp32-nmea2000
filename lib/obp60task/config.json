@@ -263,6 +263,21 @@
         }
     },
     {
+        "name": "useRTC",
+        "label": "RTC Modul",
+        "type": "list",
+        "default": "DS1388",
+        "description": "Use internal RTC module type [off|DS1388]",
+        "list": [
+            "off",
+            "DS1388"
+        ],
+        "category": "OBP60 Hardware",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
         "name": "useGPS",
         "label": "GPS Sensor",
         "type": "list",

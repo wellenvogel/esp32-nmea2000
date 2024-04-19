@@ -6,7 +6,8 @@
 #include <HTU21D.h>                     // Lib for SHT21/HTU21
 #include "AS5600.h"                     // Lib for magnetic rotation sensor AS5600
 #include <INA226.h>                     // Lib for power management IC INA226
-#include <Ticker.h>                     // Timer Lib for timer interrupts       
+#include <Ticker.h>                     // Timer Lib for timer interrupts
+#include <RTClib.h>                     // DS1388 RTC   
 #include "OBPSensorTask.h"
 #include "OBP60Hardware.h"
 #include "N2kMessages.h"
@@ -77,9 +78,11 @@ void sensorTask(void *param){
     INA226 ina226_1(INA226_I2C_ADDR1);// Power management sensor INA226 Battery
     INA226 ina226_2(INA226_I2C_ADDR2);// Power management sensor INA226 Solar
     INA226 ina226_3(INA226_I2C_ADDR3);// Power management sensor INA226 Generator
+    RTC_DS1388 ds1388;              // RTC DS1388
 
     // Init sensor stuff
-    bool gps_ready = false;         // GPS initialized and ready to use
+    bool DS1388_ready = false;      // DS1388 initialized and ready to use
+    bool GPS_ready = false;         // GPS initialized and ready to use
     bool BME280_ready = false;      // BME280 initialized and ready to use
     bool BMP280_ready = false;      // BMP280 initialized and ready to use
     bool BMP180_ready = false;      // BMP180 initialized and ready to use
@@ -118,45 +121,61 @@ void sensorTask(void *param){
         digitalWrite(OBP_DIRECTION_PIN, true);
     }
 
-    // Setting for GPS sensors
+    // Settings for RTC
+    String rtcOn=api->getConfig()->getConfigItem(api->getConfig()->useRTC,true)->asString();
+        if(String(rtcOn) == "DS1833"){
+            if (!ds1388.begin()) {
+                api->getLogger()->logDebug(GwLog::ERROR,"Modul DS1388 not found, check wiring");
+            }
+            else{
+                api->getLogger()->logDebug(GwLog::LOG,"Modul DS1388 found");
+                uint year = ds1388.now().year();
+                if(year < 2023){
+                    ds1388.adjust(DateTime(__DATE__, __TIME__));  // Set date and time from PC file time
+                }
+                DS1388_ready = true;
+            }
+        }
+
+    // Settings for GPS sensors
     String gpsOn=api->getConfig()->getConfigItem(api->getConfig()->useGPS,true)->asString();
         if(String(gpsOn) == "NEO-6M"){
             Serial2.begin(9600, SERIAL_8N1, OBP_GPS_RX, OBP_GPS_TX, false); // not inverted (false)
             if (!Serial2) {     
                 api->getLogger()->logDebug(GwLog::ERROR,"GPS modul NEO-6M not found, check wiring");
-                gps_ready = false;
+                GPS_ready = false;
                 }
             else{
                 api->getLogger()->logDebug(GwLog::LOG,"GPS modul NEO-M6 found");
                 NMEA0183.SetMessageStream(&Serial2);
                 NMEA0183.Open();
-                gps_ready = true;
+                GPS_ready = true;
             }
         }
         if(String(gpsOn) == "NEO-M8N"){
             Serial2.begin(9600, SERIAL_8N1, OBP_GPS_RX, OBP_GPS_TX, false); // not inverted (false)
             if (!Serial2) {     
                 api->getLogger()->logDebug(GwLog::ERROR,"GPS modul NEO-M8N not found, check wiring");
-                gps_ready = false;
+                GPS_ready = false;
                 }
             else{
                 api->getLogger()->logDebug(GwLog::LOG,"GPS modul NEO-M8N found");
                 NMEA0183.SetMessageStream(&Serial2);
                 NMEA0183.Open();
-                gps_ready = true;
+                GPS_ready = true;
             }
         }
         if(String(gpsOn) == "ATGM336H"){
             Serial2.begin(9600, SERIAL_8N1, OBP_GPS_RX, OBP_GPS_TX, false); // not inverted (false)
             if (!Serial2) {     
                 api->getLogger()->logDebug(GwLog::ERROR,"GPS modul ATGM336H not found, check wiring");
-                gps_ready = false;
+                GPS_ready = false;
                 }
             else{
                 api->getLogger()->logDebug(GwLog::LOG,"GPS modul ATGM336H found");
                 NMEA0183.SetMessageStream(&Serial2);
                 NMEA0183.Open();
-                gps_ready = true;
+                GPS_ready = true;
             }
         }
 
@@ -329,10 +348,14 @@ void sensorTask(void *param){
     long starttime8 = millis();     // Battery power sensor update all 1s
     long starttime9 = millis();     // Solar power sensor update all 1s
     long starttime10 = millis();    // Generator power sensor update all 1s
-
+    long starttime11 = millis();    // Copy GPS data to RTC all 5min
 
     tN2kMsg N2kMsg;
     shared->setSensorData(sensors); //set initially read values
+
+    GwApi::BoatValue *gpsdays=new GwApi::BoatValue(GwBoatData::_GPSD);
+    GwApi::BoatValue *gpsseconds=new GwApi::BoatValue(GwBoatData::_GPST);
+    GwApi::BoatValue *valueList[]={gpsdays, gpsseconds};
 
     // Sensor task loop runs with 100ms
     //####################################################################################
@@ -345,7 +368,7 @@ void sensorTask(void *param){
         {
             starttime0 = millis();
             // Send NMEA0183 GPS data on several bus systems all 100ms
-            if (gps_ready == true)
+            if (GPS_ready == true)
             {
                 SNMEA0183Msg NMEA0183Msg;
                 while (NMEA0183.GetMessageCor(NMEA0183Msg))
@@ -355,7 +378,22 @@ void sensorTask(void *param){
             }
             
         }
-        // Read sensors and set values in sensor data
+        // Copy GPS data to RTC all 5min
+        if(millis() > starttime11 + 5*60*1000){
+            starttime11 = millis();
+            if(rtcOn == "DS1388" && DS1388_ready == true){
+                api->getBoatDataValues(2,valueList);
+                if(gpsdays->valid && gpsseconds->valid){
+                    long ts = tNMEA0183Msg::daysToTime_t(gpsdays->value)+floor(gpsseconds->value);
+                    // sample input: date = "Dec 26 2009", time = "12:34:56"
+                    // ds1388.adjust(DateTime("Dec 26 2009", "12:34:56"));
+                    DateTime adjusttime(ts);
+                    api->getLogger()->logDebug(GwLog::LOG,"Adjust time: %04d/%02d/%02d %02d:%02d:%02d",adjusttime.year(), adjusttime.month(), adjusttime.day(), adjusttime.hour(), adjusttime.minute(), adjusttime.second());
+                    ds1388.adjust(adjusttime);
+                }
+            }
+        }
+
         // Send supplay voltage value all 1s
         if(millis() > starttime5 + 1000 && String(powsensor1) == "off"){
             starttime5 = millis();

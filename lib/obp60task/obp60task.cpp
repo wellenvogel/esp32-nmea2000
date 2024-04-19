@@ -42,22 +42,7 @@ void OBP60Init(GwApi *api){
     api->getLogger()->logDebug(GwLog::LOG,"obp60init running");
     
     // Check I2C devices
-    Wire.begin(OBP_I2C_SDA, OBP_I2C_SCL);
-    Wire.beginTransmission(DS1388_I2C_ADDR);
-    if (Wire.endTransmission() != 0) {
-        api->getLogger()->logDebug(GwLog::ERROR,"DS1388 not found, check wiring");
-        initComplete = false;
-    }
-    else{
-        // Init code for DS1388
-        api->getLogger()->logDebug(GwLog::LOG,"DS1388 found");
-        if(ds1388.begin()){
-            uint year = ds1388.now().year();
-            if(year < 2023){
-                ds1388.adjust(DateTime(__DATE__, __TIME__));  // Set date and time from PC file time
-            }
-        }
-    }
+    
 
     // Init hardware
     hardwareInit();
