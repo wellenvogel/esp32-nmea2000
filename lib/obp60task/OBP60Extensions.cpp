@@ -57,9 +57,6 @@ GxEPD2_BW<GxEPD2_420_SE0420NQ04, GxEPD2_420_SE0420NQ04::HEIGHT> & getdisplay(){r
 // Horter I2C moduls
 PCF8574 pcf8574_Out(PCF8574_I2C_ADDR1); // First digital output modul PCF8574 from Horter
 
-// RTC DS1388
-RTC_DS1388 ds1388;
-
 // Define the array of leds
 CRGB fled[NUM_FLASH_LED];           // Flash LED
 CRGB backlight[NUM_BACKLIGHT_LED];  // Backlight
@@ -76,10 +73,6 @@ void hardwareInit()
     // Init power rail 5.0V
     setPortPin(OBP_POWER_50, true);
 
-    // Init E-Ink display
-    //getdisplay().init(115200, true, 2, false);   // Use this for Waveshare boards with "clever" reset circuit, 2ms reset pulse
-
-
     // Init RGB LEDs
     FastLED.addLeds<WS2812B, OBP_FLASH_LED, GRB>(fled, NUM_FLASH_LED);
     FastLED.addLeds<WS2812B, OBP_BACKLIGHT_LED, GRB>(backlight, NUM_BACKLIGHT_LED);
@@ -88,14 +81,6 @@ void hardwareInit()
     Wire.setClock(I2C_SPEED);       // Set I2C clock on 10 kHz
     if(pcf8574_Out.begin()){        // Initialize PCF8574
         pcf8574_Out.write8(255);    // Clear all outputs
-    }
-
-    // Init DS1388 RTC
-    if(ds1388.begin()){
-        uint year = ds1388.now().year();
-        if(year < 2023){
-            ds1388.adjust(DateTime(__DATE__, __TIME__));  // Set date and time from PC file time
-        }
     }
 }
 

@@ -3,6 +3,7 @@
 #include "Pagedata.h"
 #include "OBP60Hardware.h"              // PIN definitions
 #include <Wire.h>                       // I2C connections
+#include <RTClib.h>                     // DS1388 RTC
 #include <MCP23017.h>                   // MCP23017 extension Port
 #include <N2kTypes.h>                   // NMEA2000
 #include <N2kMessages.h>
@@ -22,6 +23,9 @@
 #include "Logo_OBP_400x300_sw.h"        // OBP Logo
 #include "OBP60QRWiFi.h"                // Functions lib for WiFi QR code
 #include "OBPSensorTask.h"              // Functions lib for sensor data
+
+// RTC DS1388
+RTC_DS1388 ds1388;
 
 // Global vars
 bool initComplete = false;      // Initialization complete
@@ -46,6 +50,13 @@ void OBP60Init(GwApi *api){
     }
     else{
         // Init code for DS1388
+        api->getLogger()->logDebug(GwLog::LOG,"DS1388 found");
+        if(ds1388.begin()){
+            uint year = ds1388.now().year();
+            if(year < 2023){
+                ds1388.adjust(DateTime(__DATE__, __TIME__));  // Set date and time from PC file time
+            }
+        }
     }
 
     // Init hardware
