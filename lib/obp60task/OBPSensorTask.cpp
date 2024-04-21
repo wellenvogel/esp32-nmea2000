@@ -81,7 +81,7 @@ void sensorTask(void *param){
     RTC_DS1388 ds1388;              // RTC DS1388
 
     // Init sensor stuff
-    bool DS1388_ready = false;      // DS1388 initialized and ready to use
+    bool RTC_ready = false;      // DS1388 initialized and ready to use
     bool GPS_ready = false;         // GPS initialized and ready to use
     bool BME280_ready = false;      // BME280 initialized and ready to use
     bool BMP280_ready = false;      // BMP280 initialized and ready to use
@@ -123,17 +123,18 @@ void sensorTask(void *param){
 
     // Settings for RTC
     String rtcOn=api->getConfig()->getConfigItem(api->getConfig()->useRTC,true)->asString();
-        if(String(rtcOn) == "DS1833"){
+        if(String(rtcOn) == "DS1388"){
             if (!ds1388.begin()) {
+                RTC_ready = false;
                 api->getLogger()->logDebug(GwLog::ERROR,"Modul DS1388 not found, check wiring");
             }
             else{
                 api->getLogger()->logDebug(GwLog::LOG,"Modul DS1388 found");
                 uint year = ds1388.now().year();
                 if(year < 2023){
-                    ds1388.adjust(DateTime(__DATE__, __TIME__));  // Set date and time from PC file time
+                    // ds1388.adjust(DateTime(__DATE__, __TIME__));  // Set date and time from PC file time
                 }
-                DS1388_ready = true;
+                RTC_ready = true;
             }
         }
 
@@ -349,6 +350,7 @@ void sensorTask(void *param){
     long starttime9 = millis();     // Solar power sensor update all 1s
     long starttime10 = millis();    // Generator power sensor update all 1s
     long starttime11 = millis();    // Copy GPS data to RTC all 5min
+    long starttime12 = millis();    // Get RTC data all 500ms
 
     tN2kMsg N2kMsg;
     shared->setSensorData(sensors); //set initially read values
@@ -378,18 +380,48 @@ void sensorTask(void *param){
             }
             
         }
-        // Copy GPS data to RTC all 5min
+        // If RTC DS1388 ready, then copy GPS data to RTC all 5min
         if(millis() > starttime11 + 5*60*1000){
             starttime11 = millis();
-            if(rtcOn == "DS1388" && DS1388_ready == true){
+            if(rtcOn == "DS1388" && RTC_ready == true && GPS_ready == true){
                 api->getBoatDataValues(2,valueList);
                 if(gpsdays->valid && gpsseconds->valid){
-                    long ts = tNMEA0183Msg::daysToTime_t(gpsdays->value)+floor(gpsseconds->value);
+                    long ts = tNMEA0183Msg::daysToTime_t(gpsdays->value - (30*365+7))+floor(gpsseconds->value); // Adjusted to reference year 2000 (-30 years and 7 days for switch years)
                     // sample input: date = "Dec 26 2009", time = "12:34:56"
                     // ds1388.adjust(DateTime("Dec 26 2009", "12:34:56"));
                     DateTime adjusttime(ts);
-                    api->getLogger()->logDebug(GwLog::LOG,"Adjust time: %04d/%02d/%02d %02d:%02d:%02d",adjusttime.year(), adjusttime.month(), adjusttime.day(), adjusttime.hour(), adjusttime.minute(), adjusttime.second());
+                    api->getLogger()->logDebug(GwLog::LOG,"Adjust RTC time: %04d/%02d/%02d %02d:%02d:%02d",adjusttime.year(), adjusttime.month(), adjusttime.day(), adjusttime.hour(), adjusttime.minute(), adjusttime.second());
+                    // Adjust RTC time as unix time value
                     ds1388.adjust(adjusttime);
+                }
+            }
+        }
+
+        // If GPS not ready or installed then send RTC time on bus all 500ms
+        if(millis() > starttime12 + 500){
+            starttime12 = millis();
+            if(rtcOn == "DS1388" && RTC_ready == true && GPS_ready == false){
+                // https://de.wikipedia.org/wiki/Unixzeit
+                const short daysOfYear[12] = {0,31,59,90,120,151,181,212,243,273,304,334};
+                long unixtime = ds1388.now().get();
+                uint16_t year = ds1388.now().year();
+                uint8_t month = ds1388.now().month();
+                uint8_t hour = ds1388.now().hour();
+                uint8_t minute = ds1388.now().minute();
+                uint8_t second = ds1388.now().second();
+                uint8_t day = ds1388.now().day();
+                uint16_t switchYear = ((year-1)-1968)/4 - ((year-1)-1900)/100 + ((year-1)-1600)/400;
+                long daysAt1970 = (year-1970)*365 + switchYear + daysOfYear[month-1] + day-1;
+                // If switch year then add one day
+                if ( (month>2) && (year%4==0 && (year%100!=0 || year%400==0)) ){
+                    daysAt1970 += 1;
+                }
+                double sysTime = (hour * 3600) + (minute * 60) + second;
+                if(!isnan(daysAt1970) && !isnan(sysTime)){
+                    // api->getLogger()->logDebug(GwLog::LOG,"RTC time: %04d/%02d/%02d %02d:%02d:%02d",year, month, day, hour, minute, second);
+                    // api->getLogger()->logDebug(GwLog::LOG,"Send PGN126992: %10d %10d",daysAt1970, (uint16_t)sysTime);
+                    SetN2kPGN126992(N2kMsg,0,daysAt1970,sysTime,N2ktimes_LocalCrystalClock);
+                    api->sendN2kMessage(N2kMsg);
                 }
             }
         }
