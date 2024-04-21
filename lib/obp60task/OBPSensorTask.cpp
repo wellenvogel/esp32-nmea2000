@@ -7,7 +7,9 @@
 #include "AS5600.h"                     // Lib for magnetic rotation sensor AS5600
 #include <INA226.h>                     // Lib for power management IC INA226
 #include <Ticker.h>                     // Timer Lib for timer interrupts
-#include <RTClib.h>                     // DS1388 RTC   
+#include <RTClib.h>                     // DS1388 RTC
+#include <OneWire.h>                    // 1Wire Lib
+#include <DallasTemperature.h>          // Lib for DS18B20
 #include "OBPSensorTask.h"
 #include "OBP60Hardware.h"
 #include "N2kMessages.h"
@@ -79,9 +81,12 @@ void sensorTask(void *param){
     INA226 ina226_2(INA226_I2C_ADDR2);// Power management sensor INA226 Solar
     INA226 ina226_3(INA226_I2C_ADDR3);// Power management sensor INA226 Generator
     RTC_DS1388 ds1388;              // RTC DS1388
+    OneWire oneWire(OBP_1WIRE);     // 1Wire bus
+    DallasTemperature ds18b20(&oneWire);// Sensors for DS18B20
 
     // Init sensor stuff
-    bool RTC_ready = false;      // DS1388 initialized and ready to use
+    bool oneWire_ready = false;     // 1Wire initialized and ready to use
+    bool RTC_ready = false;         // DS1388 initialized and ready to use
     bool GPS_ready = false;         // GPS initialized and ready to use
     bool BME280_ready = false;      // BME280 initialized and ready to use
     bool BMP280_ready = false;      // BMP280 initialized and ready to use
@@ -108,7 +113,7 @@ void sensorTask(void *param){
     }
     Timer2.start();         // Start Timer2 for blinking LED
    
-    // Settings for NMEA0183
+    // Direction settings for NMEA0183
     String nmea0183Mode = api->getConfig()->getConfigItem(api->getConfig()->serialDirection, true)->asString();
     api->getLogger()->logDebug(GwLog::LOG, "NMEA0183 Mode is: %s", nmea0183Mode);
     pinMode(OBP_DIRECTION_PIN, OUTPUT);
@@ -121,64 +126,89 @@ void sensorTask(void *param){
         digitalWrite(OBP_DIRECTION_PIN, true);
     }
 
+    // Settings for 1Wire bus
+    String oneWireOn=api->getConfig()->getConfigItem(api->getConfig()->useTempSensor,true)->asString();
+    int numberOfDevices;
+    if(String(oneWireOn) == "DS18B20"){
+        ds18b20.begin();
+        DeviceAddress tempDeviceAddress;
+        numberOfDevices = ds18b20.getDeviceCount();
+        if (numberOfDevices < 1) {
+            oneWire_ready = false;
+            api->getLogger()->logDebug(GwLog::ERROR,"Modul DS18B20 not found, check wiring");
+        }
+        else{
+            api->getLogger()->logDebug(GwLog::LOG,"Modul DS18B20 found at:");
+            for(int i=0;i<numberOfDevices; i++){
+                // Search the wire for address
+                if(ds18b20.getAddress(tempDeviceAddress, i)){
+                    api->getLogger()->logDebug(GwLog::LOG,"Device-%01d: %10d", i, tempDeviceAddress);
+                } else {
+                    api->getLogger()->logDebug(GwLog::LOG,"Device-%01d: Is ghost with errors", i);
+                }
+            }        
+            oneWire_ready = true;
+        }
+    }
+
     // Settings for RTC
     String rtcOn=api->getConfig()->getConfigItem(api->getConfig()->useRTC,true)->asString();
-        if(String(rtcOn) == "DS1388"){
-            if (!ds1388.begin()) {
-                RTC_ready = false;
-                api->getLogger()->logDebug(GwLog::ERROR,"Modul DS1388 not found, check wiring");
-            }
-            else{
-                api->getLogger()->logDebug(GwLog::LOG,"Modul DS1388 found");
-                uint year = ds1388.now().year();
-                if(year < 2023){
-                    // ds1388.adjust(DateTime(__DATE__, __TIME__));  // Set date and time from PC file time
-                }
-                RTC_ready = true;
-            }
+    if(String(rtcOn) == "DS1388"){
+        if (!ds1388.begin()) {
+            RTC_ready = false;
+            api->getLogger()->logDebug(GwLog::ERROR,"Modul DS1388 not found, check wiring");
         }
+        else{
+            api->getLogger()->logDebug(GwLog::LOG,"Modul DS1388 found");
+            uint year = ds1388.now().year();
+            if(year < 2023){
+                // ds1388.adjust(DateTime(__DATE__, __TIME__));  // Set date and time from PC file time
+            }
+            RTC_ready = true;
+        }
+    }
 
     // Settings for GPS sensors
     String gpsOn=api->getConfig()->getConfigItem(api->getConfig()->useGPS,true)->asString();
-        if(String(gpsOn) == "NEO-6M"){
-            Serial2.begin(9600, SERIAL_8N1, OBP_GPS_RX, OBP_GPS_TX, false); // not inverted (false)
-            if (!Serial2) {     
-                api->getLogger()->logDebug(GwLog::ERROR,"GPS modul NEO-6M not found, check wiring");
-                GPS_ready = false;
-                }
-            else{
-                api->getLogger()->logDebug(GwLog::LOG,"GPS modul NEO-M6 found");
-                NMEA0183.SetMessageStream(&Serial2);
-                NMEA0183.Open();
-                GPS_ready = true;
+    if(String(gpsOn) == "NEO-6M"){
+        Serial2.begin(9600, SERIAL_8N1, OBP_GPS_RX, OBP_GPS_TX, false); // not inverted (false)
+        if (!Serial2) {     
+            api->getLogger()->logDebug(GwLog::ERROR,"GPS modul NEO-6M not found, check wiring");
+            GPS_ready = false;
             }
+        else{
+            api->getLogger()->logDebug(GwLog::LOG,"GPS modul NEO-M6 found");
+            NMEA0183.SetMessageStream(&Serial2);
+            NMEA0183.Open();
+            GPS_ready = true;
         }
-        if(String(gpsOn) == "NEO-M8N"){
-            Serial2.begin(9600, SERIAL_8N1, OBP_GPS_RX, OBP_GPS_TX, false); // not inverted (false)
-            if (!Serial2) {     
-                api->getLogger()->logDebug(GwLog::ERROR,"GPS modul NEO-M8N not found, check wiring");
-                GPS_ready = false;
-                }
-            else{
-                api->getLogger()->logDebug(GwLog::LOG,"GPS modul NEO-M8N found");
-                NMEA0183.SetMessageStream(&Serial2);
-                NMEA0183.Open();
-                GPS_ready = true;
+    }
+    if(String(gpsOn) == "NEO-M8N"){
+        Serial2.begin(9600, SERIAL_8N1, OBP_GPS_RX, OBP_GPS_TX, false); // not inverted (false)
+        if (!Serial2) {     
+            api->getLogger()->logDebug(GwLog::ERROR,"GPS modul NEO-M8N not found, check wiring");
+            GPS_ready = false;
             }
+        else{
+            api->getLogger()->logDebug(GwLog::LOG,"GPS modul NEO-M8N found");
+            NMEA0183.SetMessageStream(&Serial2);
+            NMEA0183.Open();
+            GPS_ready = true;
         }
-        if(String(gpsOn) == "ATGM336H"){
-            Serial2.begin(9600, SERIAL_8N1, OBP_GPS_RX, OBP_GPS_TX, false); // not inverted (false)
-            if (!Serial2) {     
-                api->getLogger()->logDebug(GwLog::ERROR,"GPS modul ATGM336H not found, check wiring");
-                GPS_ready = false;
-                }
-            else{
-                api->getLogger()->logDebug(GwLog::LOG,"GPS modul ATGM336H found");
-                NMEA0183.SetMessageStream(&Serial2);
-                NMEA0183.Open();
-                GPS_ready = true;
+    }
+    if(String(gpsOn) == "ATGM336H"){
+        Serial2.begin(9600, SERIAL_8N1, OBP_GPS_RX, OBP_GPS_TX, false); // not inverted (false)
+        if (!Serial2) {     
+            api->getLogger()->logDebug(GwLog::ERROR,"GPS modul ATGM336H not found, check wiring");
+            GPS_ready = false;
             }
+        else{
+            api->getLogger()->logDebug(GwLog::LOG,"GPS modul ATGM336H found");
+            NMEA0183.SetMessageStream(&Serial2);
+            NMEA0183.Open();
+            GPS_ready = true;
         }
+    }
 
     // Settings for temperature sensors
     String tempSensor = api->getConfig()->getConfigItem(api->getConfig()->useTempSensor,true)->asString();
