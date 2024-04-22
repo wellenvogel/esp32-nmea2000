@@ -83,6 +83,7 @@ void sensorTask(void *param){
     RTC_DS1388 ds1388;              // RTC DS1388
     OneWire oneWire(OBP_1WIRE);     // 1Wire bus
     DallasTemperature ds18b20(&oneWire);// Sensors for DS18B20
+    DeviceAddress tempDeviceAddress;// Table for DS18B20 device addresses 
 
     // Init sensor stuff
     bool oneWire_ready = false;     // 1Wire initialized and ready to use
@@ -138,13 +139,13 @@ void sensorTask(void *param){
             api->getLogger()->logDebug(GwLog::ERROR,"Modul DS18B20 not found, check wiring");
         }
         else{
-            api->getLogger()->logDebug(GwLog::LOG,"Modul DS18B20 found at:");
+            api->getLogger()->logDebug(GwLog::LOG,"1Wire modul found at:");
             for(int i=0;i<numberOfDevices; i++){
                 // Search the wire for address
                 if(ds18b20.getAddress(tempDeviceAddress, i)){
-                    api->getLogger()->logDebug(GwLog::LOG,"Device-%01d: %10d", i, tempDeviceAddress);
+                    api->getLogger()->logDebug(GwLog::LOG,"DS18B20-%01d: %12d", i, tempDeviceAddress[i]);
                 } else {
-                    api->getLogger()->logDebug(GwLog::LOG,"Device-%01d: Is ghost with errors", i);
+                    api->getLogger()->logDebug(GwLog::LOG,"DS18B20-%01d: Sensor with errors, check wiring!", i);
                 }
             }        
             oneWire_ready = true;
@@ -208,15 +209,6 @@ void sensorTask(void *param){
             NMEA0183.Open();
             GPS_ready = true;
         }
-    }
-
-    // Settings for temperature sensors
-    String tempSensor = api->getConfig()->getConfigItem(api->getConfig()->useTempSensor,true)->asString();
-    if(String(tempSensor) == "DS18B20"){
-        api->getLogger()->logDebug(GwLog::LOG,"1Wire Mode is On");
-    }
-    else{
-        api->getLogger()->logDebug(GwLog::LOG,"1Wire Mode is Off");
     }
     
     // Settings for environment sensors on I2C bus
@@ -381,6 +373,7 @@ void sensorTask(void *param){
     long starttime10 = millis();    // Generator power sensor update all 1s
     long starttime11 = millis();    // Copy GPS data to RTC all 5min
     long starttime12 = millis();    // Get RTC data all 500ms
+    long starttime13 = millis();    // Get 1Wire sensor data all 1s
 
     tN2kMsg N2kMsg;
     shared->setSensorData(sensors); //set initially read values
@@ -410,6 +403,7 @@ void sensorTask(void *param){
             }
             
         }
+
         // If RTC DS1388 ready, then copy GPS data to RTC all 5min
         if(millis() > starttime11 + 5*60*1000){
             starttime11 = millis();
@@ -423,6 +417,25 @@ void sensorTask(void *param){
                     api->getLogger()->logDebug(GwLog::LOG,"Adjust RTC time: %04d/%02d/%02d %02d:%02d:%02d",adjusttime.year(), adjusttime.month(), adjusttime.day(), adjusttime.hour(), adjusttime.minute(), adjusttime.second());
                     // Adjust RTC time as unix time value
                     ds1388.adjust(adjusttime);
+                }
+            }
+        }
+
+        // Send 1Wire data for all temperature sensors all 1s
+        if(millis() > starttime13 + 1000 && String(oneWireOn) == "DS18B20" && oneWire_ready == true){
+            starttime13 = millis();
+            float tempC;
+            ds18b20.requestTemperatures();  // Collect all temperature values
+            for(int i=0;i<numberOfDevices; i++){
+                if(ds18b20.getAddress(tempDeviceAddress, i)){
+                    // Read temperature value in Celsius
+                    tempC = ds18b20.getTempC(tempDeviceAddress); 
+                }
+                // Send to NMEA200 bus for each sensor with instance number
+                if(!isnan(tempC)){
+                    SetN2kPGN130316(N2kMsg, 0, i, N2kts_OutsideTemperature, CToKelvin(tempC), N2kDoubleNA);
+                    api->sendN2kMessage(N2kMsg);
+                    api->getLogger()->logDebug(GwLog::LOG,"DS18B20-%1d Temp: %.1f",i,tempC);
                 }
             }
         }

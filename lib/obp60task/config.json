@@ -282,7 +282,7 @@
         "label": "GPS Sensor",
         "type": "list",
         "default": "ATGM336H",
-        "description": "Use internal GPS module type [off|NEO-6M|NEO-M8N]",
+        "description": "Use internal GPS module type [off|NEO-6M|NEO-M8N|ATGM336H]",
         "list": [
             "off",
             "NEO-6M",
@@ -299,7 +299,7 @@
         "label": "Env. Sensor",
         "type": "list",
         "default": "BMP280",
-        "description": "Use internal or external environment sensor via I2C bus [off|BME280|BMP280|SHT21]",
+        "description": "Use internal or external environment sensor via I2C bus [off|BME280|BMP280|BMP180|BMP085|HTU21|SHT21]",
         "list": [
             "off",
             "BME280",
@@ -518,7 +518,7 @@
         "label": "Temp. Sensor",
         "type": "boolean",
         "default": "off",
-        "description": "Use external 1Wire device [off|DS18B20]",
+        "description": "Use max. 8 external 1Wire devices [off|DS18B20]",
         "list": [
             "off",
             "DS18B20"
