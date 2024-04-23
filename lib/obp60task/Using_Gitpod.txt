@@ -9,7 +9,7 @@ cd /workspace/esp32-nmea2000-obp60
 bash /workspace/esp32-nmea2000-obp60/lib/obp60task/run
 
 Compile result in:
-/workspace/esp32-nmea2000-obp60/.pio/build/obp60_s3/obp60_s3-all.bin, ready to flash to offset 0x1000
+/workspace/esp32-nmea2000-obp60/.pio/build/obp60_s3/obp60_s3-all.bin, ready to flash to offset 0x0000
 
 /workspace/esp32-nmea2000-obp60/.pio/build/obp60_s3/bootloader.bin
 /workspace/esp32-nmea2000-obp60/.pio/build/obp60_s3/firmware.bin
