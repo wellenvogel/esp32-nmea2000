@@ -221,6 +221,48 @@ void registerAllPages(PageList &list){
     list.add(&registerPageGenerator);
 }
 
+// Undervoltage detection for shutdown display
+void underVoltageDetection(GwApi *api){
+    int textcolor = GxEPD_BLACK;
+    int pixelcolor = GxEPD_BLACK;
+    int bgcolor = GxEPD_WHITE;
+    // Read settings
+    String displaycolor = api->getConfig()->getConfigItem(api->getConfig()->displaycolor,true)->asString();
+    float vslope = uint(api->getConfig()->getConfigItem(api->getConfig()->vSlope,true)->asFloat());
+    float voffset = uint(api->getConfig()->getConfigItem(api->getConfig()->vOffset,true)->asFloat());
+    // Read supplay voltage
+    float actVoltage = (float(analogRead(OBP_ANALOG0)) * 3.3 / 4096 + 0.17) * 20;   // V = 1/20 * Vin
+    actVoltage = actVoltage * vslope + voffset;
+    if(actVoltage < MIN_VOLTAGE){
+        // Switch off all power lines
+        setPortPin(OBP_BACKLIGHT_LED, false);   // Backlight Off
+        setFlashLED(false);                     // Flash LED Off            
+        buzzer(TONE4, 20);                      // Buzzer tone 4kHz 20ms
+        setPortPin(OBP_POWER_50, false);        // Power rail 5.0V Off
+        // Shutdown EInk display
+        if(displaycolor == "Normal"){
+            textcolor = GxEPD_BLACK;
+            bgcolor = GxEPD_WHITE;
+        }
+        else{
+            textcolor = GxEPD_WHITE;
+            bgcolor = GxEPD_BLACK;
+        }
+        getdisplay().setPartialWindow(0, 0, getdisplay().width(), getdisplay().height()); // Set partial update
+        getdisplay().fillScreen(bgcolor);       // Clear screen
+        getdisplay().setTextColor(textcolor);
+        getdisplay().setFont(&Ubuntu_Bold20pt7b);
+        getdisplay().setCursor(65, 150);
+        getdisplay().print("Undervoltage");
+        getdisplay().nextPage();                // Partial update
+        getdisplay().powerOff();                // Display power off
+        // Stop system
+        while(true){
+            esp_deep_sleep_start();             // Deep Sleep without weakup. Weakup only after power cycle (restart).
+        }
+    }
+}
+
 // OBP60 Task
 //####################################################################################
 void OBP60Task(GwApi *api){
@@ -355,6 +397,7 @@ void OBP60Task(GwApi *api){
     String backlightColor = api->getConfig()->getConfigItem(api->getConfig()->blColor,true)->asString();
     CHSV color = colorMapping(backlightColor);
     uint brightness = 2.55 * uint(api->getConfig()->getConfigItem(api->getConfig()->blBrightness,true)->asInt());
+    bool uvoltage = api->getConfig()->getConfigItem(api->getConfig()->underVoltage,true)->asBoolean();
 
     // refreshmode defined in init section
     // displaycolor defined in init section
@@ -390,6 +433,12 @@ void OBP60Task(GwApi *api){
     
     while (true){
         delay(100);     // Delay 100ms (loop time)
+
+    
+        // Undervoltage detection
+        if(uvoltage == true){
+            underVoltageDetection(api);
+        }
 
         if(millis() > starttime0 + 100){
             starttime0 = millis();

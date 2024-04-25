@@ -54,7 +54,7 @@
     #define TONE4 4000          // 4000Hz
     // Analog Input
     #define OBP_ANALOG0 4       // Voltage power supplay
-    #define MIN_VOLTAGE 9.0     // Min voltage for under voltage detection (then goto deep sleep)
+    #define MIN_VOLTAGE 10.0    // Min voltage for under voltage detection (then goto deep sleep)
     #define POWER_FAIL_TIME 2   // in [ms] Accept min voltage until 2 x 1ms (for under voltage gaps by engine start)
     // Touch buttons
     #define TOUCHTHRESHOLD 50000// Touch sensitivity, lower values more sensitiv

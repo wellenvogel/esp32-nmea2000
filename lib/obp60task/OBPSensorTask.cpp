@@ -19,47 +19,7 @@
 #include "movingAvg.h"                  // Lib for moving average building
 
 // Timer Interrupts for hardware functions
-void underVoltageDetection();
-Ticker Timer1(underVoltageDetection, 1);    // Start Timer1 with maximum speed with 1ms
-Ticker Timer2(blinkingFlashLED, 500);       // Satrt Timer2 for flash LED all 500ms
-
-// Undervoltage function for shutdown display
-void underVoltageDetection(){
-    float actVoltage = (float(analogRead(OBP_ANALOG0)) * 3.3 / 4096 + 0.17) * 20;   // V = 1/20 * Vin
-    long starttime = 0;
-    static bool undervoltage = false;
-
-    if(actVoltage < MIN_VOLTAGE){
-        if(undervoltage == false){
-            starttime = millis();
-            undervoltage = true;
-        }
-        if(millis() > starttime + POWER_FAIL_TIME){
-            Timer1.stop();                          // Stop Timer1
-/*
-            setPortPin(OBP_BACKLIGHT_LED, false);   // Backlight Off
-            setFlashLED(false);       // Flash LED Off
-*/            
-            buzzer(TONE4, 20);                      // Buzzer tone 4kHz 20ms
-            setPortPin(OBP_POWER_50, false);        // Power rail 5.0V Off
-            // Shutdown EInk display
-            /*
-            display.setPartialWindow(0, 0, display.width(), display.height()); // Set partial update
-            display.fillScreen(GxEPD_WHITE);        // Draw white sreen
-            display.nextPage();                     // Partial update
-            display.powerOff();                     // Power off
-            */
-
-            // Stop system
-            while(true){
-                esp_deep_sleep_start();             // Deep Sleep without weakup. Weakup only after power cycle (restart).
-            }
-        }
-    }
-    else{
-        undervoltage = false;
-    }
-}
+Ticker Timer1(blinkingFlashLED, 500);       // Satrt Timer2 for flash LED all 500ms
 
 // Initialization for all sensors (RS232, I2C, 1Wire, IOs)
 //####################################################################################
@@ -112,7 +72,7 @@ void sensorTask(void *param){
     if(uvoltage == true){
         Timer1.start();     // Start Timer1 for undervoltage detection
     }
-    Timer2.start();         // Start Timer2 for blinking LED
+    Timer1.start();         // Start Timer2 for blinking LED
    
     // Direction settings for NMEA0183
     String nmea0183Mode = api->getConfig()->getConfigItem(api->getConfig()->serialDirection, true)->asString();
@@ -387,8 +347,7 @@ void sensorTask(void *param){
 
     while (true){
         delay(100);                 // Loop time 100ms
-        Timer1.update();            // Update for Timer1
-        Timer2.update();            // Update for Timer2
+        Timer1.update();            // Update for Timer2
         if (millis() > starttime0 + 100)
         {
             starttime0 = millis();
