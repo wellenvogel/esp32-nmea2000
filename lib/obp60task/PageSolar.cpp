@@ -52,22 +52,31 @@ public:
         int solPower = config->getInt(config->solarPower);
         String batType = config->getString(config->batteryType);
         String backlightMode = config->getString(config->backlight);
-        String powerSensor = config->getString(config->usePowSensor1);
+        String powerSensor = config->getString(config->usePowSensor2);
 
         double value1 = 0;  // Solar voltage
         double value2 = 0;  // Solar current
         double value3 = 0;  // Solar output power
         double valueTrend = 0;  // Average over 10 values
-        double solPercentage = 0;  // Solar load
+        int solPercentage = 0;  // Solar load
         
         // Get voltage value
         String name1 = "VSol";
 
         // Get raw value for trend indicator
-        value1 = commonData.data.solarVoltage;  // Live data
+        if(powerSensor != "off"){
+            value1 = commonData.data.solarVoltage;  // Use voltage from external sensor
+        }
+        else{
+            value1 = commonData.data.batteryVoltage; // Use internal voltage sensor
+        }
         value2 = commonData.data.solarCurrent;
         value3 = commonData.data.solarPower;
-        solPercentage = value3 * 100 / (double)solPower;    // Load value       
+        solPercentage = value3 * 100 / (double)solPower;    // Load value
+        // Limits for battery level
+        if(solPercentage < 0) solPercentage = 0;
+        if(solPercentage > 99) solPercentage = 99;
+
         bool valid1 = true;
 
         // Optical warning by limit violation
@@ -134,7 +143,7 @@ public:
         if(solPower <= 999) getdisplay().print(solPower, 0);
         if(solPower > 999) getdisplay().print(float(solPower/1000.0), 1);
         getdisplay().setFont(&Ubuntu_Bold16pt7b);
-        if(solPower <= 999) getdisplay().print("w");
+        if(solPower <= 999) getdisplay().print("W");
         if(solPower > 999) getdisplay().print("kW");
 
         // Show info
@@ -154,6 +163,9 @@ public:
         getdisplay().print(solPercentage);
         getdisplay().setFont(&Ubuntu_Bold16pt7b);
         getdisplay().print("%");
+        getdisplay().setFont(&Ubuntu_Bold8pt7b);
+        getdisplay().setCursor(150, 235);
+        getdisplay().print("Load");
 
         // Show sensor type info
         String i2cAddr = "";
@@ -231,8 +243,6 @@ public:
         getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&Ubuntu_Bold8pt7b);
         if(keylock == false){
-            getdisplay().setCursor(10, 290);
-            getdisplay().print("[AVG]");
             getdisplay().setCursor(130, 290);
             getdisplay().print("[  <<<<  " + String(commonData.data.actpage) + "/" + String(commonData.data.maxpage) + "  >>>>  ]");
             if(String(backlightMode) == "Control by Key"){              // Key for illumination

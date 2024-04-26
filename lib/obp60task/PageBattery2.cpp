@@ -173,7 +173,6 @@ public:
         }
         
         // Logging voltage value
-        if (raw == NULL) return;
         LOG_DEBUG(GwLog::LOG,"Drawing at PageBattery2, Type:%s %s:=%f", batType, name1, raw);
 
         // Draw page
