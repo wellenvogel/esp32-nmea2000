@@ -263,6 +263,7 @@ void displayHeader(CommonData &commonData, GwApi::BoatValue *date, GwApi::BoatVa
         if(commonData.status.usbRx != usbRxOld || commonData.status.usbTx != usbTxOld){
         getdisplay().print("USB ");
         }
+        String acttime = formatValue(time, commonData).svalue;
         if(commonData.config->getBool(commonData.config->useGPS) == true && date->valid == true){
         getdisplay().print("GPS");
         }
@@ -393,27 +394,25 @@ void batteryGraphic(uint x, uint y, float percent, int pcolor, int bcolor){
 
 // Solar graphic with fill level
 void solarGraphic(uint x, uint y, int pcolor, int bcolor){
-    // Show battery
+    // Show solar modul
         int xb = x;     // X position
         int yb = y;     // Y position
         int t = 4;      // Line thickness
-        int percent = 75;
-        // Battery corpus 100x80 with fill level
+        int percent = 0;
+        // Solar corpus 100x80
         int level = int((100.0 - percent) * (80-(2*t)) / 100.0);
         getdisplay().fillRect(xb, yb, 100, 80, pcolor);
         if(percent < 99){
             getdisplay().fillRect(xb+t, yb+t, 100-(2*t), level, bcolor);
         }
-        // Plus pol 20x15
-        int xp = xb + 20;
-        int yp = yb - 15 + t;
-        getdisplay().fillRect(xp, yp, 20, 15, pcolor);
-        getdisplay().fillRect(xp+t, yp+t, 20-(2*t), 15-(2*t), bcolor);
-        // Minus pol 20x15
-        int xm = xb + 60;
-        int ym = yb -15 + t;
-        getdisplay().fillRect(xm, ym, 20, 15, pcolor);
-        getdisplay().fillRect(xm+t, ym+t, 20-(2*t), 15-(2*t), bcolor);
+        // Draw horizontel lines
+        getdisplay().fillRect(xb, yb+28-t, 100, t, pcolor);
+        getdisplay().fillRect(xb, yb+54-t, 100, t, pcolor);
+        // Draw vertical lines
+        getdisplay().fillRect(xb+19+t, yb, t, 80, pcolor);
+        getdisplay().fillRect(xb+38+2*t, yb, t, 80, pcolor);
+        getdisplay().fillRect(xb+57+3*t, yb, t, 80, pcolor);
+
 }
 
 // Generator graphic with fill level
@@ -422,24 +421,15 @@ void generatorGraphic(uint x, uint y, int pcolor, int bcolor){
         int xb = x;     // X position
         int yb = y;     // Y position
         int t = 4;      // Line thickness
-        int percent = 35;
-
-        // Battery corpus 100x80 with fill level
-        int level = int((100.0 - percent) * (80-(2*t)) / 100.0);
-        getdisplay().fillRect(xb, yb, 100, 80, pcolor);
-        if(percent < 99){
-            getdisplay().fillRect(xb+t, yb+t, 100-(2*t), level, bcolor);
-        }
-        // Plus pol 20x15
-        int xp = xb + 20;
-        int yp = yb - 15 + t;
-        getdisplay().fillRect(xp, yp, 20, 15, pcolor);
-        getdisplay().fillRect(xp+t, yp+t, 20-(2*t), 15-(2*t), bcolor);
-        // Minus pol 20x15
-        int xm = xb + 60;
-        int ym = yb -15 + t;
-        getdisplay().fillRect(xm, ym, 20, 15, pcolor);
-        getdisplay().fillRect(xm+t, ym+t, 20-(2*t), 15-(2*t), bcolor);
+        
+        // Generator corpus with radius 45
+        getdisplay().fillCircle(xb, yb, 45, pcolor);
+        getdisplay().fillCircle(xb, yb, 41, bcolor);
+        // Insert G
+        getdisplay().setTextColor(pcolor);
+        getdisplay().setFont(&Ubuntu_Bold32pt7b);
+        getdisplay().setCursor(xb-22, yb+20);
+        getdisplay().print("G");
 }
 
 #endif

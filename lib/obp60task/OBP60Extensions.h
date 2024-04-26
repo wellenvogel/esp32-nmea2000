@@ -63,6 +63,6 @@ SunData calcSunsetSunrise(GwApi *api, double time, double date, double latitude,
 
 void batteryGraphic(uint x, uint y, float percent, int pcolor, int bcolor); // Battery graphic with fill level
 void solarGraphic(uint x, uint y, int pcolor, int bcolor);                  // Solar graphic with fill level
-void gerenratorGraphic(uint x, uint y, int pcolor, int bcolor);             // Generator graphic with fill level
+void generatorGraphic(uint x, uint y, int pcolor, int bcolor);             // Generator graphic with fill level
 
 #endif

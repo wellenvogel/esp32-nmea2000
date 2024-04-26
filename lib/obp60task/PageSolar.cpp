@@ -8,28 +8,12 @@ class PageSolar : public Page
 {
 bool init = false;                  // Marker for init done
 bool keylock = false;               // Keylock
-int average = 0;                    // Average type [0...3], 0=off, 1=10s, 2=60s, 3=300s
-bool trend = true;                  // Trend indicator [0|1], 0=off, 1=on
-double raw = 0;
 
 public:
     PageSolar(CommonData &common){
         common.logger->logDebug(GwLog::LOG,"Show PageSolar");
     }
     virtual int handleKey(int key){
-         // Change average
-        if(key == 1){
-            average ++;
-            average = average % 4;      // Modulo 4
-            return 0;                   // Commit the key
-        }
-
-        // Trend indicator
-        if(key == 5){
-            trend = !trend;
-            return 0;                   // Commit the key
-        }
-
         // Code for keylock
         if(key == 11){
             keylock = !keylock;         // Toggle keylock
@@ -50,7 +34,6 @@ public:
         String flashLED = config->getString(config->flashLED);
         String batVoltage = config->getString(config->batteryVoltage);
         int solPower = config->getInt(config->solarPower);
-        String batType = config->getString(config->batteryType);
         String backlightMode = config->getString(config->backlight);
         String powerSensor = config->getString(config->usePowSensor2);
 
@@ -153,7 +136,7 @@ public:
         getdisplay().setCursor(10, 255);
         getdisplay().print("Solar Modul");
 
-        // Show battery with fill level
+        // Show solar panel
         solarGraphic(150, 45, pixelcolor, bgcolor);
 
         // Show load level in percent
@@ -271,7 +254,7 @@ static Page *createPage(CommonData &common){
  * and will will provide the names of the fixed values we need
  */
 PageDescription registerPageSolar(
-    "Solar",     // Name of page
+    "Solar",        // Name of page
     createPage,     // Action
     0,              // Number of bus values depends on selection in Web configuration
     {},             // Names of bus values undepends on selection in Web configuration (refer GwBoatData.h)

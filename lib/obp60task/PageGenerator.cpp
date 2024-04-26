@@ -8,20 +8,12 @@ class PageGenerator : public Page
 {
 bool init = false;                  // Marker for init done
 bool keylock = false;               // Keylock
-int average = 0;                    // Average type [0...3], 0=off, 1=10s, 2=60s, 3=300s
 
 public:
     PageGenerator(CommonData &common){
         common.logger->logDebug(GwLog::LOG,"Show PageGenerator");
     }
     virtual int handleKey(int key){
-         // Change average
-        if(key == 1){
-            average ++;
-            average = average % 4;      // Modulo 4
-            return 0;                   // Commit the key
-        }
-
         // Code for keylock
         if(key == 11){
             keylock = !keylock;         // Toggle keylock
@@ -42,29 +34,33 @@ public:
         String flashLED = config->getString(config->flashLED);
         String batVoltage = config->getString(config->batteryVoltage);
         int genPower = config->getInt(config->genPower);
-        String batType = config->getString(config->batteryType);
         String backlightMode = config->getString(config->backlight);
         String powerSensor = config->getString(config->usePowSensor3);
 
-        double value1 = 0;  // Battery voltage
-        double value2 = 0;  // Battery current
-        double value3 = 0;  // Battery power consumption
+        double value1 = 0;  // Solar voltage
+        double value2 = 0;  // Solar current
+        double value3 = 0;  // Solar output power
         double valueTrend = 0;  // Average over 10 values
-        int genPercentage = 0;
+        int genPercentage = 0;  // Power generator load
         
         // Get voltage value
         String name1 = "VGen";
 
-        // Read values
-        value1 = commonData.data.batteryVoltage;        // Live data
-        value2 = commonData.data.batteryCurrent;
-        value3 = commonData.data.batteryPower;
+        // Get raw value for trend indicator
+        if(powerSensor != "off"){
+            value1 = commonData.data.generatorVoltage;  // Use voltage from external sensor
+        }
+        else{
+            value1 = commonData.data.batteryVoltage; // Use internal voltage sensor
+        }
+        value2 = commonData.data.generatorCurrent;
+        value3 = commonData.data.generatorPower;
         genPercentage = value3 * 100 / (double)genPower;    // Load value
-        bool valid1 = true;
-
         // Limits for battery level
         if(genPercentage < 0) genPercentage = 0;
         if(genPercentage > 99) genPercentage = 99;
+
+        bool valid1 = true;
 
         // Optical warning by limit violation
         if(String(flashLED) == "Limit Violation"){
@@ -84,8 +80,7 @@ public:
         }
         
         // Logging voltage value
-        if (value1 == NULL) return;
-        LOG_DEBUG(GwLog::LOG,"Drawing at PageGenerator, Type:%s %s:=%f", batType, name1, value1);
+        LOG_DEBUG(GwLog::LOG,"Drawing at PageGenerator, Type:%iW %s:=%f", genPower, name1, value1);
 
         // Draw page
         //***********************************************************
@@ -111,13 +106,10 @@ public:
         getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&Ubuntu_Bold20pt7b);
         getdisplay().setCursor(10, 65);
-        getdisplay().print("Bat.");
-
-         // Show batery type
-        getdisplay().setTextColor(textcolor);
+        getdisplay().print("Power");
         getdisplay().setFont(&Ubuntu_Bold8pt7b);
-        getdisplay().setCursor(90, 65);
-        getdisplay().print(batType);
+        getdisplay().setCursor(12, 82);
+        getdisplay().print("Generator");
 
         // Show voltage type
         getdisplay().setTextColor(textcolor);
@@ -137,7 +129,7 @@ public:
         if(genPower <= 999) getdisplay().print(genPower, 0);
         if(genPower > 999) getdisplay().print(float(genPower/1000.0), 1);
         getdisplay().setFont(&Ubuntu_Bold16pt7b);
-        if(genPower <= 999) getdisplay().print("w");
+        if(genPower <= 999) getdisplay().print("W");
         if(genPower > 999) getdisplay().print("kW");
 
         // Show info
@@ -145,40 +137,21 @@ public:
         getdisplay().setCursor(10, 235);
         getdisplay().print("Installed");
         getdisplay().setCursor(10, 255);
-        getdisplay().print("Battery Type");
+        getdisplay().print("Power Modul");
 
-        // Show battery with fill level
-        batteryGraphic(150, 45, genPercentage, pixelcolor, bgcolor);
+        // Show generator
+        generatorGraphic(200, 95, pixelcolor, bgcolor);
 
-        // Show average settings
-        getdisplay().setTextColor(textcolor);
-        getdisplay().setFont(&Ubuntu_Bold8pt7b);
-        getdisplay().setCursor(150, 145);
-        switch (average) {
-            case 0:
-                getdisplay().print("Avg: 1s");
-                break;
-            case 1:
-                getdisplay().print("Avg: 10s");
-                break;
-            case 2:
-                getdisplay().print("Avg: 60s");
-                break;
-            case 3:
-                getdisplay().print("Avg: 300s");
-                break;
-            default:
-                getdisplay().print("Avg: 1s");
-                break;
-        } 
-
-        // Show fill level in percent
+        // Show load level in percent
         getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&DSEG7Classic_BoldItalic20pt7b);
         getdisplay().setCursor(150, 200);
         getdisplay().print(genPercentage);
         getdisplay().setFont(&Ubuntu_Bold16pt7b);
         getdisplay().print("%");
+        getdisplay().setFont(&Ubuntu_Bold8pt7b);
+        getdisplay().setCursor(150, 235);
+        getdisplay().print("Load");
 
         // Show sensor type info
         String i2cAddr = "";
@@ -187,10 +160,11 @@ public:
         if(powerSensor == "off") getdisplay().print("Internal");
         if(powerSensor == "INA219"){
             getdisplay().print("INA219");
+            i2cAddr = " (0x" + String(INA219_I2C_ADDR3, HEX) + ")";
         }
         if(powerSensor == "INA226"){
             getdisplay().print("INA226");
-            i2cAddr = " (0x" + String(INA226_I2C_ADDR1, HEX) + ")";
+            i2cAddr = " (0x" + String(INA226_I2C_ADDR3, HEX) + ")";
         }
         getdisplay().print(i2cAddr);
         getdisplay().setCursor(270, 80);
@@ -255,8 +229,6 @@ public:
         getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&Ubuntu_Bold8pt7b);
         if(keylock == false){
-            getdisplay().setCursor(10, 290);
-            getdisplay().print("[AVG]");
             getdisplay().setCursor(130, 290);
             getdisplay().print("[  <<<<  " + String(commonData.data.actpage) + "/" + String(commonData.data.maxpage) + "  >>>>  ]");
             if(String(backlightMode) == "Control by Key"){              // Key for illumination

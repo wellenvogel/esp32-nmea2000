@@ -94,6 +94,10 @@ void sensorTask(void *param){
         ds18b20.begin();
         DeviceAddress tempDeviceAddress;
         numberOfDevices = ds18b20.getDeviceCount();
+        // Limit for 8 sensors
+        if(numberOfDevices > 8){
+            numberOfDevices = 8;
+        }
         if (numberOfDevices < 1) {
             oneWire_ready = false;
             api->getLogger()->logDebug(GwLog::ERROR,"Modul DS18B20 not found, check wiring");
@@ -384,7 +388,7 @@ void sensorTask(void *param){
         if(millis() > starttime13 + 1000 && String(oneWireOn) == "DS18B20" && oneWire_ready == true){
             starttime13 = millis();
             float tempC;
-            ds18b20.requestTemperatures();  // Collect all temperature values
+            ds18b20.requestTemperatures();  // Collect all temperature values (max.8)
             for(int i=0;i<numberOfDevices; i++){
                 if(ds18b20.getAddress(tempDeviceAddress, i)){
                     // Read temperature value in Celsius
@@ -392,6 +396,7 @@ void sensorTask(void *param){
                 }
                 // Send to NMEA200 bus for each sensor with instance number
                 if(!isnan(tempC)){
+                    sensors.onewireTemp[i] = tempC; // Save values in SensorData
                     SetN2kPGN130316(N2kMsg, 0, i, N2kts_OutsideTemperature, CToKelvin(tempC), N2kDoubleNA);
                     api->sendN2kMessage(N2kMsg);
                     api->getLogger()->logDebug(GwLog::LOG,"DS18B20-%1d Temp: %.1f",i,tempC);
@@ -420,6 +425,12 @@ void sensorTask(void *param){
                 }
                 double sysTime = (hour * 3600) + (minute * 60) + second;
                 if(!isnan(daysAt1970) && !isnan(sysTime)){
+                    sensors.rtcYear = year; // Save values in SensorData
+                    sensors.rtcMonth = month;
+                    sensors.rtcDay = day;
+                    sensors.rtcHour = hour;
+                    sensors.rtcMinute = minute;
+                    sensors.rtcSecond = second;
                     // api->getLogger()->logDebug(GwLog::LOG,"RTC time: %04d/%02d/%02d %02d:%02d:%02d",year, month, day, hour, minute, second);
                     // api->getLogger()->logDebug(GwLog::LOG,"Send PGN126992: %10d %10d",daysAt1970, (uint16_t)sysTime);
                     SetN2kPGN126992(N2kMsg,0,daysAt1970,sysTime,N2ktimes_LocalCrystalClock);
