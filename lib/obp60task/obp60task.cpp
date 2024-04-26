@@ -410,6 +410,7 @@ void OBP60Task(GwApi *api){
     GwApi::BoatValue *time = boatValues.findValueOrCreate("GPST");      // Load GpsTime
     GwApi::BoatValue *lat = boatValues.findValueOrCreate("LAT");        // Load GpsLatitude
     GwApi::BoatValue *lon = boatValues.findValueOrCreate("LON");        // Load GpsLongitude
+    GwApi::BoatValue *hdop = boatValues.findValueOrCreate("HDOP");       // Load GpsHDOP
 
     LOG_DEBUG(GwLog::LOG,"obp60task: start mainloop");
     // Set start page
@@ -559,8 +560,8 @@ void OBP60Task(GwApi *api){
                 getdisplay().fillRect(0, 0, getdisplay().width(), getdisplay().height(), bgcolor);   // Clear display
                 if (pages[pageNumber].description && pages[pageNumber].description->header){
                     //build some header and footer using commonData
-                    getdisplay().fillScreen(bgcolor);       // Clear display
-                    displayHeader(commonData, date, time);  // Sown header
+                    getdisplay().fillScreen(bgcolor);             // Clear display
+                    displayHeader(commonData, date, time, hdop);  // Sown header
                 }
                 
                 // Call the particular page

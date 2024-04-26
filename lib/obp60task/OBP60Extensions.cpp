@@ -219,7 +219,7 @@ void displayTrendLow(int16_t x, int16_t y, uint16_t size, uint16_t color){
 }
 
 // Show header informations
-void displayHeader(CommonData &commonData, GwApi::BoatValue *date, GwApi::BoatValue *time){
+void displayHeader(CommonData &commonData, GwApi::BoatValue *date, GwApi::BoatValue *time, GwApi::BoatValue *hdop){
 
     static bool heartbeat = false;
     static unsigned long usbRxOld = 0;
@@ -263,8 +263,8 @@ void displayHeader(CommonData &commonData, GwApi::BoatValue *date, GwApi::BoatVa
         if(commonData.status.usbRx != usbRxOld || commonData.status.usbTx != usbTxOld){
         getdisplay().print("USB ");
         }
-        String acttime = formatValue(time, commonData).svalue;
-        if(commonData.config->getBool(commonData.config->useGPS) == true && date->valid == true){
+        double gpshdop = formatValue(hdop, commonData).value;
+        if(commonData.config->getString(commonData.config->useGPS) != "off" &&  gpshdop > 1.0){
         getdisplay().print("GPS");
         }
         // Save old telegram counter
@@ -421,7 +421,7 @@ void generatorGraphic(uint x, uint y, int pcolor, int bcolor){
         int xb = x;     // X position
         int yb = y;     // Y position
         int t = 4;      // Line thickness
-        
+
         // Generator corpus with radius 45
         getdisplay().fillCircle(xb, yb, 45, pcolor);
         getdisplay().fillCircle(xb, yb, 41, bcolor);

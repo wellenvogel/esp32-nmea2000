@@ -57,7 +57,7 @@ String xdrDelete(String input);                 // Delete xdr prefix from string
 void displayTrendHigh(int16_t x, int16_t y, uint16_t size, uint16_t color);
 void displayTrendLow(int16_t x, int16_t y, uint16_t size, uint16_t color);
 
-void displayHeader(CommonData &commonData, GwApi::BoatValue *date, GwApi::BoatValue *time); // Draw display header
+void displayHeader(CommonData &commonData, GwApi::BoatValue *date, GwApi::BoatValue *time, GwApi::BoatValue *hdop); // Draw display header
 
 SunData calcSunsetSunrise(GwApi *api, double time, double date, double latitude, double longitude, double timezone); // Calulate sunset and sunrise
 
