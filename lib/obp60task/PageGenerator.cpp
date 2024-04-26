@@ -2,18 +2,26 @@
 
 #include "Pagedata.h"
 #include "OBP60Extensions.h"
+#include "movingAvg.h"              // Lib for moving average building
 
 class PageGenerator : public Page
 {
 bool init = false;                  // Marker for init done
 bool keylock = false;               // Keylock
-int genPercentage = 0;              // Generator power level
+int average = 0;                    // Average type [0...3], 0=off, 1=10s, 2=60s, 3=300s
 
 public:
     PageGenerator(CommonData &common){
         common.logger->logDebug(GwLog::LOG,"Show PageGenerator");
     }
     virtual int handleKey(int key){
+         // Change average
+        if(key == 1){
+            average ++;
+            average = average % 4;      // Modulo 4
+            return 0;                   // Commit the key
+        }
+
         // Code for keylock
         if(key == 11){
             keylock = !keylock;         // Toggle keylock
@@ -33,36 +41,51 @@ public:
         bool holdvalues = config->getBool(config->holdvalues);
         String flashLED = config->getString(config->flashLED);
         String batVoltage = config->getString(config->batteryVoltage);
-        int generatorMaxPower = config->getInt(config->genPower);
+        int genPower = config->getInt(config->genPower);
+        String batType = config->getString(config->batteryType);
         String backlightMode = config->getString(config->backlight);
         String powerSensor = config->getString(config->usePowSensor3);
 
-        double value1 = 0;  // Generator voltage
-        double value2 = 0;  // Generator current
-        double value3 = 0;  // Generator power consumption
+        double value1 = 0;  // Battery voltage
+        double value2 = 0;  // Battery current
+        double value3 = 0;  // Battery power consumption
+        double valueTrend = 0;  // Average over 10 values
+        int genPercentage = 0;
+        
+        // Get voltage value
+        String name1 = "VGen";
 
-        // Get values
-        value1 = commonData.data.generatorVoltage;          // Live data
-        value2 = commonData.data.generatorCurrent;
-        value3 = commonData.data.generatorPower;
-        genPercentage = value3 / generatorMaxPower * 100;   // Power level calculation
-        if(genPercentage < 0){      // Limiting values
-            genPercentage = 0;
-        }
-        if(genPercentage > 99){
-            genPercentage = 99;
-        }
+        // Read values
+        value1 = commonData.data.batteryVoltage;        // Live data
+        value2 = commonData.data.batteryCurrent;
+        value3 = commonData.data.batteryPower;
+        genPercentage = value3 * 100 / (double)genPower;    // Load value
         bool valid1 = true;
 
-        // Optical warning by limit violation (unused)
+        // Limits for battery level
+        if(genPercentage < 0) genPercentage = 0;
+        if(genPercentage > 99) genPercentage = 99;
+
+        // Optical warning by limit violation
         if(String(flashLED) == "Limit Violation"){
-            setBlinkingLED(false);
-            setFlashLED(false); 
+            // Over voltage
+            if(value1 > 14.8 && batVoltage == "12V"){
+                setBlinkingLED(true);
+            }
+            if(value1 <= 14.8 && batVoltage == "12V"){
+                setBlinkingLED(false);
+            }
+            if(value1 > 29.6 && batVoltage == "24V"){
+                setBlinkingLED(true);
+            }
+            if(value1 <= 29.6 && batVoltage == "24V"){
+                setBlinkingLED(false);
+            }     
         }
         
         // Logging voltage value
         if (value1 == NULL) return;
-        LOG_DEBUG(GwLog::LOG,"Drawing at PageGenerator, V:%f C:%f P:%f", value1, value2, value3);
+        LOG_DEBUG(GwLog::LOG,"Drawing at PageGenerator, Type:%s %s:=%f", batType, name1, value1);
 
         // Draw page
         //***********************************************************
@@ -81,14 +104,20 @@ public:
             pixelcolor = GxEPD_WHITE;
             bgcolor = GxEPD_BLACK;
         }
-        /// Set display in partial refresh mode
+        // Set display in partial refresh mode
         getdisplay().setPartialWindow(0, 0, getdisplay().width(), getdisplay().height()); // Set partial update
 
         // Show name
         getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&Ubuntu_Bold20pt7b);
         getdisplay().setCursor(10, 65);
-        getdisplay().print("Gen.");
+        getdisplay().print("Bat.");
+
+         // Show batery type
+        getdisplay().setTextColor(textcolor);
+        getdisplay().setFont(&Ubuntu_Bold8pt7b);
+        getdisplay().setCursor(90, 65);
+        getdisplay().print(batType);
 
         // Show voltage type
         getdisplay().setTextColor(textcolor);
@@ -101,33 +130,49 @@ public:
         getdisplay().setFont(&Ubuntu_Bold16pt7b);
         getdisplay().print("V");
 
-        // Show generator power level
+        // Show solar power
         getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&DSEG7Classic_BoldItalic20pt7b);
         getdisplay().setCursor(10, 200);
-        if(generatorMaxPower <= 999) getdisplay().print(generatorMaxPower, 0);
-        if(generatorMaxPower > 999) getdisplay().print(float(generatorMaxPower/1000.0), 1);
+        if(genPower <= 999) getdisplay().print(genPower, 0);
+        if(genPower > 999) getdisplay().print(float(genPower/1000.0), 1);
         getdisplay().setFont(&Ubuntu_Bold16pt7b);
-        if(generatorMaxPower <= 999) getdisplay().print("W");
-        if(generatorMaxPower > 999) getdisplay().print("kw");
+        if(genPower <= 999) getdisplay().print("w");
+        if(genPower > 999) getdisplay().print("kW");
 
         // Show info
         getdisplay().setFont(&Ubuntu_Bold8pt7b);
         getdisplay().setCursor(10, 235);
         getdisplay().print("Installed");
         getdisplay().setCursor(10, 255);
-        getdisplay().print("Type");
+        getdisplay().print("Battery Type");
 
-        // Show generator icon
+        // Show battery with fill level
         batteryGraphic(150, 45, genPercentage, pixelcolor, bgcolor);
 
         // Show average settings
         getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&Ubuntu_Bold8pt7b);
         getdisplay().setCursor(150, 145);
-        getdisplay().print("Avg: 1s");
+        switch (average) {
+            case 0:
+                getdisplay().print("Avg: 1s");
+                break;
+            case 1:
+                getdisplay().print("Avg: 10s");
+                break;
+            case 2:
+                getdisplay().print("Avg: 60s");
+                break;
+            case 3:
+                getdisplay().print("Avg: 300s");
+                break;
+            default:
+                getdisplay().print("Avg: 1s");
+                break;
+        } 
 
-        // Show power level in percent
+        // Show fill level in percent
         getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&DSEG7Classic_BoldItalic20pt7b);
         getdisplay().setCursor(150, 200);
@@ -145,7 +190,7 @@ public:
         }
         if(powerSensor == "INA226"){
             getdisplay().print("INA226");
-            i2cAddr = " (0x" + String(INA226_I2C_ADDR3, HEX) + ")";
+            i2cAddr = " (0x" + String(INA226_I2C_ADDR1, HEX) + ")";
         }
         getdisplay().print(i2cAddr);
         getdisplay().setCursor(270, 80);
@@ -210,6 +255,8 @@ public:
         getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&Ubuntu_Bold8pt7b);
         if(keylock == false){
+            getdisplay().setCursor(10, 290);
+            getdisplay().print("[AVG]");
             getdisplay().setCursor(130, 290);
             getdisplay().print("[  <<<<  " + String(commonData.data.actpage) + "/" + String(commonData.data.maxpage) + "  >>>>  ]");
             if(String(backlightMode) == "Control by Key"){              // Key for illumination

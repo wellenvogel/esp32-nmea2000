@@ -2,18 +2,34 @@
 
 #include "Pagedata.h"
 #include "OBP60Extensions.h"
+#include "movingAvg.h"              // Lib for moving average building
 
 class PageSolar : public Page
 {
 bool init = false;                  // Marker for init done
 bool keylock = false;               // Keylock
-int solPercentage = 0;              // Solar power level
+int average = 0;                    // Average type [0...3], 0=off, 1=10s, 2=60s, 3=300s
+bool trend = true;                  // Trend indicator [0|1], 0=off, 1=on
+double raw = 0;
 
 public:
     PageSolar(CommonData &common){
         common.logger->logDebug(GwLog::LOG,"Show PageSolar");
     }
     virtual int handleKey(int key){
+         // Change average
+        if(key == 1){
+            average ++;
+            average = average % 4;      // Modulo 4
+            return 0;                   // Commit the key
+        }
+
+        // Trend indicator
+        if(key == 5){
+            trend = !trend;
+            return 0;                   // Commit the key
+        }
+
         // Code for keylock
         if(key == 11){
             keylock = !keylock;         // Toggle keylock
@@ -33,36 +49,46 @@ public:
         bool holdvalues = config->getBool(config->holdvalues);
         String flashLED = config->getString(config->flashLED);
         String batVoltage = config->getString(config->batteryVoltage);
-        int solarMaxPower = config->getInt(config->solarPower);
+        int solPower = config->getInt(config->solarPower);
+        String batType = config->getString(config->batteryType);
         String backlightMode = config->getString(config->backlight);
-        String powerSensor = config->getString(config->usePowSensor2);
+        String powerSensor = config->getString(config->usePowSensor1);
 
         double value1 = 0;  // Solar voltage
         double value2 = 0;  // Solar current
-        double value3 = 0;  // Solar power consumption
+        double value3 = 0;  // Solar output power
+        double valueTrend = 0;  // Average over 10 values
+        double solPercentage = 0;  // Solar load
+        
+        // Get voltage value
+        String name1 = "VSol";
 
-        // Get values
-        value1 = commonData.data.solarVoltage;        // Live data
+        // Get raw value for trend indicator
+        value1 = commonData.data.solarVoltage;  // Live data
         value2 = commonData.data.solarCurrent;
         value3 = commonData.data.solarPower;
-        solPercentage = value3 / solarMaxPower * 100;   // Power level calculation
-        if(solPercentage < 0){      // Limiting values
-            solPercentage = 0;
-        }
-        if(solPercentage > 99){
-            solPercentage = 99;
-        }
+        solPercentage = value3 * 100 / (double)solPower;    // Load value       
         bool valid1 = true;
 
-        // Optical warning by limit violation (unused)
+        // Optical warning by limit violation
         if(String(flashLED) == "Limit Violation"){
-            setBlinkingLED(false);
-            setFlashLED(false); 
+            // Over voltage
+            if(value1 > 14.8 && batVoltage == "12V"){
+                setBlinkingLED(true);
+            }
+            if(value1 <= 14.8 && batVoltage == "12V"){
+                setBlinkingLED(false);
+            }
+            if(value1 > 29.6 && batVoltage == "24V"){
+                setBlinkingLED(true);
+            }
+            if(value1 <= 29.6 && batVoltage == "24V"){
+                setBlinkingLED(false);
+            }     
         }
         
         // Logging voltage value
-        if (value1 == NULL) return;
-        LOG_DEBUG(GwLog::LOG,"Drawing at PageSolar, V:%f C:%f P:%f", value1, value2, value3);
+        LOG_DEBUG(GwLog::LOG,"Drawing at PageSolar, Type:%iW %s:=%f", solPower, name1, value1);
 
         // Draw page
         //***********************************************************
@@ -101,33 +127,27 @@ public:
         getdisplay().setFont(&Ubuntu_Bold16pt7b);
         getdisplay().print("V");
 
-        // Show solar power level
+        // Show solar power
         getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&DSEG7Classic_BoldItalic20pt7b);
         getdisplay().setCursor(10, 200);
-        if(solarMaxPower <= 999) getdisplay().print(solarMaxPower, 0);
-        if(solarMaxPower > 999) getdisplay().print(float(solarMaxPower/1000.0), 1);
+        if(solPower <= 999) getdisplay().print(solPower, 0);
+        if(solPower > 999) getdisplay().print(float(solPower/1000.0), 1);
         getdisplay().setFont(&Ubuntu_Bold16pt7b);
-        if(solarMaxPower <= 999) getdisplay().print("W");
-        if(solarMaxPower > 999) getdisplay().print("kw");
+        if(solPower <= 999) getdisplay().print("w");
+        if(solPower > 999) getdisplay().print("kW");
 
         // Show info
         getdisplay().setFont(&Ubuntu_Bold8pt7b);
         getdisplay().setCursor(10, 235);
         getdisplay().print("Installed");
         getdisplay().setCursor(10, 255);
-        getdisplay().print("Power");
+        getdisplay().print("Solar Modul");
 
-        // Show solar icon
-        batteryGraphic(150, 45, solPercentage, pixelcolor, bgcolor);
+        // Show battery with fill level
+        solarGraphic(150, 45, pixelcolor, bgcolor);
 
-        // Show average settings
-        getdisplay().setTextColor(textcolor);
-        getdisplay().setFont(&Ubuntu_Bold8pt7b);
-        getdisplay().setCursor(150, 145);
-        getdisplay().print("Avg: 1s");
-
-        // Show power level in percent
+        // Show load level in percent
         getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&DSEG7Classic_BoldItalic20pt7b);
         getdisplay().setCursor(150, 200);
@@ -142,6 +162,7 @@ public:
         if(powerSensor == "off") getdisplay().print("Internal");
         if(powerSensor == "INA219"){
             getdisplay().print("INA219");
+            i2cAddr = " (0x" + String(INA219_I2C_ADDR2, HEX) + ")";
         }
         if(powerSensor == "INA226"){
             getdisplay().print("INA226");
@@ -210,6 +231,8 @@ public:
         getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&Ubuntu_Bold8pt7b);
         if(keylock == false){
+            getdisplay().setCursor(10, 290);
+            getdisplay().print("[AVG]");
             getdisplay().setCursor(130, 290);
             getdisplay().print("[  <<<<  " + String(commonData.data.actpage) + "/" + String(commonData.data.maxpage) + "  >>>>  ]");
             if(String(backlightMode) == "Control by Key"){              // Key for illumination
@@ -238,7 +261,7 @@ static Page *createPage(CommonData &common){
  * and will will provide the names of the fixed values we need
  */
 PageDescription registerPageSolar(
-    "Solar",        // Name of page
+    "Solar",     // Name of page
     createPage,     // Action
     0,              // Number of bus values depends on selection in Web configuration
     {},             // Names of bus values undepends on selection in Web configuration (refer GwBoatData.h)

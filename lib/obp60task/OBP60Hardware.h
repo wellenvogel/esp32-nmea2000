@@ -19,8 +19,12 @@
     #define SHT21_I2C_ADDR 0x40     // Addr. 0x40 (fix)
     // AS5600
     #define AS5600_I2C_ADDR 0x36    // Addr. 0x36 (fix)
-    // INA226
+    // INA219
     #define SHUNT_VOLTAGE 0.075     // Shunt voltage in V by max. current (75mV)
+    #define INA219_I2C_ADDR1 0x40   // Addr. 0x41 (fix A0 = 5V, A1 = GND) for battery
+    #define INA219_I2C_ADDR2 0x41   // Addr. 0x44 (fix A0 = GND, A1 = 5V) for solar panels
+    #define INA219_I2C_ADDR3 0x45   // Addr. 0x45 (fix A0 = 5V, A1 = 5V) for generator
+    // INA226
     #define INA226_I2C_ADDR1 0x41   // Addr. 0x41 (fix A0 = 5V, A1 = GND) for battery
     #define INA226_I2C_ADDR2 0x44   // Addr. 0x44 (fix A0 = GND, A1 = 5V) for solar panels
     #define INA226_I2C_ADDR3 0x45   // Addr. 0x45 (fix A0 = 5V, A1 = 5V) for generator

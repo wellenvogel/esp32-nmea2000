@@ -391,4 +391,55 @@ void batteryGraphic(uint x, uint y, float percent, int pcolor, int bcolor){
         getdisplay().fillRect(xm+t, ym+t, 20-(2*t), 15-(2*t), bcolor);
 }
 
+// Solar graphic with fill level
+void solarGraphic(uint x, uint y, int pcolor, int bcolor){
+    // Show battery
+        int xb = x;     // X position
+        int yb = y;     // Y position
+        int t = 4;      // Line thickness
+        int percent = 75;
+        // Battery corpus 100x80 with fill level
+        int level = int((100.0 - percent) * (80-(2*t)) / 100.0);
+        getdisplay().fillRect(xb, yb, 100, 80, pcolor);
+        if(percent < 99){
+            getdisplay().fillRect(xb+t, yb+t, 100-(2*t), level, bcolor);
+        }
+        // Plus pol 20x15
+        int xp = xb + 20;
+        int yp = yb - 15 + t;
+        getdisplay().fillRect(xp, yp, 20, 15, pcolor);
+        getdisplay().fillRect(xp+t, yp+t, 20-(2*t), 15-(2*t), bcolor);
+        // Minus pol 20x15
+        int xm = xb + 60;
+        int ym = yb -15 + t;
+        getdisplay().fillRect(xm, ym, 20, 15, pcolor);
+        getdisplay().fillRect(xm+t, ym+t, 20-(2*t), 15-(2*t), bcolor);
+}
+
+// Generator graphic with fill level
+void generatorGraphic(uint x, uint y, int pcolor, int bcolor){
+    // Show battery
+        int xb = x;     // X position
+        int yb = y;     // Y position
+        int t = 4;      // Line thickness
+        int percent = 35;
+
+        // Battery corpus 100x80 with fill level
+        int level = int((100.0 - percent) * (80-(2*t)) / 100.0);
+        getdisplay().fillRect(xb, yb, 100, 80, pcolor);
+        if(percent < 99){
+            getdisplay().fillRect(xb+t, yb+t, 100-(2*t), level, bcolor);
+        }
+        // Plus pol 20x15
+        int xp = xb + 20;
+        int yp = yb - 15 + t;
+        getdisplay().fillRect(xp, yp, 20, 15, pcolor);
+        getdisplay().fillRect(xp+t, yp+t, 20-(2*t), 15-(2*t), bcolor);
+        // Minus pol 20x15
+        int xm = xb + 60;
+        int ym = yb -15 + t;
+        getdisplay().fillRect(xm, ym, 20, 15, pcolor);
+        getdisplay().fillRect(xm+t, ym+t, 20-(2*t), 15-(2*t), bcolor);
+}
+
 #endif
