@@ -20,42 +20,50 @@ bool keylock = false;   // Key lock after pressed key is valid (repeat protectio
 long starttime = 0;     // Start time point for pressed key
 
 
-int readKeypad() {
+int readKeypad(uint thSensitivity) {
+  
+  // Touch sensor values
+  // 35000 - Not touched
+  // 50000 - Light toched with fingertip
+  // 70000 - Touched
+  // 170000 - Strong touched
+  uint32_t touchthreshold = (thSensitivity * -1200) + 170000; // thSensitivity 0...100%
+
   int keystatus = 0;      // Status of key [0...11], 0 = processed, 1...8 = key 1..8, 9 = right swipe , 10 = left swipe, 11 keys disabled
   keycode = 0;
 
   // Read key code
-  if(touchRead(14) > TOUCHTHRESHOLD){ // Touch pad 1
+  if(touchRead(14) > touchthreshold){ // Touch pad 1
     keypad[1] = 1;
   }
   else{
     keypad[1] = 0;
   }
-  if(touchRead(13) > TOUCHTHRESHOLD){ // Touch pad 2
+  if(touchRead(13) > touchthreshold){ // Touch pad 2
     keypad[2] = 1;
   }
   else{
     keypad[2] = 0;
   }
-  if(touchRead(12) > TOUCHTHRESHOLD){ // Touch pad 3
+  if(touchRead(12) > touchthreshold){ // Touch pad 3
     keypad[3] = 1;
   }
   else{
     keypad[3] = 0;
   }
-  if(touchRead(11) > TOUCHTHRESHOLD){ // Touch pad 4
+  if(touchRead(11) > touchthreshold){ // Touch pad 4
     keypad[4] = 1;
   }
   else{
     keypad[4] = 0;
   }
-  if(touchRead(10) > TOUCHTHRESHOLD){ // Touch pad 5
+  if(touchRead(10) > touchthreshold){ // Touch pad 5
     keypad[5] = 1;
   }
   else{
     keypad[5] = 0;
   }
-  if(touchRead(9) > TOUCHTHRESHOLD){  // Touch pad 6
+  if(touchRead(9) > touchthreshold){  // Touch pad 6
     keypad[6] = 1;
   }
   else{

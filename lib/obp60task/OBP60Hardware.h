@@ -61,7 +61,6 @@
     #define MIN_VOLTAGE 10.0    // Min voltage for under voltage detection (then goto deep sleep)
     #define POWER_FAIL_TIME 2   // in [ms] Accept min voltage until 2 x 1ms (for under voltage gaps by engine start)
     // Touch buttons
-    #define TOUCHTHRESHOLD 50000// Touch sensitivity, lower values more sensitiv
     #define TP1 14              // Left outside
     #define TP2 13
     #define TP3 12

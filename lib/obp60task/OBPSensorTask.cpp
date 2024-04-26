@@ -73,7 +73,7 @@ void sensorTask(void *param){
         Timer1.start();     // Start Timer1 for undervoltage detection
     }
     Timer1.start();         // Start Timer2 for blinking LED
-   
+
     // Direction settings for NMEA0183
     String nmea0183Mode = api->getConfig()->getConfigItem(api->getConfig()->serialDirection, true)->asString();
     api->getLogger()->logDebug(GwLog::LOG, "NMEA0183 Mode is: %s", nmea0183Mode);

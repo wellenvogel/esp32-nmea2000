@@ -264,7 +264,7 @@ void displayHeader(CommonData &commonData, GwApi::BoatValue *date, GwApi::BoatVa
         getdisplay().print("USB ");
         }
         double gpshdop = formatValue(hdop, commonData).value;
-        if(commonData.config->getString(commonData.config->useGPS) != "off" &&  gpshdop > 1.0){
+        if(commonData.config->getString(commonData.config->useGPS) != "off" &&  gpshdop > 0.3){
         getdisplay().print("GPS");
         }
         // Save old telegram counter

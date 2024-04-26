@@ -83,20 +83,20 @@ typedef struct {
         int page0=0;
         QueueHandle_t queue;
         GwLog* logger = NULL;
+//        GwApi* api = NULL;
+        uint sensitivity = 100;
     } MyData;
 
 // Keyboard Task
-//####################################################################################
-int readKeypad();
-
 void keyboardTask(void *param){
     MyData *data=(MyData *)param;
+
     int keycode = 0;
     data->logger->logDebug(GwLog::LOG,"Start keyboard task");
 
     // Loop for keyboard task
     while (true){
-        keycode = readKeypad();
+        keycode = readKeypad(data->sensitivity);
         //send a key event
         if(keycode != 0){
             xQueueSend(data->queue, &keycode, 0);
@@ -382,6 +382,7 @@ void OBP60Task(GwApi *api){
     allParameters.logger=api->getLogger();
     allParameters.page0=3;
     allParameters.queue=xQueueCreate(10,sizeof(int));
+    allParameters.sensitivity= api->getConfig()->getInt(GwConfigDefinitions::tSensitivity);
     xTaskCreate(keyboardTask,"keyboard",2000,&allParameters,configMAX_PRIORITIES-1,NULL);
     SharedData *shared=new SharedData(api);
     createSensorTask(shared);
