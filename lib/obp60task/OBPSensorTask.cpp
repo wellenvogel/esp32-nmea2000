@@ -328,6 +328,7 @@ void sensorTask(void *param){
     double voffset = (api->getConfig()->getConfigItem(api->getConfig()->vOffset,true)->asString()).toFloat();
     double vslope = (api->getConfig()->getConfigItem(api->getConfig()->vSlope,true)->asString()).toFloat();
 
+    static long loopCounter = 0;    // Loop counter for 1Wire data transmission
     long starttime0 = millis();     // GPS update all 100ms
     long starttime5 = millis();     // Voltage update all 1s
     long starttime6 = millis();     // Environment sensor update all 1s
@@ -390,18 +391,22 @@ void sensorTask(void *param){
             float tempC;
             ds18b20.requestTemperatures();  // Collect all temperature values (max.8)
             for(int i=0;i<numberOfDevices; i++){
-                if(ds18b20.getAddress(tempDeviceAddress, i)){
-                    // Read temperature value in Celsius
-                    tempC = ds18b20.getTempC(tempDeviceAddress); 
-                }
-                // Send to NMEA200 bus for each sensor with instance number
-                if(!isnan(tempC)){
-                    sensors.onewireTemp[i] = tempC; // Save values in SensorData
-                    SetN2kPGN130316(N2kMsg, 0, i, N2kts_OutsideTemperature, CToKelvin(tempC), N2kDoubleNA);
-                    api->sendN2kMessage(N2kMsg);
-                    api->getLogger()->logDebug(GwLog::LOG,"DS18B20-%1d Temp: %.1f",i,tempC);
-                }
+                // Send only one 1Wire data per loop step (time reduction)
+                if(i == loopCounter % numberOfDevices){
+                    if(ds18b20.getAddress(tempDeviceAddress, i)){
+                        // Read temperature value in Celsius
+                        tempC = ds18b20.getTempC(tempDeviceAddress); 
+                    }
+                    // Send to NMEA200 bus for each sensor with instance number
+                    if(!isnan(tempC)){
+                        sensors.onewireTemp[i] = tempC; // Save values in SensorData
+                        SetN2kPGN130316(N2kMsg, 0, i, N2kts_OutsideTemperature, CToKelvin(tempC), N2kDoubleNA);
+                        api->sendN2kMessage(N2kMsg);
+                        api->getLogger()->logDebug(GwLog::LOG,"DS18B20-%1d Temp: %.1f",i,tempC);
+                    }
+                }    
             }
+            loopCounter++;
         }
 
         // If GPS not ready or installed then send RTC time on bus all 500ms
