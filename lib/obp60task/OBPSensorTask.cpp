@@ -338,7 +338,7 @@ void sensorTask(void *param){
     long starttime10 = millis();    // Generator power sensor update all 1s
     long starttime11 = millis();    // Copy GPS data to RTC all 5min
     long starttime12 = millis();    // Get RTC data all 500ms
-    long starttime13 = millis();    // Get 1Wire sensor data all 1s
+    long starttime13 = millis();    // Get 1Wire sensor data all 2s
 
     tN2kMsg N2kMsg;
     shared->setSensorData(sensors); //set initially read values
@@ -385,8 +385,8 @@ void sensorTask(void *param){
             }
         }
 
-        // Send 1Wire data for all temperature sensors all 1s
-        if(millis() > starttime13 + 1000 && String(oneWireOn) == "DS18B20" && oneWire_ready == true){
+        // Send 1Wire data for all temperature sensors all 2s
+        if(millis() > starttime13 + 2000 && String(oneWireOn) == "DS18B20" && oneWire_ready == true){
             starttime13 = millis();
             float tempC;
             ds18b20.requestTemperatures();  // Collect all temperature values (max.8)
@@ -400,9 +400,9 @@ void sensorTask(void *param){
                     // Send to NMEA200 bus for each sensor with instance number
                     if(!isnan(tempC)){
                         sensors.onewireTemp[i] = tempC; // Save values in SensorData
+                        api->getLogger()->logDebug(GwLog::DEBUG,"DS18B20-%1d Temp: %.1f",i,tempC);
                         SetN2kPGN130316(N2kMsg, 0, i, N2kts_OutsideTemperature, CToKelvin(tempC), N2kDoubleNA);
                         api->sendN2kMessage(N2kMsg);
-                        api->getLogger()->logDebug(GwLog::LOG,"DS18B20-%1d Temp: %.1f",i,tempC);
                     }
                 }    
             }
