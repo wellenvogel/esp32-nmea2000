@@ -87,6 +87,22 @@ void sensorTask(void *param){
         digitalWrite(OBP_DIRECTION_PIN, true);
     }
 
+    // Internal voltage sensor initialization
+    String powsensor1 = api->getConfig()->getConfigItem(api->getConfig()->usePowSensor1, true)->asString();
+    double voffset = (api->getConfig()->getConfigItem(api->getConfig()->vOffset,true)->asString()).toFloat();
+    double vslope = (api->getConfig()->getConfigItem(api->getConfig()->vSlope,true)->asString()).toFloat();
+    if(String(powsensor1) == "off"){
+        sensors.batteryVoltage = (float(analogRead(OBP_ANALOG0)) * 3.3 / 4096 + 0.17) * 20;   // Vin = 1/20
+        sensors.batteryVoltage = sensors.batteryVoltage * vslope + voffset; // Calibration
+        sensors.batteryCurrent = 0;
+        sensors.batteryPower = 0;
+        // Fill average arrays with start values
+        for (int i=1; i<=avgsize+1; ++i) {
+            batV.reading(int(sensors.batteryVoltage * 100));
+            batC.reading(int(sensors.batteryCurrent * 10));
+        }
+    }
+
     // Settings for 1Wire bus
     String oneWireOn=api->getConfig()->getConfigItem(api->getConfig()->useTempSensor,true)->asString();
     int numberOfDevices;
@@ -244,7 +260,6 @@ void sensorTask(void *param){
     }
 
     // Settings for power amangement sensors INA226 #1 for Battery on I2C bus
-    String powsensor1 = api->getConfig()->getConfigItem(api->getConfig()->usePowSensor1, true)->asString();
     String shunt1 = api->getConfig()->getConfigItem(api->getConfig()->shunt1, true)->asString();
     // Settings for power amangement sensors INA226 #1 for Solar on I2C bus
     String powsensor2 = api->getConfig()->getConfigItem(api->getConfig()->usePowSensor2, true)->asString();
@@ -325,8 +340,6 @@ void sensorTask(void *param){
     }
 
     int rotoffset = api->getConfig()->getConfigItem(api->getConfig()->rotOffset,true)->asInt();
-    double voffset = (api->getConfig()->getConfigItem(api->getConfig()->vOffset,true)->asString()).toFloat();
-    double vslope = (api->getConfig()->getConfigItem(api->getConfig()->vSlope,true)->asString()).toFloat();
 
     static long loopCounter = 0;    // Loop counter for 1Wire data transmission
     long starttime0 = millis();     // GPS update all 100ms
