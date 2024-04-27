@@ -536,7 +536,6 @@
         "description": "Settings for power mode",
         "list": [
             "Max Power",
-            "Only 3.3V",
             "Only 5.0V",
             "Min Power"
         ],
