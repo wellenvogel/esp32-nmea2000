@@ -166,6 +166,9 @@ For details refer to the [example description](lib/exampletask/Readme.md).
 
 Changelog
 ---------
+[20240428](../../releases/tag/20240428)
+**********
+* fix build error with M5 gps kit
 [20240324](../../releases/tag/20240324)
 **********
 * add [SSI rotary encoders](doc/Sensors.md)
