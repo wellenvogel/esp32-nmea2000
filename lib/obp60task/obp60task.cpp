@@ -428,7 +428,6 @@ void OBP60Task(GwApi *api){
     long starttime3 = millis();     // Display update all 1s
     long starttime4 = millis();     // Delayed display update after 4s when select a new page
     long starttime5 = millis();     // Calculate sunrise and sunset all 1s
-
     
     // Main loop runs with 100ms
     //####################################################################################
@@ -440,7 +439,7 @@ void OBP60Task(GwApi *api){
         // Undervoltage detection
         if(uvoltage == true){
             underVoltageDetection(api);
-        }
+        }  
 
         if(millis() > starttime0 + 100){
             starttime0 = millis();
