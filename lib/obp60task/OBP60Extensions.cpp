@@ -410,8 +410,8 @@ void solarGraphic(uint x, uint y, int pcolor, int bcolor){
         getdisplay().fillRect(xb, yb+54-t, 100, t, pcolor);
         // Draw vertical lines
         getdisplay().fillRect(xb+19+t, yb, t, 80, pcolor);
-        getdisplay().fillRect(xb+38+2*t, yb, t, 80, pcolor);
-        getdisplay().fillRect(xb+57+3*t, yb, t, 80, pcolor);
+        getdisplay().fillRect(xb+39+2*t, yb, t, 80, pcolor);
+        getdisplay().fillRect(xb+59+3*t, yb, t, 80, pcolor);
 
 }
 
