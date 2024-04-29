@@ -153,12 +153,12 @@ void setFlashLED(bool status){
     else{
         fled[0] = CRGB::Black;  // Flash LED off
     }
-    FastLED.show();  
+    FastLED.show();
 }
 
 void blinkingFlashLED(){
     if(blinkingLED == true){
-        statusLED = !statusLED;
+        statusLED = !statusLED;     // Toggle LED for each run
         FastLED.setBrightness(255); // Brightness for flash LED
         if(statusLED == true){
             fled[0] = CRGB::Red;    // Flash LED on in red
@@ -170,8 +170,8 @@ void blinkingFlashLED(){
     }    
 }
 
-void setBlinkingLED(bool on){
-    blinkingLED = on;
+void setBlinkingLED(bool status){
+    blinkingLED = status;
 }
 
 uint buzzerpower = 50;
