@@ -55,7 +55,7 @@ PLATFORMS = {
     "ESP32S3": "esp32s3"
 }
 
-BACKTRACE_REGEX = re.compile(r"(?:\s+(0x40[0-2](?:\d|[a-f]|[A-F]){5}):0x(?:\d|[a-f]|[A-F]){8})\b")
+BACKTRACE_REGEX = re.compile(r"(?:\s+(0x4[0-9a-fA-F][0-9a-fA-F](?:\d|[a-f]|[A-F]){5}):0x(?:\d|[a-f]|[A-F]){8})\b")
 EXCEPTION_REGEX = re.compile("^Exception \\((?P<exc>[0-9]*)\\):$")
 COUNTER_REGEX = re.compile('^epc1=(?P<epc1>0x[0-9a-f]+) epc2=(?P<epc2>0x[0-9a-f]+) epc3=(?P<epc3>0x[0-9a-f]+) '
                            'excvaddr=(?P<excvaddr>0x[0-9a-f]+) depc=(?P<depc>0x[0-9a-f]+)$')
@@ -65,6 +65,7 @@ STACK_BEGIN = '>>>stack>>>'
 STACK_END = '<<<stack<<<'
 STACK_REGEX = re.compile(
     '^(?P<off>[0-9a-f]+):\W+(?P<c1>[0-9a-f]+) (?P<c2>[0-9a-f]+) (?P<c3>[0-9a-f]+) (?P<c4>[0-9a-f]+)(\W.*)?$')
+CORE_REGEXP=re.compile('^Core')
 
 StackLine = namedtuple("StackLine", ["offset", "content"])
 
@@ -84,7 +85,8 @@ class ExceptionDataParser(object):
         self.sp = None
         self.end = None
         self.offset = None
-
+        self.line = 0
+        self.core = None
         self.stack = []
 
     def _parse_backtrace(self, line):
@@ -143,19 +145,27 @@ class ExceptionDataParser(object):
         return None
 
     def parse_file(self, file, platform, stack_only=False):
+        lc=0
         if platform == 'ESP32' or platform == 'ESP32S3':
             func = self._parse_backtrace
         else:
             func = self._parse_exception
             if stack_only:
                 func = self._parse_stack_begin
-
+        hasresult=False
         for line in file:
-            func = func(line.strip())
-            if func is None:
-                break
+            if CORE_REGEXP.match(line):
+                self.core=re.sub("(Core\s+[0-9]+).*",r"\1",line.strip())
+            lc+=1
+            nextfunc = func(line.strip())
+            if nextfunc is None:
+                hasresult=True
+                self.line=lc
+                yield(self)
+                self.__init__()
 
-        if func is not None:
+
+        if not hasresult:
             print("ERROR: Parser not complete!")
             sys.exit(1)
 
@@ -249,6 +259,9 @@ def print_stack(lines, resolver):
 
 
 def print_result(parser, resolver, platform, full=True, stack_only=False):
+    print("##line %d"%parser.line)
+    if parser.core is not None:
+        print("##",parser.core)
     if platform == 'ESP8266' and not stack_only:
         print('Exception: {} ({})'.format(parser.exception, EXCEPTIONS[parser.exception]))
 
@@ -314,7 +327,6 @@ if __name__ == "__main__":
     parser = ExceptionDataParser()
     resolver = AddressResolver(addr2line, elf_file)
 
-    parser.parse_file(file, args.platform, args.stack_only)
-    resolver.fill(parser)
-
-    print_result(parser, resolver, args.platform, args.full, args.stack_only)
+    for result in parser.parse_file(file, args.platform, args.stack_only):
+        resolver.fill(result)
+        print_result(result, resolver, args.platform, args.full, args.stack_only)
