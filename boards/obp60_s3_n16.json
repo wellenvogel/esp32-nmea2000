@@ -39,7 +39,7 @@
     "arduino",
     "espidf"
   ],
-  "name": "OBP60 ESP32-S3-N8 (8 MB QD, No PSRAM)",
+  "name": "OBP60 ESP32-S3-N16 (16 MB QD, No PSRAM)",
   "upload": {
     "flash_size": "16MB",
     "maximum_ram_size": 327680,
