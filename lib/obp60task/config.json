@@ -584,7 +584,7 @@
         "name": "vOffset",
         "label": "VSensor Offset",
         "type": "number",
-        "default": "0.00",
+        "default": "-1.00",
         "description": "Offset for internal voltage sensor (ESP32)",
         "category": "OBP60 Calibrations",
         "capabilities": {
