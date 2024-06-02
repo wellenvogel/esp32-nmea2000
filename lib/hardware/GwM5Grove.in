@@ -143,3 +143,22 @@
     #error "both serial devices already in use"
   #endif
 #endif
+
+#GROVE
+#ifdef GWBMP280G1$GS$
+  #ifndef M5_GROOVEIIC$GS$
+    #define M5_GROOVEIIC$GS$
+  #endif
+  GROOVE_IIC(BMP280,$Z$,1)
+  #define _GWBMP280
+#endif
+
+#GROVE
+#ifdef GWBMP280G2$GS$
+  #ifndef M5_GROOVEIIC$GS$
+    #define M5_GROOVEIIC$GS$
+  #endif
+  GROOVE_IIC(BMP280,$Z$,2)
+  #define _GWBMP280
+#endif
+
