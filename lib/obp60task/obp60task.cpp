@@ -46,8 +46,13 @@ void OBP60Init(GwApi *api){
 
     // Init hardware
     hardwareInit();
-    // static const bool useFastFullUpdate = true; // For high speed full update e-paper
-    static const bool useFastFullUpdate = false; // For normal speed full update e-paper
+
+    #ifdef DISPLAY_GDEY042T81
+    if(FAST_FULL_UPDATE == true){
+        static const bool useFastFullUpdate = true;   // Enable fast full display update only for GDEY042T81
+    }
+    #endif
+
     /*
     setCpuFrequencyMhz(80);
     int freq = getCpuFrequencyMhz();
@@ -535,9 +540,11 @@ void OBP60Task(GwApi *api){
             // Full display update afer a new selected page and 4s wait time
             if(millis() > starttime4 + 4000 && delayedDisplayUpdate == true){
                 getdisplay().setFullWindow();    // Set full update
-                getdisplay().fillScreen(pixelcolor);// Clear display
-                getdisplay().nextPage();         // Full update
-                getdisplay().fillScreen(bgcolor);// Clear display
+                if(FAST_FULL_UPDATE == false){
+                    getdisplay().fillScreen(pixelcolor);// Clear display
+                    getdisplay().nextPage();            // Full update
+                    getdisplay().fillScreen(bgcolor);   // Clear display
+                }
                 getdisplay().nextPage();         // Full update
                 delayedDisplayUpdate = false;
             }
@@ -548,9 +555,11 @@ void OBP60Task(GwApi *api){
                 starttime1 = millis();
                 LOG_DEBUG(GwLog::DEBUG,"E-Ink full refresh first 5 min");
                 getdisplay().setFullWindow();    // Set full update
-                getdisplay().fillScreen(pixelcolor);// Clear display
-                getdisplay().nextPage();         // Full update
-                getdisplay().fillScreen(bgcolor);// Clear display
+                if(FAST_FULL_UPDATE == false){
+                    getdisplay().fillScreen(pixelcolor);// Clear display
+                    getdisplay().nextPage();            // Full update
+                    getdisplay().fillScreen(bgcolor);   // Clear display
+                }
                 getdisplay().nextPage();         // Full update
             }
 
@@ -560,10 +569,11 @@ void OBP60Task(GwApi *api){
                 starttime2 = millis();
                 LOG_DEBUG(GwLog::DEBUG,"E-Ink full refresh");
                 getdisplay().setFullWindow();    // Set full update
-                getdisplay().setFullWindow();    // Set full update
-                getdisplay().fillScreen(pixelcolor);// Clear display
-                getdisplay().nextPage();         // Full update
-                getdisplay().fillScreen(bgcolor);// Clear display
+                if(FAST_FULL_UPDATE == false){
+                    getdisplay().fillScreen(pixelcolor);// Clear display
+                    getdisplay().nextPage();            // Full update
+                    getdisplay().fillScreen(bgcolor);   // Clear display
+                }
                 getdisplay().nextPage();         // Full update
             }
             

@@ -262,7 +262,8 @@ public:
         }
 
         // Update display
-        getdisplay().nextPage();    // Partial update (fast)
+        while(getdisplay().nextPage());    // Partial update (fast)
+        while(getdisplay().nextPage());    // Partial update (fast)
     };
 };
 
