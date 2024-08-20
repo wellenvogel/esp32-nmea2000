@@ -10,7 +10,7 @@
 #include "OBP60Hardware.h"
 #include "OBP60Extensions.h"
 
-// Please dont forget to declarate the fonts in OBP60ExtensionPort.h
+// Character sets
 #include "Ubuntu_Bold8pt7b.h"
 #include "Ubuntu_Bold12pt7b.h"
 #include "Ubuntu_Bold16pt7b.h"

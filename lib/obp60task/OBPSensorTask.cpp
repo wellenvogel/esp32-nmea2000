@@ -6,20 +6,20 @@
 #include <HTU21D.h>                     // Lib for SHT21/HTU21
 #include "AS5600.h"                     // Lib for magnetic rotation sensor AS5600
 #include <INA226.h>                     // Lib for power management IC INA226
-#include <Ticker.h>                     // Timer Lib for timer interrupts
+#include <Ticker.h>                     // Timer Lib for timer
 #include <RTClib.h>                     // DS1388 RTC
 #include <OneWire.h>                    // 1Wire Lib
 #include <DallasTemperature.h>          // Lib for DS18B20
-#include "OBPSensorTask.h"
-#include "OBP60Hardware.h"
-#include "N2kMessages.h"
-#include "NMEA0183.h"
-#include "ObpNmea0183.h"
-#include "OBP60Extensions.h"
+#include "OBPSensorTask.h"              // Lib for sensor reading
+#include "OBP60Hardware.h"              // Hardware definitions
+#include "N2kMessages.h"                // Lib for NMEA2000
+#include "NMEA0183.h"                   // Lib for NMEA0183
+#include "ObpNmea0183.h"                // Check NMEA0183 sentence for uncorrect content
+#include "OBP60Extensions.h"            // Lib for hardware extensions
 #include "movingAvg.h"                  // Lib for moving average building
 
-// Timer Interrupts for hardware functions
-Ticker Timer1(blinkingFlashLED, 500);       // Satrt Timer2 for flash LED all 500ms
+// Timer for hardware functions
+Ticker Timer1(blinkingFlashLED, 500);   // Satrt Timer1 for flash LED all 500ms
 
 // Initialization for all sensors (RS232, I2C, 1Wire, IOs)
 //####################################################################################
@@ -67,12 +67,8 @@ void sensorTask(void *param){
     batV.begin();
     batC.begin();
 
-    // Start timer interrupts
-    bool uvoltage = api->getConfig()->getConfigItem(api->getConfig()->underVoltage,true)->asBoolean();
-    if(uvoltage == true){
-        Timer1.start();     // Start Timer1 for undervoltage detection
-    }
-    Timer1.start();         // Start Timer2 for blinking LED
+    // Start timer
+    Timer1.start(); // Start Timer1 for blinking LED
 
     // Direction settings for NMEA0183
     String nmea0183Mode = api->getConfig()->getConfigItem(api->getConfig()->serialDirection, true)->asString();
@@ -426,6 +422,7 @@ void sensorTask(void *param){
         if(millis() > starttime12 + 500){
             starttime12 = millis();
             if(rtcOn == "DS1388" && RTC_ready == true && GPS_ready == false){
+                // Convert RTC time to Unix system time
                 // https://de.wikipedia.org/wiki/Unixzeit
                 const short daysOfYear[12] = {0,31,59,90,120,151,181,212,243,273,304,334};
                 long unixtime = ds1388.now().get();

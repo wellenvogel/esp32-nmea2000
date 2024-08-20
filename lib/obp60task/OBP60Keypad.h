@@ -8,7 +8,7 @@
 
 // Touch keypad over ESP32 touch sensor inputs  
 
-int keypad[9];          // Raw data array from TTP229
+int keypad[9];          // Raw data array for keys
 int key;                // Value of key [0|1], 0 = touched, 1 = not touched
 int keycode = 0;        // Keycode of pressed key [0...8], 0 = nothing touched
 int keycode2 = 0;       // Keycode of very short pressed key [0...8], 0 = nothing touched
