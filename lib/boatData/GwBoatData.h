@@ -175,41 +175,42 @@ class GwBoatData{
         GwBoatItemBase::GwBoatItemMap values;
     public:
 
-    GWBOATDATA(double,COG,4000,formatCourse)
-    GWBOATDATA(double,TWD,4000,formatCourse)
-    GWBOATDATA(double,SOG,4000,formatKnots)
-    GWBOATDATA(double,STW,4000,formatKnots)
-    GWBOATDATA(double,TWS,4000,formatKnots)
-    GWBOATDATA(double,AWS,4000,formatKnots)
-    GWBOATDATA(double,MaxTws,0,formatKnots)
+    GWBOATDATA(double,COG,4000,formatCourse) // course over ground
+    GWBOATDATA(double,SOG,4000,formatKnots) // speed over ground
+    GWBOATDATA(double,HDG,4000,formatCourse) // true heading
+    GWBOATDATA(double,MHDG,4000,formatCourse) // magnetic heading
+    GWBOATDATA(double,STW,4000,formatKnots) // water speed
+    GWBOATDATA(double,VAR,4000,formatCourse) // variation
+    GWBOATDATA(double,DEV,4000,formatCourse) // deviation
+    GWBOATDATA(double,AWA,4000,formatWind) // apparent wind ANGLE
+    GWBOATDATA(double,AWS,4000,formatKnots) // apparent wind speed
     GWBOATDATA(double,MaxAws,0,formatKnots)
-    GWBOATDATA(double,AWA,4000,formatWind)
-    GWBOATDATA(double,HDG,4000,formatCourse) //true heading
-    GWBOATDATA(double,MHDG,4000,formatCourse) //magnetic heading
-    GWBOATDATA(double,ROT,4000,formatRot)
-    GWBOATDATA(double,VAR,4000,formatCourse) //Variation
-    GWBOATDATA(double,DEV,4000,formatCourse) //Deviation
+    GWBOATDATA(double,TWD,4000,formatCourse) // true wind DIRECTION
+    GWBOATDATA(double,TWA,4000,formatCourse) // true wind ANGLE
+    GWBOATDATA(double,TWS,4000,formatKnots) // true wind speed
+    GWBOATDATA(double,MaxTws,0,formatKnots)
+    GWBOATDATA(double,ROT,4000,formatRot) // rate of turn
+    GWBOATDATA(double,RPOS,4000,formatWind) // rudder position
+    GWBOATDATA(double,PRPOS,4000,formatWind) // secondary rudder position
+    GWBOATDATA(double,LAT,4000,formatLatitude) 
+    GWBOATDATA(double,LON,4000,formatLongitude)
+    GWBOATDATA(double,ALT,4000,formatFixed0) //altitude
     GWBOATDATA(double,HDOP,4000,formatDop)
     GWBOATDATA(double,PDOP,4000,formatDop)
     GWBOATDATA(double,VDOP,4000,formatDop)
-    GWBOATDATA(double,RPOS,4000,formatWind) //RudderPosition
-    GWBOATDATA(double,PRPOS,4000,formatWind) //second rudder pos
-    GWBOATDATA(double,LAT,4000,formatLatitude)
-    GWBOATDATA(double,LON,4000,formatLongitude)
-    GWBOATDATA(double,ALT,4000,formatFixed0) //altitude
     GWBOATDATA(double,DBS,4000,formatDepth) //waterDepth (below surface)
     GWBOATDATA(double,DBT,4000,formatDepth) //DepthTransducer
-    GWBOATDATA(double,GPST,4000,formatTime) //GpsTime
+    GWBOATDATA(double,GPST,4000,formatTime) // GPS time (seconds of day)
+    GWBOATDATA(uint32_t,GPSD,4000,formatDate) // GPS date (days since 1979-01-01)
+    GWBOATDATA(int16_t,TZ,8000,formatFixed0)
     GWBOATDATA(double,WTemp,4000,kelvinToC)
-    GWBOATDATA(double,XTE,4000,formatXte)
-    GWBOATDATA(double,DTW,4000,mtr2nm) //distance wp
-    GWBOATDATA(double,BTW,4000,formatCourse) //bearing wp
-    GWBOATDATA(double,WPLat,4000,formatLatitude)
-    GWBOATDATA(double,WPLon,4000,formatLongitude)
     GWBOATDATA(uint32_t,Log,16000,mtr2nm)
     GWBOATDATA(uint32_t,TripLog,16000,mtr2nm)
-    GWBOATDATA(uint32_t,GPSD,4000,formatDate) //Date
-    GWBOATDATA(int16_t,TZ,8000,formatFixed0)
+    GWBOATDATA(double,DTW,4000,mtr2nm) // distance to waypoint
+    GWBOATDATA(double,BTW,4000,formatCourse) // bearing to waypoint
+    GWBOATDATA(double,XTE,4000,formatXte) // cross track error
+    GWBOATDATA(double,WPLat,4000,formatLatitude) // waypoint latitude
+    GWBOATDATA(double,WPLon,4000,formatLongitude) // waypoint longitude
     GWSPECBOATDATA(GwBoatDataSatList,SatInfo,GwSatInfoList::lifeTime,formatFixed0);
     public:
         GwBoatData(GwLog *logger);

@@ -399,20 +399,20 @@ private:
             return;
         }
         tN2kMsg n2kMsg;
-        tN2kWindReference n2kRef;
+        tN2kWindReference n2kRef; 
         bool shouldSend=false;
         WindAngle=formatDegToRad(WindAngle);
         switch(Reference){
             case NMEA0183Wind_Apparent:
                 n2kRef=N2kWind_Apparent;
                 shouldSend=updateDouble(boatData->AWA,WindAngle,msg.sourceId) && 
-                    updateDouble(boatData->AWS,WindSpeed,msg.sourceId);
+                           updateDouble(boatData->AWS,WindSpeed,msg.sourceId);
                 if (WindSpeed != NMEA0183DoubleNA) boatData->MaxAws->updateMax(WindSpeed);    
                 break;
             case NMEA0183Wind_True:
-                n2kRef=N2kWind_True_North;
-                shouldSend=updateDouble(boatData->TWD,WindAngle,msg.sourceId) && 
-                    updateDouble(boatData->TWS,WindSpeed,msg.sourceId);
+                n2kRef=N2kWind_True_water;
+                shouldSend=updateDouble(boatData->TWA,WindAngle,msg.sourceId) && 
+                           updateDouble(boatData->TWS,WindSpeed,msg.sourceId);
                 if (WindSpeed != NMEA0183DoubleNA) boatData->MaxTws->updateMax(WindSpeed);    
                 break;      
             default:
@@ -467,8 +467,7 @@ private:
 
     void convertMWD(const SNMEA0183Msg &msg)
     {
-        double WindAngle = NMEA0183DoubleNA, WindAngleMagnetic=NMEA0183DoubleNA,
-            WindSpeed = NMEA0183DoubleNA;
+        double WindDirection = NMEA0183DoubleNA, WindDirectionMagnetic=NMEA0183DoubleNA, WindSpeed = NMEA0183DoubleNA;
         if (msg.FieldCount() < 8 )
         {
             LOG_DEBUG(GwLog::DEBUG, "failed to parse MWD %s", msg.line);
@@ -476,11 +475,11 @@ private:
         }
         if (msg.FieldLen(0) > 0 && msg.Field(1)[0] == 'T')
         {
-            WindAngle = formatDegToRad(atof(msg.Field(0)));
+            WindDirection = formatDegToRad(atof(msg.Field(0)));
         }
         if (msg.FieldLen(2) > 0 && msg.Field(3)[0] == 'M')
         {
-            WindAngleMagnetic = formatDegToRad(atof(msg.Field(2)));
+            WindDirectionMagnetic = formatDegToRad(atof(msg.Field(2)));
         }
         if (msg.FieldLen(4) > 0 && msg.Field(5)[0] == 'N')
         {
@@ -497,19 +496,17 @@ private:
         }
         tN2kMsg n2kMsg;
         bool shouldSend = false;
-        if (WindAngle != NMEA0183DoubleNA){
-            shouldSend = updateDouble(boatData->TWD, WindAngle, msg.sourceId) &&
+        if (WindDirection != NMEA0183DoubleNA){
+            shouldSend = updateDouble(boatData->TWD, WindDirection, msg.sourceId) &&
                          updateDouble(boatData->TWS, WindSpeed, msg.sourceId);
             if (WindSpeed != NMEA0183DoubleNA) boatData->MaxTws->updateMax(WindSpeed);             
-        }
-        if (shouldSend)
-        {
-            SetN2kWindSpeed(n2kMsg, 1, WindSpeed, WindAngle, N2kWind_True_North);
-            send(n2kMsg,msg.sourceId,String(n2kMsg.PGN)+String((int)N2kWind_True_North));
-        }
-        if (WindAngleMagnetic != NMEA0183DoubleNA && shouldSend){
-            SetN2kWindSpeed(n2kMsg, 1, WindSpeed, WindAngleMagnetic, N2kWind_Magnetic);
-            send(n2kMsg,msg.sourceId,String(n2kMsg.PGN)+String((int)N2kWind_Magnetic));
+            if(shouldSend && boatData->HDG->isValid()) {
+                double twa = WindDirection-boatData->HDG->getData();
+                if(twa<0) { twa+=2*M_PI; }
+                updateDouble(boatData->TWA, twa, msg.sourceId);
+                SetN2kWindSpeed(n2kMsg, 1, WindSpeed, twa, N2kWind_True_water);
+                send(n2kMsg,msg.sourceId,String(n2kMsg.PGN)+String((int)N2kWind_True_water));
+            }
         }
     }
 

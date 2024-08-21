@@ -468,37 +468,46 @@ private:
     {
         unsigned char SID;
         tN2kWindReference WindReference;
-        tNMEA0183WindReference NMEA0183Reference = NMEA0183Wind_True;
-
-        double x, y;
         double WindAngle=N2kDoubleNA, WindSpeed=N2kDoubleNA;
 
-        if (ParseN2kWindSpeed(N2kMsg, SID, WindSpeed, WindAngle, WindReference))
-        {
+        if (ParseN2kWindSpeed(N2kMsg, SID, WindSpeed, WindAngle, WindReference)) {
             tNMEA0183Msg NMEA0183Msg;
+            tNMEA0183WindReference NMEA0183Reference;
+            bool shouldSend = false;
 
-            if (WindReference == N2kWind_Apparent)
-            {
+            // MWV sentence contains apparent/true ANGLE and SPEED
+            // https://gpsd.gitlab.io/gpsd/NMEA.html#_mwv_wind_speed_and_angle
+            // https://docs.vaisala.com/r/M211109EN-L/en-US/GUID-7402DEF8-5E82-446F-B63E-998F49F3D743/GUID-C77934C7-2A72-466E-BC52-CE6B8CC7ACB6
+
+            if (WindReference == N2kWind_Apparent) {
                 NMEA0183Reference = NMEA0183Wind_Apparent;
                 updateDouble(boatData->AWA, WindAngle);
                 updateDouble(boatData->AWS, WindSpeed);
                 setMax(boatData->MaxAws, boatData->AWS);
-            }
-            if (WindReference == N2kWind_True_North)
-            {
+                shouldSend = true;
+            } 
+            if (WindReference == N2kWind_True_water) {
                 NMEA0183Reference = NMEA0183Wind_True;
-                updateDouble(boatData->TWD, WindAngle);
+                updateDouble(boatData->TWA, WindAngle);
                 updateDouble(boatData->TWS, WindSpeed);
+                setMax(boatData->MaxTws, boatData->TWS);
+                shouldSend = true;
+                if (boatData->HDG->isValid()) {
+                    double twd = WindAngle+boatData->HDG->getData();
+                    if (twd>2*M_PI) { twd-=2*M_PI; }
+                    updateDouble(boatData->TWD, twd);
+                }
             }
 
-            if (NMEA0183SetMWV(NMEA0183Msg, formatCourse(WindAngle), NMEA0183Reference, WindSpeed,talkerId))
+            if (shouldSend && NMEA0183SetMWV(NMEA0183Msg, formatCourse(WindAngle), NMEA0183Reference, WindSpeed, talkerId)) {
                 SendMessage(NMEA0183Msg);
+            }
 
-            if (WindReference == N2kWind_Apparent && boatData->SOG->isValid())
+            /* if (WindReference == N2kWind_Apparent && boatData->SOG->isValid())
             { // Lets calculate and send TWS/TWA if SOG is available
 
-                x = WindSpeed * cos(WindAngle);
-                y = WindSpeed * sin(WindAngle);
+                double x = WindSpeed * cos(WindAngle);
+                double y = WindSpeed * sin(WindAngle);
 
                 updateDouble(boatData->TWD, atan2(y, -boatData->SOG->getData() + x));
                 updateDouble(boatData->TWS, sqrt((y * y) + ((-boatData->SOG->getData() + x) * (-boatData->SOG->getData() + x))));
@@ -534,7 +543,7 @@ private:
                     return;
 
                 SendMessage(NMEA0183Msg);
-            }
+            } */
         }
     }
     //*****************************************************************************
