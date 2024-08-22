@@ -177,8 +177,8 @@ class GwBoatData{
 
     GWBOATDATA(double,COG,4000,formatCourse) // course over ground
     GWBOATDATA(double,SOG,4000,formatKnots) // speed over ground
-    GWBOATDATA(double,HDG,4000,formatCourse) // true heading
-    GWBOATDATA(double,MHDG,4000,formatCourse) // magnetic heading
+    GWBOATDATA(double,HDT,4000,formatCourse) // true heading
+    GWBOATDATA(double,HDM,4000,formatCourse) // magnetic heading
     GWBOATDATA(double,STW,4000,formatKnots) // water speed
     GWBOATDATA(double,VAR,4000,formatCourse) // variation
     GWBOATDATA(double,DEV,4000,formatCourse) // deviation

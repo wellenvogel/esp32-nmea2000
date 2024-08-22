@@ -185,13 +185,13 @@ private:
             if (N2kIsNA(Variation)){
                 //no variation
                 if (ref == N2khr_magnetic){
-                    updateDouble(boatData->MHDG,Heading);
+                    updateDouble(boatData->HDM,Heading);
                     if (NMEA0183SetHDM(NMEA0183Msg,Heading,talkerId)){
                         SendMessage(NMEA0183Msg);
                     }    
                 }
                 if (ref == N2khr_true){
-                    updateDouble(boatData->HDG,Heading);
+                    updateDouble(boatData->HDT,Heading);
                     if (NMEA0183SetHDT(NMEA0183Msg,Heading,talkerId)){
                         SendMessage(NMEA0183Msg);
                     }
@@ -206,8 +206,8 @@ private:
                 if (ref == N2khr_true){
                     MagneticHeading=Heading-Variation;
                 }
-                updateDouble(boatData->MHDG,MagneticHeading);
-                updateDouble(boatData->HDG,Heading);
+                updateDouble(boatData->HDM,MagneticHeading);
+                updateDouble(boatData->HDT,Heading);
                 if (!N2kIsNA(MagneticHeading)){
                     if (NMEA0183SetHDG(NMEA0183Msg, MagneticHeading,_Deviation, 
                         Variation,talkerId))
@@ -252,8 +252,8 @@ private:
             tNMEA0183Msg NMEA0183Msg;
             updateDouble(boatData->STW, WaterReferenced);
             unsigned long now = millis();
-            double MagneticHeading = (boatData->HDG->isValid(now) && boatData->VAR->isValid(now)) ? boatData->HDG->getData() + boatData->VAR->getData() : NMEA0183DoubleNA;
-            if (NMEA0183SetVHW(NMEA0183Msg, boatData->HDG->getDataWithDefault(NMEA0183DoubleNA), MagneticHeading, WaterReferenced,talkerId))
+            double MagneticHeading = (boatData->HDT->isValid(now) && boatData->VAR->isValid(now)) ? boatData->HDT->getData() + boatData->VAR->getData() : NMEA0183DoubleNA;
+            if (NMEA0183SetVHW(NMEA0183Msg, boatData->HDT->getDataWithDefault(NMEA0183DoubleNA), MagneticHeading, WaterReferenced,talkerId))
             {
                 SendMessage(NMEA0183Msg);
             }
@@ -492,8 +492,8 @@ private:
                 updateDouble(boatData->TWS, WindSpeed);
                 setMax(boatData->MaxTws, boatData->TWS);
                 shouldSend = true;
-                if (boatData->HDG->isValid()) {
-                    double twd = WindAngle+boatData->HDG->getData();
+                if (boatData->HDT->isValid()) {
+                    double twd = WindAngle+boatData->HDT->getData();
                     if (twd>2*M_PI) { twd-=2*M_PI; }
                     updateDouble(boatData->TWD, twd);
                 }

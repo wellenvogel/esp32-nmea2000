@@ -500,8 +500,8 @@ private:
             shouldSend = updateDouble(boatData->TWD, WindDirection, msg.sourceId) &&
                          updateDouble(boatData->TWS, WindSpeed, msg.sourceId);
             if (WindSpeed != NMEA0183DoubleNA) boatData->MaxTws->updateMax(WindSpeed);             
-            if(shouldSend && boatData->HDG->isValid()) {
-                double twa = WindDirection-boatData->HDG->getData();
+            if(shouldSend && boatData->HDT->isValid()) {
+                double twa = WindDirection-boatData->HDT->getData();
                 if(twa<0) { twa+=2*M_PI; }
                 updateDouble(boatData->TWA, twa, msg.sourceId);
                 SetN2kWindSpeed(n2kMsg, 1, WindSpeed, twa, N2kWind_True_water);
@@ -511,15 +511,15 @@ private:
     }
 
     void convertHDM(const SNMEA0183Msg &msg){
-        double MHDG=NMEA0183DoubleNA;
-        if (!NMEA0183ParseHDM_nc(msg, MHDG))
+        double HDM=NMEA0183DoubleNA;
+        if (!NMEA0183ParseHDM_nc(msg, HDM))
         {
             LOG_DEBUG(GwLog::DEBUG, "failed to parse HDM %s", msg.line);
             return;
         }
-        if (! UD(MHDG)) return;
+        if (! UD(HDM)) return;
         tN2kMsg n2kMsg;
-        SetN2kMagneticHeading(n2kMsg,1,MHDG,
+        SetN2kMagneticHeading(n2kMsg,1,HDM,
             boatData->VAR->getDataWithDefault(N2kDoubleNA),
             boatData->DEV->getDataWithDefault(N2kDoubleNA)
         );
@@ -527,28 +527,29 @@ private:
     }
     
     void convertHDT(const SNMEA0183Msg &msg){
-        double HDG=NMEA0183DoubleNA;
-        if (!NMEA0183ParseHDT_nc(msg, HDG))
+        double HDT=NMEA0183DoubleNA;
+        if (!NMEA0183ParseHDT_nc(msg, HDT))
         {
             LOG_DEBUG(GwLog::DEBUG, "failed to parse HDT %s", msg.line);
             return;
         }
-        if (! UD(HDG)) return;
+        if (! UD(HDT)) return;
         tN2kMsg n2kMsg;
-        SetN2kTrueHeading(n2kMsg,1,HDG);
+        SetN2kTrueHeading(n2kMsg,1,HDT);
         send(n2kMsg,msg.sourceId);    
     }
+    
     void convertHDG(const SNMEA0183Msg &msg){
-        double MHDG=NMEA0183DoubleNA;
-        double VAR=NMEA0183DoubleNA;
+        double HDM=NMEA0183DoubleNA;
         double DEV=NMEA0183DoubleNA;
+        double VAR=NMEA0183DoubleNA;
         if (msg.FieldCount() < 5)
         {
             LOG_DEBUG(GwLog::DEBUG, "failed to parse HDG %s", msg.line);
             return;
         }
         if (msg.FieldLen(0)>0){
-            MHDG=formatDegToRad(atof(msg.Field(0)));
+            HDM=formatDegToRad(atof(msg.Field(0)));
         }
         else{
             return;
@@ -562,11 +563,11 @@ private:
             if (msg.Field(4)[0] == 'W') VAR=-VAR;
         }
 
-        if (! UD(MHDG)) return;
+        if (! UD(HDM)) return;
         UD(VAR);
         UD(DEV);
         tN2kMsg n2kMsg;
-        SetN2kMagneticHeading(n2kMsg,1,MHDG,DEV,VAR);
+        SetN2kMagneticHeading(n2kMsg,1,HDM,DEV,VAR);
         send(n2kMsg,msg.sourceId,"127250M");    
     }
 
@@ -702,11 +703,11 @@ private:
             return;
         }
         tN2kMsg n2kMsg;
-        if (updateDouble(boatData->HDG,TrueHeading,msg.sourceId)){
+        if (updateDouble(boatData->HDT,TrueHeading,msg.sourceId)){
             SetN2kTrueHeading(n2kMsg,1,TrueHeading);
             send(n2kMsg,msg.sourceId); 
         }
-        if(updateDouble(boatData->MHDG,MagneticHeading,msg.sourceId)){
+        if(updateDouble(boatData->HDM,MagneticHeading,msg.sourceId)){
             SetN2kMagneticHeading(n2kMsg,1,MagneticHeading,
                 boatData->DEV->getDataWithDefault(N2kDoubleNA),
                 boatData->VAR->getDataWithDefault(N2kDoubleNA)
