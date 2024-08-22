@@ -180,13 +180,13 @@ class GwBoatData{
     GWBOATDATA(double,HDT,4000,formatCourse) // true heading
     GWBOATDATA(double,HDM,4000,formatCourse) // magnetic heading
     GWBOATDATA(double,STW,4000,formatKnots) // water speed
-    GWBOATDATA(double,VAR,4000,formatCourse) // variation
-    GWBOATDATA(double,DEV,4000,formatCourse) // deviation
+    GWBOATDATA(double,VAR,4000,formatWind) // variation
+    GWBOATDATA(double,DEV,4000,formatWind) // deviation
     GWBOATDATA(double,AWA,4000,formatWind) // apparent wind ANGLE
     GWBOATDATA(double,AWS,4000,formatKnots) // apparent wind speed
     GWBOATDATA(double,MaxAws,0,formatKnots)
     GWBOATDATA(double,TWD,4000,formatCourse) // true wind DIRECTION
-    GWBOATDATA(double,TWA,4000,formatCourse) // true wind ANGLE
+    GWBOATDATA(double,TWA,4000,formatWind) // true wind ANGLE
     GWBOATDATA(double,TWS,4000,formatKnots) // true wind speed
     GWBOATDATA(double,MaxTws,0,formatKnots)
     GWBOATDATA(double,ROT,4000,formatRot) // rate of turn
