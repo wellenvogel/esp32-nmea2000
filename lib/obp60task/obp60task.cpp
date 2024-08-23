@@ -553,7 +553,6 @@ void OBP60Task(GwApi *api){
             // This needs for a better display contrast after power on in cold or warm environments
             if(millis() < firststart + (5 * 60 * 1000) && millis() > starttime1 + (60 * 1000)){
                 starttime1 = millis();
-                starttime2 = millis();
                 LOG_DEBUG(GwLog::DEBUG,"E-Ink full refresh first 5 min");
                 getdisplay().setFullWindow();    // Set full update
                 if(FAST_FULL_UPDATE == false){
