@@ -1,0 +1,6 @@
+Partition table fpr OBP60 V2.1
+
+0x0000  - 0x3FFF 16k Boatloader
+0x8000  - 0x8FFF 4k Partition table
+0xE000  - 0xFFFF 8k Application starter
+0x10000 - 0x1xxxx OBP60 Firmware
