@@ -539,8 +539,6 @@ void OBP60Task(GwApi *api){
             
             // Full display update afer a new selected page and 4s wait time
             if(millis() > starttime4 + 4000 && delayedDisplayUpdate == true){
-                starttime1 = millis();
-                starttime2 = millis();
                 getdisplay().setFullWindow();    // Set full update
                 if(FAST_FULL_UPDATE == false){
                     getdisplay().fillScreen(pixelcolor);// Clear display
