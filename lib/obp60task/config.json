@@ -650,7 +650,32 @@
         "label": "Refresh",
         "type": "boolean",
         "default": "true",
-        "description": "Refresh E-Ink display after each new page request to reduce ghost effects [on|off]",
+        "description": "Refresh e-paper display after each new page request to reduce ghost effects [on|off]",
+        "category": "OBP60 Display",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "fastRefresh",
+        "label": "Fast Refresh",
+        "type": "boolean",
+        "default": "true",
+        "description": "Fast refresh for e-paper display [on|off]",
+        "category": "OBP60 Display",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "fullRefreshTime",
+        "label": "Full Refresh Time [min]",
+        "type": "number",
+        "default": "10",
+        "check": "checkMinMax",
+        "min": 1,
+        "max": 10,
+        "description": "E-Paper full refresh time all [1...10 min]",
         "category": "OBP60 Display",
         "capabilities": {
             "obp60":"true"

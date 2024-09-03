@@ -47,8 +47,11 @@ void OBP60Init(GwApi *api){
     // Init hardware
     hardwareInit();
 
+    // Settings for e-paper display
+    String fastrefresh = api->getConfig()->getConfigItem(api->getConfig()->fastRefresh,true)->asString();
+    api->getLogger()->logDebug(GwLog::DEBUG,"Fast Refresh Mode is: %s", fastrefresh);
     #ifdef DISPLAY_GDEY042T81
-    if(FAST_FULL_UPDATE == true){
+    if(fastrefresh == "On"){
         static const bool useFastFullUpdate = true;   // Enable fast full display update only for GDEY042T81
     }
     #endif
@@ -296,6 +299,8 @@ void OBP60Task(GwApi *api){
     String systemname = api->getConfig()->getConfigItem(api->getConfig()->systemName,true)->asString();
     String wifipass = api->getConfig()->getConfigItem(api->getConfig()->apPassword,true)->asString();
     bool refreshmode = api->getConfig()->getConfigItem(api->getConfig()->refresh,true)->asBoolean();
+    String fastrefresh = api->getConfig()->getConfigItem(api->getConfig()->fastRefresh,true)->asString();
+    uint fullrefreshtime = uint(api->getConfig()->getConfigItem(api->getConfig()->fullRefreshTime,true)->asInt());
     int textcolor = GxEPD_BLACK;
     int pixelcolor = GxEPD_BLACK;
     int bgcolor = GxEPD_WHITE;
@@ -542,7 +547,7 @@ void OBP60Task(GwApi *api){
                 starttime1 = millis();
                 starttime2 = millis();
                 getdisplay().setFullWindow();    // Set full update
-                if(FAST_FULL_UPDATE == false){
+                if(fastrefresh == "Off"){
                     getdisplay().fillScreen(pixelcolor);// Clear display
                     getdisplay().nextPage();            // Full update
                     getdisplay().fillScreen(bgcolor);   // Clear display
@@ -558,7 +563,7 @@ void OBP60Task(GwApi *api){
                 starttime2 = millis();
                 LOG_DEBUG(GwLog::DEBUG,"E-Ink full refresh first 5 min");
                 getdisplay().setFullWindow();    // Set full update
-                if(FAST_FULL_UPDATE == false){
+                if(fastrefresh == "Off"){
                     getdisplay().fillScreen(pixelcolor);// Clear display
                     getdisplay().nextPage();            // Full update
                     getdisplay().fillScreen(bgcolor);   // Clear display
@@ -567,12 +572,11 @@ void OBP60Task(GwApi *api){
             }
 
             // Subtask E-Ink full refresh
-            //if(millis() > starttime2 + FULL_REFRESH_TIME * 1000){
-            if(millis() > starttime2 + 1 * 60 * 1000){
+            if(millis() > starttime2 + fullrefreshtime * 60 * 1000){
                 starttime2 = millis();
                 LOG_DEBUG(GwLog::DEBUG,"E-Ink full refresh");
                 getdisplay().setFullWindow();    // Set full update
-                if(FAST_FULL_UPDATE == false){
+                if(fastrefresh == "Off"){
                     getdisplay().fillScreen(pixelcolor);// Clear display
                     getdisplay().nextPage();            // Full update
                     getdisplay().fillScreen(bgcolor);   // Clear display

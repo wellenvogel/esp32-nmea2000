@@ -38,7 +38,6 @@
     #define OBP_SPI_CLK 38
     #define OBP_SPI_DIN 48
     #define SHOW_TIME 6000        // Show time in [ms] for logo and WiFi QR code
-    #define FAST_FULL_UPDATE false// Enable fast full update for e-paper display GDEY042T81
     #define FULL_REFRESH_TIME 600 // Refresh cycle time in [s][600...3600] for full display update (very important healcy function)
     #define MAX_PAGE_NUMBER 10    // Max number of pages for show data
     #define FONT1 "Ubuntu_Bold8pt7b"
