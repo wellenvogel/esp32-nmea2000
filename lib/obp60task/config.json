@@ -660,7 +660,7 @@
         "name": "fastRefresh",
         "label": "Fast Refresh",
         "type": "boolean",
-        "default": "true",
+        "default": "false",
         "description": "Fast refresh for e-paper display [on|off]",
         "category": "OBP60 Display",
         "capabilities": {

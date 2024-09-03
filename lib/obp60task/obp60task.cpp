@@ -51,7 +51,7 @@ void OBP60Init(GwApi *api){
     String fastrefresh = api->getConfig()->getConfigItem(api->getConfig()->fastRefresh,true)->asString();
     api->getLogger()->logDebug(GwLog::DEBUG,"Fast Refresh Mode is: %s", fastrefresh);
     #ifdef DISPLAY_GDEY042T81
-    if(fastrefresh == "On"){
+    if(fastrefresh == "true"){
         static const bool useFastFullUpdate = true;   // Enable fast full display update only for GDEY042T81
     }
     #endif
@@ -79,7 +79,7 @@ void OBP60Init(GwApi *api){
 
     // Settings flash LED mode
     String ledMode = api->getConfig()->getConfigItem(api->getConfig()->flashLED,true)->asString();
-    api->getLogger()->logDebug(GwLog::DEBUG,"Backlight Mode is: %s", ledMode);
+    api->getLogger()->logDebug(GwLog::DEBUG,"LED Mode is: %s", ledMode);
     if(String(ledMode) == "Off"){
         setBlinkingLED(false);
     }
@@ -547,7 +547,7 @@ void OBP60Task(GwApi *api){
                 starttime1 = millis();
                 starttime2 = millis();
                 getdisplay().setFullWindow();    // Set full update
-                if(fastrefresh == "Off"){
+                if(fastrefresh == "false"){
                     getdisplay().fillScreen(pixelcolor);// Clear display
                     getdisplay().nextPage();            // Full update
                     getdisplay().fillScreen(bgcolor);   // Clear display
@@ -563,7 +563,7 @@ void OBP60Task(GwApi *api){
                 starttime2 = millis();
                 LOG_DEBUG(GwLog::DEBUG,"E-Ink full refresh first 5 min");
                 getdisplay().setFullWindow();    // Set full update
-                if(fastrefresh == "Off"){
+                if(fastrefresh == "false"){
                     getdisplay().fillScreen(pixelcolor);// Clear display
                     getdisplay().nextPage();            // Full update
                     getdisplay().fillScreen(bgcolor);   // Clear display
@@ -576,7 +576,7 @@ void OBP60Task(GwApi *api){
                 starttime2 = millis();
                 LOG_DEBUG(GwLog::DEBUG,"E-Ink full refresh");
                 getdisplay().setFullWindow();    // Set full update
-                if(fastrefresh == "Off"){
+                if(fastrefresh == "false"){
                     getdisplay().fillScreen(pixelcolor);// Clear display
                     getdisplay().nextPage();            // Full update
                     getdisplay().fillScreen(bgcolor);   // Clear display
