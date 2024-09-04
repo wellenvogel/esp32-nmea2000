@@ -1,4 +1,5 @@
-Partition table fpr OBP60 V2.1
+Partition table for OBP60 V2.1
+based on default_16MB.csv
 
 Start      End       Size      Type  Content
 ---------------------------------------------------------------
