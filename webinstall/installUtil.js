@@ -1,4 +1,4 @@
-import {ESPLoader,Transport} from "https://cdn.jsdelivr.net/npm/esptool-js@0.2.1/bundle.js";
+import {ESPLoader,Transport} from "https://cdn.jsdelivr.net/npm/esptool-js@0.4.5/bundle.js";
 /**
  * write all messages to the console
  */
@@ -102,9 +102,13 @@ class ESPInstaller{
                     await this.consoleReader.cancel();
                     this.consoleReader=undefined;
                 }
-                await this.consoleDevice.close();
             }catch(e){
                 console.log(`error cancel serial read ${e}`);
+            }
+            try{
+                await this.consoleDevice.close();
+            }catch(e){
+                console.log('error closing console device', this.consoleDevice,e);
             }
             this.consoleDevice=undefined;
         }
@@ -126,13 +130,17 @@ class ESPInstaller{
         }
         try {
             this.transport = new Transport(device);
-            this.esploader = new ESPLoader(this.transport, 115200, this.espLoaderTerminal);
-            let foundChip = await this.esploader.main_fn();
+            this.esploader = new ESPLoader({
+                transport:this.transport, 
+                baudrate: 115200, 
+                terminal: this.espLoaderTerminal});
+            //this.esploader.debugLogging=true;
+            let foundChip = await this.esploader.main();
             if (!foundChip) {
                 throw new Error("unable to read chip id");
             }
             this.espLoaderTerminal.writeLine(`chip: ${foundChip}`);
-            await this.esploader.flash_id();
+            //await this.esploader.flashId();
             this.chipFamily = this.esploader.chip.CHIP_NAME;
             this.imageChipId = this.esploader.chip.IMAGE_CHIP_ID;
             this.espLoaderTerminal.writeLine(`chipFamily: ${this.chipFamily}`);
@@ -198,12 +206,17 @@ class ESPInstaller{
     async writeFlash(fileList){
         this.checkConnected();
         this.espLoaderTerminal.writeLine(`Flashing....`);
-        await this.esploader.write_flash(
-            fileList,
-            "keep",
-            "keep",
-            "keep",
-            false
+        await this.esploader.writeFlash({
+            fileArray: fileList,
+            flashSize: "keep",
+            flashMode: "keep",
+            flashFreq: "keep",
+            eraseAll: false,
+            compress: true,
+            reportProgress: (fileIndex, written, total)=>{
+                this.espLoaderTerminal.writeLine(`file ${fileIndex}: ${written}/${total}`); 
+            }
+            }
         )
         await this.resetTransport();
         this.espLoaderTerminal.writeLine(`Done.`);
