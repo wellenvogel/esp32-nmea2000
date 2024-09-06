@@ -1,3 +1,4 @@
+#include <esp_wifi.h>
 #include "GWWifi.h"
 
 
@@ -35,7 +36,29 @@ void GwWifi::setup(){
         LOG_DEBUG(GwLog::ERROR,"unable to set access point mask %s, falling back to %s",
             apMask.c_str(),AP_subnet.toString().c_str());
     }
+    //try to remove any existing config from nvs
+    //this will avoid issues when updating from framework 6.3.2 to 6.8.1 - see #78
+    //we do not need the nvs config any way - so we set persistent to false
+    //unfortunately this will be to late (config from nvs has already been loaded)
+    //if we update from an older version that has config in the nvs
+    //so we need to make a dummy init, erase the flash and deinit
+    wifi_config_t conf_current;
+    wifi_init_config_t conf=WIFI_INIT_CONFIG_DEFAULT();
+    esp_err_t err=esp_wifi_init(&conf);
+    esp_wifi_get_config((wifi_interface_t)WIFI_IF_AP, &conf_current);
+    LOG_DEBUG(GwLog::DEBUG,"Wifi AP old config before reset ssid=%s, pass=%s, channel=%d",conf_current.ap.ssid,conf_current.ap.password,conf_current.ap.channel);
+    if (err){
+        LOG_DEBUG(GwLog::ERROR,"unable to pre-init wifi: %d",(int)err);
+    }
+    err=esp_wifi_restore();
+    if (err){
+        LOG_DEBUG(GwLog::ERROR,"unable to reset wifi: %d",(int)err);
+    }
+    err=esp_wifi_deinit();
+    WiFi.persistent(false);
     WiFi.mode(WIFI_MODE_APSTA); //enable both AP and client
+    esp_wifi_get_config((wifi_interface_t)WIFI_IF_AP, &conf_current);
+    LOG_DEBUG(GwLog::DEBUG,"Wifi AP old config after reset ssid=%s, pass=%s, channel=%d",conf_current.ap.ssid,conf_current.ap.password,conf_current.ap.channel);
     const char *ssid=config->getConfigItem(config->systemName)->asCString();
     if (fixedApPass){
         WiFi.softAP(ssid,AP_password);
@@ -45,7 +68,7 @@ void GwWifi::setup(){
     }
     delay(100);
     WiFi.softAPConfig(AP_local_ip, AP_gateway, AP_subnet);
-    LOG_DEBUG(GwLog::LOG,"WifiAP created: ssid=%s,adress=%s",
+    LOG_DEBUG(GwLog::ERROR,"WifiAP created: ssid=%s,adress=%s",
         ssid,
         WiFi.softAPIP().toString().c_str()
         );
