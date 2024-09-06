@@ -213,9 +213,9 @@ class ESPInstaller{
             flashFreq: "keep",
             eraseAll: false,
             compress: true,
-            reportProgress: (fileIndex, written, total)=>{
+            /*reportProgress: (fileIndex, written, total)=>{
                 this.espLoaderTerminal.writeLine(`file ${fileIndex}: ${written}/${total}`); 
-            }
+            }*/
             }
         )
         await this.resetTransport();
