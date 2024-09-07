@@ -2,6 +2,7 @@
 #include "GwHardware.h"
 #include "GwApi.h"
 #include <driver/spi_master.h>
+#include "ColorTo3Byte.h"
 
 /*
 controlling some WS2812 using SPI
@@ -82,24 +83,18 @@ static Color colorFromMode(GwLedMode cmode){
 
 
 static void colorCompTo3Byte(uint8_t comp,uint8_t *buffer){
-    //test: we assume comp to be 0x7f
-    //meaning 1 0 bit (100) and 7 1 bits (110)
-    /*
-    *buffer=    0b10011011;
-    *(buffer+1)=0b01101101;
-    *(buffer+2)=0b10110110;
-    */
-    *buffer=    0b10010010;
-    *(buffer+1)=0b01001001;
-    *(buffer+2)=0b10110110;
+    for (int i=0;i<3;i++){
+        *(buffer+i)=colorTo3Byte[comp][i];
+    }
 }
 
+//depending on LED strip - handle color order
 static size_t ledsToBuffer(int numLeds,const Color *leds,uint8_t *buffer){
     uint8_t *p=buffer;
     for (int i=0;i<numLeds;i++){
-        colorCompTo3Byte(leds[i].g,p);
-        p+=3;
         colorCompTo3Byte(leds[i].r,p);
+        p+=3;
+        colorCompTo3Byte(leds[i].g,p);
         p+=3;
         colorCompTo3Byte(leds[i].b,p);
         p+=3;
@@ -185,12 +180,23 @@ void handleSpiLeds(GwApi *api){
     GwLedMode currentMode=LED_GREEN;
     bool first=true;
     int apiResult=0;
+    int count=0;
+    int seccount=0;
+    int modeIndex=0;
+    GwLedMode modes[4]={LED_WHITE,LED_GREEN,LED_RED,LED_BLUE};
     while (true)
     {
         delay(50);
+        count++;
+        if (count > 20){ //1s repeat
+            first=true;
+            count=0;
+            seccount++;
+        }
         GwLedMode newMode = currentMode;
+        /*
         IButtonTask buttonState = api->taskInterfaces()->get<IButtonTask>(apiResult);
-        if (apiResult >= 0)
+        if (apiResult >= 0 )
         {
             switch (buttonState.state)
             {
@@ -209,10 +215,19 @@ void handleSpiLeds(GwApi *api){
         {
             newMode = LED_WHITE;
         }
+        */
+        if (seccount > 5){
+            newMode=modes[modeIndex];
+            modeIndex++;
+            if (modeIndex >= 4) modeIndex=0;
+            seccount=0;
+            first=true;
+        }
         if (newMode != currentMode || first)
         {
             first=false;
             leds[0] = setBrightness(colorFromMode(newMode),brightness);
+            LOG_DEBUG(GwLog::DEBUG,"(%d) mode=%d,setting color g=%d,r=%d,b=%d",modeIndex,(int)newMode,leds[0].g,leds[0].r,leds[0].b);
             ledsToBuffer(NUMLEDS,leds,outbuffer);
             struct spi_transaction_t ta = {
                 .flags = 0,
@@ -222,12 +237,14 @@ void handleSpiLeds(GwApi *api){
                 .rxlength = 0,
                 .tx_buffer = outbuffer
                 };
+            int64_t now=esp_timer_get_time();
             esp_err_t ret = spi_device_transmit(device, &ta);
+            int64_t end=esp_timer_get_time();
             if (ret != ESP_OK){
                 LOG_DEBUG(GwLog::ERROR,"unable to send led data: %d",(int)ret);
             }
             else{
-                LOG_DEBUG(GwLog::DEBUG,"successfully send led data for %d leds",NUMLEDS);
+                LOG_DEBUG(GwLog::DEBUG,"successfully send led data for %d leds, %lld us",NUMLEDS,end-now);
             }
             currentMode = newMode;
         }
