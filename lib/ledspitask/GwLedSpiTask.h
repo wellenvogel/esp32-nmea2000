@@ -4,5 +4,5 @@
 //task function
 void handleSpiLeds(GwApi *param);
 
-DECLARE_USERTASK(handleSpiLeds);
+DECLARE_USERTASK_PARAM(handleSpiLeds,4000);
 #endif
