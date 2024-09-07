@@ -43,7 +43,7 @@ void handleLeds(GwApi *api){
     leds[0]=colorFromMode(currentMode);
     FastLED.setBrightness(brightness);
     FastLED.show();
-    LOG_DEBUG(GwLog::LOG,"led task started with mode %d",(int)currentMode);
+    LOG_DEBUG(GwLog::LOG,"led task started with mode %d, brightness=%d",(int)currentMode,(int)brightness);
     int apiResult=0;
     while (true)
     {
