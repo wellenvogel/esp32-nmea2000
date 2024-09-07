@@ -2,6 +2,9 @@
 #include "GwHardware.h"
 #include "GwApi.h"
 #include <driver/spi_master.h>
+#include <driver/gpio.h>
+#include <esp_rom_gpio.h>
+#include <soc/spi_periph.h>
 #include "ColorTo3Byte.h"
 
 /*
@@ -102,6 +105,20 @@ static size_t ledsToBuffer(int numLeds,const Color *leds,uint8_t *buffer){
     return p-buffer;
 }
 
+bool prepareGpio(GwLog *logger, uint8_t pin){
+    esp_err_t err=gpio_set_direction((gpio_num_t)pin,GPIO_MODE_OUTPUT);
+    if (err != ESP_OK){
+        LOG_DEBUG(GwLog::ERROR,"unable to set gpio mode for %d: %d",pin,(int)err);
+        return false;
+    }
+    err=gpio_set_level((gpio_num_t)pin,0);
+    if (err != ESP_OK){
+        LOG_DEBUG(GwLog::ERROR,"unable to set gpio level for %d: %d",pin,(int)err);
+        return false;
+    }
+    return true;
+}
+
 #define EXIT_TASK delay(50);vTaskDelete(NULL);return;
 void handleSpiLeds(GwApi *api){
     GwLog *logger=api->getLogger();
@@ -135,12 +152,13 @@ void handleSpiLeds(GwApi *api){
     LOG_DEBUG(GwLog::ERROR,"SpiLed task started");
     uint8_t ledPin=GWLED_PIN;
     spi_bus_config_t buscfg = {
-        .mosi_io_num = ledPin,
+        .mosi_io_num = -1,
         .miso_io_num = -1,
         .sclk_io_num = -1,
         .quadwp_io_num = -1,
         .quadhd_io_num = -1,
-        .max_transfer_sz = 0
+        .max_transfer_sz = 0,
+        .flags=SPICOMMON_BUSFLAG_GPIO_PINS
         };   
     esp_err_t err=spi_bus_initialize(bus,&buscfg,SPI_DMA_CH_AUTO);    
     if (err != ESP_OK){
@@ -166,6 +184,9 @@ void handleSpiLeds(GwApi *api){
     if (err != ESP_OK){
         LOG_DEBUG(GwLog::ERROR,"unable to add device to SPI bus %d,mosi=%d, error=%d",
         (int)bus,ledPin,(int)err);
+        EXIT_TASK;
+    }
+    if (! prepareGpio(logger,ledPin)){
         EXIT_TASK;
     }
     const int NUMLEDS=2;
@@ -239,7 +260,9 @@ void handleSpiLeds(GwApi *api){
                 .tx_buffer = outbuffer
                 };
             int64_t now=esp_timer_get_time();
+            esp_rom_gpio_connect_out_signal(ledPin,spi_periph_signal[bus].spid_out,false,false);
             esp_err_t ret = spi_device_transmit(device, &ta);
+            esp_rom_gpio_connect_out_signal(ledPin,SIG_GPIO_OUT_IDX,false,false);
             int64_t end=esp_timer_get_time();
             if (ret != ESP_OK){
                 LOG_DEBUG(GwLog::ERROR,"unable to send led data: %d",(int)ret);
