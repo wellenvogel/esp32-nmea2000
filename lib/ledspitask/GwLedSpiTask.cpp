@@ -168,7 +168,7 @@ void handleSpiLeds(GwApi *api){
         (int)bus,ledPin,(int)err);
         EXIT_TASK;
     }
-    const int NUMLEDS=1;
+    const int NUMLEDS=2;
     Color leds[NUMLEDS];
     size_t bufferSize=NUMLEDS*3*3;
     uint8_t *outbuffer=(uint8_t*) heap_caps_malloc(bufferSize,MALLOC_CAP_DMA);
@@ -227,6 +227,7 @@ void handleSpiLeds(GwApi *api){
         {
             first=false;
             leds[0] = setBrightness(colorFromMode(newMode),brightness);
+            leds[1] = leds[0];
             LOG_DEBUG(GwLog::DEBUG,"(%d) mode=%d,setting color g=%d,r=%d,b=%d",modeIndex,(int)newMode,leds[0].g,leds[0].r,leds[0].b);
             ledsToBuffer(NUMLEDS,leds,outbuffer);
             struct spi_transaction_t ta = {
