@@ -1,6 +1,9 @@
 #ifdef BOARD_OBP60S3
 
 #include <Arduino.h>
+#define FASTLED_ALL_PINS_HARDWARE_SPI
+#define FASTLED_ESP32_SPI_BUS HSPI
+#define FASTLED_ESP32_FLASH_LOCK 1
 #include <FastLED.h>      // Driver for WS2812 RGB LED
 #include <PCF8574.h>      // Driver for PCF8574 output modul from Horter
 #include <Wire.h>         // I2C
@@ -110,15 +113,22 @@ CHSV colorMapping(String colorString){
 
 // All defined colors see pixeltypes.h in FastLED lib
 void setBacklightLED(uint brightness, CHSV color){
-    FastLED.setBrightness(255); // Brightness for flash LED
-    color.value = brightness;
-    backlight[0] = color;       // Backlight LEDs on with color
-    backlight[1] = color;
-    backlight[2] = color;
-    backlight[3] = color;
-    backlight[4] = color;
-    backlight[5] = color;
-    FastLED.show(); 
+    static uint oldbrightness;
+    static CHSV oldcolor;
+    // If changed the values then set new values
+    if(brightness != oldbrightness || color != oldcolor){
+        FastLED.setBrightness(255); // Brightness for flash LED
+        color.value = brightness;
+        backlight[0] = color;       // Backlight LEDs on with color
+        backlight[1] = color;
+        backlight[2] = color;
+        backlight[3] = color;
+        backlight[4] = color;
+        backlight[5] = color;
+        FastLED.show();
+        oldbrightness = brightness;
+        oldcolor = color;
+    }
 }
 
 void toggleBacklightLED(uint brightness, CHSV color){
@@ -145,9 +155,9 @@ void toggleBacklightLED(uint brightness, CHSV color){
 }
 
 void setFlashLED(bool status){
-    statusLED = status;
-    FastLED.setBrightness(255); // Brightness for flash LED
-    if(statusLED == true){
+    static bool oldstatus;
+    FastLED.setBrightness(255);     // Brightness for flash LED
+    if(status == true){
         fled[0] = CRGB::Red;    // Flash LED on in red
     }
     else{

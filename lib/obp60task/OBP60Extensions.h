@@ -3,6 +3,9 @@
 
 #include <Arduino.h>
 #include "OBP60Hardware.h"
+#define FASTLED_ALL_PINS_HARDWARE_SPI
+#define FASTLED_ESP32_SPI_BUS HSPI
+#define FASTLED_ESP32_FLASH_LOCK 1
 #include <FastLED.h>                    // Driver for WS2812 RGB LED
 #include <GxEPD2_BW.h>                  // E-paper lib V2
 
