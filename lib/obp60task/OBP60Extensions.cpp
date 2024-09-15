@@ -2,7 +2,7 @@
 
 #include <Arduino.h>
 #define FASTLED_ALL_PINS_HARDWARE_SPI
-#define FASTLED_ESP32_SPI_BUS HSPI
+#define FASTLED_ESP32_SPI_BUS FSPI
 #define FASTLED_ESP32_FLASH_LOCK 1
 #include <FastLED.h>      // Driver for WS2812 RGB LED
 #include <PCF8574.h>      // Driver for PCF8574 output modul from Horter
@@ -156,12 +156,12 @@ void toggleBacklightLED(uint brightness, CHSV color){
 
 void setFlashLED(bool status){
     static bool oldstatus;
-    FastLED.setBrightness(255);     // Brightness for flash LED
     if(status == true){
-        fled[0] = CRGB::Red;    // Flash LED on in red
+        FastLED.setBrightness(255); // Brightness for flash LED
+        fled[0] = CRGB::Red;        // Flash LED on in red
     }
     else{
-        fled[0] = CRGB::Black;  // Flash LED off
+        fled[0] = CRGB::Black;      // Flash LED off
     }
     FastLED.show();
 }
@@ -169,8 +169,8 @@ void setFlashLED(bool status){
 void blinkingFlashLED(){
     if(blinkingLED == true){
         statusLED = !statusLED;     // Toggle LED for each run
-        FastLED.setBrightness(255); // Brightness for flash LED
         if(statusLED == true){
+            FastLED.setBrightness(255); // Brightness for flash LED
             fled[0] = CRGB::Red;    // Flash LED on in red
         }
         else{
