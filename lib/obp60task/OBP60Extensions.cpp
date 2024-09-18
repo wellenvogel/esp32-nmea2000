@@ -81,8 +81,8 @@ void hardwareInit()
     FastLED.addLeds<WS2812B, OBP_BACKLIGHT_LED, GRB>(backlight, NUM_BACKLIGHT_LED);
 
     // Init PCF8574 digital outputs
-    Wire.setClock(I2C_SPEED);       // Set I2C clock on 10 kHz
     if(pcf8574_Out.begin()){        // Initialize PCF8574
+        Wire.setClock(I2C_SPEED);   // Set I2C clock on 10 kHz
         pcf8574_Out.write8(255);    // Clear all outputs
     }
 }

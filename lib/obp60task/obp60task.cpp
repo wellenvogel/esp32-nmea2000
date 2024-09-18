@@ -3,7 +3,6 @@
 #include "Pagedata.h"                   // Data exchange for pages
 #include "OBP60Hardware.h"              // PIN definitions
 #include <Wire.h>                       // I2C connections
-#include <RTClib.h>                     // DS1388 RTC
 #include <MCP23017.h>                   // MCP23017 extension Port
 #include <N2kTypes.h>                   // NMEA2000
 #include <N2kMessages.h>
@@ -23,9 +22,6 @@
 #include "Logo_OBP_400x300_sw.h"        // OBP Logo
 #include "OBP60QRWiFi.h"                // Functions lib for WiFi QR code
 #include "OBPSensorTask.h"              // Functions lib for sensor data
-
-// RTC DS1388
-RTC_DS1388 ds1388;
 
 // Global vars
 bool initComplete = false;      // Initialization complete
