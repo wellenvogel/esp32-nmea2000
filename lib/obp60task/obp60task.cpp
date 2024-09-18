@@ -49,7 +49,7 @@ void OBP60Init(GwApi *api){
 
     // Settings for e-paper display
     String fastrefresh = api->getConfig()->getConfigItem(api->getConfig()->fastRefresh,true)->asString();
-    api->getLogger()->logDebug(GwLog::DEBUG,"Fast Refresh Mode is: %s", fastrefresh);
+    api->getLogger()->logDebug(GwLog::DEBUG,"Fast Refresh Mode is: %s", fastrefresh.c_str());
     #ifdef DISPLAY_GDEY042T81
     if(fastrefresh == "true"){
         static const bool useFastFullUpdate = true;   // Enable fast full display update only for GDEY042T81
@@ -64,7 +64,7 @@ void OBP60Init(GwApi *api){
     
     // Settings for backlight
     String backlightMode = api->getConfig()->getConfigItem(api->getConfig()->backlight,true)->asString();
-    api->getLogger()->logDebug(GwLog::DEBUG,"Backlight Mode is: %s", backlightMode);
+    api->getLogger()->logDebug(GwLog::DEBUG,"Backlight Mode is: %s", backlightMode.c_str());
     uint brightness = uint(api->getConfig()->getConfigItem(api->getConfig()->blBrightness,true)->asInt());
     String backlightColor = api->getConfig()->getConfigItem(api->getConfig()->blColor,true)->asString();
     if(String(backlightMode) == "On"){
@@ -79,7 +79,7 @@ void OBP60Init(GwApi *api){
 
     // Settings flash LED mode
     String ledMode = api->getConfig()->getConfigItem(api->getConfig()->flashLED,true)->asString();
-    api->getLogger()->logDebug(GwLog::DEBUG,"LED Mode is: %s", ledMode);
+    api->getLogger()->logDebug(GwLog::DEBUG,"LED Mode is: %s", ledMode.c_str());
     if(String(ledMode) == "Off"){
         setBlinkingLED(false);
     }
