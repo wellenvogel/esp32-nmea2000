@@ -72,7 +72,7 @@ public:
                 if (handled > 0){
                     memmove(logBuffer,logBuffer+handled,wp-handled);
                     wp-=handled;
-                    logBuffer[handled]=0;
+                    logBuffer[wp]=0;
                 }
                 return;
             }
