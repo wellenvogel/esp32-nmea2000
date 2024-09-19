@@ -1,8 +1,9 @@
 #ifndef _GWLEDS_H
 #define _GWLEDS_H
 #include "GwApi.h"
-//task function
-void handleLeds(GwApi *param);
+//task init function
 
-DECLARE_USERTASK(handleLeds);
+void initLeds(GwApi *param);
+
+DECLARE_INITFUNCTION(initLeds);
 #endif
