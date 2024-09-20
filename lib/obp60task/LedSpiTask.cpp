@@ -139,7 +139,7 @@ bool sendToLeds(GwLog *logger, uint8_t pin, int numLeds, Color *leds, spi_host_d
     //need to send a long reset before
     //as on S3 MOSI is high on idle on older frameworks
     //see https://github.com/espressif/esp-idf/issues/13974
-    const int zeroprefix=80; //3.2us per byte 
+    const int zeroprefix=100; //3.2us per byte 
     bool ownsBuffer = false;
     size_t bufferSize = numLeds * 3 * 3+zeroprefix;
     if (buffer == NULL)
