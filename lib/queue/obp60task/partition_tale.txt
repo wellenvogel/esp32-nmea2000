@@ -1,0 +1,27 @@
+Partition table for OBP60 V2.1
+
+based on default_16MB.csv
+
+Start      End       Size      Type  Content
+---------------------------------------------------------------
+0x0000   - 0x3FFF    0x3FFF    boot  16k Boatloader
+0x8000   - 0x8FFF    0x0FFF    part  4k Partition table
+0x9000   - 0xDFFF    0x5000    data  20k NVS Partition
+0xE000   - 0xFFFF    0x2000    data  8k Application starter
+0x10000  - 0x64FFFF  0x640000  app   6.25M OTA-0 OBP60 Firmware
+0x650000 - 0xC8FFFF  0x640000  app   6.25M OTA-1 OBP60 Firmware
+0xC90000 - 0xFEFFFF  0x360000  data  3.37M SPIFFS
+0xFF0000 - 0x1000000 0x10000   data  64k Coredump
+
+based on default_8MB.csv
+
+Start      End       Size      Type  Content
+---------------------------------------------------------------
+0x0000   - 0x3FFF    0x3FFF    boot  16k Boatloader
+0x8000   - 0x8FFF    0x0FFF    part  4k Partition table
+0x9000   - 0xDFFF    0x5000    data  20k NVS Partition
+0xE000   - 0xFFFF    0x2000    data  8k Application starter
+0x10000  - 0x33FFFF  0x330000  app   3.18M OTA-0 OBP60 Firmware
+0x340000 - 0x66FFFF  0x330000  app   3.18M OTA-1 OBP60 Firmware
+0x670000 - 0x7EFFFF  0x180000  data  1.68M SPIFFS
+0x7F0000 - 0x800000  0x10000   data  64k Coredump

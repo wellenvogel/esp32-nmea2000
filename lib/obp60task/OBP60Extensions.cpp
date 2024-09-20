@@ -4,7 +4,6 @@
 #define FASTLED_ALL_PINS_HARDWARE_SPI
 #define FASTLED_ESP32_SPI_BUS FSPI
 #define FASTLED_ESP32_FLASH_LOCK 1
-#include <FastLED.h>      // Driver for WS2812 RGB LED
 #include <PCF8574.h>      // Driver for PCF8574 output modul from Horter
 #include <Wire.h>         // I2C
 #include <RTClib.h>       // Driver for DS1388 RTC
@@ -60,10 +59,6 @@ GxEPD2_BW<GxEPD2_420_SE0420NQ04, GxEPD2_420_SE0420NQ04::HEIGHT> & getdisplay(){r
 // Horter I2C moduls
 PCF8574 pcf8574_Out(PCF8574_I2C_ADDR1); // First digital output modul PCF8574 from Horter
 
-// Define the array of leds
-CRGB fled[NUM_FLASH_LED];           // Flash LED
-CRGB backlight[NUM_BACKLIGHT_LED];  // Backlight
-
 // Global vars
 bool blinkingLED = false;       // Enable / disable blinking flash LED
 bool statusLED = false;         // Actual status of flash LED on/off
@@ -71,20 +66,24 @@ bool statusBacklightLED = false;// Actual status of flash LED on/off
 
 int uvDuration = 0;             // Under voltage duration in n x 100ms
 
+LedTaskData *ledTaskData=nullptr;
+
 void hardwareInit()
 {
     // Init power rail 5.0V
     setPortPin(OBP_POWER_50, true);
-
-    // Init RGB LEDs
-    FastLED.addLeds<WS2812B, OBP_FLASH_LED, GRB>(fled, NUM_FLASH_LED);
-    FastLED.addLeds<WS2812B, OBP_BACKLIGHT_LED, GRB>(backlight, NUM_BACKLIGHT_LED);
-
+    Wire.begin();
     // Init PCF8574 digital outputs
+    Wire.setClock(I2C_SPEED);       // Set I2C clock on 10 kHz
     if(pcf8574_Out.begin()){        // Initialize PCF8574
-        Wire.setClock(I2C_SPEED);   // Set I2C clock on 10 kHz
         pcf8574_Out.write8(255);    // Clear all outputs
     }
+
+}
+
+void startLedTask(GwApi *api){
+    ledTaskData=new LedTaskData(api);
+    createSpiLedTask(ledTaskData);
 }
 
 void setPortPin(uint pin, bool value){
@@ -98,85 +97,48 @@ void togglePortPin(uint pin){
 }
 
 // Valid colors see hue
-CHSV colorMapping(String colorString){
-    CHSV color = CHSV(HUE_RED, 255, 255);
-    if(colorString == "Red"){color = CHSV(HUE_RED, 255, 255);}
-    if(colorString == "Orange"){color = CHSV(HUE_ORANGE, 255, 255);}
-    if(colorString == "Yellow"){color = CHSV(HUE_YELLOW, 255, 255);}
-    if(colorString == "Green"){color = CHSV(HUE_GREEN, 255, 255);}
-    if(colorString == "Blue"){color = CHSV(HUE_BLUE, 255, 255);}
-    if(colorString == "Aqua"){color = CHSV(HUE_AQUA, 255, 255);}
-    if(colorString == "Violet"){color = CHSV(HUE_PURPLE, 255, 255);}
-    if(colorString == "White"){color = CHSV(HUE_AQUA, 0, 255);}
+Color colorMapping(const String &colorString){
+    Color color = COLOR_RED;
+    if(colorString == "Orange"){color = Color(255,153,0);}
+    if(colorString == "Yellow"){color = Color(255,255,0);}
+    if(colorString == "Green"){color = COLOR_GREEN;}
+    if(colorString == "Blue"){color = COLOR_BLUE;}
+    if(colorString == "Aqua"){color = Color(51,102,255);}
+    if(colorString == "Violet"){color = Color(255,0,102);}
+    if(colorString == "White"){color = COLOR_WHITE;}
     return color;
 }
 
 // All defined colors see pixeltypes.h in FastLED lib
-void setBacklightLED(uint brightness, CHSV color){
-    static uint oldbrightness;
-    static CHSV oldcolor;
-    // If changed the values then set new values
-    if(brightness != oldbrightness || color != oldcolor){
-        FastLED.setBrightness(255); // Brightness for flash LED
-        color.value = brightness;
-        backlight[0] = color;       // Backlight LEDs on with color
-        backlight[1] = color;
-        backlight[2] = color;
-        backlight[3] = color;
-        backlight[4] = color;
-        backlight[5] = color;
-        FastLED.show();
-        oldbrightness = brightness;
-        oldcolor = color;
-    }
+void setBacklightLED(uint brightness, const Color &color){
+    if (ledTaskData == nullptr) return;
+    Color nv=setBrightness(color,brightness);
+    LedInterface current=ledTaskData->getLedData();
+    current.setBacklight(nv);
+    ledTaskData->setLedData(current);    
 }
 
-void toggleBacklightLED(uint brightness, CHSV color){
+void toggleBacklightLED(uint brightness, const Color &color){
+    if (ledTaskData == nullptr) return;
     statusBacklightLED = !statusBacklightLED;
-    FastLED.setBrightness(255); // Brightness for flash LED
-    if(statusBacklightLED == true){
-        color.value = brightness;
-        backlight[0] = color;   // Backlight LEDs on with color
-        backlight[1] = color;
-        backlight[2] = color;
-        backlight[3] = color;
-        backlight[4] = color;
-        backlight[5] = color;
-    }
-    else{
-        backlight[0] = CHSV(HUE_BLUE, 255, 0); // Backlight LEDs off (blue without britghness)
-        backlight[1] = CHSV(HUE_BLUE, 255, 0);
-        backlight[2] = CHSV(HUE_BLUE, 255, 0);
-        backlight[3] = CHSV(HUE_BLUE, 255, 0);
-        backlight[4] = CHSV(HUE_BLUE, 255, 0);
-        backlight[5] = CHSV(HUE_BLUE, 255, 0);
-    }
-    FastLED.show(); 
+    Color nv=setBrightness(statusBacklightLED?color:COLOR_BLACK,brightness);
+    LedInterface current=ledTaskData->getLedData();
+    current.setBacklight(nv);
+    ledTaskData->setLedData(current); 
 }
 
 void setFlashLED(bool status){
-    static bool oldstatus;
-    if(status == true){
-        FastLED.setBrightness(255); // Brightness for flash LED
-        fled[0] = CRGB::Red;        // Flash LED on in red
-    }
-    else{
-        fled[0] = CRGB::Black;      // Flash LED off
-    }
-    FastLED.show();
+    if (ledTaskData == nullptr) return;
+    Color c=status?COLOR_RED:COLOR_BLACK;
+    LedInterface current=ledTaskData->getLedData();
+    current.setFlash(c);
+    ledTaskData->setLedData(current);
 }
 
 void blinkingFlashLED(){
     if(blinkingLED == true){
         statusLED = !statusLED;     // Toggle LED for each run
-        if(statusLED == true){
-            FastLED.setBrightness(255); // Brightness for flash LED
-            fled[0] = CRGB::Red;    // Flash LED on in red
-        }
-        else{
-            fled[0] = CRGB::Black;  // Flash LED off
-        }
-        FastLED.show();
+        setFlashLED(statusLED);
     }    
 }
 

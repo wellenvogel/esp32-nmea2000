@@ -23,6 +23,8 @@
 #include "OBP60QRWiFi.h"                // Functions lib for WiFi QR code
 #include "OBPSensorTask.h"              // Functions lib for sensor data
 
+#include "LedSpiTask.h"
+
 // Global vars
 bool initComplete = false;      // Initialization complete
 int taskRunCounter = 0;         // Task couter for loop section
@@ -67,10 +69,10 @@ void OBP60Init(GwApi *api){
            setBacklightLED(brightness, colorMapping(backlightColor));
     }
     if(String(backlightMode) == "Off"){
-           setBacklightLED(0, CHSV(HUE_BLUE, 255, 0)); // Backlight LEDs off (blue without britghness)
+           setBacklightLED(0, COLOR_BLACK); // Backlight LEDs off (blue without britghness)
     }
     if(String(backlightMode) == "Control by Key"){
-           setBacklightLED(0, CHSV(HUE_BLUE, 255, 0)); // Backlight LEDs off (blue without britghness)
+           setBacklightLED(0, COLOR_BLUE); // Backlight LEDs off (blue without britghness)
     }
 
     // Settings flash LED mode
@@ -279,6 +281,7 @@ void underVoltageDetection(GwApi *api){
 void OBP60Task(GwApi *api){
     GwLog *logger=api->getLogger();
     GwConfigHandler *config=api->getConfig();
+    startLedTask(api);
     PageList allPages;
     registerAllPages(allPages);
 
@@ -409,7 +412,7 @@ void OBP60Task(GwApi *api){
     String gpsOn=api->getConfig()->getConfigItem(api->getConfig()->useGPS,true)->asString();
     String tz = api->getConfig()->getConfigItem(api->getConfig()->timeZone,true)->asString();
     String backlightColor = api->getConfig()->getConfigItem(api->getConfig()->blColor,true)->asString();
-    CHSV color = colorMapping(backlightColor);
+    Color color = colorMapping(backlightColor);
     uint brightness = 2.55 * uint(api->getConfig()->getConfigItem(api->getConfig()->blBrightness,true)->asInt());
     bool uvoltage = api->getConfig()->getConfigItem(api->getConfig()->underVoltage,true)->asBoolean();
 
@@ -531,7 +534,7 @@ void OBP60Task(GwApi *api){
                             setBacklightLED(brightness, color);
                         }
                         else{
-                            setBacklightLED(0, CHSV(HUE_BLUE, 255, 0)); // Backlight LEDs off (blue without britghness)
+                            setBacklightLED(0, COLOR_BLUE); // Backlight LEDs off (blue without britghness)
                         }           
 
                     }
