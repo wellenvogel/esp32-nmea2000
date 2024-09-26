@@ -263,6 +263,22 @@
         }
     },
     {
+        "name": "cpuSpeed",
+        "label": "CPU Speed [MHz]",
+        "type": "list",
+        "default": "160",
+        "description": "CPU speed in MHz [80|160|240]",
+        "list": [
+            "80",
+            "160",
+            "240"
+        ],
+        "category": "OBP60 Hardware",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
         "name": "useRTC",
         "label": "RTC Modul",
         "type": "list",
@@ -671,7 +687,7 @@
         "name": "fullRefreshTime",
         "label": "Full Refresh Time [min]",
         "type": "number",
-        "default": "10",
+        "default": "1",
         "check": "checkMinMax",
         "min": 1,
         "max": 10,

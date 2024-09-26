@@ -54,11 +54,19 @@ void OBP60Init(GwApi *api){
     }
     #endif
 
-    /*
-    setCpuFrequencyMhz(80);
+    // Set CPU speed
+    String cpuspeed = api->getConfig()->getConfigItem(api->getConfig()->cpuSpeed,true)->asString();
+    if(String(cpuspeed) == "80"){
+        setCpuFrequencyMhz(80);
+    }
+    if(String(cpuspeed) == "160"){
+        setCpuFrequencyMhz(160);
+    }
+    if(String(cpuspeed) == "240"){
+        setCpuFrequencyMhz(240);
+    }
     int freq = getCpuFrequencyMhz();
-    api->getLogger()->logDebug(GwLog::LOG,"CPU speed: %i", freq);
-    */
+    api->getLogger()->logDebug(GwLog::LOG,"CPU speed: %i MHz", freq);
     
     // Settings for backlight
     String backlightMode = api->getConfig()->getConfigItem(api->getConfig()->backlight,true)->asString();
