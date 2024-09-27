@@ -70,8 +70,6 @@ LedTaskData *ledTaskData=nullptr;
 
 void hardwareInit()
 {
-    // Init power rail 5.0V
-    setPortPin(OBP_POWER_50, true);
     Wire.begin();
     // Init PCF8574 digital outputs
     Wire.setClock(I2C_SPEED);       // Set I2C clock on 10 kHz

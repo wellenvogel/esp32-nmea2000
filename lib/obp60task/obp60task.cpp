@@ -45,6 +45,16 @@ void OBP60Init(GwApi *api){
     // Init hardware
     hardwareInit();
 
+    // Init power rail 5.0V
+    String powermode = api->getConfig()->getConfigItem(api->getConfig()->powerMode,true)->asString();
+    api->getLogger()->logDebug(GwLog::DEBUG,"Power Mode is: %s", powermode.c_str());
+    if(powermode == "Max Power" || powermode == "Only 5.0V"){
+        setPortPin(OBP_POWER_50, true); // Power on 5.0V rail
+    }
+    else{
+        setPortPin(OBP_POWER_50, false); // Power off 5.0V rail
+    }
+
     // Settings for e-paper display
     String fastrefresh = api->getConfig()->getConfigItem(api->getConfig()->fastRefresh,true)->asString();
     api->getLogger()->logDebug(GwLog::DEBUG,"Fast Refresh Mode is: %s", fastrefresh.c_str());
@@ -312,8 +322,12 @@ void OBP60Task(GwApi *api){
     int pixelcolor = GxEPD_BLACK;
     int bgcolor = GxEPD_WHITE;
 
-    getdisplay().init(115200);   // Init for nolrmal displays
- //   getdisplay().init(115200, true, 2, false);   // Use this for Waveshare boards with "clever" reset circuit, 2ms reset pulse
+    #ifdef DISPLAY_GDEY042T81
+        getdisplay().init(115200, true, 2, false);  // Use this for Waveshare boards with "clever" reset circuit, 2ms reset pulse
+    #else
+        getdisplay().init(115200);                  // Init for normal displays
+    #endif
+
     getdisplay().setRotation(0);                 // Set display orientation (horizontal)
     if(displaycolor == "Normal"){
         textcolor = GxEPD_BLACK;
