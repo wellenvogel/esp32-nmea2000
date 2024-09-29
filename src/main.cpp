@@ -138,7 +138,7 @@ bool fixedApPass=true;
 #endif
 GwWifi gwWifi(&config,&logger,fixedApPass);
 GwChannelList channels(&logger,&config);
-GwBoatData boatData(&logger);
+GwBoatData boatData(&logger,&config);
 GwXDRMappings xdrMappings(&logger,&config);
 bool sendOutN2k=true;
 
