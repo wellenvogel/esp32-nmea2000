@@ -657,12 +657,14 @@ private:
         double _Heading=N2kDoubleNA;
         double _ROT=N2kDoubleNA;
         tN2kAISNavStatus _NavStatus;
+        tN2kAISTransceiverInformation _AISTransceiverInformation; 
+        uint8_t _SID;
 
         uint8_t _MessageType = 1;
         tNMEA0183AISMsg NMEA0183AISMsg;
 
         if (ParseN2kPGN129038(N2kMsg, SID, _Repeat, _UserID, _Latitude, _Longitude, _Accuracy, _RAIM, _Seconds,
-                              _COG, _SOG, _Heading, _ROT, _NavStatus))
+                              _COG, _SOG, _Heading, _ROT, _NavStatus,_AISTransceiverInformation,_SID))
         {
 
 // Debug
@@ -746,12 +748,13 @@ private:
         tN2kGNSStype _GNSStype;
         tN2kAISTransceiverInformation _AISinfo;
         tN2kAISDTE _DTE;
+        uint8_t _SID;
 
         tNMEA0183AISMsg NMEA0183AISMsg;
 
-        if (ParseN2kPGN129794(N2kMsg, _MessageID, _Repeat, _UserID, _IMONumber, _Callsign, _Name, _VesselType,
-                              _Length, _Beam, _PosRefStbd, _PosRefBow, _ETAdate, _ETAtime, _Draught, _Destination,
-                              _AISversion, _GNSStype, _DTE, _AISinfo))
+        if (ParseN2kPGN129794(N2kMsg, _MessageID, _Repeat, _UserID, _IMONumber, _Callsign, 8, _Name,21, _VesselType,
+                              _Length, _Beam, _PosRefStbd, _PosRefBow, _ETAdate, _ETAtime, _Draught, _Destination,21,
+                              _AISversion, _GNSStype, _DTE, _AISinfo,_SID))
         {
 
 #ifdef SERIAL_PRINT_AIS_FIELDS
@@ -855,9 +858,10 @@ private:
         bool _Display, _DSC, _Band, _Msg22, _State;
         tN2kAISMode _Mode;
         tN2kAISTransceiverInformation  _AISTranceiverInformation;
+        uint8_t _SID;
 
         if (ParseN2kPGN129039(N2kMsg, _MessageID, _Repeat, _UserID, _Latitude, _Longitude, _Accuracy, _RAIM,
-                              _Seconds, _COG, _SOG, _AISTranceiverInformation, _Heading, _Unit, _Display, _DSC, _Band, _Msg22, _Mode, _State))
+                              _Seconds, _COG, _SOG, _AISTranceiverInformation, _Heading, _Unit, _Display, _DSC, _Band, _Msg22, _Mode, _State,_SID))
         {
 
             tNMEA0183AISMsg NMEA0183AISMsg;
@@ -896,8 +900,10 @@ private:
         tN2kAISRepeat _Repeat;
         uint32_t _UserID; // MMSI
         char _Name[21];
+        tN2kAISTransceiverInformation _AISInfo;
+        uint8_t _SID;
 
-        if (ParseN2kPGN129809(N2kMsg, _MessageID, _Repeat, _UserID, _Name))
+        if (ParseN2kPGN129809(N2kMsg, _MessageID, _Repeat, _UserID, _Name,21,_AISInfo,_SID))
         {
 
             tNMEA0183AISMsg NMEA0183AISMsg;
@@ -923,9 +929,11 @@ private:
         double _Beam=N2kDoubleNA;
         double _PosRefStbd=N2kDoubleNA;
         double _PosRefBow=N2kDoubleNA;
+        tN2kAISTransceiverInformation _AISInfo;
+        uint8_t _SID;
 
-        if (ParseN2kPGN129810(N2kMsg, _MessageID, _Repeat, _UserID, _VesselType, _Vendor, _Callsign,
-                              _Length, _Beam, _PosRefStbd, _PosRefBow, _MothershipID))
+        if (ParseN2kPGN129810(N2kMsg, _MessageID, _Repeat, _UserID, _VesselType, _Vendor,4, _Callsign,8,
+                              _Length, _Beam, _PosRefStbd, _PosRefBow, _MothershipID,_AISInfo,_SID))
         {
 
 //
@@ -1121,8 +1129,8 @@ private:
         int16_t ETADate=0;
         double BearingOriginToDestinationWaypoint=N2kDoubleNA;
         double BearingPositionToDestinationWaypoint=N2kDoubleNA;
-        uint8_t OriginWaypointNumber; 
-        uint8_t DestinationWaypointNumber;
+        uint32_t OriginWaypointNumber; 
+        uint32_t DestinationWaypointNumber;
         double DestinationLatitude=N2kDoubleNA;
         double DestinationLongitude=N2kDoubleNA;
         double WaypointClosingVelocity=N2kDoubleNA;
