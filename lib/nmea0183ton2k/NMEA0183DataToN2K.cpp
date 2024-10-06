@@ -399,28 +399,29 @@ private:
             return;
         }
         tN2kMsg n2kMsg;
-        tN2kWindReference n2kRef; 
         bool shouldSend=false;
         WindAngle=formatDegToRad(WindAngle);
+        GwConverterConfig::WindMapping mapping;
         switch(Reference){
             case NMEA0183Wind_Apparent:
-                n2kRef=N2kWind_Apparent;
                 shouldSend=updateDouble(boatData->AWA,WindAngle,msg.sourceId) && 
                            updateDouble(boatData->AWS,WindSpeed,msg.sourceId);
                 if (WindSpeed != NMEA0183DoubleNA) boatData->MaxAws->updateMax(WindSpeed);    
+                mapping=config.findWindMapping(GwConverterConfig::WindMapping::AWA_AWS);
                 break;
             case NMEA0183Wind_True:
-                n2kRef=N2kWind_True_water;
                 shouldSend=updateDouble(boatData->TWA,WindAngle,msg.sourceId) && 
                            updateDouble(boatData->TWS,WindSpeed,msg.sourceId);
                 if (WindSpeed != NMEA0183DoubleNA) boatData->MaxTws->updateMax(WindSpeed);    
+                mapping=config.findWindMapping(GwConverterConfig::WindMapping::TWA_TWS);
                 break;      
             default:
                 LOG_DEBUG(GwLog::DEBUG,"unknown wind reference %d in %s",(int)Reference,msg.line);
         }
-        if (shouldSend){
-            SetN2kWindSpeed(n2kMsg,1,WindSpeed,WindAngle,n2kRef);  
-            send(n2kMsg,msg.sourceId,String(n2kMsg.PGN)+String((int)n2kRef));  
+        //TODO: try to compute TWD and get mapping for this one
+        if (shouldSend && mapping.valid){
+            SetN2kWindSpeed(n2kMsg,1,WindSpeed,WindAngle,mapping.n2kType);  
+            send(n2kMsg,msg.sourceId,String(n2kMsg.PGN)+String((int)mapping.n2kType));  
         }
     }
     void convertVWR(const SNMEA0183Msg &msg)
@@ -460,8 +461,11 @@ private:
         if (WindSpeed != NMEA0183DoubleNA) boatData->MaxAws->updateMax(WindSpeed);             
         if (shouldSend)
         {
-            SetN2kWindSpeed(n2kMsg, 1, WindSpeed, WindAngle, N2kWind_Apparent);
-            send(n2kMsg,msg.sourceId,String(n2kMsg.PGN)+String((int)N2kWind_Apparent));
+            const GwConverterConfig::WindMapping mapping=config.findWindMapping(GwConverterConfig::WindMapping::AWA_AWS);
+            if (mapping.valid){
+                SetN2kWindSpeed(n2kMsg, 1, WindSpeed, WindAngle, mapping.n2kType);
+                send(n2kMsg,msg.sourceId,String(n2kMsg.PGN)+String((int)mapping.n2kType));
+            }
         }
     }
 
@@ -504,8 +508,16 @@ private:
                 double twa = WindDirection-boatData->HDT->getData();
                 if(twa<0) { twa+=2*M_PI; }
                 updateDouble(boatData->TWA, twa, msg.sourceId);
-                SetN2kWindSpeed(n2kMsg, 1, WindSpeed, twa, N2kWind_True_water);
-                send(n2kMsg,msg.sourceId,String(n2kMsg.PGN)+String((int)N2kWind_True_water));
+                const GwConverterConfig::WindMapping mapping=config.findWindMapping(GwConverterConfig::WindMapping::TWA_TWS);
+                if (mapping.valid){
+                    SetN2kWindSpeed(n2kMsg, 1, WindSpeed, twa, mapping.n2kType);
+                    send(n2kMsg,msg.sourceId,String(n2kMsg.PGN)+String((int)mapping.n2kType));
+                }
+                const GwConverterConfig::WindMapping mapping2=config.findWindMapping(GwConverterConfig::WindMapping::TWD_TWS);
+                if (mapping2.valid){
+                    SetN2kWindSpeed(n2kMsg, 1, WindSpeed, WindDirection, mapping2.n2kType);
+                    send(n2kMsg,msg.sourceId,String(n2kMsg.PGN)+String((int)mapping2.n2kType));
+                }
             }
         }
     }

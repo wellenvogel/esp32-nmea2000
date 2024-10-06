@@ -850,7 +850,7 @@ void setup() {
   xdrMappings.begin();
   logger.flush();
   GwConverterConfig converterConfig;
-  converterConfig.init(&config);
+  converterConfig.init(&config,&logger);
   nmea0183Converter= N2kDataToNMEA0183::create(&logger, &boatData, 
     [](const tNMEA0183Msg &msg, int sourceId){
       SendNMEA0183Message(msg,sourceId,false);

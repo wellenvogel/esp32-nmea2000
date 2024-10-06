@@ -469,38 +469,65 @@ private:
         unsigned char SID;
         tN2kWindReference WindReference;
         double WindAngle=N2kDoubleNA, WindSpeed=N2kDoubleNA;
-
+        tNMEA0183WindReference NMEA0183Reference;
         if (ParseN2kWindSpeed(N2kMsg, SID, WindSpeed, WindAngle, WindReference)) {
             tNMEA0183Msg NMEA0183Msg;
-            tNMEA0183WindReference NMEA0183Reference;
+            GwConverterConfig::WindMapping mapping=config.findWindMapping(WindReference);
             bool shouldSend = false;
 
             // MWV sentence contains apparent/true ANGLE and SPEED
             // https://gpsd.gitlab.io/gpsd/NMEA.html#_mwv_wind_speed_and_angle
             // https://docs.vaisala.com/r/M211109EN-L/en-US/GUID-7402DEF8-5E82-446F-B63E-998F49F3D743/GUID-C77934C7-2A72-466E-BC52-CE6B8CC7ACB6
-
-            if (WindReference == N2kWind_Apparent) {
-                NMEA0183Reference = NMEA0183Wind_Apparent;
-                updateDouble(boatData->AWA, WindAngle);
-                updateDouble(boatData->AWS, WindSpeed);
-                setMax(boatData->MaxAws, boatData->AWS);
-                shouldSend = true;
-            } 
-            if (WindReference == N2kWind_True_water) {
-                NMEA0183Reference = NMEA0183Wind_True;
-                updateDouble(boatData->TWA, WindAngle);
-                updateDouble(boatData->TWS, WindSpeed);
-                setMax(boatData->MaxTws, boatData->TWS);
-                shouldSend = true;
-                if (boatData->HDT->isValid()) {
-                    double twd = WindAngle+boatData->HDT->getData();
-                    if (twd>2*M_PI) { twd-=2*M_PI; }
-                    updateDouble(boatData->TWD, twd);
+            if (mapping.valid)
+            {
+                if (mapping.nmea0183Type == GwConverterConfig::WindMapping::AWA_AWS)
+                {
+                    NMEA0183Reference = NMEA0183Wind_Apparent;
+                    updateDouble(boatData->AWA, WindAngle);
+                    updateDouble(boatData->AWS, WindSpeed);
+                    setMax(boatData->MaxAws, boatData->AWS);
+                    shouldSend = true;
                 }
-            }
+                if (mapping.nmea0183Type == GwConverterConfig::WindMapping::TWA_TWS)
+                {
+                    NMEA0183Reference = NMEA0183Wind_True;
+                    updateDouble(boatData->TWA, WindAngle);
+                    updateDouble(boatData->TWS, WindSpeed);
+                    setMax(boatData->MaxTws, boatData->TWS);
+                    shouldSend = true;
+                    if (boatData->HDT->isValid())
+                    {
+                        double twd = WindAngle + boatData->HDT->getData();
+                        if (twd > 2 * M_PI)
+                        {
+                            twd -= 2 * M_PI;
+                        }
+                        updateDouble(boatData->TWD, twd);
+                    }
+                }
+                if (mapping.nmea0183Type == GwConverterConfig::WindMapping::TWD_TWS)
+                {
+                    NMEA0183Reference = NMEA0183Wind_True;
+                    updateDouble(boatData->TWD, WindAngle);
+                    updateDouble(boatData->TWS, WindSpeed);
+                    setMax(boatData->MaxTws, boatData->TWS);
+                    if (boatData->HDT->isValid())
+                    {
+                        shouldSend = true;
+                        double twa = WindAngle - boatData->HDT->getData();
+                        if (twa > 2 * M_PI)
+                        {
+                            twa -= 2 * M_PI;
+                        }
+                        updateDouble(boatData->TWA, twa);
+                        WindAngle=twa;
+                    }
+                }
 
-            if (shouldSend && NMEA0183SetMWV(NMEA0183Msg, formatCourse(WindAngle), NMEA0183Reference, WindSpeed, talkerId)) {
-                SendMessage(NMEA0183Msg);
+                if (shouldSend && NMEA0183SetMWV(NMEA0183Msg, formatCourse(WindAngle), NMEA0183Reference, WindSpeed, talkerId))
+                {
+                    SendMessage(NMEA0183Msg);
+                }
             }
 
             /* if (WindReference == N2kWind_Apparent && boatData->SOG->isValid())

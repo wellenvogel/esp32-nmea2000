@@ -251,6 +251,58 @@
         "category": "converter"
     },
     {
+        "name": "windmappings",
+        "type": "array",
+        "replace":[
+            {
+                "n": "tng",
+                "l": "true north ground",
+                "t": "True_North=0",
+                "d": "twa_tws"
+            },
+            {
+                "n": "mgd",
+                "l": "magnetic ground dir",
+                "t": "Magnetic=1",
+                "d":""
+            },
+            {
+                "n": "awa",
+                "l": "apparent angle",
+                "t": "Apparent=2",
+                "d":"awa_aws"
+            },
+            {
+                "n": "gna",
+                "l": "ground angle",
+                "t": "True_boat=3",
+                "d": ""
+            },
+            {
+                "n": "tra",
+                "l": "true angle",
+                "t": "True_water=4",
+                "d":""
+            }
+
+        ],
+        "children":[
+            {
+                "name":"windm$n",
+                "type":"list",
+                "description": "mapping of the PGN 130306 wind reference $t",
+                "label":"wind $l",
+                "list":[
+                    {"l": "-unset-","v":""},
+                    {"l": "TWA/TWS","v":"twa_tws"},
+                    {"l": "AWA/AWS", "v":"awa_aws"},
+                    {"l": "TWD/TWS","v":"twd_tws"}
+                ]
+
+            }
+        ]
+    },
+    {
         "name": "timeouts",
         "type": "array",
         "replace":[
