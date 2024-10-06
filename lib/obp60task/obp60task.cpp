@@ -64,19 +64,9 @@ void OBP60Init(GwApi *api){
     }
     #endif
 
-    // Set CPU speed
-    String cpuspeed = api->getConfig()->getConfigItem(api->getConfig()->cpuSpeed,true)->asString();
-    if(String(cpuspeed) == "80"){
-        setCpuFrequencyMhz(80);
-    }
-    if(String(cpuspeed) == "160"){
-        setCpuFrequencyMhz(160);
-    }
-    if(String(cpuspeed) == "240"){
-        setCpuFrequencyMhz(240);
-    }
+    // Get CPU speed
     int freq = getCpuFrequencyMhz();
-    api->getLogger()->logDebug(GwLog::LOG,"CPU speed: %i MHz", freq);
+    api->getLogger()->logDebug(GwLog::LOG,"CPU speed at boot: %i MHz", freq);
     
     // Settings for backlight
     String backlightMode = api->getConfig()->getConfigItem(api->getConfig()->backlight,true)->asString();
@@ -437,6 +427,7 @@ void OBP60Task(GwApi *api){
     Color color = colorMapping(backlightColor);
     uint brightness = 2.55 * uint(api->getConfig()->getConfigItem(api->getConfig()->blBrightness,true)->asInt());
     bool uvoltage = api->getConfig()->getConfigItem(api->getConfig()->underVoltage,true)->asBoolean();
+    String cpuspeed = api->getConfig()->getConfigItem(api->getConfig()->cpuSpeed,true)->asString();
 
     // refreshmode defined in init section
     // displaycolor defined in init section
@@ -459,6 +450,7 @@ void OBP60Task(GwApi *api){
     commonData.time = boatValues.findValueOrCreate("GPST");      // Load GpsTime
     commonData.date = boatValues.findValueOrCreate("GPSD");      // Load GpsTime
     bool delayedDisplayUpdate = false;  // If select a new pages then make a delayed full display update
+    bool cpuspeedsetted = false;    // Marker for change CPU speed 
     long firststart = millis();     // First start
     long starttime0 = millis();     // Mainloop
     long starttime1 = millis();     // Full display refresh for the first 5 min (more often as normal)
@@ -478,6 +470,22 @@ void OBP60Task(GwApi *api){
         if(uvoltage == true){
             underVoltageDetection(api);
         }  
+
+        // Set CPU speed after boot after 1min 
+        if(millis() > firststart + (1 * 60 * 1000) && cpuspeedsetted == false){
+            if(String(cpuspeed) == "80"){
+                setCpuFrequencyMhz(80);
+            }
+            if(String(cpuspeed) == "160"){
+                setCpuFrequencyMhz(160);
+            }
+            if(String(cpuspeed) == "240"){
+                setCpuFrequencyMhz(240);
+            }
+            int freq = getCpuFrequencyMhz();
+            api->getLogger()->logDebug(GwLog::LOG,"CPU speed: %i MHz", freq);
+            cpuspeedsetted = true;
+        }
 
         if(millis() > starttime0 + 100){
             starttime0 = millis();
