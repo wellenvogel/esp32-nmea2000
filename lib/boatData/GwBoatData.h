@@ -2,6 +2,7 @@
 #define _GWBOATDATA_H
 
 #include "GwLog.h"
+#include "GWConfig.h"
 #include <Arduino.h>
 #include <map>
 #include <vector>
@@ -15,6 +16,14 @@
 class GwJsonDocument;
 class GwBoatItemBase{
     public:
+        using TOType=enum{
+            def=1,
+            ais=2,
+            sensor=3,
+            lng=4,
+            user=5,
+            keep=6
+        };
         class StringWriter{
             uint8_t *buffer =NULL;
             uint8_t *wp=NULL;
@@ -31,7 +40,7 @@ class GwBoatItemBase{
                 bool baseFilled();
                 void reset();
         };
-        static const unsigned long INVALID_TIME=60000;
+        static const long INVALID_TIME=60000;
         //the formatter names that must be known in js
         GWSC(formatCourse);
         GWSC(formatKnots);
@@ -51,10 +60,11 @@ class GwBoatItemBase{
     protected:
         int type;
         unsigned long lastSet=0;
-        unsigned long invalidTime=INVALID_TIME;
+        long invalidTime=INVALID_TIME;
         String name;
         String format;
         StringWriter writer;
+        TOType toType=TOType::def;
         void uls(unsigned long ts=0){
             if (ts) lastSet=ts;
             else lastSet=millis();
@@ -65,7 +75,8 @@ class GwBoatItemBase{
         int getCurrentType(){return type;}
         unsigned long getLastSet() const {return lastSet;}
         bool isValid(unsigned long now=0) const ;
-        GwBoatItemBase(String name,String format,unsigned long invalidTime=INVALID_TIME);
+        GwBoatItemBase(String name,String format,TOType toType);
+        GwBoatItemBase(String name,String format,unsigned long invalidTime);
         virtual ~GwBoatItemBase(){}
         void invalidate(){
             lastSet=0;
@@ -82,6 +93,8 @@ class GwBoatItemBase{
         virtual double getDoubleValue()=0;
         String getName(){return name;}
         const String & getFormat() const{return format;}
+        virtual void setInvalidTime(unsigned long it, bool force=true);
+        TOType getToType(){return toType;}
 };
 class GwBoatData;
 template<class T> class GwBoatItem : public GwBoatItemBase{
@@ -90,6 +103,7 @@ template<class T> class GwBoatItem : public GwBoatItemBase{
         bool lastStringValid=false;
     public:
         GwBoatItem(String name,String formatInfo,unsigned long invalidTime=INVALID_TIME,GwBoatItemMap *map=NULL);
+        GwBoatItem(String name,String formatInfo,TOType toType,GwBoatItemMap *map=NULL);
         virtual ~GwBoatItem(){}
         bool update(T nv, int source=-1);
         bool updateMax(T nv,int sourceId=-1);
@@ -118,14 +132,14 @@ class GwSatInfo{
         uint32_t Elevation;
         uint32_t Azimut;
         uint32_t SNR;
-        unsigned long timestamp;
+        unsigned long validTill;
 };
 class GwSatInfoList{
     public:
-        static const unsigned long lifeTime=32000;
+        static const GwBoatItemBase::TOType toType=GwBoatItemBase::TOType::lng;
         std::vector<GwSatInfo> sats;
         void houseKeeping(unsigned long ts=0);
-        void update(GwSatInfo entry);
+        void update(GwSatInfo entry, unsigned long validTill);
         int getNumSats() const{
             return sats.size();
         }
@@ -139,7 +153,7 @@ class GwSatInfoList{
 class GwBoatDataSatList : public GwBoatItem<GwSatInfoList>
 {
 public:
-    GwBoatDataSatList(String name, String formatInfo, unsigned long invalidTime = INVALID_TIME, GwBoatItemMap *map = NULL);
+    GwBoatDataSatList(String name, String formatInfo, GwBoatItemBase::TOType toType, GwBoatItemMap *map = NULL);
     bool update(GwSatInfo info, int source);
     virtual void toJsonDoc(GwJsonDocument *doc, unsigned long minTime);
     GwSatInfo *getAt(int idx){
@@ -164,55 +178,59 @@ public:
     virtual unsigned long getInvalidTime(){ return GwBoatItemBase::INVALID_TIME;}
     virtual ~GwBoatItemNameProvider() {}
 };
-#define GWBOATDATA(type,name,time,fmt)  \
+#define GWBOATDATAT(type,name,toType,fmt)  \
     static constexpr const char* _##name=#name; \
-    GwBoatItem<type> *name=new GwBoatItem<type>(#name,GwBoatItemBase::fmt,time,&values) ;
-#define GWSPECBOATDATA(clazz,name,time,fmt)  \
-    clazz *name=new clazz(#name,GwBoatItemBase::fmt,time,&values) ;
+    GwBoatItem<type> *name=new GwBoatItem<type>(#name,GwBoatItemBase::fmt,toType,&values) ;
+#define GWBOATDATA(type,name,fmt) GWBOATDATAT(type,name,GwBoatItemBase::TOType::def,fmt) 
+#define GWSPECBOATDATA(clazz,name,toType,fmt)  \
+    clazz *name=new clazz(#name,GwBoatItemBase::fmt,toType,&values) ;
 class GwBoatData{
+    static const unsigned long DEF_TIME=4000;
     private:
         GwLog *logger;
         GwBoatItemBase::GwBoatItemMap values;
     public:
 
-    GWBOATDATA(double,COG,4000,formatCourse)
-    GWBOATDATA(double,TWD,4000,formatCourse)
-    GWBOATDATA(double,SOG,4000,formatKnots)
-    GWBOATDATA(double,STW,4000,formatKnots)
-    GWBOATDATA(double,TWS,4000,formatKnots)
-    GWBOATDATA(double,AWS,4000,formatKnots)
-    GWBOATDATA(double,MaxTws,0,formatKnots)
-    GWBOATDATA(double,MaxAws,0,formatKnots)
-    GWBOATDATA(double,AWA,4000,formatWind)
-    GWBOATDATA(double,HDG,4000,formatCourse) //true heading
-    GWBOATDATA(double,MHDG,4000,formatCourse) //magnetic heading
-    GWBOATDATA(double,ROT,4000,formatRot)
-    GWBOATDATA(double,VAR,4000,formatCourse) //Variation
-    GWBOATDATA(double,DEV,4000,formatCourse) //Deviation
-    GWBOATDATA(double,HDOP,4000,formatDop)
-    GWBOATDATA(double,PDOP,4000,formatDop)
-    GWBOATDATA(double,VDOP,4000,formatDop)
-    GWBOATDATA(double,RPOS,4000,formatWind) //RudderPosition
-    GWBOATDATA(double,PRPOS,4000,formatWind) //second rudder pos
-    GWBOATDATA(double,LAT,4000,formatLatitude)
-    GWBOATDATA(double,LON,4000,formatLongitude)
-    GWBOATDATA(double,ALT,4000,formatFixed0) //altitude
-    GWBOATDATA(double,DBS,4000,formatDepth) //waterDepth (below surface)
-    GWBOATDATA(double,DBT,4000,formatDepth) //DepthTransducer
-    GWBOATDATA(double,GPST,4000,formatTime) //GpsTime
-    GWBOATDATA(double,WTemp,4000,kelvinToC)
-    GWBOATDATA(double,XTE,4000,formatXte)
-    GWBOATDATA(double,DTW,4000,mtr2nm) //distance wp
-    GWBOATDATA(double,BTW,4000,formatCourse) //bearing wp
-    GWBOATDATA(double,WPLat,4000,formatLatitude)
-    GWBOATDATA(double,WPLon,4000,formatLongitude)
-    GWBOATDATA(uint32_t,Log,16000,mtr2nm)
-    GWBOATDATA(uint32_t,TripLog,16000,mtr2nm)
-    GWBOATDATA(uint32_t,GPSD,4000,formatDate) //Date
-    GWBOATDATA(int16_t,TZ,8000,formatFixed0)
-    GWSPECBOATDATA(GwBoatDataSatList,SatInfo,GwSatInfoList::lifeTime,formatFixed0);
+    GWBOATDATA(double,COG,formatCourse) // course over ground
+    GWBOATDATA(double,SOG,formatKnots) // speed over ground
+    GWBOATDATA(double,HDT,formatCourse) // true heading
+    GWBOATDATA(double,HDM,formatCourse) // magnetic heading
+    GWBOATDATA(double,STW,formatKnots) // water speed
+    GWBOATDATA(double,VAR,formatWind) // variation
+    GWBOATDATA(double,DEV,formatWind) // deviation
+    GWBOATDATA(double,AWA,formatWind) // apparent wind ANGLE
+    GWBOATDATA(double,AWS,formatKnots) // apparent wind speed
+    GWBOATDATAT(double,MaxAws,GwBoatItemBase::TOType::keep,formatKnots)
+    GWBOATDATA(double,TWD,formatCourse) // true wind DIRECTION
+    GWBOATDATA(double,TWA,formatWind) // true wind ANGLE
+    GWBOATDATA(double,TWS,formatKnots) // true wind speed
+
+    GWBOATDATAT(double,MaxTws,GwBoatItemBase::TOType::keep,formatKnots)
+    GWBOATDATA(double,ROT,formatRot) // rate of turn
+    GWBOATDATA(double,RPOS,formatWind) // rudder position
+    GWBOATDATA(double,PRPOS,formatWind) // secondary rudder position
+    GWBOATDATA(double,LAT,formatLatitude) 
+    GWBOATDATA(double,LON,formatLongitude)
+    GWBOATDATA(double,ALT,formatFixed0) //altitude
+    GWBOATDATA(double,HDOP,formatDop)
+    GWBOATDATA(double,PDOP,formatDop)
+    GWBOATDATA(double,VDOP,formatDop)
+    GWBOATDATA(double,DBS,formatDepth) //waterDepth (below surface)
+    GWBOATDATA(double,DBT,formatDepth) //DepthTransducer
+    GWBOATDATA(double,GPST,formatTime) // GPS time (seconds of day)
+    GWBOATDATA(uint32_t,GPSD,formatDate) // GPS date (days since 1979-01-01)
+    GWBOATDATAT(int16_t,TZ,GwBoatItemBase::TOType::lng,formatFixed0)
+    GWBOATDATA(double,WTemp,kelvinToC)
+    GWBOATDATAT(uint32_t,Log,GwBoatItemBase::TOType::lng,mtr2nm)
+    GWBOATDATAT(uint32_t,TripLog,GwBoatItemBase::TOType::lng,mtr2nm)
+    GWBOATDATA(double,DTW,mtr2nm) // distance to waypoint
+    GWBOATDATA(double,BTW,formatCourse) // bearing to waypoint
+    GWBOATDATA(double,XTE,formatXte) // cross track error
+    GWBOATDATA(double,WPLat,formatLatitude) // waypoint latitude
+    GWBOATDATA(double,WPLon,formatLongitude) // waypoint longitude
+    GWSPECBOATDATA(GwBoatDataSatList,SatInfo,GwSatInfoList::toType,formatFixed0);
     public:
-        GwBoatData(GwLog *logger);
+        GwBoatData(GwLog *logger, GwConfigHandler *cfg);
         ~GwBoatData();
         template<class T> GwBoatItem<T> *getOrCreate(T initial,GwBoatItemNameProvider *provider);
         template<class T> bool update(T value,int source,GwBoatItemNameProvider *provider);

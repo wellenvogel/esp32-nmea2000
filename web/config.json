@@ -251,6 +251,46 @@
         "category": "converter"
     },
     {
+        "name": "timeouts",
+        "type": "array",
+        "replace":[
+            {
+                "n":"Default",
+                "d":"4000",
+                "l": "default",
+                "t": "NMEA"
+            },
+            {
+                "n":"Sensor",
+                "d":"60000",
+                "l": "sensor",
+                "t": "sensor"
+            },
+            {
+                "n":"Long",
+                "d":"32000",
+                "l": "long",
+                "t": "special NMEA"
+            },
+            {
+                "n":"Ais",
+                "d":"120000",
+                "l": "ais",
+                "t": "ais"
+            }
+        ],
+        "children":[
+            {
+            "name":"timo$n",
+            "label":"timeout $l",
+            "default": "$d",
+            "type": "number",
+            "description": "data timeouts(ms) for $t data",
+            "category": "converter"
+            }
+        ]
+    },
+    {
         "name": "usbActisense",
         "label": "USB mode",
         "type": "list",

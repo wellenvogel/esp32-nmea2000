@@ -185,13 +185,13 @@ private:
             if (N2kIsNA(Variation)){
                 //no variation
                 if (ref == N2khr_magnetic){
-                    updateDouble(boatData->MHDG,Heading);
+                    updateDouble(boatData->HDM,Heading);
                     if (NMEA0183SetHDM(NMEA0183Msg,Heading,talkerId)){
                         SendMessage(NMEA0183Msg);
                     }    
                 }
                 if (ref == N2khr_true){
-                    updateDouble(boatData->HDG,Heading);
+                    updateDouble(boatData->HDT,Heading);
                     if (NMEA0183SetHDT(NMEA0183Msg,Heading,talkerId)){
                         SendMessage(NMEA0183Msg);
                     }
@@ -206,8 +206,8 @@ private:
                 if (ref == N2khr_true){
                     MagneticHeading=Heading-Variation;
                 }
-                updateDouble(boatData->MHDG,MagneticHeading);
-                updateDouble(boatData->HDG,Heading);
+                updateDouble(boatData->HDM,MagneticHeading);
+                updateDouble(boatData->HDT,Heading);
                 if (!N2kIsNA(MagneticHeading)){
                     if (NMEA0183SetHDG(NMEA0183Msg, MagneticHeading,_Deviation, 
                         Variation,talkerId))
@@ -252,8 +252,8 @@ private:
             tNMEA0183Msg NMEA0183Msg;
             updateDouble(boatData->STW, WaterReferenced);
             unsigned long now = millis();
-            double MagneticHeading = (boatData->HDG->isValid(now) && boatData->VAR->isValid(now)) ? boatData->HDG->getData() + boatData->VAR->getData() : NMEA0183DoubleNA;
-            if (NMEA0183SetVHW(NMEA0183Msg, boatData->HDG->getDataWithDefault(NMEA0183DoubleNA), MagneticHeading, WaterReferenced,talkerId))
+            double MagneticHeading = (boatData->HDT->isValid(now) && boatData->VAR->isValid(now)) ? boatData->HDT->getData() + boatData->VAR->getData() : NMEA0183DoubleNA;
+            if (NMEA0183SetVHW(NMEA0183Msg, boatData->HDT->getDataWithDefault(NMEA0183DoubleNA), MagneticHeading, WaterReferenced,talkerId))
             {
                 SendMessage(NMEA0183Msg);
             }
@@ -468,37 +468,46 @@ private:
     {
         unsigned char SID;
         tN2kWindReference WindReference;
-        tNMEA0183WindReference NMEA0183Reference = NMEA0183Wind_True;
-
-        double x, y;
         double WindAngle=N2kDoubleNA, WindSpeed=N2kDoubleNA;
 
-        if (ParseN2kWindSpeed(N2kMsg, SID, WindSpeed, WindAngle, WindReference))
-        {
+        if (ParseN2kWindSpeed(N2kMsg, SID, WindSpeed, WindAngle, WindReference)) {
             tNMEA0183Msg NMEA0183Msg;
+            tNMEA0183WindReference NMEA0183Reference;
+            bool shouldSend = false;
 
-            if (WindReference == N2kWind_Apparent)
-            {
+            // MWV sentence contains apparent/true ANGLE and SPEED
+            // https://gpsd.gitlab.io/gpsd/NMEA.html#_mwv_wind_speed_and_angle
+            // https://docs.vaisala.com/r/M211109EN-L/en-US/GUID-7402DEF8-5E82-446F-B63E-998F49F3D743/GUID-C77934C7-2A72-466E-BC52-CE6B8CC7ACB6
+
+            if (WindReference == N2kWind_Apparent) {
                 NMEA0183Reference = NMEA0183Wind_Apparent;
                 updateDouble(boatData->AWA, WindAngle);
                 updateDouble(boatData->AWS, WindSpeed);
                 setMax(boatData->MaxAws, boatData->AWS);
-            }
-            if (WindReference == N2kWind_True_North)
-            {
+                shouldSend = true;
+            } 
+            if (WindReference == N2kWind_True_water) {
                 NMEA0183Reference = NMEA0183Wind_True;
-                updateDouble(boatData->TWD, WindAngle);
+                updateDouble(boatData->TWA, WindAngle);
                 updateDouble(boatData->TWS, WindSpeed);
+                setMax(boatData->MaxTws, boatData->TWS);
+                shouldSend = true;
+                if (boatData->HDT->isValid()) {
+                    double twd = WindAngle+boatData->HDT->getData();
+                    if (twd>2*M_PI) { twd-=2*M_PI; }
+                    updateDouble(boatData->TWD, twd);
+                }
             }
 
-            if (NMEA0183SetMWV(NMEA0183Msg, formatCourse(WindAngle), NMEA0183Reference, WindSpeed,talkerId))
+            if (shouldSend && NMEA0183SetMWV(NMEA0183Msg, formatCourse(WindAngle), NMEA0183Reference, WindSpeed, talkerId)) {
                 SendMessage(NMEA0183Msg);
+            }
 
-            if (WindReference == N2kWind_Apparent && boatData->SOG->isValid())
+            /* if (WindReference == N2kWind_Apparent && boatData->SOG->isValid())
             { // Lets calculate and send TWS/TWA if SOG is available
 
-                x = WindSpeed * cos(WindAngle);
-                y = WindSpeed * sin(WindAngle);
+                double x = WindSpeed * cos(WindAngle);
+                double y = WindSpeed * sin(WindAngle);
 
                 updateDouble(boatData->TWD, atan2(y, -boatData->SOG->getData() + x));
                 updateDouble(boatData->TWS, sqrt((y * y) + ((-boatData->SOG->getData() + x) * (-boatData->SOG->getData() + x))));
@@ -534,7 +543,7 @@ private:
                     return;
 
                 SendMessage(NMEA0183Msg);
-            }
+            } */
         }
     }
     //*****************************************************************************
@@ -657,12 +666,14 @@ private:
         double _Heading=N2kDoubleNA;
         double _ROT=N2kDoubleNA;
         tN2kAISNavStatus _NavStatus;
+        tN2kAISTransceiverInformation _AISTransceiverInformation; 
+        uint8_t _SID;
 
         uint8_t _MessageType = 1;
         tNMEA0183AISMsg NMEA0183AISMsg;
 
         if (ParseN2kPGN129038(N2kMsg, SID, _Repeat, _UserID, _Latitude, _Longitude, _Accuracy, _RAIM, _Seconds,
-                              _COG, _SOG, _Heading, _ROT, _NavStatus))
+                              _COG, _SOG, _Heading, _ROT, _NavStatus,_AISTransceiverInformation,_SID))
         {
 
 // Debug
@@ -746,12 +757,13 @@ private:
         tN2kGNSStype _GNSStype;
         tN2kAISTransceiverInformation _AISinfo;
         tN2kAISDTE _DTE;
+        uint8_t _SID;
 
         tNMEA0183AISMsg NMEA0183AISMsg;
 
-        if (ParseN2kPGN129794(N2kMsg, _MessageID, _Repeat, _UserID, _IMONumber, _Callsign, _Name, _VesselType,
-                              _Length, _Beam, _PosRefStbd, _PosRefBow, _ETAdate, _ETAtime, _Draught, _Destination,
-                              _AISversion, _GNSStype, _DTE, _AISinfo))
+        if (ParseN2kPGN129794(N2kMsg, _MessageID, _Repeat, _UserID, _IMONumber, _Callsign, 8, _Name,21, _VesselType,
+                              _Length, _Beam, _PosRefStbd, _PosRefBow, _ETAdate, _ETAtime, _Draught, _Destination,21,
+                              _AISversion, _GNSStype, _DTE, _AISinfo,_SID))
         {
 
 #ifdef SERIAL_PRINT_AIS_FIELDS
@@ -855,9 +867,10 @@ private:
         bool _Display, _DSC, _Band, _Msg22, _State;
         tN2kAISMode _Mode;
         tN2kAISTransceiverInformation  _AISTranceiverInformation;
+        uint8_t _SID;
 
         if (ParseN2kPGN129039(N2kMsg, _MessageID, _Repeat, _UserID, _Latitude, _Longitude, _Accuracy, _RAIM,
-                              _Seconds, _COG, _SOG, _AISTranceiverInformation, _Heading, _Unit, _Display, _DSC, _Band, _Msg22, _Mode, _State))
+                              _Seconds, _COG, _SOG, _AISTranceiverInformation, _Heading, _Unit, _Display, _DSC, _Band, _Msg22, _Mode, _State,_SID))
         {
 
             tNMEA0183AISMsg NMEA0183AISMsg;
@@ -896,8 +909,10 @@ private:
         tN2kAISRepeat _Repeat;
         uint32_t _UserID; // MMSI
         char _Name[21];
+        tN2kAISTransceiverInformation _AISInfo;
+        uint8_t _SID;
 
-        if (ParseN2kPGN129809(N2kMsg, _MessageID, _Repeat, _UserID, _Name))
+        if (ParseN2kPGN129809(N2kMsg, _MessageID, _Repeat, _UserID, _Name,21,_AISInfo,_SID))
         {
 
             tNMEA0183AISMsg NMEA0183AISMsg;
@@ -923,9 +938,11 @@ private:
         double _Beam=N2kDoubleNA;
         double _PosRefStbd=N2kDoubleNA;
         double _PosRefBow=N2kDoubleNA;
+        tN2kAISTransceiverInformation _AISInfo;
+        uint8_t _SID;
 
-        if (ParseN2kPGN129810(N2kMsg, _MessageID, _Repeat, _UserID, _VesselType, _Vendor, _Callsign,
-                              _Length, _Beam, _PosRefStbd, _PosRefBow, _MothershipID))
+        if (ParseN2kPGN129810(N2kMsg, _MessageID, _Repeat, _UserID, _VesselType, _Vendor,4, _Callsign,8,
+                              _Length, _Beam, _PosRefStbd, _PosRefBow, _MothershipID,_AISInfo,_SID))
         {
 
 //
@@ -1121,8 +1138,8 @@ private:
         int16_t ETADate=0;
         double BearingOriginToDestinationWaypoint=N2kDoubleNA;
         double BearingPositionToDestinationWaypoint=N2kDoubleNA;
-        uint8_t OriginWaypointNumber; 
-        uint8_t DestinationWaypointNumber;
+        uint32_t OriginWaypointNumber; 
+        uint32_t DestinationWaypointNumber;
         double DestinationLatitude=N2kDoubleNA;
         double DestinationLongitude=N2kDoubleNA;
         double WaypointClosingVelocity=N2kDoubleNA;
