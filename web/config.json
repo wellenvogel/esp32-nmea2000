@@ -297,7 +297,9 @@
                     {"l": "TWA/TWS","v":"twa_tws"},
                     {"l": "AWA/AWS", "v":"awa_aws"},
                     {"l": "TWD/TWS","v":"twd_tws"}
-                ]
+                ],
+                "category":"converter",
+                "default":"$d"
 
             }
         ]
