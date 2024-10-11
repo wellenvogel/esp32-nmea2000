@@ -18,7 +18,7 @@ jobs:
         run: |
           #apt-get install -y python3-pip
           python3 -m pip install --upgrade pip
-          pip install -U platformio
+          pip install -U platformio --break-system-packages
       - name: Build
         run: |
           pio run
