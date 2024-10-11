@@ -1332,6 +1332,21 @@ private:
             return;
         }
         int i=0;
+        if (TempSource == N2kts_SeaTemperature) {
+          updateDouble(boatData->WTemp, Temperature);
+          tNMEA0183Msg NMEA0183Msg;
+
+          if (!NMEA0183Msg.Init("MTW", talkerId))
+              return;
+          if (!NMEA0183Msg.AddDoubleField(KelvinToC(Temperature)))
+              return;
+          if (!NMEA0183Msg.AddStrField("C"))
+              return;
+
+            SendMessage(NMEA0183Msg);
+            i++;
+        }
+
         GwXDRFoundMapping mapping=xdrMappings->getMapping(XDRTEMP,TempSource,0,0);
         if (updateDouble(&mapping,Temperature)){
             LOG_DEBUG(GwLog::DEBUG+1,"found temperature mapping %s",mapping.definition->toString().c_str());
