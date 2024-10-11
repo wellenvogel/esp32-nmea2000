@@ -341,6 +341,6 @@ body {
 .error{
   color: red;
 }
-.changed input.error{
-  color: red;
+input.error{
+  background-color: rgba(255, 0, 0, 0.329);
 }

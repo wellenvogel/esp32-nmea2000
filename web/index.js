@@ -1,5 +1,4 @@
 (function () {
-    let self = this;
     let lastUpdate = (new Date()).getTime();
     let reloadConfig = false;
     let needAdminPass = true;
@@ -7,6 +6,8 @@
     let channelList = {};
     let minUser = 200;
     let listeners = [];
+    let buttonHandlers={};
+    let checkers={};
     function addEl(type, clazz, parent, text) {
         let el = document.createElement(type);
         if (clazz) {
@@ -48,7 +49,7 @@
         return fetch(url)
             .then(function (r) { return r.text() });
     }
-    function reset() {
+    buttonHandlers.reset=function() {
         ensurePass()
             .then(function (hash) {
                 fetch('/api/reset?_hash=' + encodeURIComponent(hash));
@@ -161,7 +162,8 @@
                 }
             });
     }
-    function checkMinMax(v, allValues, def) {
+    buttonHandlers.resetForm=resetForm;
+    checkers.checkMinMax=function(v, allValues, def) {
         let parsed = parseFloat(v);
         if (isNaN(parsed)) return "must be a number";
         if (def.min !== undefined) {
@@ -172,7 +174,7 @@
         }
     }
 
-    function checkSystemName(v) {
+    checkers.checkSystemName=function(v) {
         //2...32 characters for ssid
         let allowed = v.replace(/[^a-zA-Z0-9]*/g, '');
         if (allowed != v) return "contains invalid characters, only a-z, A-Z, 0-9";
@@ -184,11 +186,11 @@
             return "password must be at least 8 characters";
         }
     }
-    function checkAdminPass(v) {
+    checkers.checkAdminPass=function(v) {
         return checkApPass(v);
     }
 
-    function checkApIp(v, allValues) {
+    checkers.checkApIp=function(v, allValues) {
         if (!v) return "cannot be empty";
         let err1 = "must be in the form 192.168.x.x";
         if (!v.match(/[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+/)) return err1;
@@ -199,11 +201,11 @@
             if (iv < 0 || iv > 255) return err1;
         }
     }
-    function checkNetMask(v, allValues) {
-        return checkApIp(v, allValues);
+    checkers.checkNetMask=function(v, allValues) {
+        return checkers.checkApIp(v, allValues);
     }
 
-    function checkIpAddress(v, allValues, def) {
+    checkers.checkIpAddress=function(v, allValues, def) {
         if (allValues.tclEnabled != "true") return;
         if (!v) return "cannot be empty";
         if (!v.match(/[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*/)
@@ -211,7 +213,7 @@
             return "must be either in the form 192.168.1.1 or xxx.local";
     }
 
-    function checkXDR(v, allValues) {
+    checkers.checkXDR=function(v, allValues) {
         if (!v) return;
         let parts = v.split(',');
         if (parseInt(parts[1]) == 0) return;
@@ -256,14 +258,11 @@
             }
             let check = v.getAttribute('data-check');
             if (check) {
-                let checkFunction;
-                try{
-                    checkFunction=eval(check);
-                }catch(e){}
+                let checkFunction=checkers[check];
                 if (typeof (checkFunction) === 'function') {
                     if (! loggedChecks[check]){
                         loggedChecks[check]=true;
-                        console.log("check:"+check);
+                        //console.log("check:"+check);
                     }
                     let res = checkFunction(v.value, allValues, getConfigDefition(name));
                     if (res) {
@@ -276,12 +275,15 @@
                         return;
                     }
                 }
+                else{
+                    console.log("check not found:",check);
+                }
             }
             allValues[name] = v.value;
         }
         return allValues;
     }
-    function changeConfig() {
+    buttonHandlers.changeConfig=function() {
         ensurePass()
             .then(function (pass) {
                 let newAdminPass;
@@ -320,7 +322,7 @@
             })
             .catch(function (e) { alert(e); })
     }
-    function factoryReset() {
+    buttonHandlers.factoryReset=function() {
         ensurePass()
             .then(function (hash) {
                 if (!confirm("Really delete all configuration?\n" +
@@ -1014,7 +1016,7 @@
             hideOverlay();
         }
     }
-    function loadUnassigned() {
+    buttonHandlers.loadUnassigned=function() {
         getText("/api/xdrUnmapped")
             .then(function (txt) {
                 let ot = "";
@@ -1062,17 +1064,17 @@
         target.setAttribute('download', name);
         target.click();
     }
-    function exportConfig() {
+    buttonHandlers.exportConfig=function() {
         let data = getAllConfigs(true);
         if (!data) return;
         downloadData(data, formatDateForFilename(true) + ".json");
     }
-    function exportXdr() {
+    buttonHandlers.exportXdr=function() {
         let data = {};
         forEl('.xdrvalue', function (el) {
             let name = el.getAttribute('name');
             let value = el.value;
-            let err = checkXDR(value, data);
+            let err = checkers.checkXDR(value, data);
             if (err) {
                 alert("error in " + name + ": " + value + "\n" + err);
                 return;
@@ -1133,10 +1135,10 @@
         });
         ip.click();
     }
-    function importXdr() {
+    buttonHandlers.importXdr=function() {
         importJson(new RegExp(/^XDR[0-9][0-9]*/));
     }
-    function importConfig() {
+    buttonHandlers.importConfig=function() {
         importJson();
     }
     function toggleClass(el, id, classList) {
@@ -1287,7 +1289,7 @@
                 }
                 try{
                     Object.freeze(capabilities);
-                    callListeners(api.EVENTS.capabilities,capabilities);
+                    callListeners(api.EVENTS.init,capabilities);
                 }catch (e){
                     console.log(e);
                 }
@@ -1325,7 +1327,7 @@
     }
 
 
-    function adminPassCancel() {
+    buttonHandlers.adminPassCancel=function() {
         forEl('#adminPassOverlay', function (el) { el.classList.add('hidden') });
         forEl('#adminPassInput', function (el) { el.value = '' });
     }
@@ -1342,7 +1344,7 @@
             } catch (e) { }
         });
     }
-    function forgetPass() {
+    buttonHandlers.forgetPass=function() {
         localStorage.removeItem('adminPass');
         forEl('#adminPassInput', function (el) {
             el.value = '';
@@ -1395,7 +1397,7 @@
             }
         });
     }
-    function converterInfo() {
+    buttonHandlers.converterInfo=function() {
         getJson("api/converterInfo").then(function (json) {
             let text = "<h3>Converted entities</h3>";
             text += "<p><b>NMEA0183 to NMEA2000:</b><br/>";
@@ -1740,7 +1742,7 @@
             });
         }
     }
-    function uploadBin(ev) {
+    buttonHandlers.uploadBin=function(ev) {
         let el = document.getElementById("uploadFile");
         let progressEl = document.getElementById("uploadDone");
         if (!el) return;
@@ -1895,8 +1897,7 @@
         forEl: forEl,
         closestParent: closestParent,
         EVENTS: {
-            init: 0,
-            capabilities: 1, //called when capabilities are loaded
+            init: 0, //called when capabilities are loaded, data is capabilities
         }
     };
     function callListeners(event,data){
@@ -1906,7 +1907,7 @@
             }
         })
     }
-    window.esp32nmea = api;
+    window.esp32nmea2k = api;
     window.setInterval(update, 1000);
     window.setInterval(function () {
         let dp = document.getElementById('dashboardPage');
@@ -1919,10 +1920,10 @@
         let buttons = document.querySelectorAll('button');
         for (let i = 0; i < buttons.length; i++) {
             let be = buttons[i];
-            let buttonFunction=eval(be.id);
+            let buttonFunction=buttonHandlers[be.id];
             if (typeof(buttonFunction) === 'function'){
                 be.onclick = buttonFunction; //assume a function with the button id
-                console.log("button: "+be.id);
+                //console.log("button: "+be.id);
             }
             else{
                 console.log("no handler for button "+be.id);
@@ -1983,6 +1984,6 @@
                     })
             })
         })
-        callListeners(api.EVENTS.init);
     });
 }());
+
