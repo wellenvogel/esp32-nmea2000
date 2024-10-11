@@ -341,3 +341,6 @@ body {
 .error{
   color: red;
 }
+.changed input.error{
+  color: red;
+}

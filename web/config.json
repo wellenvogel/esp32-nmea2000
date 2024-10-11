@@ -351,7 +351,7 @@
         "check": "checkMinMax",
         "min": -1,
         "max": 256,
-        "description": "the temp instance of PGN 130312 used for water temperature, use -1 for none, 256 for any",
+        "description": "the temp instance of PGN 130312 used for water temperature (0...255), use -1 for none, 256 for any",
         "default": "256",
         "category":"converter"
     },
