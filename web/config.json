@@ -219,16 +219,56 @@
         "category":"converter"
      },
      {
-        "name":"checkRMCt",
+        "name": "checkRMCt",
         "label": "check RMC time",
         "type": "number",
         "description": "start sending RMC if we did not see an external RMC after this much ms",
-        "default":"4000",
+        "default": "4000",
         "min": 1000,
-        "check":"checkMinMax",
-        "category":"converter"
-     },
-     {
+        "check": "checkMinMax",
+        "category": "converter"
+    },
+    {
+        "name": "timeouts",
+        "type": "array",
+        "replace": [
+            {
+                "n": "Default",
+                "d": "4000",
+                "l": "default",
+                "t": "NMEA"
+            },
+            {
+                "n": "Sensor",
+                "d": "60000",
+                "l": "sensor",
+                "t": "sensor"
+            },
+            {
+                "n": "Long",
+                "d": "32000",
+                "l": "long",
+                "t": "special NMEA"
+            },
+            {
+                "n": "Ais",
+                "d": "120000",
+                "l": "ais",
+                "t": "ais"
+            }
+        ],
+        "children": [
+            {
+                "name": "timo$n",
+                "label": "timeout $l",
+                "default": "$d",
+                "type": "number",
+                "description": "data timeouts(ms) for $t data",
+                "category": "converter"
+            }
+        ]
+    },
+    {
         "name": "stbRudderI",
         "label":"stb rudder instance",
         "type": "number",
@@ -305,44 +345,15 @@
         ]
     },
     {
-        "name": "timeouts",
-        "type": "array",
-        "replace":[
-            {
-                "n":"Default",
-                "d":"4000",
-                "l": "default",
-                "t": "NMEA"
-            },
-            {
-                "n":"Sensor",
-                "d":"60000",
-                "l": "sensor",
-                "t": "sensor"
-            },
-            {
-                "n":"Long",
-                "d":"32000",
-                "l": "long",
-                "t": "special NMEA"
-            },
-            {
-                "n":"Ais",
-                "d":"120000",
-                "l": "ais",
-                "t": "ais"
-            }
-        ],
-        "children":[
-            {
-            "name":"timo$n",
-            "label":"timeout $l",
-            "default": "$d",
-            "type": "number",
-            "description": "data timeouts(ms) for $t data",
-            "category": "converter"
-            }
-        ]
+        "name": "winst312",
+        "label": "130312 WTemp iid",
+        "type": "number",
+        "check": "checkMinMax",
+        "min": -1,
+        "max": 256,
+        "description": "the temp instance of PGN 130312 used for water temperature, use -1 for none, 256 for any",
+        "default": "256",
+        "category":"converter"
     },
     {
         "name": "usbActisense",

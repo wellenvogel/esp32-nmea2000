@@ -70,6 +70,7 @@ class GwConverterConfig{
       int min2KInterval=50;
       int rmcInterval=1000;
       int rmcCheckTime=4000;
+      int winst312=256;
       std::vector<WindMapping> windMappings;
       void init(GwConfigHandler *config, GwLog*logger){
         minXdrInterval=config->getInt(GwConfigDefinitions::minXdrInterval,100);
@@ -82,6 +83,7 @@ class GwConverterConfig{
         rmcInterval=config->getInt(GwConfigDefinitions::sendRMCi,1000);
         if (rmcInterval < 0) rmcInterval=0;
         if (rmcInterval > 0 && rmcInterval <100) rmcInterval=100;
+        winst312=config->getInt(GwConfigDefinitions::winst312,256);
         for (auto && it:windConfigs){
           String cfg=config->getString(it.second);
           WindMapping mapping(it.first,cfg);

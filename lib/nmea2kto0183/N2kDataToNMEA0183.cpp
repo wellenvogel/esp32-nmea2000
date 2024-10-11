@@ -1344,7 +1344,6 @@ private:
               return;
 
             SendMessage(NMEA0183Msg);
-            i++;
         }
 
         GwXDRFoundMapping mapping=xdrMappings->getMapping(XDRTEMP,TempSource,0,0);
@@ -1379,6 +1378,21 @@ private:
            LOG_DEBUG(GwLog::DEBUG,"unable to parse PGN %d",msg.PGN);
            return;
         }
+        if (TemperatureSource == N2kts_SeaTemperature && 
+            (config.winst312 == TemperatureInstance || config.winst312 == 256)) {
+          updateDouble(boatData->WTemp, Temperature);
+          tNMEA0183Msg NMEA0183Msg;
+
+          if (!NMEA0183Msg.Init("MTW", talkerId))
+              return;
+          if (!NMEA0183Msg.AddDoubleField(KelvinToC(Temperature)))
+              return;
+          if (!NMEA0183Msg.AddStrField("C"))
+              return;
+
+            SendMessage(NMEA0183Msg);
+        }
+
         GwXDRFoundMapping mapping=xdrMappings->getMapping(XDRTEMP,(int)TemperatureSource,0,TemperatureInstance);
         if (updateDouble(&mapping,Temperature)){
             LOG_DEBUG(GwLog::DEBUG+1,"found temperature mapping %s",mapping.definition->toString().c_str());
