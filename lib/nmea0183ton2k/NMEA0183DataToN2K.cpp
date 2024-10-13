@@ -103,7 +103,7 @@ private:
         if (v != NMEA0183UInt32NA){
             return target->update(v,sourceId);
         }
-        return v;
+        return false;
     }
     uint32_t getUint32(GwBoatItem<uint32_t> *src){
         return src->getDataWithDefault(N2kUInt32NA);
@@ -406,13 +406,13 @@ private:
             case NMEA0183Wind_Apparent:
                 shouldSend=updateDouble(boatData->AWA,WindAngle,msg.sourceId) && 
                            updateDouble(boatData->AWS,WindSpeed,msg.sourceId);
-                if (WindSpeed != NMEA0183DoubleNA) boatData->MaxAws->updateMax(WindSpeed);    
+                if (WindSpeed != NMEA0183DoubleNA) boatData->MaxAws->updateMax(WindSpeed,msg.sourceId);    
                 mapping=config.findWindMapping(GwConverterConfig::WindMapping::AWA_AWS);
                 break;
             case NMEA0183Wind_True:
                 shouldSend=updateDouble(boatData->TWA,WindAngle,msg.sourceId) && 
                            updateDouble(boatData->TWS,WindSpeed,msg.sourceId);
-                if (WindSpeed != NMEA0183DoubleNA) boatData->MaxTws->updateMax(WindSpeed);    
+                if (WindSpeed != NMEA0183DoubleNA) boatData->MaxTws->updateMax(WindSpeed,msg.sourceId);    
                 mapping=config.findWindMapping(GwConverterConfig::WindMapping::TWA_TWS);
                 break;      
             default:
@@ -458,7 +458,7 @@ private:
         bool shouldSend = false;
         shouldSend = updateDouble(boatData->AWA, WindAngle, msg.sourceId) &&
                      updateDouble(boatData->AWS, WindSpeed, msg.sourceId);
-        if (WindSpeed != NMEA0183DoubleNA) boatData->MaxAws->updateMax(WindSpeed);             
+        if (WindSpeed != NMEA0183DoubleNA) boatData->MaxAws->updateMax(WindSpeed,msg.sourceId);             
         if (shouldSend)
         {
             const GwConverterConfig::WindMapping mapping=config.findWindMapping(GwConverterConfig::WindMapping::AWA_AWS);
@@ -503,7 +503,7 @@ private:
         if (WindDirection != NMEA0183DoubleNA){
             shouldSend = updateDouble(boatData->TWD, WindDirection, msg.sourceId) &&
                          updateDouble(boatData->TWS, WindSpeed, msg.sourceId);
-            if (WindSpeed != NMEA0183DoubleNA) boatData->MaxTws->updateMax(WindSpeed);             
+            if (WindSpeed != NMEA0183DoubleNA) boatData->MaxTws->updateMax(WindSpeed,msg.sourceId);             
             if(shouldSend && boatData->HDT->isValid()) {
                 double twa = WindDirection-boatData->HDT->getData();
                 if(twa<0) { twa+=2*M_PI; }
@@ -602,10 +602,10 @@ private:
         }
         //offset == 0? SK does not allow this
         if (Offset != NMEA0183DoubleNA && Offset>=0 ){
-            if (! boatData->DBS->update(DepthBelowTransducer+Offset)) return;
+            if (! boatData->DBS->update(DepthBelowTransducer+Offset,msg.sourceId)) return;
         }
         if (Offset == NMEA0183DoubleNA) Offset=N2kDoubleNA;
-        if (! boatData->DBT->update(DepthBelowTransducer)) return;
+        if (! boatData->DBT->update(DepthBelowTransducer,msg.sourceId)) return;
         tN2kMsg n2kMsg;
         SetN2kWaterDepth(n2kMsg,1,DepthBelowTransducer,Offset);
         send(n2kMsg,msg.sourceId,String(n2kMsg.PGN)+String((Offset != N2kDoubleNA)?1:0));

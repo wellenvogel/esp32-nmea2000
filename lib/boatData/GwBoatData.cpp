@@ -47,7 +47,6 @@ GwBoatItemBase::GwBoatItemBase(String name, String format, GwBoatItemBase::TOTyp
     this->format = format;
     this->type = 0;
     this->lastUpdateSource = -1;
-    this->toType=TOType::user;
 }
 void GwBoatItemBase::setInvalidTime(unsigned long it, bool force){
     if (toType != TOType::user || force ){
@@ -375,7 +374,7 @@ GwBoatItem<T> *GwBoatData::getOrCreate(T initial, GwBoatItemNameProvider *provid
                                           provider->getBoatItemFormat(),
                                           provider->getInvalidTime(),
                                           &values);
-    rt->update(initial);
+    rt->update(initial,-1);
     LOG_DEBUG(GwLog::LOG, "creating boatItem %s, type %d",
               name.c_str(), rt->getCurrentType());
     return rt;
