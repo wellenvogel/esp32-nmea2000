@@ -1671,7 +1671,7 @@
             src.setAttribute('id', 'source_' + def.name);
             let u = getUnit(def, true)
             addEl('span', 'unit', footer, u);
-            callListeners(api.EVENTS.dataItemCreated, frame);
+            callListeners(api.EVENTS.dataItemCreated,{name:def.name,element:frame});
         }
         let de = document.getElementById('data_' + def.name);
         return de;
@@ -1720,30 +1720,39 @@
             if (!current.name) continue;
             names[current.name] = true;
             let show = current.valid||showInvalid;
-            let de=createOrHideDashboardItem(current,show,frame);
-            if (de) {
-                let newContent = '----';
-                if (current.valid) {
-                    let formatter;
-                    if (current.format && current.format != "NULL") {
-                        let key = current.format.replace(/^\&/, '');
-                        formatter = userFormatters[current.name]|| valueFormatters[key];
-                    }
-                    if (formatter && formatter.f) {
-                        newContent = formatter.f(current.value);
+            let de = createOrHideDashboardItem(current, show, frame);
+            let newContent = '---';
+            if (current.valid) {
+                let formatter;
+                if (current.format && current.format != "NULL") {
+                    let key = current.format.replace(/^\&/, '');
+                    formatter = userFormatters[current.name] || valueFormatters[key];
+                }
+                if (formatter && formatter.f) {
+                    newContent = formatter.f(current.value,true);
+                    if (newContent === undefined) newContent = "";
+                }
+                else {
+                    let v = parseFloat(current.value);
+                    if (!isNaN(v)) {
+                        v = v.toFixed(3)
+                        newContent = v;
                     }
                     else {
-                        let v = parseFloat(current.value);
-                        if (!isNaN(v)) {
-                            v = v.toFixed(3)
-                            newContent = v;
-                        }
-                        else {
-                            newContent = current.value;
-                        }
+                        newContent = current.value;
                     }
                 }
-                else newContent = "---";
+            }
+            else {
+                let uf=userFormatters[current.name];
+                if (uf && uf.f){
+                    //call the user formatter
+                    //so that it can detect the invalid state
+                    newContent=uf.f(undefined,false);
+                }
+                if (newContent === undefined)newContent = "---";
+            }
+            if (de) {
                 if (newContent !== de.textContent) {
                     de.textContent = newContent;
                     resizeFont(de, true);
@@ -2024,7 +2033,8 @@
             tab: 1, //tab page activated data is the id of the tab page
             config: 2, //data is the config object
             boatData: 3, //data is the list of boat Data items
-            dataItemCreated: 4, //data is the frame item of the boat data display
+            dataItemCreated: 4, //data is an object with
+                                // name: the item name, element: the frame item of the boat data display
         }
     };
     function callListeners(event,data){
