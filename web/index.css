@@ -22,7 +22,7 @@ body {
   overflow: hidden;
 }
 
-.tabPage{
+#tabPages{
   overflow: auto;
 }
 
@@ -119,6 +119,9 @@ body {
   }
   .hidden{
     display: none !important;
+  }
+  .dash.invalid{
+    display: none;
   }
   #xdrPage .row>.label{
     display: none;

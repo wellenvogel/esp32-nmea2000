@@ -8,6 +8,7 @@
     let listeners = [];
     let buttonHandlers={};
     let checkers={};
+    let userFormatters={};
     function addEl(type, clazz, parent, text) {
         let el = document.createElement(type);
         if (clazz) {
@@ -19,7 +20,12 @@
             });
         }
         if (text) el.textContent = text;
-        if (parent) parent.appendChild(el);
+        if (parent) {
+            if (typeof(parent) != 'object'){
+                parent=document.querySelector(parent);
+            }
+            if (parent) parent.appendChild(el);
+        }
         return el;
     }
     function forEl(query, callback, base) {
@@ -122,6 +128,7 @@
     function resetForm(ev) {
         getJson("/api/config")
             .then(function (jsonData) {
+                callListeners(api.EVENTS.config,jsonData);
                 for (let k in jsonData) {
                     if (k == "useAdminPass") {
                         needAdminPass = jsonData[k] != 'false';
@@ -1418,16 +1425,15 @@
         }
         let activeTab = document.getElementById(activeName);
         if (!activeTab) return;
-        let all = document.querySelectorAll('.tabPage');
-        for (let i = 0; i < all.length; i++) {
-            all[i].classList.add('hidden');
-        }
-        let tabs = document.querySelectorAll('.tab');
-        for (let i = 0; i < all.length; i++) {
-            tabs[i].classList.remove('active');
-        }
+        forEl('.tabPage',function(pel){
+            pel.classList.add('hidden');
+        });
+        forEl('.tab',function(tel){
+            tel.classList.remove('active');
+        });
         el.classList.add('active');
         activeTab.classList.remove('hidden');
+        callListeners(api.EVENTS.tab,activeName);
     }
     /**
      *
@@ -1603,6 +1609,10 @@
 
 
     }
+    Object.freeze(valueFormatters);
+    for (let k in valueFormatters){
+        Object.freeze(valueFormatters[k]);
+    }
     function resizeFont(el, reset, maxIt) {
         if (maxIt === undefined) maxIt = 10;
         if (!el) return;
@@ -1612,23 +1622,62 @@
             el.style.fontSize = next + "px";
         }
     }
-    function createDashboardItem(name, def, parent) {
-        if (!def.name) return;
-        let frame = addEl('div', 'dash', parent);
-        let title = addEl('span', 'dashTitle', frame, name);
-        let value = addEl('span', 'dashValue', frame);
-        value.setAttribute('id', 'data_' + name);
-        let fmt = valueFormatters[def.format];
-        if (def.format) value.classList.add(def.format);
-        let footer = addEl('div', 'footer', frame);
-        let src = addEl('span', 'source', footer);
-        src.setAttribute('id', 'source_' + name);
+    function getUnit(def,useUser){
+        let fmt = useUser?(userFormatters[def.name] || valueFormatters[def.format]):valueFormatters[def.format] ;
         let u = fmt ? fmt.u : ' ';
         if (!fmt && def.format && def.format.match(/formatXdr/)) {
             u = def.format.replace(/formatXdr:[^:]*:/, '');
         }
-        addEl('span', 'unit', footer, u);
-        return value;
+        return u;
+    }
+    /**
+     * create a dashboard item if it does not exist
+     * @param {*} def 
+     * @param {*} show 
+     * @param {*} parent 
+     * @returns the value div of the dashboard item
+     */
+    function createOrHideDashboardItem(def,show, parent) {
+        if (!def.name) return;
+        let frame=document.getElementById('frame_'+def.name);
+        let build=false;
+        if (frame){
+            if (frame.classList.contains('invalid') && show){
+                build=true;
+                frame.classList.remove('invalid');
+                frame.innerHTML='';
+            }
+        }
+        else{
+            if (! parent) return;
+            frame = addEl('div', 'dash', parent);
+            frame.setAttribute('id','frame_'+def.name);
+            build=true;
+        }
+        if (! show){
+            if (!frame.classList.contains('invalid')){
+                frame.classList.add('invalid');
+                frame.innerHTML='';
+            }
+            return;    
+        }
+        if (build) {
+            let title = addEl('span', 'dashTitle', frame, def.name);
+            let value = addEl('span', 'dashValue', frame);
+            value.setAttribute('id', 'data_' + def.name);
+            if (def.format) value.classList.add(def.format);
+            let footer = addEl('div', 'footer', frame);
+            let src = addEl('span', 'source', footer);
+            src.setAttribute('id', 'source_' + def.name);
+            let u = getUnit(def, true)
+            addEl('span', 'unit', footer, u);
+            callListeners(api.EVENTS.dataItemCreated, frame);
+        }
+        let de = document.getElementById('data_' + def.name);
+        return de;
+    }
+    function hideDashboardItem(name){
+        createOrHideDashboardItem({name:name},false);
     }
     function parseBoatDataLine(line) {
         let rt = {};
@@ -1659,6 +1708,7 @@
     }
     let lastSelectList = [];
     function updateDashboard(data) {
+        callListeners(api.EVENTS.boatData,data);
         let frame = document.getElementById('dashboardPage');
         let showInvalid = true;
         forEl('select[name=showInvalidData]', function (el) {
@@ -1669,24 +1719,17 @@
             let current = parseBoatDataLine(data[n]);
             if (!current.name) continue;
             names[current.name] = true;
-            let de = document.getElementById('data_' + current.name);
-            let isValid = current.valid;
-            if (!de && frame && (isValid || showInvalid)) {
-                de = createDashboardItem(current.name, current, frame);
-            }
-            if (de && (!isValid && !showInvalid)) {
-                de.parentElement.remove();
-                continue;
-            }
+            let show = current.valid||showInvalid;
+            let de=createOrHideDashboardItem(current,show,frame);
             if (de) {
                 let newContent = '----';
                 if (current.valid) {
                     let formatter;
                     if (current.format && current.format != "NULL") {
                         let key = current.format.replace(/^\&/, '');
-                        formatter = valueFormatters[key];
+                        formatter = userFormatters[current.name]|| valueFormatters[key];
                     }
-                    if (formatter) {
+                    if (formatter && formatter.f) {
                         newContent = formatter.f(current.value);
                     }
                     else {
@@ -1711,11 +1754,14 @@
                 src.textContent = sourceName(current.source);
             }
         }
-        console.log("update");
-        forEl('.dashValue', function (el) {
+        //console.log("update");
+        //remove all items that are not send any more
+        //this can only happen if the device restarted
+        //otherwise data items will not go away - they will become invalid
+        forEl('.dash', function (el) {
             let id = el.getAttribute('id');
             if (id) {
-                if (!names[id.replace(/^data_/, '')]) {
+                if (!names[id.replace(/^frame_/, '')]) {
                     el.parentElement.remove();
                 }
             }
@@ -1889,15 +1935,96 @@
             reader.readAsArrayBuffer(slice);
         });
     }
+    function addTabPage(name,label){
+        if (label === undefined) label=name;
+        let tab=addEl('div','tab','#tabs',label);
+        tab.setAttribute('data-page',name);
+        tab.addEventListener('click',function(ev){
+            handleTab(ev.target);
+        })
+        let page=addEl('div','tabPage hidden','#tabPages');
+        page.setAttribute('id',name);
+        return page;
+    }
+    function addUserFormatter(name,unit,formatter){
+        if (unit !== undefined && formatter !== undefined){
+            userFormatters[name]={
+                u:unit,
+                f:formatter
+            }
+        }
+        else{
+            delete userFormatters[name];
+        }
+        hideDashboardItem(name); //will recreate it on next data receive
+    }
     const api= {
         registerListener: function (callback) {
             listeners.push(callback);
         },
+        /**
+         * helper for creating dom elements
+         * parameters:
+         *   type: the element type (e.g. div)
+         *   class: a list of classes separated by space
+         *   parent (opt): a parent element (either a dom element vor a query selector)
+         *   text (opt): the text to be set as textContent 
+         * returns: the newly created element
+         */
         addEl: addEl,
+        /**
+         * iterator helper for a query selector
+         * parameters:
+         *  query: the query selector
+         *  callback: the callback function (will be called with the element as param)
+         *  base (opt): a dome element to be used as the root (defaults to document)
+         */
         forEl: forEl,
+        /**
+         * find the closest parent that has a particular class
+         * parameters:
+         *  element: the element to start with
+         *  class: the class to be searched for
+         * returns: the element or undefined/null
+         */
         closestParent: closestParent,
+        /**
+         * add a new tab
+         * parameters: 
+         *   name - the name of the page
+         *   label (opt): the label for the new page 
+         * returns: the newly created element
+         */
+        addTabPage: addTabPage,
+        /**
+         * add a user defined formatter for a boat data item
+         * parameters:
+         *   name : the boat data item name
+         *   unit: the unit to be displayed
+         *   formatter: the formatter function (must return a string)
+         */
+        addUserFormatter: addUserFormatter,
+        removeUserFormatter: function(name){
+            addUserFormatter(name);
+        },
+        /**
+         * a dict of formatters
+         * each one has 2 members:
+         *   u: the unit
+         *   f: the formatter function
+         */
+        formatters: valueFormatters,
+        /**
+         * parse a line of boat data
+         * the line has name,format,valid,update,source,value
+         */
+        parseBoatDataLine: parseBoatDataLine,
         EVENTS: {
             init: 0, //called when capabilities are loaded, data is capabilities
+            tab: 1, //tab page activated data is the id of the tab page
+            config: 2, //data is the config object
+            boatData: 3, //data is the list of boat Data items
+            dataItemCreated: 4, //data is the frame item of the boat data display
         }
     };
     function callListeners(event,data){
