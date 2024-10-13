@@ -223,6 +223,7 @@ body {
   }
   #tabs {
       display: flex;
+      flex-wrap: wrap;
       border-bottom: 1px solid grey;
       margin-bottom: 0.5em;
   }

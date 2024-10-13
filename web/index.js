@@ -1944,13 +1944,17 @@
             reader.readAsArrayBuffer(slice);
         });
     }
-    function addTabPage(name,label){
+    function addTabPage(name,label,url){
         if (label === undefined) label=name;
         let tab=addEl('div','tab','#tabs',label);
-        tab.setAttribute('data-page',name);
         tab.addEventListener('click',function(ev){
             handleTab(ev.target);
         })
+        if (url !== undefined){
+            tab.setAttribute('data-url',url);
+            return;
+        }
+        tab.setAttribute('data-page',name);
         let page=addEl('div','tabPage hidden','#tabPages');
         page.setAttribute('id',name);
         return page;
