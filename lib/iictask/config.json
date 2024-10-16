@@ -530,5 +530,204 @@
                 }
             }
         ]
+    },
+    {
+        "type": "array",
+        "name": "BMP280",
+        "replace": [
+            {
+                "b": "1",
+                "i": "11",
+                "n": "93"
+            },
+            {
+                "b": "1",
+                "i": "12",
+                "n": "92"
+            },
+            {
+                "b": "2",
+                "i": "21",
+                "n": "103"
+            },
+            {
+                "b": "2",
+                "i": "22",
+                "n": "102"
+            }
+        ],
+        "children": [
+            {
+                "name": "BMP280$itmAct",
+                "label": "BMP280-$i Temp",
+                "type": "boolean",
+                "default": "true",
+                "description": "Enable the $i. I2C BMP280 temp sensor (bus $b)",
+                "category": "iicsensors$b",
+                "capabilities": {
+                    "BMP280$i": "true"
+                }
+            },
+            {
+                "name": "BMP280$itmSrc",
+                "label": "BMP280-$i Temp Type",
+                "type": "list",
+                "default": "2",
+                "description": "the NMEA2000 source type for the temperature",
+                "list": [
+                    {
+                        "l": "SeaTemperature",
+                        "v": "0"
+                    },
+                    {
+                        "l": "OutsideTemperature",
+                        "v": "1"
+                    },
+                    {
+                        "l": "InsideTemperature",
+                        "v": "2"
+                    },
+                    {
+                        "l": "EngineRoomTemperature",
+                        "v": "3"
+                    },
+                    {
+                        "l": "MainCabinTemperature",
+                        "v": "4"
+                    },
+                    {
+                        "l": "LiveWellTemperature",
+                        "v": "5"
+                    },
+                    {
+                        "l": "BaitWellTemperature",
+                        "v": "6"
+                    },
+                    {
+                        "l": "RefridgerationTemperature",
+                        "v": "7"
+                    },
+                    {
+                        "l": "HeatingSystemTemperature",
+                        "v": "8"
+                    },
+                    {
+                        "l": "DewPointTemperature",
+                        "v": "9"
+                    },
+                    {
+                        "l": "ApparentWindChillTemperature",
+                        "v": "10"
+                    },
+                    {
+                        "l": "TheoreticalWindChillTemperature",
+                        "v": "11"
+                    },
+                    {
+                        "l": "HeatIndexTemperature",
+                        "v": "12"
+                    },
+                    {
+                        "l": "FreezerTemperature",
+                        "v": "13"
+                    },
+                    {
+                        "l": "ExhaustGasTemperature",
+                        "v": "14"
+                    },
+                    {
+                        "l": "ShaftSealTemperature",
+                        "v": "15"
+                    }
+                ],
+                "category": "iicsensors$b",
+                "capabilities": {
+                    "BMP280$i": "true"
+                }
+            },
+            {
+                "name": "BMP280$itmOff",
+                "label": "BMP280-$i Temperature Offset",
+                "type": "number",
+                "description": "offset (in °) to be added to the BMP280 temperature measurements",
+                "default": "0",
+                "category": "iicsensors$b",
+                "capabilities": {
+                    "BMP280$i": "true"
+                }
+            },
+            {
+                "name": "BMP280$iprAct",
+                "label": "BMP280-$i Pressure",
+                "type": "boolean",
+                "default": "true",
+                "description": "Enable the $i. I2C BMP280 pressure sensor (bus $b)",
+                "category": "iicsensors$b",
+                "capabilities": {
+                    "BMP280$i": "true"
+                }
+            },
+            {
+                "name": "BMP280$iprOff",
+                "label": "BMP280 Pressure Offset",
+                "type": "number",
+                "description": "offset (in pa) to be added to the BMP280 pressure measurements",
+                "default": "0",
+                "category": "iicsensors$b",
+                "capabilities": {
+                    "BMP280$i": "true"
+                }
+            },
+            {
+                "name": "BMP280$iiid",
+                "label": "BMP280-$i N2K iid",
+                "type": "number",
+                "default": "$n",
+                "description": "the N2K instance id for the BMP280 Temperature",
+                "category": "iicsensors$b",
+                "min": 0,
+                "max": 253,
+                "check": "checkMinMax",
+                "capabilities": {
+                    "BMP280$i": "true"
+                }
+            },
+            {
+                "name": "BMP280$iintv",
+                "label": "BMP280-$i Interval",
+                "type": "number",
+                "default": 2,
+                "description": "Interval(s) to query BME280 Temperature (1...300)",
+                "category": "iicsensors$b",
+                "min": 1,
+                "max": 300,
+                "check": "checkMinMax",
+                "capabilities": {
+                    "BMP280$i": "true"
+                }
+            },
+            {
+                "name": "BMP280$itmNam",
+                "label": "BMP280-$i Temp XDR",
+                "type": "String",
+                "default": "BTemp$i",
+                "description": "set the XDR transducer name for the BMP280 Temperature, leave empty to disable NMEA0183 XDR ",
+                "category": "iicsensors$b",
+                "capabilities": {
+                    "BMP280$i": "true"
+                }
+            },
+            {
+                "name": "BMP280$iprNam",
+                "label": "BMP280-$i Pressure XDR",
+                "type": "String",
+                "default": "BPressure$i",
+                "description": "set the XDR transducer name for the BMP280 Pressure, leave empty to disable NMEA0183 XDR",
+                "category": "iicsensors$b",
+                "capabilities": {
+                    "BMP280$i": "true"
+                }
+            }
+        ]
     }
 ]
