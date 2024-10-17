@@ -55,8 +55,17 @@ class RequestHandler(http.server.SimpleHTTPRequestHandler):
             super().do_GET()
     def do_POST(self):
         if not self.do_proxy():            
-            super().do_POST()        
+            super().do_POST()
+    def guess_type(self,path):
+        if path.endswith('.gz'):
+            return super().guess_type(path[0:-3])
+        return super().guess_type(path)
+    def end_headers(self):
+        if hasattr(self,"isgz") and self.isgz:
+            self.send_header("Content-Encoding","gzip")
+        super().end_headers()        
     def translate_path(self, path):
+        self.isgz=False
         """Translate a /-separated PATH to the local filename syntax.
 
         Components that mean special things to the local file system
@@ -90,6 +99,9 @@ class RequestHandler(http.server.SimpleHTTPRequestHandler):
                 rpath += '/'
             if os.path.exists(rpath):
                 return rpath
+            if os.path.exists(rpath+".gz"):
+                self.isgz=True
+                return rpath+".gz"
             if isSecond:
                 return rpath
             isSecond=True

@@ -219,16 +219,56 @@
         "category":"converter"
      },
      {
-        "name":"checkRMCt",
+        "name": "checkRMCt",
         "label": "check RMC time",
         "type": "number",
         "description": "start sending RMC if we did not see an external RMC after this much ms",
-        "default":"4000",
+        "default": "4000",
         "min": 1000,
-        "check":"checkMinMax",
-        "category":"converter"
-     },
-     {
+        "check": "checkMinMax",
+        "category": "converter"
+    },
+    {
+        "name": "timeouts",
+        "type": "array",
+        "replace": [
+            {
+                "n": "Default",
+                "d": "4000",
+                "l": "default",
+                "t": "NMEA"
+            },
+            {
+                "n": "Sensor",
+                "d": "60000",
+                "l": "sensor",
+                "t": "sensor"
+            },
+            {
+                "n": "Long",
+                "d": "32000",
+                "l": "long",
+                "t": "special NMEA"
+            },
+            {
+                "n": "Ais",
+                "d": "120000",
+                "l": "ais",
+                "t": "ais"
+            }
+        ],
+        "children": [
+            {
+                "name": "timo$n",
+                "label": "timeout $l",
+                "default": "$d",
+                "type": "number",
+                "description": "data timeouts(ms) for $t data",
+                "category": "converter"
+            }
+        ]
+    },
+    {
         "name": "stbRudderI",
         "label":"stb rudder instance",
         "type": "number",
@@ -251,44 +291,69 @@
         "category": "converter"
     },
     {
-        "name": "timeouts",
+        "name": "windmappings",
         "type": "array",
         "replace":[
             {
-                "n":"Default",
-                "d":"4000",
-                "l": "default",
-                "t": "NMEA"
+                "n": "tng",
+                "l": "true north ground",
+                "t": "True_North=0",
+                "d": "twa_tws"
             },
             {
-                "n":"Sensor",
-                "d":"60000",
-                "l": "sensor",
-                "t": "sensor"
+                "n": "mgd",
+                "l": "magnetic ground dir",
+                "t": "Magnetic=1",
+                "d":""
             },
             {
-                "n":"Long",
-                "d":"32000",
-                "l": "long",
-                "t": "special NMEA"
+                "n": "awa",
+                "l": "apparent angle",
+                "t": "Apparent=2",
+                "d":"awa_aws"
             },
             {
-                "n":"Ais",
-                "d":"120000",
-                "l": "ais",
-                "t": "ais"
+                "n": "gna",
+                "l": "ground angle",
+                "t": "True_boat=3",
+                "d": ""
+            },
+            {
+                "n": "tra",
+                "l": "true angle",
+                "t": "True_water=4",
+                "d":""
             }
+
         ],
         "children":[
             {
-            "name":"timo$n",
-            "label":"timeout $l",
-            "default": "$d",
-            "type": "number",
-            "description": "data timeouts(ms) for $t data",
-            "category": "converter"
+                "name":"windm$n",
+                "type":"list",
+                "description": "mapping of the PGN 130306 wind reference $t",
+                "label":"wind $l",
+                "list":[
+                    {"l": "-unset-","v":""},
+                    {"l": "TWA/TWS","v":"twa_tws"},
+                    {"l": "AWA/AWS", "v":"awa_aws"},
+                    {"l": "TWD/TWS","v":"twd_tws"}
+                ],
+                "category":"converter",
+                "default":"$d"
+
             }
         ]
+    },
+    {
+        "name": "winst312",
+        "label": "130312 WTemp iid",
+        "type": "number",
+        "check": "checkMinMax",
+        "min": -1,
+        "max": 256,
+        "description": "the temp instance of PGN 130312 used for water temperature (0...255), use -1 for none, 256 for any",
+        "default": "256",
+        "category":"converter"
     },
     {
         "name": "usbActisense",

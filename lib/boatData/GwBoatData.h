@@ -105,8 +105,8 @@ template<class T> class GwBoatItem : public GwBoatItemBase{
         GwBoatItem(String name,String formatInfo,unsigned long invalidTime=INVALID_TIME,GwBoatItemMap *map=NULL);
         GwBoatItem(String name,String formatInfo,TOType toType,GwBoatItemMap *map=NULL);
         virtual ~GwBoatItem(){}
-        bool update(T nv, int source=-1);
-        bool updateMax(T nv,int sourceId=-1);
+        bool update(T nv, int source);
+        bool updateMax(T nv,int sourceId);
         T getData(){
             return data;
         }
@@ -185,7 +185,6 @@ public:
 #define GWSPECBOATDATA(clazz,name,toType,fmt)  \
     clazz *name=new clazz(#name,GwBoatItemBase::fmt,toType,&values) ;
 class GwBoatData{
-    static const unsigned long DEF_TIME=4000;
     private:
         GwLog *logger;
         GwBoatItemBase::GwBoatItemMap values;

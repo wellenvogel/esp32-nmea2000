@@ -18,6 +18,8 @@ OWN_FILE="extra_script.py"
 GEN_DIR='lib/generated'
 CFG_FILE='web/config.json'
 XDR_FILE='web/xdrconfig.json'
+INDEXJS="index.js"
+INDEXCSS="index.css"
 CFG_INCLUDE='GwConfigDefinitions.h'
 CFG_INCLUDE_IMPL='GwConfigDefImpl.h'
 XDR_INCLUDE='GwXdrTypeMappings.h'
@@ -66,6 +68,7 @@ def isCurrent(infile,outfile):
 def compressFile(inFile,outfile):
     if isCurrent(inFile,outfile):
         return
+    print("compressing %s"%inFile)
     with open(inFile, 'rb') as f_in:
         with gzip.open(outfile, 'wb') as f_out:
             shutil.copyfileobj(f_in, f_out)
@@ -372,6 +375,16 @@ def getLibs():
             rt.append(e)
     return rt
 
+def joinFiles(target,pattern,dirlist):
+    with gzip.open(target,"wb") as oh:
+        for dir in dirlist:
+            fn=os.path.join(dir,pattern)
+            if os.path.exists(fn):
+                print("adding %s to %s"%(fn,target))
+                with open(fn,"rb") as rh:
+                    shutil.copyfileobj(rh,oh)
+    
+
 OWNLIBS=getLibs()+["FS","WiFi"]
 GLOBAL_INCLUDES=[]
 
@@ -440,6 +453,8 @@ def prebuild(env):
     compressFile(mergedConfig,mergedConfig+".gz")
     generateCfg(mergedConfig,os.path.join(outPath(),CFG_INCLUDE),False)
     generateCfg(mergedConfig,os.path.join(outPath(),CFG_INCLUDE_IMPL),True)
+    joinFiles(os.path.join(outPath(),INDEXJS+".gz"),INDEXJS,["web"]+userTaskDirs)
+    joinFiles(os.path.join(outPath(),INDEXCSS+".gz"),INDEXCSS,["web"]+userTaskDirs)
     embedded=getEmbeddedFiles(env)
     filedefs=[]
     for ef in embedded:
@@ -453,7 +468,6 @@ def prebuild(env):
         filedefs.append((pureName,usname,ct))
         inFile=os.path.join(basePath(),"web",pureName)
         if os.path.exists(inFile):
-            print("compressing %s"%inFile)
             compressFile(inFile,ef)
         else:
             print("#WARNING: infile %s for %s not found"%(inFile,ef))
