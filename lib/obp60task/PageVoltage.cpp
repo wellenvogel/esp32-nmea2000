@@ -162,7 +162,7 @@ public:
         getdisplay().setCursor(270, 100);
         getdisplay().print("V");
 
-        // Show batery type
+        // Show battery type
         getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&Ubuntu_Bold8pt7b);
         getdisplay().setCursor(295, 100);

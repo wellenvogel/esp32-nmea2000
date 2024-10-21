@@ -9,8 +9,8 @@ class PageBattery : public Page
     int average = 0;                    // Average type [0...3], 0=off, 1=10s, 2=60s, 3=300s
 
     public:
-    PageBattery(CommonData &comon){
-        comon.logger->logDebug(GwLog::LOG,"Show PageThreeValue");
+    PageBattery(CommonData &common){
+        common.logger->logDebug(GwLog::LOG,"Show PageBattery");
     }
 
     virtual int handleKey(int key){
