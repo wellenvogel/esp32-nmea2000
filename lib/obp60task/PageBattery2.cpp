@@ -201,7 +201,7 @@ public:
         getdisplay().setCursor(10, 65);
         getdisplay().print("Bat.");
 
-         // Show batery type
+         // Show battery type
         getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&Ubuntu_Bold8pt7b);
         getdisplay().setCursor(90, 65);
@@ -218,7 +218,7 @@ public:
         getdisplay().setFont(&Ubuntu_Bold16pt7b);
         getdisplay().print("V");
 
-        // Show batery capacity
+        // Show battery capacity
         getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&DSEG7Classic_BoldItalic20pt7b);
         getdisplay().setCursor(10, 200);

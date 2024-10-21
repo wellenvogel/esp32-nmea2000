@@ -8,8 +8,8 @@ class PageBME280 : public Page
     bool keylock = false;               // Keylock
 
     public:
-    PageBME280(CommonData &comon){
-        comon.logger->logDebug(GwLog::LOG,"Show PageThreeValue");
+    PageBME280(CommonData &common){
+        common.logger->logDebug(GwLog::LOG,"Show PageBME280");
     }
 
     virtual int handleKey(int key){

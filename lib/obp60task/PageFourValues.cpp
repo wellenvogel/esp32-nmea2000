@@ -8,8 +8,8 @@ class PageFourValues : public Page
     bool keylock = false;               // Keylock
 
     public:
-    PageFourValues(CommonData &comon){
-        comon.logger->logDebug(GwLog::LOG,"Show PageFourValues");
+    PageFourValues(CommonData &common){
+        common.logger->logDebug(GwLog::LOG,"Show PageFourValues");
     }
 
     virtual int handleKey(int key){

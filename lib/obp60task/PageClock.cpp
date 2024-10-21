@@ -256,7 +256,7 @@ public:
         if (value1 < 0) {value1 = value1 + 86400;}
         hour = (value1 / 3600.0);
         if(hour > 12) hour = hour - 12.0;
-//        minute = (hour - int(hour)) * 3600.0 / 60.0;        // Analog minute pointer smoth moving
+//        minute = (hour - int(hour)) * 3600.0 / 60.0;        // Analog minute pointer smooth moving
         minute = int((hour - int(hour)) * 3600.0 / 60.0);   // Jumping minute pointer from minute to minute
         LOG_DEBUG(GwLog::DEBUG,"... PageClock, value1: %f hour: %f minute:%f", value1, hour, minute);
         

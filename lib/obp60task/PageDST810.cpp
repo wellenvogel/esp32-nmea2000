@@ -8,8 +8,8 @@ class PageDST810 : public Page
     bool keylock = false;               // Keylock
 
     public:
-    PageDST810(CommonData &comon){
-        comon.logger->logDebug(GwLog::LOG,"Show PageDST810");
+    PageDST810(CommonData &common){
+        common.logger->logDebug(GwLog::LOG,"Show PageDST810");
     }
 
     virtual int handleKey(int key){
