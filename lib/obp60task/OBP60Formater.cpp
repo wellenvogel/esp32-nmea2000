@@ -60,6 +60,9 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
             else if(String(dateFormat) == "US"){
                 snprintf(buffer,bsize,"%02d/%02d/%04d",parts.tm_mon+1,parts.tm_mday,parts.tm_year+1900);
             }
+            else if(String(dateFormat) == "ISO"){
+                snprintf(buffer,bsize,"%04d-%02d-%02d",parts.tm_year+1900,parts.tm_mon+1,parts.tm_mday);
+            }
             else{
                 snprintf(buffer,bsize,"%02d.%02d.%04d",parts.tm_mday,parts.tm_mon+1,parts.tm_year+1900);  
             }

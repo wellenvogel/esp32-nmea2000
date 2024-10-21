@@ -251,11 +251,12 @@
         "label": "Date Format",
         "type": "list",
         "default": "DE",
-        "description": "Date format [DE|GB|US] DE: 31.12.2022, GB: 31/12/2022, US: 12/31/2022",
+        "description": "Date format [DE|GB|US|ISO] DE: 31.12.2022, GB: 31/12/2022, US: 12/31/2022, ISO: 2022-12-31",
         "list": [
             "DE",
             "GB",
-            "US"
+            "US",
+            "ISO"
         ],
         "category": "OBP60 Units",
         "capabilities": {
