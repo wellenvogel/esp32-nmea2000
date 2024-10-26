@@ -405,7 +405,7 @@ PageDescription registerPageWindRoseFlex(
     "WindRoseFlex",         // Page name
     createPage,         // Action
     6,                  // Number of bus values depends on selection in Web configuration; was zero
-    //{"AWA", "AWS", "COG", "SOG", "TWD", "TWS"},    // Bus values we need in the page
+    //{"AWA", "AWS", "COG", "SOG", "TWD", "TWS"},    // Bus values we need in the page, modified for WindRose2
     true                // Show display header on/off
 );
 
