@@ -884,7 +884,7 @@
     },
     {
         "name": "page1value1",
-        "label": "Field 1 ",
+        "label": "Field 1",
         "type": "boatData",
         "default": "",
         "description": "The display for field one",
