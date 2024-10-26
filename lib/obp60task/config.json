@@ -932,10 +932,10 @@
     },
     {
         "name": "page1value5",
-        "label": "Field 4",
+        "label": "Field 5",
         "type": "boatData",
         "default": "",
-        "description": "The display for field 4",
+        "description": "The display for field 5",
         "category": "OBP60 Page 1",
         "capabilities": {
             "obp60":"true"
@@ -944,10 +944,10 @@
     },
     {
         "name": "page1value6",
-        "label": "Field 4",
+        "label": "Field 6",
         "type": "boatData",
         "default": "",
-        "description": "The display for field 4",
+        "description": "The display for field 6",
         "category": "OBP60 Page 1",
         "capabilities": {
             "obp60":"true"
@@ -1016,6 +1016,30 @@
         "condition":[{"page2type":"FourValues"},{"page2type":"FourValues2"}]
     },
     {
+        "name": "page2value5",
+        "label": "Field 4",
+        "type": "boatData",
+        "default": "",
+        "description": "The display for field 5",
+        "category": "OBP60 Page 2",
+        "capabilities": {
+            "obp60":"true"
+        },
+        "condition":[{"page2type":"WindRodseFlex"}]
+    },
+    {
+        "name": "page2value6",
+        "label": "Field 4",
+        "type": "boatData",
+        "default": "",
+        "description": "The display for field 6",
+        "category": "OBP60 Page 2",
+        "capabilities": {
+            "obp60":"true"
+        },
+        "condition":[{"page2type":"WindRodseFlex"}]
+    },
+    {
         "name": "page3type",
         "label": "Type",
         "type": "list",
@@ -1075,6 +1099,30 @@
             "obp60":"true"
         },
         "condition":[{"page3type":"FourValues"},{"page3type":"FourValues2"}]
+    },
+    {
+        "name": "page3value5",
+        "label": "Field 5",
+        "type": "boatData",
+        "default": "",
+        "description": "The display for field 5",
+        "category": "OBP60 Page 3",
+        "capabilities": {
+            "obp60":"true"
+        },
+        "condition":[{"page3type":"WindRodseFlex"}]
+    },
+    {
+        "name": "page3value6",
+        "label": "Field 6",
+        "type": "boatData",
+        "default": "",
+        "description": "The display for field 6",
+        "category": "OBP60 Page 3",
+        "capabilities": {
+            "obp60":"true"
+        },
+        "condition":[{"page3type":"WindRodseFlex"}]
     },
     {
         "name": "page4type",
@@ -1138,6 +1186,30 @@
         "condition":[{"page4type":"FourValues"},{"page4type":"FourValues2"}]
     },
     {
+        "name": "page4value5",
+        "label": "Field 5",
+        "type": "boatData",
+        "default": "",
+        "description": "The display for field 5",
+        "category": "OBP60 Page 4",
+        "capabilities": {
+            "obp60":"true"
+        },
+        "condition":[{"page4type":"WindRodseFlex"}]
+    },
+    {
+        "name": "page4value6",
+        "label": "Field 6",
+        "type": "boatData",
+        "default": "",
+        "description": "The display for field 6",
+        "category": "OBP60 Page 4",
+        "capabilities": {
+            "obp60":"true"
+        },
+        "condition":[{"page4type":"WindRodseFlex"}]
+    },
+    {
         "name": "page5type",
         "label": "Type",
         "type": "list",
@@ -1197,6 +1269,30 @@
             "obp60":"true"
         },
         "condition":[{"page5type":"FourValues"},{"page5type":"FourValues2"}]
+    },
+    {
+        "name": "page5value5",
+        "label": "Field 5",
+        "type": "boatData",
+        "default": "",
+        "description": "The display for field 5",
+        "category": "OBP60 Page 5",
+        "capabilities": {
+            "obp60":"true"
+        },
+        "condition":[{"page5type":"WindRodseFlex"}]
+    },
+    {
+        "name": "page5value6",
+        "label": "Field 6",
+        "type": "boatData",
+        "default": "",
+        "description": "The display for field 6",
+        "category": "OBP60 Page 5",
+        "capabilities": {
+            "obp60":"true"
+        },
+        "condition":[{"page5type":"WindRodseFlex"}]
     },
     {
         "name": "page6type",
@@ -1260,6 +1356,30 @@
         "condition":[{"page6type":"FourValues"},{"page6type":"FourValues2"}]
     },
     {
+        "name": "page6value5",
+        "label": "Field 5",
+        "type": "boatData",
+        "default": "",
+        "description": "The display for field 5",
+        "category": "OBP60 Page 6",
+        "capabilities": {
+            "obp60":"true"
+        },
+        "condition":[{"page6type":"WindRodseFlex"}]
+    },
+    {
+        "name": "page6value6",
+        "label": "Field 6",
+        "type": "boatData",
+        "default": "",
+        "description": "The display for field 6",
+        "category": "OBP60 Page 6",
+        "capabilities": {
+            "obp60":"true"
+        },
+        "condition":[{"page6type":"WindRodseFlex"}]
+    },
+    {
         "name": "page7type",
         "label": "Type",
         "type": "list",
@@ -1319,6 +1439,30 @@
             "obp60":"true"
         },
         "condition":[{"page7type":"FourValues"},{"page7type":"FourValues2"}]
+    },
+    {
+        "name": "page7value5",
+        "label": "Field 5",
+        "type": "boatData",
+        "default": "",
+        "description": "The display for field 5",
+        "category": "OBP60 Page 7",
+        "capabilities": {
+            "obp60":"true"
+        },
+        "condition":[{"page7type":"WindRodseFlex"}]
+    },
+    {
+        "name": "page7value6",
+        "label": "Field 6",
+        "type": "boatData",
+        "default": "",
+        "description": "The display for field 6",
+        "category": "OBP60 Page 7",
+        "capabilities": {
+            "obp60":"true"
+        },
+        "condition":[{"page7type":"WindRodseFlex"}]
     },
     {
         "name": "page8type",
@@ -1382,6 +1526,30 @@
         "condition":[{"page8type":"FourValues"},{"page8type":"FourValues2"}]
     },
     {
+        "name": "page8value5",
+        "label": "Field 5",
+        "type": "boatData",
+        "default": "",
+        "description": "The display for field 5",
+        "category": "OBP60 Page 8",
+        "capabilities": {
+            "obp60":"true"
+        },
+        "condition":[{"page8type":"WindRodseFlex"}]
+    },
+    {
+        "name": "page8value6",
+        "label": "Field 6",
+        "type": "boatData",
+        "default": "",
+        "description": "The display for field 6",
+        "category": "OBP60 Page 8",
+        "capabilities": {
+            "obp60":"true"
+        },
+        "condition":[{"page8type":"WindRodseFlex"}]
+    },
+    {
         "name": "page9type",
         "label": "Type",
         "type": "list",
@@ -1443,6 +1611,30 @@
         "condition":[{"page9type":"FourValues"},{"page9type":"FourValues2"}]
     },
     {
+        "name": "page9value5",
+        "label": "Field 5",
+        "type": "boatData",
+        "default": "",
+        "description": "The display for field 5",
+        "category": "OBP60 Page 9",
+        "capabilities": {
+            "obp60":"true"
+        },
+        "condition":[{"page9type":"WindRodseFlex"}]
+    },
+    {
+        "name": "page9value6",
+        "label": "Field 6",
+        "type": "boatData",
+        "default": "",
+        "description": "The display for field 6",
+        "category": "OBP60 Page 9",
+        "capabilities": {
+            "obp60":"true"
+        },
+        "condition":[{"page9type":"WindRodseFlex"}]
+    },
+    {
         "name": "page10type",
         "label": "Type",
         "type": "list",
@@ -1502,5 +1694,29 @@
             "obp60":"true"
         },
         "condition":[{"page10type":"FourValues"},{"page10type":"FourValues2"}]
-    }    
+    },   
+    {
+        "name": "page10value5",
+        "label": "Field 5",
+        "type": "boatData",
+        "default": "",
+        "description": "The display for field 5",
+        "category": "OBP60 Page 10",
+        "capabilities": {
+            "obp60":"true"
+        },
+        "condition":[{"page1type":"WindRodseFlex"}]
+    },
+    {
+        "name": "page10value6",
+        "label": "Field 6",
+        "type": "boatData",
+        "default": "",
+        "description": "The display for field 6",
+        "category": "OBP60 Page 10",
+        "capabilities": {
+            "obp60":"true"
+        },
+        "condition":[{"page10type":"WindRodseFlex"}]
+    }
 ]
