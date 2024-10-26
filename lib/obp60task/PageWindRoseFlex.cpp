@@ -404,7 +404,7 @@ static Page *createPage(CommonData &common){
 PageDescription registerPageWindRoseFlex(
     "WindRoseFlex",         // Page name
     createPage,         // Action
-    6,                  // Number of bus values depends on selection in Web configuration
+    6,                  // Number of bus values depends on selection in Web configuration; was zero
     //{"AWA", "AWS", "COG", "SOG", "TWD", "TWS"},    // Bus values we need in the page
     true                // Show display header on/off
 );
