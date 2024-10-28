@@ -171,7 +171,7 @@ public:
         // Show average settings
         getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&Ubuntu_Bold8pt7b);
-        getdisplay().setCursor(320, 100);
+        getdisplay().setCursor(320, 84);
         switch (average) {
             case 0:
                 getdisplay().print("Avg: 1s");
