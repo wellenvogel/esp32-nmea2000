@@ -14,6 +14,7 @@
 
 // Character sets
 #include "Ubuntu_Bold8pt7b.h"
+#include "Ubuntu_Bold10pt7b.h"
 #include "Ubuntu_Bold12pt7b.h"
 #include "Ubuntu_Bold16pt7b.h"
 #include "Ubuntu_Bold20pt7b.h"

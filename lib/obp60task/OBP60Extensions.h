@@ -11,6 +11,7 @@
 
 // Fonts declarations for display (#inclues see OBP60Extensions.cpp)
 extern const GFXfont Ubuntu_Bold8pt7b;
+extern const GFXfont Ubuntu_Bold10pt7b;
 extern const GFXfont Ubuntu_Bold12pt7b;
 extern const GFXfont Ubuntu_Bold16pt7b;
 extern const GFXfont Ubuntu_Bold20pt7b;
