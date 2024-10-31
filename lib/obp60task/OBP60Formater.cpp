@@ -379,6 +379,19 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
         }
     }
     //########################################################
+    else if (value->getFormat() == "formatXte"){
+		double xte = abs(value->value);
+		rawvalue = value->value;
+        if (xte >= 100) {
+            snprintf(buffer,bsize,"%3.0f",value->value);
+        } else if (xte >= 10) {
+            snprintf(buffer,bsize,"%3.1f",value->value);
+        } else {
+            snprintf(buffer,bsize,"%3.2f",value->value);
+        }
+        result.unit = "nm";
+    }
+    //########################################################
     else if (value->getFormat() == "kelvinToC"){
         double temp = 0;
         if(usesimudata == false) {
