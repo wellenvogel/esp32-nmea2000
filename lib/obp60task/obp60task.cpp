@@ -287,6 +287,8 @@ void underVoltageDetection(GwApi *api){
 // OBP60 Task
 //####################################################################################
 void OBP60Task(GwApi *api){
+//    vTaskDelete(NULL);
+//    return;
     GwLog *logger=api->getLogger();
     GwConfigHandler *config=api->getConfig();
     startLedTask(api);
