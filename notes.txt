@@ -1,0 +1,17 @@
+git remote add upstream /url/to/original/repo
+git fetch upstream
+git checkout master
+git reset --hard upstream/master  
+git push origin master --force
+
+https://github.com/norbert-walter/esp32-nmea2000-obp60
+
+
+cd /workspace/esp32-nmea2000-obp60
+bash /workspace/esp32-nmea2000-obp60/lib/obp60task/run
+
+Page beim OBP60 hinzufügen
+1. Page unter /lib/obp60task/PageXXXX.cpp anlegen
+2. Alle Page-Namen in PageXXXX.cpp auf den Namen der Datei setzen
+3. In /lib/obp60task/obp60task.cpp ab Zeile 242 (registerAllPages) die Seite hinzufügen
+4. In /lib/obp60task/config.json für jede Seite den neuen Seitentyp in die Liste aufnehmen.
