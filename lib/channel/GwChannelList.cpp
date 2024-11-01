@@ -83,7 +83,7 @@ public:
 };
 
 template<typename T>
-    class SerialWrapper : public GwChannelList::SerialWrapperBase{
+    class SerialWrapper : public GwSerial::SerialWrapperBase{
         private:
         template<class C>
         void beginImpl(C *s,unsigned long baud, uint32_t config=SERIAL_8N1, int8_t rxPin=-1, int8_t txPin=-1){}
@@ -184,7 +184,7 @@ void GwChannelList::addSerial(int id, int rx, int tx, int type){
     }
     LOG_DEBUG(GwLog::ERROR,"invalid serial config with id %d",id);
 }
-void GwChannelList::addSerial(GwChannelList::SerialWrapperBase *stream,int type,int rx,int tx){
+void GwChannelList::addSerial(GwSerial::SerialWrapperBase *stream,int type,int rx,int tx){
     const char *mode=nullptr;
     switch (type)
     {
@@ -207,7 +207,7 @@ void GwChannelList::addSerial(GwChannelList::SerialWrapperBase *stream,int type,
     }
     addSerial(stream,mode,rx,tx);
 }
-void GwChannelList::addSerial(GwChannelList::SerialWrapperBase *serialStream,const String &mode,int rx,int tx){
+void GwChannelList::addSerial(GwSerial::SerialWrapperBase *serialStream,const String &mode,int rx,int tx){
     int id=serialStream->getId();
     for (auto &&it:theChannels){
         if (it->isOwnSource(id)){
@@ -251,7 +251,7 @@ void GwChannelList::addSerial(GwChannelList::SerialWrapperBase *serialStream,con
     LOG_DEBUG(GwLog::DEBUG,"serial set up: mode=%s,rx=%d,canRead=%d,tx=%d,canWrite=%d",
         mode.c_str(),rx,(int)canRead,tx,(int)canWrite);
     serialStream->begin(logger,config->getInt(param->baud,115200),SERIAL_8N1,rx,tx);
-    GwSerial *serial = new GwSerial(logger, serialStream->getStream(), id, canRead);
+    GwSerial *serial = new GwSerial(logger, serialStream, canRead);
     LOG_DEBUG(GwLog::LOG, "starting serial %d ", id);
     GwChannel *channel = new GwChannel(logger, param->name, id);
     channel->setImpl(serial);
@@ -303,8 +303,9 @@ void GwChannelList::begin(bool fallbackSerial){
     GwChannel *channel=NULL;
     //usb
     if (! fallbackSerial){
-        GwSerial *usb=new GwSerial(NULL,&USBSerial,USB_CHANNEL_ID);
-        USBSerial.begin(config->getInt(config->usbBaud));
+        GwSerial::SerialWrapperBase *usbWrapper=new SerialWrapper<decltype(USBSerial)>(&USBSerial,USB_CHANNEL_ID);
+        usbWrapper->begin(NULL,config->getInt(config->usbBaud));
+        GwSerial *usb=new GwSerial(NULL,usbWrapper);
         logger->setWriter(new GwSerialLog(usb,config->getBool(config->usbActisense),getFlushTimeout(USBSerial)));
         logger->prefix="GWSERIAL:";
         channel=new GwChannel(logger,"USB",USB_CHANNEL_ID);

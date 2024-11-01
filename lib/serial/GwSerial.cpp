@@ -40,10 +40,10 @@ class GwSerialStream: public Stream{
 
 
 
-GwSerial::GwSerial(GwLog *logger, Stream *s, int id,bool allowRead):serial(s)
+GwSerial::GwSerial(GwLog *logger, GwSerial::SerialWrapperBase *s, bool allowRead):serial(s)
 {
     LOG_DEBUG(GwLog::DEBUG,"creating GwSerial %p id %d",this,id);
-    this->id=id;
+    this->id=s->getId();
     this->logger = logger;
     String bufName="Ser(";
     bufName+=String(id);
