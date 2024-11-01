@@ -47,6 +47,7 @@ Hardware
 --------
 The software is prepared to run on different kinds of ESP32 based modules and accessoirs. For some of them prebuild binaries are available that only need to be flashed, others would require to add some definitions of the used PINs and features and to build the binary.
 For the list of hardware set ups refer to [Hardware](doc/Hardware.md).
+For details of the usage of serial devices and the USB connection refer to [Serial and USB](doc/serial-usb.md).
 
 There is a couple of prebuild binaries that you can directly flash to your device. For other combinations of hardware there is an [online build service](doc/BuildService.md) that will allow you to select your hardware and trigger a build.
 
