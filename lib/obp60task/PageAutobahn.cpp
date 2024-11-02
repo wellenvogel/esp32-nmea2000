@@ -43,12 +43,12 @@ class PageAutobahn : public Page{
            getdisplay().fillTriangle(x0, y0, x1, y1, x3, y3, color);
            getdisplay().fillTriangle(x1, y1, x2, y2, x3, y3, color);
        } else {
-		   // draw outline 
-		   getdisplay().drawLine(x0, y0, x1, y1, color);
-		   getdisplay().drawLine(x1, y1, x2, y2, color);
-  		   getdisplay().drawLine(x2, y2, x3, y3, color);
-		   getdisplay().drawLine(x3, y3, x0, y0, color);
-	   }
+           // draw outline
+           getdisplay().drawLine(x0, y0, x1, y1, color);
+           getdisplay().drawLine(x1, y1, x2, y2, color);
+             getdisplay().drawLine(x2, y2, x3, y3, color);
+           getdisplay().drawLine(x3, y3, x0, y0, color);
+       }
     }
 
     virtual int handleKey(int key){
@@ -74,7 +74,7 @@ class PageAutobahn : public Page{
         // Optical warning by limit violation (unused)
         if(String(flashLED) == "Limit Violation"){
             setBlinkingLED(false);
-            setFlashLED(false); 
+            setFlashLED(false);
         }
 
         // Logging boat values
@@ -156,10 +156,10 @@ class PageAutobahn : public Page{
 
         double diff = bv_cog->value - bv_btw->value;
         if (diff < -180) {
-			diff += 360;
-		} else if (diff > 180:) {
-		    diff -= 360
-		}
+            diff += 360;
+        } else if (diff > 180:) {
+            diff -= 360
+        }
 
         // default all segments activated
         bool seg[6] = {true, true, true, true, true, true};
@@ -169,13 +169,13 @@ class PageAutobahn : public Page{
         int order[6];
         if (diff < 0) {
             // right
-			order[0] = 6; order[1] = 5;	order[2] = 4;
-			order[3] = 1; order[4] = 2;	order[5] = 3;
-		else if (diff > 0) {
-			// left
-			order[0] = 3; order[1] = 2;	order[2] = 1;
-			order[3] = 4; order[4] = 5;	order[5] = 6;
-		}
+            order[0] = 6; order[1] = 5; order[2] = 4;
+            order[3] = 1; order[4] = 2; order[5] = 3;
+        else if (diff > 0) {
+            // left
+            order[0] = 3; order[1] = 2; order[2] = 1;
+            order[3] = 4; order[4] = 5; order[5] = 6;
+        }
         int i = 0;
         while (nseg > 0) {
             seg[order[i]] = false;
