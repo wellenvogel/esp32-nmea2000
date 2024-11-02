@@ -167,6 +167,20 @@
         }
     },
     {
+        "name": "trackStep",
+        "label": "angle [deg]",
+        "type": "number",
+        "default": "3.0",
+        "check": "checkMinMax",
+        "min": 1.0,
+        "max": 12.0,
+        "description": "track step offset [1...12deg]",
+        "category": "OBP60 Settings",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
         "name": "lengthFormat",
         "label": "Length Format",
         "type": "list",
@@ -890,7 +904,7 @@
         "type": "list",
         "default": "Voltage",
         "description": "Type of page for page 1",
-        "list":["OneValue","TwoValues","ThreeValues","FourValues","FourValues2","ApparentWind","WindRose","WindRoseFlex","Voltage","DST810","Clock","WhitePage","BME280","RudderPosition","KeelPosition","Battery","Battery2","RollPitch","Solar","Generator"],
+        "list":["OneValue","TwoValues","ThreeValues","FourValues","FourValues2","ApparentWind","WindRose","WindRoseFlex","Voltage","DST810","Clock","WhitePage","BME280","RudderPosition","KeelPosition","Battery","Battery2","RollPitch","Solar","Generator","Autobahn"],
         "category": "OBP60 Page 1",
         "capabilities": {
             "obp60":"true"
@@ -974,7 +988,7 @@
         "type": "list",
         "default": "WindRose",
         "description": "Type of page for page 2",
-        "list":["OneValue","TwoValues","ThreeValues","FourValues","FourValues2","ApparentWind","WindRose","WindRoseFlex","Voltage","DST810","Clock","WhitePage","BME280","RudderPosition","KeelPosition","Battery","Battery2","RollPitch","Solar","Generator"],
+        "list":["OneValue","TwoValues","ThreeValues","FourValues","FourValues2","ApparentWind","WindRose","WindRoseFlex","Voltage","DST810","Clock","WhitePage","BME280","RudderPosition","KeelPosition","Battery","Battery2","RollPitch","Solar","Generator","Autobahn"],
         "category": "OBP60 Page 2",
         "capabilities": {
             "obp60":"true"
@@ -1059,7 +1073,7 @@
         "type": "list",
         "default": "OneValue",
         "description": "Type of page for page 3",
-        "list":["OneValue","TwoValues","ThreeValues","FourValues","FourValues2","ApparentWind","WindRose","WindRoseFlex","Voltage","DST810","Clock","WhitePage","BME280","RudderPosition","KeelPosition","Battery","Battery2","RollPitch","Solar","Generator"],
+        "list":["OneValue","TwoValues","ThreeValues","FourValues","FourValues2","ApparentWind","WindRose","WindRoseFlex","Voltage","DST810","Clock","WhitePage","BME280","RudderPosition","KeelPosition","Battery","Battery2","RollPitch","Solar","Generator","Autobahn"],
         "category": "OBP60 Page 3",
         "capabilities": {
             "obp60":"true"
@@ -1144,7 +1158,7 @@
         "type": "list",
         "default": "TwoValues",
         "description": "Type of page for page 4",
-        "list":["OneValue","TwoValues","ThreeValues","FourValues","FourValues2","ApparentWind","WindRose","WindRoseFlex","Voltage","DST810","Clock","WhitePage","BME280","RudderPosition","KeelPosition","Battery","Battery2","RollPitch","Solar","Generator"],
+        "list":["OneValue","TwoValues","ThreeValues","FourValues","FourValues2","ApparentWind","WindRose","WindRoseFlex","Voltage","DST810","Clock","WhitePage","BME280","RudderPosition","KeelPosition","Battery","Battery2","RollPitch","Solar","Generator","Autobahn"],
         "category": "OBP60 Page 4",
         "capabilities": {
             "obp60":"true"
@@ -1229,7 +1243,7 @@
         "type": "list",
         "default": "ThreeValues",
         "description": "Type of page for page 5",
-        "list":["OneValue","TwoValues","ThreeValues","FourValues","FourValues2","ApparentWind","WindRose","WindRoseFlex","Voltage","DST810","Clock","WhitePage","BME280","RudderPosition","KeelPosition","Battery","Battery2","RollPitch","Solar","Generator"],
+        "list":["OneValue","TwoValues","ThreeValues","FourValues","FourValues2","ApparentWind","WindRose","WindRoseFlex","Voltage","DST810","Clock","WhitePage","BME280","RudderPosition","KeelPosition","Battery","Battery2","RollPitch","Solar","Generator","Autobahn"],
         "category": "OBP60 Page 5",
         "capabilities": {
             "obp60":"true"
@@ -1314,7 +1328,7 @@
         "type": "list",
         "default": "FourValues",
         "description": "Type of page for page 6",
-        "list":["OneValue","TwoValues","ThreeValues","FourValues","FourValues2","ApparentWind","WindRose","WindRoseFlex","Voltage","DST810","Clock","WhitePage","BME280","RudderPosition","KeelPosition","Battery","Battery2","RollPitch","Solar","Generator"],
+        "list":["OneValue","TwoValues","ThreeValues","FourValues","FourValues2","ApparentWind","WindRose","WindRoseFlex","Voltage","DST810","Clock","WhitePage","BME280","RudderPosition","KeelPosition","Battery","Battery2","RollPitch","Solar","Generator","Autobahn"],
         "category": "OBP60 Page 6",
         "capabilities": {
             "obp60":"true"
@@ -1399,7 +1413,7 @@
         "type": "list",
         "default": "FourValues2",
         "description": "Type of page for page 7",
-        "list":["OneValue","TwoValues","ThreeValues","FourValues","FourValues2","ApparentWind","WindRose","WindRoseFlex","Voltage","DST810","Clock","WhitePage","BME280","RudderPosition","KeelPosition","Battery","Battery2","RollPitch","Solar","Generator"],
+        "list":["OneValue","TwoValues","ThreeValues","FourValues","FourValues2","ApparentWind","WindRose","WindRoseFlex","Voltage","DST810","Clock","WhitePage","BME280","RudderPosition","KeelPosition","Battery","Battery2","RollPitch","Solar","Generator","Autobahn"],
         "category": "OBP60 Page 7",
         "capabilities": {
             "obp60":"true"
@@ -1484,7 +1498,7 @@
         "type": "list",
         "default": "Clock",
         "description": "Type of page for page 8",
-        "list":["OneValue","TwoValues","ThreeValues","FourValues","FourValues2","ApparentWind","WindRose","WindRoseFlex","Voltage","DST810","Clock","WhitePage","BME280","RudderPosition","KeelPosition","Battery","Battery2","RollPitch","Solar","Generator"],
+        "list":["OneValue","TwoValues","ThreeValues","FourValues","FourValues2","ApparentWind","WindRose","WindRoseFlex","Voltage","DST810","Clock","WhitePage","BME280","RudderPosition","KeelPosition","Battery","Battery2","RollPitch","Solar","Generator","Autobahn"],
         "category": "OBP60 Page 8",
         "capabilities": {
             "obp60":"true"
@@ -1569,7 +1583,7 @@
         "type": "list",
         "default": "RollPitch",
         "description": "Type of page for page 9",
-        "list":["OneValue","TwoValues","ThreeValues","FourValues","FourValues2","ApparentWind","WindRose","WindRoseFlex","Voltage","DST810","Clock","WhitePage","BME280","RudderPosition","KeelPosition","Battery","Battery2","RollPitch","Solar","Generator"],
+        "list":["OneValue","TwoValues","ThreeValues","FourValues","FourValues2","ApparentWind","WindRose","WindRoseFlex","Voltage","DST810","Clock","WhitePage","BME280","RudderPosition","KeelPosition","Battery","Battery2","RollPitch","Solar","Generator","Autobahn"],
         "category": "OBP60 Page 9",
         "capabilities": {
             "obp60":"true"
@@ -1654,7 +1668,7 @@
         "type": "list",
         "default": "Battery2",
         "description": "Type of page for page 10",
-        "list":["OneValue","TwoValues","ThreeValues","FourValues","FourValues2","ApparentWind","WindRose","WindRoseFlex","Voltage","DST810","Clock","WhitePage","BME280","RudderPosition","KeelPosition","Battery","Battery2","RollPitch","Solar","Generator"],
+        "list":["OneValue","TwoValues","ThreeValues","FourValues","FourValues2","ApparentWind","WindRose","WindRoseFlex","Voltage","DST810","Clock","WhitePage","BME280","RudderPosition","KeelPosition","Battery","Battery2","RollPitch","Solar","Generator","Autobahn"],
         "category": "OBP60 Page 10",
         "capabilities": {
             "obp60":"true"
