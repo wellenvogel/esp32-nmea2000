@@ -32,10 +32,14 @@ public:
         static String svalue2old = "";
         static String unit2old = "";
         static String svalue3old = "";
-        static String svalue4old = "";
+        static String unit3old = "";
+
+        static String svalue5old = "";
+        static String svalue6old = "";
 
         double value1 = 0;
         double value2 = 0;
+        double value3 = 0;
 
         // Get config data
         String lengthformat = config->getString(config->lengthFormat);
@@ -66,7 +70,7 @@ public:
         }
 
         // Get boat values for GPS date
-        GwApi::BoatValue *bvalue2 = pageData.values[1]; // First element in list (only one value by PageOneValue)
+        GwApi::BoatValue *bvalue2 = pageData.values[1]; // Second element in list (only one value by PageOneValue)
         String name2 = bvalue2->getName().c_str();      // Value name
         name2 = name2.substring(0, 6);                  // String length limit for value name
         value2 = bvalue2->value;                        // Value as double in SI unit
@@ -76,6 +80,19 @@ public:
         if(valid2 == true){
             svalue2old = svalue2;   	                // Save old value
             unit2old = unit2;                           // Save old unit
+        }
+
+        // Get boat values for HDOP date
+        GwApi::BoatValue *bvalue3 = pageData.values[2]; // Third element in list (only one value by PageOneValue)
+        String name3 = bvalue3->getName().c_str();      // Value name
+        name3 = name3.substring(0, 6);                  // String length limit for value name
+        value3 = bvalue3->value;                        // Value as double in SI unit
+        bool valid3 = bvalue3->valid;                   // Valid information 
+        String svalue3 = formatValue(bvalue3, commonData).svalue;    // Formatted value as string including unit conversion and switching decimal places
+        String unit3 = formatValue(bvalue3, commonData).unit;        // Unit of value
+        if(valid3 == true){
+            svalue3old = svalue3;   	                // Save old value
+            unit3old = unit3;                           // Save old unit
         }
 
         // Optical warning by limit violation (unused)
@@ -133,16 +150,16 @@ public:
 
         // Show values sunrise
         String sunrise = "---";
-        if(valid1 == true && valid2 == true){
+        if(valid1 == true && valid2 == true && valid3 == true){
             sunrise = String(commonData.sundata.sunriseHour) + ":" + String(commonData.sundata.sunriseMinute + 100).substring(1);
-            svalue3old = sunrise;
+            svalue5old = sunrise;
         }
 
         getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&Ubuntu_Bold8pt7b);
         getdisplay().setCursor(335, 65);
         if(holdvalues == false) getdisplay().print(sunrise); // Value
-        else getdisplay().print(svalue3old);
+        else getdisplay().print(svalue5old);
         getdisplay().setFont(&Ubuntu_Bold12pt7b);
         getdisplay().setCursor(335, 95);
         getdisplay().print("SunR");                          // Name
@@ -152,16 +169,16 @@ public:
 
         // Show values sunset
         String sunset = "---";
-        if(valid1 == true && valid2 == true){
+        if(valid1 == true && valid2 == true && valid3 == true){
             sunset = String(commonData.sundata.sunsetHour) + ":" +  String(commonData.sundata.sunsetMinute + 100).substring(1);
-            svalue4old = sunset;
+            svalue6old = sunset;
         }
 
         getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&Ubuntu_Bold8pt7b);
         getdisplay().setCursor(335, 250);
         if(holdvalues == false) getdisplay().print(sunset);  // Value
-        else getdisplay().print(svalue4old);
+        else getdisplay().print(svalue6old);
         getdisplay().setFont(&Ubuntu_Bold12pt7b);
         getdisplay().setCursor(335, 220);
         getdisplay().print("SunS");                          // Name
@@ -350,10 +367,10 @@ static Page *createPage(CommonData &common){
  * and will will provide the names of the fixed values we need
  */
 PageDescription registerPageClock(
-    "Clock",         // Page name
+    "Clock",            // Page name
     createPage,         // Action
     0,                  // Number of bus values depends on selection in Web configuration
-    {"GPST", "GPSD"},    // Bus values we need in the page
+    {"GPST", "GPSD", "HDOP"},   // Bus values we need in the page
     true                // Show display header on/off
 );
 
