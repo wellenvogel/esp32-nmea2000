@@ -432,6 +432,7 @@ void OBP60Task(GwApi *api){
     uint brightness = 2.55 * uint(api->getConfig()->getConfigItem(api->getConfig()->blBrightness,true)->asInt());
     bool uvoltage = api->getConfig()->getConfigItem(api->getConfig()->underVoltage,true)->asBoolean();
     String cpuspeed = api->getConfig()->getConfigItem(api->getConfig()->cpuSpeed,true)->asString();
+    uint hdopAccuracy = uint(api->getConfig()->getConfigItem(api->getConfig()->hdopAccuracy,true)->asInt());
 
     // refreshmode defined in init section
     // displaycolor defined in init section
@@ -498,11 +499,11 @@ void OBP60Task(GwApi *api){
             commonData.data.maxpage = numPages;
             
             // If GPS fix then LED off (HDOP)
-            if(String(gpsFix) == "GPS Fix Lost" && date->valid == true){
+            if(String(gpsFix) == "GPS Fix Lost" && hdop->value <= hdopAccuracy && hdop->valid == true){
                 setFlashLED(false);
             }
             // If missing GPS fix then LED on
-            if(String(gpsFix) == "GPS Fix Lost" && date->valid == false){
+            if((String(gpsFix) == "GPS Fix Lost" && hdop->value > hdopAccuracy && hdop->valid == true) || (String(gpsFix) == "GPS Fix Lost" && hdop->valid == false)){
                 setFlashLED(true);
             }
          

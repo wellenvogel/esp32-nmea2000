@@ -312,6 +312,20 @@
         }
     },
     {
+        "name": "hdopAccuracy",
+        "label": "HDOP Accuracy [m]",
+        "type": "number",
+        "default": "20",
+        "check": "checkMinMax",
+        "min": 1,
+        "max": 50,
+        "description": "HDOP ccuracy in m for a valid GPS signal [1...50]",
+        "category": "OBP60 Hardware",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
         "name": "useEnvSensor",
         "label": "Env. Sensor",
         "type": "list",

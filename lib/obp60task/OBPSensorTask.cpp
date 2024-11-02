@@ -147,6 +147,7 @@ void sensorTask(void *param){
 
     // Settings for GPS sensors
     String gpsOn=api->getConfig()->getConfigItem(api->getConfig()->useGPS,true)->asString();
+    uint hdopAccuracy = uint(api->getConfig()->getConfigItem(api->getConfig()->hdopAccuracy,true)->asInt());
     if(String(gpsOn) == "NEO-6M"){
         Serial2.begin(9600, SERIAL_8N1, OBP_GPS_RX, OBP_GPS_TX, false); // not inverted (false)
         if (!Serial2) {     
@@ -354,7 +355,8 @@ void sensorTask(void *param){
 
     GwApi::BoatValue *gpsdays=new GwApi::BoatValue(GwBoatData::_GPSD);
     GwApi::BoatValue *gpsseconds=new GwApi::BoatValue(GwBoatData::_GPST);
-    GwApi::BoatValue *valueList[]={gpsdays, gpsseconds};
+    GwApi::BoatValue *hdop=new GwApi::BoatValue(GwBoatData::_HDOP);
+    GwApi::BoatValue *valueList[]={gpsdays, gpsseconds, hdop};
 
     // Sensor task loop runs with 100ms
     //####################################################################################
@@ -366,7 +368,7 @@ void sensorTask(void *param){
         {
             starttime0 = millis();
             // Send NMEA0183 GPS data on several bus systems all 100ms
-            if (GPS_ready == true)
+            if (GPS_ready == true && hdop->value <= hdopAccuracy)
             {
                 SNMEA0183Msg NMEA0183Msg;
                 while (NMEA0183.GetMessageCor(NMEA0183Msg))
@@ -381,8 +383,8 @@ void sensorTask(void *param){
         if(millis() > starttime11 + 5*60*1000){
             starttime11 = millis();
             if(rtcOn == "DS1388" && RTC_ready == true && GPS_ready == true){
-                api->getBoatDataValues(2,valueList);
-                if(gpsdays->valid && gpsseconds->valid){
+                api->getBoatDataValues(3,valueList);
+                if(gpsdays->valid && gpsseconds->valid && hdop->valid){
                     long ts = tNMEA0183Msg::daysToTime_t(gpsdays->value - (30*365+7))+floor(gpsseconds->value); // Adjusted to reference year 2000 (-30 years and 7 days for switch years)
                     // sample input: date = "Dec 26 2009", time = "12:34:56"
                     // ds1388.adjust(DateTime("Dec 26 2009", "12:34:56"));
@@ -421,7 +423,7 @@ void sensorTask(void *param){
         // If GPS not ready or installed then send RTC time on bus all 500ms
         if(millis() > starttime12 + 500){
             starttime12 = millis();
-            if(rtcOn == "DS1388" && RTC_ready == true && GPS_ready == false){
+            if((rtcOn == "DS1388" && RTC_ready == true && GPS_ready == false) || (rtcOn == "DS1388" && RTC_ready == true && GPS_ready == true && hdop->valid == false)){
                 // Convert RTC time to Unix system time
                 // https://de.wikipedia.org/wiki/Unixzeit
                 const short daysOfYear[12] = {0,31,59,90,120,151,181,212,243,273,304,334};

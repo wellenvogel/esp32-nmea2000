@@ -234,7 +234,7 @@ void displayHeader(CommonData &commonData, GwApi::BoatValue *date, GwApi::BoatVa
         getdisplay().print("USB ");
         }
         double gpshdop = formatValue(hdop, commonData).value;
-        if(commonData.config->getString(commonData.config->useGPS) != "off" &&  gpshdop > 0.3){
+        if(commonData.config->getString(commonData.config->useGPS) != "off" &&  gpshdop <= commonData.config->getInt(commonData.config->hdopAccuracy) && hdop->valid == true){
         getdisplay().print("GPS");
         }
         // Save old telegram counter
@@ -265,6 +265,7 @@ void displayHeader(CommonData &commonData, GwApi::BoatValue *date, GwApi::BoatVa
         getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&Ubuntu_Bold8pt7b);
         getdisplay().setCursor(230, 15);
+        // Show date and time if date present
         if(date->valid == true){
             String acttime = formatValue(time, commonData).svalue;
             acttime = acttime.substring(0, 5);
