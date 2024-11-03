@@ -157,20 +157,21 @@ class PageAutobahn : public Page{
         double diff = bv_cog->value - bv_btw->value;
         if (diff < -180) {
             diff += 360;
-        } else if (diff > 180:) {
-            diff -= 360
+        } else if (diff > 180) {
+            diff -= 360;
         }
 
         // default all segments activated
         bool seg[6] = {true, true, true, true, true, true};
         // number of inactive segments
-        int nseg = std::min(std::floor(std::abs(diff) / seg_deg), 5);
+        int nseg = std::min(static_cast<int>(std::floor(std::abs(diff) / seg_deg)), 5);
 
         int order[6];
         if (diff < 0) {
             // right
             order[0] = 6; order[1] = 5; order[2] = 4;
             order[3] = 1; order[4] = 2; order[5] = 3;
+        }    
         else if (diff > 0) {
             // left
             order[0] = 3; order[1] = 2; order[2] = 1;
@@ -189,7 +190,7 @@ class PageAutobahn : public Page{
         drawSegment(60, 100, 117, 18, 147, 18, 110, 100, pixelcolor,seg[2]);
         // right segments
         drawSegment(399, 54, 354, 18, 325, 18, 399, 90, pixelcolor, seg[3]);
-        drawSegment(399, 100, 318, 18, 289, 18, 350, 100, pixelcolor, seg[4]));
+        drawSegment(399, 100, 318, 18, 289, 18, 350, 100, pixelcolor, seg[4]);
         drawSegment(340, 100, 283, 18, 253, 18, 290, 100, pixelcolor, seg[5]);
 
         // Key Layout
