@@ -375,14 +375,30 @@ def getLibs():
             rt.append(e)
     return rt
 
+
+
 def joinFiles(target,pattern,dirlist):
-    with gzip.open(target,"wb") as oh:
-        for dir in dirlist:
+    flist=[]
+    for dir in dirlist:
             fn=os.path.join(dir,pattern)
             if os.path.exists(fn):
-                print("adding %s to %s"%(fn,target))
-                with open(fn,"rb") as rh:
-                    shutil.copyfileobj(rh,oh)
+                flist.append(fn)
+    current=False
+    if os.path.exists(target):
+        current=True
+        for f in flist:
+            if not isCurrent(f,target):
+                current=False
+                break
+    if current:
+        print("%s is up to date"%target)
+        return
+    print("creating %s"%target)
+    with gzip.open(target,"wb") as oh:
+        for fn in flist:
+            print("adding %s to %s"%(fn,target))
+            with open(fn,"rb") as rh:
+                shutil.copyfileobj(rh,oh)
     
 
 OWNLIBS=getLibs()+["FS","WiFi"]
