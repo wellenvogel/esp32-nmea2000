@@ -50,7 +50,7 @@ class GwChannel{
     );
 
     void setImpl(GwChannelInterface *impl);
-    bool isOwnSource(int id);
+    bool overlaps(const GwChannel *) const;
     void enable(bool enabled){
         this->enabled=enabled;
     }
@@ -73,5 +73,10 @@ class GwChannel{
     void sendActisense(const tN2kMsg &msg, int sourceId);
     unsigned long countRx();
     unsigned long countTx();
+    bool isOwnSource(int source){
+        if (maxSourceId < 0) return source == sourceId;
+        return (source >= sourceId && source <= maxSourceId);
+    }
+    String getMode(){return impl->getMode();}
 };
 

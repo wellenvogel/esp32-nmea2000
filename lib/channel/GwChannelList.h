@@ -28,13 +28,10 @@ class GwChannelList{
         GwConfigHandler *config;
         typedef std::vector<GwChannel *> ChannelList;
         ChannelList theChannels;
-        std::map<int,String> modes;
         GwSocketServer *sockets;
         GwTcpClient *client;
-        void addSerial(GwSerial::SerialWrapperBase *stream,const String &mode,int rx,int tx);
-        void addSerial(GwSerial::SerialWrapperBase *stream,int type,int rx,int tx);
     public:
-        void addSerial(int id, int rx, int tx, int type);
+        void addChannel(GwChannel *);
         GwChannelList(GwLog *logger, GwConfigHandler *config);
         typedef std::function<void(GwChannel *)> ChannelAction;
         void allChannels(ChannelAction action);

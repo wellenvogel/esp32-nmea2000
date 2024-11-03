@@ -218,14 +218,23 @@ void GwChannel::sendActisense(const tN2kMsg &msg, int sourceId){
     if (!enabled || ! impl || ! writeActisense || ! channelStream) return;
     //currently actisense only for channels with a single source id
     //so we can check it here
-    if (isOwnSource(sourceId)) return;
+    if (maxSourceId < 0 && this->sourceId == sourceId) return;
+    if (sourceId >= this->sourceId && sourceId <= maxSourceId) return;
     countOut->add(String(msg.PGN)); 
     msg.SendInActisenseFormat(channelStream);
 }
 
-bool GwChannel::isOwnSource(int id){
-    if (maxSourceId < 0) return id == sourceId;
-    else return (id >= sourceId && id <= maxSourceId);
+bool GwChannel::overlaps(const GwChannel *other) const{
+    if (maxSourceId < 0){
+        if (other->maxSourceId < 0) return sourceId == other->sourceId;
+        return (other->sourceId <= sourceId && other->maxSourceId >= sourceId);
+    }
+    if (other->maxSourceId < 0){
+        return other->sourceId >= sourceId && other->sourceId <= maxSourceId;
+    }
+    if (other->maxSourceId < sourceId) return false;
+    if (other->sourceId > maxSourceId) return false;
+    return true;
 }
 
 unsigned long GwChannel::countRx(){
