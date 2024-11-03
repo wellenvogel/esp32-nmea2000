@@ -185,13 +185,13 @@ class PageAutobahn : public Page{
         }
 
         // left segments
-        drawSegment(0, 54, 46, 18, 75, 18, 0, 90, pixelcolor, seg[0]);
-        drawSegment(0, 100, 82, 18, 112, 18, 50, 100, pixelcolor, seg[1]);
-        drawSegment(60, 100, 117, 18, 147, 18, 110, 100, pixelcolor,seg[2]);
+        drawSegment(0, 54, 46, 24, 75, 24, 0, 90, pixelcolor, seg[0]);
+        drawSegment(0, 100, 82, 24, 112, 24, 50, 100, pixelcolor, seg[1]);
+        drawSegment(60, 100, 117, 24, 147, 24, 110, 100, pixelcolor,seg[2]);
         // right segments
-        drawSegment(399, 54, 354, 18, 325, 18, 399, 90, pixelcolor, seg[3]);
-        drawSegment(399, 100, 318, 18, 289, 18, 350, 100, pixelcolor, seg[4]);
-        drawSegment(340, 100, 283, 18, 253, 18, 290, 100, pixelcolor, seg[5]);
+        drawSegment(399, 54, 354, 24, 325, 24, 399, 90, pixelcolor, seg[3]);
+        drawSegment(399, 100, 318, 24, 289, 24, 350, 100, pixelcolor, seg[4]);
+        drawSegment(340, 100, 283, 24, 253, 24, 290, 100, pixelcolor, seg[5]);
 
         // Key Layout
         getdisplay().setFont(&Ubuntu_Bold8pt7b);
