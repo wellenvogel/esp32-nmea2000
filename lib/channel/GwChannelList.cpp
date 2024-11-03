@@ -18,6 +18,7 @@ class SerInit{
 };
 std::vector<SerInit> serialInits;
 
+
 static int typeFromMode(const char *mode){
     if (strcmp(mode,"UNI") == 0) return GWSERIAL_TYPE_UNI;
     if (strcmp(mode,"BI") == 0) return GWSERIAL_TYPE_BI;
@@ -31,90 +32,94 @@ static int typeFromMode(const char *mode){
     static GwInitializer<SerInit> __serial ## ser ## _init \
         (serialInits,SerInit(ser,__VA_ARGS__));
 #ifdef _GWI_SERIAL1
-    CFG_SERIAL(0,_GWI_SERIAL1)
+    CFG_SERIAL(SERIAL1_CHANNEL_ID,_GWI_SERIAL1)
 #endif
 #ifdef _GWI_SERIAL2
-    CFG_SERIAL(1,_GWI_SERIAL2)
+    CFG_SERIAL(SERIAL2_CHANNEL_ID,_GWI_SERIAL2)
 #endif
-//handle separate defines
-    //serial 1
-    #ifndef GWSERIAL_TX
-      #define GWSERIAL_TX -1
-    #endif
-    #ifndef GWSERIAL_RX
-      #define GWSERIAL_RX -1
-    #endif
-    #ifdef GWSERIAL_TYPE
-        CFG_SERIAL(0,GWSERIAL_RX,GWSERIAL_TX,GWSERIAL_TYPE)
-    #else
-        #ifdef GWSERIAL_MODE
-            CFG_SERIAL(0,GWSERIAL_RX,GWSERIAL_TX,typeFromMode(GWSERIAL_MODE))
-        #endif
-    #endif
-    //serial 2
-    #ifndef GWSERIAL2_TX
-      #define GWSERIAL2_TX -1
-    #endif
-    #ifndef GWSERIAL2_RX
-      #define GWSERIAL2_RX -1
-    #endif
-    #ifdef GWSERIAL2_TYPE
-        CFG_SERIAL(1,GWSERIAL2_RX,GWSERIAL2_TX,GWSERIAL2_TYPE)
-    #else
-        #ifdef GWSERIAL2_MODE
-            CFG_SERIAL(1,GWSERIAL2_RX,GWSERIAL2_TX,typeFromMode(GWSERIAL2_MODE))
-        #endif
-    #endif
-class GwSerialLog : public GwLogWriter
-{
-    static const size_t bufferSize = 4096;
-    char *logBuffer = NULL;
-    int wp = 0;
-    GwSerial *writer;
-    bool disabled = false;
-public:
-    GwSerialLog(GwSerial *writer, bool disabled)
+    // handle separate defines
+    // serial 1
+#ifndef GWSERIAL_TX
+#define GWSERIAL_TX -1
+#endif
+#ifndef GWSERIAL_RX
+#define GWSERIAL_RX -1
+#endif
+#ifdef GWSERIAL_TYPE
+    CFG_SERIAL(SERIAL1_CHANNEL_ID, GWSERIAL_RX, GWSERIAL_TX, GWSERIAL_TYPE)
+#else
+#ifdef GWSERIAL_MODE
+CFG_SERIAL(SERIAL1_CHANNEL_ID, GWSERIAL_RX, GWSERIAL_TX, typeFromMode(GWSERIAL_MODE))
+#endif
+#endif
+    // serial 2
+#ifndef GWSERIAL2_TX
+#define GWSERIAL2_TX -1
+#endif
+#ifndef GWSERIAL2_RX
+#define GWSERIAL2_RX -1
+#endif
+#ifdef GWSERIAL2_TYPE
+    CFG_SERIAL(SERIAL2_CHANNEL_ID, GWSERIAL2_RX, GWSERIAL2_TX, GWSERIAL2_TYPE)
+#else
+#ifdef GWSERIAL2_MODE
+CFG_SERIAL(SERIAL2_CHANNEL_ID, GWSERIAL2_RX, GWSERIAL2_TX, typeFromMode(GWSERIAL2_MODE))
+#endif
+#endif
+    class GwSerialLog : public GwLogWriter
     {
-        this->writer = writer;
-        this->disabled = disabled;
-        logBuffer = new char[bufferSize];
-        wp = 0;
-    }
-    virtual ~GwSerialLog() {}
-    virtual void write(const char *data)
-    {
-        if (disabled)
-            return;
-        int len = strlen(data);
-        if ((wp + len) >= (bufferSize - 1))
-            return;
-        strncpy(logBuffer + wp, data, len);
-        wp += len;
-        logBuffer[wp] = 0;
-    }
-    virtual void flush()
-    {
-        size_t handled = 0;
-        if (!disabled)
+        static const size_t bufferSize = 4096;
+        char *logBuffer = NULL;
+        int wp = 0;
+        GwSerial *writer;
+        bool disabled = false;
+
+    public:
+        GwSerialLog(GwSerial *writer, bool disabled)
         {
-            while (handled < wp)
-            {
-                if ( !writer->flush()) break;
-                size_t rt = writer->sendToClients(logBuffer + handled, -1, true);
-                handled += rt;
-            }
-            if (handled < wp){
-                if (handled > 0){
-                    memmove(logBuffer,logBuffer+handled,wp-handled);
-                    wp-=handled;
-                    logBuffer[wp]=0;
-                }
-                return;
-            }
+            this->writer = writer;
+            this->disabled = disabled;
+            logBuffer = new char[bufferSize];
+            wp = 0;
         }
-        wp = 0;
-        logBuffer[0] = 0;
-    }
+        virtual ~GwSerialLog() {}
+        virtual void write(const char *data)
+        {
+            if (disabled)
+                return;
+            int len = strlen(data);
+            if ((wp + len) >= (bufferSize - 1))
+                return;
+            strncpy(logBuffer + wp, data, len);
+            wp += len;
+            logBuffer[wp] = 0;
+        }
+        virtual void flush()
+        {
+            size_t handled = 0;
+            if (!disabled)
+            {
+                while (handled < wp)
+                {
+                    if (!writer->flush())
+                        break;
+                    size_t rt = writer->sendToClients(logBuffer + handled, -1, true);
+                    handled += rt;
+                }
+                if (handled < wp)
+                {
+                    if (handled > 0)
+                    {
+                        memmove(logBuffer, logBuffer + handled, wp - handled);
+                        wp -= handled;
+                        logBuffer[wp] = 0;
+                    }
+                    return;
+                }
+            }
+            wp = 0;
+            logBuffer[0] = 0;
+        }
 };
 
 
@@ -192,9 +197,23 @@ GwSerial* createSerial(GwLog *logger, T* s,int id, bool canRead=true){
     return new GwSerialImpl<T>(logger,s,id,canRead);
 } 
 
+static SerialParam * findSerialParam(int id){
+    SerialParam *param=nullptr;
+    for (auto && p: serialParameters){
+        if (id == p.id){
+            param=&p;
+            break;
+        }
+    }
+    return param;
+}
+
 static GwChannel * createSerialChannel(GwConfigHandler *config,GwLog *logger, int idx,int type,int rx,int tx, bool setLog=false){
-    if (idx < 0 || idx >= sizeof(serialParameters)/sizeof(SerialParam*)) return nullptr;
-    SerialParam *param=&serialParameters[idx];
+    SerialParam *param=findSerialParam(idx);
+    if (param == nullptr){
+        LOG_DEBUG(GwLog::ERROR,"invalid serial channel id %d",idx);
+        return nullptr;
+    }
     bool canRead=false;
     bool canWrite=false;
     bool validType=false;
@@ -225,9 +244,8 @@ static GwChannel * createSerialChannel(GwConfigHandler *config,GwLog *logger, in
         LOG_DEBUG(GwLog::ERROR,"invalid type for serial channel %d: %d",param->id,type);
         return nullptr;
     }
-    if (rx < 0) canRead=false;
-    if (tx < 0) canWrite=false;
-    LOG_DEBUG(GwLog::DEBUG,"serial set up: type=%d,rx=%d,canRead=%d,tx=%d,canWrite=%d",
+    LOG_DEBUG(GwLog::DEBUG,"serial set up: channel=%d, type=%d,rx=%d,canRead=%d,tx=%d,canWrite=%d",
+        idx,
         type,rx,(int)canRead,tx,(int)canWrite);
     GwSerial *serialStream=nullptr;
     GwLog *streamLog=setLog?nullptr:logger;
@@ -275,28 +293,20 @@ void GwChannelList::addChannel(GwChannel * channel){
             return;
         }
     }
-    LOG_DEBUG(GwLog::LOG, "adding channel %s", channel->toString().c_str());
+    LOG_INFO("adding channel %s", channel->toString().c_str());
     theChannels.push_back(channel);
 }
 void GwChannelList::preinit(){
     for (auto &&init:serialInits){
+        LOG_INFO("serial config found for %d",init.serial);
         if (init.fixedBaud >= 0){
-            switch(init.serial){
-              case 1:
-              {
-                LOG_DEBUG(GwLog::DEBUG,"setting fixed baud %d for serial",init.fixedBaud);
-                config->setValue(GwConfigDefinitions::serialBaud,String(init.fixedBaud),GwConfigInterface::READONLY);
-              }
-              break;
-              case 2:
-              {
-                LOG_DEBUG(GwLog::DEBUG,"setting fixed baud %d for serial2",init.fixedBaud);
-                config->setValue(GwConfigDefinitions::serial2Baud,String(init.fixedBaud),GwConfigInterface::READONLY);
-              }
-              break;
-              default:
-                LOG_DEBUG(GwLog::ERROR,"invalid serial definition %d found",init.serial)
+            SerialParam *param=findSerialParam(init.serial);
+            if (! param){
+                LOG_ERROR("invalid serial definition %d found",init.serial)
+                return;
             }
+            LOG_DEBUG(GwLog::DEBUG,"setting fixed baud %d for serial %d",init.fixedBaud,init.serial);
+            config->setValue(param->baud,String(init.fixedBaud),GwConfigInterface::READONLY);
         }
     }
 }
@@ -312,7 +322,7 @@ void GwChannelList::begin(bool fallbackSerial){
     GwChannel *channel=NULL;
     //usb
     if (! fallbackSerial){
-        GwChannel *usb=createSerialChannel(config, logger,0,GWSERIAL_TYPE_BI,GWUSB_RX,GWUSB_TX,true);
+        GwChannel *usb=createSerialChannel(config, logger,USB_CHANNEL_ID,GWSERIAL_TYPE_BI,GWUSB_RX,GWUSB_TX,true);
         addChannel(usb);
     }
     //TCP server
@@ -335,7 +345,11 @@ void GwChannelList::begin(bool fallbackSerial){
 
     //new serial config handling
     for (auto &&init:serialInits){
-        (logger,init.serial,init.rx,init.tx,init.mode);
+        LOG_INFO("creating serial channel %d, rx=%d,tx=%d,type=%d",init.serial,init.rx,init.tx,init.mode);
+        GwChannel *ser=createSerialChannel(config,logger,init.serial,init.mode,init.rx,init.tx);
+        if (ser != nullptr){
+            addChannel(ser);
+        }
     }
     
     //tcp client
