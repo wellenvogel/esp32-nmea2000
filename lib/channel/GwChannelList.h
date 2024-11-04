@@ -18,6 +18,7 @@
 #define SERIAL2_CHANNEL_ID 3
 #define TCP_CLIENT_CHANNEL_ID 4
 #define MIN_TCP_CHANNEL_ID 5
+#define UDPW_CHANNEL_ID 20
 
 #define MIN_USER_TASK 200
 class GwSocketServer;

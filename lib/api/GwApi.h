@@ -95,6 +95,7 @@ class GwApi{
                 unsigned long ser2Tx=0;
                 unsigned long tcpSerRx=0;
                 unsigned long tcpSerTx=0;
+                unsigned long udpwTx=0;
                 int tcpClients=0;
                 unsigned long tcpClRx=0;
                 unsigned long tcpClTx=0;

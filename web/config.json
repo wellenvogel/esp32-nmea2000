@@ -827,6 +827,47 @@
         "category": "TCP client"
     },
     {
+        "name": "udpwEnabled",
+        "label": "enable",
+        "type": "boolean",
+        "default": "false",
+        "description":"enable the UDP writer",
+        "category":"UDP writer"
+    },
+    {
+        "name": "udpwPort",
+        "label": "remote port",
+        "type": "number",
+        "default": "10110",
+        "description": "the UDP port we send to",
+        "category": "UDP writer"
+    },
+    {
+        "name": "udpwAddress",
+        "label": "remote address",
+        "type": "string",
+        "default": "",
+        "check": "checkIpAddress",
+        "description": "the IP address we connect to in the form 192.168.1.2",
+        "category": "UDP writer"
+    },
+    {
+        "name": "udpwWriteFilter",
+        "label": "NMEA write Filter",
+        "type": "filter",
+        "default": "",
+        "description": "filter for NMEA0183 data when writing to remote UDP server\nselect aison|aisoff, set a whitelist or a blacklist with NMEA sentences like RMC,RMB",
+        "category": "UDP writer"
+    },
+    {
+        "name": "udpwSeasmart",
+        "label": "Seasmart out",
+        "type": "boolean",
+        "default": "false",
+        "description": "send NMEA2000 as seasmart to remote UDP server",
+        "category": "UDP writer"
+    },
+    {
         "name": "wifiClient",
         "label": "wifi client",
         "type": "boolean",

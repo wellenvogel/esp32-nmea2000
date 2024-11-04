@@ -6,6 +6,7 @@
 #include "GwSocketServer.h"
 #include "GwSerial.h"
 #include "GwTcpClient.h"
+#include "GwUdpWriter.h"
 class SerInit{
     public:
         int serial=-1;
@@ -241,6 +242,24 @@ static  ChannelParam channelParameters[]={
         .maxId=-1,
         .rxstatus=offsetof(GwApi::Status,GwApi::Status::tcpClRx),
         .txstatus=offsetof(GwApi::Status,GwApi::Status::tcpClTx)
+    },
+    {
+        .id=UDPW_CHANNEL_ID,
+        .baud="",
+        .receive="",
+        .send=GwConfigDefinitions::udpwEnabled,
+        .direction="",
+        .toN2K="",
+        .readF="",
+        .writeF=GwConfigDefinitions::udpwWriteFilter,
+        .preventLog="",
+        .readAct="",
+        .writeAct="",
+        .sendSeasmart=GwConfigDefinitions::udpwSeasmart,
+        .name="UDPWriter",
+        .maxId=-1,
+        .rxstatus=0,
+        .txstatus=offsetof(GwApi::Status,GwApi::Status::udpwTx)
     }
 
 };
@@ -425,6 +444,13 @@ void GwChannelList::begin(bool fallbackSerial){
         );
     }
     addChannel(createChannel(logger,config,TCP_CLIENT_CHANNEL_ID,client));
+
+    //udp writer
+    if (config->getBool(GwConfigDefinitions::udpwEnabled)){
+        GwUdpWriter *writer=new GwUdpWriter(config,logger,UDPW_CHANNEL_ID);
+        writer->begin();
+        addChannel(createChannel(logger,config,UDPW_CHANNEL_ID,writer));
+    }
     logger->flush();
 }
 String GwChannelList::getMode(int id){
