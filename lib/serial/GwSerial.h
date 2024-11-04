@@ -4,6 +4,9 @@
 #include "GwLog.h"
 #include "GwBuffer.h"
 #include "GwChannelInterface.h"
+#if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S3
+  #include "hal/usb_serial_jtag_ll.h"
+#endif
 
 #define USBCDC_RESTART_TIME 100
 class GwSerialStream;
@@ -77,7 +80,7 @@ template<typename T>
          * workaround for the HWCDC beeing stuck at some point in time
          * with availableForWrite == 0 but the ISR being disabled
          * we simply give a small delay of 100ms for availableForWrite being 0
-         * and afterwards call isConnected that seems to retrigger the ISR
+         * and afterwards retrigger the ISR
         */
         int availableForWrite(HWCDC* c){
             int rt=c->availableForWrite();
@@ -88,8 +91,10 @@ template<typename T>
             unsigned long now=millis();
             if (now > (lastWritable+USBCDC_RESTART_TIME)){
                 lastWritable=now;
-                LOG_ERROR("***Restart USBCDC***");
-                c->isConnected(); //this seems to retrigger the ISR
+                if (c->isConnected()){
+                    //this retriggers the ISR
+                    usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
+                }
             }
             return rt;
         }
