@@ -144,10 +144,14 @@ typedef struct {
     const char *preventLog;
     const char *readAct;
     const char *writeAct;
+    const char *sendSeasmart;
     const char *name;
-} SerialParam;
+    int maxId;
+    size_t rxstatus;
+    size_t txstatus;
+} ChannelParam;
 
-static  SerialParam serialParameters[]={
+static  ChannelParam channelParameters[]={
     {
         .id=USB_CHANNEL_ID,
         .baud=GwConfigDefinitions::usbBaud,
@@ -160,7 +164,11 @@ static  SerialParam serialParameters[]={
         .preventLog=GwConfigDefinitions::usbActisense,
         .readAct=GwConfigDefinitions::usbActisense,
         .writeAct=GwConfigDefinitions::usbActSend,
-        .name="USB"
+        .sendSeasmart="",
+        .name="USB",
+        .maxId=-1,
+        .rxstatus=offsetof(GwApi::Status,GwApi::Status::usbRx),
+        .txstatus=offsetof(GwApi::Status,GwApi::Status::usbTx)
     },
     {
         .id=SERIAL1_CHANNEL_ID,
@@ -174,7 +182,11 @@ static  SerialParam serialParameters[]={
         .preventLog="",
         .readAct="",
         .writeAct="",
-        .name="Serial"
+        .sendSeasmart="",
+        .name="Serial",
+        .maxId=-1,
+        .rxstatus=offsetof(GwApi::Status,GwApi::Status::serRx),
+        .txstatus=offsetof(GwApi::Status,GwApi::Status::serTx)
     },
     {
         .id=SERIAL2_CHANNEL_ID,
@@ -188,8 +200,49 @@ static  SerialParam serialParameters[]={
         .preventLog="",
         .readAct="",
         .writeAct="",
-        .name="Serial2"
+        .sendSeasmart="",
+        .name="Serial2",
+        .maxId=-1,
+        .rxstatus=offsetof(GwApi::Status,GwApi::Status::ser2Rx),
+        .txstatus=offsetof(GwApi::Status,GwApi::Status::ser2Tx)
+    },
+    {
+        .id=MIN_TCP_CHANNEL_ID,
+        .baud="",
+        .receive=GwConfigDefinitions::readTCP,
+        .send=GwConfigDefinitions::sendTCP,
+        .direction="",
+        .toN2K=GwConfigDefinitions::tcpToN2k,
+        .readF=GwConfigDefinitions::tcpReadFilter,
+        .writeF=GwConfigDefinitions::tcpWriteFilter,
+        .preventLog="",
+        .readAct="",
+        .writeAct="",
+        .sendSeasmart=GwConfigDefinitions::sendSeasmart,
+        .name="TCPServer",
+        .maxId=MIN_TCP_CHANNEL_ID+10,
+        .rxstatus=offsetof(GwApi::Status,GwApi::Status::tcpSerRx),
+        .txstatus=offsetof(GwApi::Status,GwApi::Status::tcpSerTx)
+    },
+    {
+        .id=TCP_CLIENT_CHANNEL_ID,
+        .baud="",
+        .receive=GwConfigDefinitions::readTCL,
+        .send=GwConfigDefinitions::sendTCL,
+        .direction="",
+        .toN2K=GwConfigDefinitions::tclToN2k,
+        .readF=GwConfigDefinitions::tclReadFilter,
+        .writeF=GwConfigDefinitions::tclWriteFilter,
+        .preventLog="",
+        .readAct="",
+        .writeAct="",
+        .sendSeasmart=GwConfigDefinitions::tclSeasmart,
+        .name="TCPClient",
+        .maxId=-1,
+        .rxstatus=offsetof(GwApi::Status,GwApi::Status::tcpClRx),
+        .txstatus=offsetof(GwApi::Status,GwApi::Status::tcpClTx)
     }
+
 };
 
 template<typename T>
@@ -197,9 +250,9 @@ GwSerial* createSerial(GwLog *logger, T* s,int id, bool canRead=true){
     return new GwSerialImpl<T>(logger,s,id,canRead);
 } 
 
-static SerialParam * findSerialParam(int id){
-    SerialParam *param=nullptr;
-    for (auto && p: serialParameters){
+static ChannelParam * findChannelParam(int id){
+    ChannelParam *param=nullptr;
+    for (auto && p: channelParameters){
         if (id == p.id){
             param=&p;
             break;
@@ -208,10 +261,42 @@ static SerialParam * findSerialParam(int id){
     return param;
 }
 
-static GwChannel * createSerialChannel(GwConfigHandler *config,GwLog *logger, int idx,int type,int rx,int tx, bool setLog=false){
-    SerialParam *param=findSerialParam(idx);
+static GwSerial * createSerialImpl(GwConfigHandler *config,GwLog *logger, int idx,int rx,int tx, bool setLog=false){
+    LOG_DEBUG(GwLog::DEBUG,"create serial: channel=%d, rx=%d,tx=%d",
+        idx,rx,tx);
+    ChannelParam *param=findChannelParam(idx);
     if (param == nullptr){
         LOG_DEBUG(GwLog::ERROR,"invalid serial channel id %d",idx);
+        return nullptr;
+    }
+    GwSerial *serialStream=nullptr;
+    GwLog *streamLog=setLog?nullptr:logger;
+    switch(param->id){
+        case USB_CHANNEL_ID:
+            serialStream=createSerial(streamLog,&USBSerial,param->id);
+            break;
+        case SERIAL1_CHANNEL_ID:
+            serialStream=createSerial(streamLog,&Serial1,param->id);
+            break;
+        case SERIAL2_CHANNEL_ID:
+            serialStream=createSerial(streamLog,&Serial2,param->id);
+            break;
+    }
+    if (serialStream == nullptr){
+        LOG_DEBUG(GwLog::ERROR,"invalid serial config with id %d",param->id);
+        return nullptr;
+    }
+    serialStream->begin(config->getInt(param->baud,115200),SERIAL_8N1,rx,tx);
+    if (setLog){
+        logger->setWriter(new GwSerialLog(serialStream,config->getBool(param->preventLog,false)));
+        logger->prefix="GWSERIAL:";
+    }
+    return serialStream;
+}
+static GwChannel * createChannel(GwLog *logger, GwConfigHandler *config, int id,GwChannelInterface *impl, int type=GWSERIAL_TYPE_BI){
+    ChannelParam *param=findChannelParam(id);
+    if (param == nullptr){
+        LOG_DEBUG(GwLog::ERROR,"invalid channel id %d",id);
         return nullptr;
     }
     bool canRead=false;
@@ -241,37 +326,11 @@ static GwChannel * createSerialChannel(GwConfigHandler *config,GwLog *logger, in
         validType=true;
     }
     if (! validType){
-        LOG_DEBUG(GwLog::ERROR,"invalid type for serial channel %d: %d",param->id,type);
+        LOG_DEBUG(GwLog::ERROR,"invalid type for channel %d: %d",param->id,type);
         return nullptr;
     }
-    LOG_DEBUG(GwLog::DEBUG,"serial set up: channel=%d, type=%d,rx=%d,canRead=%d,tx=%d,canWrite=%d",
-        idx,
-        type,rx,(int)canRead,tx,(int)canWrite);
-    GwSerial *serialStream=nullptr;
-    GwLog *streamLog=setLog?nullptr:logger;
-    switch(param->id){
-        case USB_CHANNEL_ID:
-            serialStream=createSerial(streamLog,&USBSerial,param->id);
-            break;
-        case SERIAL1_CHANNEL_ID:
-            serialStream=createSerial(streamLog,&Serial1,param->id);
-            break;
-        case SERIAL2_CHANNEL_ID:
-            serialStream=createSerial(streamLog,&Serial2,param->id);
-            break;
-    }
-    if (serialStream == nullptr){
-        LOG_DEBUG(GwLog::ERROR,"invalid serial config with id %d",param->id);
-        return nullptr;
-    }
-    serialStream->begin(config->getInt(param->baud,115200),SERIAL_8N1,rx,tx);
-    if (setLog){
-        logger->setWriter(new GwSerialLog(serialStream,config->getBool(param->preventLog,false)));
-        logger->prefix="GWSERIAL:";
-    }
-    LOG_DEBUG(GwLog::LOG, "starting serial %d ", param->id);
-    GwChannel *channel = new GwChannel(logger, param->name,param->id);
-    channel->setImpl(serialStream);
+    GwChannel *channel = new GwChannel(logger, param->name,param->id,param->maxId);
+    channel->setImpl(impl);
     channel->begin(
         canRead || canWrite,
         canWrite,
@@ -282,9 +341,11 @@ static GwChannel * createSerialChannel(GwConfigHandler *config,GwLog *logger, in
         config->getBool(param->toN2K),
         config->getBool(param->readAct),
         config->getBool(param->writeAct));
+    LOG_INFO("created channel %s",channel->toString().c_str());
     return channel;
 }
 void GwChannelList::addChannel(GwChannel * channel){
+    if (channel == nullptr) return;
     for (auto &&it:theChannels){
         if (it->overlaps(channel)){
             LOG_DEBUG(GwLog::ERROR,"trying to add channel with overlapping ids %s (%s), ignoring",
@@ -300,7 +361,7 @@ void GwChannelList::preinit(){
     for (auto &&init:serialInits){
         LOG_INFO("serial config found for %d",init.serial);
         if (init.fixedBaud >= 0){
-            SerialParam *param=findSerialParam(init.serial);
+            ChannelParam *param=findChannelParam(init.serial);
             if (! param){
                 LOG_ERROR("invalid serial definition %d found",init.serial)
                 return;
@@ -322,39 +383,39 @@ void GwChannelList::begin(bool fallbackSerial){
     GwChannel *channel=NULL;
     //usb
     if (! fallbackSerial){
-        GwChannel *usb=createSerialChannel(config, logger,USB_CHANNEL_ID,GWSERIAL_TYPE_BI,GWUSB_RX,GWUSB_TX,true);
-        addChannel(usb);
+        GwSerial *usbSerial=createSerialImpl(config, logger,USB_CHANNEL_ID,GWUSB_RX,GWUSB_TX,true);
+        if (usbSerial != nullptr){
+            GwChannel *usbChannel=createChannel(logger,config,USB_CHANNEL_ID,usbSerial,GWSERIAL_TYPE_BI);
+            if (usbChannel != nullptr){
+                addChannel(usbChannel);
+            }
+            else{
+                delete usbSerial;
+            }
+        }
     }
     //TCP server
     sockets=new GwSocketServer(config,logger,MIN_TCP_CHANNEL_ID);
     sockets->begin();
-    channel=new GwChannel(logger,"TCPserver",MIN_TCP_CHANNEL_ID,MIN_TCP_CHANNEL_ID+10);
-    channel->setImpl(sockets);
-    channel->begin(
-        true,
-        config->getBool(config->sendTCP),
-        config->getBool(config->readTCP),
-        config->getString(config->tcpReadFilter),
-        config->getString(config->tcpWriteFilter),
-        config->getBool(config->sendSeasmart),
-        config->getBool(config->tcpToN2k),
-        false,
-        false
-    );
-    addChannel(channel);
+    addChannel(createChannel(logger,config,MIN_TCP_CHANNEL_ID,sockets));
 
     //new serial config handling
     for (auto &&init:serialInits){
         LOG_INFO("creating serial channel %d, rx=%d,tx=%d,type=%d",init.serial,init.rx,init.tx,init.mode);
-        GwChannel *ser=createSerialChannel(config,logger,init.serial,init.mode,init.rx,init.tx);
+        GwSerial *ser=createSerialImpl(config,logger,init.serial,init.rx,init.tx);
         if (ser != nullptr){
-            addChannel(ser);
+            channel=createChannel(logger,config,init.serial,ser,init.mode);
+            if (channel != nullptr){
+                addChannel(channel);
+            }
+            else{
+                delete ser;
+            }
         }
     }
     
     //tcp client
     bool tclEnabled=config->getBool(config->tclEnabled);
-    channel=new GwChannel(logger,"TCPClient",TCP_CLIENT_CHANNEL_ID);
     if (tclEnabled){
         client=new GwTcpClient(logger);
         client->begin(TCP_CLIENT_CHANNEL_ID,
@@ -362,20 +423,8 @@ void GwChannelList::begin(bool fallbackSerial){
             config->getInt(config->remotePort),
             config->getBool(config->readTCL)
         );
-        channel->setImpl(client);
     }
-    channel->begin(
-        tclEnabled,
-        config->getBool(config->sendTCL),
-        config->getBool(config->readTCL),
-        config->getString(config->tclReadFilter),
-        config->getString(config->tclReadFilter),
-        config->getBool(config->tclSeasmart),
-        config->getBool(config->tclToN2k),
-        false,
-        false
-        );
-    addChannel(channel);
+    addChannel(createChannel(logger,config,TCP_CLIENT_CHANNEL_ID,client));
     logger->flush();
 }
 String GwChannelList::getMode(int id){
@@ -412,30 +461,22 @@ GwChannel *GwChannelList::getChannelById(int sourceId){
     return NULL;
 }
 
+/**
+ * slightly tricky generic setter for the API status
+ * we expect all values to be unsigned long
+ * the offsets are always offsetof(GwApi::Status,GwApi::Status::xxx)
+*/
+static void setStatus(GwApi::Status *status,size_t offset,unsigned long v){
+    if (offset == 0) return;
+    *((unsigned long *)(((unsigned char *)status)+offset))=v;
+}
+
 void GwChannelList::fillStatus(GwApi::Status &status){
-    GwChannel *channel=getChannelById(USB_CHANNEL_ID);
-    if (channel){
-        status.usbRx=channel->countRx();
-        status.usbTx=channel->countTx();
-    }
-    channel=getChannelById(SERIAL1_CHANNEL_ID);
-    if (channel){
-        status.serRx=channel->countRx();
-        status.serTx=channel->countTx();
-    }
-    channel=getChannelById(SERIAL2_CHANNEL_ID);
-    if (channel){
-        status.ser2Rx=channel->countRx();
-        status.ser2Tx=channel->countTx();
-    }
-    channel=getChannelById(MIN_TCP_CHANNEL_ID);
-    if (channel){
-        status.tcpSerRx=channel->countRx();
-        status.tcpSerTx=channel->countTx();
-    }
-    channel=getChannelById(TCP_CLIENT_CHANNEL_ID);
-    if (channel){
-        status.tcpClRx=channel->countRx();
-        status.tcpClTx=channel->countTx();
+    for (auto && channel: theChannels){
+        ChannelParam *param=findChannelParam(channel->getMinId());
+        if (param != nullptr){
+            setStatus(&status,param->rxstatus,channel->countRx());
+            setStatus(&status,param->txstatus,channel->countTx());
+        }
     }
 }
