@@ -8,11 +8,12 @@ if (not defined $dev){
 if (! -e $dev) {
     die "$dev not found"
 }
-open(my $fh,"<",$dev) or die "unable to open $dev";
 if (defined $speed){
     print("setting speed $speed");
     system("stty speed $speed < $dev") == 0 or die "unable to set speed";    
 }
+system("stty raw < $dev") == 0 or die "unable to set raw mode for $dev";
+open(my $fh,"<",$dev) or die "unable to open $dev";
 my $last=0;
 while (<$fh>){
     my $x=time();
