@@ -356,7 +356,7 @@ static GwChannel * createChannel(GwLog *logger, GwConfigHandler *config, int id,
         canRead,
         config->getString(param->readF),
         config->getString(param->writeF),
-        false,
+        config->getBool(param->sendSeasmart),
         config->getBool(param->toN2K),
         config->getBool(param->readAct),
         config->getBool(param->writeAct));
