@@ -843,13 +843,45 @@
         "category": "UDP writer"
     },
     {
+        "name": "udpwType",
+        "label": "remote address type",
+        "type": "list",
+        "default": "0",
+        "description": "to which networks/addresses do we send\nbc-all: send broadcast to AP and wifi client network\nbc-ap: send broadcast to access point only\nbc-cli: send broadcast to wifi client network\nnormal: normal target address\nmc-all: multicast to AP and wifi client network\nmc-ap:multicast to AP network\nmc-cli: muticast to wifi client network",
+        "list":[
+            {"l":"bc-all","v":"0"},
+            {"l":"bc-ap","v":"1"},
+            {"l":"bc-cli","v":"2"},
+            {"l":"normal","v":"3"},
+            {"l":"mc-all","v":"4"},
+            {"l":"mc-ap","v":"5"},
+            {"l":"mc-cli","v":"6"}
+        ],
+        "category": "UDP writer"
+    },
+    {
         "name": "udpwAddress",
         "label": "remote address",
         "type": "string",
         "default": "",
         "check": "checkIpAddress",
         "description": "the IP address we connect to in the form 192.168.1.2",
-        "category": "UDP writer"
+        "category": "UDP writer",
+        "condition":{
+            "udpwType":["3"]
+        }
+    },
+    {
+        "name": "udpwMC",
+        "label": "multicast address",
+        "type": "string",
+        "default": "224.0.0.1",
+        "check": "checkMCAddress",
+        "description": "the multicast address we send to 224.0.0.0...239.255.255.255",
+        "category": "UDP writer",
+        "condition":{
+            "udpwType":["4","5","6"]
+        }
     },
     {
         "name": "udpwWriteFilter",
