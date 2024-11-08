@@ -7,6 +7,7 @@
 #include "GwSerial.h"
 #include "GwTcpClient.h"
 #include "GwUdpWriter.h"
+#include "GwUdpReader.h"
 class SerInit{
     public:
         int serial=-1;
@@ -260,7 +261,26 @@ static  ChannelParam channelParameters[]={
         .maxId=-1,
         .rxstatus=0,
         .txstatus=offsetof(GwApi::Status,GwApi::Status::udpwTx)
+    },
+    {
+        .id=UDPR_CHANNEL_ID,
+        .baud="",
+        .receive=GwConfigDefinitions::udprEnabled,
+        .send="",
+        .direction="",
+        .toN2K=GwConfigDefinitions::udprToN2k,
+        .readF=GwConfigDefinitions::udprReadFilter,
+        .writeF="",
+        .preventLog="",
+        .readAct="",
+        .writeAct="",
+        .sendSeasmart="",
+        .name="UDPReader",
+        .maxId=-1,
+        .rxstatus=offsetof(GwApi::Status,GwApi::Status::udprRx),
+        .txstatus=0
     }
+
 
 };
 
@@ -450,6 +470,12 @@ void GwChannelList::begin(bool fallbackSerial){
         GwUdpWriter *writer=new GwUdpWriter(config,logger,UDPW_CHANNEL_ID);
         writer->begin();
         addChannel(createChannel(logger,config,UDPW_CHANNEL_ID,writer));
+    }
+    //udp reader
+    if (config->getBool(GwConfigDefinitions::udprEnabled)){
+        GwUdpReader *reader=new GwUdpReader(config,logger,UDPR_CHANNEL_ID);
+        reader->begin();
+        addChannel(createChannel(logger,config,UDPR_CHANNEL_ID,reader));
     }
     logger->flush();
 }

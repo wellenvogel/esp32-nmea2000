@@ -22,4 +22,7 @@ class GwSocketHelper{
             if (inet_pton(AF_INET,addr.c_str(),&iaddr) != 1) return false;
             return IN_MULTICAST(ntohl(iaddr.s_addr));
         }
+        static bool equals(const in_addr &left, const in_addr &right){
+            return left.s_addr == right.s_addr;
+        }
 };

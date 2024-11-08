@@ -33,7 +33,7 @@ class GwBuffer{
         uint8_t *buffer;
         uint8_t *writePointer;
         uint8_t *readPointer;
-        size_t offset(uint8_t* ptr){
+        size_t offset(uint8_t* ptr) const{
             return (size_t)(ptr-buffer);
         }
         GwLog *logger;
@@ -54,6 +54,9 @@ class GwBuffer{
          * find the first occurance of x in the buffer, -1 if not found
          */
         int findChar(char x);
+        uint8_t *getWp(){return writePointer;}
+        size_t continousSpace() const; //free space from wp
+        void moveWp(size_t offset); //move the wp forward
 };
 
 #endif

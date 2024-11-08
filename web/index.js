@@ -181,6 +181,12 @@
         }
     }
 
+    checkers.checkPort=function(v,allValues,def){
+        let parsed=parseInt(v);
+        if (isNaN(parsed)) return "must be a number";
+        if (parsed <1 || parsed >= 65536) return "port must be in the range 1..65536"; 
+    }
+
     checkers.checkSystemName=function(v) {
         //2...32 characters for ssid
         let allowed = v.replace(/[^a-zA-Z0-9]*/g, '');
@@ -213,13 +219,20 @@
     }
 
     checkers.checkIpAddress=function(v, allValues, def) {
-        if (allValues.tclEnabled != "true") return;
         if (!v) return "cannot be empty";
         if (!v.match(/[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*/)
             && !v.match(/.*\.local/))
             return "must be either in the form 192.168.1.1 or xxx.local";
     }
+    checkers.checkMCAddress=function(v, allValues, def) {
+        if (!v) return "cannot be empty";
+        if (!v.match(/[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*/))
+            return "must be in the form 224.0.0.1";
+        let parts=v.split(".");
+        let o1=parseInt(v[0]);
+        if (o1 < 224 || o1 > 239) return "mulicast address must be in the range 224.0.0.0 to 239.255.255.255"
 
+    }
     checkers.checkXDR=function(v, allValues) {
         if (!v) return;
         let parts = v.split(',');
@@ -264,21 +277,22 @@
                 continue;
             }
             let check = v.getAttribute('data-check');
-            if (check) {
+            if (check && conditionOk(name)) {
+                let cfgDef=getConfigDefition(name);
                 let checkFunction=checkers[check];
                 if (typeof (checkFunction) === 'function') {
                     if (! loggedChecks[check]){
                         loggedChecks[check]=true;
                         //console.log("check:"+check);
                     }
-                    let res = checkFunction(v.value, allValues, getConfigDefition(name));
+                    let res = checkFunction(v.value, allValues, cfgDef);
                     if (res) {
                         let value = v.value;
                         if (v.type === 'password') value = "******";
                         let label = v.getAttribute('data-label');
                         if (!label) label = v.getAttribute('name');
                         v.classList.add("error");
-                        alert("invalid config for " + label + "(" + value + "):\n" + res);
+                        alert("invalid config for "+cfgDef.category+":" + label + "(" + value + "):\n" + res);
                         return;
                     }
                 }
@@ -472,10 +486,10 @@
         if (!(condition instanceof Array)) condition = [condition];
         return condition;
     }
-    function checkCondition(element) {
-        let name = element.getAttribute('name');
+
+    function conditionOk(name){
         let condition = getConditions(name);
-        if (!condition) return;
+        if (!condition) return true;
         let visible = false;
         if (!condition instanceof Array) condition = [condition];
         condition.forEach(function (cel) {
@@ -493,7 +507,13 @@
                 }
             }
             if (lvis) visible = true;
-        });
+        }); 
+        return visible;   
+    }
+
+    function checkCondition(element) {
+        let name = element.getAttribute('name');
+        let visible=conditionOk(name);
         let row = closestParent(element, 'row');
         if (!row) return;
         if (visible) row.classList.remove('hidden');

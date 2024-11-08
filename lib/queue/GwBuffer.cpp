@@ -21,7 +21,7 @@ GwBuffer::~GwBuffer(){
 }
 void GwBuffer::reset(String reason)
 {
-    LOG_DEBUG(GwLog::LOG,"reseting buffer %s, reason %s",this->name.c_str(),reason.c_str());
+    if (! reason.isEmpty())LOG_DEBUG(GwLog::LOG,"reseting buffer %s, reason %s",this->name.c_str(),reason.c_str());
     writePointer = buffer;
     readPointer = buffer;
     lp("reset");
@@ -32,6 +32,16 @@ size_t GwBuffer::freeSpace()
         return readPointer+bufferSize-writePointer-1;
     }
     return readPointer - writePointer - 1;
+}
+size_t GwBuffer::continousSpace() const{
+    if (readPointer <= writePointer){
+        return bufferSize-offset(writePointer);
+    }
+    return readPointer-writePointer-1;
+}
+void GwBuffer::moveWp(size_t offset){
+    if (offset > continousSpace()) return;
+    writePointer+=offset;
 }
 size_t GwBuffer::usedSpace()
 {
