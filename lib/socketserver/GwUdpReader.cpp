@@ -49,13 +49,7 @@ void GwUdpReader::createAndBind(){
         return;
     }
     struct ip_mreq mc;
-    String mcAddr=config->getString(GwConfigDefinitions::udprMC);
-    if (inet_pton(AF_INET,mcAddr.c_str(),&mc.imr_multiaddr) != 1){
-        LOG_ERROR("UDPR: invalid multicast addr %s",mcAddr.c_str());
-        ::close(fd);
-        fd=-1;
-        return;
-    }
+    mc.imr_multiaddr=listenA.sin_addr;
     if (type == T_MCALL || type == T_MCAP){
         mc.imr_interface=apAddr;
         int res=setsockopt(fd,IPPROTO_IP,IP_ADD_MEMBERSHIP,&mc,sizeof(mc));
@@ -63,7 +57,7 @@ void GwUdpReader::createAndBind(){
             LOG_ERROR("UDPR: unable to add MC membership for AP:%d",errno);
         }
         else{
-            LOG_INFO("UDPR: membership for %s for AP",mcAddr.c_str());
+            LOG_INFO("UDPR: membership for for AP");
         }
     }
     if (!currentStationIp.isEmpty() && (type == T_MCALL || type == T_MCSTA))
@@ -75,7 +69,7 @@ void GwUdpReader::createAndBind(){
             LOG_ERROR("UDPR: unable to add MC membership for STA:%d", errno);
         }
         else{
-            LOG_INFO("UDPR: membership for %s for STA %s",mcAddr.c_str(),currentStationIp.c_str());
+            LOG_INFO("UDPR: membership for STA %s",currentStationIp.c_str());
         }
     }
 }
@@ -88,14 +82,26 @@ void GwUdpReader::begin()
     port=config->getInt(GwConfigDefinitions::udprPort);
     listenA.sin_family=AF_INET;
     listenA.sin_port=htons(port);
-    if (type != T_STA){
-        listenA.sin_addr.s_addr=htonl(INADDR_ANY);
-    }
+    listenA.sin_addr.s_addr=htonl(INADDR_ANY); //default
     String ap=WiFi.softAPIP().toString();
     if (inet_pton(AF_INET, ap.c_str(), &apAddr) != 1)
     {
         LOG_ERROR("UDPR: invalid ap ip address %s", ap.c_str());
         return;
+    }
+    if (type == T_MCALL || type == T_MCAP || type == T_MCSTA){
+        String mcAddr=config->getString(GwConfigDefinitions::udprMC);
+        if (inet_pton(AF_INET, mcAddr.c_str(), &listenA.sin_addr) != 1)
+        {
+            LOG_ERROR("UDPR: invalid mc address %s", mcAddr.c_str());
+            close(fd);
+            fd = -1;
+            return;
+        }
+        LOG_INFO("UDPR: using multicast address %s",mcAddr.c_str());
+    }
+    if (type == T_AP){
+        listenA.sin_addr=apAddr;
     }
     String sta;
     if (WiFi.isConnected()) sta=WiFi.localIP().toString();
