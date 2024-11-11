@@ -229,7 +229,7 @@
         if (!v.match(/[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*/))
             return "must be in the form 224.0.0.1";
         let parts=v.split(".");
-        let o1=parseInt(v[0]);
+        let o1=parseInt(parts[0]);
         if (o1 < 224 || o1 > 239) return "mulicast address must be in the range 224.0.0.0 to 239.255.255.255"
 
     }

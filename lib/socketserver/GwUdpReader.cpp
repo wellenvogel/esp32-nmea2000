@@ -120,7 +120,7 @@ void GwUdpReader::loop(bool handleRead, bool handleWrite)
             //only change anything if we considered the station IP
             String nextStationIp;
             if (WiFi.isConnected()){
-                String nextStationIp=WiFi.localIP().toString();
+                nextStationIp=WiFi.localIP().toString();
             }
             if (setStationAdd(nextStationIp)){
                 LOG_INFO("UDPR: wifi client IP changed, restart");
