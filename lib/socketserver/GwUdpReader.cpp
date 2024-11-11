@@ -142,15 +142,18 @@ void GwUdpReader::readMessages(GwMessageFetcher *writer)
     if (fd < 0) return;
     //we expect one NMEA message in one UDP packet
     buffer->reset();
-    struct sockaddr_in from;
-    socklen_t fromLen=sizeof(from);
-    ssize_t res=recvfrom(fd,buffer->getWp(),buffer->continousSpace(),MSG_DONTWAIT,
+    size_t rd=buffer->fillData(buffer->freeSpace(),
+    [this](uint8_t *rcvb,size_t rcvlen,void *param)->size_t{
+        struct sockaddr_in from;
+        socklen_t fromLen=sizeof(from);
+        ssize_t res=recvfrom(fd,rcvb,rcvlen,MSG_DONTWAIT,
         (struct sockaddr*)&from,&fromLen);
-    if (res <= 0) return;
-    if (GwSocketHelper::equals(from.sin_addr,apAddr)) return;
-    if (!currentStationIp.isEmpty() && (GwSocketHelper::equals(from.sin_addr,staAddr))) return;
-    buffer->moveWp(res);
-    LOG_DEBUG(GwLog::DEBUG,"UDPR: received %d bytes",res);
+        if (res <= 0) return 0;
+        if (GwSocketHelper::equals(from.sin_addr,apAddr)) return 0;
+        if (!currentStationIp.isEmpty() && (GwSocketHelper::equals(from.sin_addr,staAddr))) return 0;
+        return res;
+    },this);
+    if (buffer->usedSpace() > 0)(GwLog::DEBUG,"UDPR: received %d bytes",buffer->usedSpace());
     writer->handleBuffer(buffer);   
 }
 size_t GwUdpReader::sendToClients(const char *buf, int source,bool partial)
