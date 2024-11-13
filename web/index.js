@@ -1071,8 +1071,12 @@
     function formatDateForFilename(usePrefix, d) {
         let rt = "";
         if (usePrefix) {
+            let hdl= document.getElementById('headline');
+            if (hdl){
+                rt=hdl.textContent+"_";
+            }
             let fwt = document.querySelector('.status-fwtype');
-            if (fwt) rt = fwt.textContent;
+            if (fwt) rt += fwt.textContent;
             rt += "_";
         }
         if (!d) d = new Date();
