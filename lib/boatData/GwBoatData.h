@@ -14,6 +14,8 @@
 #define ROT_WA_FACTOR 60
 
 class GwJsonDocument;
+class GwBoatData;
+
 class GwBoatItemBase{
     public:
         using TOType=enum{
@@ -56,7 +58,6 @@ class GwBoatItemBase{
         GWSC(formatRot);
         GWSC(formatDate);
         GWSC(formatTime);
-        typedef std::map<String,GwBoatItemBase*> GwBoatItemMap;
     protected:
         int type;
         unsigned long lastSet=0;
@@ -93,10 +94,15 @@ class GwBoatItemBase{
         virtual double getDoubleValue()=0;
         String getName(){return name;}
         const String & getFormat() const{return format;}
-        virtual void setInvalidTime(unsigned long it, bool force=true);
+        virtual void setInvalidTime(GwConfigHandler *cfg);
         TOType getToType(){return toType;}
+        class GwBoatItemMap : public std::map<String,GwBoatItemBase*>{
+            GwBoatData *boatData;
+            public:
+            GwBoatItemMap(GwBoatData *bd):boatData(bd){}
+            void add(const String &name,GwBoatItemBase *item);
+        };
 };
-class GwBoatData;
 template<class T> class GwBoatItem : public GwBoatItemBase{
     protected:
         T data;
@@ -186,8 +192,9 @@ public:
     clazz *name=new clazz(#name,GwBoatItemBase::fmt,toType,&values) ;
 class GwBoatData{
     private:
-        GwLog *logger;
-        GwBoatItemBase::GwBoatItemMap values;
+        GwLog *logger=nullptr;
+        GwConfigHandler *config=nullptr;
+        GwBoatItemBase::GwBoatItemMap values{this};
     public:
 
     GWBOATDATA(double,COG,formatCourse) // course over ground
@@ -231,9 +238,11 @@ class GwBoatData{
     public:
         GwBoatData(GwLog *logger, GwConfigHandler *cfg);
         ~GwBoatData();
+        void begin();
         template<class T> GwBoatItem<T> *getOrCreate(T initial,GwBoatItemNameProvider *provider);
         template<class T> bool update(T value,int source,GwBoatItemNameProvider *provider);
         template<class T> T getDataWithDefault(T defaultv, GwBoatItemNameProvider *provider);
+        void setInvalidTime(GwBoatItemBase *item);
         bool isValid(String name);
         double getDoubleValue(String name,double defaultv);
         GwBoatItemBase *getBase(String name);

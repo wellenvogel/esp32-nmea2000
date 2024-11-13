@@ -784,6 +784,7 @@ void setup() {
     logger.prefix="FALLBACK:";
   logger.setWriter(new DefaultLogWriter());
 #endif
+  boatData.begin();
   userCodeHandler.startInitTasks(MIN_USER_TASK);
   channels.preinit();
   config.stopChanges();
