@@ -348,6 +348,8 @@ public:
     }
     return xdrMappings.addFixedMapping(mapping);
   }
+  virtual void registerRequestHandler(const String &url,HandlerFunction handler){
+  }
   virtual void addCapability(const String &name, const String &value){}
   virtual bool addUserTask(GwUserTaskFunction task,const String Name, int stackSize=2000){
     return false;
@@ -768,6 +770,7 @@ void loopFunction(void *){
     //delay(1);
   }
 }
+const String USERPREFIX="/api/user/";
 void setup() {
   mainLock=xSemaphoreCreateMutex();
   uint8_t chipid[6];
@@ -845,7 +848,12 @@ void setup() {
                               snprintf(buffer,29,"%g",value);
                               buffer[29]=0;
                               request->send(200,"text/plain",buffer);    
-  });                                                        
+  });
+  webserver.registerHandler((USERPREFIX+"*").c_str(),[&USERPREFIX](AsyncWebServerRequest *req){
+                              String turl=req->url().substring(USERPREFIX.length());
+                              logger.logDebug(GwLog::DEBUG,"user web request for %s",turl.c_str());
+                              userCodeHandler.handleWebRequest(turl,req);
+  });
 
   webserver.begin();
   xdrMappings.begin();

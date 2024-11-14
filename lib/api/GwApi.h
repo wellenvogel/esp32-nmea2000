@@ -6,7 +6,9 @@
 #include "GWConfig.h"
 #include "GwBoatData.h"
 #include "GwXDRMappings.h"
+#include "GwSynchronized.h"
 #include <map>
+#include <ESPAsyncWebServer.h>
 class GwApi;
 typedef void (*GwUserTaskFunction)(GwApi *);
 //API to be used for additional tasks
@@ -170,6 +172,20 @@ class GwApi{
         virtual void reset(int idx){}
         virtual void remove(int idx){}
         virtual TaskInterfaces * taskInterfaces()=0;
+
+        /**
+         * register handler for web URLs
+         * Please be aware that this handler function will always be called from a separate
+         * task. So you must ensure proper synchronization!
+        */
+        using HandlerFunction=std::function<void(AsyncWebServerRequest *)>;
+        /**
+         * @param url: the url of that will trigger the handler.
+         *             it will be prefixed with /api/user/<taskname>
+         *             taskname is the name that you used in addUserTask
+         * @param handler: the handler function (see remark above about thread synchronization)
+        */
+        virtual void registerRequestHandler(const String &url,HandlerFunction handler)=0;
 
         /**
          * only allowed during init methods

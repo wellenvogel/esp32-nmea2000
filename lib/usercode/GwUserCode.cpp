@@ -191,6 +191,7 @@ class TaskApi : public GwApiInternal
     SemaphoreHandle_t *mainLock;
     SemaphoreHandle_t localLock;
     std::map<int,GwCounter<String>> counter;
+    std::map<String,GwApi::HandlerFunction> webHandlers;
     String name;
     bool counterUsed=false;
     int counterIdx=0;
@@ -315,6 +316,10 @@ public:
     virtual bool addXdrMapping(const GwXDRMappingDef &def){
         return api->addXdrMapping(def);
     }
+    virtual void registerRequestHandler(const String &url,HandlerFunction handler){
+        GWSYNCHRONIZED(&localLock);
+        webHandlers[url]=handler;
+    }
     virtual void addCapability(const String &name, const String &value){
         if (! isInit) return;
         userCapabilities[name]=value;
@@ -334,6 +339,16 @@ public:
     }
     virtual void setCalibrationValue(const String &name, double value){
         api->setCalibrationValue(name,value);
+    }
+    virtual bool handleWebRequest(const String &url,AsyncWebServerRequest *req){
+        GWSYNCHRONIZED(&localLock);
+        auto it=webHandlers.find(url);
+        if (it == webHandlers.end()){
+            api->getLogger()->logDebug(GwLog::LOG,"no web handler task=%s url=%s",name.c_str(),url.c_str());
+            return false;
+        }
+        it->second(req);
+        return true;
     }
 
 };
@@ -404,4 +419,19 @@ int GwUserCode::getJsonSize(){
         }
     }
     return rt;
+}
+void GwUserCode::handleWebRequest(const String &url,AsyncWebServerRequest *req){
+    int sep1=url.indexOf('/');
+    String tname;
+    if (sep1 > 0){
+        tname=url.substring(0,sep1);
+        for (auto &&it:userTasks){
+            if (it.api && it.name == tname){
+                if (it.api->handleWebRequest(url.substring(sep1+1),req)) return;
+                break;
+            }
+        }
+    }
+    LOG_DEBUG(GwLog::DEBUG,"no task found for web request %s[%s]",url.c_str(),tname.c_str());
+    req->send(404, "text/plain", "not found");
 }
