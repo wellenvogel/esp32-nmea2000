@@ -70,7 +70,8 @@ Files
  * add capabilities (since 20231105 - as an alternative to a static DECLARE_CAPABILITY )
  * add a user task (since 20231105 - as an alternative to a static DECLARE_USERTASK)
  * store or read task interface data (see below)
-
+ * add a request handler for web requests (since 202411xx) - see registerRequestHandler in the API
+ 
 
  __Interfacing between Task__
 
