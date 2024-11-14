@@ -76,46 +76,48 @@
         }
         getJson('/api/status')
             .then(function (jsonData) {
+                if (jsonData.salt !== undefined) {
+                    lastSalt=jsonData.salt;
+                    delete jsonData.salt;
+                }
+                if (jsonData.minUser !== undefined){
+                    minUser=jsonData.minUser;
+                    delete jsonData.minUser;
+                }
+                callListeners(api.EVENTS.status,jsonData);
                 let statusPage = document.getElementById('statusPageContent');
                 let even = true; //first counter
-                for (let k in jsonData) {
-                    if (k == "salt") {
-                        lastSalt = jsonData[k];
-                        continue;
-                    }
-                    if (k == "minUser") {
-                        minUser = parseInt(jsonData[k]);
-                        continue;
-                    }
-                    if (!statusPage) continue;
-                    if (typeof (jsonData[k]) === 'object') {
-                        if (k.indexOf('count') == 0) {
-                            createCounterDisplay(statusPage, k.replace("count", "").replace(/in$/, " in").replace(/out$/, " out"), k, even);
-                            even = !even;
-                            for (let sk in jsonData[k]) {
-                                let key = k + "." + sk;
-                                if (typeof (jsonData[k][sk]) === 'object') {
-                                    //msg details
-                                    updateMsgDetails(key, jsonData[k][sk]);
-                                }
-                                else {
-                                    let el = document.getElementById(key);
-                                    if (el) el.textContent = jsonData[k][sk];
+                if (statusPage){
+                    for (let k in jsonData) {
+                        if (typeof (jsonData[k]) === 'object') {
+                            if (k.indexOf('count') == 0) {
+                                createCounterDisplay(statusPage, k.replace("count", "").replace(/in$/, " in").replace(/out$/, " out"), k, even);
+                                even = !even;
+                                for (let sk in jsonData[k]) {
+                                    let key = k + "." + sk;
+                                    if (typeof (jsonData[k][sk]) === 'object') {
+                                        //msg details
+                                        updateMsgDetails(key, jsonData[k][sk]);
+                                    }
+                                    else {
+                                        let el = document.getElementById(key);
+                                        if (el) el.textContent = jsonData[k][sk];
+                                    }
                                 }
                             }
+                            if (k.indexOf("ch") == 0) {
+                                //channel def
+                                let name = k.substring(2);
+                                channelList[name] = jsonData[k];
+                            }
                         }
-                        if (k.indexOf("ch") == 0) {
-                            //channel def
-                            let name = k.substring(2);
-                            channelList[name] = jsonData[k];
+                        else {
+                            let el = document.getElementById(k);
+                            if (el) el.textContent = jsonData[k];
+                            forEl('.status-' + k, function (el) {
+                                el.textContent = jsonData[k];
+                            });
                         }
-                    }
-                    else {
-                        let el = document.getElementById(k);
-                        if (el) el.textContent = jsonData[k];
-                        forEl('.status-' + k, function (el) {
-                            el.textContent = jsonData[k];
-                        });
                     }
                 }
                 lastUpdate = (new Date()).getTime();
@@ -382,6 +384,7 @@
                 icon.classList.add('icon-less');
             }
         });
+        callListeners(api.EVENTS.counterDisplayCreated,row);
     }
     function validKey(key) {
         if (!key) return;
@@ -1996,8 +1999,16 @@
         hideDashboardItem(name); //will recreate it on next data receive
     }
     const api= {
-        registerListener: function (callback) {
-            listeners.push(callback);
+        registerListener: function (callback,opt_event) {
+            if (opt_event === undefined){
+                listeners.push(callback);
+            }
+            else{
+                listeners.push({
+                    event:opt_event,
+                    callback:callback
+                })
+            }
         },
         /**
          * helper for creating dom elements
@@ -2058,17 +2069,26 @@
         parseBoatDataLine: parseBoatDataLine,
         EVENTS: {
             init: 0, //called when capabilities are loaded, data is capabilities
-            tab: 1, //tab page activated data is the id of the tab page
-            config: 2, //data is the config object
-            boatData: 3, //data is the list of boat Data items
+            tab: 1, //tab page activated, data is the id of the tab page
+            config: 2, //called when the config data is loaded,data is the config object
+            boatData: 3, //called when boatData is received, data is the list of boat Data items
             dataItemCreated: 4, //data is an object with
                                 // name: the item name, element: the frame item of the boat data display
+            status: 5, //status received, data is the status object
+            counterDisplayCreated: 6 //data is the row for the display
         }
     };
     function callListeners(event,data){
         listeners.forEach((listener)=>{
             if (typeof(listener) === 'function'){
                 listener(event,data);
+            }
+            else if (typeof(listener) === 'object'){
+                if (listener.event === event){
+                    if (typeof(listener.callback) === 'function'){
+                        listener.callback(event,data);
+                    }
+                }
             }
         })
     }
@@ -2120,14 +2140,6 @@
                 });
             }
         } catch (e) { }
-        let statusPage = document.getElementById('statusPageContent');
-        /*if (statusPage){
-            let even=true;
-            for (let c in counters){
-                createCounterDisplay(statusPage,counters[c],c,even);
-                even=!even;
-            }
-        }*/
         forEl('#uploadFile', function (el) {
             el.addEventListener('change', function (ev) {
                 if (ev.target.files.length < 1) return;
