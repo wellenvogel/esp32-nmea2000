@@ -340,17 +340,23 @@ public:
     virtual void setCalibrationValue(const String &name, double value){
         api->setCalibrationValue(name,value);
     }
-    virtual bool handleWebRequest(const String &url,AsyncWebServerRequest *req){
-        GWSYNCHRONIZED(&localLock);
-        auto it=webHandlers.find(url);
-        if (it == webHandlers.end()){
-            api->getLogger()->logDebug(GwLog::LOG,"no web handler task=%s url=%s",name.c_str(),url.c_str());
-            return false;
+    virtual bool handleWebRequest(const String &url, AsyncWebServerRequest *req)
+    {
+        GwApi::HandlerFunction handler;
+        {
+            GWSYNCHRONIZED(&localLock);
+            auto it = webHandlers.find(url);
+            if (it == webHandlers.end())
+            {
+                api->getLogger()->logDebug(GwLog::LOG, "no web handler task=%s url=%s", name.c_str(), url.c_str());
+                return false;
+            }
+            handler = it->second;
         }
-        it->second(req);
+        if (handler)
+            handler(req);
         return true;
     }
-
 };
 
 GwUserCode::GwUserCode(GwApiInternal *api,SemaphoreHandle_t *mainLock){
