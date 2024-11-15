@@ -2,8 +2,6 @@
 #ifdef _GWIIC
     #if defined(GWBMP280) || defined(GWBMP28011) || defined(GWBMP28012)|| defined(GWBMP28021)|| defined(GWBMP28022)
         #define _GWBMP280
-    #else
-        #undef _GWBMP280
     #endif
 #else
     #undef _GWBMP280
@@ -126,6 +124,7 @@ class BMP280Config : public IICSensorBase{
             busId = 2;
             addr = 0x77;
             CFGBMP280(BMP28022);
+            ok=true;
         }
         intv *= 1000;
     }

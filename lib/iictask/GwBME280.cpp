@@ -140,6 +140,7 @@ class BME280Config : public IICSensorBase{
             busId = 2;
             addr = 0x77;
             CFG280(BME28022);
+            ok=true;
         }
         intv *= 1000;
     }
