@@ -39,8 +39,7 @@ class BMP280Config : public IICSensorBase{
         }
     virtual bool isActive(){return prAct||tmAct;}
     virtual bool initDevice(GwApi *api,TwoWire *wire){
-        GwLog *logger=api->getLogger();
-	//Wire.begin(GWIIC_SDA,GWIIC_SCL);        
+        GwLog *logger=api->getLogger();  
         device= new Adafruit_BMP280(wire);
         if (! device->begin(addr)){
             LOG_DEBUG(GwLog::ERROR,"unable to initialize %s at %d",prefix.c_str(),addr);

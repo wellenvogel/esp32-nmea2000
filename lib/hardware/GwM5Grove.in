@@ -64,6 +64,17 @@
 #endif
 
 #GROVE
+#ifdef M5_ENV4$GS$
+  #ifndef M5_GROOVEIIC$GS$
+    #define M5_GROOVEIIC$GS$
+  #endif
+  GROOVE_IIC(SHT3X,$Z$,1)
+  GROOVE_IIC(BMP280,$Z$,1)
+  #define _GWSHT3X
+  #define _BMP280
+#endif
+
+#GROVE
 //example: -DSHT3XG1_A : defines STH3Xn1 on grove A - x depends on the other devices
 #ifdef GWSHT3XG1$GS$
   #ifndef M5_GROOVEIIC$GS$
@@ -119,6 +130,24 @@
 #endif
 
 #GROVE
+#ifdef GWBMP280G1$GS$
+  #ifndef M5_GROOVEIIC$GS$
+    #define M5_GROOVEIIC$GS$
+  #endif
+  GROOVE_IIC(BMP280,$Z$,1)
+  #define _GWBMP280
+#endif
+
+#GROVE
+#ifdef GWBMP280G2$GS$
+  #ifndef M5_GROOVEIIC$GS$
+    #define M5_GROOVEIIC$GS$
+  #endif
+  GROOVE_IIC(BMP280,$Z$,2)
+  #define _GWBMP280
+#endif
+
+#GROVE
 //select up to 2 IIC devices for grove usage
 #ifdef M5_GROOVEIIC$GS$
   GWRESOURCE_USE(GROOVE$G$,M5_GROOVEIIC$GS$)
@@ -144,21 +173,4 @@
   #endif
 #endif
 
-#GROVE
-#ifdef GWBMP280G1$GS$
-  #ifndef M5_GROOVEIIC$GS$
-    #define M5_GROOVEIIC$GS$
-  #endif
-  GROOVE_IIC(BMP280,$Z$,1)
-  #define _GWBMP280
-#endif
-
-#GROVE
-#ifdef GWBMP280G2$GS$
-  #ifndef M5_GROOVEIIC$GS$
-    #define M5_GROOVEIIC$GS$
-  #endif
-  GROOVE_IIC(BMP280,$Z$,2)
-  #define _GWBMP280
-#endif
 
