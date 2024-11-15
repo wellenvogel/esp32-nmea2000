@@ -123,7 +123,7 @@ types:
             resource: bme280#grv#2
       - type: checkbox
         label: BMP280-1
-        description: "BMP280 temperature/humidity/pressure sensor 0x76"
+        description: "BMP280 temperature/pressure sensor 0x76"
         key: bmp2801g1
         target: define
         url: "https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bmp280-ds001.pdf"
@@ -133,7 +133,7 @@ types:
             resource: bmp280#grv#1
       - type: checkbox
         label: BMP280-2
-        description: "BMP280 temperature/humidity/pressure sensor 0x77"
+        description: "BMP280 temperature/pressure sensor 0x77"
         key: bmp2802
         target: define
         url: "https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bmp280-ds001.pdf"
@@ -530,7 +530,7 @@ types:
                 value: GWBME280#busname#2
           - type: checkbox
             label: BMP280-#busname#-1
-            description: "BMP280 temperature/humidity/pressure sensor 0x76"
+            description: "BMP280 temperature/pressure sensor 0x76"
             key: bmp2801
             target: define
             url: "https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bmp280-ds001.pdf"
@@ -539,7 +539,7 @@ types:
                 value: GWBMP280#busname#1
           - type: checkbox
             label: BMP280-#busname#-2
-            description: "BME280 temperature/humidity/pressure sensor 0x77"
+            description: "BMP280 temperature/pressure sensor 0x77"
             key: bmp2802
             target: define
             url: "https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bmp280-ds001.pdf"
