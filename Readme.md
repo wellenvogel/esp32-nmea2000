@@ -192,6 +192,8 @@ Changelog
 * do not store the wifi settings in nvs on the system level [#78](../../issues/78)
 * rename of data: HDG->HDT, MHDG->HDM
 * adapt crash decoder tool to s3
+* allow to set the Pins used for the USB connection (not S3 with integrated PHY) using GWUSB_TX and GWUSB_RX defines
+
 [20240428](../../releases/tag/20240428)
 **********
 * fix build error with M5 gps kit
