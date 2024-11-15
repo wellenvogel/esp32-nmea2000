@@ -22,7 +22,7 @@ body {
   overflow: hidden;
 }
 
-.tabPage{
+#tabPages{
   overflow: auto;
 }
 
@@ -119,6 +119,9 @@ body {
   }
   .hidden{
     display: none !important;
+  }
+  .dash.invalid{
+    display: none;
   }
   #xdrPage .row>.label{
     display: none;
@@ -220,6 +223,7 @@ body {
   }
   #tabs {
       display: flex;
+      flex-wrap: wrap;
       border-bottom: 1px solid grey;
       margin-bottom: 0.5em;
   }
@@ -340,4 +344,7 @@ body {
 }
 .error{
   color: red;
+}
+input.error{
+  background-color: rgba(255, 0, 0, 0.329);
 }

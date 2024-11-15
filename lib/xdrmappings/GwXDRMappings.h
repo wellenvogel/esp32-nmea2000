@@ -167,15 +167,18 @@ class GwXDRFoundMapping : public GwBoatItemNameProvider{
         GwXDRType *type=NULL;
         int instanceId=-1;
         bool empty=true;
-        GwXDRFoundMapping(GwXDRMappingDef *definition,GwXDRType *type){
+        unsigned long timeout=0;
+        GwXDRFoundMapping(GwXDRMappingDef *definition,GwXDRType *type, unsigned long timeout){
             this->definition=definition;
             this->type=type;
+            this->timeout=timeout;
             empty=false;
         }
-        GwXDRFoundMapping(GwXDRMapping* mapping,int instance=0){
+        GwXDRFoundMapping(GwXDRMapping* mapping,unsigned long timeout,int instance){
             this->definition=mapping->definition;
             this->type=mapping->type;
             this->instanceId=instance;
+            this->timeout=timeout;
             empty=false;
         }
         GwXDRFoundMapping(){}
@@ -195,6 +198,9 @@ class GwXDRFoundMapping : public GwBoatItemNameProvider{
             return "formatXdr:"+type->xdrtype+":"+type->boatDataUnit; 
         };
         virtual ~GwXDRFoundMapping(){}
+        virtual unsigned long getInvalidTime() override{
+            return timeout;
+        }
 };
 
 //the class GwXDRMappings is not intended to be deleted

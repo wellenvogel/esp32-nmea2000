@@ -8,6 +8,7 @@
 #include "GWConfig.h"
 #include "GwJsonDocument.h"
 #include "GwApi.h"
+#include "GwSerial.h"
 #include <HardwareSerial.h>
 
 //NMEA message channels
@@ -17,29 +18,22 @@
 #define SERIAL2_CHANNEL_ID 3
 #define TCP_CLIENT_CHANNEL_ID 4
 #define MIN_TCP_CHANNEL_ID 5
+#define UDPW_CHANNEL_ID 20
+#define UDPR_CHANNEL_ID 21
 
 #define MIN_USER_TASK 200
 class GwSocketServer;
 class GwTcpClient;
 class GwChannelList{
     private:
-    class SerialWrapperBase{
-        public:
-        virtual void begin(GwLog* logger,unsigned long baud, uint32_t config=SERIAL_8N1, int8_t rxPin=-1, int8_t txPin=-1)=0;
-        virtual Stream *getStream()=0;
-        virtual int getId()=0;
-    };
         GwLog *logger;
         GwConfigHandler *config;
         typedef std::vector<GwChannel *> ChannelList;
         ChannelList theChannels;
-        std::map<int,String> modes;
         GwSocketServer *sockets;
         GwTcpClient *client;
-        void addSerial(SerialWrapperBase *stream,const String &mode,int rx,int tx);
-        void addSerial(SerialWrapperBase *stream,int type,int rx,int tx);
     public:
-        void addSerial(int id, int rx, int tx, int type);
+        void addChannel(GwChannel *);
         GwChannelList(GwLog *logger, GwConfigHandler *config);
         typedef std::function<void(GwChannel *)> ChannelAction;
         void allChannels(ChannelAction action);

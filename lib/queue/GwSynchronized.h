@@ -7,10 +7,10 @@ class GwSynchronized{
     public:
         GwSynchronized(SemaphoreHandle_t *locker){
             this->locker=locker;
-            xSemaphoreTake(*locker, portMAX_DELAY);
+            if (locker != nullptr) xSemaphoreTake(*locker, portMAX_DELAY);
         }
         ~GwSynchronized(){
-            xSemaphoreGive(*locker);
+            if (locker != nullptr) xSemaphoreGive(*locker);
         }
 };
 

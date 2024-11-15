@@ -1,6 +1,7 @@
 #include "GwBoatData.h"
 #include <GwJsonDocument.h>
 #include <ArduinoJson/Json/TextFormatter.hpp>
+#include "GWConfig.h"
 #define GWTYPE_DOUBLE 1
 #define GWTYPE_UINT32 2
 #define GWTYPE_UINT16 3
@@ -35,8 +36,48 @@ GwBoatItemBase::GwBoatItemBase(String name, String format, unsigned long invalid
     this->format = format;
     this->type = 0;
     this->lastUpdateSource = -1;
+    this->toType=TOType::user;
+}
+GwBoatItemBase::GwBoatItemBase(String name, String format, GwBoatItemBase::TOType toType)
+{
+    lastSet = 0;
+    this->invalidTime = INVALID_TIME;
+    this->toType=toType;
+    this->name = name;
+    this->format = format;
+    this->type = 0;
+    this->lastUpdateSource = -1;
+}
+void GwBoatItemBase::setInvalidTime(GwConfigHandler *cfg){
+    if (toType != TOType::user){
+        unsigned long timeout=GwBoatItemBase::INVALID_TIME;
+        switch(getToType()){
+            case GwBoatItemBase::TOType::ais:
+                timeout=cfg->getInt(GwConfigDefinitions::timoAis);
+                break;
+            case GwBoatItemBase::TOType::def:
+                timeout=cfg->getInt(GwConfigDefinitions::timoDefault);
+                break;
+            case GwBoatItemBase::TOType::lng:
+                timeout=cfg->getInt(GwConfigDefinitions::timoLong);
+                break;
+            case GwBoatItemBase::TOType::sensor:
+                timeout=cfg->getInt(GwConfigDefinitions::timoSensor);
+                break;
+            case GwBoatItemBase::TOType::keep:
+                timeout=0;
+                break;
+        }
+        invalidTime=timeout;
+    }
 }
 size_t GwBoatItemBase::getJsonSize() { return JSON_OBJECT_SIZE(10); }
+
+void GwBoatItemBase::GwBoatItemMap::add(const String &name,GwBoatItemBase *item){
+    boatData->setInvalidTime(item);
+    (*this)[name]=item;
+}
+
 #define STRING_SIZE 40
 GwBoatItemBase::StringWriter::StringWriter()
 {
@@ -110,7 +151,17 @@ GwBoatItem<T>::GwBoatItem(String name, String formatInfo, unsigned long invalidT
     this->type = GwBoatItemTypes::getType(dummy);
     if (map)
     {
-        (*map)[name] = this;
+        map->add(name,this);
+    }
+}
+template <class T>
+GwBoatItem<T>::GwBoatItem(String name, String formatInfo, GwBoatItemBase::TOType toType, GwBoatItemMap *map) : GwBoatItemBase(name, formatInfo, toType)
+{
+    T dummy;
+    this->type = GwBoatItemTypes::getType(dummy);
+    if (map)
+    {
+        map->add(name,this);
     }
 }
 
@@ -246,14 +297,13 @@ void GwSatInfoList::houseKeeping(unsigned long ts)
                    sats.end(),
                    [ts, this](const GwSatInfo &info)
                    {
-                       return (info.timestamp + lifeTime) < ts;
+                       return info.validTill < ts;
                    }),
                sats.end());
 }
-void GwSatInfoList::update(GwSatInfo entry)
+void GwSatInfoList::update(GwSatInfo entry, unsigned long validTill)
 {
-    unsigned long now = millis();
-    entry.timestamp = now;
+    entry.validTill = validTill;
     for (auto it = sats.begin(); it != sats.end(); it++)
     {
         if (it->PRN == entry.PRN)
@@ -267,7 +317,7 @@ void GwSatInfoList::update(GwSatInfo entry)
     sats.push_back(entry);
 }
 
-GwBoatDataSatList::GwBoatDataSatList(String name, String formatInfo, unsigned long invalidTime, GwBoatItemMap *map) : GwBoatItem<GwSatInfoList>(name, formatInfo, invalidTime, map) {}
+GwBoatDataSatList::GwBoatDataSatList(String name, String formatInfo, GwBoatItemBase::TOType toType, GwBoatItemMap *map) : GwBoatItem<GwSatInfoList>(name, formatInfo, toType, map) {}
 
 bool GwBoatDataSatList::update(GwSatInfo info, int source)
 {
@@ -284,7 +334,7 @@ bool GwBoatDataSatList::update(GwSatInfo info, int source)
     }
     lastUpdateSource = source;
     uls(now);
-    data.update(info);
+    data.update(info,now+invalidTime);
     return true;
 }
 void GwBoatDataSatList::toJsonDoc(GwJsonDocument *doc, unsigned long minTime)
@@ -293,9 +343,15 @@ void GwBoatDataSatList::toJsonDoc(GwJsonDocument *doc, unsigned long minTime)
     GwBoatItem<GwSatInfoList>::toJsonDoc(doc, minTime);
 }
 
-GwBoatData::GwBoatData(GwLog *logger)
+GwBoatData::GwBoatData(GwLog *logger, GwConfigHandler *cfg)
 {
     this->logger = logger;
+    this->config = cfg;
+}
+void GwBoatData::begin(){
+    for (auto &&it : values){
+        it.second->setInvalidTime(config);
+    }
 }
 GwBoatData::~GwBoatData()
 {
@@ -326,7 +382,7 @@ GwBoatItem<T> *GwBoatData::getOrCreate(T initial, GwBoatItemNameProvider *provid
                                           provider->getBoatItemFormat(),
                                           provider->getInvalidTime(),
                                           &values);
-    rt->update(initial);
+    rt->update(initial,-1);
     LOG_DEBUG(GwLog::LOG, "creating boatItem %s, type %d",
               name.c_str(), rt->getCurrentType());
     return rt;
@@ -407,6 +463,10 @@ double GwBoatData::getDoubleValue(String name, double defaultv)
     if (!it->second->isValid())
         return defaultv;
     return it->second->getDoubleValue();
+}
+
+void GwBoatData::setInvalidTime(GwBoatItemBase *item){
+    if (config != nullptr) item->setInvalidTime(config);
 }
 double formatCourse(double cv)
 {

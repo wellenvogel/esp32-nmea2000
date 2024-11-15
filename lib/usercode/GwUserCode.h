@@ -11,6 +11,7 @@ class GwApiInternal : public GwApi{
     ~GwApiInternal(){}
     virtual void fillStatus(GwJsonDocument &status){};
     virtual int getJsonSize(){return 0;};
+    virtual bool handleWebRequest(const String &url,AsyncWebServerRequest *req){return false;}
 };
 class GwUserTask{
     public:
@@ -50,5 +51,6 @@ class GwUserCode{
         Capabilities *getCapabilities();
         void fillStatus(GwJsonDocument &status);
         int getJsonSize();
+        void handleWebRequest(const String &url,AsyncWebServerRequest *);
 };
 #endif

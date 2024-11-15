@@ -103,7 +103,7 @@ private:
         if (v != NMEA0183UInt32NA){
             return target->update(v,sourceId);
         }
-        return v;
+        return false;
     }
     uint32_t getUint32(GwBoatItem<uint32_t> *src){
         return src->getDataWithDefault(N2kUInt32NA);
@@ -399,28 +399,29 @@ private:
             return;
         }
         tN2kMsg n2kMsg;
-        tN2kWindReference n2kRef;
         bool shouldSend=false;
         WindAngle=formatDegToRad(WindAngle);
+        GwConverterConfig::WindMapping mapping;
         switch(Reference){
             case NMEA0183Wind_Apparent:
-                n2kRef=N2kWind_Apparent;
                 shouldSend=updateDouble(boatData->AWA,WindAngle,msg.sourceId) && 
-                    updateDouble(boatData->AWS,WindSpeed,msg.sourceId);
-                if (WindSpeed != NMEA0183DoubleNA) boatData->MaxAws->updateMax(WindSpeed);    
+                           updateDouble(boatData->AWS,WindSpeed,msg.sourceId);
+                if (WindSpeed != NMEA0183DoubleNA) boatData->MaxAws->updateMax(WindSpeed,msg.sourceId);    
+                mapping=config.findWindMapping(GwConverterConfig::WindMapping::AWA_AWS);
                 break;
             case NMEA0183Wind_True:
-                n2kRef=N2kWind_True_North;
-                shouldSend=updateDouble(boatData->TWD,WindAngle,msg.sourceId) && 
-                    updateDouble(boatData->TWS,WindSpeed,msg.sourceId);
-                if (WindSpeed != NMEA0183DoubleNA) boatData->MaxTws->updateMax(WindSpeed);    
+                shouldSend=updateDouble(boatData->TWA,WindAngle,msg.sourceId) && 
+                           updateDouble(boatData->TWS,WindSpeed,msg.sourceId);
+                if (WindSpeed != NMEA0183DoubleNA) boatData->MaxTws->updateMax(WindSpeed,msg.sourceId);    
+                mapping=config.findWindMapping(GwConverterConfig::WindMapping::TWA_TWS);
                 break;      
             default:
                 LOG_DEBUG(GwLog::DEBUG,"unknown wind reference %d in %s",(int)Reference,msg.line);
         }
-        if (shouldSend){
-            SetN2kWindSpeed(n2kMsg,1,WindSpeed,WindAngle,n2kRef);  
-            send(n2kMsg,msg.sourceId,String(n2kMsg.PGN)+String((int)n2kRef));  
+        //TODO: try to compute TWD and get mapping for this one
+        if (shouldSend && mapping.valid){
+            SetN2kWindSpeed(n2kMsg,1,WindSpeed,WindAngle,mapping.n2kType);  
+            send(n2kMsg,msg.sourceId,String(n2kMsg.PGN)+String((int)mapping.n2kType));  
         }
     }
     void convertVWR(const SNMEA0183Msg &msg)
@@ -457,18 +458,20 @@ private:
         bool shouldSend = false;
         shouldSend = updateDouble(boatData->AWA, WindAngle, msg.sourceId) &&
                      updateDouble(boatData->AWS, WindSpeed, msg.sourceId);
-        if (WindSpeed != NMEA0183DoubleNA) boatData->MaxAws->updateMax(WindSpeed);             
+        if (WindSpeed != NMEA0183DoubleNA) boatData->MaxAws->updateMax(WindSpeed,msg.sourceId);             
         if (shouldSend)
         {
-            SetN2kWindSpeed(n2kMsg, 1, WindSpeed, WindAngle, N2kWind_Apparent);
-            send(n2kMsg,msg.sourceId,String(n2kMsg.PGN)+String((int)N2kWind_Apparent));
+            const GwConverterConfig::WindMapping mapping=config.findWindMapping(GwConverterConfig::WindMapping::AWA_AWS);
+            if (mapping.valid){
+                SetN2kWindSpeed(n2kMsg, 1, WindSpeed, WindAngle, mapping.n2kType);
+                send(n2kMsg,msg.sourceId,String(n2kMsg.PGN)+String((int)mapping.n2kType));
+            }
         }
     }
 
     void convertMWD(const SNMEA0183Msg &msg)
     {
-        double WindAngle = NMEA0183DoubleNA, WindAngleMagnetic=NMEA0183DoubleNA,
-            WindSpeed = NMEA0183DoubleNA;
+        double WindDirection = NMEA0183DoubleNA, WindDirectionMagnetic=NMEA0183DoubleNA, WindSpeed = NMEA0183DoubleNA;
         if (msg.FieldCount() < 8 )
         {
             LOG_DEBUG(GwLog::DEBUG, "failed to parse MWD %s", msg.line);
@@ -476,11 +479,11 @@ private:
         }
         if (msg.FieldLen(0) > 0 && msg.Field(1)[0] == 'T')
         {
-            WindAngle = formatDegToRad(atof(msg.Field(0)));
+            WindDirection = formatDegToRad(atof(msg.Field(0)));
         }
         if (msg.FieldLen(2) > 0 && msg.Field(3)[0] == 'M')
         {
-            WindAngleMagnetic = formatDegToRad(atof(msg.Field(2)));
+            WindDirectionMagnetic = formatDegToRad(atof(msg.Field(2)));
         }
         if (msg.FieldLen(4) > 0 && msg.Field(5)[0] == 'N')
         {
@@ -497,32 +500,38 @@ private:
         }
         tN2kMsg n2kMsg;
         bool shouldSend = false;
-        if (WindAngle != NMEA0183DoubleNA){
-            shouldSend = updateDouble(boatData->TWD, WindAngle, msg.sourceId) &&
+        if (WindDirection != NMEA0183DoubleNA){
+            shouldSend = updateDouble(boatData->TWD, WindDirection, msg.sourceId) &&
                          updateDouble(boatData->TWS, WindSpeed, msg.sourceId);
-            if (WindSpeed != NMEA0183DoubleNA) boatData->MaxTws->updateMax(WindSpeed);             
-        }
-        if (shouldSend)
-        {
-            SetN2kWindSpeed(n2kMsg, 1, WindSpeed, WindAngle, N2kWind_True_North);
-            send(n2kMsg,msg.sourceId,String(n2kMsg.PGN)+String((int)N2kWind_True_North));
-        }
-        if (WindAngleMagnetic != NMEA0183DoubleNA && shouldSend){
-            SetN2kWindSpeed(n2kMsg, 1, WindSpeed, WindAngleMagnetic, N2kWind_Magnetic);
-            send(n2kMsg,msg.sourceId,String(n2kMsg.PGN)+String((int)N2kWind_Magnetic));
+            if (WindSpeed != NMEA0183DoubleNA) boatData->MaxTws->updateMax(WindSpeed,msg.sourceId);             
+            if(shouldSend && boatData->HDT->isValid()) {
+                double twa = WindDirection-boatData->HDT->getData();
+                if(twa<0) { twa+=2*M_PI; }
+                updateDouble(boatData->TWA, twa, msg.sourceId);
+                const GwConverterConfig::WindMapping mapping=config.findWindMapping(GwConverterConfig::WindMapping::TWA_TWS);
+                if (mapping.valid){
+                    SetN2kWindSpeed(n2kMsg, 1, WindSpeed, twa, mapping.n2kType);
+                    send(n2kMsg,msg.sourceId,String(n2kMsg.PGN)+String((int)mapping.n2kType));
+                }
+                const GwConverterConfig::WindMapping mapping2=config.findWindMapping(GwConverterConfig::WindMapping::TWD_TWS);
+                if (mapping2.valid){
+                    SetN2kWindSpeed(n2kMsg, 1, WindSpeed, WindDirection, mapping2.n2kType);
+                    send(n2kMsg,msg.sourceId,String(n2kMsg.PGN)+String((int)mapping2.n2kType));
+                }
+            }
         }
     }
 
     void convertHDM(const SNMEA0183Msg &msg){
-        double MHDG=NMEA0183DoubleNA;
-        if (!NMEA0183ParseHDM_nc(msg, MHDG))
+        double HDM=NMEA0183DoubleNA;
+        if (!NMEA0183ParseHDM_nc(msg, HDM))
         {
             LOG_DEBUG(GwLog::DEBUG, "failed to parse HDM %s", msg.line);
             return;
         }
-        if (! UD(MHDG)) return;
+        if (! UD(HDM)) return;
         tN2kMsg n2kMsg;
-        SetN2kMagneticHeading(n2kMsg,1,MHDG,
+        SetN2kMagneticHeading(n2kMsg,1,HDM,
             boatData->VAR->getDataWithDefault(N2kDoubleNA),
             boatData->DEV->getDataWithDefault(N2kDoubleNA)
         );
@@ -530,28 +539,29 @@ private:
     }
     
     void convertHDT(const SNMEA0183Msg &msg){
-        double HDG=NMEA0183DoubleNA;
-        if (!NMEA0183ParseHDT_nc(msg, HDG))
+        double HDT=NMEA0183DoubleNA;
+        if (!NMEA0183ParseHDT_nc(msg, HDT))
         {
             LOG_DEBUG(GwLog::DEBUG, "failed to parse HDT %s", msg.line);
             return;
         }
-        if (! UD(HDG)) return;
+        if (! UD(HDT)) return;
         tN2kMsg n2kMsg;
-        SetN2kTrueHeading(n2kMsg,1,HDG);
+        SetN2kTrueHeading(n2kMsg,1,HDT);
         send(n2kMsg,msg.sourceId);    
     }
+    
     void convertHDG(const SNMEA0183Msg &msg){
-        double MHDG=NMEA0183DoubleNA;
-        double VAR=NMEA0183DoubleNA;
+        double HDM=NMEA0183DoubleNA;
         double DEV=NMEA0183DoubleNA;
+        double VAR=NMEA0183DoubleNA;
         if (msg.FieldCount() < 5)
         {
             LOG_DEBUG(GwLog::DEBUG, "failed to parse HDG %s", msg.line);
             return;
         }
         if (msg.FieldLen(0)>0){
-            MHDG=formatDegToRad(atof(msg.Field(0)));
+            HDM=formatDegToRad(atof(msg.Field(0)));
         }
         else{
             return;
@@ -565,11 +575,11 @@ private:
             if (msg.Field(4)[0] == 'W') VAR=-VAR;
         }
 
-        if (! UD(MHDG)) return;
+        if (! UD(HDM)) return;
         UD(VAR);
         UD(DEV);
         tN2kMsg n2kMsg;
-        SetN2kMagneticHeading(n2kMsg,1,MHDG,DEV,VAR);
+        SetN2kMagneticHeading(n2kMsg,1,HDM,DEV,VAR);
         send(n2kMsg,msg.sourceId,"127250M");    
     }
 
@@ -592,10 +602,10 @@ private:
         }
         //offset == 0? SK does not allow this
         if (Offset != NMEA0183DoubleNA && Offset>=0 ){
-            if (! boatData->DBS->update(DepthBelowTransducer+Offset)) return;
+            if (! boatData->DBS->update(DepthBelowTransducer+Offset,msg.sourceId)) return;
         }
         if (Offset == NMEA0183DoubleNA) Offset=N2kDoubleNA;
-        if (! boatData->DBT->update(DepthBelowTransducer)) return;
+        if (! boatData->DBT->update(DepthBelowTransducer,msg.sourceId)) return;
         tN2kMsg n2kMsg;
         SetN2kWaterDepth(n2kMsg,1,DepthBelowTransducer,Offset);
         send(n2kMsg,msg.sourceId,String(n2kMsg.PGN)+String((Offset != N2kDoubleNA)?1:0));
@@ -705,11 +715,11 @@ private:
             return;
         }
         tN2kMsg n2kMsg;
-        if (updateDouble(boatData->HDG,TrueHeading,msg.sourceId)){
+        if (updateDouble(boatData->HDT,TrueHeading,msg.sourceId)){
             SetN2kTrueHeading(n2kMsg,1,TrueHeading);
             send(n2kMsg,msg.sourceId); 
         }
-        if(updateDouble(boatData->MHDG,MagneticHeading,msg.sourceId)){
+        if(updateDouble(boatData->HDM,MagneticHeading,msg.sourceId)){
             SetN2kMagneticHeading(n2kMsg,1,MagneticHeading,
                 boatData->DEV->getDataWithDefault(N2kDoubleNA),
                 boatData->VAR->getDataWithDefault(N2kDoubleNA)
@@ -850,7 +860,7 @@ private:
             LOG_DEBUG(GwLog::DEBUG,"GSV invalid current %u %s",current,msg.line);
             return;
         }
-        for (int idx=2;idx < msg.FieldCount();idx+=4){
+        for (int idx=3;idx < msg.FieldCount();idx+=4){
             if (msg.FieldLen(idx) < 1 ||
                 msg.FieldLen(idx+1) < 1 ||
                 msg.FieldLen(idx+2) < 1 ||

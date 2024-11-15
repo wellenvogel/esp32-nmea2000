@@ -24,6 +24,7 @@
 #define GWSERIAL_TYPE_BI 2
 #define GWSERIAL_TYPE_RX 3
 #define GWSERIAL_TYPE_TX 4
+#define GWSERIAL_TYPE_UNK 0
 #include <GwConfigItem.h>
 #include <HardwareSerial.h>
 #include "GwAppInfo.h"

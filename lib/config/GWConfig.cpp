@@ -4,6 +4,7 @@
 #include <ArduinoJson.h>
 #include <string.h>
 #include <MD5Builder.h>
+#include <esp_partition.h>
 using CfgInit=std::function<void(GwConfigHandler *)>;
 static std::vector<CfgInit> cfgInits;
 #define CFG_INIT(name,value,mode) \
@@ -96,15 +97,36 @@ bool GwConfigHandler::updateValue(String name, String value){
         if (i->asString() == value){
             return false;
         }
-        LOG_DEBUG(GwLog::LOG,"update config %s=>%s",name.c_str(),i->isSecret()?"***":value.c_str());
         prefs->begin(PREF_NAME,false);
         prefs->putString(i->getName().c_str(),value);
+        LOG_DEBUG(GwLog::LOG,"update config %s=>%s, freeEntries=%d",name.c_str(),i->isSecret()?"***":value.c_str(),(int)(prefs->freeEntries()));
         prefs->end();
     }
     return true;
 }
 bool GwConfigHandler::reset(){
-    LOG_DEBUG(GwLog::LOG,"reset config");
+    LOG_DEBUG(GwLog::ERROR,"reset config");
+    //try to find the nvs partition
+    //currently we only support the default
+    bool wiped=false;
+    const esp_partition_t *nvspart=esp_partition_find_first(ESP_PARTITION_TYPE_DATA,ESP_PARTITION_SUBTYPE_DATA_NVS,"nvs");
+    if (nvspart != NULL){
+        LOG_DEBUG(GwLog::ERROR,"wiping nvs partition");
+        esp_err_t err=esp_partition_erase_range(nvspart,0,nvspart->size);
+        if (err != ESP_OK){
+            LOG_DEBUG(GwLog::ERROR,"wiping nvs partition failed: %d",(int)err);
+        }
+        else{
+            wiped=true;
+        }
+    }
+    else{
+        LOG_DEBUG(GwLog::ERROR,"nvs partition not found");
+    }
+    if (wiped){
+        return true;
+    }
+    LOG_DEBUG(GwLog::ERROR,"unable to wipe nvs partition, trying to reset values");  
     prefs->begin(PREF_NAME,false);
     for (int i=0;i<getNumConfig();i++){
         prefs->putString(configs[i]->getName().c_str(),configs[i]->getDefault());

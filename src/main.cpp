@@ -138,7 +138,7 @@ bool fixedApPass=true;
 #endif
 GwWifi gwWifi(&config,&logger,fixedApPass);
 GwChannelList channels(&logger,&config);
-GwBoatData boatData(&logger);
+GwBoatData boatData(&logger,&config);
 GwXDRMappings xdrMappings(&logger,&config);
 bool sendOutN2k=true;
 
@@ -347,6 +347,8 @@ public:
       return false;
     }
     return xdrMappings.addFixedMapping(mapping);
+  }
+  virtual void registerRequestHandler(const String &url,HandlerFunction handler){
   }
   virtual void addCapability(const String &name, const String &value){}
   virtual bool addUserTask(GwUserTaskFunction task,const String Name, int stackSize=2000){
@@ -768,6 +770,7 @@ void loopFunction(void *){
     //delay(1);
   }
 }
+const String USERPREFIX="/api/user/";
 void setup() {
   mainLock=xSemaphoreCreateMutex();
   uint8_t chipid[6];
@@ -784,6 +787,7 @@ void setup() {
     logger.prefix="FALLBACK:";
   logger.setWriter(new DefaultLogWriter());
 #endif
+  boatData.begin();
   userCodeHandler.startInitTasks(MIN_USER_TASK);
   channels.preinit();
   config.stopChanges();
@@ -844,13 +848,18 @@ void setup() {
                               snprintf(buffer,29,"%g",value);
                               buffer[29]=0;
                               request->send(200,"text/plain",buffer);    
-  });                                                        
+  });
+  webserver.registerHandler((USERPREFIX+"*").c_str(),[&USERPREFIX](AsyncWebServerRequest *req){
+                              String turl=req->url().substring(USERPREFIX.length());
+                              logger.logDebug(GwLog::DEBUG,"user web request for %s",turl.c_str());
+                              userCodeHandler.handleWebRequest(turl,req);
+  });
 
   webserver.begin();
   xdrMappings.begin();
   logger.flush();
   GwConverterConfig converterConfig;
-  converterConfig.init(&config);
+  converterConfig.init(&config,&logger);
   nmea0183Converter= N2kDataToNMEA0183::create(&logger, &boatData, 
     [](const tNMEA0183Msg &msg, int sourceId){
       SendNMEA0183Message(msg,sourceId,false);

@@ -6,4 +6,5 @@ class GwChannelInterface{
         virtual void readMessages(GwMessageFetcher *writer)=0;
         virtual size_t sendToClients(const char *buffer, int sourceId, bool partial=false)=0;
         virtual Stream * getStream(bool partialWrites){ return NULL;}
+        virtual String getMode(){return "UNKNOWN";}
 };

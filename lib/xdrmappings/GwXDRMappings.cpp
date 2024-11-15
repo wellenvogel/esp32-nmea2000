@@ -355,6 +355,7 @@ void GwXDRMappings::begin()
 GwXDRFoundMapping GwXDRMappings::selectMapping(GwXDRMapping::MappingList *list, int instance, const char *key)
 {
     GwXDRMapping *candidate = NULL;
+    unsigned long invalidTime=config->getInt(GwConfigDefinitions::timoSensor);
     for (auto mit = list->begin(); mit != list->end(); mit++)
     {
         GwXDRMappingDef *def = (*mit)->definition;
@@ -369,7 +370,7 @@ GwXDRFoundMapping GwXDRMappings::selectMapping(GwXDRMapping::MappingList *list, 
             {
                 LOG_DEBUG(GwLog::DEBUG + 1, "selected mapping %s for %s, i=%d",
                           def->toString().c_str(), key, instance);
-                return GwXDRFoundMapping(*mit, instance);
+                return GwXDRFoundMapping(*mit,invalidTime, instance);
             }
             if (instance < 0)
             {
@@ -393,7 +394,7 @@ GwXDRFoundMapping GwXDRMappings::selectMapping(GwXDRMapping::MappingList *list, 
     {
         LOG_DEBUG(GwLog::DEBUG + 1, "selected mapping %s for %s, i=%d",
                   candidate->definition->toString().c_str(), key, instance);
-        return GwXDRFoundMapping(candidate, instance>=0?instance:candidate->definition->instanceId);
+        return GwXDRFoundMapping(candidate, invalidTime,instance>=0?instance:candidate->definition->instanceId);
     }
     LOG_DEBUG(GwLog::DEBUG + 1, "no instance mapping found for key=%s, i=%d", key, instance);
     return GwXDRFoundMapping();
@@ -472,8 +473,9 @@ String GwXDRMappings::getXdrEntry(String mapping, double value,int instance){
     }
     GwXDRType *type = findType(code, &typeIndex);
     bool first=true;
+    unsigned long invalidTime=config->getInt(GwConfigDefinitions::timoSensor);
     while (type){
-        GwXDRFoundMapping found(def,type);
+        GwXDRFoundMapping found(def,type,invalidTime);
         found.instanceId=instance;
         if (first) first=false;
         else rt+=",";

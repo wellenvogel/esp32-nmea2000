@@ -23,104 +23,106 @@
   <div class="tab" data-page="updatePage">Update</div>
   <div class="tab" data-url="https://github.com/wellenvogel/esp32-nmea2000" data-window="help" id="helpButton">Help</div>
 </div>
-<div id="statusPage" class="tabPage">
-  <div id="statusPageContent">
-    <div class="row">
-      <span class="label">VERSION</span>
-      <span class="value" id="version">---</span>
-      <button class="infoButton" id="converterInfo">?</button>
-    </div>
+<div id="tabPages">
+  <div id="statusPage" class="tabPage">
+    <div id="statusPageContent">
+      <div class="row">
+        <span class="label">VERSION</span>
+        <span class="value" id="version">---</span>
+        <button class="infoButton" id="converterInfo">?</button>
+      </div>
 
-    <div class="row even">
-      <span class="label">Access Point IP</span>
-      <span class="value" id="apIp">---</span>
+      <div class="row even">
+        <span class="label">Access Point IP</span>
+        <span class="value" id="apIp">---</span>
+      </div>
+      <div class="row ">
+        <span class="label">wifi client connected</span>
+        <span class="value" id="wifiConnected">---</span>&nbsp;[<span class="value" id="wifiSSID">---</span>]
+      </div>
+      <div class="row even">
+        <span class="label">wifi client IP</span>
+        <span class="value" id="clientIP">---</span>
+      </div>
+      <div class="row">
+        <span class="label"># clients</span>
+        <span class="value" id="numClients">---</span>
+      </div>
+      <div class="row even">
+        <span class="label">TCP client connected</span>
+        <span class="value" id="clientCon">---</span>
+      </div>
+      <div class="row">
+        <span class="label">TCP client error</span>
+        <span class="value" id="clientErr">---</span>
+      </div>
+      <div class="row even">
+        <span class="label">Free heap</span>
+        <span class="value" id="heap">---</span>
+      </div>
+      <div class="row">
+        <span class="label">NMEA2000 State</span>
+        [<span class="value" id="n2knode">---</span>]&nbsp;
+        <span class="value" id="n2kstate">UNKNOWN</span>
+      </div>
     </div>
-    <div class="row ">
-      <span class="label">wifi client connected</span>
-      <span class="value" id="wifiConnected">---</span>&nbsp;[<span class="value" id="wifiSSID">---</span>]
-    </div>
-    <div class="row even">
-      <span class="label">wifi client IP</span>
-      <span class="value" id="clientIP">---</span>
-    </div>
-    <div class="row">
-      <span class="label"># clients</span>
-      <span class="value" id="numClients">---</span>
-    </div> 
-    <div class="row even">
-      <span class="label">TCP client connected</span>
-      <span class="value" id="clientCon">---</span>
-    </div>
-    <div class="row">
-      <span class="label">TCP client error</span>
-      <span class="value" id="clientErr">---</span>
-    </div> 
-    <div class="row even">
-      <span class="label">Free heap</span>
-      <span class="value" id="heap">---</span>
-    </div>
-    <div class="row">
-      <span class="label">NMEA2000 State</span>
-      [<span class="value" id="n2knode">---</span>]&nbsp;
-      <span class="value" id="n2kstate">UNKNOWN</span>
-    </div> 
+    <button id="reset">Reset</button>
   </div>
-  <button id="reset">Reset</button>
-</div>
-<div class="configForm tabPage hidden" id="configPage" >
-  <div class="buttons">
-    <button id="resetForm">ReloadConfig</button>
-    <button id="forgetPass">ForgetPass</button>
-    <button id="changeConfig">Save&Restart</button>
-    <button id="exportConfig">Export</button>
-    <button id="importConfig">Import</button>
-    <button id="factoryReset">FactoryReset</button>
+  <div class="configForm tabPage hidden" id="configPage">
+    <div class="buttons">
+      <button id="resetForm">ReloadConfig</button>
+      <button id="forgetPass">ForgetPass</button>
+      <button id="changeConfig">Save&Restart</button>
+      <button id="exportConfig">Export</button>
+      <button id="importConfig">Import</button>
+      <button id="factoryReset">FactoryReset</button>
+    </div>
+    <div class="configFormRows">
+
+    </div>
   </div>
-  <div class="configFormRows">
+  <div class="configForm tabPage hidden" id="xdrPage">
+    <div class="buttons">
+      <button id="resetForm">ReloadConfig</button>
+      <button id="changeConfig">Save&Restart</button>
+      <button id="loadUnassigned">Show Unmapped</button>
+      <button id="exportXdr">Export</button>
+      <button id="importXdr">Import</button>
+    </div>
+    <div class="configFormRows">
+
+    </div>
+  </div>
+  <div class="tabPage hidden" id="dashboardPage">
 
   </div>
-</div>
-<div class="configForm tabPage hidden" id="xdrPage" >
-  <div class="buttons">
-    <button id="resetForm">ReloadConfig</button>
-    <button id="changeConfig">Save&Restart</button>
-    <button id="loadUnassigned">Show Unmapped</button>
-    <button id="exportXdr">Export</button>
-    <button id="importXdr">Import</button>
-  </div>
-  <div class="configFormRows">
-
-  </div>
-</div>
-<div class="tabPage hidden" id="dashboardPage">
-
-</div>
-<div class="tabPage hidden" id="updatePage">
-  <div class="row">
-    <span class="label">firmware type</span>
-    <span class="value status-fwtype">---</span>
-  </div>
-  <div class="row">
-    <span class="label">chip type</span>
-    <span class="value status-chipid">---</span>
-  </div>
-  <div class="row">
-    <span class="label">currentVersion</span>
-    <span class="value status-version">---</span>
-  </div>
-  <div class="row">
-    <span class="label">New Firmware</span>
-    <input type="file" name="file1" id="uploadFile">
-  </div>
-  <div class="row">
-    <span class="label"></span>
-    <span id="imageProperties" class="value"></span>
-  </div>
-  <div id="uploadProgress">
-    <div id="uploadDone"></div>
-  </div>
-  <div class="buttons">
-    <button id="uploadBin">Upload</button>
+  <div class="tabPage hidden" id="updatePage">
+    <div class="row">
+      <span class="label">firmware type</span>
+      <span class="value status-fwtype">---</span>
+    </div>
+    <div class="row">
+      <span class="label">chip type</span>
+      <span class="value status-chipid">---</span>
+    </div>
+    <div class="row">
+      <span class="label">currentVersion</span>
+      <span class="value status-version">---</span>
+    </div>
+    <div class="row">
+      <span class="label">New Firmware</span>
+      <input type="file" name="file1" id="uploadFile">
+    </div>
+    <div class="row">
+      <span class="label"></span>
+      <span id="imageProperties" class="value"></span>
+    </div>
+    <div id="uploadProgress">
+      <div id="uploadDone"></div>
+    </div>
+    <div class="buttons">
+      <button id="uploadBin">Upload</button>
+    </div>
   </div>
 </div>
 
