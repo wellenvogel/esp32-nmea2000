@@ -71,7 +71,7 @@
   GROOVE_IIC(SHT3X,$Z$,1)
   GROOVE_IIC(BMP280,$Z$,1)
   #define _GWSHT3X
-  #define _BMP280
+  #define _GWBMP280
 #endif
 
 #GROVE
