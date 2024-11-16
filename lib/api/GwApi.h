@@ -240,7 +240,10 @@ static void checkDef(T... args){};
 #define DECLARE_USERTASK_PARAM(task,...)
 #endif
 #ifndef DECLARE_INITFUNCTION
-#define DECLARE_INITFUNCTION(task)
+#define DECLARE_INITFUNCTION(task,...)
+#endif
+#ifndef DECLARE_INITFUNCTION_ORDER
+#define DECLARE_INITFUNCTION_ORDER(task,...)
 #endif
 #ifndef DECLARE_CAPABILITY
 #define DECLARE_CAPABILITY(name,value)
@@ -322,5 +325,8 @@ class ConfiguredSensors : public GwApi::TaskInterfaces::Base{
 };
 DECLARE_TASKIF(ConfiguredSensors);    
 
+//order for late init functions
+//all user tasks should have lower orders (default: 0)
+#define GWLATEORDER 9999
 
 #endif

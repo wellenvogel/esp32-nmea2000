@@ -1,6 +1,7 @@
 #define DECLARE_USERTASK(task) GwUserTaskDef __##task##__(task,#task);
 #define DECLARE_USERTASK_PARAM(task,...) GwUserTaskDef __##task##__(task,#task,__VA_ARGS__);
 #define DECLARE_INITFUNCTION(task) GwInitTask __Init##task##__(task,#task);
+#define DECLARE_INITFUNCTION_ORDER(task,order) GwInitTask __Init##task##__(task,#task,order);
 #define DECLARE_CAPABILITY(name,value) GwUserCapability __CAP##name##__(#name,#value);
 #define DECLARE_STRING_CAPABILITY(name,value) GwUserCapability __CAP##name##__(#name,value); 
 #define DECLARE_TASKIF(type) \
@@ -43,8 +44,8 @@ class GwInitTask{
         GwInitTask(TaskFunction_t task, String name){
             initTasks.push_back(GwUserTask(name,task));
         }
-        GwInitTask(GwUserTaskFunction task, String name){
-            initTasks.push_back(GwUserTask(name,task));
+        GwInitTask(GwUserTaskFunction task, String name,int order=0){
+            initTasks.push_back(GwUserTask(name,task,GwUserTask::DEFAULT_STACKSIZE,order));
         }
 };
 class GwUserCapability{
@@ -341,7 +342,6 @@ public:
             sensors->sensors.add(sensor);
             return true;
         });
-        api->getLogger()->logDebug(GwLog::LOG,"adding sensor %s returns %d",sensor->prefix.c_str(),(int)rt);
     }
 };
 
@@ -378,6 +378,9 @@ void GwUserCode::startUserTasks(int baseId){
     }
 }
 void GwUserCode::startInitTasks(int baseId){
+    std::sort(initTasks.begin(),initTasks.end(),[](const GwUserTask &a, const GwUserTask &b){
+        return a.order < b.order;    
+    });
     LOG_DEBUG(GwLog::DEBUG,"starting %d user init tasks",initTasks.size());
     for (auto it=initTasks.begin();it != initTasks.end();it++){
         LOG_DEBUG(GwLog::LOG,"starting user init task %s with id %d",it->name.c_str(),baseId);

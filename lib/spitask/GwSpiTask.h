@@ -16,5 +16,5 @@
 #define _GWSPITASK_H
 #include "GwApi.h"
 void initSpiTask(GwApi *api);
-DECLARE_INITFUNCTION(initSpiTask);
+DECLARE_INITFUNCTION_ORDER(initSpiTask,GWLATEORDER);
 #endif

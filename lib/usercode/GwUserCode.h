@@ -15,22 +15,25 @@ class GwApiInternal : public GwApi{
 };
 class GwUserTask{
     public:
+        static const int DEFAULT_STACKSIZE=2000;
         String name;
         TaskFunction_t task=NULL;
         GwUserTaskFunction usertask=NULL;
         bool isUserTask=false;
         GwApiInternal *api=NULL;
         int stackSize=2000;
-        GwUserTask(String name,TaskFunction_t task,int stackSize=2000){
+        int order=0;
+        GwUserTask(String name,TaskFunction_t task,int stackSize=DEFAULT_STACKSIZE){
             this->name=name;
             this->task=task;
             this->stackSize=stackSize;
         }
-        GwUserTask(String name, GwUserTaskFunction task,int stackSize=2000){
+        GwUserTask(String name, GwUserTaskFunction task,int stackSize=DEFAULT_STACKSIZE, int order=0){
             this->name=name;
             this->usertask=task;
             this->isUserTask=true;
             this->stackSize=stackSize;
+            this->order=order;
         }
 };
 
