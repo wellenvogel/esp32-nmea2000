@@ -184,8 +184,8 @@ void runIicTask(GwApi *api){
     bool runLoop=false;
     GwIntervalRunner timers;
     int counterId=api->addCounter("iicsensors");
-    for (auto it=sensors.begin();it != sensors.end();it++){
-        IICSensorBase *cfg=*it;
+    for (auto &&cfg:sensors){
+        if (cfg->busType != SensorBase::IIC) continue;
         auto bus=buses.find(cfg->busId);
         if (! cfg->isActive()) continue;
         if (bus == buses.end()){

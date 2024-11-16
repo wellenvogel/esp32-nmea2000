@@ -33,8 +33,8 @@ class BMP280Config : public IICSensorBase{
     float prOff=0;
     Adafruit_BMP280 *device=nullptr;
     uint32_t sensorId=-1;
-    BMP280Config(GwApi * api, const String &prfx):SensorBase(TYPE,api,prfx){
-        }
+    BMP280Config(GwApi * api, const String &prfx):IICSensorBase(TYPE,api,prfx){
+    }
     virtual bool isActive(){return prAct||tmAct;}
     virtual bool initDevice(GwApi *api,TwoWire *wire){
         GwLog *logger=api->getLogger();  

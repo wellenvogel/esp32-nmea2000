@@ -48,7 +48,7 @@ class SPIBus{
     spi_host_device_t host() const { return hd;} 
 };
 
-using BusType=SPIBus;
+using BUSTYPE=SPIBus;
 
 class SSIDevice{
     spi_device_handle_t spi;
@@ -90,7 +90,7 @@ class SSIDevice{
 };
 
 
-class SSISensor : public SensorBase<BusType>{
+class SSISensor : public SensorTemplate<BUSTYPE,SensorBase::SPI>{
     std::unique_ptr<SSIDevice> device;
     protected:
     int bits=12;
@@ -125,17 +125,17 @@ class SSISensor : public SensorBase<BusType>{
         }
 
     public:
-    SSISensor(const String &type,GwApi *api,const String &prfx, int host):SensorBase(type,api,prfx)
+    SSISensor(const String &type,GwApi *api,const String &prfx, int host):SensorTemplate<BUSTYPE,SensorBase::SPI>(type,api,prfx)
     {
         busId=host;
     }
     virtual bool isActive(){return act;};
-    virtual bool initDevice(GwApi *api,BusType *bus){
+    virtual bool initDevice(GwApi *api,BUSTYPE *bus){
         return initSSI(api->getLogger(),bus, clock,cs,bits);
     };
     
 };
-using SpiSensorList=SensorList<BusType>;
+using SpiSensorList=SensorList;
 #define GWSPI1_HOST SPI2_HOST
 #define GWSPI2_HOST SPI3_HOST
 #endif

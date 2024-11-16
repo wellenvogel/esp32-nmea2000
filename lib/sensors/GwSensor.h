@@ -16,9 +16,14 @@
 #define _GWSENSORS_H
 #include "GwApi.h"
 #include "GwLog.h"
-template<typename BUS>
 class SensorBase{
     public:
+    using BusType=enum{
+        IIC=0,
+        SPI=1,
+        UNKNOWN=-1
+    };
+    BusType busType=BusType::UNKNOWN;
     int busId=0;
     int iid=99; //N2K instanceId
     int addr=-1;
@@ -27,25 +32,41 @@ class SensorBase{
     long intv=0;
     bool ok=false;
     virtual void readConfig(GwConfigHandler *cfg)=0;
-    SensorBase(const String &tn,GwApi *api,const String &prfx):type(tn),prefix(prfx){
+    SensorBase(BusType bt,const String &tn,GwApi *api,const String &prfx)
+        :busType(bt),type(tn),prefix(prfx){
     }
-    using Creator=std::function<SensorBase<BUS> *(GwApi *api,const String &prfx)>;
+    using Creator=std::function<SensorBase *(GwApi *api,const String &prfx)>;
     virtual bool isActive(){return false;};
-    virtual bool initDevice(GwApi *api,BUS *wire){return false;};
+    virtual bool initDevice(GwApi *api,void *bus){return false;};
     virtual bool preinit(GwApi * api){return false;}
-    virtual void measure(GwApi * api,BUS *wire, int counterId){};
+    virtual void measure(GwApi * api,void *bus, int counterId){};
     virtual ~SensorBase(){}
 };
-
-template<typename BUS>
-class SensorList : public std::vector<SensorBase<BUS>*>{
+template<typename BUS,SensorBase::BusType bt>
+class SensorTemplate : public SensorBase{
     public:
-    void add(GwApi *api, SensorBase<BUS> *sensor){
+    SensorTemplate(const String &tn,GwApi *api,const String &prfx)
+        :SensorBase(bt,tn,api,prfx){}
+    virtual bool initDevice(GwApi *api,BUS *bus){return false;};
+    virtual bool initDevice(GwApi *api,void *bus){
+        if (busType != bt) return false;
+        return initDevice(api,(BUS*)bus);
+    }
+    virtual void measure(GwApi * api,void *bus, int counterId){
+        if (busType != bt) return;
+        measure(api,(BUS*)bus,counterId);
+    };
+};
+
+
+class SensorList : public std::vector<SensorBase*>{
+    public:
+    void add(GwApi *api, SensorBase *sensor){
         sensor->readConfig(api->getConfig());
         api->getLogger()->logDebug(GwLog::LOG,"configured sensor %s, status %d",sensor->prefix.c_str(),(int)sensor->ok);
         this->push_back(sensor);
     }
-    using std::vector<SensorBase<BUS>*>::vector;
+    using std::vector<SensorBase*>::vector;
 };
 
 

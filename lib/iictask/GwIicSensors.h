@@ -11,9 +11,9 @@
     class TwoWire;
 #endif
 
-using BusType=TwoWire;
-using IICSensorList=SensorList<BusType>;
-using IICSensorBase=SensorBase<BusType>;
+using BUSTYPE=TwoWire;
+using IICSensorList=SensorList;
+using IICSensorBase=SensorTemplate<BUSTYPE,SensorBase::IIC>;
 
 
 template <class CFG>
