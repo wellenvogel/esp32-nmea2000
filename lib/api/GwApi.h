@@ -9,6 +9,9 @@
 #include "GwSynchronized.h"
 #include <map>
 #include <ESPAsyncWebServer.h>
+#include "GwSensor.h"
+#include <functional>
+#include <memory>
 class GwApi;
 typedef void (*GwUserTaskFunction)(GwApi *);
 //API to be used for additional tasks
@@ -59,6 +62,7 @@ class GwApi{
         protected:
             virtual bool iset(const String &name, Ptr v) = 0;
             virtual Ptr iget(const String &name, int &result) = 0;
+            virtual bool iupdate(const String &name,std::function<Ptr(Ptr v)>)=0;
         public:
             template <typename T>
             bool set(const T &v){
@@ -72,6 +76,10 @@ class GwApi{
             template <typename T>
             bool claim(const String &task){
                 return true;
+            }
+            template <typename T>
+            bool update(std::function<bool(T *)>){
+                return false;
             }
         };
         class Status{
@@ -201,7 +209,13 @@ class GwApi{
          * @param name: the config name this value is used for
          * @param value: the current value
         */
-        virtual void setCalibrationValue(const String &name, double value);
+        virtual void setCalibrationValue(const String &name, double value)=0;
+        /**
+         * add a sensor
+         * depending on the type it will be added to the appropriate task
+         * @param sensor: created sensor config
+        */
+        virtual void addSensor(SensorBase* sensor,bool readConfig=true){};
 
         /**
          * not thread safe methods
@@ -274,9 +288,39 @@ static void checkDef(T... args){};
         }\
         type *tp=(type*)ptr.get(); \
         return type(*tp); \
-    }
+    } \
+    template<> \
+    inline bool GwApi::TaskInterfaces::update(std::function<bool(type *)> f) { \
+        return iupdate(#type,[f](GwApi::TaskInterfaces::Ptr cp)->GwApi::TaskInterfaces::Ptr{ \
+            if (cp) { \
+                f((type *)cp.get()); \
+                return cp; \
+            } \
+            type * et=new type(); \
+            bool res=f(et); \
+            if (! res){ \
+                delete et; \
+                return GwApi::TaskInterfaces::Ptr(); \
+            } \
+            return GwApi::TaskInterfaces::Ptr(et); \
+        }); \
+    } \
+
+
 
 #ifndef DECLARE_TASKIF
     #define DECLARE_TASKIF(type) DECLARE_TASKIF_IMPL(type)
 #endif
+
+/**
+ * do not use this interface directly
+ * instead use the API function addSensor
+*/
+class ConfiguredSensors : public GwApi::TaskInterfaces::Base{
+    public:
+    SensorList sensors;
+};
+DECLARE_TASKIF(ConfiguredSensors);    
+
+
 #endif

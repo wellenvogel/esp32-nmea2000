@@ -98,6 +98,40 @@ class TaskInterfacesStorage{
             }
             result = it->second.updates;
             return it->second.ptr;
+        }
+
+        bool update(const String &name, std::function<GwApi::TaskInterfaces::Ptr(GwApi::TaskInterfaces::Ptr)>f){
+            GWSYNCHRONIZED(&lock);
+            auto vit=values.find(name);
+            bool rt=false;
+            int mode=0;
+            if (vit == values.end()){
+                mode=1;
+                auto np=f(GwApi::TaskInterfaces::Ptr());
+                if (np){
+                    mode=11;
+                    values[name]=TaskDataEntry(np);
+                    rt=true;
+                }
+            }
+            else
+            {
+                auto np = f(vit->second.ptr);
+                mode=2;
+                if (np)
+                {
+                    mode=22;
+                    vit->second = np;
+                    vit->second.updates++;
+                    if (vit->second.updates < 0)
+                    {
+                        vit->second.updates = 0;
+                    }
+                    rt=true;
+                }
+            }
+            LOG_DEBUG(GwLog::DEBUG,"TaskApi::update %s (mode %d)returns %d",name.c_str(),mode,(int)rt);
+            return rt;
         } 
 };    
 class TaskInterfacesImpl : public GwApi::TaskInterfaces{
@@ -114,6 +148,9 @@ class TaskInterfacesImpl : public GwApi::TaskInterfaces{
         }
         virtual Ptr iget(const String &name, int &result){
             return storage->get(name,result);
+        }
+        virtual bool iupdate(const String &name,std::function<Ptr(Ptr v)> f){
+            return storage->update(name,f);
         }
 };
 
@@ -290,6 +327,21 @@ public:
         if (handler)
             handler(req);
         return true;
+    }
+    virtual void addSensor(SensorBase *sb,bool readConfig=true) override{
+        if (sb == nullptr) return;
+        SensorBase::Ptr sensor(sb);
+        if (readConfig) sb->readConfig(this->getConfig());
+        if (! sensor->ok){
+               api->getLogger()->logDebug(GwLog::ERROR,"sensor %s nok , bustype=%d",sensor->prefix.c_str(),(int)sensor->busType);
+               return; 
+            }
+        bool rt=taskInterfaces()->update<ConfiguredSensors>( [sensor,this](ConfiguredSensors *sensors)->bool{
+            api->getLogger()->logDebug(GwLog::LOG,"adding sensor %s, type=%d",sensor->prefix,(int)sensor->busType);
+            sensors->sensors.add(sensor);
+            return true;
+        });
+        api->getLogger()->logDebug(GwLog::LOG,"adding sensor %s returns %d",sensor->prefix.c_str(),(int)rt);
     }
 };
 

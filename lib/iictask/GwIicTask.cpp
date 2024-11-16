@@ -43,8 +43,7 @@ static std::vector<IICGrove> iicGroveList;
 
 void runIicTask(GwApi *api);
 
-static IICSensorList sensors;
-static void addGroveItems(std::vector<IICSensorBase::Creator> &creators,GwApi *api, IICSensorList &sensors, const String &bus,const String &grove, int, int)
+static void addGroveItems(std::vector<IICSensorBase::Creator> &creators,GwApi *api, const String &bus,const String &grove, int, int)
 {
     GwLog *logger=api->getLogger();
     for (auto &&init : iicGroveList)
@@ -65,7 +64,7 @@ static void addGroveItems(std::vector<IICSensorBase::Creator> &creators,GwApi *a
                 if (scfg->ok)
                 {
                     LOG_DEBUG(GwLog::LOG, "adding %s from grove config", prfx.c_str());
-                    sensors.add(api, SensorBase::Ptr(scfg));
+                    api->addSensor(scfg,false);
                     found=true;
                     break;
                 }
@@ -90,18 +89,22 @@ void initIicTask(GwApi *api){
     bool addTask=false;
     GwConfigHandler *config=api->getConfig();
     std::vector<IICSensorBase::Creator> creators;
-    creators.push_back(registerSHT3X(api,sensors));
-    creators.push_back(registerQMP6988(api,sensors));
-    creators.push_back(registerBME280(api,sensors));
-    creators.push_back(registerBMP280(api,sensors));
+    creators.push_back(registerSHT3X(api));
+    creators.push_back(registerQMP6988(api));
+    creators.push_back(registerBME280(api));
+    creators.push_back(registerBMP280(api));
     #ifdef _GWI_IIC1
-        addGroveItems(creators,api,sensors,"1",_GWI_IIC1);    
+        addGroveItems(creators,api,"1",_GWI_IIC1);    
     #endif
     #ifdef _GWI_IIC2
-        addGroveItems(creators,api,sensors,"2",_GWI_IIC2);    
+        addGroveItems(creators,api,"2",_GWI_IIC2);    
     #endif
-    for (auto it=sensors.begin();it != sensors.end();it++){
-        if ((*it)->preinit(api)) addTask=true;
+    //TODO: ensure that we run after other init tasks...
+    int res=-1;
+    ConfiguredSensors sensorList=api->taskInterfaces()->get<ConfiguredSensors>(res);
+    for (auto &&it: sensorList.sensors){
+        if (it->busType != SensorBase::IIC) continue;
+        if (it->preinit(api)) addTask=true;
     }
     if (addTask){
         api->addUserTask(runIicTask,"iicTask",4000);
@@ -154,8 +157,11 @@ void runIicTask(GwApi *api){
     GwLog *logger=api->getLogger();
     std::map<int,TwoWire *> buses;
     LOG_DEBUG(GwLog::LOG,"iic task started");
-    for (auto it=sensors.begin();it != sensors.end();it++){
-        int busId=(*it)->busId;
+    int res=-1;
+    ConfiguredSensors sensorList=api->taskInterfaces()->get<ConfiguredSensors>(res);
+    for (auto &&it : sensorList.sensors){
+        if (it->busType != SensorBase::IIC) continue;
+        int busId=it->busId;
         auto bus=buses.find(busId);
         if (bus == buses.end()){
             switch (busId)
@@ -175,7 +181,7 @@ void runIicTask(GwApi *api){
             }
             break;
             default:
-                LOG_DEBUG(GwLog::ERROR, "invalid bus id %d at config %s", busId, (*it)->prefix.c_str());
+                LOG_DEBUG(GwLog::ERROR, "invalid bus id %d at config %s", busId, it->prefix.c_str());
                 break;
             }
         }
@@ -184,7 +190,7 @@ void runIicTask(GwApi *api){
     bool runLoop=false;
     GwIntervalRunner timers;
     int counterId=api->addCounter("iicsensors");
-    for (auto &&cfg:sensors){
+    for (auto && cfg: sensorList.sensors){
         if (cfg->busType != SensorBase::IIC) continue;
         auto bus=buses.find(cfg->busId);
         if (! cfg->isActive()) continue;

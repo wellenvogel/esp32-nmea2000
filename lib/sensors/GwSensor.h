@@ -14,9 +14,11 @@
 */
 #ifndef _GWSENSORS_H
 #define _GWSENSORS_H
-#include "GwApi.h"
-#include "GwLog.h"
+#include <Arduino.h>
 #include <memory>
+#include <vector>
+class GwApi;
+class GwConfigHandler;
 class SensorBase{
     public:
     using BusType=enum{
@@ -63,16 +65,13 @@ class SensorTemplate : public SensorBase{
 
 class SensorList : public std::vector<SensorBase::Ptr>{
     public:
-    void add(GwApi *api, SensorBase::Ptr sensor){
-        sensor->readConfig(api->getConfig());
-        api->getLogger()->logDebug(GwLog::LOG,"configured sensor %s, status %d",sensor->prefix.c_str(),(int)sensor->ok);
-        this->push_back(sensor);
-    }
+    void add(SensorBase::Ptr sensor);
     using std::vector<SensorBase::Ptr>::vector;
 };
 
 
 #define CFG_GET(name,prefix) \
     cfg->getValue(name, GwConfigDefinitions::prefix ## name)
+
     
 #endif

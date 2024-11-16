@@ -133,39 +133,31 @@ class BMP280Config : public IICSensorBase{
 static IICSensorBase::Creator creator([](GwApi *api, const String &prfx){
     return new BMP280Config(api,prfx);
 });
-IICSensorBase::Creator registerBMP280(GwApi *api,IICSensorList &sensors){
+IICSensorBase::Creator registerBMP280(GwApi *api){
     #if defined(GWBMP280) || defined(GWBMP28011)
     {   
-        auto *cfg=creator(api,PRFX1);
-        //BMP280Config *cfg=new BMP280Config(api,PRFX1);
-        sensors.add(api,cfg);
+        api->addSensor(creator(api,PRFX1));
         CHECK_IIC1();
         #pragma message "GWBMP28011 defined"
     }
     #endif
     #if defined(GWBMP28012)
     {
-        auto *cfg=creator(api,PRFX2);
-        //BMP280Config *cfg=new BMP280Config(api,PRFX2);
-        sensors.add(api,cfg);
+        api->addSensor(creator(api,PRFX2));
         CHECK_IIC1();
         #pragma message "GWBMP28012 defined"
     }
     #endif
     #if defined(GWBMP28021)
     {
-        auto *cfg=creator(api,PRFX3);
-        //BMP280Config *cfg=new BMP280Config(api,PRFX3);
-        sensors.add(api,cfg);
+        api->addSensor(creator(api,PRFX3));
         CHECK_IIC2();
         #pragma message "GWBMP28021 defined"
     }
     #endif
     #if defined(GWBMP28022)
     {
-        auto *cfg=creator(api,PRFX4);
-        //BMP280Config *cfg=new BMP280Config(api,PRFX4);
-        sensors.add(api,cfg);
+        api->addSensor(creator(api,PRFX4));
         CHECK_IIC1();
         #pragma message "GWBMP28022 defined"
     }
@@ -173,7 +165,7 @@ IICSensorBase::Creator registerBMP280(GwApi *api,IICSensorList &sensors){
     return creator;
 }
 #else
-IICSensorBase::Creator registerBMP280(GwApi *api,IICSensorList &sensors){
+IICSensorBase::Creator registerBMP280(GwApi *api){
    return IICSensorBase::Creator();
 }
 

@@ -16,7 +16,7 @@
 #ifndef _GWSPISENSOR_H
 #define _GWSPISENSOR_H
 #include <driver/spi_master.h>
-#include "GwSensor.h"
+#include "GwApi.h"
 #include <memory>
 
 class SPIBus{

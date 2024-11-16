@@ -109,36 +109,32 @@ class SHT3XConfig : public IICSensorBase{
 IICSensorBase::Creator creator=[](GwApi *api,const String &prfx){
     return new SHT3XConfig(api,prfx);
 };
-IICSensorBase::Creator registerSHT3X(GwApi *api,IICSensorList &sensors){
+IICSensorBase::Creator registerSHT3X(GwApi *api){
     GwLog *logger=api->getLogger();
     #if defined(GWSHT3X) || defined (GWSHT3X11)
     {
-        auto *scfg=creator(api,PRFX1);
-        sensors.add(api,scfg);
+        api->addSensor(creator(api,PRFX1));
         CHECK_IIC1();
         #pragma message "GWSHT3X11 defined"
     }
     #endif
     #if defined(GWSHT3X12)
     {
-        auto *scfg=creator(api,PRFX2);
-        sensors.add(api,scfg);
+        api->addSensor(creator(api,PRFX2));
         CHECK_IIC1();
         #pragma message "GWSHT3X12 defined"
     }
     #endif
     #if defined(GWSHT3X21)
     {
-        auto *scfg=creator(api,PRFX3);
-        sensors.add(api,scfg);
+        api->addSensor(creator(api,PRFX3));
         CHECK_IIC2();
         #pragma message "GWSHT3X21 defined"
     }
     #endif
     #if defined(GWSHT3X22)
     {
-        auto *scfg=creator(api,PRFX4);
-        sensors.add(api,scfg);
+        api->addSensor(creator(api,PRFX4));
         CHECK_IIC2();
         #pragma message "GWSHT3X22 defined"
     }
@@ -147,7 +143,7 @@ IICSensorBase::Creator registerSHT3X(GwApi *api,IICSensorList &sensors){
 };
 
 #else
-IICSensorBase::Creator registerSHT3X(GwApi *api,IICSensorList &sensors){
+IICSensorBase::Creator registerSHT3X(GwApi *api){
     return IICSensorBase::Creator();
 }
 
