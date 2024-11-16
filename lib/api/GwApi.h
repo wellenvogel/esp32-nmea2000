@@ -43,11 +43,7 @@ class GwApi{
          * the core part will not handle this data at all but
          * this interface ensures that there is a correct locking of the
          * data to correctly handle multi threading
-         * The user code should not use this intterface directly
-         * but instead it should use the static functions
-         * apiGetXXX(GwApi *,...)
-         * apiSetXXX(GwApi *,...)
-         * that will be created by the macro DECLARE_TASK_INTERFACE
+         * there is no protection - i.e. every task can get and set the data
          */
         class TaskInterfaces
         {
@@ -61,9 +57,8 @@ class GwApi{
             };
             using Ptr = std::shared_ptr<Base>;
         protected:
-            virtual bool iset(const String &file, const String &name, Ptr v) = 0;
+            virtual bool iset(const String &name, Ptr v) = 0;
             virtual Ptr iget(const String &name, int &result) = 0;
-            virtual bool iclaim(const String &name, const String &task)=0;
         public:
             template <typename T>
             bool set(const T &v){
@@ -76,7 +71,7 @@ class GwApi{
             }
             template <typename T>
             bool claim(const String &task){
-                return false;
+                return true;
             }
         };
         class Status{
@@ -255,27 +250,20 @@ static void checkDef(T... args){};
  *          int ival2=99;
  *          String sval="unset";
  * };
- * DECLARE_TASKIF(testTask,TestTaskApi);
- * The macro will generate 2 static funtions:
+ * DECLARE_TASKIF(TestTaskApi);
  * 
- * bool apiSetTestTaskApi(GwApi *api, const TestTaskApi &v);
- * TestTaskApi apiGetTestTaskApi(GwApi *api, int &result);
- * 
- * The setter will return true on success.
- * It is intended to be used by the task that did declare the api.
- * The getter will set the result to -1 if no data is available, otherwise
- * it will return the update count (so you can check if there was a change 
- * compared to the last call).
  * It is intended to be used by any task.
  * Be aware that all the apis share a common namespace - so be sure to somehow
  * make your API names unique.
- * 
+ * To utilize this interface a task can call:
+ * api->taskInterfaces()->get<TestTaskApi>(res) //and check the result in res
+ * api->taskInterfaces()->set<TestTaskApi>(value)
  * 
 */
 #define DECLARE_TASKIF_IMPL(type) \
     template<> \
     inline bool GwApi::TaskInterfaces::set(const type & v) {\
-        return iset(__FILE__,#type,GwApi::TaskInterfaces::Ptr(new type(v))); \
+        return iset(#type,GwApi::TaskInterfaces::Ptr(new type(v))); \
     }\
     template<> \
     inline type GwApi::TaskInterfaces::get<type>(int &result) {\
@@ -286,11 +274,7 @@ static void checkDef(T... args){};
         }\
         type *tp=(type*)ptr.get(); \
         return type(*tp); \
-    }\
-    template<> \
-    inline bool GwApi::TaskInterfaces::claim<type>(const String &task) {\
-        return iclaim(#type,task);\
-    }\
+    }
 
 #ifndef DECLARE_TASKIF
     #define DECLARE_TASKIF(type) DECLARE_TASKIF_IMPL(type)

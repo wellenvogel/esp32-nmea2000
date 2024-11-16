@@ -65,7 +65,7 @@ static void addGroveItems(std::vector<IICSensorBase::Creator> &creators,GwApi *a
                 if (scfg->ok)
                 {
                     LOG_DEBUG(GwLog::LOG, "adding %s from grove config", prfx.c_str());
-                    sensors.add(api, scfg);
+                    sensors.add(api, SensorBase::Ptr(scfg));
                     found=true;
                     break;
                 }

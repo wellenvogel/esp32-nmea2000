@@ -849,7 +849,7 @@ void setup() {
                               buffer[29]=0;
                               request->send(200,"text/plain",buffer);    
   });
-  webserver.registerHandler((USERPREFIX+"*").c_str(),[&USERPREFIX](AsyncWebServerRequest *req){
+  webserver.registerHandler((USERPREFIX+"*").c_str(),[](AsyncWebServerRequest *req){
                               String turl=req->url().substring(USERPREFIX.length());
                               logger.logDebug(GwLog::DEBUG,"user web request for %s",turl.c_str());
                               userCodeHandler.handleWebRequest(turl,req);

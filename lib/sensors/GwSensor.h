@@ -16,6 +16,7 @@
 #define _GWSENSORS_H
 #include "GwApi.h"
 #include "GwLog.h"
+#include <memory>
 class SensorBase{
     public:
     using BusType=enum{
@@ -23,6 +24,7 @@ class SensorBase{
         SPI=1,
         UNKNOWN=-1
     };
+    using Ptr=std::shared_ptr<SensorBase>;
     BusType busType=BusType::UNKNOWN;
     int busId=0;
     int iid=99; //N2K instanceId
@@ -59,14 +61,14 @@ class SensorTemplate : public SensorBase{
 };
 
 
-class SensorList : public std::vector<SensorBase*>{
+class SensorList : public std::vector<SensorBase::Ptr>{
     public:
-    void add(GwApi *api, SensorBase *sensor){
+    void add(GwApi *api, SensorBase::Ptr sensor){
         sensor->readConfig(api->getConfig());
         api->getLogger()->logDebug(GwLog::LOG,"configured sensor %s, status %d",sensor->prefix.c_str(),(int)sensor->ok);
         this->push_back(sensor);
     }
-    using std::vector<SensorBase*>::vector;
+    using std::vector<SensorBase::Ptr>::vector;
 };
 
 

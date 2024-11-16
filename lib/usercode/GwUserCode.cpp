@@ -5,7 +5,7 @@
 #define DECLARE_STRING_CAPABILITY(name,value) GwUserCapability __CAP##name##__(#name,value); 
 #define DECLARE_TASKIF(type) \
     DECLARE_TASKIF_IMPL(type) \
-    GwIreg __register##type(__FILE__,#type)
+    static int __taskInterface##type=0; //avoid duplicate declarations
 
 #include "GwUserCode.h"
 #include "GwSynchronized.h"
@@ -28,45 +28,6 @@ bool taskExists(V &list, const String &name){
     }
     return false;
 }
-class RegEntry{
-    public:
-    String file;
-    String task;
-    RegEntry(const String &t, const String &f):file(f),task(t){}
-    RegEntry(){}
-};
-using RegMap=std::map<String,RegEntry>;
-static RegMap &registrations(){
-    static RegMap *regMap=new RegMap();
-    return *regMap;
-} 
-
-static void registerInterface(const String &task,const String &file, const String &name){
-    auto it=registrations().find(name);
-    if (it != registrations().end()){
-        if (it->second.file != file){
-            ESP_LOGE("Assert","type %s redefined in %s original in %s",name,file,it->second.file);
-            std::abort(); 
-        };
-        if (it->second.task != task){
-            ESP_LOGE("Assert","type %s registered for multiple tasks %s and %s",name,task,it->second.task);
-            std::abort(); 
-        };
-    }   
-    else{
-        registrations()[name]=RegEntry(task,file);
-    }
-}
-
-class GwIreg{
-    public:
-        GwIreg(const String &file, const String &name){
-            registerInterface("",file,name);
-        }
-    };
-
-
-
 class GwUserTaskDef{
     public:
         GwUserTaskDef(TaskFunction_t task,String name, int stackSize=2000){
@@ -112,21 +73,8 @@ class TaskInterfacesStorage{
             logger(l){
                 lock=xSemaphoreCreateMutex();
             }
-        bool set(const String &file, const String &name, const String &task,GwApi::TaskInterfaces::Ptr v){
+        bool set(const String &name, GwApi::TaskInterfaces::Ptr v){
             GWSYNCHRONIZED(&lock);
-            auto it=registrations().find(name);
-            if (it == registrations().end()){
-                LOG_DEBUG(GwLog::ERROR,"TaskInterfaces: invalid set %s not known",name.c_str());
-                return false;
-            }
-            if (it->second.file != file){
-                LOG_DEBUG(GwLog::ERROR,"TaskInterfaces: invalid set %s wrong file, expected %s , got %s",name.c_str(),it->second.file.c_str(),file.c_str());
-                return false;
-            }
-            if (it->second.task != task){
-                LOG_DEBUG(GwLog::ERROR,"TaskInterfaces: invalid set %s wrong task, expected %s , got %s",name.c_str(),it->second.task.c_str(),task.c_str());
-                return false;
-            }
             auto vit=values.find(name);
             if (vit != values.end()){
                 vit->second.updates++;
@@ -153,33 +101,19 @@ class TaskInterfacesStorage{
         } 
 };    
 class TaskInterfacesImpl : public GwApi::TaskInterfaces{
-    String task;
+
     TaskInterfacesStorage *storage;
     GwLog *logger;
     bool isInit=false;
     public:
-        TaskInterfacesImpl(const String &n,TaskInterfacesStorage *s, GwLog *l,bool i):
-            task(n),storage(s),isInit(i),logger(l){}
-        virtual bool iset(const String &file, const String &name, Ptr v){
-            return storage->set(file,name,task,v);
+        TaskInterfacesImpl(TaskInterfacesStorage *s, GwLog *l,bool i):
+            storage(s),isInit(i),logger(l){}
+    protected:
+        virtual bool iset(const String &name, Ptr v){
+            return storage->set(name,v);
         }
         virtual Ptr iget(const String &name, int &result){
             return storage->get(name,result);
-        }
-        virtual bool iclaim(const String &name, const String &task){
-            if (! isInit) return false;
-            auto it=registrations().find(name);
-            if (it == registrations().end()){
-                LOG_DEBUG(GwLog::ERROR,"unable to claim interface %s for task %s, not registered",name.c_str(),task.c_str());
-                return false;
-            }
-            if (!it->second.task.isEmpty()){
-                LOG_DEBUG(GwLog::ERROR,"unable to claim interface %s for task %s, already claimed by %s",name.c_str(),task.c_str(),it->second.task.c_str());
-                return false;
-            }
-            it->second.task=task;
-            LOG_DEBUG(GwLog::LOG,"claimed interface %s for task %s",name.c_str(),task.c_str());
-            return true;
         }
 };
 
@@ -210,7 +144,7 @@ public:
         this->mainLock=mainLock;
         this->name=name;
         localLock=xSemaphoreCreateMutex();
-        interfaces=new TaskInterfacesImpl(name,s,api->getLogger(),init);
+        interfaces=new TaskInterfacesImpl(s,api->getLogger(),init);
         isInit=init;
     }
     virtual GwRequestQueue *getQueue()
