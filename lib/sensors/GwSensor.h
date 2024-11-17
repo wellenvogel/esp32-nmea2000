@@ -14,6 +14,7 @@
 */
 #ifndef _GWSENSORS_H
 #define _GWSENSORS_H
+#include "GwConfigItem.h"
 #include <Arduino.h>
 #include <memory>
 #include <vector>
@@ -68,6 +69,62 @@ class SensorList : public std::vector<SensorBase::Ptr>{
     void add(SensorBase::Ptr sensor);
     using std::vector<SensorBase::Ptr>::vector;
 };
+
+/**
+ * helper classes for a simplified sensor configuration
+ * by creating a list of type GwSensorConfigInitializerList<SensorClass> we can populate
+ * it by static instances of GwSensorConfigInitializer (using GWSENSORCONFIG ) that each has
+ * a function that populates the sensor config from the config data. 
+ * For using sensors this is not really necessary - but it can simplify the code for a sensor
+ * if you want to support a couple of instances on different buses. 
+ * By using this approach you still can write functions using the CFG_SGET macros that will check
+ * your config definitions at compile time.
+ * 
+*/
+template <typename T>
+class GwSensorConfig{
+    public:
+    using ReadConfig=std::function<void(T*,GwConfigHandler*)>;
+    ReadConfig configReader;
+    String prefix;
+    GwSensorConfig(const String &prfx,ReadConfig f):prefix(prfx),configReader(f){
+    }
+    bool readConfig(T* s,GwConfigHandler *cfg){
+        if (s == nullptr) return false;
+        configReader(s,cfg);
+        return s->ok;
+    }
+};
+
+template<typename T>
+class GwSensorConfigInitializer : public GwInitializer<GwSensorConfig<T>>{
+    public:
+    using GwInitializer<GwSensorConfig<T>>::GwInitializer;
+};
+template<typename T>
+class GwSensorConfigInitializerList : public GwInitializer<GwSensorConfig<T>>::List{
+    public:
+    using GwInitializer<GwSensorConfig<T>>::List::List;
+    bool readConfig(T *s,GwConfigHandler *cfg){
+        for (auto &&scfg:*this){
+            if (scfg.readConfig(s,cfg)) return true;
+        }
+        return false;
+    }
+    bool knowsPrefix(const String &prefix){
+        for (auto &&scfg:*this){
+            if (scfg.prefix == prefix) return true;
+        }
+        return false;
+    }
+};
+
+#define CFG_SGET(s, name, prefix) \
+    cfg->getValue(s->name, GwConfigDefinitions::prefix##name)
+
+#define GWSENSORCONFIG(list,type,prefix,initFunction) \
+    GwSensorConfigInitializer<type> __init ## type ## prefix(list,GwSensorConfig<type>(#prefix,initFunction));
+
 
 
 #define CFG_GET(name,prefix) \

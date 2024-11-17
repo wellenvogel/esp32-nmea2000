@@ -60,6 +60,7 @@ static void addGroveItems(std::vector<IICSensorBase::Creator> &creators,GwApi *a
             {
                 if (! creator) continue;
                 auto *scfg = creator(api, prfx);
+                if (scfg == nullptr) continue;
                 scfg->readConfig(api->getConfig());
                 if (scfg->ok)
                 {
