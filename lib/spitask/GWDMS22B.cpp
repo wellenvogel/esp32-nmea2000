@@ -83,7 +83,7 @@ class GWDMS22B : public SSISensor{
     bool invt=false;
     String zeroConfigName;
     public:
-    GWDMS22B(GwApi *api,const String &prfx, int host):SSISensor("DMS22B",api,prfx,host){}
+    GWDMS22B(GwApi *api,const String &prfx, int host):SSISensor(api,prfx,host){}
     virtual bool preinit(GwApi * api){
         GwLog *logger=api->getLogger();
         LOG_DEBUG(GwLog::LOG,"DMS22B configured, prefix=%s, intv=%f, active=%d",prefix.c_str(),fintv,(int)act);

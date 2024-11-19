@@ -25,7 +25,7 @@
 class BMP280Config;
 GwSensorConfigInitializerList<BMP280Config> configs;
 
-class BMP280Config : public IICSensorBase{
+class BMP280Config : public IICSensorBase<BMP280Config>{
     public:
     bool prAct=true;
     bool tmAct=true;
@@ -38,8 +38,7 @@ class BMP280Config : public IICSensorBase{
     float prOff=0;
     Adafruit_BMP280 *device=nullptr;
     uint32_t sensorId=-1;
-    BMP280Config(GwApi * api, const String &prfx):IICSensorBase("BMP280",api,prfx){
-    }
+    using IICSensorBase<BMP280Config>::IICSensorBase;
     virtual bool isActive(){return prAct||tmAct;}
     virtual bool initDevice(GwApi *api,TwoWire *wire){
         GwLog *logger=api->getLogger();  
@@ -98,13 +97,13 @@ class BMP280Config : public IICSensorBase{
 };
 
 
-static IICSensorBase::Creator creator([](GwApi *api, const String &prfx)->BMP280Config*{
+static SensorBase::Creator creator([](GwApi *api, const String &prfx)->BMP280Config*{
     if (! configs.knowsPrefix(prfx)){
         return nullptr;
     }
     return new BMP280Config(api,prfx);
 });
-IICSensorBase::Creator registerBMP280(GwApi *api){
+SensorBase::Creator registerBMP280(GwApi *api){
     #if defined(GWBMP280) || defined(GWBMP28011)
     {   
         api->addSensor(creator(api,"BMP28011"));
@@ -171,8 +170,8 @@ SCBMP280(configs, BMP28021, 2, 0x76);
 SCBMP280(configs, BMP28022, 2, 0x77);
 
 #else
-IICSensorBase::Creator registerBMP280(GwApi *api){
-   return IICSensorBase::Creator();
+SensorBase::Creator registerBMP280(GwApi *api){
+   return SensorBase::Creator();
 }
 
 #endif

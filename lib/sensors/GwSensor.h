@@ -33,12 +33,10 @@ class SensorBase{
     int iid=99; //N2K instanceId
     int addr=-1;
     const String prefix;
-    const String type;
     long intv=0;
     bool ok=false;
-    virtual void readConfig(GwConfigHandler *cfg)=0;
-    SensorBase(BusType bt,const String &tn,GwApi *api,const String &prfx)
-        :busType(bt),type(tn),prefix(prfx){
+    SensorBase(BusType bt,GwApi *api,const String &prfx)
+        :busType(bt),prefix(prfx){
     }
     using Creator=std::function<SensorBase *(GwApi *api,const String &prfx)>;
     virtual bool isActive(){return false;};
@@ -46,12 +44,18 @@ class SensorBase{
     virtual bool preinit(GwApi * api){return false;}
     virtual void measure(GwApi * api,void *bus, int counterId){};
     virtual ~SensorBase(){}
+    virtual void readConfig(GwConfigHandler *cfg)=0;
+
 };
-template<typename BUS,SensorBase::BusType bt>
+template<typename BUS,SensorBase::BusType bt,typename Sensor>
 class SensorTemplate : public SensorBase{
     public:
-    SensorTemplate(const String &tn,GwApi *api,const String &prfx)
-        :SensorBase(bt,tn,api,prfx){}
+    using ConfigReader=std::function<bool(Sensor *,GwConfigHandler *)>;
+    protected:
+    ConfigReader configReader;
+    public:
+    SensorTemplate(GwApi *api,const String &prfx)
+        :SensorBase(bt,api,prfx){}
     virtual bool initDevice(GwApi *api,BUS *bus){return false;};
     virtual bool initDevice(GwApi *api,void *bus){
         if (busType != bt) return false;
@@ -61,6 +65,16 @@ class SensorTemplate : public SensorBase{
         if (busType != bt) return;
         measure(api,(BUS*)bus,counterId);
     };
+    virtual void setConfigReader(ConfigReader r){
+        configReader=r;
+    }
+    protected:
+    bool configFromReader(Sensor *s, GwConfigHandler *cfg){
+        if (configReader){
+            return configReader(s,cfg);
+        }
+        return false;
+    }
 };
 
 

@@ -146,10 +146,10 @@ class BME280Config : public IICSensorBase{
     }
 };
 
-static IICSensorBase::Creator creator([](GwApi *api, const String &prfx){
+static SensorBase::Creator creator([](GwApi *api, const String &prfx){
     return new BME280Config(api,prfx);
 });
-IICSensorBase::Creator registerBME280(GwApi *api){
+SensorBase::Creator registerBME280(GwApi *api){
     #if defined(GWBME280) || defined(GWBME28011)
     {
         api->addSensor(creator(api,PRFX1));
@@ -181,8 +181,8 @@ IICSensorBase::Creator registerBME280(GwApi *api){
     return creator;
 }
 #else
-IICSensorBase::Creator registerBME280(GwApi *api){ 
-    return IICSensorBase::Creator(); 
+SensorBase::Creator registerBME280(GwApi *api){ 
+    return SensorBase::Creator(); 
 }
 
 #endif

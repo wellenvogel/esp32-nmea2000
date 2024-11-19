@@ -43,7 +43,7 @@ static std::vector<IICGrove> iicGroveList;
 
 void runIicTask(GwApi *api);
 
-static void addGroveItems(std::vector<IICSensorBase::Creator> &creators,GwApi *api, const String &bus,const String &grove, int, int)
+static void addGroveItems(std::vector<SensorBase::Creator> &creators,GwApi *api, const String &bus,const String &grove, int, int)
 {
     GwLog *logger=api->getLogger();
     for (auto &&init : iicGroveList)
@@ -71,7 +71,7 @@ static void addGroveItems(std::vector<IICSensorBase::Creator> &creators,GwApi *a
                 }
                 else
                 {
-                    LOG_DEBUG(GwLog::DEBUG, "unmatched grove sensor config %s for %s", prfx.c_str(), scfg->type.c_str());
+                    LOG_DEBUG(GwLog::DEBUG, "unmatched grove sensor config %s", prfx.c_str());
                     delete scfg;
                 }
             }
@@ -89,7 +89,7 @@ void initIicTask(GwApi *api){
     #else
     bool addTask=false;
     GwConfigHandler *config=api->getConfig();
-    std::vector<IICSensorBase::Creator> creators;
+    std::vector<SensorBase::Creator> creators;
     creators.push_back(registerSHT3X(api));
     creators.push_back(registerQMP6988(api));
     creators.push_back(registerBME280(api));

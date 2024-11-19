@@ -106,10 +106,10 @@ class SHT3XConfig : public IICSensorBase{
         intv*=1000;
     }
 };
-IICSensorBase::Creator creator=[](GwApi *api,const String &prfx){
+SensorBase::Creator creator=[](GwApi *api,const String &prfx){
     return new SHT3XConfig(api,prfx);
 };
-IICSensorBase::Creator registerSHT3X(GwApi *api){
+SensorBase::Creator registerSHT3X(GwApi *api){
     GwLog *logger=api->getLogger();
     #if defined(GWSHT3X) || defined (GWSHT3X11)
     {
@@ -143,8 +143,8 @@ IICSensorBase::Creator registerSHT3X(GwApi *api){
 };
 
 #else
-IICSensorBase::Creator registerSHT3X(GwApi *api){
-    return IICSensorBase::Creator();
+SensorBase::Creator registerSHT3X(GwApi *api){
+    return SensorBase::Creator();
 }
 
 #endif

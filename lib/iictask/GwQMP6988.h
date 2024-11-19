@@ -16,5 +16,5 @@
 #ifdef _GWQMP6988
     #include "QMP6988.h"
 #endif
-IICSensorBase::Creator registerQMP6988(GwApi *api);
+SensorBase::Creator registerQMP6988(GwApi *api);
 #endif

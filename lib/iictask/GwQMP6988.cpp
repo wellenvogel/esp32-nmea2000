@@ -79,10 +79,10 @@ class QMP6988Config : public IICSensorBase{
 
         }
 };
-static IICSensorBase::Creator creator=[](GwApi *api,const String &prfx){
+static SensorBase::Creator creator=[](GwApi *api,const String &prfx){
     return new QMP6988Config(api,prfx);
 };
-IICSensorBase::Creator registerQMP6988(GwApi *api,IICSensorList &sensors){
+SensorBase::Creator registerQMP6988(GwApi *api,IICSensorList &sensors){
     GwLog *logger=api->getLogger();
     #if defined(GWQMP6988) || defined(GWQMP698811)
     {
@@ -116,7 +116,7 @@ IICSensorBase::Creator registerQMP6988(GwApi *api,IICSensorList &sensors){
 }
 
 #else
-    IICSensorBase::Creator registerQMP6988(GwApi *api){
-        return IICSensorBase::Creator();
+    SensorBase::Creator registerQMP6988(GwApi *api){
+        return SensorBase::Creator();
     }
 #endif

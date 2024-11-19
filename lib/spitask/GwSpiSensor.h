@@ -90,7 +90,7 @@ class SSIDevice{
 };
 
 
-class SSISensor : public SensorTemplate<BUSTYPE,SensorBase::SPI>{
+class SSISensor : public SensorTemplate<BUSTYPE,SensorBase::SPI, SSISensor>{
     std::unique_ptr<SSIDevice> device;
     protected:
     int bits=12;
@@ -125,7 +125,7 @@ class SSISensor : public SensorTemplate<BUSTYPE,SensorBase::SPI>{
         }
 
     public:
-    SSISensor(const String &type,GwApi *api,const String &prfx, int host):SensorTemplate<BUSTYPE,SensorBase::SPI>(type,api,prfx)
+    SSISensor(GwApi *api,const String &prfx, int host):SensorTemplate<BUSTYPE,SensorBase::SPI,SSISensor>(api,prfx)
     {
         busId=host;
     }
