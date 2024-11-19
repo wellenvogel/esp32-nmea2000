@@ -23,9 +23,9 @@
  */
 
 class BMP280Config;
-GwSensorConfigInitializerList<BMP280Config> configs;
+static GwSensorConfigInitializerList<BMP280Config> configs;
 
-class BMP280Config : public IICSensorBase<BMP280Config>{
+class BMP280Config : public IICSensorBase{
     public:
     bool prAct=true;
     bool tmAct=true;
@@ -38,7 +38,7 @@ class BMP280Config : public IICSensorBase<BMP280Config>{
     float prOff=0;
     Adafruit_BMP280 *device=nullptr;
     uint32_t sensorId=-1;
-    using IICSensorBase<BMP280Config>::IICSensorBase;
+    using IICSensorBase::IICSensorBase;
     virtual bool isActive(){return prAct||tmAct;}
     virtual bool initDevice(GwApi *api,TwoWire *wire){
         GwLog *logger=api->getLogger();  
@@ -92,6 +92,7 @@ class BMP280Config : public IICSensorBase<BMP280Config>{
     
     virtual void readConfig(GwConfigHandler *cfg) override
     {
+        if (ok) return;
         configs.readConfig(this,cfg);
     }
 };

@@ -47,12 +47,8 @@ class SensorBase{
     virtual void readConfig(GwConfigHandler *cfg)=0;
 
 };
-template<typename BUS,SensorBase::BusType bt,typename Sensor>
+template<typename BUS,SensorBase::BusType bt>
 class SensorTemplate : public SensorBase{
-    public:
-    using ConfigReader=std::function<bool(Sensor *,GwConfigHandler *)>;
-    protected:
-    ConfigReader configReader;
     public:
     SensorTemplate(GwApi *api,const String &prfx)
         :SensorBase(bt,api,prfx){}
@@ -65,16 +61,6 @@ class SensorTemplate : public SensorBase{
         if (busType != bt) return;
         measure(api,(BUS*)bus,counterId);
     };
-    virtual void setConfigReader(ConfigReader r){
-        configReader=r;
-    }
-    protected:
-    bool configFromReader(Sensor *s, GwConfigHandler *cfg){
-        if (configReader){
-            return configReader(s,cfg);
-        }
-        return false;
-    }
 };
 
 

@@ -13,8 +13,7 @@
 
 using BUSTYPE=TwoWire;
 using IICSensorList=SensorList;
-template<typename Sensor>
-using IICSensorBase=SensorTemplate<BUSTYPE,SensorBase::IIC,Sensor>;
+using IICSensorBase=SensorTemplate<BUSTYPE,SensorBase::IIC>;
 
 
 template <class CFG>
