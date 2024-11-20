@@ -182,7 +182,7 @@ public:
 
     // utility functions:
     static uint8_t readRegister(uint8_t address);
-    static uint8_t writeRegister(uint8_t address, uint8_t value);
+    static void writeRegister(uint8_t address, uint8_t value);
     static uint8_t bcd2bin (uint8_t val) { return val - 6 * (val >> 4); }
     static uint8_t bin2bcd (uint8_t val) { return val + 6 * (val / 10); }
 };
