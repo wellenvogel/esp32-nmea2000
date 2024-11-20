@@ -127,7 +127,7 @@ public:
         }
         
         // Logging voltage value
-        if (raw == NULL) return;
+        if (raw == 0) return;
         LOG_DEBUG(GwLog::LOG,"Drawing at PageVoltage, Type:%s %s:=%f", batType, name1.c_str(), raw);
 
         // Draw page
