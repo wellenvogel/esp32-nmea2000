@@ -70,7 +70,9 @@ public:
         else{
             svalue1 = String(value1/(2*PI)*360,0);
         }
-
+        if(valid1 == true){
+           svalue1old = svalue1;                                       // Save the old value
+        }
         // Get boat values for pitch
         GwApi::BoatValue *bvalue2 = pageData.values[1]; // Second element in list (xdrPitch)
         String name2 = xdrDelete(bvalue2->getName());   // Value name
@@ -92,6 +94,9 @@ public:
         }
         else{
             svalue2 = String(value2/(2*PI)*360,0);
+        }
+        if(valid2 == true){
+           svalue2old = svalue2;                                       // Save the old value
         }
 
         // Optical warning by limit violation
@@ -135,6 +140,8 @@ public:
         getdisplay().setFont(&DSEG7Classic_BoldItalic20pt7b);
         getdisplay().setCursor(10, 65);
         getdisplay().print(rolllimit);                   // Value
+        //getdisplay().print(svalue1);                   // Value
+
         getdisplay().setFont(&Ubuntu_Bold12pt7b);
         getdisplay().setCursor(10, 95);
         getdisplay().print("Limit");                     // Name
@@ -353,6 +360,7 @@ PageDescription registerPageRollPitch(
     "RollPitch",        // Page name
     createPage,         // Action
     0,                  // Number of bus values depends on selection in Web configuration
+   // {"xdrROLL", "xdrPTCH"},// Bus values we need in the page
     {"xdrRoll", "xdrPitch"},// Bus values we need in the page
     true                // Show display header on/off
 );
