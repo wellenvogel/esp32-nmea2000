@@ -70,7 +70,9 @@ public:
         else{
             svalue1 = String(value1/(2*PI)*360,0);
         }
-
+        if(valid1 == true){
+           svalue1old = svalue1;                                       // Save the old value
+        }
         // Get boat values for pitch
         GwApi::BoatValue *bvalue2 = pageData.values[1]; // Second element in list (xdrPitch)
         String name2 = xdrDelete(bvalue2->getName());   // Value name
@@ -92,6 +94,9 @@ public:
         }
         else{
             svalue2 = String(value2/(2*PI)*360,0);
+        }
+         if(valid2 == true){
+           svalue2old = svalue2;                                       // Save the old value
         }
 
         // Optical warning by limit violation
