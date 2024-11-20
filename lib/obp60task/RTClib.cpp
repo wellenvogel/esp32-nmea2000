@@ -486,7 +486,7 @@ uint8_t RTC_BQ32000::readRegister(uint8_t address) {
     return Wire.read();
 }
 
-uint8_t RTC_BQ32000::writeRegister(uint8_t address, uint8_t value) {
+void RTC_BQ32000::writeRegister(uint8_t address, uint8_t value) {
     /* Write the given value to the register at the given address.
      */
     Wire.beginTransmission(BQ32000_ADDRESS);
