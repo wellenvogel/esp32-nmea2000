@@ -102,6 +102,15 @@ void sendN2kTemperature(GwApi *api,CFG &cfg,double value, int counterId){
     api->increment(counterId,cfg.prefix+String("temp"));
 }
 
+template <class CFG>
+void sendN2kEnvironmentalParameters(GwApi *api,CFG &cfg,double tmValue, double huValue, double prValue, int counterId){
+    tN2kMsg msg;
+    SetN2kEnvironmentalParameters(msg,1,cfg.tmSrc,tmValue,cfg.huSrc,huValue,prValue);
+    api->sendN2kMessage(msg);
+    api->increment(counterId,cfg.prefix+String("hum"));
+    api->increment(counterId,cfg.prefix+String("press"));
+    api->increment(counterId,cfg.prefix+String("temp"));
+}
 
 #ifndef _GWI_IIC1
     #define CHECK_IIC1() checkDef(GWIIC_SCL,GWIIC_SDA)

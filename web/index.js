@@ -76,46 +76,48 @@
         }
         getJson('/api/status')
             .then(function (jsonData) {
+                if (jsonData.salt !== undefined) {
+                    lastSalt=jsonData.salt;
+                    delete jsonData.salt;
+                }
+                if (jsonData.minUser !== undefined){
+                    minUser=jsonData.minUser;
+                    delete jsonData.minUser;
+                }
+                callListeners(api.EVENTS.status,jsonData);
                 let statusPage = document.getElementById('statusPageContent');
                 let even = true; //first counter
-                for (let k in jsonData) {
-                    if (k == "salt") {
-                        lastSalt = jsonData[k];
-                        continue;
-                    }
-                    if (k == "minUser") {
-                        minUser = parseInt(jsonData[k]);
-                        continue;
-                    }
-                    if (!statusPage) continue;
-                    if (typeof (jsonData[k]) === 'object') {
-                        if (k.indexOf('count') == 0) {
-                            createCounterDisplay(statusPage, k.replace("count", "").replace(/in$/, " in").replace(/out$/, " out"), k, even);
-                            even = !even;
-                            for (let sk in jsonData[k]) {
-                                let key = k + "." + sk;
-                                if (typeof (jsonData[k][sk]) === 'object') {
-                                    //msg details
-                                    updateMsgDetails(key, jsonData[k][sk]);
-                                }
-                                else {
-                                    let el = document.getElementById(key);
-                                    if (el) el.textContent = jsonData[k][sk];
+                if (statusPage){
+                    for (let k in jsonData) {
+                        if (typeof (jsonData[k]) === 'object') {
+                            if (k.indexOf('count') == 0) {
+                                createCounterDisplay(statusPage, k.replace("count", "").replace(/in$/, " in").replace(/out$/, " out"), k, even);
+                                even = !even;
+                                for (let sk in jsonData[k]) {
+                                    let key = k + "." + sk;
+                                    if (typeof (jsonData[k][sk]) === 'object') {
+                                        //msg details
+                                        updateMsgDetails(key, jsonData[k][sk]);
+                                    }
+                                    else {
+                                        let el = document.getElementById(key);
+                                        if (el) el.textContent = jsonData[k][sk];
+                                    }
                                 }
                             }
+                            if (k.indexOf("ch") == 0) {
+                                //channel def
+                                let name = k.substring(2);
+                                channelList[name] = jsonData[k];
+                            }
                         }
-                        if (k.indexOf("ch") == 0) {
-                            //channel def
-                            let name = k.substring(2);
-                            channelList[name] = jsonData[k];
+                        else {
+                            let el = document.getElementById(k);
+                            if (el) el.textContent = jsonData[k];
+                            forEl('.status-' + k, function (el) {
+                                el.textContent = jsonData[k];
+                            });
                         }
-                    }
-                    else {
-                        let el = document.getElementById(k);
-                        if (el) el.textContent = jsonData[k];
-                        forEl('.status-' + k, function (el) {
-                            el.textContent = jsonData[k];
-                        });
                     }
                 }
                 lastUpdate = (new Date()).getTime();
@@ -181,6 +183,12 @@
         }
     }
 
+    checkers.checkPort=function(v,allValues,def){
+        let parsed=parseInt(v);
+        if (isNaN(parsed)) return "must be a number";
+        if (parsed <1 || parsed >= 65536) return "port must be in the range 1..65536"; 
+    }
+
     checkers.checkSystemName=function(v) {
         //2...32 characters for ssid
         let allowed = v.replace(/[^a-zA-Z0-9]*/g, '');
@@ -213,13 +221,20 @@
     }
 
     checkers.checkIpAddress=function(v, allValues, def) {
-        if (allValues.tclEnabled != "true") return;
         if (!v) return "cannot be empty";
         if (!v.match(/[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*/)
             && !v.match(/.*\.local/))
             return "must be either in the form 192.168.1.1 or xxx.local";
     }
+    checkers.checkMCAddress=function(v, allValues, def) {
+        if (!v) return "cannot be empty";
+        if (!v.match(/[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*/))
+            return "must be in the form 224.0.0.1";
+        let parts=v.split(".");
+        let o1=parseInt(parts[0]);
+        if (o1 < 224 || o1 > 239) return "mulicast address must be in the range 224.0.0.0 to 239.255.255.255"
 
+    }
     checkers.checkXDR=function(v, allValues) {
         if (!v) return;
         let parts = v.split(',');
@@ -264,21 +279,22 @@
                 continue;
             }
             let check = v.getAttribute('data-check');
-            if (check) {
+            if (check && conditionOk(name)) {
+                let cfgDef=getConfigDefition(name);
                 let checkFunction=checkers[check];
                 if (typeof (checkFunction) === 'function') {
                     if (! loggedChecks[check]){
                         loggedChecks[check]=true;
                         //console.log("check:"+check);
                     }
-                    let res = checkFunction(v.value, allValues, getConfigDefition(name));
+                    let res = checkFunction(v.value, allValues, cfgDef);
                     if (res) {
                         let value = v.value;
                         if (v.type === 'password') value = "******";
                         let label = v.getAttribute('data-label');
                         if (!label) label = v.getAttribute('name');
                         v.classList.add("error");
-                        alert("invalid config for " + label + "(" + value + "):\n" + res);
+                        alert("invalid config for "+cfgDef.category+":" + label + "(" + value + "):\n" + res);
                         return;
                     }
                 }
@@ -368,6 +384,7 @@
                 icon.classList.add('icon-less');
             }
         });
+        callListeners(api.EVENTS.counterDisplayCreated,row);
     }
     function validKey(key) {
         if (!key) return;
@@ -472,10 +489,10 @@
         if (!(condition instanceof Array)) condition = [condition];
         return condition;
     }
-    function checkCondition(element) {
-        let name = element.getAttribute('name');
+
+    function conditionOk(name){
         let condition = getConditions(name);
-        if (!condition) return;
+        if (!condition) return true;
         let visible = false;
         if (!condition instanceof Array) condition = [condition];
         condition.forEach(function (cel) {
@@ -493,7 +510,13 @@
                 }
             }
             if (lvis) visible = true;
-        });
+        }); 
+        return visible;   
+    }
+
+    function checkCondition(element) {
+        let name = element.getAttribute('name');
+        let visible=conditionOk(name);
         let row = closestParent(element, 'row');
         if (!row) return;
         if (visible) row.classList.remove('hidden');
@@ -1051,8 +1074,12 @@
     function formatDateForFilename(usePrefix, d) {
         let rt = "";
         if (usePrefix) {
+            let hdl= document.getElementById('headline');
+            if (hdl){
+                rt=hdl.textContent+"_";
+            }
             let fwt = document.querySelector('.status-fwtype');
-            if (fwt) rt = fwt.textContent;
+            if (fwt) rt += fwt.textContent;
             rt += "_";
         }
         if (!d) d = new Date();
@@ -1972,8 +1999,16 @@
         hideDashboardItem(name); //will recreate it on next data receive
     }
     const api= {
-        registerListener: function (callback) {
-            listeners.push(callback);
+        registerListener: function (callback,opt_event) {
+            if (opt_event === undefined){
+                listeners.push(callback);
+            }
+            else{
+                listeners.push({
+                    event:opt_event,
+                    callback:callback
+                })
+            }
         },
         /**
          * helper for creating dom elements
@@ -2034,17 +2069,26 @@
         parseBoatDataLine: parseBoatDataLine,
         EVENTS: {
             init: 0, //called when capabilities are loaded, data is capabilities
-            tab: 1, //tab page activated data is the id of the tab page
-            config: 2, //data is the config object
-            boatData: 3, //data is the list of boat Data items
+            tab: 1, //tab page activated, data is the id of the tab page
+            config: 2, //called when the config data is loaded,data is the config object
+            boatData: 3, //called when boatData is received, data is the list of boat Data items
             dataItemCreated: 4, //data is an object with
                                 // name: the item name, element: the frame item of the boat data display
+            status: 5, //status received, data is the status object
+            counterDisplayCreated: 6 //data is the row for the display
         }
     };
     function callListeners(event,data){
         listeners.forEach((listener)=>{
             if (typeof(listener) === 'function'){
                 listener(event,data);
+            }
+            else if (typeof(listener) === 'object'){
+                if (listener.event === event){
+                    if (typeof(listener.callback) === 'function'){
+                        listener.callback(event,data);
+                    }
+                }
             }
         })
     }
@@ -2096,14 +2140,6 @@
                 });
             }
         } catch (e) { }
-        let statusPage = document.getElementById('statusPageContent');
-        /*if (statusPage){
-            let even=true;
-            for (let c in counters){
-                createCounterDisplay(statusPage,counters[c],c,even);
-                even=!even;
-            }
-        }*/
         forEl('#uploadFile', function (el) {
             el.addEventListener('change', function (ev) {
                 if (ev.target.files.length < 1) return;

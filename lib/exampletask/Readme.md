@@ -32,6 +32,26 @@ Files
      This file allows to add some config definitions that are needed for our task. For the possible options have a look at the global [config.json](../../web/config.json). Be careful not to overwrite config defitions from the global file. A good practice wood be to prefix the names of definitions with parts of the library name. Always put them in a separate category so that they do not interfere with the system ones.
      The defined config items can later be accessed in the code (see the example in [GwExampleTask.cpp](GwExampleTask.cpp)).
 
+   * [index.js](index.js)<br>
+     You can add javascript code that will contribute to the UI of the system. The WebUI provides a small API that allows you to "hook" into some functions to include your own parts of the UI. This includes adding new tabs, modifying/replacing the data display items, modifying the status display or accessing the config items.
+     For the API refer to [../../web/index.js](../../web/index.js#L2001).
+     To start interacting just register for some events like api.EVENTS.init. You can check the capabilities you have defined to see if your task is active.
+     By registering an own formatter [api.addUserFormatter](../../web/index.js#L2054) you can influence the way boat data items are shown.
+     You can even go for an own display by registering for the event *dataItemCreated* and replace the dom element content with your own html. By additionally having added a user formatter you can now fill your own html with the current value.
+     By using [api.addTabPage](../../web/index.js#L2046) you can add new tabs that you can populate with your own code. Or you can link to an external URL.<br>
+     Please be aware that your js code is always combined with the code from the core into one js file.<br>
+     For fast testing there is a small python script that allow you to test the UI without always flushing each change.
+     Just run it with
+     ```
+     tools/testServer.py nnn http://x.x.x.x/api
+     ```
+     with nnn being the local port and x.x.x.x the address of a running system. Open `http://localhost:nnn` in your browser.<br>
+     After a change just start the compilation and reload the page.
+
+   * [index.css](index.css)<br>
+     You can add own css to influence the styling of the display.
+
+
  Interfaces
  ----------
  The task init function and the task function interact with the core using an [API](../api/GwApi.h) that they get when started.
@@ -50,7 +70,8 @@ Files
  * add capabilities (since 20231105 - as an alternative to a static DECLARE_CAPABILITY )
  * add a user task (since 20231105 - as an alternative to a static DECLARE_USERTASK)
  * store or read task interface data (see below)
-
+ * add a request handler for web requests (since 202411xx) - see registerRequestHandler in the API
+ 
 
  __Interfacing between Task__
 

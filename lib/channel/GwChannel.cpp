@@ -58,8 +58,6 @@ GwChannel::GwChannel(GwLog *logger,
     this->name=name;
     this->sourceId=sourceId;
     this->maxSourceId=maxSourceId;
-    this->countIn=new GwCounter<String>(String("count")+name+String("in"));
-    this->countOut=new GwCounter<String>(String("count")+name+String("out"));
     this->impl=NULL;
     this->receiver=new GwChannelMessageReceiver(logger,this);
     this->actisenseReader=NULL;
@@ -100,6 +98,12 @@ void GwChannel::begin(
             actisenseReader->SetReadStream(channelStream);         
         }
     }
+    if (nmeaIn || readActisense){
+        this->countIn=new GwCounter<String>(String("count")+name+String("in"));
+    }
+    if (nmeaOut || seaSmartOut || writeActisense){
+        this->countOut=new GwCounter<String>(String("count")+name+String("out"));
+    }
 }
 void GwChannel::setImpl(GwChannelInterface *impl){
     this->impl=impl;
@@ -135,10 +139,10 @@ void GwChannel::updateCounter(const char *msg, bool out)
     }
     if (key[0] == 0) return;
     if (out){
-        countOut->add(key);
+        if (countOut) countOut->add(key);
     }
     else{
-        countIn->add(key);
+        if (countIn) countIn->add(key);
     }
 }
 
@@ -209,7 +213,7 @@ void GwChannel::parseActisense(N2kHandler handler){
     tN2kMsg N2kMsg;
 
     while (actisenseReader->GetMessageFromStream(N2kMsg)) {
-      countIn->add(String(N2kMsg.PGN));
+      if(countIn) countIn->add(String(N2kMsg.PGN));
       handler(N2kMsg,sourceId);
     }
 }
@@ -218,14 +222,23 @@ void GwChannel::sendActisense(const tN2kMsg &msg, int sourceId){
     if (!enabled || ! impl || ! writeActisense || ! channelStream) return;
     //currently actisense only for channels with a single source id
     //so we can check it here
-    if (isOwnSource(sourceId)) return;
-    countOut->add(String(msg.PGN)); 
+    if (maxSourceId < 0 && this->sourceId == sourceId) return;
+    if (sourceId >= this->sourceId && sourceId <= maxSourceId) return;
+    if(countOut) countOut->add(String(msg.PGN)); 
     msg.SendInActisenseFormat(channelStream);
 }
 
-bool GwChannel::isOwnSource(int id){
-    if (maxSourceId < 0) return id == sourceId;
-    else return (id >= sourceId && id <= maxSourceId);
+bool GwChannel::overlaps(const GwChannel *other) const{
+    if (maxSourceId < 0){
+        if (other->maxSourceId < 0) return sourceId == other->sourceId;
+        return (other->sourceId <= sourceId && other->maxSourceId >= sourceId);
+    }
+    if (other->maxSourceId < 0){
+        return other->sourceId >= sourceId && other->sourceId <= maxSourceId;
+    }
+    if (other->maxSourceId < sourceId) return false;
+    if (other->sourceId > maxSourceId) return false;
+    return true;
 }
 
 unsigned long GwChannel::countRx(){

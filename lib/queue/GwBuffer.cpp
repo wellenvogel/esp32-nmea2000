@@ -21,7 +21,7 @@ GwBuffer::~GwBuffer(){
 }
 void GwBuffer::reset(String reason)
 {
-    LOG_DEBUG(GwLog::LOG,"reseting buffer %s, reason %s",this->name.c_str(),reason.c_str());
+    if (! reason.isEmpty())LOG_DEBUG(GwLog::LOG,"reseting buffer %s, reason %s",this->name.c_str(),reason.c_str());
     writePointer = buffer;
     readPointer = buffer;
     lp("reset");

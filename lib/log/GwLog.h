@@ -38,5 +38,7 @@ class GwLog{
         long long getRecordCounter(){return recordCounter;}
 };
 #define LOG_DEBUG(level,...){ if (logger != NULL && logger->isActive(level)) logger->logDebug(level,__VA_ARGS__);}
+#define LOG_INFO(...){ if (logger != NULL && logger->isActive(GwLog::LOG)) logger->logDebug(GwLog::LOG,__VA_ARGS__);}
+#define LOG_ERROR(...){ if (logger != NULL && logger->isActive(GwLog::ERROR)) logger->logDebug(GwLog::ERROR,__VA_ARGS__);}
 
 #endif

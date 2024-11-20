@@ -219,7 +219,7 @@ bool SetAISClassBMessage18(tNMEA0183AISMsg &NMEA0183AISMsg, uint8_t MessageID, u
 bool SetAISClassBMessage24PartA(tNMEA0183AISMsg &NMEA0183AISMsg, uint8_t MessageID, uint8_t Repeat, uint32_t UserID, char *Name) {
 
   bool found = false;
-  for (int i = 0; i < vships.size(); i++) {
+  for (size_t i = 0; i < vships.size(); i++) {
     if ( vships[i]->_userID == UserID ) {
       found = true;
       break;
