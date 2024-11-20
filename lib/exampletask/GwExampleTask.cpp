@@ -7,6 +7,7 @@
 #include <vector>
 #include "N2kMessages.h"
 #include "GwXdrTypeMappings.h"
+
 /**
  * INVALID!!! - the next interface declaration will not work
  *              as it is not in the correct header file
@@ -144,6 +145,26 @@ String formatValue(GwApi::BoatValue *value){
     return String(buffer);
 }
 
+class ExampleWebData{
+    SemaphoreHandle_t lock;
+    int data=0;
+    public:
+    ExampleWebData(){
+        lock=xSemaphoreCreateMutex();
+    }
+    ~ExampleWebData(){
+        vSemaphoreDelete(lock);
+    }
+    void set(int v){
+        GWSYNCHRONIZED(&lock);
+        data=v;
+    }
+    int get(){
+        GWSYNCHRONIZED(&lock);
+        return data;
+    }
+};
+
 void exampleTask(GwApi *api){
     GwLog *logger=api->getLogger();
     //get some configuration data
@@ -172,8 +193,24 @@ void exampleTask(GwApi *api){
     LOG_DEBUG(GwLog::LOG,"exampleNotWorking update returned %d",(int)nwrs);
     String voltageTransducer=api->getConfig()->getString(GwConfigDefinitions::exTransducer);
     int voltageInstance=api->getConfig()->getInt(GwConfigDefinitions::exInstanceId);
+    ExampleWebData webData;
+    /**
+     * an example web request handler
+     * it uses a synchronized data structure as it gets called from a different thread
+     * be aware that you must not block for longer times here!
+    */
+    api->registerRequestHandler("data",[&webData](AsyncWebServerRequest *request){
+        int data=webData.get();
+        char buffer[30];
+        snprintf(buffer,29,"%d",data);
+        buffer[29]=0;
+        request->send(200,"text/plain",buffer); 
+    });
+    int loopcounter=0;
     while(true){
         delay(1000);
+        loopcounter++;
+        webData.set(loopcounter);
         /*
         * getting values from the internal data store (boatData) requires some special handling
         * our tasks runs (potentially) at some time on a different core then the main code

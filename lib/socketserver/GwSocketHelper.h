@@ -17,4 +17,12 @@ class GwSocketHelper{
             if (setsockopt(socket, IPPROTO_TCP, TCP_KEEPCNT, &val, sizeof(val)) != ESP_OK) return false;
             return true;  
         }
+        static bool isMulticast(const String &addr){
+            in_addr iaddr;
+            if (inet_pton(AF_INET,addr.c_str(),&iaddr) != 1) return false;
+            return IN_MULTICAST(ntohl(iaddr.s_addr));
+        }
+        static bool equals(const in_addr &left, const in_addr &right){
+            return left.s_addr == right.s_addr;
+        }
 };

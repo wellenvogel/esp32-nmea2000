@@ -50,6 +50,10 @@ For the list of hardware set ups refer to [Hardware](doc/Hardware.md).
 
 There is a couple of prebuild binaries that you can directly flash to your device. For other combinations of hardware there is an [online build service](doc/BuildService.md) that will allow you to select your hardware and trigger a build.
 
+Connectivity
+------------
+For details of the usage of serial devices and the USB connection refer to [Serial and USB](doc/serial-usb.md).<br>
+For details on the networking capabilities refer to [Networking](doc/network.md).
 
 Installation
 ------------
@@ -166,6 +170,30 @@ For details refer to the [example description](lib/exampletask/Readme.md).
 
 Changelog
 ---------
+[20241114](../../releases/tag/20241114)
+**********
+* UDP writer and reader - [#79](../../issues/79)
+* extensions for [user tasks](lib/exampletask/Readme.md)
+  * extend the Web UI with js and css
+  * register handler for Web Requests
+* Naming of the config file [#87](../../issues/87)
+* MTW from PGN130311 [#83](../../issues/83)
+* USB connection on S3 stops [#81](../../issues/81)
+* remove invalid true wind calc, allow to configure some mapping - partly [#75](../../issues/75)
+* correctly parse GSV messages [#50](../../issues/50)
+* minor adaptations from new version [#66](../../issues/66) 
+* new platform version 6.8.1
+* internally restructure the channel handling
+* add docs for [networking](doc/network.md) and [serial/USB](doc/serial-usb.md)
+* allow to configure the timeout(s) for the data display
+* new library versions - nmea2000 4.22.0, nmea0183 1.10.1
+* allow for builds completely without FastLED
+* wipe the nvs partition on factory reset (to handle corrupted config)
+* do not store the wifi settings in nvs on the system level [#78](../../issues/78)
+* rename of data: HDG->HDT, MHDG->HDM
+* adapt crash decoder tool to s3
+* allow to set the Pins used for the USB connection (not S3 with integrated PHY) using GWUSB_TX and GWUSB_RX defines
+
 [20240428](../../releases/tag/20240428)
 **********
 * fix build error with M5 gps kit

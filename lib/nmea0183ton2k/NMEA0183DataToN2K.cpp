@@ -860,7 +860,7 @@ private:
             LOG_DEBUG(GwLog::DEBUG,"GSV invalid current %u %s",current,msg.line);
             return;
         }
-        for (int idx=2;idx < msg.FieldCount();idx+=4){
+        for (int idx=3;idx < msg.FieldCount();idx+=4){
             if (msg.FieldLen(idx) < 1 ||
                 msg.FieldLen(idx+1) < 1 ||
                 msg.FieldLen(idx+2) < 1 ||

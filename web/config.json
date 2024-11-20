@@ -691,6 +691,7 @@
         "label": "TCP port",
         "type": "number",
         "default": "10110",
+        "check":"checkPort",
         "description": "the TCP port we listen on",
         "category": "TCP server"
     },
@@ -766,8 +767,12 @@
         "label": "remote port",
         "type": "number",
         "default": "10110",
+        "check":"checkPort",
         "description": "the TCP port we connect to",
-        "category": "TCP client"
+        "category": "TCP client",
+        "condition":{
+            "tclEnabled":"true"
+        }
     },
     {
         "name": "remoteAddress",
@@ -776,7 +781,10 @@
         "default": "",
         "check": "checkIpAddress",
         "description": "the IP address we connect to in the form 192.168.1.2\nor an MDNS name like ESP32NMEA2K.local",
-        "category": "TCP client"
+        "category": "TCP client",
+        "condition":{
+            "tclEnabled":"true"
+        }
     },
     {
         "name": "sendTCL",
@@ -784,7 +792,10 @@
         "type": "boolean",
         "default": "true",
         "description": "send out NMEA data to remote TCP server",
-        "category": "TCP client"
+        "category": "TCP client",
+        "condition":{
+            "tclEnabled":"true"
+        }
     },
     {
         "name": "readTCL",
@@ -792,7 +803,10 @@
         "type": "boolean",
         "default": "true",
         "description": "receive NMEA data from remote TCP server",
-        "category": "TCP client"
+        "category": "TCP client",
+        "condition":{
+            "tclEnabled":"true"
+        }
     },
     {
         "name": "tclToN2k",
@@ -800,7 +814,10 @@
         "type": "boolean",
         "default": "true",
         "description": "convert NMEA0183 from remote TCP server to NMEA2000",
-        "category": "TCP client"
+        "category": "TCP client",
+        "condition":{
+            "tclEnabled":"true"
+        }
     },
     {
         "name": "tclReadFilter",
@@ -808,7 +825,10 @@
         "type": "filter",
         "default": "",
         "description": "filter for NMEA0183 data when reading from remote TCP server\nselect aison|aisoff, set a whitelist or a blacklist with NMEA sentences like RMC,RMB",
-        "category": "TCP client"
+        "category": "TCP client",
+        "condition":{
+            "tclEnabled":"true"
+        }
     },
     {
         "name": "tclWriteFilter",
@@ -816,7 +836,10 @@
         "type": "filter",
         "default": "",
         "description": "filter for NMEA0183 data when writing to remote TCP server\nselect aison|aisoff, set a whitelist or a blacklist with NMEA sentences like RMC,RMB",
-        "category": "TCP client"
+        "category": "TCP client",
+        "condition":{
+            "tclEnabled":"true"
+        }
     },
     {
         "name": "tclSeasmart",
@@ -824,7 +847,172 @@
         "type": "boolean",
         "default": "false",
         "description": "send NMEA2000 as seasmart to remote TCP server",
-        "category": "TCP client"
+        "category": "TCP client",
+        "condition":{
+            "tclEnabled":"true"
+        }
+    },
+    {
+        "name": "udpwEnabled",
+        "label": "enable",
+        "type": "boolean",
+        "default": "false",
+        "description":"enable the UDP writer",
+        "category":"UDP writer"
+    },
+    {
+        "name": "udpwPort",
+        "label": "remote port",
+        "type": "number",
+        "default": "10110",
+        "description": "the UDP port we send to",
+        "check":"checkPort",
+        "category": "UDP writer",
+        "condition":{
+            "udpwEnabled":"true"
+        }
+    },
+    {
+        "name": "udpwType",
+        "label": "remote address type",
+        "type": "list",
+        "default": "0",
+        "description": "to which networks/addresses do we send\nbc-all: send broadcast to AP and wifi client network\nbc-ap: send broadcast to access point only\nbc-cli: send broadcast to wifi client network\nnormal: normal target address\nmc-all: multicast to AP and wifi client network\nmc-ap:multicast to AP network\nmc-cli: muticast to wifi client network",
+        "list":[
+            {"l":"bc-all","v":"0"},
+            {"l":"bc-ap","v":"1"},
+            {"l":"bc-cli","v":"2"},
+            {"l":"normal","v":"3"},
+            {"l":"mc-all","v":"4"},
+            {"l":"mc-ap","v":"5"},
+            {"l":"mc-cli","v":"6"}
+        ],
+        "category": "UDP writer",
+        "condition":{
+            "udpwEnabled":"true"
+        }
+    },
+    {
+        "name": "udpwAddress",
+        "label": "remote address",
+        "type": "string",
+        "default": "",
+        "check": "checkIpAddress",
+        "description": "the IP address we connect to in the form 192.168.1.2",
+        "category": "UDP writer",
+        "condition":{
+            "udpwType":["3"],
+            "udpwEnabled":"true"
+        }
+    },
+    {
+        "name": "udpwMC",
+        "label": "multicast address",
+        "type": "string",
+        "default": "224.0.0.1",
+        "check": "checkMCAddress",
+        "description": "the multicast address we send to 224.0.0.0...239.255.255.255",
+        "category": "UDP writer",
+        "condition":{
+            "udpwType":["4","5","6"],
+            "udpwEnabled":"true"
+        }
+    },
+    {
+        "name": "udpwWriteFilter",
+        "label": "NMEA write Filter",
+        "type": "filter",
+        "default": "",
+        "description": "filter for NMEA0183 data when writing to remote UDP server\nselect aison|aisoff, set a whitelist or a blacklist with NMEA sentences like RMC,RMB",
+        "category": "UDP writer",
+        "condition":{
+            "udpwEnabled":"true"
+        }
+    },
+    {
+        "name": "udpwSeasmart",
+        "label": "Seasmart out",
+        "type": "boolean",
+        "default": "false",
+        "description": "send NMEA2000 as seasmart to remote UDP server",
+        "category": "UDP writer",
+        "condition":{
+            "udpwEnabled":"true"
+        }
+    },
+    {
+        "name": "udprEnabled",
+        "label": "enable",
+        "type": "boolean",
+        "default": "false",
+        "description":"enable the UDP reader",
+        "category":"UDP reader"
+    },
+    {
+        "name": "udprPort",
+        "label": "local port",
+        "type": "number",
+        "default": "10110",
+        "check":"checkPort",
+        "description": "the UDP port we listen on",
+        "category": "UDP reader",
+        "condition":{
+            "udprEnabled":"true"
+        }
+    },
+    {
+        "name": "udprType",
+        "label": "local address type",
+        "type": "list",
+        "default": "0",
+        "description": "to which networks/addresses do we listen\nall: listen on AP and wifi client network\nap: listen in access point network only\ncli: listen in wifi client network\nmc-all: receive multicast from AP and wifi client network\nmc-ap:receive multicast from AP network\nmc-cli: receive muticast wifi client network",
+        "list":[
+            {"l":"all","v":"0"},
+            {"l":"ap","v":"1"},
+            {"l":"cli","v":"2"},
+            {"l":"mc-all","v":"4"},
+            {"l":"mc-ap","v":"5"},
+            {"l":"mc-cli","v":"6"}
+        ],
+        "category": "UDP reader",
+        "condition":{
+            "udprEnabled":"true"
+        }
+    },
+    {
+        "name": "udprToN2k",
+        "label": "to NMEA2000",
+        "type": "boolean",
+        "default": "true",
+        "description": "convert NMEA0183 from UDP to NMEA2000",
+        "category": "UDP reader",
+        "condition":{
+            "udprEnabled":"true"
+        }
+    },
+    {
+        "name": "udprMC",
+        "label": "multicast address",
+        "type": "string",
+        "default": "224.0.0.1",
+        "check": "checkMCAddress",
+        "description": "the multicast address we listen on 224.0.0.0...239.255.255.255",
+        "category": "UDP reader",
+        "condition":{
+            "udprType":["4","5","6"],
+            "udprEnabled":"true"
+        }
+    },
+    {
+        "name": "udprReadFilter",
+        "label": "NMEA read Filter",
+        "type": "filter",
+        "default": "",
+        "description": "filter for NMEA0183 data when receiving\nselect aison|aisoff, set a whitelist or a blacklist with NMEA sentences like RMC,RMB",
+        "category": "UDP reader",
+        "condition":{
+            "udprEnabled":"true"
+        }
     },
     {
         "name": "wifiClient",

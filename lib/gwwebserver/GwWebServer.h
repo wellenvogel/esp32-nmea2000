@@ -4,6 +4,7 @@
 #include <functional>
 #include "GwMessage.h"
 #include "GwLog.h"
+#include "GwApi.h"
 class GwWebServer{
     private:
         AsyncWebServer *server;
@@ -11,7 +12,7 @@ class GwWebServer{
         GwLog *logger;
     public:
         typedef GwRequestMessage *(RequestCreator)(AsyncWebServerRequest *request);
-        using HandlerFunction=std::function<void(AsyncWebServerRequest *)>;
+        using HandlerFunction=GwApi::HandlerFunction;
         GwWebServer(GwLog *logger, GwRequestQueue *queue,int port);
         ~GwWebServer();
         void begin();

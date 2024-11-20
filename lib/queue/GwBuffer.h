@@ -18,9 +18,9 @@ class GwMessageFetcher{
  * buffer to safely inserte data if it fits
  * and to write out data if possible
  */
-typedef size_t (*GwBufferHandleFunction)(uint8_t *buffer, size_t len, void *param);
 class GwBuffer{
     public:
+        using GwBufferHandleFunction=std::function<size_t(uint8_t *buffer, size_t len, void *param)>;
         static const size_t TX_BUFFER_SIZE=1620; // app. 20 NMEA messages
         static const size_t RX_BUFFER_SIZE=600;  // enough for 1 NMEA message or actisense message or seasmart message
         typedef enum {
@@ -33,7 +33,7 @@ class GwBuffer{
         uint8_t *buffer;
         uint8_t *writePointer;
         uint8_t *readPointer;
-        size_t offset(uint8_t* ptr){
+        size_t offset(uint8_t* ptr) const{
             return (size_t)(ptr-buffer);
         }
         GwLog *logger;

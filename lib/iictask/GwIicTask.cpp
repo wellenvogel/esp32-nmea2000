@@ -21,6 +21,7 @@ static std::vector<IICGrove> iicGroveList;
 #include "GwIicSensors.h"
 #include "GwHardware.h"
 #include "GwBME280.h"
+#include "GwBMP280.h"
 #include "GwQMP6988.h"
 #include "GwSHT3X.h"
 #include <map>
@@ -92,6 +93,7 @@ void initIicTask(GwApi *api){
     creators.push_back(registerSHT3X(api,sensors));
     creators.push_back(registerQMP6988(api,sensors));
     creators.push_back(registerBME280(api,sensors));
+    creators.push_back(registerBMP280(api,sensors));
     #ifdef _GWI_IIC1
         addGroveItems(creators,api,sensors,"1",_GWI_IIC1);    
     #endif
