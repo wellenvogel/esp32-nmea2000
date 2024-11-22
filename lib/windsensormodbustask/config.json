@@ -1,0 +1,24 @@
+[
+    {
+        "name": "mbEnable",
+        "label": "enable modbus wind sensor",
+        "type": "boolean",
+        "default": "false",
+        "description": "Enable support for modbus serial port wind sensor XS-WSDS01",
+        "category": "modbus serial port",
+        "capabilities": {
+            "modbusserial": "true"
+        }
+    },
+    {
+        "name": "mbAddr",
+        "label": "modbus sensor address",
+        "type": "number",
+        "default": 1,
+        "description": "The modbus address of the wind sensor",
+        "category": "modbus serial port",
+        "capabilities": {
+            "modbusserial": "true"
+        }
+    }
+]
