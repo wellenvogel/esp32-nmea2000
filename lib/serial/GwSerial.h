@@ -94,6 +94,7 @@ template<typename T>
                 if (c->isConnected()){
                     //this retriggers the ISR
                     usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
+                    usb_serial_jtag_ll_txfifo_flush();
                 }
             }
             return rt;
