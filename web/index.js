@@ -1578,7 +1578,7 @@
                 if (isNaN(x)) return '-----';
                 return formatLonLatsDecimal(x, 'lat');
             },
-            u: '°'
+            u: ''
         },
         formatLongitude: {
             f: function (v) {
