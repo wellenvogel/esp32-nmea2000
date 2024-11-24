@@ -189,6 +189,7 @@ private:
         if (N2kIsNA(v)) return N2kInt8NA;
         return v;
     }
+    
     void convertXDR(const SNMEA0183Msg &msg){
         XdrMappingList foundMappings;
         for (int offset=0;offset <= (msg.FieldCount()-4);offset+=4){
@@ -199,7 +200,19 @@ private:
             String unit=msg.Field(offset+2);
             String transducerName=msg.Field(offset+3);
             GwXDRFoundMapping found=xdrMappings->getMapping(transducerName,type,unit);
-            if (found.empty) continue;
+            if (found.empty) {
+                if (config.unmappedXdr){
+                    const GwXDRType *typeDef=xdrMappings->findType(type,unit);
+                    GwXdrUnknownMapping mapping(transducerName,unit,typeDef,config.xdrTimeout);
+                    value=mapping.valueFromXdr(value);
+                    if (boatData->update(value,msg.sourceId,&mapping)){
+                        //TODO: potentially update the format
+                        LOG_DEBUG(GwLog::DEBUG+1,"found unmapped XDR %s:%s, value %f",
+                        transducerName.c_str(),mapping.getBoatItemFormat().c_str(),value);
+                    }
+                }
+                continue;
+            }
             value=found.valueFromXdr(value);
             if (!boatData->update(value,msg.sourceId,&found)) continue;
             LOG_DEBUG(GwLog::DEBUG+1,"found mapped XDR %s:%s, value %f",

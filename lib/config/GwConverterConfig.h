@@ -71,9 +71,12 @@ class GwConverterConfig{
       int rmcInterval=1000;
       int rmcCheckTime=4000;
       int winst312=256;
+      bool unmappedXdr=false;
+      unsigned long xdrTimeout=60000;
       std::vector<WindMapping> windMappings;
       void init(GwConfigHandler *config, GwLog*logger){
         minXdrInterval=config->getInt(GwConfigDefinitions::minXdrInterval,100);
+        xdrTimeout=config->getInt(GwConfigDefinitions::timoSensor);
         starboardRudderInstance=config->getInt(GwConfigDefinitions::stbRudderI,0);
         portRudderInstance=config->getInt(GwConfigDefinitions::portRudderI,-1);
         min2KInterval=config->getInt(GwConfigDefinitions::min2KInterval,50);
@@ -83,6 +86,7 @@ class GwConverterConfig{
         rmcInterval=config->getInt(GwConfigDefinitions::sendRMCi,1000);
         if (rmcInterval < 0) rmcInterval=0;
         if (rmcInterval > 0 && rmcInterval <100) rmcInterval=100;
+        unmappedXdr=config->getBool(GwConfigDefinitions::unknownXdr);
         winst312=config->getInt(GwConfigDefinitions::winst312,256);
         for (auto && it:windConfigs){
           String cfg=config->getString(it.second);
