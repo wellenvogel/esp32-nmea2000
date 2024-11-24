@@ -156,11 +156,11 @@ class ExampleWebData{
         vSemaphoreDelete(lock);
     }
     void set(int v){
-        GWSYNCHRONIZED(&lock);
+        GWSYNCHRONIZED(lock);
         data=v;
     }
     int get(){
-        GWSYNCHRONIZED(&lock);
+        GWSYNCHRONIZED(lock);
         return data;
     }
 };

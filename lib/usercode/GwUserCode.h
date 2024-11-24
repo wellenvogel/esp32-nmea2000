@@ -38,13 +38,14 @@ class TaskInterfacesStorage;
 class GwUserCode{
     GwLog *logger;
     GwApiInternal *api;
-    SemaphoreHandle_t *mainLock;
+    SemaphoreHandle_t mainLock=nullptr;
     TaskInterfacesStorage *taskData;
     void startAddOnTask(GwApiInternal *api,GwUserTask *task,int sourceId,String name);
     public:
         ~GwUserCode();
         typedef std::map<String,String> Capabilities;
-        GwUserCode(GwApiInternal *api, SemaphoreHandle_t *mainLock);
+        GwUserCode(GwApiInternal *api);
+        void begin(SemaphoreHandle_t mainLock){this->mainLock=mainLock;}
         void startUserTasks(int baseId);
         void startInitTasks(int baseId);
         void startAddonTask(String name,TaskFunction_t task, int id);
