@@ -1798,7 +1798,7 @@
             let id = el.getAttribute('id');
             if (id) {
                 if (!names[id.replace(/^frame_/, '')]) {
-                    el.parentElement.remove();
+                    el.remove();
                 }
             }
         });
