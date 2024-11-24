@@ -246,7 +246,7 @@ void GwTcpClient::resolveHost(String host)
 {
     LOG_DEBUG(GwLog::LOG,"start resolving %s",host.c_str());
     {
-        GWSYNCHRONIZED(&locker);
+        GWSYNCHRONIZED(locker);
         resolvedAddress.resolved = false;
     }
     state = C_RESOLVING;
@@ -283,12 +283,12 @@ void GwTcpClient::resolveHost(String host)
 void GwTcpClient::setResolved(IPAddress addr, bool valid){
     LOG_DEBUG(GwLog::LOG,"setResolved %s, valid=%s",
         addr.toString().c_str(),(valid?"true":"false"));
-    GWSYNCHRONIZED(&locker);
+    GWSYNCHRONIZED(locker);
     resolvedAddress.address=addr;
     resolvedAddress.resolved=valid;
     state=C_RESOLVED;
 }
 GwTcpClient::ResolvedAddress GwTcpClient::getResolved(){
-    GWSYNCHRONIZED(&locker);
+    GWSYNCHRONIZED(locker);
     return resolvedAddress;
 }
