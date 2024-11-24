@@ -113,7 +113,7 @@ class TaskInterfacesStorage{
                 lock=xSemaphoreCreateMutex();
             }
         bool set(const String &file, const String &name, const String &task,GwApi::TaskInterfaces::Ptr v){
-            GWSYNCHRONIZED(&lock);
+            GWSYNCHRONIZED(lock);
             auto it=registrations().find(name);
             if (it == registrations().end()){
                 LOG_DEBUG(GwLog::ERROR,"TaskInterfaces: invalid set %s not known",name.c_str());
@@ -141,7 +141,7 @@ class TaskInterfacesStorage{
             return true;
         }
         GwApi::TaskInterfaces::Ptr get(const String &name, int &result){
-            GWSYNCHRONIZED(&lock);
+            GWSYNCHRONIZED(lock);
             auto it = values.find(name);
             if (it == values.end())
             {
@@ -188,7 +188,7 @@ class TaskApi : public GwApiInternal
 {
     GwApiInternal *api=nullptr;
     int sourceId;
-    SemaphoreHandle_t *mainLock;
+    SemaphoreHandle_t mainLock;
     SemaphoreHandle_t localLock;
     std::map<int,GwCounter<String>> counter;
     std::map<String,GwApi::HandlerFunction> webHandlers;
@@ -200,7 +200,7 @@ class TaskApi : public GwApiInternal
 public:
     TaskApi(GwApiInternal *api, 
         int sourceId, 
-        SemaphoreHandle_t *mainLock, 
+        SemaphoreHandle_t mainLock, 
         const String &name,
         TaskInterfacesStorage *s,
         bool init=false)
@@ -264,14 +264,14 @@ public:
         vSemaphoreDelete(localLock);
     };
     virtual void fillStatus(GwJsonDocument &status){
-        GWSYNCHRONIZED(&localLock);
+        GWSYNCHRONIZED(localLock);
         if (! counterUsed) return;
         for (auto it=counter.begin();it != counter.end();it++){
             it->second.toJson(status);
         }
     };
     virtual int getJsonSize(){
-        GWSYNCHRONIZED(&localLock);
+        GWSYNCHRONIZED(localLock);
         if (! counterUsed) return 0;
         int rt=0;
         for (auto it=counter.begin();it != counter.end();it++){
@@ -280,7 +280,7 @@ public:
         return rt;
     };
     virtual void increment(int idx,const String &name,bool failed=false){
-        GWSYNCHRONIZED(&localLock);
+        GWSYNCHRONIZED(localLock);
         counterUsed=true;
         auto it=counter.find(idx);
         if (it == counter.end()) return;
@@ -288,18 +288,18 @@ public:
         else (it->second.add(name));
     };
     virtual void reset(int idx){
-        GWSYNCHRONIZED(&localLock);
+        GWSYNCHRONIZED(localLock);
         counterUsed=true;
         auto it=counter.find(idx);
         if (it == counter.end()) return;
         it->second.reset();
     };
     virtual void remove(int idx){
-        GWSYNCHRONIZED(&localLock);
+        GWSYNCHRONIZED(localLock);
         counter.erase(idx);
     }
     virtual int addCounter(const String &name){
-        GWSYNCHRONIZED(&localLock);
+        GWSYNCHRONIZED(localLock);
         counterUsed=true;
         counterIdx++;
         //avoid the need for an empty counter constructor
@@ -317,7 +317,7 @@ public:
         return api->addXdrMapping(def);
     }
     virtual void registerRequestHandler(const String &url,HandlerFunction handler){
-        GWSYNCHRONIZED(&localLock);
+        GWSYNCHRONIZED(localLock);
         webHandlers[url]=handler;
     }
     virtual void addCapability(const String &name, const String &value){
@@ -344,7 +344,7 @@ public:
     {
         GwApi::HandlerFunction handler;
         {
-            GWSYNCHRONIZED(&localLock);
+            GWSYNCHRONIZED(localLock);
             auto it = webHandlers.find(url);
             if (it == webHandlers.end())
             {
@@ -359,10 +359,9 @@ public:
     }
 };
 
-GwUserCode::GwUserCode(GwApiInternal *api,SemaphoreHandle_t *mainLock){
+GwUserCode::GwUserCode(GwApiInternal *api){
     this->logger=api->getLogger();
     this->api=api;
-    this->mainLock=mainLock;
     this->taskData=new TaskInterfacesStorage(this->logger);
 }
 GwUserCode::~GwUserCode(){
