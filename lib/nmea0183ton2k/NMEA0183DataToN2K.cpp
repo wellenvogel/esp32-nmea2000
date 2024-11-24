@@ -320,7 +320,7 @@ private:
             return;   
         }
         tN2kMsg n2kMsg;
-        if (boatData->XTE->update(rmb.xte,msg.sourceId)){
+        if (updateDouble(boatData->XTE,rmb.xte,msg.sourceId)){
             tN2kXTEMode mode=N2kxtem_Autonomous;
             if (msg.FieldCount() > 13){
                 const char *modeChar=msg.Field(13);
@@ -331,10 +331,10 @@ private:
         }
         uint8_t destinationId=getWaypointId(rmb.destID);
         uint8_t sourceId=getWaypointId(rmb.originID);
-        if (boatData->DTW->update(rmb.dtw,msg.sourceId)
-            && boatData->BTW->update(rmb.btw,msg.sourceId)
-            && boatData->WPLat->update(rmb.latitude,msg.sourceId)
-            && boatData->WPLon->update(rmb.longitude,msg.sourceId)
+        if (updateDouble(boatData->DTW,rmb.dtw,msg.sourceId)
+            && updateDouble(boatData->BTW,rmb.btw,msg.sourceId)
+            && updateDouble(boatData->WPLat,rmb.latitude,msg.sourceId)
+            && updateDouble(boatData->WPLon,rmb.longitude,msg.sourceId)
             ){
             SetN2kNavigationInfo(n2kMsg,1,rmb.dtw,N2khr_true,
                 false,
