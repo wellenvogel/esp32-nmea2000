@@ -211,6 +211,14 @@
          "category":"converter"
      },
      {
+        "name":"unknownXdr",
+        "label":"show unknown XDR",
+        "type":"boolean",
+        "default":"false",
+        "description":"show received XDR transducer values in data display if there is no XDR mapping for them",
+        "category":"converter"
+    },
+     {
         "name":"sendRMCi",
         "label":"send RMC interval",
         "type": "number",

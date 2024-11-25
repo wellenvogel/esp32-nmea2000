@@ -58,6 +58,7 @@ GwXDRType *types[] = {
     new GwXDRType(GwXDRType::DISPLACEMENTD, "A", "D",DegToRad,RadToDeg,"rd"),
     new GwXDRType(GwXDRType::RPM,"T","R")
     };
+static GwXDRType genericType(GwXDRType::GENERIC, "G", "");
 template<typename T, int size>
 int GetArrLength(T(&)[size]){return size;}
 static GwXDRType *findType(GwXDRType::TypeCode type, int *start = NULL)
@@ -80,6 +81,19 @@ static GwXDRType *findType(GwXDRType::TypeCode type, int *start = NULL)
     if (start != NULL)
         *start = i;
     return NULL;
+}
+
+static GwXDRType *findType(const String &typeString, const String &unitString)
+{
+    int len=GetArrLength(types);
+    for (int i=0; i< len; i++)
+    {
+        if (types[i]->xdrtype == typeString && types[i]->xdrunit == unitString)
+        {
+            return types[i];
+        }
+    }
+    return &genericType;
 }
 
 #include "GwXdrTypeMappings.h"
@@ -199,7 +213,7 @@ GwXDRMappingDef *GwXDRMappingDef::fromString(String s)
     }
     return rt;
 }
-String GwXDRMappingDef::getTransducerName(int instance)
+String GwXDRMappingDef::getTransducerName(int instance) const
 {
     String name = xdrName;
     if (instanceMode == GwXDRMappingDef::IS_AUTO)
@@ -257,7 +271,7 @@ bool GwXDRMappings::addMapping(GwXDRMappingDef *def)
             LOG_DEBUG(GwLog::ERROR, "no type mapping for %s", def->toString().c_str());
             return false;
         }
-        GwXDRType *type = findType(code, &typeIndex);
+        GwXDRType *type = ::findType(code, &typeIndex);
         if (!type)
         {
             LOG_DEBUG(GwLog::ERROR, "no type definition for %s", def->toString().c_str());
@@ -298,7 +312,7 @@ bool GwXDRMappings::addMapping(GwXDRMappingDef *def)
                 LOG_DEBUG(GwLog::LOG, "append mapping with n183key %s", n183key.c_str());
                 it->second.push_back(mapping);
             }
-            type = findType(code, &typeIndex);
+            type = ::findType(code, &typeIndex);
             if (!type)
                 break;
             mapping = new GwXDRMapping(def, type);
@@ -471,7 +485,7 @@ String GwXDRMappings::getXdrEntry(String mapping, double value,int instance){
     {
         return rt;
     }
-    GwXDRType *type = findType(code, &typeIndex);
+    GwXDRType *type = ::findType(code, &typeIndex);
     bool first=true;
     unsigned long invalidTime=config->getInt(GwConfigDefinitions::timoSensor);
     while (type){
@@ -480,8 +494,12 @@ String GwXDRMappings::getXdrEntry(String mapping, double value,int instance){
         if (first) first=false;
         else rt+=",";
         rt+=found.buildXdrEntry(value).entry;
-        type = findType(code, &typeIndex);
+        type = ::findType(code, &typeIndex);
     }
     delete def;
     return rt;
+}
+
+const GwXDRType * GwXDRMappings::findType(const String &typeString, const String &unitString) const{
+    return ::findType(typeString,unitString);
 }
