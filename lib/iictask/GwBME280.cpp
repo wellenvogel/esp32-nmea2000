@@ -33,7 +33,7 @@ class BME280Config : public IICSensorBase{
     float prOff=0;
     Adafruit_BME280 *device=nullptr;
     uint32_t sensorId=-1;
-    BME280Config(GwApi * api, const String &prfx):SensorBase(TYPE,api,prfx){
+    BME280Config(GwApi * api, const String &prfx):IICSensorBase(api,prfx){
         }
     virtual bool isActive(){return prAct||huAct||tmAct;}
     virtual bool initDevice(GwApi *api,TwoWire *wire){
