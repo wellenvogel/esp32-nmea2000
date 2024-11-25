@@ -30,7 +30,6 @@ class QMP6988Config : public IICSensorBase{
         virtual bool preinit(GwApi * api){
             GwLog *logger=api->getLogger();
             LOG_DEBUG(GwLog::LOG,"QMP6988 configured");
-            api->addCapability(prefix,"true");
             addPressureXdr(api,*this);
             return isActive();
         }

@@ -55,7 +55,6 @@ class BME280Config : public IICSensorBase{
     virtual bool preinit(GwApi * api){
         GwLog *logger=api->getLogger();
         LOG_DEBUG(GwLog::LOG,"%s configured",prefix.c_str());
-        api->addCapability(prefix,"true");
         addPressureXdr(api,*this);
         addTempXdr(api,*this);
         addHumidXdr(api,*this);

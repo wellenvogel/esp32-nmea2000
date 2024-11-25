@@ -92,13 +92,14 @@ class SSIDevice{
 
 class SSISensor : public SensorTemplate<BUSTYPE,SensorBase::SPI>{
     std::unique_ptr<SSIDevice> device;
-    protected:
+    public:
     int bits=12;
     int mask=0xffff;
     int cs=-1;
     int clock=0;
     bool act=false;
     float fintv=0;
+    protected:
     virtual bool initSSI(GwLog*logger,const SPIBus *bus,
         int clock,int cs, int bits){
             mask= (1 << bits)-1;
@@ -125,9 +126,8 @@ class SSISensor : public SensorTemplate<BUSTYPE,SensorBase::SPI>{
         }
 
     public:
-    SSISensor(GwApi *api,const String &prfx, int host):SensorTemplate<BUSTYPE,SensorBase::SPI>(api,prfx)
+    SSISensor(GwApi *api,const String &prfx):SensorTemplate<BUSTYPE,SensorBase::SPI>(api,prfx)
     {
-        busId=host;
     }
     virtual bool isActive(){return act;};
     virtual bool initDevice(GwApi *api,BUSTYPE *bus){
