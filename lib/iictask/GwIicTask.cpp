@@ -105,7 +105,10 @@ void initIicTask(GwApi *api){
     ConfiguredSensors sensorList=api->taskInterfaces()->get<ConfiguredSensors>(res);
     for (auto &&it: sensorList.sensors){
         if (it->busType != SensorBase::IIC) continue;
-        if (it->preinit(api)) addTask=true;
+        if (it->preinit(api)) {
+            addTask=true;
+            api->addCapability(it->prefix,"true");
+        }
     }
     if (addTask){
         api->addUserTask(runIicTask,"iicTask",4000);

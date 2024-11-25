@@ -25,7 +25,7 @@
         {\
         CHECK_BUS(BUS); \
         GWDMS22B *dms=new GWDMS22B(api,#PRFX,GW ## BUS ## _HOST);\
-        sensors.add(api,dms); \
+        api->addSensor(dms,true); \
         }
 
 #ifdef GWDMS22B11
@@ -130,7 +130,7 @@ class GWDMS22B : public SSISensor{
     }
 };
 
-void registerDMS22B(GwApi *api,SpiSensorList &sensors){
+void registerDMS22B(GwApi *api){
     ADD22B11
     ADD22B12
     ADD22B21

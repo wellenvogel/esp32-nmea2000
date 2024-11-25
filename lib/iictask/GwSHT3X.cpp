@@ -102,31 +102,31 @@ SensorBase::Creator registerSHT3X(GwApi *api){
 };
 
 /**
-     * we do not dynamically compute the config names
-     * just to get compile time errors if something does not fit
-     * correctly
-    */
-    #define CFGSHT3X(s,prefix,bus,baddr) \
-        CFG_SGET(s,tmNam,prefix); \
-        CFG_SGET(s,huNam,prefix); \
-        CFG_SGET(s,iid,prefix); \
-        CFG_SGET(s,tmAct,prefix); \
-        CFG_SGET(s,huAct,prefix); \
-        CFG_SGET(s,intv,prefix); \
-        CFG_SGET(s,huSrc,prefix); \
-        CFG_SGET(s,tmSrc,prefix); \
-        s->busId = bus;                       \
-        s->addr = baddr;                      \
-        s->ok = true;  \
-        s->intv*=1000;
+ * we do not dynamically compute the config names
+ * just to get compile time errors if something does not fit
+ * correctly
+ */
+#define CFGSHT3X(s, prefix, bus, baddr) \
+    CFG_SGET(s, tmNam, prefix);         \
+    CFG_SGET(s, huNam, prefix);         \
+    CFG_SGET(s, iid, prefix);           \
+    CFG_SGET(s, tmAct, prefix);         \
+    CFG_SGET(s, huAct, prefix);         \
+    CFG_SGET(s, intv, prefix);          \
+    CFG_SGET(s, huSrc, prefix);         \
+    CFG_SGET(s, tmSrc, prefix);         \
+    s->busId = bus;                     \
+    s->addr = baddr;                    \
+    s->ok = true;                       \
+    s->intv *= 1000;
 
-#define SCSHT3X(list, prefix, bus, addr) \
-    GWSENSORCONFIG(list, SHT3XConfig, prefix, [](SHT3XConfig *s, GwConfigHandler *cfg) { CFGSHT3X(s, prefix, bus, addr); });
+#define SCSHT3X(prefix, bus, addr) \
+    GWSENSORDEF(configs, SHT3XConfig, CFGSHT3X, prefix, bus, addr)
 
-SCSHT3X(configs, SHT3X11,1, 0x44);
-SCSHT3X(configs, SHT3X12,1, 0x45);
-SCSHT3X(configs, SHT3X21,2, 0x44);
-SCSHT3X(configs, SHT3X22,2, 0x45);
+SCSHT3X(SHT3X11, 1, 0x44);
+SCSHT3X(SHT3X12, 1, 0x45);
+SCSHT3X(SHT3X21, 2, 0x44);
+SCSHT3X(SHT3X22, 2, 0x45);
 
 #else
 SensorBase::Creator registerSHT3X(GwApi *api){

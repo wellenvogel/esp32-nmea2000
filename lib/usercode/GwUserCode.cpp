@@ -161,7 +161,6 @@ class TaskApi : public GwApiInternal
     GwApiInternal *api=nullptr;
     int sourceId;
     SemaphoreHandle_t mainLock;
-    SemaphoreHandle_t mainLock;
     SemaphoreHandle_t localLock;
     std::map<int,GwCounter<String>> counter;
     std::map<String,GwApi::HandlerFunction> webHandlers;

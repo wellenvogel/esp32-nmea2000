@@ -15,11 +15,9 @@
     #include <Adafruit_BME280.h>
 #endif
 #ifdef _GWBME280
-#define TYPE "BME280"
-#define PRFX1 TYPE "11"
-#define PRFX2 TYPE "12"
-#define PRFX3 TYPE "21"
-#define PRFX4 TYPE "22"
+
+class BME280Config;
+static GwSensorConfigInitializerList<BME280Config> configs;
 class BME280Config : public IICSensorBase{
     public:
     bool prAct=true;
@@ -97,89 +95,77 @@ class BME280Config : public IICSensorBase{
             sendN2kEnvironmentalParameters(api, *this, temperature, humidity, computed,counterId);
         }
     }
-    #define CFG280(prefix) \
-        CFG_GET(prAct,prefix); \
-        CFG_GET(tmAct,prefix);\
-        CFG_GET(huAct,prefix);\
-        CFG_GET(tmSrc,prefix);\
-        CFG_GET(huSrc,prefix);\
-        CFG_GET(iid,prefix);\
-        CFG_GET(intv,prefix);\
-        CFG_GET(tmNam,prefix);\
-        CFG_GET(huNam,prefix);\
-        CFG_GET(prNam,prefix);\
-        CFG_GET(tmOff,prefix);\
-        CFG_GET(prOff,prefix);
+    
 
     virtual void readConfig(GwConfigHandler *cfg) override
     {
         if (ok) return;
-        if (prefix == PRFX1)
-        {
-            busId = 1;
-            addr = 0x76;
-            CFG280(BME28011);
-            ok=true;
-        }
-        if (prefix == PRFX2)
-        {
-            busId = 1;
-            addr = 0x77;
-            CFG280(BME28012);
-            ok=true;
-        }
-        if (prefix == PRFX3)
-        {
-            busId = 2;
-            addr = 0x76;
-            CFG280(BME28021);
-            ok=true;
-        }
-        if (prefix == PRFX4)
-        {
-            busId = 2;
-            addr = 0x77;
-            CFG280(BME28022);
-            ok=true;
-        }
-        intv *= 1000;
+        configs.readConfig(this,cfg);       
     }
 };
+
 
 static SensorBase::Creator creator([](GwApi *api, const String &prfx){
     return new BME280Config(api,prfx);
 });
 SensorBase::Creator registerBME280(GwApi *api){
-    #if defined(GWBME280) || defined(GWBME28011)
+#if defined(GWBME280) || defined(GWBME28011)
     {
-        api->addSensor(creator(api,PRFX1));
+        api->addSensor(creator(api,"BME28011"));
         CHECK_IIC1();
         #pragma message "GWBME28011 defined"
     }
-    #endif
-    #if defined(GWBME28012)
+#endif
+#if defined(GWBME28012)
     {
-        api->addSensor(creator(api,PRFX2));
+        api->addSensor(creator(api,"BME28012"));
         CHECK_IIC1();
         #pragma message "GWBME28012 defined"
     }
-    #endif
-    #if defined(GWBME28021)
+#endif
+#if defined(GWBME28021)
     {
-        api->addSensor(creator(api,PRFX3));
+        api->addSensor(creator(api,"BME28021"));
         CHECK_IIC2();
         #pragma message "GWBME28021 defined"
     }
-    #endif
-    #if defined(GWBME28022)
+#endif
+#if defined(GWBME28022)
     {
-        api->addSensor(creator(api,PRFX4));
+        api->addSensor(creator(api,"BME28022"));
         CHECK_IIC1();
         #pragma message "GWBME28022 defined"
     }
-    #endif
+#endif
     return creator;
 }
+
+#define CFG280(s, prefix, bus, baddr) \
+    CFG_SGET(s, prAct, prefix);       \
+    CFG_SGET(s, tmAct, prefix);       \
+    CFG_SGET(s, huAct, prefix);       \
+    CFG_SGET(s, tmSrc, prefix);       \
+    CFG_SGET(s, huSrc, prefix);       \
+    CFG_SGET(s, iid, prefix);         \
+    CFG_SGET(s, intv, prefix);        \
+    CFG_SGET(s, tmNam, prefix);       \
+    CFG_SGET(s, huNam, prefix);       \
+    CFG_SGET(s, prNam, prefix);       \
+    CFG_SGET(s, tmOff, prefix);       \
+    CFG_SGET(s, prOff, prefix);       \
+    s->busId = bus;                   \
+    s->addr = baddr;                  \
+    s->ok = true;                     \
+    s->intv *= 1000;
+
+#define SCBME280(list, prefix, bus, addr) \
+    GWSENSORCONFIG(list, BME280Config, prefix, [](BME280Config *s, GwConfigHandler *cfg) { CFG280(s, prefix, bus, addr); });
+
+SCBME280(configs,BME28011,1,0x76);
+SCBME280(configs,BME28012,1,0x77);
+SCBME280(configs,BME28021,2,0x76);
+SCBME280(configs,BME28022,2,0x77);
+
 #else
 SensorBase::Creator registerBME280(GwApi *api){ 
     return SensorBase::Creator(); 

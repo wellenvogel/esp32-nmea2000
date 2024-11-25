@@ -61,6 +61,8 @@ class SensorTemplate : public SensorBase{
         if (busType != bt) return;
         measure(api,(BUS*)bus,counterId);
     };
+    protected:
+    virtual void measure(GwApi *api,BUS *bus, int counterId)=0;
 };
 
 
@@ -124,7 +126,8 @@ class GwSensorConfigInitializerList : public GwInitializer<GwSensorConfig<T>>::L
 
 #define GWSENSORCONFIG(list,type,prefix,initFunction) \
     GwSensorConfigInitializer<type> __init ## type ## prefix(list,GwSensorConfig<type>(#prefix,initFunction));
-
+#define GWSENSORDEF(list,type,init,prefix,bus,baddr) \
+    GWSENSORCONFIG(list, type, prefix, [](type *s, GwConfigHandler *cfg) { init(s, prefix, bus, baddr); });
 
 
 #define CFG_GET(name,prefix) \
