@@ -91,7 +91,6 @@ class TaskInterfacesStorage{
         }
         GwApi::TaskInterfaces::Ptr get(const String &name, int &result){
             GWSYNCHRONIZED(lock);
-            GWSYNCHRONIZED(lock);
             auto it = values.find(name);
             if (it == values.end())
             {
@@ -246,7 +245,6 @@ public:
     };
     virtual int getJsonSize(){
         GWSYNCHRONIZED(localLock);
-        GWSYNCHRONIZED(localLock);
         if (! counterUsed) return 0;
         int rt=0;
         for (auto it=counter.begin();it != counter.end();it++){
@@ -255,7 +253,6 @@ public:
         return rt;
     };
     virtual void increment(int idx,const String &name,bool failed=false){
-        GWSYNCHRONIZED(localLock);
         GWSYNCHRONIZED(localLock);
         counterUsed=true;
         auto it=counter.find(idx);
