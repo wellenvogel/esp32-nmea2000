@@ -40,6 +40,8 @@ types:
     type: frame
     key: m5groovei2c#grv#
     label: "M5 I2C Groove Units"
+    target: resource
+    resource: i2cbus
     children:
       - label: "M5 ENV3"
         type: checkbox
@@ -682,7 +684,7 @@ resources:
   default: &esp32default
     serial: 2
     can: 1
-    i2c: 1
+    i2cbus: 2
     gpio: 1 
 
 config:

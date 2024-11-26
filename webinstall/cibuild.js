@@ -686,7 +686,7 @@ class PipelineInfo{
             let allowed=allowedResources[ak];
             if (allowed === undefined) allowed=1;
             if (resList.length > allowed){
-                errors+=" more than "+allowed+" "+k+" device(s) used";
+                errors+=" more than "+allowed+" device(s) of type "+k+" used";
             }
             
         }
