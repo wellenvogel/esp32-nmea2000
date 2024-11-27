@@ -53,16 +53,16 @@ types:
           - value: M5_ENV3#grv#
             key: true
             resource: qmp69881#grv#1,sht3x#grv#1
-      - label: "M5 ENV4"
-        type: checkbox
-        key: m5env4#grv#
-        target: define
-        url: "https://docs.m5stack.com/en/unit/ENV%E2%85%A3%20Unit"
-        description: "M5 sensor module temperature, humidity, pressure"
-        values:
-          - value: M5_ENV4#grv#
-            key: true
-            resource: bmp280#grv#1,sht3x#grv#1
+#      - label: "M5 ENV4"
+#        type: checkbox
+#        key: m5env4#grv#
+#        target: define
+#        url: "https://docs.m5stack.com/en/unit/ENV%E2%85%A3%20Unit"
+#        description: "M5 sensor module temperature, humidity, pressure"
+#        values:
+#          - value: M5_ENV4#grv#
+#            key: true
+#            resource: bmp280#grv#1,sht3x#grv#1
       - type: checkbox
         label: SHT3X-1
         description: "SHT30 temperature and humidity sensor 0x44"
