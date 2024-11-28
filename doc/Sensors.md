@@ -64,7 +64,8 @@ You need to implement:
 * _measure_ - read the sensor data, send NMEA2000 messages and increment 
 counters
 
-The busType and busId fields of your imnplementation have to be set correctly.
+The busType and busId fields of your imnplementation have to be set correctly.<br>
+In your task init function add the sensors you would like to be handled using [api->addSensor](../lib/api/GwApi.h#L218).
 
 All the internal sensors are implemented using this approach - e.g. [BME280](../lib/iictask/GwBME280.cpp#L23).<br>
 Do not get confused by all the different defines and the special config handling - this is only there to be as generic as possible - typically not necessary for your own sensor implementation.
@@ -77,8 +78,8 @@ So you would need to add such definitions to your environment in your platformio
 
 Implemented Sensors
 -------------------
-* [BME280](https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bme280-ds002.pdf): temperature/humidity/pressure [PGNs: 130314,130312, 130313, 130311 since 202412xx ]
-* [BMP280](https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bmp280-ds001.pdf) [since 202412xx]: temperature/pressure [PGNs: 130314,130312, 130311]
+* [BME280](https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bme280-ds002.pdf): temperature/humidity/pressure [PGNs: 130314,130312, 130313, 130311 since 20241128 ]
+* [BMP280](https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bmp280-ds001.pdf) [since 20241128]: temperature/pressure [PGNs: 130314,130312, 130311]
 * [QMP6988](https://m5stack.oss-cn-shenzhen.aliyuncs.com/resource/docs/datasheet/unit/enviii/QMP6988%20Datasheet.pdf): pressure [PGN: 130314]
 * [SHT30](https://m5stack.oss-cn-shenzhen.aliyuncs.com/resource/docs/datasheet/unit/SHT3x_Datasheet_digital.pdf): temperature and humidity [PGNs: 130312, 130313]
 * [M5-ENV3](https://docs.m5stack.com/en/unit/envIII): combination of QMP6988 and SHT30 [PGNs: 130314,130312, 130313]
