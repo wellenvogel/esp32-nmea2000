@@ -4,7 +4,7 @@
 #include "OBP60Extensions.h"
 
 /*
-  Autobahn view
+  XTETrack view
     XTE - Cross track error
     COG - Track / Course over ground
     DTW - Distance to waypoint
@@ -26,12 +26,12 @@ static unsigned char ship_bits[] PROGMEM = {
    0x00, 0xf8, 0x3f, 0x00, 0x00, 0xf8, 0x3f, 0x00, 0x00, 0xf8, 0x3f, 0x00,
    0x00, 0xf0, 0x1f, 0x00, 0x00, 0x00, 0x00, 0x00 };
 
-class PageAutobahn : public Page{
+class PageXTETrack : public Page{
     bool keylock = false;               // Keylock
 
     public:
-    PageAutobahn(CommonData &common){
-        common.logger->logDebug(GwLog::LOG,"Show PageAutobahn");
+    PageXTETrack(CommonData &common){
+        common.logger->logDebug(GwLog::LOG,"Show PageXTETrack");
     }
 
     void drawSegment(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1,
@@ -78,7 +78,7 @@ class PageAutobahn : public Page{
         }
 
         // Logging boat values
-        LOG_DEBUG(GwLog::LOG,"Drawing at PageAutobahn");
+        LOG_DEBUG(GwLog::LOG,"Drawing at PageXTETrack");
 
         // Draw page
         //***********************************************************
@@ -138,7 +138,7 @@ class PageAutobahn : public Page{
 
         bool valid = bv_cog->valid && bv_btw->valid;
 
-        // autobahn view
+        // XTETrack view
 
         // draw ship symbol (as bitmap)
         getdisplay().drawXBitmap(184, 68, ship_bits, ship_width, ship_height, pixelcolor);
@@ -226,7 +226,7 @@ class PageAutobahn : public Page{
 };
 
 static Page* createPage(CommonData &common){
-    return new PageAutobahn(common);
+    return new PageXTETrack(common);
 }
 
 /**
@@ -236,8 +236,8 @@ static Page* createPage(CommonData &common){
  * and we provide the number of user parameters we expect
  * this will be number of BoatValue pointers in pageData.values
  */
-PageDescription registerPageAutobahn(
-    "Autobahn",            // Page name
+PageDescription registerPageXTETrack(
+    "XTETrack",            // Page name
     createPage,             // Action
     0,                      // Number of bus values depends on selection in Web configuration
     {"XTE", "COG", "DTW", "BTW"}, // Bus values we need in the page

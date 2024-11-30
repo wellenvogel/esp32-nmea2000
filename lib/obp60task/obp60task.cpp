@@ -242,8 +242,8 @@ void registerAllPages(PageList &list){
     list.add(&registerPageSolar);
     extern PageDescription registerPageGenerator;
     list.add(&registerPageGenerator);
-    extern PageDescription registerPageAutobahn;
-    list.add(&registerPageAutobahn);
+    extern PageDescription registerPageXTETrack;
+    list.add(&registerPageXTETrack);
 }
 
 // Undervoltage detection for shutdown display
