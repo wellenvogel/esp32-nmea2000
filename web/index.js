@@ -1578,7 +1578,7 @@
                 if (isNaN(x)) return '-----';
                 return formatLonLatsDecimal(x, 'lat');
             },
-            u: '°'
+            u: ''
         },
         formatLongitude: {
             f: function (v) {
@@ -1798,7 +1798,7 @@
             let id = el.getAttribute('id');
             if (id) {
                 if (!names[id.replace(/^frame_/, '')]) {
-                    el.parentElement.remove();
+                    el.remove();
                 }
             }
         });

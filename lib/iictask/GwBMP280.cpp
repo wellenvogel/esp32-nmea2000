@@ -15,11 +15,16 @@
     #include <Adafruit_BMP280.h>
 #endif
 #ifdef _GWBMP280
-#define TYPE "BMP280"
-#define PRFX1 TYPE "11"
-#define PRFX2 TYPE "12"
-#define PRFX3 TYPE "21"
-#define PRFX4 TYPE "22"
+
+
+/**
+ * we need a forward declaration here as the config list has to go before the
+ * class implementation
+ */
+
+class BMP280Config;
+static GwSensorConfigInitializerList<BMP280Config> configs;
+
 class BMP280Config : public IICSensorBase{
     public:
     bool prAct=true;
@@ -33,14 +38,13 @@ class BMP280Config : public IICSensorBase{
     float prOff=0;
     Adafruit_BMP280 *device=nullptr;
     uint32_t sensorId=-1;
-    BMP280Config(GwApi * api, const String &prfx):SensorBase(TYPE,api,prfx){
-        }
+    using IICSensorBase::IICSensorBase;
     virtual bool isActive(){return prAct||tmAct;}
     virtual bool initDevice(GwApi *api,TwoWire *wire){
         GwLog *logger=api->getLogger();  
         device= new Adafruit_BMP280(wire);
         if (! device->begin(addr)){
-            LOG_DEBUG(GwLog::ERROR,"unable to initialize %s at %d",prefix.c_str(),addr);
+            LOG_DEBUG(GwLog::ERROR,"unable to initialize %s at 0x%x",prefix.c_str(),addr);
             delete device;
             device=nullptr;
             return false;
@@ -52,7 +56,6 @@ class BMP280Config : public IICSensorBase{
     virtual bool preinit(GwApi * api){
         GwLog *logger=api->getLogger();
         LOG_DEBUG(GwLog::LOG,"%s configured",prefix.c_str());
-        api->addCapability(prefix,"true");
         addPressureXdr(api,*this);
         addTempXdr(api,*this);
         return isActive();
@@ -85,96 +88,90 @@ class BMP280Config : public IICSensorBase{
             sendN2kEnvironmentalParameters(api, *this, temperature, humidity, computed,counterId);
         }
     }
-    #define CFGBMP280(prefix) \
-        CFG_GET(prAct,prefix); \
-        CFG_GET(tmAct,prefix);\
-        CFG_GET(tmSrc,prefix);\
-        CFG_GET(iid,prefix);\
-        CFG_GET(intv,prefix);\
-        CFG_GET(tmNam,prefix);\
-        CFG_GET(prNam,prefix);\
-        CFG_GET(tmOff,prefix);\
-        CFG_GET(prOff,prefix);
-
+    
     virtual void readConfig(GwConfigHandler *cfg) override
     {
-        if (prefix == PRFX1)
-        {
-            busId = 1;
-            addr = 0x76;
-            CFGBMP280(BMP28011);
-            ok=true;
-        }
-        if (prefix == PRFX2)
-        {
-            busId = 1;
-            addr = 0x77;
-            CFGBMP280(BMP28012);
-            ok=true;
-        }
-        if (prefix == PRFX3)
-        {
-            busId = 2;
-            addr = 0x76;
-            CFGBMP280(BMP28021);
-            ok=true;
-        }
-        if (prefix == PRFX4)
-        {
-            busId = 2;
-            addr = 0x77;
-            CFGBMP280(BMP28022);
-            ok=true;
-        }
-        intv *= 1000;
+        if (ok) return;
+        configs.readConfig(this,cfg);
     }
 };
 
-static IICSensorBase::Creator creator([](GwApi *api, const String &prfx){
+
+static SensorBase::Creator creator([](GwApi *api, const String &prfx)->BMP280Config*{
+    if (! configs.knowsPrefix(prfx)){
+        return nullptr;
+    }
     return new BMP280Config(api,prfx);
 });
-IICSensorBase::Creator registerBMP280(GwApi *api,IICSensorList &sensors){
+SensorBase::Creator registerBMP280(GwApi *api){
     #if defined(GWBMP280) || defined(GWBMP28011)
     {   
-        auto *cfg=creator(api,PRFX1);
-        //BMP280Config *cfg=new BMP280Config(api,PRFX1);
-        sensors.add(api,cfg);
+        api->addSensor(creator(api,"BMP28011"));
         CHECK_IIC1();
         #pragma message "GWBMP28011 defined"
     }
     #endif
     #if defined(GWBMP28012)
     {
-        auto *cfg=creator(api,PRFX2);
-        //BMP280Config *cfg=new BMP280Config(api,PRFX2);
-        sensors.add(api,cfg);
+        api->addSensor(creator(api,"BMP28012"));
         CHECK_IIC1();
         #pragma message "GWBMP28012 defined"
     }
     #endif
     #if defined(GWBMP28021)
     {
-        auto *cfg=creator(api,PRFX3);
-        //BMP280Config *cfg=new BMP280Config(api,PRFX3);
-        sensors.add(api,cfg);
+        api->addSensor(creator(api,"BMP28021"));
         CHECK_IIC2();
         #pragma message "GWBMP28021 defined"
     }
     #endif
     #if defined(GWBMP28022)
     {
-        auto *cfg=creator(api,PRFX4);
-        //BMP280Config *cfg=new BMP280Config(api,PRFX4);
-        sensors.add(api,cfg);
+        api->addSensor(creator(api,"BMP28022"));
         CHECK_IIC1();
         #pragma message "GWBMP28022 defined"
     }
     #endif
     return creator;
 }
+
+/**
+ * a define for the readConfig function
+ * we use a define here as we want to be able to check the config
+ * definitions at compile time
+*/
+#define CFGBMP280P(s, prefix, bus, baddr) \
+    CFG_SGET(s, prAct, prefix);           \
+    CFG_SGET(s, tmAct, prefix);           \
+    CFG_SGET(s, tmSrc, prefix);           \
+    CFG_SGET(s, iid, prefix);             \
+    CFG_SGET(s, intv, prefix);            \
+    CFG_SGET(s, tmNam, prefix);           \
+    CFG_SGET(s, prNam, prefix);           \
+    CFG_SGET(s, tmOff, prefix);           \
+    CFG_SGET(s, prOff, prefix);           \
+    s->busId = bus;                       \
+    s->addr = baddr;                      \
+    s->ok = true;                         \
+    s->intv*=1000;
+
+/**
+ * a config initializer for our sensor
+*/
+#define SCBMP280(list, prefix, bus, addr) \
+    GWSENSORCONFIG(list, BMP280Config, prefix, [](BMP280Config *s, GwConfigHandler *cfg) { CFGBMP280P(s, prefix, bus, addr); });
+
+/**
+ * four possible sensor configs
+*/
+SCBMP280(configs, BMP28011, 1, 0x76);
+SCBMP280(configs, BMP28012, 1, 0x77);
+SCBMP280(configs, BMP28021, 2, 0x76);
+SCBMP280(configs, BMP28022, 2, 0x77);
+
 #else
-IICSensorBase::Creator registerBMP280(GwApi *api,IICSensorList &sensors){
-   return IICSensorBase::Creator();
+SensorBase::Creator registerBMP280(GwApi *api){
+   return SensorBase::Creator();
 }
 
 #endif

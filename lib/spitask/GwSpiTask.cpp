@@ -21,8 +21,6 @@
 static SPIBus bus1(GWSPI1_HOST);
 static SPIBus bus2(GWSPI2_HOST);
 
-static SpiSensorList sensors;
-
 #ifdef GWSPI1_CLK
 static const int spi1clk=GWSPI1_CLK;
 #else
@@ -57,8 +55,11 @@ static const int spi2mosi=-1;
 
 void runSpiTask(GwApi *api){
     GwLog *logger=api->getLogger();
+    int res=-1;
+    ConfiguredSensors sensorList=api->taskInterfaces()->get<ConfiguredSensors>(res);
     std::map<int,SPIBus *> buses;
-    for (auto && sensor:sensors){
+    for (auto && sensor: sensorList.sensors){
+        if (sensor->busType != SensorBase::BusType::SPI) continue;
         int busId=sensor->busId;
         auto bus=buses.find(busId);
         if (bus == buses.end()){
@@ -93,7 +94,7 @@ void runSpiTask(GwApi *api){
     bool runLoop=false;
     GwIntervalRunner timers;
     int counterId=api->addCounter("spisensors");
-    for (auto && sensor:sensors){
+    for (auto && sensor: sensorList.sensors){
         if (!sensor->isActive()) continue;
         auto bus=buses.find(sensor->busId);
         if (bus == buses.end()){
@@ -122,10 +123,16 @@ void runSpiTask(GwApi *api){
 
 void initSpiTask(GwApi *api){
     GwLog *logger=api->getLogger();
-    registerDMS22B(api,sensors);
+    int res=-1;
+    registerDMS22B(api);
+    ConfiguredSensors sensorList=api->taskInterfaces()->get<ConfiguredSensors>(res);
     bool addTask=false;
-    for (auto && sensor:sensors){
-        if (sensor->preinit(api)) addTask=true;
+    for (auto && sensor:sensorList.sensors){
+        if (sensor->busType != SensorBase::BusType::SPI) continue;
+        if (sensor->preinit(api)) {
+            api->addCapability(sensor->prefix,"true");
+            addTask=true;
+        }
     }
     if (addTask){
         api->addUserTask(runSpiTask,"spiTask",3000);   

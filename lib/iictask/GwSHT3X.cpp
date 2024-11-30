@@ -1,11 +1,7 @@
 #include "GwSHT3X.h"
 #ifdef _GWSHT3X
-#define TYPE "SHT3X"
-#define PRFX1 TYPE "11"
-#define PRFX2 TYPE "12"
-#define PRFX3 TYPE "21"
-#define PRFX4 TYPE "22"
-
+class SHT3XConfig;
+static GwSensorConfigInitializerList<SHT3XConfig> configs;
 class SHT3XConfig : public IICSensorBase{
     public:
     String tmNam;
@@ -15,8 +11,7 @@ class SHT3XConfig : public IICSensorBase{
     tN2kHumiditySource huSrc;
     tN2kTempSource tmSrc;
     SHT3X *device=nullptr;
-    SHT3XConfig(GwApi *api,const String &prefix):
-        SensorBase(TYPE,api,prefix){}
+    using IICSensorBase::IICSensorBase;
     virtual bool isActive(){
         return tmAct || huAct;
     }
@@ -31,7 +26,6 @@ class SHT3XConfig : public IICSensorBase{
     virtual bool preinit(GwApi * api){
         GwLog *logger=api->getLogger();
         LOG_DEBUG(GwLog::LOG,"%s configured",prefix.c_str());
-        api->addCapability(prefix,"true");
         addHumidXdr(api,*this);
         addTempXdr(api,*this);
         return isActive();
@@ -62,83 +56,43 @@ class SHT3XConfig : public IICSensorBase{
             LOG_DEBUG(GwLog::DEBUG, "unable to query %s: %d",prefix.c_str(), rt);
         }
     }
-    /**
-     * we do not dynamically compute the config names
-     * just to get compile time errors if something does not fit
-     * correctly
-    */
-    #define CFG3X(prefix) \
-        CFG_GET(tmNam,prefix); \
-        CFG_GET(huNam,prefix); \
-        CFG_GET(iid,prefix); \
-        CFG_GET(tmAct,prefix); \
-        CFG_GET(huAct,prefix); \
-        CFG_GET(intv,prefix); \
-        CFG_GET(huSrc,prefix); \
-        CFG_GET(tmSrc,prefix);
-
+    
     virtual void readConfig(GwConfigHandler *cfg){
         if (ok) return;
-        if (prefix == PRFX1){
-            busId=1;
-            addr=0x44;
-            CFG3X(SHT3X11);
-            ok=true; 
-        }
-        if (prefix == PRFX2){
-            busId=1;
-            addr=0x45;
-            CFG3X(SHT3X12);
-            ok=true;
-        }
-        if (prefix == PRFX3){
-            busId=2;
-            addr=0x44;
-            CFG3X(SHT3X21);
-            ok=true;
-        }
-        if (prefix == PRFX4){
-            busId=2;
-            addr=0x45;
-            CFG3X(SHT3X22);
-            ok=true;
-        }
-        intv*=1000;
+        configs.readConfig(this,cfg);
+        return;
     }
 };
-IICSensorBase::Creator creator=[](GwApi *api,const String &prfx){
+SensorBase::Creator creator=[](GwApi *api,const String &prfx)-> SensorBase*{
+    if (! configs.knowsPrefix(prfx)) return nullptr;
     return new SHT3XConfig(api,prfx);
 };
-IICSensorBase::Creator registerSHT3X(GwApi *api,IICSensorList &sensors){
+SensorBase::Creator registerSHT3X(GwApi *api){
     GwLog *logger=api->getLogger();
     #if defined(GWSHT3X) || defined (GWSHT3X11)
     {
-        auto *scfg=creator(api,PRFX1);
-        sensors.add(api,scfg);
+        api->addSensor(creator(api,"SHT3X11"));
         CHECK_IIC1();
         #pragma message "GWSHT3X11 defined"
     }
     #endif
     #if defined(GWSHT3X12)
     {
-        auto *scfg=creator(api,PRFX2);
-        sensors.add(api,scfg);
+        api->addSensor(creator(api,"SHT3X12"));
         CHECK_IIC1();
         #pragma message "GWSHT3X12 defined"
     }
     #endif
     #if defined(GWSHT3X21)
     {
-        auto *scfg=creator(api,PRFX3);
-        sensors.add(api,scfg);
+        api->addSensor(creator(api,"SHT3X21"));
         CHECK_IIC2();
         #pragma message "GWSHT3X21 defined"
     }
     #endif
     #if defined(GWSHT3X22)
     {
-        auto *scfg=creator(api,PRFX4);
-        sensors.add(api,scfg);
+        api->addSensor(creator(api,"SHT3X22"));
         CHECK_IIC2();
         #pragma message "GWSHT3X22 defined"
     }
@@ -146,9 +100,36 @@ IICSensorBase::Creator registerSHT3X(GwApi *api,IICSensorList &sensors){
     return creator;
 };
 
+/**
+ * we do not dynamically compute the config names
+ * just to get compile time errors if something does not fit
+ * correctly
+ */
+#define CFGSHT3X(s, prefix, bus, baddr) \
+    CFG_SGET(s, tmNam, prefix);         \
+    CFG_SGET(s, huNam, prefix);         \
+    CFG_SGET(s, iid, prefix);           \
+    CFG_SGET(s, tmAct, prefix);         \
+    CFG_SGET(s, huAct, prefix);         \
+    CFG_SGET(s, intv, prefix);          \
+    CFG_SGET(s, huSrc, prefix);         \
+    CFG_SGET(s, tmSrc, prefix);         \
+    s->busId = bus;                     \
+    s->addr = baddr;                    \
+    s->ok = true;                       \
+    s->intv *= 1000;
+
+#define SCSHT3X(prefix, bus, addr) \
+    GWSENSORDEF(configs, SHT3XConfig, CFGSHT3X, prefix, bus, addr)
+
+SCSHT3X(SHT3X11, 1, 0x44);
+SCSHT3X(SHT3X12, 1, 0x45);
+SCSHT3X(SHT3X21, 2, 0x44);
+SCSHT3X(SHT3X22, 2, 0x45);
+
 #else
-IICSensorBase::Creator registerSHT3X(GwApi *api,IICSensorList &sensors){
-    return IICSensorBase::Creator();
+SensorBase::Creator registerSHT3X(GwApi *api){
+    return SensorBase::Creator();
 }
 
 #endif

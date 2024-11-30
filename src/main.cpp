@@ -235,17 +235,17 @@ void SendNMEA0183Message(const tNMEA0183Msg &NMEA0183Msg, int sourceId,bool conv
 class CalibrationValues {
   using Map=std::map<String,double>;
   Map values;
-  SemaphoreHandle_t lock;
+  SemaphoreHandle_t lock=nullptr;
   public:
     CalibrationValues(){
       lock=xSemaphoreCreateMutex();
     }
     void set(const String &name,double value){
-      GWSYNCHRONIZED(&lock);
+      GWSYNCHRONIZED(lock);
       values[name]=value;
     }
     bool get(const String &name, double &value){
-      GWSYNCHRONIZED(&lock);
+      GWSYNCHRONIZED(lock);
       auto it=values.find(name);
       if (it==values.end()) return false;
       value=it->second;
@@ -373,7 +373,7 @@ bool delayedRestart(){
   },"reset",2000,&logger,0,NULL) == pdPASS;
 }
 ApiImpl *apiImpl=new ApiImpl(MIN_USER_TASK);
-GwUserCode userCodeHandler(apiImpl,&mainLock);
+GwUserCode userCodeHandler(apiImpl);
 
 #define JSON_OK "{\"status\":\"OK\"}"
 #define JSON_INVALID_PASS F("{\"status\":\"invalid password\"}")
@@ -788,6 +788,7 @@ void setup() {
   logger.setWriter(new DefaultLogWriter());
 #endif
   boatData.begin();
+  userCodeHandler.begin(mainLock);
   userCodeHandler.startInitTasks(MIN_USER_TASK);
   channels.preinit();
   config.stopChanges();
@@ -849,7 +850,7 @@ void setup() {
                               buffer[29]=0;
                               request->send(200,"text/plain",buffer);    
   });
-  webserver.registerHandler((USERPREFIX+"*").c_str(),[&USERPREFIX](AsyncWebServerRequest *req){
+  webserver.registerHandler((USERPREFIX+"*").c_str(),[](AsyncWebServerRequest *req){
                               String turl=req->url().substring(USERPREFIX.length());
                               logger.logDebug(GwLog::DEBUG,"user web request for %s",turl.c_str());
                               userCodeHandler.handleWebRequest(turl,req);
@@ -937,7 +938,7 @@ void setup() {
   logger.logDebug(GwLog::LOG,"starting addon tasks");
   logger.flush();
   {
-    GWSYNCHRONIZED(&mainLock);
+    GWSYNCHRONIZED(mainLock);
     userCodeHandler.startUserTasks(MIN_USER_TASK);
   }
   timers.addAction(HEAP_REPORT_TIME,[](){
@@ -967,7 +968,7 @@ void handleSendAndRead(bool handleRead){
 void loopRun() {
   //logger.logDebug(GwLog::DEBUG,"main loop start");
   monitor.reset();
-  GWSYNCHRONIZED(&mainLock);
+  GWSYNCHRONIZED(mainLock);
   logger.flush();
   monitor.setTime(1);
   gwWifi.loop();

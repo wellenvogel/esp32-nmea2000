@@ -427,6 +427,7 @@ void GwChannelList::begin(bool fallbackSerial){
     if (! fallbackSerial){
         GwSerial *usbSerial=createSerialImpl(config, logger,USB_CHANNEL_ID,GWUSB_RX,GWUSB_TX,true);
         if (usbSerial != nullptr){
+            usbSerial->enableWriteLock(); //as it is used for logging we need this additionally
             GwChannel *usbChannel=createChannel(logger,config,USB_CHANNEL_ID,usbSerial,GWSERIAL_TYPE_BI);
             if (usbChannel != nullptr){
                 addChannel(usbChannel);

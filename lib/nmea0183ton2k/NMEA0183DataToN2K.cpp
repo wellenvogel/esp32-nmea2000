@@ -189,6 +189,7 @@ private:
         if (N2kIsNA(v)) return N2kInt8NA;
         return v;
     }
+    
     void convertXDR(const SNMEA0183Msg &msg){
         XdrMappingList foundMappings;
         for (int offset=0;offset <= (msg.FieldCount()-4);offset+=4){
@@ -199,7 +200,19 @@ private:
             String unit=msg.Field(offset+2);
             String transducerName=msg.Field(offset+3);
             GwXDRFoundMapping found=xdrMappings->getMapping(transducerName,type,unit);
-            if (found.empty) continue;
+            if (found.empty) {
+                if (config.unmappedXdr){
+                    const GwXDRType *typeDef=xdrMappings->findType(type,unit);
+                    GwXdrUnknownMapping mapping(transducerName,unit,typeDef,config.xdrTimeout);
+                    value=mapping.valueFromXdr(value);
+                    if (boatData->update(value,msg.sourceId,&mapping)){
+                        //TODO: potentially update the format
+                        LOG_DEBUG(GwLog::DEBUG+1,"found unmapped XDR %s:%s, value %f",
+                        transducerName.c_str(),mapping.getBoatItemFormat().c_str(),value);
+                    }
+                }
+                continue;
+            }
             value=found.valueFromXdr(value);
             if (!boatData->update(value,msg.sourceId,&found)) continue;
             LOG_DEBUG(GwLog::DEBUG+1,"found mapped XDR %s:%s, value %f",
@@ -307,7 +320,7 @@ private:
             return;   
         }
         tN2kMsg n2kMsg;
-        if (boatData->XTE->update(rmb.xte,msg.sourceId)){
+        if (updateDouble(boatData->XTE,rmb.xte,msg.sourceId)){
             tN2kXTEMode mode=N2kxtem_Autonomous;
             if (msg.FieldCount() > 13){
                 const char *modeChar=msg.Field(13);
@@ -318,10 +331,10 @@ private:
         }
         uint8_t destinationId=getWaypointId(rmb.destID);
         uint8_t sourceId=getWaypointId(rmb.originID);
-        if (boatData->DTW->update(rmb.dtw,msg.sourceId)
-            && boatData->BTW->update(rmb.btw,msg.sourceId)
-            && boatData->WPLat->update(rmb.latitude,msg.sourceId)
-            && boatData->WPLon->update(rmb.longitude,msg.sourceId)
+        if (updateDouble(boatData->DTW,rmb.dtw,msg.sourceId)
+            && updateDouble(boatData->BTW,rmb.btw,msg.sourceId)
+            && updateDouble(boatData->WPLat,rmb.latitude,msg.sourceId)
+            && updateDouble(boatData->WPLon,rmb.longitude,msg.sourceId)
             ){
             SetN2kNavigationInfo(n2kMsg,1,rmb.dtw,N2khr_true,
                 false,

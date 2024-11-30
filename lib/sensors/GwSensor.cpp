@@ -12,9 +12,9 @@
   License along with this library; if not, write to the Free Software
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
-#ifndef _GWSPITASK_H
-#define _GWSPITASK_H
+#include "GwSensor.h"
 #include "GwApi.h"
-void initSpiTask(GwApi *api);
-DECLARE_INITFUNCTION_ORDER(initSpiTask,GWLATEORDER);
-#endif
+
+void SensorList::add(SensorBase::Ptr sensor){
+        this->push_back(sensor);
+    }

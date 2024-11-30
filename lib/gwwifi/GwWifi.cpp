@@ -108,7 +108,7 @@ void GwWifi::loop(){
         }
         else{
             if (! clientIsConnected){
-                LOG_DEBUG(GwLog::LOG,"wifiClient %s now connected to",wifiSSID->asCString());
+                LOG_DEBUG(GwLog::LOG,"wifiClient now connected to %s at %s",wifiSSID->asCString(),WiFi.localIP().toString().c_str());
                 clientIsConnected=true;
             }
         }

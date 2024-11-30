@@ -170,6 +170,17 @@ For details refer to the [example description](lib/exampletask/Readme.md).
 
 Changelog
 ---------
+[20241128](../../releases/tag/20241128)
+*********
+* additional correction for: USB connection on S3 stops [#81](../../issues/81)
+* [#71](../../pull/71): add BMP280 to [IIC Sensors](doc/Sensors.md), send 130311 for BMP380 and BME380
+* add an api function to add [own Sensors](doc/Sensors.md)
+* use a lock on the USB connection write site to avoid problems with NMEA and logs at the same time
+* allow to show unmapped XDR values in the data display
+* fix a bug that made the dashboard page disappear after a restart of the device
+* correctly handle empty fields in RMB messages
+* call the newly introduced web request handler for user tasks outside of an API lock
+
 [20241114](../../releases/tag/20241114)
 **********
 * UDP writer and reader - [#79](../../issues/79)

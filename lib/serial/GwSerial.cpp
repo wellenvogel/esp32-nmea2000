@@ -63,6 +63,7 @@ GwSerial::~GwSerial()
 {
     delete buffer;
     if (readBuffer) delete readBuffer;
+    if (lock != nullptr) vSemaphoreDelete(lock);
 }
 
 String GwSerial::getMode(){
@@ -87,10 +88,14 @@ size_t GwSerial::enqueue(const uint8_t *data, size_t len, bool partial)
 }
 GwBuffer::WriteStatus GwSerial::write(){
     if (! isInitialized()) return GwBuffer::ERROR;
-    size_t numWrite=availableForWrite();          
-    size_t rt=buffer->fetchData(numWrite,[](uint8_t *buffer,size_t len, void *p){
-        return ((GwSerial *)p)->stream->write(buffer,len);
-    },this);
+    size_t rt=0;
+    {
+        GWSYNCHRONIZED(lock);
+        size_t numWrite=availableForWrite();          
+        rt=buffer->fetchData(numWrite,[](uint8_t *buffer,size_t len, void *p){
+            return ((GwSerial *)p)->stream->write(buffer,len);
+        },this);
+    }
     if (rt != 0){
         LOG_DEBUG(GwLog::DEBUG+1,"Serial %d write %d",id,rt);
     }

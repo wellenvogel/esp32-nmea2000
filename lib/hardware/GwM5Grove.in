@@ -64,15 +64,15 @@
 #endif
 
 #GROVE
-#ifdef M5_ENV4$GS$
-  #ifndef M5_GROOVEIIC$GS$
-    #define M5_GROOVEIIC$GS$
-  #endif
-  GROOVE_IIC(SHT3X,$Z$,1)
-  GROOVE_IIC(BMP280,$Z$,1)
-  #define _GWSHT3X
-  #define _GWBMP280
-#endif
+//#ifdef M5_ENV4$GS$
+//  #ifndef M5_GROOVEIIC$GS$
+//    #define M5_GROOVEIIC$GS$
+//  #endif
+//  GROOVE_IIC(SHT3X,$Z$,1)
+//  GROOVE_IIC(BMP280,$Z$,1)
+//  #define _GWSHT3X
+//  #define _GWBMP280
+//#endif
 
 #GROVE
 //example: -DSHT3XG1_A : defines STH3Xn1 on grove A - x depends on the other devices
