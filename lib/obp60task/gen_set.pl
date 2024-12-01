@@ -1,13 +1,10 @@
 #!/bin/perl -w
-#A tool to generate that part of config.json  that deals with pages and Fields.
+#A tool to generate that part of config.json  that deals with pages and fields.
 
-use List::Util qw( min max );
-
-
-#List of all Pages and the number of parameters they expect.
+#List of all pages and the number of parameters they expect.
 %NoOfFieldsPerPage=qw( 
                 ApparentWind    0
-                Autobahn    0
+                XTETrack    0
                 Battery2    0
                 Battery     0
                 BME280      0
@@ -28,13 +25,22 @@ use List::Util qw( min max );
                 WindRose    0
                 WindRoseFlex    6
                 );
-# No changes neede beyond this pint
+# No changes needed beyond this point
+#max number of pages supported by OBP60
 $NoOfPages=10;
+#Default selection for each page
 @Defaults=qw(Voltage WindRose OneValue TwoValues ThreeValues FourValues FourValues2 Clock RollPitch Battery2);
 @Numbers=qw(one two three four five six seven eight nine ten);
 @Pages=sort(keys(%NoOfFieldsPerPage));
-$MaxNoOfFieldsPerPage=max(values(%NoOfFieldsPerPage));
+$MaxNoOfFieldsPerPage=0; # inital value, gets updated with maximum entry from %NoOfFieldsPerPage
 
+
+#find max. number of fields without additional modules
+ foreach (values(%NoOfFieldsPerPage)){
+    if ($_ > $MaxNoOfFieldsPerPage){
+        $MaxNoOfFieldsPerPage=$_;
+    }
+ }
 
 for ($PageNo=1;$PageNo<=$NoOfPages;$PageNo++){
     print "{\n"; 
@@ -59,7 +65,6 @@ for ($PageNo=1;$PageNo<=$NoOfPages;$PageNo++){
     for ($vp=$PageNo;$vp<=$NoOfPages;$vp++){ 
         print '"{visiblePages":"',$vp,'"},';
     } 
-    #"visiblePages":"2"},{"visiblePages":"3"},{"visiblePages":"4"},{"visiblePages":"5"},{"visiblePages":"6"},{"visiblePages":"7"},{"visiblePages":"8"},{"visiblePages":"9"},{"visiblePages":"10"}
     print "\b",']',"\n";
     print '},',"\n";
     for ($FieldNo=1; $FieldNo<=$MaxNoOfFieldsPerPage;$FieldNo++){  
@@ -78,12 +83,8 @@ for ($PageNo=1;$PageNo<=$NoOfPages;$PageNo++){
             if($NoOfFieldsPerPage{$page}>=$FieldNo){ 
                 print '{"page1type":"',$page,'"},';
             } 
-            
-        #{"page1type":"OneValue"},{"page1type":"TwoValues"},{"page1type":"ThreeValues"},{"page1type":"FourValues"},{"page1type":"FourValues2"},{"page1type":"WindRoseFlex"}
         } 
         print "\b],\n";
     print '},',"\n";
     } 
 } 
-   
-
