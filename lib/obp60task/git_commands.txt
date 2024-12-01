@@ -2,3 +2,11 @@ git status
 git fetch upstream
 git diff --name-status upstream/master
 git checkout upstream/master platformio.ini
+
+# how to reset my Repo to match norbert'status
+
+git remote add upstream https://github.com/norbert-walter/esp32-nmea2000-obp60
+git fetch upstream
+git checkout master
+git reset --hard upstream/master  
+git push origin master --force
