@@ -1103,7 +1103,7 @@
             {"l":"Fuel Gasoline (6)","v":"6"}
         ],
         "description": "Fluid type in tank",
-        "category": "OBP60 Page 1",
+        "category": "OBP60 Page 2",
         "capabilities": {
             "obp60":"true"
         },
@@ -1209,7 +1209,7 @@
             {"l":"Fuel Gasoline (6)","v":"6"}
         ],
         "description": "Fluid type in tank",
-        "category": "OBP60 Page 1",
+        "category": "OBP60 Page 3",
         "capabilities": {
             "obp60":"true"
         },
@@ -1315,7 +1315,7 @@
             {"l":"Fuel Gasoline (6)","v":"6"}
         ],
         "description": "Fluid type in tank",
-        "category": "OBP60 Page 1",
+        "category": "OBP60 Page 4",
         "capabilities": {
             "obp60":"true"
         },
@@ -1421,7 +1421,7 @@
             {"l":"Fuel Gasoline (6)","v":"6"}
         ],
         "description": "Fluid type in tank",
-        "category": "OBP60 Page 1",
+        "category": "OBP60 Page 5",
         "capabilities": {
             "obp60":"true"
         },
@@ -1527,7 +1527,7 @@
             {"l":"Fuel Gasoline (6)","v":"6"}
         ],
         "description": "Fluid type in tank",
-        "category": "OBP60 Page 1",
+        "category": "OBP60 Page 6",
         "capabilities": {
             "obp60":"true"
         },
@@ -1633,7 +1633,7 @@
             {"l":"Fuel Gasoline (6)","v":"6"}
         ],
         "description": "Fluid type in tank",
-        "category": "OBP60 Page 1",
+        "category": "OBP60 Page 7",
         "capabilities": {
             "obp60":"true"
         },
@@ -1739,7 +1739,7 @@
             {"l":"Fuel Gasoline (6)","v":"6"}
         ],
         "description": "Fluid type in tank",
-        "category": "OBP60 Page 1",
+        "category": "OBP60 Page 8",
         "capabilities": {
             "obp60":"true"
         },
@@ -1845,7 +1845,7 @@
             {"l":"Fuel Gasoline (6)","v":"6"}
         ],
         "description": "Fluid type in tank",
-        "category": "OBP60 Page 1",
+        "category": "OBP60 Page 9",
         "capabilities": {
             "obp60":"true"
         },
@@ -1951,7 +1951,7 @@
             {"l":"Fuel Gasoline (6)","v":"6"}
         ],
         "description": "Fluid type in tank",
-        "category": "OBP60 Page 1",
+        "category": "OBP60 Page 10",
         "capabilities": {
             "obp60":"true"
         },
