@@ -77,7 +77,7 @@ for ($PageNo=1;$PageNo<=$NoOfPages;$PageNo++){
         print "\t",'"category": "OBP60 Page ',$PageNo,'",',"\n";
         print "\t",'"capabilities": {',"\n";
         print "\t",'    "obp60":"true"',"\n";
-        print "\t",'}, ls',"\n";
+        print "\t",'}, ',"\n";
         print "\t",'"condition":[';
         foreach $page (@Pages) {
             if($NoOfFieldsPerPage{$page}>=$FieldNo){ 
