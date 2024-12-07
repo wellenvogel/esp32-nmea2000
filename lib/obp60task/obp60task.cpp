@@ -201,8 +201,10 @@ void registerAllPages(PageList &list){
     //this way this separate source file can be compiled by it's own
     //and has no access to any of our data except the one that we
     //give as a parameter to the page function
-    extern PageDescription registerPageOneValue;
+    extern PageDescription registerPageSystem;
     //we add the variable to our list
+    list.add(&registerPageSystem);
+    extern PageDescription registerPageOneValue;
     list.add(&registerPageOneValue);
     extern PageDescription registerPageTwoValues;
     list.add(&registerPageTwoValues);
@@ -470,11 +472,11 @@ void OBP60Task(GwApi *api){
     
     // Main loop runs with 100ms
     //####################################################################################
-    
+
+    bool systemPage = false;
     while (true){
         delay(100);     // Delay 100ms (loop time)
 
-    
         // Undervoltage detection
         if(uvoltage == true){
             underVoltageDetection(api);
@@ -515,9 +517,19 @@ void OBP60Task(GwApi *api){
             int keyboardMessage=0;
             while (xQueueReceive(allParameters.queue,&keyboardMessage,0)){
                 LOG_DEBUG(GwLog::LOG,"new key from keyboard %d",keyboardMessage);
-                
-                Page *currentPage=pages[pageNumber].page;
-                if (currentPage ){
+
+                Page *currentPage;
+                if (keyboardMessage == 12) {
+                    LOG_DEBUG(GwLog::LOG, "Calling system page");
+                    systemPage = true; // System page is out of band
+                    currentPage = allPages.pages[0]->creator(commonData);
+                }
+                else {
+                    systemPage = false;
+                    currentPage  = pages[pageNumber].page;
+                }
+
+                if (currentPage) {
                     keyboardMessage=currentPage->handleKey(keyboardMessage);
                 }
                 if (keyboardMessage > 0)
@@ -641,19 +653,27 @@ void OBP60Task(GwApi *api){
                 }
                 
                 // Call the particular page
-                Page *currentPage=pages[pageNumber].page;
-                if (currentPage == NULL){
-                    LOG_DEBUG(GwLog::ERROR,"page number %d not found",pageNumber);
-                    // Error handling for missing page
+                Page *currentPage;
+                if (systemPage) {
+                    currentPage = allPages.pages[0]->creator(commonData);
+                    PageData sysparams;
+                    currentPage->displayPage(commonData, sysparams);
                 }
-                else{
-                    if (lastPage != pageNumber){
-                        currentPage->displayNew(commonData,pages[pageNumber].parameters);
-                        lastPage=pageNumber;
+                else {
+                    currentPage = pages[pageNumber].page;
+                    if (currentPage == NULL){
+                        LOG_DEBUG(GwLog::ERROR,"page number %d not found",pageNumber);
+                        // Error handling for missing page
                     }
-                    //call the page code
-                    LOG_DEBUG(GwLog::DEBUG,"calling page %d",pageNumber);
-                    currentPage->displayPage(commonData,pages[pageNumber].parameters);
+                    else{
+                        if (lastPage != pageNumber){
+                            currentPage->displayNew(commonData,pages[pageNumber].parameters);
+                            lastPage=pageNumber;
+                        }
+                        //call the page code
+                        LOG_DEBUG(GwLog::DEBUG,"calling page %d",pageNumber);
+                        currentPage->displayPage(commonData,pages[pageNumber].parameters);
+                    }
                 }
             }
         }

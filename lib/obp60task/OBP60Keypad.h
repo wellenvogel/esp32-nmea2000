@@ -128,6 +128,15 @@ int readKeypad(uint thSensitivity) {
     }
   }
 
+  // System page with key 5 and 4 in fast series
+  if (keycode2 == 5 && keycodeold2 == 4) {
+    keycode = 0;
+    keycodeold = 0;
+    keycode2 = 0;
+    keycodeold2 = 0;
+    keystatus = 12;
+  }
+
   // Key lock with key 1 and 6 or 6 and 1 in fast series
   if((keycode2 == 1 && keycodeold2 == 6) || (keycode2 == 6 && keycodeold2 == 1)) {
     keycode = 0;
