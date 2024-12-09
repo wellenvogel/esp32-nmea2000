@@ -46,7 +46,7 @@ std::vector<Point> rotatePoints(const Point& origin, const std::vector<Point>& p
      return rotatedPoints;
 }
 
-void fillPoly4(const std::vector<Point>& p4, int color) {
+void fillPoly4(const std::vector<Point>& p4, uint16_t color) {
     getdisplay().fillTriangle(p4[0].x, p4[0].y, p4[1].x, p4[1].y, p4[2].x, p4[2].y, color);
     getdisplay().fillTriangle(p4[0].x, p4[0].y, p4[2].x, p4[2].y, p4[3].x, p4[3].y, color);
 }
@@ -96,10 +96,12 @@ static unsigned char gasoline_bits[] = {
 
 class PageFluid : public Page{
     bool keylock = false;               // Keylock
+    int fluidtype;
 
     public:
     PageFluid(CommonData &common){
         common.logger->logDebug(GwLog::LOG,"Show PageFluid");
+        fluidtype = common.config->getInt("page" + String(common.data.actpage) + "fluid", 0);
     }
 
     virtual int handleKey(int key){
@@ -116,7 +118,6 @@ class PageFluid : public Page{
 
         // Get config data
         String flashLED = config->getString(config->flashLED);
-        String displaycolor = config->getString(config->displaycolor);
         String backlightMode = config->getString(config->backlight);
 
         // Optical warning by limit violation (unused)
@@ -133,22 +134,13 @@ class PageFluid : public Page{
         double value1 = bvalue1->value;
         bool valid1 = bvalue1->valid;
 
-        int fluidtype = config->getInt("page" + String(commonData.data.actpage) + "fluid", 0);
-
         // Draw page
         //***********************************************************
 
-        // Set background color and text color
-        int textcolor = GxEPD_BLACK;
-        int pixelcolor = GxEPD_BLACK;
-        int bgcolor = GxEPD_WHITE;
-        if(displaycolor != "Normal"){
-            textcolor = GxEPD_WHITE;
-            pixelcolor = GxEPD_WHITE;
-            bgcolor = GxEPD_BLACK;
-        }
         // Set display in partial refresh mode
         getdisplay().setPartialWindow(0, 0, getdisplay().width(), getdisplay().height());
+
+        getdisplay().setTextColor(commonData.fgcolor);
 
         // descriptions
         getdisplay().setFont(&Ubuntu_Bold12pt7b);
@@ -166,11 +158,11 @@ class PageFluid : public Page{
         uint8_t r = 110;
 
         // circular frame
-        getdisplay().drawCircle(c.x, c.y, r+5, pixelcolor);
-        getdisplay().fillCircle(c.x, c.y, r+2, pixelcolor);
-        getdisplay().fillCircle(c.x, c.y, r-1, bgcolor);
+        getdisplay().drawCircle(c.x, c.y, r+5, commonData.fgcolor);
+        getdisplay().fillCircle(c.x, c.y, r+2, commonData.fgcolor);
+        getdisplay().fillCircle(c.x, c.y, r-1, commonData.bgcolor);
         // center of pointer as dot 
-        getdisplay().fillCircle(c.x, c.y, 8, pixelcolor);
+        getdisplay().fillCircle(c.x, c.y, 8, commonData.fgcolor);
 
         // value down centered
         char buffer[6];
@@ -184,19 +176,19 @@ class PageFluid : public Page{
         // draw symbol (as bitmap)
         switch (fluidtype) {
             case 0:
-                getdisplay().drawXBitmap(c.x-8, c.y-50, fuel_bits, fuel_width, fuel_height, pixelcolor);
+                getdisplay().drawXBitmap(c.x-8, c.y-50, fuel_bits, fuel_width, fuel_height, commonData.fgcolor);
                 break;
             case 1:
-                getdisplay().drawXBitmap(c.x-8, c.y-50, water_bits, water_width, water_height, pixelcolor);
+                getdisplay().drawXBitmap(c.x-8, c.y-50, water_bits, water_width, water_height, commonData.fgcolor);
                 break;
             case 4:
-                getdisplay().drawXBitmap(c.x-8, c.y-50, oil_bits, oil_width, oil_height, pixelcolor);
+                getdisplay().drawXBitmap(c.x-8, c.y-50, oil_bits, oil_width, oil_height, commonData.fgcolor);
                 break;
             case 5:
-                getdisplay().drawXBitmap(c.x-8, c.y-50, waste_bits, waste_width, waste_height, pixelcolor);
+                getdisplay().drawXBitmap(c.x-8, c.y-50, waste_bits, waste_width, waste_height, commonData.fgcolor);
                 break;
             case 6:
-                getdisplay().drawXBitmap(c.x-8, c.y-50, gasoline_bits, gasoline_width, gasoline_height, pixelcolor);
+                getdisplay().drawXBitmap(c.x-8, c.y-50, gasoline_bits, gasoline_width, gasoline_height, commonData.fgcolor);
                 break;
         }
 
@@ -225,11 +217,11 @@ class PageFluid : public Page{
             {c.x + 2, c.y - (r - 16)},
             {c.x - 2, c.y - (r - 16)} 
         };
-        fillPoly4(rotatePoints(c, pts, -120), pixelcolor);
-        fillPoly4(rotatePoints(c, pts, -60), pixelcolor);
-        fillPoly4(rotatePoints(c, pts, 0), pixelcolor);
-        fillPoly4(rotatePoints(c, pts, 60), pixelcolor);
-        fillPoly4(rotatePoints(c, pts, 120), pixelcolor);
+        fillPoly4(rotatePoints(c, pts, -120), commonData.fgcolor);
+        fillPoly4(rotatePoints(c, pts, -60), commonData.fgcolor);
+        fillPoly4(rotatePoints(c, pts, 0), commonData.fgcolor);
+        fillPoly4(rotatePoints(c, pts, 60), commonData.fgcolor);
+        fillPoly4(rotatePoints(c, pts, 120), commonData.fgcolor);
 
         // dots
         // rotate 0 to 360 in 12 degree steps
@@ -238,7 +230,7 @@ class PageFluid : public Page{
                 continue;
             }
             p = rotatePoint(c, {c.x, c.y - r + 10}, angle);
-            getdisplay().fillCircle(p.x, p.y, 3, pixelcolor);
+            getdisplay().fillCircle(p.x, p.y, 3, commonData.fgcolor);
         }
 
         // pointer
@@ -249,9 +241,9 @@ class PageFluid : public Page{
                 {c.x + 6, c.y + 15},
                 {c.x - 6, c.y + 15}
             };
-            fillPoly4(rotatePoints(c, pts, -120 + bvalue1->value * 2.4), pixelcolor);
+            fillPoly4(rotatePoints(c, pts, -120 + bvalue1->value * 2.4), commonData.fgcolor);
             // Pointer axis is white
-            getdisplay().fillCircle(c.x, c.y, 6, bgcolor);
+            getdisplay().fillCircle(c.x, c.y, 6, commonData.bgcolor);
         }
  
         // Key Layout

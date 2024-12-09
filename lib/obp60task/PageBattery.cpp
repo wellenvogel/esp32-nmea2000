@@ -47,7 +47,6 @@ class PageBattery : public Page
         // Get config data
         String lengthformat = config->getString(config->lengthFormat);
         // bool simulation = config->getBool(config->useSimuData);
-        String displaycolor = config->getString(config->displaycolor);
         String flashLED = config->getString(config->flashLED);
         String backlightMode = config->getString(config->backlight);
         String powsensor1 = config->getString(config->usePowSensor1);
@@ -153,25 +152,11 @@ class PageBattery : public Page
         // Draw page
         //***********************************************************
 
-        // Set background color and text color
-        int textcolor = GxEPD_BLACK;
-        int pixelcolor = GxEPD_BLACK;
-        int bgcolor = GxEPD_WHITE;
-        if(displaycolor == "Normal"){
-            textcolor = GxEPD_BLACK;
-            pixelcolor = GxEPD_BLACK;
-            bgcolor = GxEPD_WHITE;
-        }
-        else{
-            textcolor = GxEPD_WHITE;
-            pixelcolor = GxEPD_WHITE;
-            bgcolor = GxEPD_BLACK;
-        }
         // Set display in partial refresh mode
         getdisplay().setPartialWindow(0, 0, getdisplay().width(), getdisplay().height()); // Set partial update
 
         // Show average settings
-        getdisplay().setTextColor(textcolor);
+        getdisplay().setTextColor(commonData.fgcolor);
         getdisplay().setFont(&Ubuntu_Bold8pt7b);
         switch (average) {
             case 0:
@@ -219,13 +204,11 @@ class PageBattery : public Page
         // ############### Value 1 ################
 
         // Show name
-        getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&Ubuntu_Bold20pt7b);
         getdisplay().setCursor(20, 55);
         getdisplay().print(name1);                           // Value name
 
         // Show unit
-        getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&Ubuntu_Bold12pt7b);
         getdisplay().setCursor(20, 90);
         getdisplay().print(unit1);                           // Unit
@@ -245,18 +228,16 @@ class PageBattery : public Page
         // ############### Horizontal Line ################
 
         // Horizontal line 3 pix
-        getdisplay().fillRect(0, 105, 400, 3, pixelcolor);
+        getdisplay().fillRect(0, 105, 400, 3, commonData.fgcolor);
 
         // ############### Value 2 ################
 
         // Show name
-        getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&Ubuntu_Bold20pt7b);
         getdisplay().setCursor(20, 145);
         getdisplay().print(name2);                           // Value name
 
         // Show unit
-        getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&Ubuntu_Bold12pt7b);
         getdisplay().setCursor(20, 180);
         getdisplay().print(unit2);                           // Unit
@@ -276,18 +257,16 @@ class PageBattery : public Page
         // ############### Horizontal Line ################
 
         // Horizontal line 3 pix
-        getdisplay().fillRect(0, 195, 400, 3, pixelcolor);
+        getdisplay().fillRect(0, 195, 400, 3, commonData.fgcolor);
 
         // ############### Value 3 ################
 
         // Show name
-        getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&Ubuntu_Bold20pt7b);
         getdisplay().setCursor(20, 235);
         getdisplay().print(name3);                           // Value name
 
         // Show unit
-        getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&Ubuntu_Bold12pt7b);
         getdisplay().setCursor(20, 270);
         getdisplay().print(unit3);                           // Unit
@@ -308,7 +287,6 @@ class PageBattery : public Page
         // ############### Key Layout ################
 
         // Key Layout
-        getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&Ubuntu_Bold8pt7b);
         if(keylock == false){
             getdisplay().setCursor(10, 290);

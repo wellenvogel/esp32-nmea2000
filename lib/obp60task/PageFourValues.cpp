@@ -37,7 +37,6 @@ class PageFourValues : public Page
         // Get config data
         String lengthformat = config->getString(config->lengthFormat);
         // bool simulation = config->getBool(config->useSimuData);
-        String displaycolor = config->getString(config->displaycolor);
         bool holdvalues = config->getBool(config->holdvalues);
         String flashLED = config->getString(config->flashLED);
         String backlightMode = config->getString(config->backlight);
@@ -91,33 +90,19 @@ class PageFourValues : public Page
         // Draw page
         //***********************************************************
 
-        // Set background color and text color
-        int textcolor = GxEPD_BLACK;
-        int pixelcolor = GxEPD_BLACK;
-        int bgcolor = GxEPD_WHITE;
-        if(displaycolor == "Normal"){
-            textcolor = GxEPD_BLACK;
-            pixelcolor = GxEPD_BLACK;
-            bgcolor = GxEPD_WHITE;
-        }
-        else{
-            textcolor = GxEPD_WHITE;
-            pixelcolor = GxEPD_WHITE;
-            bgcolor = GxEPD_BLACK;
-        }
         // Set display in partial refresh mode
         getdisplay().setPartialWindow(0, 0, getdisplay().width(), getdisplay().height()); // Set partial update
+
+        getdisplay().setTextColor(commonData.fgcolor);
 
         // ############### Value 1 ################
 
         // Show name
-        getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&Ubuntu_Bold16pt7b);
         getdisplay().setCursor(20, 45);
         getdisplay().print(name1);                           // Page name
 
         // Show unit
-        getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&Ubuntu_Bold8pt7b);
         getdisplay().setCursor(20, 65);
         if(holdvalues == false){
@@ -156,18 +141,16 @@ class PageFourValues : public Page
         // ############### Horizontal Line ################
 
         // Horizontal line 3 pix
-        getdisplay().fillRect(0, 80, 400, 3, pixelcolor);
+        getdisplay().fillRect(0, 80, 400, 3, commonData.fgcolor);
 
         // ############### Value 2 ################
 
         // Show name
-        getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&Ubuntu_Bold16pt7b);
         getdisplay().setCursor(20, 113);
         getdisplay().print(name2);                           // Page name
 
         // Show unit
-        getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&Ubuntu_Bold8pt7b);
         getdisplay().setCursor(20, 133);
         if(holdvalues == false){
@@ -206,18 +189,16 @@ class PageFourValues : public Page
         // ############### Horizontal Line ################
 
         // Horizontal line 3 pix
-        getdisplay().fillRect(0, 146, 400, 3, pixelcolor);
+        getdisplay().fillRect(0, 146, 400, 3, commonData.fgcolor);
 
         // ############### Value 3 ################
 
         // Show name
-        getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&Ubuntu_Bold16pt7b);
         getdisplay().setCursor(20, 181);
         getdisplay().print(name3);                           // Page name
 
         // Show unit
-        getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&Ubuntu_Bold8pt7b);
         getdisplay().setCursor(20, 201);
         if(holdvalues == false){
@@ -256,18 +237,16 @@ class PageFourValues : public Page
         // ############### Horizontal Line ################
 
         // Horizontal line 3 pix
-        getdisplay().fillRect(0, 214, 400, 3, pixelcolor);
+        getdisplay().fillRect(0, 214, 400, 3, commonData.fgcolor);
 
         // ############### Value 4 ################
 
         // Show name
-        getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&Ubuntu_Bold16pt7b);
         getdisplay().setCursor(20, 249);
         getdisplay().print(name4);                           // Page name
 
         // Show unit
-        getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&Ubuntu_Bold8pt7b);
         getdisplay().setCursor(20, 269);
         if(holdvalues == false){
@@ -307,7 +286,6 @@ class PageFourValues : public Page
         // ############### Key Layout ################
 
         // Key Layout
-        getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&Ubuntu_Bold8pt7b);
         if(keylock == false){
             getdisplay().setCursor(130, 290);

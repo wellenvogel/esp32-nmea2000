@@ -45,7 +45,6 @@ public:
         
         // Get config data
         bool simulation = config->getBool(config->useSimuData);
-        String displaycolor = config->getString(config->displaycolor);
         bool holdvalues = config->getBool(config->holdvalues);
         String flashLED = config->getString(config->flashLED);
         String batVoltage = config->getString(config->batteryVoltage);
@@ -133,43 +132,26 @@ public:
         // Draw page
         //***********************************************************
 
-        // Clear display, set background color and text color
-        int textcolor = GxEPD_BLACK;
-        int pixelcolor = GxEPD_BLACK;
-        int bgcolor = GxEPD_WHITE;
-        if(displaycolor == "Normal"){
-            textcolor = GxEPD_BLACK;
-            pixelcolor = GxEPD_BLACK;
-            bgcolor = GxEPD_WHITE;
-        }
-        else{
-            textcolor = GxEPD_WHITE;
-            pixelcolor = GxEPD_WHITE;
-            bgcolor = GxEPD_BLACK;
-        }
         // Set display in partial refresh mode
         getdisplay().setPartialWindow(0, 0, getdisplay().width(), getdisplay().height()); // Set partial update
 
         // Show name
-        getdisplay().setTextColor(textcolor);
+        getdisplay().setTextColor(commonData.fgcolor);
         getdisplay().setFont(&Ubuntu_Bold32pt7b);
         getdisplay().setCursor(20, 100);
         getdisplay().print(name1);                           // Value name
 
         // Show unit
-        getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&Ubuntu_Bold20pt7b);
         getdisplay().setCursor(270, 100);
         getdisplay().print("V");
 
         // Show battery type
-        getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&Ubuntu_Bold8pt7b);
         getdisplay().setCursor(295, 100);
         getdisplay().print(batType);
 
         // Show average settings
-        getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&Ubuntu_Bold8pt7b);
         getdisplay().setCursor(320, 84);
         switch (average) {
@@ -191,7 +173,6 @@ public:
         } 
 
         // Reading bus data or using simulation data
-        getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&DSEG7Classic_BoldItalic60pt7b);
         getdisplay().setCursor(20, 240);
         if(simulation == true){
@@ -226,23 +207,23 @@ public:
         // Trend indicator
         // Show trend indicator
         if(trend == true){
-            getdisplay().fillRect(310, 240, 40, 120, bgcolor);   // Clear area
-            getdisplay().fillRect(315, 183, 35, 4, textcolor);   // Draw separator
+            getdisplay().fillRect(310, 240, 40, 120, commonData.bgcolor);   // Clear area
+            getdisplay().fillRect(315, 183, 35, 4, commonData.fgcolor);   // Draw separator
             if(int(raw * 10) > int(valueTrend * 10)){
-                displayTrendHigh(320, 174, 11, textcolor);  // Show high indicator
+                displayTrendHigh(320, 174, 11, commonData.fgcolor);  // Show high indicator
             }
             if(int(raw * 10) < int(valueTrend * 10)){
-                displayTrendLow(320, 195, 11, textcolor);   // Show low indicator
+                displayTrendLow(320, 195, 11, commonData.fgcolor);   // Show low indicator
             }
         }
         // No trend indicator
         else{
-            getdisplay().fillRect(310, 240, 40, 120, bgcolor);   // Clear area
+            getdisplay().fillRect(310, 240, 40, 120, commonData.bgcolor);   // Clear area
         }
 
 
         // Key Layout
-        getdisplay().setTextColor(textcolor);
+        getdisplay().setTextColor(commonData.fgcolor);
         getdisplay().setFont(&Ubuntu_Bold8pt7b);
         if(keylock == false){
             getdisplay().setCursor(10, 290);

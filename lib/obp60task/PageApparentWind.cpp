@@ -54,7 +54,6 @@ public:
         // Get config data
         String lengthformat = config->getString(config->lengthFormat);
         // bool simulation = config->getBool(config->useSimuData);
-        String displaycolor = config->getString(config->displaycolor);
         bool holdvalues = config->getBool(config->holdvalues);
         String flashLED = config->getString(config->flashLED);
         String backlightMode = config->getString(config->backlight);
@@ -90,25 +89,12 @@ public:
         // Draw page
         //***********************************************************
 
-        // Set background color and text color
-        int textcolor = GxEPD_BLACK;
-        int pixelcolor = GxEPD_BLACK;
-        int bgcolor = GxEPD_WHITE;
-        if(displaycolor == "Normal"){
-            textcolor = GxEPD_BLACK;
-            pixelcolor = GxEPD_BLACK;
-            bgcolor = GxEPD_WHITE;
-        }
-        else{
-            textcolor = GxEPD_WHITE;
-            pixelcolor = GxEPD_WHITE;
-            bgcolor = GxEPD_BLACK;
-        }
         // Set display in partial refresh mode
         getdisplay().setPartialWindow(0, 0, getdisplay().width(), getdisplay().height()); // Set partial update
 
+        getdisplay().setTextColor(commonData.fgcolor);
+
         // Show values AWS
-        getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&Ubuntu_Bold20pt7b);
         getdisplay().setCursor(20, 50);
         if(holdvalues == false){
@@ -127,7 +113,6 @@ public:
         }
 
         // Show values AWD
-        getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&Ubuntu_Bold20pt7b);
         getdisplay().setCursor(20, 260);
         if(holdvalues == false){
@@ -154,8 +139,8 @@ public:
         static int16_t y2 = y0;
 
         //Draw instrument
-        getdisplay().fillCircle(x0, y0, lp + 5, pixelcolor); // Black circle
-        getdisplay().fillCircle(x0, y0, lp + 1, bgcolor);    // White circle
+        getdisplay().fillCircle(x0, y0, lp + 5, commonData.fgcolor);
+        getdisplay().fillCircle(x0, y0, lp + 1, commonData.bgcolor);
 
         // Calculation end point of pointer
         value2 = value2 - 3.14 / 2;
@@ -163,10 +148,9 @@ public:
         y1 = y0 + sin(value2) * lp * 0.6;
         x2 = x0 + cos(value2) * lp;
         y2 = y0 + sin(value2) * lp;
-        getdisplay().drawLine(x1, y1, x2, y2, pixelcolor);
+        getdisplay().drawLine(x1, y1, x2, y2, commonData.fgcolor);
 
         // Key Layout
-        getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&Ubuntu_Bold8pt7b);
         if(keylock == false){
             getdisplay().setCursor(130, 290);

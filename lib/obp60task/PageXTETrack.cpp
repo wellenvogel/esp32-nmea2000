@@ -65,7 +65,6 @@ class PageXTETrack : public Page{
 
         // Get config data
         String flashLED = config->getString(config->flashLED);
-        String displaycolor = config->getString(config->displaycolor);
         String backlightMode = config->getString(config->backlight);
 
         String trackStep = config->getString(config->trackStep);
@@ -83,17 +82,10 @@ class PageXTETrack : public Page{
         // Draw page
         //***********************************************************
 
-        // Set background color and text color
-        int textcolor = GxEPD_BLACK;
-        int pixelcolor = GxEPD_BLACK;
-        int bgcolor = GxEPD_WHITE;
-        if(displaycolor != "Normal"){
-            textcolor = GxEPD_WHITE;
-            pixelcolor = GxEPD_WHITE;
-            bgcolor = GxEPD_BLACK;
-        }
         // Set display in partial refresh mode
         getdisplay().setPartialWindow(0, 0, getdisplay().width(), getdisplay().height()); // Set partial update
+
+        getdisplay().setTextColor(commonData.fgcolor);
 
         // descriptions
         getdisplay().setFont(&Ubuntu_Bold8pt7b);
@@ -141,7 +133,7 @@ class PageXTETrack : public Page{
         // XTETrack view
 
         // draw ship symbol (as bitmap)
-        getdisplay().drawXBitmap(184, 68, ship_bits, ship_width, ship_height, pixelcolor);
+        getdisplay().drawXBitmap(184, 68, ship_bits, ship_width, ship_height, commonData.fgcolor);
 
         // draw next waypoint name
         String sval_wpname = "no data";
@@ -196,13 +188,13 @@ class PageXTETrack : public Page{
         }
 
         // left segments
-        drawSegment(0, 54, 46, 24, 75, 24, 0, 90, pixelcolor, seg[2]);
-        drawSegment(0, 100, 82, 24, 112, 24, 50, 100, pixelcolor, seg[1]);
-        drawSegment(60, 100, 117, 24, 147, 24, 110, 100, pixelcolor,seg[0]);
+        drawSegment(0, 54, 46, 24, 75, 24, 0, 90, commonData.fgcolor, seg[2]);
+        drawSegment(0, 100, 82, 24, 112, 24, 50, 100, commonData.fgcolor, seg[1]);
+        drawSegment(60, 100, 117, 24, 147, 24, 110, 100, commonData.fgcolor,seg[0]);
         // right segments
-        drawSegment(340, 100, 283, 24, 253, 24, 290, 100, pixelcolor, seg[3]);
-        drawSegment(399, 100, 318, 24, 289, 24, 350, 100, pixelcolor, seg[4]);
-        drawSegment(399, 54, 354, 24, 325, 24, 399, 90, pixelcolor, seg[5]);
+        drawSegment(340, 100, 283, 24, 253, 24, 290, 100, commonData.fgcolor, seg[3]);
+        drawSegment(399, 100, 318, 24, 289, 24, 350, 100, commonData.fgcolor, seg[4]);
+        drawSegment(399, 54, 354, 24, 325, 24, 399, 90, commonData.fgcolor, seg[5]);
 
         // Key Layout
         getdisplay().setFont(&Ubuntu_Bold8pt7b);

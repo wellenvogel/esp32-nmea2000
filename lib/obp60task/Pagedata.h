@@ -68,6 +68,8 @@ typedef struct{
   SunData sundata;
   GwApi::BoatValue *time=NULL;
   GwApi::BoatValue *date=NULL;
+  uint16_t fgcolor;
+  uint16_t bgcolor;
 } CommonData;
 
 //a base class that all pages must inherit from

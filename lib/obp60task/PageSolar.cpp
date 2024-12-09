@@ -29,7 +29,6 @@ public:
         
         // Get config data
         bool simulation = config->getBool(config->useSimuData);
-        String displaycolor = config->getString(config->displaycolor);
         bool holdvalues = config->getBool(config->holdvalues);
         String flashLED = config->getString(config->flashLED);
         String batVoltage = config->getString(config->batteryVoltage);
@@ -85,31 +84,17 @@ public:
         // Draw page
         //***********************************************************
 
-        // Clear display, set background color and text color
-        int textcolor = GxEPD_BLACK;
-        int pixelcolor = GxEPD_BLACK;
-        int bgcolor = GxEPD_WHITE;
-        if(displaycolor == "Normal"){
-            textcolor = GxEPD_BLACK;
-            pixelcolor = GxEPD_BLACK;
-            bgcolor = GxEPD_WHITE;
-        }
-        else{
-            textcolor = GxEPD_WHITE;
-            pixelcolor = GxEPD_WHITE;
-            bgcolor = GxEPD_BLACK;
-        }
         // Set display in partial refresh mode
         getdisplay().setPartialWindow(0, 0, getdisplay().width(), getdisplay().height()); // Set partial update
 
+        getdisplay().setTextColor(commonData.fgcolor);
+
         // Show name
-        getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&Ubuntu_Bold20pt7b);
         getdisplay().setCursor(10, 65);
         getdisplay().print("Solar");
 
         // Show voltage type
-        getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&DSEG7Classic_BoldItalic20pt7b);
         getdisplay().setCursor(10, 140);
         int bvoltage = 0;
@@ -120,7 +105,6 @@ public:
         getdisplay().print("V");
 
         // Show solar power
-        getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&DSEG7Classic_BoldItalic20pt7b);
         getdisplay().setCursor(10, 200);
         if(solPower <= 999) getdisplay().print(solPower, 0);
@@ -137,10 +121,9 @@ public:
         getdisplay().print("Solar Modul");
 
         // Show solar panel
-        solarGraphic(150, 45, pixelcolor, bgcolor);
+        solarGraphic(150, 45, commonData.fgcolor, commonData.bgcolor);
 
         // Show load level in percent
-        getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&DSEG7Classic_BoldItalic20pt7b);
         getdisplay().setCursor(150, 200);
         getdisplay().print(solPercentage);
@@ -168,7 +151,6 @@ public:
         getdisplay().print("Sensor Modul");
 
         // Reading bus data or using simulation data
-        getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&DSEG7Classic_BoldItalic20pt7b);
         getdisplay().setCursor(260, 140);
         if(simulation == true){
@@ -197,7 +179,6 @@ public:
         getdisplay().print("V");
 
         // Show actual current in A
-        getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&DSEG7Classic_BoldItalic20pt7b);
         getdisplay().setCursor(260, 200);
         if((powerSensor == "INA219" || powerSensor == "INA226") && simulation == false){
@@ -210,7 +191,6 @@ public:
         getdisplay().print("A");
 
         // Show actual consumption in W
-        getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&DSEG7Classic_BoldItalic20pt7b);
         getdisplay().setCursor(260, 260);
         if((powerSensor == "INA219" || powerSensor == "INA226") && simulation == false){
@@ -223,7 +203,6 @@ public:
         getdisplay().print("W");
 
         // Key Layout
-        getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&Ubuntu_Bold8pt7b);
         if(keylock == false){
             getdisplay().setCursor(130, 290);
