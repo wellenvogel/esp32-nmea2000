@@ -86,7 +86,7 @@ class PageBME280 : public Page
         }
         // Display data when sensor activated
         if((String(useenvsensor) == "BME280") or (String(useenvsensor) == "BMP280")){
-            svalue3 = String(value3, 0);                // Formatted value as string including unit conversion and switching decimal places
+            svalue3 = String(value3 / 100, 1);          // Formatted value as string including unit conversion and switching decimal places
         }
         else{
             svalue3 = "---";
@@ -190,7 +190,7 @@ class PageBME280 : public Page
 
         // Switch font if format for any values
         getdisplay().setFont(&DSEG7Classic_BoldItalic30pt7b);
-        getdisplay().setCursor(180, 270);
+        getdisplay().setCursor(140, 270);
 
         // Show bus data
         getdisplay().print(svalue3);                         // Real value as formated string
