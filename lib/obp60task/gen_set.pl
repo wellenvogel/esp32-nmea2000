@@ -1,5 +1,5 @@
 #!/bin/perl -w
-#A tool to generate that part of config.json  that deals with pages and fields.
+#A tool to generate the part of config.json that deals with pages and fields.
 
 #List of all pages and the number of parameters they expect.
 %NoOfFieldsPerPage=qw( 
@@ -77,7 +77,7 @@ for ($PageNo=1;$PageNo<=$NoOfPages;$PageNo++){
         print "\t",'"category": "OBP60 Page ',$PageNo,'",',"\n";
         print "\t",'"capabilities": {',"\n";
         print "\t",'    "obp60":"true"',"\n";
-        print "\t",'},',"\n";
+        print "\t",'}, ',"\n";
         print "\t",'"condition":[';
         foreach $page (@Pages) {
             if($NoOfFieldsPerPage{$page}>=$FieldNo){ 
@@ -87,4 +87,25 @@ for ($PageNo=1;$PageNo<=$NoOfPages;$PageNo++){
         print "\b],\n";
     print '},',"\n";
     } 
+    print "{\n";
+    print "\t","\"name\": \"page", $PageNo,"fluid\",\n";
+    print "\t",'"label": "Fluid type",',"\n";
+    print "\t",'"type": "list",',"\n";
+    print "\t",'"default": "0",',"\n";
+    print "\t",'"list": [',"\n";
+    print "\t",'{"l":"Fuel (0)","v":"0"},',"\n";
+    print "\t",'{"l":"Water (1)","v":"1"},',"\n";
+    print "\t",'{"l":"Gray Water (2)","v":"2"},',"\n";
+    print "\t",'{"l":"Live Well (3)","v":"3"},',"\n";
+    print "\t",'{"l":"Oil (4)","v":"4"},',"\n";
+    print "\t",'{"l":"Black Water (5)","v":"5"},',"\n";
+    print "\t",'{"l":"Fuel Gasoline (6)","v":"6"}',"\n";
+    print "\t",'],',"\n";
+    print "\t",'"description": "Fluid type in tank",',"\n";
+    print "\t",'"category": "OBP60 Page ',$PageNo,'",',"\n";
+    print "\t",'"capabilities": {',"\n";
+    print "\t",'"obp60":"true"',"\n";
+    print "\t",'},',"\n";
+    print "\t",'"condition":[{"page',$PageNo,'type":"Fluid"}]',"\n";
+    print '},',"\n";
 } 
