@@ -38,7 +38,6 @@ public:
         // Get config data
         String lengthformat = config->getString(config->lengthFormat);
         bool simulation = config->getBool(config->useSimuData);
-        String displaycolor = config->getString(config->displaycolor);
         bool holdvalues = config->getBool(config->holdvalues);
         String flashLED = config->getString(config->flashLED);
         String backlightMode = config->getString(config->backlight);
@@ -118,25 +117,12 @@ public:
         // Draw page
         //***********************************************************
 
-        // Set background color and text color
-        int textcolor = GxEPD_BLACK;
-        int pixelcolor = GxEPD_BLACK;
-        int bgcolor = GxEPD_WHITE;
-        if(displaycolor == "Normal"){
-            textcolor = GxEPD_BLACK;
-            pixelcolor = GxEPD_BLACK;
-            bgcolor = GxEPD_WHITE;
-        }
-        else{
-            textcolor = GxEPD_WHITE;
-            pixelcolor = GxEPD_WHITE;
-            bgcolor = GxEPD_BLACK;
-        }
         // Set display in partial refresh mode
         getdisplay().setPartialWindow(0, 0, getdisplay().width(), getdisplay().height()); // Set partial update
 
+        getdisplay().setTextColor(commonData.fgcolor);
+
         // Show roll limit
-        getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&DSEG7Classic_BoldItalic20pt7b);
         getdisplay().setCursor(10, 65);
         getdisplay().print(rolllimit);                   // Value
@@ -150,10 +136,9 @@ public:
         getdisplay().print("DEG");
         
         // Horizintal separator left
-        getdisplay().fillRect(0, 149, 60, 3, pixelcolor);
+        getdisplay().fillRect(0, 149, 60, 3, commonData.fgcolor);
 
         // Show roll value
-        getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&DSEG7Classic_BoldItalic20pt7b);
         getdisplay().setCursor(10, 270);
         if(holdvalues == false) getdisplay().print(svalue1); // Value
@@ -166,10 +151,9 @@ public:
         getdisplay().print("Deg");
 
         // Horizintal separator right
-        getdisplay().fillRect(340, 149, 80, 3, pixelcolor);
+        getdisplay().fillRect(340, 149, 80, 3, commonData.fgcolor);
 
         // Show pitch value
-        getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&DSEG7Classic_BoldItalic20pt7b);
         getdisplay().setCursor(295, 270);
         if(holdvalues == false) getdisplay().print(svalue2); // Value
@@ -187,8 +171,8 @@ public:
         int rInstrument = 100;     // Radius of instrument
         float pi = 3.141592;
 
-        getdisplay().fillCircle(200, 150, rInstrument + 10, pixelcolor);    // Outer circle
-        getdisplay().fillCircle(200, 150, rInstrument + 7, bgcolor);        // Outer circle     
+        getdisplay().fillCircle(200, 150, rInstrument + 10, commonData.fgcolor);    // Outer circle
+        getdisplay().fillCircle(200, 150, rInstrument + 7, commonData.bgcolor);     // Outer circle
 
         for(int i=0; i<360; i=i+10)
         {
@@ -196,7 +180,7 @@ public:
             if((i >= 0 && i <= 60) ||  (i >= 300 && i <= 360)){
                 // Scaling values
                 float x = 200 + (rInstrument+25)*sin(i/180.0*pi);  //  x-coordinate dots
-                float y = 150 - (rInstrument+25)*cos(i/180.0*pi);  //  y-coordinate cots 
+                float y = 150 - (rInstrument+25)*cos(i/180.0*pi);  //  y-coordinate cots
                 const char *ii = "";
                 switch (i)
                 {
@@ -223,7 +207,7 @@ public:
                 // Draw sub scale with dots
                 float x1c = 200 + rInstrument*sin(i/180.0*pi);
                 float y1c = 150 - rInstrument*cos(i/180.0*pi);
-                getdisplay().fillCircle((int)x1c, (int)y1c, 2, pixelcolor);
+                getdisplay().fillCircle((int)x1c, (int)y1c, 2, commonData.fgcolor);
                 float sinx=sin(i/180.0*pi);
                 float cosx=cos(i/180.0*pi); 
 
@@ -236,10 +220,10 @@ public:
                     float yy2 =  -(rInstrument+10);
                     getdisplay().fillTriangle(200+(int)(cosx*xx1-sinx*yy1),150+(int)(sinx*xx1+cosx*yy1),
                             200+(int)(cosx*xx2-sinx*yy1),150+(int)(sinx*xx2+cosx*yy1),
-                            200+(int)(cosx*xx1-sinx*yy2),150+(int)(sinx*xx1+cosx*yy2),pixelcolor);
+                            200+(int)(cosx*xx1-sinx*yy2),150+(int)(sinx*xx1+cosx*yy2),commonData.fgcolor);
                     getdisplay().fillTriangle(200+(int)(cosx*xx2-sinx*yy1),150+(int)(sinx*xx2+cosx*yy1),
                             200+(int)(cosx*xx1-sinx*yy2),150+(int)(sinx*xx1+cosx*yy2),
-                            200+(int)(cosx*xx2-sinx*yy2),150+(int)(sinx*xx2+cosx*yy2),pixelcolor);  
+                            200+(int)(cosx*xx2-sinx*yy2),150+(int)(sinx*xx2+cosx*yy2),commonData.fgcolor);
                 }
             }
         }
@@ -260,7 +244,7 @@ public:
             float yy2 = -(rInstrument * 0.7); 
             getdisplay().fillTriangle(200+(int)(cosx*xx1-sinx*yy1),150+(int)(sinx*xx1+cosx*yy1),
                 200+(int)(cosx*xx2-sinx*yy1),150+(int)(sinx*xx2+cosx*yy1),
-                200+(int)(cosx*0-sinx*yy2),150+(int)(sinx*0+cosx*yy2),pixelcolor);   
+                200+(int)(cosx*0-sinx*yy2),150+(int)(sinx*0+cosx*yy2),commonData.fgcolor);   
             // Inverted pointer
             // Pointer as triangle with center base 2*width
             float endwidth = 2;         // End width of pointer
@@ -270,26 +254,26 @@ public:
             float iy2 = -endwidth;
             getdisplay().fillTriangle(200+(int)(cosx*ix1-sinx*iy1),150+(int)(sinx*ix1+cosx*iy1),
                 200+(int)(cosx*ix2-sinx*iy1),150+(int)(sinx*ix2+cosx*iy1),
-                200+(int)(cosx*0-sinx*iy2),150+(int)(sinx*0+cosx*iy2),pixelcolor);
+                200+(int)(cosx*0-sinx*iy2),150+(int)(sinx*0+cosx*iy2),commonData.fgcolor);
 
             // Draw counterweight
-            getdisplay().fillCircle(200+(int)(cosx*0-sinx*yy2),150+(int)(sinx*0+cosx*yy2), 5, pixelcolor);
+            getdisplay().fillCircle(200+(int)(cosx*0-sinx*yy2),150+(int)(sinx*0+cosx*yy2), 5, commonData.fgcolor);
         }
 
         // Center circle
-        getdisplay().fillCircle(200, 150, startwidth + 22, bgcolor);
-        getdisplay().fillCircle(200, 150, startwidth + 20, pixelcolor);      // Boat circle
+        getdisplay().fillCircle(200, 150, startwidth + 22, commonData.bgcolor);
+        getdisplay().fillCircle(200, 150, startwidth + 20, commonData.fgcolor);      // Boat circle
         int x0 = 200;
         int y0 = 150;
         int x1 = x0 + 50*cos(value1);
         int y1 = y0 + 50*sin(value1);
         int x2 = x0 + 50*cos(value1 - pi/2);
         int y2 = y0 + 50*sin(value1 - pi/2);
-        getdisplay().fillTriangle(x0, y0, x1, y1, x2, y2, bgcolor);          // Clear half top side of boat circle (right triangle)
+        getdisplay().fillTriangle(x0, y0, x1, y1, x2, y2, commonData.bgcolor);          // Clear half top side of boat circle (right triangle)
         x1 = x0 + 50*cos(value1 + pi);
         y1 = y0 + 50*sin(value1 + pi);
-        getdisplay().fillTriangle(x0, y0, x1, y1, x2, y2, bgcolor);          // Clear half top side of boat circle (left triangle)
-        getdisplay().fillRect(150, 160, 100, 4, pixelcolor);                 // Water line
+        getdisplay().fillTriangle(x0, y0, x1, y1, x2, y2, commonData.bgcolor);          // Clear half top side of boat circle (left triangle)
+        getdisplay().fillRect(150, 160, 100, 4, commonData.fgcolor);                 // Water line
 
         // Draw roll pointer
         startwidth = 4;     // Start width of pointer
@@ -304,7 +288,7 @@ public:
             float yy2 = -(rInstrument - 15); 
             getdisplay().fillTriangle(200+(int)(cosx*xx1-sinx*yy1),150+(int)(sinx*xx1+cosx*yy1),
                 200+(int)(cosx*xx2-sinx*yy1),150+(int)(sinx*xx2+cosx*yy1),
-                200+(int)(cosx*0-sinx*yy2),150+(int)(sinx*0+cosx*yy2),pixelcolor);   
+                200+(int)(cosx*0-sinx*yy2),150+(int)(sinx*0+cosx*yy2),commonData.fgcolor);   
             // Inverted pointer
             // Pointer as triangle with center base 2*width
             float endwidth = 2;         // End width of pointer
@@ -314,7 +298,7 @@ public:
             float iy2 = -endwidth;
             getdisplay().fillTriangle(200+(int)(cosx*ix1-sinx*iy1),150+(int)(sinx*ix1+cosx*iy1),
                 200+(int)(cosx*ix2-sinx*iy1),150+(int)(sinx*ix2+cosx*iy1),
-                200+(int)(cosx*0-sinx*iy2),150+(int)(sinx*0+cosx*iy2),pixelcolor);
+                200+(int)(cosx*0-sinx*iy2),150+(int)(sinx*0+cosx*iy2),commonData.fgcolor);
         }
         else{
             // Print sensor info
@@ -325,7 +309,6 @@ public:
 
 //*******************************************************************************************
         // Key Layout
-        getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&Ubuntu_Bold8pt7b);
         if(keylock == false){
             getdisplay().setCursor(130, 290);
