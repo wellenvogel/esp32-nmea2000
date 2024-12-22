@@ -11,6 +11,7 @@
 #include "Pagedata.h"
 #include "OBP60Hardware.h"
 #include "OBP60Extensions.h"
+#include "imglib.h"
 
 // Character sets
 #include "Ubuntu_Bold8pt7b.h"
@@ -402,6 +403,46 @@ void generatorGraphic(uint x, uint y, int pcolor, int bcolor){
         getdisplay().setFont(&Ubuntu_Bold32pt7b);
         getdisplay().setCursor(xb-22, yb+20);
         getdisplay().print("G");
+}
+
+// Function to handle HTTP image request
+void doImageRequest(GwApi *api, int *pageno, const PageStruct pages[MAX_PAGE_NUMBER], AsyncWebServerRequest *request) {
+    GwLog *logger = api->getLogger();
+
+    String imgformat = api->getConfig()->getConfigItem(api->getConfig()->imageFormat,true)->asString();
+    imgformat.toLowerCase();
+    String filename = "Page" + String(*pageno) + "_" +  pages[*pageno].description->pageName + "." + imgformat;
+
+    logger->logDebug(GwLog::LOG,"handle image request [%s]: %s", imgformat, filename);
+
+    uint8_t *fb = getdisplay().getBuffer(); // EPD framebuffer
+    std::vector<uint8_t> imageBuffer;       // image in webserver transferbuffer
+    String mimetype;
+
+    if (imgformat == "gif") {
+        // GIF is commpressed with LZW, so small
+        mimetype = "image/gif";
+        if (!createGIF(fb, &imageBuffer, GxEPD_WIDTH, GxEPD_HEIGHT)) {
+             logger->logDebug(GwLog::LOG,"GIF creation failed: Hashtable init error!");
+             return;
+        }
+    }
+    else if (imgformat == "bmp") {
+        // Microsoft BMP bitmap
+        mimetype = "image/bmp";
+        createBMP(fb, &imageBuffer, GxEPD_WIDTH, GxEPD_HEIGHT);
+    }
+    else {
+        // PBM simple portable bitmap
+        mimetype = "image/x-portable-bitmap";
+        createPBM(fb, &imageBuffer, GxEPD_WIDTH, GxEPD_HEIGHT);
+    }
+
+    AsyncWebServerResponse *response = request->beginResponse_P(200, mimetype, (const uint8_t*)imageBuffer.data(), imageBuffer.size());
+    response->addHeader("Content-Disposition", "inline; filename=" + filename);
+    request->send(response);
+
+    imageBuffer.clear();
 }
 
 #endif

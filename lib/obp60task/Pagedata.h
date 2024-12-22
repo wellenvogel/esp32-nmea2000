@@ -4,6 +4,8 @@
 #include <functional>
 #include <vector>
 
+#define MAX_PAGE_NUMBER 10    // Max number of pages for show data
+
 typedef std::vector<GwApi::BoatValue *> ValueList;
 typedef struct{
   String pageName;
@@ -112,6 +114,13 @@ class PageDescription{
             this->creator=creator;
             this->header=header;
         }
+};
+
+class PageStruct{
+    public:
+        Page *page=NULL;
+        PageData parameters;
+        PageDescription *description=NULL;
 };
 
 // Structure for formated boat values
