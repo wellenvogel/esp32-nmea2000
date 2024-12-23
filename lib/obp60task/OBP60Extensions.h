@@ -70,4 +70,6 @@ void solarGraphic(uint x, uint y, int pcolor, int bcolor);                  // S
 void generatorGraphic(uint x, uint y, int pcolor, int bcolor);              // Generator graphic with fill level
 void startLedTask(GwApi *api);
 
+void doImageRequest(GwApi *api, int *pageno, const PageStruct pages[MAX_PAGE_NUMBER], AsyncWebServerRequest *request);
+
 #endif
