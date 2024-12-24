@@ -22,43 +22,6 @@ TODO
 
 */
 
-struct Point {
-    double x;
-    double y;
-};
-
-Point rotatePoint(const Point& origin, const Point& p, double angle) {
-    // rotate poind around origin by degrees
-    Point rotated;
-    double phi = angle * M_PI / 180.0;
-    double dx = p.x - origin.x;
-    double dy = p.y - origin.y;
-    rotated.x = origin.x + cos(phi) * dx - sin(phi) * dy;
-    rotated.y = origin.y + sin(phi) * dx + cos(phi) * dy;
-    return rotated;
-}
-
-std::vector<Point> rotatePoints(const Point& origin, const std::vector<Point>& pts, double angle) {
-    std::vector<Point> rotatedPoints;
-    for (const auto& p : pts) {
-         rotatedPoints.push_back(rotatePoint(origin, p, angle));
-    }
-     return rotatedPoints;
-}
-
-void fillPoly4(const std::vector<Point>& p4, uint16_t color) {
-    getdisplay().fillTriangle(p4[0].x, p4[0].y, p4[1].x, p4[1].y, p4[2].x, p4[2].y, color);
-    getdisplay().fillTriangle(p4[0].x, p4[0].y, p4[2].x, p4[2].y, p4[3].x, p4[3].y, color);
-}
-
-void drawTextCentered(int16_t tx, int16_t ty, String text) {
-    int16_t x, y;
-    uint16_t w, h;
-    getdisplay().getTextBounds(text, 0, 0, &x, &y, &w, &h);
-    getdisplay().setCursor(tx - w / 2, ty + h / 2);
-    getdisplay().print(text);
-}
-
 #define fuel_width 16
 #define fuel_height 16
 static unsigned char fuel_bits[] = {
@@ -171,7 +134,7 @@ class PageFluid : public Page{
         } else {
             strcpy(buffer, "---");
         }
-        drawTextCentered(c.x, c.y + r - 20, String(buffer));
+        drawTextCenter(c.x, c.y + r - 20, String(buffer));
 
         // draw symbol (as bitmap)
         switch (fluidtype) {
@@ -197,18 +160,18 @@ class PageFluid : public Page{
         // scale texts
         getdisplay().setFont(&Ubuntu_Bold8pt7b);
         p = {c.x, c.y - r + 30};
-        drawTextCentered(p.x, p.y, "1/2");
+        drawTextCenter(p.x, p.y, "1/2");
         pr = rotatePoint(c, p, -60);
-        drawTextCentered(pr.x, pr.y, "1/4");
+        drawTextCenter(pr.x, pr.y, "1/4");
         pr = rotatePoint(c, p, 60);
-        drawTextCentered(pr.x, pr.y, "3/4");
+        drawTextCenter(pr.x, pr.y, "3/4");
 
         // empty and full
         getdisplay().setFont(&Ubuntu_Bold12pt7b);
         p = rotatePoint(c, {c.x, c.y - r + 30}, -130);
-        drawTextCentered(p.x, p.y, "E");
+        drawTextCenter(p.x, p.y, "E");
         p = rotatePoint(c, {c.x, c.y - r + 30}, 130);
-        drawTextCentered(p.x, p.y, "F");
+        drawTextCenter(p.x, p.y, "F");
 
         // lines
         std::vector<Point> pts = {

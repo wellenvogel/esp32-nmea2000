@@ -39,6 +39,14 @@ GxEPD2_BW<GxEPD2_420_GYE042A87, GxEPD2_420_GYE042A87::HEIGHT> & getdisplay();
 GxEPD2_BW<GxEPD2_420_SE0420NQ04, GxEPD2_420_SE0420NQ04::HEIGHT> & getdisplay();
 #endif
 
+struct Point {
+    double x;
+    double y;
+};
+Point rotatePoint(const Point& origin, const Point& p, double angle);
+std::vector<Point> rotatePoints(const Point& origin, const std::vector<Point>& pts, double angle);
+void fillPoly4(const std::vector<Point>& p4, uint16_t color);
+
 void hardwareInit();
 
 void setPortPin(uint pin, bool value);          // Set port pin for extension port
@@ -57,6 +65,9 @@ void buzzer(uint frequency, uint duration);     // Buzzer function
 void setBuzzerPower(uint power);                // Set buzzer power
 
 String xdrDelete(String input);                 // Delete xdr prefix from string
+
+void drawTextCenter(int16_t cx, int16_t cy, String text);
+void drawTextRalign(int16_t x, int16_t y, String text);
 
 void displayTrendHigh(int16_t x, int16_t y, uint16_t size, uint16_t color);
 void displayTrendLow(int16_t x, int16_t y, uint16_t size, uint16_t color);

@@ -180,6 +180,48 @@ String xdrDelete(String input){
     return input;
 }
 
+Point rotatePoint(const Point& origin, const Point& p, double angle) {
+    // rotate poind around origin by degrees
+    Point rotated;
+    double phi = angle * M_PI / 180.0;
+    double dx = p.x - origin.x;
+    double dy = p.y - origin.y;
+    rotated.x = origin.x + cos(phi) * dx - sin(phi) * dy;
+    rotated.y = origin.y + sin(phi) * dx + cos(phi) * dy;
+    return rotated;
+}
+
+std::vector<Point> rotatePoints(const Point& origin, const std::vector<Point>& pts, double angle) {
+    std::vector<Point> rotatedPoints;
+    for (const auto& p : pts) {
+         rotatedPoints.push_back(rotatePoint(origin, p, angle));
+    }
+     return rotatedPoints;
+}
+
+void fillPoly4(const std::vector<Point>& p4, uint16_t color) {
+    getdisplay().fillTriangle(p4[0].x, p4[0].y, p4[1].x, p4[1].y, p4[2].x, p4[2].y, color);
+    getdisplay().fillTriangle(p4[0].x, p4[0].y, p4[2].x, p4[2].y, p4[3].x, p4[3].y, color);
+}
+
+// Draw centered text
+void drawTextCenter(int16_t cx, int16_t cy, String text) {
+    int16_t x1, y1;
+    uint16_t w, h;
+    getdisplay().getTextBounds(text, 0, 150, &x1, &y1, &w, &h);
+    getdisplay().setCursor(cx - w / 2, cy + h / 2);
+    getdisplay().print(text);
+}
+
+// Draw right aligned text
+void drawTextRalign(int16_t x, int16_t y, String text) {
+    int16_t x1, y1;
+    uint16_t w, h;
+    getdisplay().getTextBounds(text, 0, 150, &x1, &y1, &w, &h);
+    getdisplay().setCursor(x - w, y);
+    getdisplay().print(text);
+}
+
 // Show a triangle for trend direction high (x, y is the left edge)
 void displayTrendHigh(int16_t x, int16_t y, uint16_t size, uint16_t color){
     getdisplay().fillTriangle(x, y, x+size*2, y, x+size, y-size*2, color);
