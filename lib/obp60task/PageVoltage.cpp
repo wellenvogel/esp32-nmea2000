@@ -329,8 +329,8 @@ public:
             fillPoly4(rotatePoints(c, pts, angle), commonData.fgcolor);
 
             // base
-            getdisplay().fillCircle(c.x, c.y, 8, commonData.fgcolor);
-            getdisplay().fillCircle(c.x, c.y, 6, commonData.bgcolor);
+            getdisplay().fillCircle(c.x, c.y, 7, commonData.fgcolor);
+            getdisplay().fillCircle(c.x, c.y, 4, commonData.bgcolor);
 
             // Symbol
             printVoltageSymbol(40, 60, commonData.fgcolor);
