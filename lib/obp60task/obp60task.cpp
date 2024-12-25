@@ -43,7 +43,7 @@ void OBP60Init(GwApi *api){
     
 
     // Init hardware
-    hardwareInit();
+    hardwareInit(api);
 
     // Init power rail 5.0V
     String powermode = api->getConfig()->getConfigItem(api->getConfig()->powerMode,true)->asString();

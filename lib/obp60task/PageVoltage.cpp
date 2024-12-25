@@ -8,20 +8,26 @@ class PageVoltage : public Page
 {
 bool init = false;                  // Marker for init done
 bool keylock = false;               // Keylock
-int average = 0;                    // Average type [0...3], 0=off, 1=10s, 2=60s, 3=300s
+uint8_t average = 0;                // Average type [0...3], 0=off, 1=10s, 2=60s, 3=300s
 bool trend = true;                  // Trend indicator [0|1], 0=off, 1=on
 double raw = 0;
 char mode = 'D';                    // display mode (A)nalog | (D)igital
 
 public:
     PageVoltage(CommonData &common){
-        common.logger->logDebug(GwLog::LOG,"Show PageVoltage");
+        common.logger->logDebug(GwLog::LOG,"Instantiate PageVoltage");
+        if (hasFRAM) {
+            average = fram.read(FRAM_VOLTAGE_AVG);
+            trend = fram.read(FRAM_VOLTAGE_TREND);
+            mode = fram.read(FRAM_VOLTAGE_MODE);
+        }
     }
     virtual int handleKey(int key){
          // Change average
         if(key == 1){
             average ++;
             average = average % 4;      // Modulo 4
+            if (hasFRAM) fram.write(FRAM_VOLTAGE_AVG, average);
             return 0;                   // Commit the key
         }
 
@@ -32,12 +38,14 @@ public:
             } else {
                 mode = 'A';
             }
+            if (hasFRAM) fram.write(FRAM_VOLTAGE_MODE, mode);
             return 0;
         }
 
         // Trend indicator
         if(key == 5){
             trend = !trend;
+            if (hasFRAM) fram.write(FRAM_VOLTAGE_TREND, trend);
             return 0;                   // Commit the key
         }
 
@@ -335,7 +343,7 @@ public:
             // Symbol
             printVoltageSymbol(40, 60, commonData.fgcolor);
 
-            // Additional informatio at right side
+            // Additional information at right side
             getdisplay().setFont(&Ubuntu_Bold8pt7b);
             getdisplay().setCursor(300, 60);
             getdisplay().print("Source:");
@@ -350,6 +358,11 @@ public:
             getdisplay().setCursor(300, 160);
             getdisplay().print("Avg:");
             printAvg(average, 300, 180, false);
+
+            // FRAM indicator
+            if (hasFRAM) {
+                getdisplay().drawXBitmap(300, 240, fram_bits, fram_width, fram_height, commonData.fgcolor);
+            }
 
         }
 
