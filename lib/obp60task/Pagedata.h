@@ -43,14 +43,9 @@ typedef struct{
   double airHumidity = 0;
   double airPressure = 0;
   double onewireTemp[8] = {0,0,0,0,0,0,0,0};
-  double rotationAngle = 0;       // Rotation angle in radiant
-  bool validRotAngle = false;     // Valid flag magnet present for rotation sensor
-  int rtcYear = 0;  // UTC time
-  int rtcMonth = 0;
-  int rtcDay = 0;
-  int rtcHour = 0;
-  int rtcMinute = 0;
-  int rtcSecond = 0;
+  double rotationAngle = 0;     // Rotation angle in radiant
+  bool validRotAngle = false;   // Valid flag magnet present for rotation sensor
+  struct tm rtcTime;            // UTC time from internal RTC
   int sunsetHour = 0;
   int sunsetMinute = 0;
   int sunriseHour = 0;
@@ -169,13 +164,16 @@ class PageStruct{
         PageDescription *description=NULL;
 };
 
-// Structure for formated boat values
+// Standard format functions without overhead
+String formatDate(String fmttype, uint16_t year, uint8_t month, uint8_t day);
+String formatTime(char fmttype, uint8_t hour, uint8_t minute, uint8_t second);
+
+// Structure for formatted boat values
 typedef struct{
   double value;
   String svalue;
   String unit;
 } FormatedData;
 
-
-// Formater for boat values
+// Formatter for boat values
 FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata);

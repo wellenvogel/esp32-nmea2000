@@ -8,6 +8,35 @@
 // simulation data
 // hold values by missing data
 
+String formatDate(String fmttype, uint16_t year, uint8_t month, uint8_t day) {
+    char buffer[12];
+    if (fmttype == "GB") {
+        snprintf(buffer, 12, "%02d/%02d/%04d", day , month, year);
+    }
+    else if (fmttype == "US") {
+        snprintf(buffer, 12, "%02d/%02d/%04d", month, day, year);
+    }
+    else if (fmttype == "ISO") {
+        snprintf(buffer, 12, "%04d-%02d-%02d", year, month, day);
+    }
+    else {
+        snprintf(buffer, 12, "%02d.%02d.%04d", day, month, year);
+    }
+    return String(buffer);
+}
+
+String formatTime(char fmttype, uint8_t hour, uint8_t minute, uint8_t second) {
+    // fmttype: s: with seconds, m: only minutes
+    char buffer[10];
+    if (fmttype == 'm') {
+        snprintf(buffer, 10, "%02d:%02d", hour , minute);
+    }
+    else {
+        snprintf(buffer, 10, "%02d:%02d:%02d", hour, minute, second);
+    }
+    return String(buffer);
+}
+
 FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
     GwLog *logger = commondata.logger;
     FormatedData result;

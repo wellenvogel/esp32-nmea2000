@@ -421,32 +421,45 @@ void displayHeader(CommonData &commonData, GwApi::BoatValue *date, GwApi::BoatVa
         heartbeat = !heartbeat;
 
         // Date and time
-        getdisplay().setTextColor(commonData.fgcolor);
+        String fmttype = commonData.config->getString(commonData.config->dateFormat);
+        String timesource = commonData.config->getString(commonData.config->timeSource);
+        int tz = commonData.config->getInt(commonData.config->timeZone);
+        getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&Ubuntu_Bold8pt7b);
         getdisplay().setCursor(230, 15);
-        // Show date and time if date present
-        if(date->valid == true){
-            String acttime = formatValue(time, commonData).svalue;
-            acttime = acttime.substring(0, 5);
-            String actdate = formatValue(date, commonData).svalue;
-            getdisplay().print(acttime);
+        if (timesource == "RTC") {
+            time_t tv = mktime(&commonData.data.rtcTime) + tz * 3600;
+            struct tm *local_tm = localtime(&tv);
+            getdisplay().print(formatTime('m', local_tm->tm_hour, local_tm->tm_min, 0));
             getdisplay().print(" ");
-            getdisplay().print(actdate);
+            getdisplay().print(formatDate(fmttype, local_tm->tm_year + 1900, local_tm->tm_mon + 1, local_tm->tm_mday));
             getdisplay().print(" ");
-            if(commonData.config->getInt(commonData.config->timeZone) == 0){
-                getdisplay().print("UTC");
-            }
-            else{
-                getdisplay().print("LOT");
-            }
         }
-        else{
-            if(commonData.config->getBool(commonData.config->useSimuData) == true){
-                getdisplay().print("12:00 01.01.2024 LOT");
+        else { // timesource == "GPS"
+            // Show date and time if date present
+            if(date->valid == true){
+                String acttime = formatValue(time, commonData).svalue;
+                acttime = acttime.substring(0, 5);
+                String actdate = formatValue(date, commonData).svalue;
+                getdisplay().print(acttime);
+                getdisplay().print(" ");
+                getdisplay().print(actdate);
+                getdisplay().print(" ");
             }
             else{
-                getdisplay().print("No GPS data");
+                if(commonData.config->getBool(commonData.config->useSimuData) == true){
+                    getdisplay().print("12:00 01.01.2024 LOT");
+                }
+                else{
+                    getdisplay().print("No GPS data");
+                }
             }
+        } // timesource == "GPS"
+        if (tz == 0) {
+            getdisplay().print("UTC");
+        }
+        else {
+            getdisplay().print("LOT");
         }
     }
 }

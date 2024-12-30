@@ -3,10 +3,25 @@
 #include "Pagedata.h"
 #include "OBP60Extensions.h"
 
+/*
+ * TODO mode: race timer: keys
+ *   - prepare: set countdown to 5min
+ *     reset: abort current countdown and start over with 5min preparation
+ *   - 5min: key press
+ *   - 4min: key press to sync
+ *   - 1min: buzzer signal
+ *   - start: buzzer signal for start
+ *
+ */
+
 class PageClock : public Page
 {
-    bool simulation = false;
-    int simtime;
+bool simulation = false;
+int simtime;
+bool keylock = false;
+char source = 'R';  // time source (R)TC | (G)PS
+char mode = 'A';    // display mode (A)nalog | (D)igital | race (T)imer
+char tz = 'L';      // time zone (L)ocal | (U)TC
 
     public:
     PageClock(CommonData &common){
@@ -18,9 +33,38 @@ class PageClock : public Page
 
     // Key functions
     virtual int handleKey(int key){
-         // Code for keylock
-        if(key == 11){
-            commonData->keylock = !commonData->keylock;
+        // Time source
+        if (key == 1) {
+            if (source == 'G') {
+                source = 'R';
+            } else {
+                source = 'G';
+            }
+            return 0;
+        }
+        if (key == 2) {
+            if (mode == 'A') {
+                mode = 'D';
+            } else if (mode == 'D') {
+                mode = 'T';
+            } else {
+                mode = 'A';
+            }
+            return 0;
+        }
+        // Time zone: Local / UTC
+        if (key == 5) {
+            if (tz == 'L') {
+                tz = 'U';
+            } else {
+                tz = 'L';
+            }
+            return 0;
+        }
+
+        // Keylock function
+        if(key == 11){              // Code for keylock
+            keylock = !keylock;     // Toggle keylock
             return 0;               // Commit the key
         }
         return key;
@@ -47,6 +91,8 @@ class PageClock : public Page
 
         // Get config data
         String lengthformat = config->getString(config->lengthFormat);
+        String dateformat = config->getString(config->dateFormat);
+        bool simulation = config->getBool(config->useSimuData);
         bool holdvalues = config->getBool(config->holdvalues);
         String flashLED = config->getString(config->flashLED);
         String backlightMode = config->getString(config->backlight);
@@ -100,7 +146,7 @@ class PageClock : public Page
         // Optical warning by limit violation (unused)
         if(String(flashLED) == "Limit Violation"){
             setBlinkingLED(false);
-            setFlashLED(false); 
+            setFlashLED(false);
         }
 
         // Logging boat values
@@ -115,11 +161,28 @@ class PageClock : public Page
 
         getdisplay().setTextColor(commonData->fgcolor);
 
+        time_t tv = mktime(&commonData.data.rtcTime) + timezone * 3600;
+        struct tm *local_tm = localtime(&tv);
+
         // Show values GPS date
         getdisplay().setFont(&Ubuntu_Bold8pt7b);
         getdisplay().setCursor(10, 65);
-        if(holdvalues == false) getdisplay().print(svalue2); // Value
-        else getdisplay().print(svalue2old);
+        if (holdvalues == false) {
+            if (source == 'G') {
+                 // GPS value
+                 getdisplay().print(svalue2);
+            } else {
+                // RTC value
+                 if (tz == 'L') {
+                     getdisplay().print(formatDate(dateformat, local_tm->tm_year + 1900, local_tm->tm_mon + 1, local_tm->tm_mday));
+                 }
+                 else {
+                     getdisplay().print(formatDate(dateformat, commonData.data.rtcTime.tm_year + 1900, commonData.data.rtcTime.tm_mon + 1, commonData.data.rtcTime.tm_mday));
+                 }
+            }
+        } else {
+            getdisplay().print(svalue2old);
+        }
         getdisplay().setFont(&Ubuntu_Bold12pt7b);
         getdisplay().setCursor(10, 95);
         getdisplay().print("Date");                          // Name
@@ -130,8 +193,22 @@ class PageClock : public Page
         // Show values GPS time
         getdisplay().setFont(&Ubuntu_Bold8pt7b);
         getdisplay().setCursor(10, 250);
-        if(holdvalues == false) getdisplay().print(svalue1); // Value
-        else getdisplay().print(svalue1old);
+        if (holdvalues == false) {
+            if (source == 'G') {
+                getdisplay().print(svalue1); // Value
+            }
+            else {
+                 if (tz == 'L') {
+                      getdisplay().print(formatTime('s', local_tm->tm_hour, local_tm->tm_min, local_tm->tm_sec));
+                 }
+                 else {
+                      getdisplay().print(formatTime('s', commonData.data.rtcTime.tm_hour, commonData.data.rtcTime.tm_min, commonData.data.rtcTime.tm_sec));
+                 }
+            }
+        }
+        else {
+             getdisplay().print(svalue1old);
+        }
         getdisplay().setFont(&Ubuntu_Bold12pt7b);
         getdisplay().setCursor(10, 220);
         getdisplay().print("Time");                          // Name
@@ -174,7 +251,7 @@ class PageClock : public Page
         getdisplay().print("SunS");                          // Name
 
 //*******************************************************************************************
-        
+
         // Draw clock
         int rInstrument = 110;     // Radius of clock
         float pi = 3.141592;
@@ -246,24 +323,53 @@ class PageClock : public Page
         getdisplay().setFont(&Ubuntu_Bold12pt7b);
         getdisplay().setCursor(175, 110);
         if(holdvalues == false){
-            getdisplay().print(unit2);                       // Unit
+            if (tz == 'L') {
+                getdisplay().print(unit2);                       // Unit
+            } else {
+                getdisplay().print("UTC");
+            }
         }
         else{
             getdisplay().print(unit2old);                    // Unit
         }
 
+        getdisplay().setFont(&Ubuntu_Bold8pt7b);
+        getdisplay().setCursor(185, 190);
+        if (source == 'G') {
+            getdisplay().print("GPS");
+        } else {
+            getdisplay().print("RTC");
+        }
+
         // Clock values
         double hour = 0;
         double minute = 0;
-        value1 = value1 + int(timezone*3600);
-        if (value1 > 86400) {value1 = value1 - 86400;}
-        if (value1 < 0) {value1 = value1 + 86400;}
-        hour = (value1 / 3600.0);
-        if(hour > 12) hour = hour - 12.0;
-//        minute = (hour - int(hour)) * 3600.0 / 60.0;        // Analog minute pointer smooth moving
-        minute = int((hour - int(hour)) * 3600.0 / 60.0);   // Jumping minute pointer from minute to minute
+        if (source == 'R') {
+            if (tz == 'L') {
+                time_t tv = mktime(&commonData.data.rtcTime) + timezone * 3600;
+                struct tm *local_tm = localtime(&tv);
+                minute = local_tm->tm_min;
+                hour = local_tm->tm_hour;
+            } else {
+                minute = commonData.data.rtcTime.tm_min;
+                hour = commonData.data.rtcTime.tm_hour;
+            }
+            hour += minute / 60;
+        } else {
+            if (tz == 'L') {
+                value1 += int(timezone*3600);
+            }
+            if (value1 > 86400) {value1 = value1 - 86400;}
+            if (value1 < 0) {value1 = value1 + 86400;}
+            hour = (value1 / 3600.0);
+    //        minute = (hour - int(hour)) * 3600.0 / 60.0;        // Analog minute pointer smooth moving
+            minute = int((hour - int(hour)) * 3600.0 / 60.0);   // Jumping minute pointer from minute to minute
+        }
+        if (hour > 12) {
+            hour -= 12.0;
+        }
         LOG_DEBUG(GwLog::DEBUG,"... PageClock, value1: %f hour: %f minute:%f", value1, hour, minute);
-        
+
         // Draw hour pointer
         float startwidth = 8;       // Start width of pointer
         if(valid1 == true || holdvalues == true || simulation == true){
@@ -274,7 +380,7 @@ class PageClock : public Page
             float xx1 = -startwidth;
             float xx2 = startwidth;
             float yy1 = -startwidth;
-            float yy2 = -(rInstrument * 0.5); 
+            float yy2 = -(rInstrument * 0.5);
             getdisplay().fillTriangle(200+(int)(cosx*xx1-sinx*yy1),150+(int)(sinx*xx1+cosx*yy1),
                 200+(int)(cosx*xx2-sinx*yy1),150+(int)(sinx*xx2+cosx*yy1),
                 200+(int)(cosx*0-sinx*yy2),150+(int)(sinx*0+cosx*yy2),commonData->fgcolor);
@@ -300,7 +406,7 @@ class PageClock : public Page
             float xx1 = -startwidth;
             float xx2 = startwidth;
             float yy1 = -startwidth;
-            float yy2 = -(rInstrument - 15); 
+            float yy2 = -(rInstrument - 15);
             getdisplay().fillTriangle(200+(int)(cosx*xx1-sinx*yy1),150+(int)(sinx*xx1+cosx*yy1),
                 200+(int)(cosx*xx2-sinx*yy1),150+(int)(sinx*xx2+cosx*yy1),
                 200+(int)(cosx*0-sinx*yy2),150+(int)(sinx*0+cosx*yy2),commonData->fgcolor);
@@ -319,6 +425,28 @@ class PageClock : public Page
         // Center circle
         getdisplay().fillCircle(200, 150, startwidth + 6, commonData->bgcolor);
         getdisplay().fillCircle(200, 150, startwidth + 4, commonData->fgcolor);
+
+//*******************************************************************************************
+        // Key Layout
+        getdisplay().setFont(&Ubuntu_Bold8pt7b);
+        if(keylock == false){
+            getdisplay().setCursor(10, 290);
+            getdisplay().print("[SRC]");
+            getdisplay().setCursor(60, 290);
+            getdisplay().print("[MODE]");
+            getdisplay().setCursor(293, 290);
+            getdisplay().print("[TZ]");
+            getdisplay().setCursor(130, 290);
+            getdisplay().print("[  <<<<  " + String(commonData.data.actpage) + "/" + String(commonData.data.maxpage) + "  >>>>  ]");
+            if(String(backlightMode) == "Control by Key"){                  // Key for illumination
+                getdisplay().setCursor(343, 290);
+                getdisplay().print("[ILUM]");
+            }
+        }
+        else{
+            getdisplay().setCursor(130, 290);
+            getdisplay().print(" [    Keylock active    ]");
+        }
 
         // Update display
         getdisplay().nextPage();    // Partial update (fast)
