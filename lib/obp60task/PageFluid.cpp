@@ -100,8 +100,7 @@ class PageFluid : public Page{
 
     public:
     PageFluid(CommonData &common){
-        common.logger->logDebug(GwLog::LOG,"Show PageFluid");
-        fluidtype = common.config->getInt("page" + String(common.data.actpage) + "fluid", 0);
+        common.logger->logDebug(GwLog::LOG,"Instantiate PageFluid");
     }
 
     virtual int handleKey(int key){
@@ -110,6 +109,11 @@ class PageFluid : public Page{
             return 0;                   // Commit the key
         }
         return key;
+    }
+
+    virtual void displayNew(CommonData &commonData, PageData &pageData){
+        fluidtype = commonData.config->getInt("page" + String(pageData.pageNumber) + "fluid", 0);
+        commonData.logger->logDebug(GwLog::LOG,"New PageFluid: fluidtype=%d", fluidtype);
     }
 
     virtual void displayPage(CommonData &commonData, PageData &pageData){

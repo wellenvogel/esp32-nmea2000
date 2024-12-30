@@ -936,7 +936,7 @@
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"page1type":"OneValue"},{"page1type":"TwoValues"},{"page1type":"ThreeValues"},{"page1type":"FourValues"},{"page1type":"FourValues2"},{"page1type":"WindRoseFlex"}]
+        "condition":[{"page1type":"OneValue"},{"page1type":"TwoValues"},{"page1type":"ThreeValues"},{"page1type":"FourValues"},{"page1type":"FourValues2"},{"page1type":"WindRoseFlex"},{"page1type":"Fluid"}]
     },
     {
         "name": "page1value2",
@@ -1042,7 +1042,7 @@
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"page2type":"OneValue"},{"page2type":"TwoValues"},{"page2type":"ThreeValues"},{"page2type":"FourValues"},{"page2type":"FourValues2"},{"page2type":"WindRoseFlex"}]
+        "condition":[{"page2type":"OneValue"},{"page2type":"TwoValues"},{"page2type":"ThreeValues"},{"page2type":"FourValues"},{"page2type":"FourValues2"},{"page2type":"WindRoseFlex"},{"page2type":"Fluid"}]
     },
     {
         "name": "page2value2",
@@ -1148,7 +1148,7 @@
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"page3type":"OneValue"},{"page3type":"TwoValues"},{"page3type":"ThreeValues"},{"page3type":"FourValues"},{"page3type":"FourValues2"},{"page3type":"WindRoseFlex"}]
+        "condition":[{"page3type":"OneValue"},{"page3type":"TwoValues"},{"page3type":"ThreeValues"},{"page3type":"FourValues"},{"page3type":"FourValues2"},{"page3type":"WindRoseFlex"},{"page3type":"Fluid"}]
     },
     {
         "name": "page3value2",
@@ -1254,7 +1254,7 @@
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"page4type":"OneValue"},{"page4type":"TwoValues"},{"page4type":"ThreeValues"},{"page4type":"FourValues"},{"page4type":"FourValues2"},{"page4type":"WindRoseFlex"}]
+        "condition":[{"page4type":"OneValue"},{"page4type":"TwoValues"},{"page4type":"ThreeValues"},{"page4type":"FourValues"},{"page4type":"FourValues2"},{"page4type":"WindRoseFlex"},{"page4type":"Fluid"}]
     },
     {
         "name": "page4value2",
@@ -1360,7 +1360,7 @@
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"page5type":"OneValue"},{"page5type":"TwoValues"},{"page5type":"ThreeValues"},{"page5type":"FourValues"},{"page5type":"FourValues2"},{"page4type":"WindRoseFlex"}]
+        "condition":[{"page5type":"OneValue"},{"page5type":"TwoValues"},{"page5type":"ThreeValues"},{"page5type":"FourValues"},{"page5type":"FourValues2"},{"page4type":"WindRoseFlex"},{"page5type":"Fluid"}]
     },
     {
         "name": "page5value2",
@@ -1466,7 +1466,7 @@
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"page6type":"OneValue"},{"page6type":"TwoValues"},{"page6type":"ThreeValues"},{"page6type":"FourValues"},{"page6type":"FourValues2"},{"page6type":"WindRoseFlex"}]
+        "condition":[{"page6type":"OneValue"},{"page6type":"TwoValues"},{"page6type":"ThreeValues"},{"page6type":"FourValues"},{"page6type":"FourValues2"},{"page6type":"WindRoseFlex"},{"page6type":"Fluid"}]
     },
     {
         "name": "page6value2",
@@ -1572,7 +1572,7 @@
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"page7type":"OneValue"},{"page7type":"TwoValues"},{"page7type":"ThreeValues"},{"page7type":"FourValues"},{"page7type":"FourValues2"},{"page7type":"WindRoseFlex"}]
+        "condition":[{"page7type":"OneValue"},{"page7type":"TwoValues"},{"page7type":"ThreeValues"},{"page7type":"FourValues"},{"page7type":"FourValues2"},{"page7type":"WindRoseFlex"},{"page7type":"Fluid"}]
     },
     {
         "name": "page7value2",
@@ -1678,7 +1678,7 @@
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"page8type":"OneValue"},{"page8type":"TwoValues"},{"page8type":"ThreeValues"},{"page8type":"FourValues"},{"page8type":"FourValues2"},{"page8type":"WindRoseFlex"}]
+        "condition":[{"page8type":"OneValue"},{"page8type":"TwoValues"},{"page8type":"ThreeValues"},{"page8type":"FourValues"},{"page8type":"FourValues2"},{"page8type":"WindRoseFlex"},{"page8type":"Fluid"}]
     },
     {
         "name": "page8value2",
@@ -1784,7 +1784,7 @@
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"page9type":"OneValue"},{"page9type":"TwoValues"},{"page9type":"ThreeValues"},{"page9type":"FourValues"},{"page9type":"FourValues2"},{"page9type":"WindRoseFlex"}]
+        "condition":[{"page9type":"OneValue"},{"page9type":"TwoValues"},{"page9type":"ThreeValues"},{"page9type":"FourValues"},{"page9type":"FourValues2"},{"page9type":"WindRoseFlex"},{"page9type":"Fluid"}]
     },
     {
         "name": "page9value2",
@@ -1890,7 +1890,7 @@
         "capabilities": {
             "obp60":"true"
         },
-        "condition":[{"page10type":"OneValue"},{"page10type":"TwoValues"},{"page10type":"ThreeValues"},{"page10type":"FourValues"},{"page10type":"FourValues2"},{"page10type":"WindRoseFlex"}]
+        "condition":[{"page10type":"OneValue"},{"page10type":"TwoValues"},{"page10type":"ThreeValues"},{"page10type":"FourValues"},{"page10type":"FourValues2"},{"page10type":"WindRoseFlex"},{"page10type":"Fluid"}]
     },
     {
         "name": "page10value2",

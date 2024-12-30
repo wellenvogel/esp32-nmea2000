@@ -373,6 +373,7 @@ void OBP60Task(GwApi *api){
        pages[i].description=description;
        pages[i].page=description->creator(commonData);
        pages[i].parameters.pageName=pageType;
+       pages[i].parameters.pageNumber = i + 1;
        LOG_DEBUG(GwLog::DEBUG,"found page %s for number %d",pageType.c_str(),i);
        //fill in all the user defined parameters
        for (int uid=0;uid<description->userParam;uid++){
