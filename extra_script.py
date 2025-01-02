@@ -274,9 +274,9 @@ class Grove:
     def _ss(self,z=False):
         if z:
             return self.name
-        return self.name if self.name is not 'Z' else ''
+        return self.name if self.name != 'Z' else ''
     def _suffix(self):
-        return '_'+self.name if self.name is not 'Z' else ''
+        return '_'+self.name if self.name != 'Z' else ''
     def replace(self,line):
         if line is None:
             return line
