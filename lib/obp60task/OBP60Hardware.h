@@ -30,6 +30,8 @@
     #define INA226_I2C_ADDR3 0x45   // Addr. 0x45 (fix A0 = 5V, A1 = 5V) for generator
     // Horter modules
     #define PCF8574_I2C_ADDR1 0x20  // First digital out module
+    // FRAM (e.g. MB85RC256V)
+    #define FRAM_I2C_ADDR 0x50
     // SPI (E-Ink display, Extern Bus)
     #define OBP_SPI_CS 39
     #define OBP_SPI_DC 40
