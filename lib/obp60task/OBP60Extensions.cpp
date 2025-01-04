@@ -465,7 +465,7 @@ void generatorGraphic(uint x, uint y, int pcolor, int bcolor){
         getdisplay().setTextColor(pcolor);
         getdisplay().setFont(&Ubuntu_Bold32pt7b);
         getdisplay().setCursor(xb-22, yb+20);
-        getdisplay().print("G");Function to handle HTTP image request
+        getdisplay().print("G");
 }
 
 // Function to handle HTTP image request
