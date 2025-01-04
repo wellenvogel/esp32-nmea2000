@@ -3,9 +3,6 @@
 
 #include <Arduino.h>
 #include "OBP60Hardware.h"
-#define FASTLED_ALL_PINS_HARDWARE_SPI
-#define FASTLED_ESP32_SPI_BUS FSPI
-#define FASTLED_ESP32_FLASH_LOCK 1
 #include "LedSpiTask.h"
 #include <GxEPD2_BW.h>                  // E-paper lib V2
 #include <Adafruit_FRAM_I2C.h>          // I2C FRAM
