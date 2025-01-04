@@ -394,6 +394,8 @@ void OBP60Task(GwApi *api){
        }
     }
 
+    // Display screenshot handler for HTTP request
+    // http://192.168.15.1/api/user/OBP60Task/screenshot
     api->registerRequestHandler("screenshot", [api, &pageNumber, pages](AsyncWebServerRequest *request) {
         doImageRequest(api, &pageNumber, pages, request);
     });

@@ -472,6 +472,7 @@ void generatorGraphic(uint x, uint y, int pcolor, int bcolor){
 }
 
 // Function to handle HTTP image request
+// http://192.168.15.1/api/user/OBP60Task/screenshot
 void doImageRequest(GwApi *api, int *pageno, const PageStruct pages[MAX_PAGE_NUMBER], AsyncWebServerRequest *request) {
     GwLog *logger = api->getLogger();
 
