@@ -1,9 +1,6 @@
 #ifdef BOARD_OBP60S3
 
 #include <Arduino.h>
-#define FASTLED_ALL_PINS_HARDWARE_SPI
-#define FASTLED_ESP32_SPI_BUS FSPI
-#define FASTLED_ESP32_FLASH_LOCK 1
 #include <PCF8574.h>      // Driver for PCF8574 output modul from Horter
 #include <Wire.h>         // I2C
 #include <RTClib.h>       // Driver for DS1388 RTC
@@ -472,6 +469,7 @@ void generatorGraphic(uint x, uint y, int pcolor, int bcolor){
 }
 
 // Function to handle HTTP image request
+// http://192.168.15.1/api/user/OBP60Task/screenshot
 void doImageRequest(GwApi *api, int *pageno, const PageStruct pages[MAX_PAGE_NUMBER], AsyncWebServerRequest *request) {
     GwLog *logger = api->getLogger();
 

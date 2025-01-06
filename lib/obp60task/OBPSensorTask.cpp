@@ -456,7 +456,7 @@ void sensorTask(void *param){
             }
         }
 
-        // Send supplay voltage value all 1s
+        // Send supply voltage value all 1s
         if(millis() > starttime5 + 1000 && String(powsensor1) == "off"){
             starttime5 = millis();
             sensors.batteryVoltage = (float(analogRead(OBP_ANALOG0)) * 3.3 / 4096 + 0.17) * 20;   // Vin = 1/20

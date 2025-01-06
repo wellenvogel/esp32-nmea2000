@@ -246,7 +246,7 @@ void underVoltageDetection(GwApi *api, CommonData &common){
     // Read settings
     float vslope = uint(api->getConfig()->getConfigItem(api->getConfig()->vSlope,true)->asFloat());
     float voffset = uint(api->getConfig()->getConfigItem(api->getConfig()->vOffset,true)->asFloat());
-    // Read supplay voltage
+    // Read supply voltage
     float actVoltage = (float(analogRead(OBP_ANALOG0)) * 3.3 / 4096 + 0.17) * 20;   // V = 1/20 * Vin
     actVoltage = actVoltage * vslope + voffset;
     if(actVoltage < MIN_VOLTAGE){
@@ -394,6 +394,8 @@ void OBP60Task(GwApi *api){
        }
     }
 
+    // Display screenshot handler for HTTP request
+    // http://192.168.15.1/api/user/OBP60Task/screenshot
     api->registerRequestHandler("screenshot", [api, &pageNumber, pages](AsyncWebServerRequest *request) {
         doImageRequest(api, &pageNumber, pages, request);
     });

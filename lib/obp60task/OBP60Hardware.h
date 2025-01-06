@@ -54,7 +54,7 @@
     #define TONE3 3500          // 3500Hz
     #define TONE4 4000          // 4000Hz
     // Analog Input
-    #define OBP_ANALOG0 4       // Analog input for voltage power supplay
+    #define OBP_ANALOG0 4       // Analog input for voltage power supply
     #define MIN_VOLTAGE 10.0    // Min voltage for under voltage detection (then goto deep sleep)
     #define POWER_FAIL_TIME 2   // in [ms] Accept min voltage until 2 x 1ms (for under voltage gaps by engine start)
     // Touch buttons
@@ -69,7 +69,7 @@
     #define NUM_FLASH_LED 1         // Number of flash LED
     #define OBP_FLASH_LED 7         // GPIO port
     // Backlight LEDs (6x WS2812B)
-    #define NUM_BACKLIGHT_LED 6     // Numebr of Backlight LEDs
+    #define NUM_BACKLIGHT_LED 6     // Number of Backlight LEDs
     #define OBP_BACKLIGHT_LED 15    // GPIO port
     // Power Rail
     #define OBP_POWER_50 5          // 5.0V power rail
