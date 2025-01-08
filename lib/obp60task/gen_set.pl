@@ -1,6 +1,7 @@
 #!/bin/perl -w
 #A tool to generate the part of config.json that deals with pages and fields.
-
+#DEPRECATED, moved to get_set.py
+die "Please use gen_set.py instead";
 #List of all pages and the number of parameters they expect.
 %NoOfFieldsPerPage=qw( 
                 ApparentWind    0
@@ -81,7 +82,7 @@ for ($PageNo=1;$PageNo<=$NoOfPages;$PageNo++){
         print "\t",'"condition":[';
         foreach $page (@Pages) {
             if($NoOfFieldsPerPage{$page}>=$FieldNo){ 
-                print '{"page1type":"',$page,'"},';
+                print '{"page',$PageNo,'type":"',$page,'"},';
             } 
         } 
         print "\b],\n";

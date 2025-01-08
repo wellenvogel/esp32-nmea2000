@@ -342,9 +342,9 @@ static Page *createPage(CommonData &common){
 PageDescription registerPageRollPitch(
     "RollPitch",        // Page name
     createPage,         // Action
-    0,                  // Number of bus values depends on selection in Web configuration
+    2,                  // Number of bus values depends on selection in Web configuration
    // {"xdrROLL", "xdrPTCH"},// Bus values we need in the page
-    {"xdrRoll", "xdrPitch"},// Bus values we need in the page
+    //{"xdrRoll", "xdrPitch"},// Bus values we need in the page
     true                // Show display header on/off
 );
 
