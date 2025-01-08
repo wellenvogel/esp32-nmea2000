@@ -254,7 +254,7 @@ public:
         }
 
         // Reduce instrument size
-        if(key == 2 && mode == 'N'){    // Code for reduce
+        if(key == 2 && mode == 'X'){    // Code for reduce
             lp = lp - 10;
             if(lp < 10){
                 lp = 10;
@@ -264,7 +264,7 @@ public:
         }
 
         // Enlarge instrument size
-        if(key == 5 && mode == 'N'){    // Code for enlarge
+        if(key == 5 && mode == 'X'){    // Code for enlarge
             lp = lp + 10;
             if(lp > 80){
                 lp = 80;
