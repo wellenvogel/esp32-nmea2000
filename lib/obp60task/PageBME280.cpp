@@ -5,24 +5,24 @@
 
 class PageBME280 : public Page
 {
-    bool keylock = false;               // Keylock
-
     public:
     PageBME280(CommonData &common){
-        common.logger->logDebug(GwLog::LOG,"Show PageBME280");
+        commonData = &common;
+        common.logger->logDebug(GwLog::LOG,"Instantiate PageBME280");
     }
 
     virtual int handleKey(int key){
-        if(key == 11){                  // Code for keylock
-            keylock = !keylock;         // Toggle keylock
+        // Code for keylock
+        if(key == 11){
+            commonData->keylock = !commonData->keylock;
             return 0;                   // Commit the key
         }
         return key;
     }
 
-    virtual void displayPage(CommonData &commonData, PageData &pageData){
-        GwConfigHandler *config = commonData.config;
-        GwLog *logger=commonData.logger;
+    virtual void displayPage(PageData &pageData){
+        GwConfigHandler *config = commonData->config;
+        GwLog *logger = commonData->logger;
 
         double value1 = 0;
         double value2 = 0;
@@ -42,7 +42,7 @@ class PageBME280 : public Page
         String name1 = "Temp";                          // Value name
         name1 = name1.substring(0, 6);                  // String length limit for value name
         if(simulation == false){
-            value1 = commonData.data.airTemperature;    // Value as double in SI unit 
+            value1 = commonData->data.airTemperature;    // Value as double in SI unit
         }
         else{
             value1 = 23.0 + float(random(0, 10)) / 10.0;
@@ -60,7 +60,7 @@ class PageBME280 : public Page
         String name2 = "Humid";                         // Value name
         name2 = name2.substring(0, 6);                  // String length limit for value name
         if(simulation == false){
-            value2 = commonData.data.airHumidity;       // Value as double in SI unit 
+            value2 = commonData->data.airHumidity;       // Value as double in SI unit
         }
         else{
             value2 = 43 + float(random(0, 4));
@@ -78,7 +78,7 @@ class PageBME280 : public Page
         String name3 = "Press";                         // Value name
         name3 = name3.substring(0, 6);                  // String length limit for value name
          if(simulation == false){
-            value3 = commonData.data.airPressure;       // Value as double in SI unit 
+            value3 = commonData->data.airPressure;       // Value as double in SI unit
         }
         else{
             value3 = 1006 + float(random(0, 5));
@@ -107,7 +107,7 @@ class PageBME280 : public Page
         // Set display in partial refresh mode
         getdisplay().setPartialWindow(0, 0, getdisplay().width(), getdisplay().height()); // Set partial update
 
-        getdisplay().setTextColor(commonData.fgcolor);
+        getdisplay().setTextColor(commonData->fgcolor);
 
         // ############### Value 1 ################
 
@@ -131,7 +131,7 @@ class PageBME280 : public Page
         // ############### Horizontal Line ################
 
         // Horizontal line 3 pix
-        getdisplay().fillRect(0, 105, 400, 3, commonData.fgcolor);
+        getdisplay().fillRect(0, 105, 400, 3, commonData->fgcolor);
 
         // ############### Value 2 ################
 
@@ -155,7 +155,7 @@ class PageBME280 : public Page
         // ############### Horizontal Line ################
 
         // Horizontal line 3 pix
-        getdisplay().fillRect(0, 195, 400, 3, commonData.fgcolor);
+        getdisplay().fillRect(0, 195, 400, 3, commonData->fgcolor);
 
         // ############### Value 3 ################
 
@@ -180,17 +180,11 @@ class PageBME280 : public Page
 
         // Key Layout
         getdisplay().setFont(&Ubuntu_Bold8pt7b);
-        if(keylock == false){
-            getdisplay().setCursor(130, 290);
-            getdisplay().print("[  <<<<  " + String(commonData.data.actpage) + "/" + String(commonData.data.maxpage) + "  >>>>  ]");
+        if(commonData->keylock == false){
             if(String(backlightMode) == "Control by Key"){                  // Key for illumination
                 getdisplay().setCursor(343, 290);
                 getdisplay().print("[ILUM]");
             }
-        }
-        else{
-            getdisplay().setCursor(130, 290);
-            getdisplay().print(" [    Keylock active    ]");
         }
 
         // Update display

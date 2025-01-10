@@ -629,12 +629,13 @@ void OBP60Task(GwApi *api){
                 }
                 else{
                     if (lastPage != pageNumber){
-                        currentPage->displayNew(commonData,pages[pageNumber].parameters);
+                        if (hasFRAM) fram.write(FRAM_PAGE_NO, pageNumber); // remember page for device restart
+                        currentPage->displayNew(pages[pageNumber].parameters);
                         lastPage=pageNumber;
                     }
                     //call the page code
                     LOG_DEBUG(GwLog::DEBUG,"calling page %d",pageNumber);
-                    currentPage->displayPage(commonData,pages[pageNumber].parameters);
+                    currentPage->displayPage(pages[pageNumber].parameters);
                 }
             }
         }

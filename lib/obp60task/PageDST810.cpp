@@ -5,24 +5,24 @@
 
 class PageDST810 : public Page
 {
-    bool keylock = false;               // Keylock
-
-    public:
+public:
     PageDST810(CommonData &common){
-        common.logger->logDebug(GwLog::LOG,"Show PageDST810");
+        commonData = &common;
+        common.logger->logDebug(GwLog::LOG,"Instantiate PageDST810");
     }
 
     virtual int handleKey(int key){
-        if(key == 11){                  // Code for keylock
-            keylock = !keylock;         // Toggle keylock
+        // Code for keylock
+        if(key == 11){
+            commonData->keylock = !commonData->keylock;
             return 0;                   // Commit the key
         }
         return key;
     }
 
-    virtual void displayPage(CommonData &commonData, PageData &pageData){
-        GwConfigHandler *config = commonData.config;
-        GwLog *logger=commonData.logger;
+    virtual void displayPage(PageData &pageData){
+        GwConfigHandler *config = commonData->config;
+        GwLog *logger = commonData->logger;
 
         // Old values for hold function
         static String svalue1old = "";
@@ -47,8 +47,8 @@ class PageDST810 : public Page
         name1 = name1.substring(0, 6);                  // String length limit for value name
         double value1 = bvalue1->value;                 // Value as double in SI unit
         bool valid1 = bvalue1->valid;                   // Valid information 
-        String svalue1 = formatValue(bvalue1, commonData).svalue;    // Formatted value as string including unit conversion and switching decimal places
-        String unit1 = formatValue(bvalue1, commonData).unit;        // Unit of value
+        String svalue1 = formatValue(bvalue1, *commonData).svalue;    // Formatted value as string including unit conversion and switching decimal places
+        String unit1 = formatValue(bvalue1, *commonData).unit;        // Unit of value
 
         // Get boat values #2
         GwApi::BoatValue *bvalue2 = pageData.values[1]; // Second element in list (only one value by PageOneValue)
@@ -56,8 +56,8 @@ class PageDST810 : public Page
         name2 = name2.substring(0, 6);                  // String length limit for value name
         double value2 = bvalue2->value;                 // Value as double in SI unit
         bool valid2 = bvalue2->valid;                   // Valid information 
-        String svalue2 = formatValue(bvalue2, commonData).svalue;    // Formatted value as string including unit conversion and switching decimal places
-        String unit2 = formatValue(bvalue2, commonData).unit;        // Unit of value
+        String svalue2 = formatValue(bvalue2, *commonData).svalue;    // Formatted value as string including unit conversion and switching decimal places
+        String unit2 = formatValue(bvalue2, *commonData).unit;        // Unit of value
 
         // Get boat values #3
         GwApi::BoatValue *bvalue3 = pageData.values[2]; // Second element in list (only one value by PageOneValue)
@@ -65,8 +65,8 @@ class PageDST810 : public Page
         name3 = name3.substring(0, 6);                  // String length limit for value name
         double value3 = bvalue3->value;                 // Value as double in SI unit
         bool valid3 = bvalue3->valid;                   // Valid information 
-        String svalue3 = formatValue(bvalue3, commonData).svalue;    // Formatted value as string including unit conversion and switching decimal places
-        String unit3 = formatValue(bvalue3, commonData).unit;        // Unit of value
+        String svalue3 = formatValue(bvalue3, *commonData).svalue;    // Formatted value as string including unit conversion and switching decimal places
+        String unit3 = formatValue(bvalue3, *commonData).unit;        // Unit of value
 
         // Get boat values #4
         GwApi::BoatValue *bvalue4 = pageData.values[3]; // Second element in list (only one value by PageOneValue)
@@ -74,8 +74,8 @@ class PageDST810 : public Page
         name4 = name4.substring(0, 6);                  // String length limit for value name
         double value4 = bvalue4->value;                 // Value as double in SI unit
         bool valid4 = bvalue4->valid;                   // Valid information 
-        String svalue4 = formatValue(bvalue4, commonData).svalue;    // Formatted value as string including unit conversion and switching decimal places
-        String unit4 = formatValue(bvalue4, commonData).unit;        // Unit of value
+        String svalue4 = formatValue(bvalue4, *commonData).svalue;    // Formatted value as string including unit conversion and switching decimal places
+        String unit4 = formatValue(bvalue4, *commonData).unit;        // Unit of value
 
         // Optical warning by limit violation (unused)
         if(String(flashLED) == "Limit Violation"){
@@ -93,7 +93,7 @@ class PageDST810 : public Page
         // Set display in partial refresh mode
         getdisplay().setPartialWindow(0, 0, getdisplay().width(), getdisplay().height()); // Set partial update
 
-        getdisplay().setTextColor(commonData.fgcolor);
+        getdisplay().setTextColor(commonData->fgcolor);
 
         // ############### Value 1 ################
 
@@ -131,7 +131,7 @@ class PageDST810 : public Page
         // ############### Horizontal Line ################
 
         // Horizontal line 3 pix
-        getdisplay().fillRect(0, 105, 400, 3, commonData.fgcolor);
+        getdisplay().fillRect(0, 105, 400, 3, commonData->fgcolor);
 
         // ############### Value 2 ################
 
@@ -169,7 +169,7 @@ class PageDST810 : public Page
         // ############### Horizontal Line ################
 
         // Horizontal line 3 pix
-        getdisplay().fillRect(0, 195, 400, 3, commonData.fgcolor);
+        getdisplay().fillRect(0, 195, 400, 3, commonData->fgcolor);
 
         // ############### Value 3 ################
 
@@ -207,7 +207,7 @@ class PageDST810 : public Page
         // ############### Vertical Line ################
 
         // Vertical line 3 pix
-        getdisplay().fillRect(200, 195, 3, 75, commonData.fgcolor);
+        getdisplay().fillRect(200, 195, 3, 75, commonData->fgcolor);
 
         // ############### Value 4 ################
 
@@ -247,17 +247,11 @@ class PageDST810 : public Page
 
         // Key Layout
         getdisplay().setFont(&Ubuntu_Bold8pt7b);
-        if(keylock == false){
-            getdisplay().setCursor(130, 290);
-            getdisplay().print("[  <<<<  " + String(commonData.data.actpage) + "/" + String(commonData.data.maxpage) + "  >>>>  ]");
+        if(commonData->keylock == false){
             if(String(backlightMode) == "Control by Key"){                  // Key for illumination
                 getdisplay().setCursor(343, 290);
                 getdisplay().print("[ILUM]");
             }
-        }
-        else{
-            getdisplay().setCursor(130, 290);
-            getdisplay().print(" [    Keylock active    ]");
         }
 
         // Update display

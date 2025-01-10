@@ -57,31 +57,33 @@ static unsigned char gasoline_bits[] = {
    0x98, 0xcf, 0x38, 0xe7, 0x78, 0xf0, 0xf8, 0xfa, 0xf8, 0xfa, 0x78, 0xf0,
    0x38, 0xe7, 0x98, 0xcf, 0xf8, 0xff, 0xf0, 0x7f };
 
-class PageFluid : public Page{
-    bool keylock = false;               // Keylock
+class PageFluid : public Page
+{
     int fluidtype;
 
     public:
     PageFluid(CommonData &common){
+        commonData = &common;
         common.logger->logDebug(GwLog::LOG,"Instantiate PageFluid");
     }
 
     virtual int handleKey(int key){
-        if(key == 11){                  // Code for keylock
-            keylock = !keylock;         // Toggle keylock
+        // Code for keylock
+        if(key == 11){
+            commonData->keylock = !commonData->keylock;
             return 0;                   // Commit the key
         }
         return key;
     }
 
-    virtual void displayNew(CommonData &commonData, PageData &pageData){
-        fluidtype = commonData.config->getInt("page" + String(pageData.pageNumber) + "fluid", 0);
-        commonData.logger->logDebug(GwLog::LOG,"New PageFluid: fluidtype=%d", fluidtype);
+    virtual void displayNew(PageData &pageData){
+        fluidtype = commonData->config->getInt("page" + String(pageData.pageNumber) + "fluid", 0);
+        commonData->logger->logDebug(GwLog::LOG,"New PageFluid: fluidtype=%d", fluidtype);
     }
 
-    virtual void displayPage(CommonData &commonData, PageData &pageData){
-        GwConfigHandler *config = commonData.config;
-        GwLog *logger=commonData.logger;
+    virtual void displayPage(PageData &pageData){
+        GwConfigHandler *config = commonData->config;
+        GwLog *logger = commonData->logger;
 
         // Get config data
         String flashLED = config->getString(config->flashLED);
@@ -107,7 +109,7 @@ class PageFluid : public Page{
         // Set display in partial refresh mode
         getdisplay().setPartialWindow(0, 0, getdisplay().width(), getdisplay().height());
 
-        getdisplay().setTextColor(commonData.fgcolor);
+        getdisplay().setTextColor(commonData->fgcolor);
 
         // descriptions
         getdisplay().setFont(&Ubuntu_Bold12pt7b);
@@ -125,11 +127,11 @@ class PageFluid : public Page{
         uint8_t r = 110;
 
         // circular frame
-        getdisplay().drawCircle(c.x, c.y, r+5, commonData.fgcolor);
-        getdisplay().fillCircle(c.x, c.y, r+2, commonData.fgcolor);
-        getdisplay().fillCircle(c.x, c.y, r-1, commonData.bgcolor);
+        getdisplay().drawCircle(c.x, c.y, r+5, commonData->fgcolor);
+        getdisplay().fillCircle(c.x, c.y, r+2, commonData->fgcolor);
+        getdisplay().fillCircle(c.x, c.y, r-1, commonData->bgcolor);
         // center of pointer as dot 
-        getdisplay().fillCircle(c.x, c.y, 8, commonData.fgcolor);
+        getdisplay().fillCircle(c.x, c.y, 8, commonData->fgcolor);
 
         // value down centered
         char buffer[6];
@@ -143,19 +145,19 @@ class PageFluid : public Page{
         // draw symbol (as bitmap)
         switch (fluidtype) {
             case 0:
-                getdisplay().drawXBitmap(c.x-8, c.y-50, fuel_bits, fuel_width, fuel_height, commonData.fgcolor);
+                getdisplay().drawXBitmap(c.x-8, c.y-50, fuel_bits, fuel_width, fuel_height, commonData->fgcolor);
                 break;
             case 1:
-                getdisplay().drawXBitmap(c.x-8, c.y-50, water_bits, water_width, water_height, commonData.fgcolor);
+                getdisplay().drawXBitmap(c.x-8, c.y-50, water_bits, water_width, water_height, commonData->fgcolor);
                 break;
             case 4:
-                getdisplay().drawXBitmap(c.x-8, c.y-50, oil_bits, oil_width, oil_height, commonData.fgcolor);
+                getdisplay().drawXBitmap(c.x-8, c.y-50, oil_bits, oil_width, oil_height, commonData->fgcolor);
                 break;
             case 5:
-                getdisplay().drawXBitmap(c.x-8, c.y-50, waste_bits, waste_width, waste_height, commonData.fgcolor);
+                getdisplay().drawXBitmap(c.x-8, c.y-50, waste_bits, waste_width, waste_height, commonData->fgcolor);
                 break;
             case 6:
-                getdisplay().drawXBitmap(c.x-8, c.y-50, gasoline_bits, gasoline_width, gasoline_height, commonData.fgcolor);
+                getdisplay().drawXBitmap(c.x-8, c.y-50, gasoline_bits, gasoline_width, gasoline_height, commonData->fgcolor);
                 break;
         }
 
@@ -184,11 +186,11 @@ class PageFluid : public Page{
             {c.x + 2, c.y - (r - 16)},
             {c.x - 2, c.y - (r - 16)} 
         };
-        fillPoly4(rotatePoints(c, pts, -120), commonData.fgcolor);
-        fillPoly4(rotatePoints(c, pts, -60), commonData.fgcolor);
-        fillPoly4(rotatePoints(c, pts, 0), commonData.fgcolor);
-        fillPoly4(rotatePoints(c, pts, 60), commonData.fgcolor);
-        fillPoly4(rotatePoints(c, pts, 120), commonData.fgcolor);
+        fillPoly4(rotatePoints(c, pts, -120), commonData->fgcolor);
+        fillPoly4(rotatePoints(c, pts, -60), commonData->fgcolor);
+        fillPoly4(rotatePoints(c, pts, 0), commonData->fgcolor);
+        fillPoly4(rotatePoints(c, pts, 60), commonData->fgcolor);
+        fillPoly4(rotatePoints(c, pts, 120), commonData->fgcolor);
 
         // dots
         // rotate 0 to 360 in 12 degree steps
@@ -197,7 +199,7 @@ class PageFluid : public Page{
                 continue;
             }
             p = rotatePoint(c, {c.x, c.y - r + 10}, angle);
-            getdisplay().fillCircle(p.x, p.y, 3, commonData.fgcolor);
+            getdisplay().fillCircle(p.x, p.y, 3, commonData->fgcolor);
         }
 
         // pointer
@@ -208,24 +210,18 @@ class PageFluid : public Page{
                 {c.x + 6, c.y + 15},
                 {c.x - 6, c.y + 15}
             };
-            fillPoly4(rotatePoints(c, pts, -120 + bvalue1->value * 2.4), commonData.fgcolor);
+            fillPoly4(rotatePoints(c, pts, -120 + bvalue1->value * 2.4), commonData->fgcolor);
             // Pointer axis is white
-            getdisplay().fillCircle(c.x, c.y, 6, commonData.bgcolor);
+            getdisplay().fillCircle(c.x, c.y, 6, commonData->bgcolor);
         }
  
         // Key Layout
         getdisplay().setFont(&Ubuntu_Bold8pt7b);
-        if(keylock == false){
-            getdisplay().setCursor(130, 296);
-            getdisplay().print("[  <<<<  " + String(commonData.data.actpage) + "/" + String(commonData.data.maxpage) + "  >>>>  ]");
+        if(commonData->keylock == false){
             if(String(backlightMode) == "Control by Key"){                  // Key for illumination
                 getdisplay().setCursor(343, 296);
                 getdisplay().print("[ILUM]");
             }
-        }
-        else{
-            getdisplay().setCursor(130, 296);
-            getdisplay().print(" [    Keylock active    ]");
         }
 
         // Update display

@@ -314,16 +314,23 @@ void displayHeader(CommonData &commonData, GwApi::BoatValue *date, GwApi::BoatVa
         usbRxOld = commonData.status.usbRx;
         usbTxOld = commonData.status.usbTx;
 
+        // Display key lock status
+        if (commonData.keylock) {
+            getdisplay().drawXBitmap(150, 1, lock_bits, icon_width, icon_height, commonData.fgcolor);
+        } else {
+            getdisplay().drawXBitmap(150, 1, swipe_bits, icon_width, icon_height, commonData.fgcolor);
+        }
+
+        // Current page number in a small box
+        getdisplay().setFont(&Ubuntu_Bold8pt7b);
+        getdisplay().drawRect(170, 2, 20, 15, textcolor);
+        drawTextCenter(179, 9, String(commonData.data.actpage));
+
         // Heartbeat as dot
         getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&Ubuntu_Bold32pt7b);
         getdisplay().setCursor(205, 14);
-        if(heartbeat == true){
-        getdisplay().print(".");
-        }
-        else{
-        getdisplay().print(" ");
-        }
+        getdisplay().print(heartbeat ? "." : " ");
         heartbeat = !heartbeat; 
 
         // Date and time

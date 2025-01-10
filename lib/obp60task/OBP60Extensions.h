@@ -9,6 +9,8 @@
 
 // FRAM address reservations 32kB: 0x0000 - 0x7FFF
 // 0x0000 - 0x03ff: single variables
+#define FRAM_PAGE_NO 0x0002
+// Voltage page
 #define FRAM_VOLTAGE_AVG 0x000A
 #define FRAM_VOLTAGE_TREND 0x000B
 #define FRAM_VOLTAGE_MODE 0x000C
@@ -19,7 +21,7 @@
 extern Adafruit_FRAM_I2C fram;
 extern bool hasFRAM;
 
-// Fonts declarations for display (#inclues see OBP60Extensions.cpp)
+// Fonts declarations for display (#includes see OBP60Extensions.cpp)
 extern const GFXfont Ubuntu_Bold8pt7b;
 extern const GFXfont Ubuntu_Bold10pt7b;
 extern const GFXfont Ubuntu_Bold12pt7b;
@@ -32,7 +34,21 @@ extern const GFXfont DSEG7Classic_BoldItalic30pt7b;
 extern const GFXfont DSEG7Classic_BoldItalic42pt7b;
 extern const GFXfont DSEG7Classic_BoldItalic60pt7b;
 
-// Gloabl functions
+// Icons
+#define icon_width 16
+#define icon_height 16
+
+static unsigned char swipe_bits[] PROGMEM = {
+   0x80, 0x03, 0xe0, 0x06, 0xb0, 0x0a, 0xa8, 0x0a, 0xa8, 0x0a, 0xa8, 0x3a,
+   0x28, 0x28, 0x08, 0x28, 0x08, 0x28, 0x08, 0x26, 0x08, 0x21, 0x08, 0x10,
+   0x10, 0x08, 0x10, 0x04, 0x10, 0x04, 0x00, 0x00 };
+
+static unsigned char lock_bits[] PROGMEM = {
+   0xc0, 0x03, 0x60, 0x06, 0x30, 0x0c, 0x10, 0x08, 0x10, 0x08, 0x10, 0x08,
+   0xfc, 0x3f, 0x04, 0x20, 0x04, 0x20, 0x84, 0x21, 0x84, 0x21, 0x84, 0x21,
+   0x04, 0x20, 0x04, 0x20, 0x04, 0x20, 0xfc, 0x3f };
+
+// Global functions
 #ifdef DISPLAY_GDEW042T2
 GxEPD2_BW<GxEPD2_420, GxEPD2_420::HEIGHT> & getdisplay();
 #endif

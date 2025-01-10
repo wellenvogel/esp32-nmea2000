@@ -7,14 +7,14 @@
 class PageBattery2 : public Page
 {
 bool init = false;                  // Marker for init done
-bool keylock = false;               // Keylock
 int average = 0;                    // Average type [0...3], 0=off, 1=10s, 2=60s, 3=300s
 bool trend = true;                  // Trend indicator [0|1], 0=off, 1=on
 double raw = 0;
 
 public:
     PageBattery2(CommonData &common){
-        common.logger->logDebug(GwLog::LOG,"Show PageBattery2");
+        commonData = &common;
+        common.logger->logDebug(GwLog::LOG,"Instantiate PageBattery2");
     }
     virtual int handleKey(int key){
          // Change average
@@ -32,16 +32,16 @@ public:
 
         // Code for keylock
         if(key == 11){
-            keylock = !keylock;         // Toggle keylock
+            commonData->keylock = !commonData->keylock;
             return 0;                   // Commit the key
         }
         return key;
     }
 
-    virtual void displayPage(CommonData &commonData, PageData &pageData)
+    virtual void displayPage(PageData &pageData)
     {
-        GwConfigHandler *config = commonData.config;
-        GwLog *logger=commonData.logger;
+        GwConfigHandler *config = commonData->config;
+        GwLog *logger = commonData->logger;
 
         // Polynominal coefficients second order for battery energy level calculation
         // index 0 = Pb, 1 = Gel, 2 = AGM, 3 = LiFePo4
@@ -71,42 +71,42 @@ public:
 
         // Create trend value
         if(init == false){          // Load start values for first page run
-            valueTrend = commonData.data.batteryVoltage10;
+            valueTrend = commonData->data.batteryVoltage10;
             init = true;
         }
         else{                       // Reading trend value
-            valueTrend = commonData.data.batteryVoltage10;
+            valueTrend = commonData->data.batteryVoltage10;
         }
 
         // Get raw value for trend indicator
-        raw = commonData.data.batteryVoltage;        // Live data
+        raw = commonData->data.batteryVoltage;        // Live data
 
         // Switch average values
         switch (average) {
             case 0:
-                value1 = commonData.data.batteryVoltage;        // Live data
-                value2 = commonData.data.batteryCurrent;
-                value3 = commonData.data.batteryPower;
+                value1 = commonData->data.batteryVoltage;        // Live data
+                value2 = commonData->data.batteryCurrent;
+                value3 = commonData->data.batteryPower;
                 break;
             case 1:
-                value1 = commonData.data.batteryVoltage10;      // Average 10s
-                value2 = commonData.data.batteryCurrent10;
-                value3 = commonData.data.batteryPower10;
+                value1 = commonData->data.batteryVoltage10;      // Average 10s
+                value2 = commonData->data.batteryCurrent10;
+                value3 = commonData->data.batteryPower10;
                 break;
             case 2:
-                value1 = commonData.data.batteryVoltage60;      // Average 60s
-                value2 = commonData.data.batteryCurrent60;
-                value3 = commonData.data.batteryPower60;
+                value1 = commonData->data.batteryVoltage60;      // Average 60s
+                value2 = commonData->data.batteryCurrent60;
+                value3 = commonData->data.batteryPower60;
                 break;
             case 3:
-                value1 = commonData.data.batteryVoltage300;     // Average 300s
-                value2 = commonData.data.batteryCurrent300;
-                value3 = commonData.data.batteryPower300;
+                value1 = commonData->data.batteryVoltage300;     // Average 300s
+                value2 = commonData->data.batteryCurrent300;
+                value3 = commonData->data.batteryPower300;
                 break;
             default:
-                value1 = commonData.data.batteryVoltage;        // Default
-                value2 = commonData.data.batteryCurrent;
-                value3 = commonData.data.batteryPower;
+                value1 = commonData->data.batteryVoltage;        // Default
+                value2 = commonData->data.batteryCurrent;
+                value3 = commonData->data.batteryPower;
                 break;
         }
         bool valid1 = true;
@@ -180,7 +180,7 @@ public:
         // Set display in partial refresh mode
         getdisplay().setPartialWindow(0, 0, getdisplay().width(), getdisplay().height()); // Set partial update
 
-        getdisplay().setTextColor(commonData.fgcolor);
+        getdisplay().setTextColor(commonData->fgcolor);
 
         // Show name
         getdisplay().setFont(&Ubuntu_Bold20pt7b);
@@ -219,7 +219,7 @@ public:
         getdisplay().print("Battery Type");
 
         // Show battery with fill level
-        batteryGraphic(150, 45, batPercentage, commonData.fgcolor, commonData.bgcolor);
+        batteryGraphic(150, 45, batPercentage, commonData->fgcolor, commonData->bgcolor);
 
         // Show average settings
         getdisplay().setFont(&Ubuntu_Bold8pt7b);
@@ -330,19 +330,13 @@ public:
 
         // Key Layout
         getdisplay().setFont(&Ubuntu_Bold8pt7b);
-        if(keylock == false){
+        if(commonData->keylock == false){
             getdisplay().setCursor(10, 290);
             getdisplay().print("[AVG]");
-            getdisplay().setCursor(130, 290);
-            getdisplay().print("[  <<<<  " + String(commonData.data.actpage) + "/" + String(commonData.data.maxpage) + "  >>>>  ]");
             if(String(backlightMode) == "Control by Key"){              // Key for illumination
                 getdisplay().setCursor(343, 290);
                 getdisplay().print("[ILUM]");
             }
-        }
-        else{
-            getdisplay().setCursor(130, 290);
-            getdisplay().print(" [    Keylock active    ]");
         }
 
         // Update display

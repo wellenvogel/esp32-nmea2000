@@ -73,13 +73,16 @@ typedef struct{
   GwApi::BoatValue *date=NULL;
   uint16_t fgcolor;
   uint16_t bgcolor;
+  bool keylock = false;
 } CommonData;
 
 //a base class that all pages must inherit from
 class Page{
+  protected:
+    CommonData *commonData;
   public:
-    virtual void displayPage(CommonData &commonData, PageData &pageData)=0;
-    virtual void displayNew(CommonData &commonData, PageData &pageData){}
+    virtual void displayPage(PageData &pageData)=0;
+    virtual void displayNew(PageData &pageData){}
     //return -1 if handled by the page
     virtual int handleKey(int key){return key;}
 };

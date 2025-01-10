@@ -7,7 +7,6 @@
 class PageVoltage : public Page
 {
 bool init = false;                  // Marker for init done
-bool keylock = false;               // Keylock
 uint8_t average = 0;                // Average type [0...3], 0=off, 1=10s, 2=60s, 3=300s
 bool trend = true;                  // Trend indicator [0|1], 0=off, 1=on
 double raw = 0;
@@ -15,6 +14,7 @@ char mode = 'D';                    // display mode (A)nalog | (D)igital
 
 public:
     PageVoltage(CommonData &common){
+        commonData = &common;
         common.logger->logDebug(GwLog::LOG,"Instantiate PageVoltage");
         if (hasFRAM) {
             average = fram.read(FRAM_VOLTAGE_AVG);
@@ -51,7 +51,7 @@ public:
 
         // Code for keylock
         if(key == 11){
-            keylock = !keylock;         // Toggle keylock
+            commonData->keylock = !commonData->keylock;
             return 0;                   // Commit the key
         }
         return key;
@@ -92,10 +92,9 @@ public:
         getdisplay().fillRect(x + 16, y + 11, 6, 3, color);
     }
 
-    virtual void displayPage(CommonData &commonData, PageData &pageData)
-    {
-        GwConfigHandler *config = commonData.config;
-        GwLog *logger=commonData.logger;
+    virtual void displayPage(PageData &pageData){
+        GwConfigHandler *config = commonData->config;
+        GwLog *logger = commonData->logger;
         
         // Get config data
         bool simulation = config->getBool(config->useSimuData);
@@ -113,32 +112,32 @@ public:
 
         // Create trend value
         if(init == false){          // Load start values for first page run
-            valueTrend = commonData.data.batteryVoltage10;
+            valueTrend = commonData->data.batteryVoltage10;
             init = true;
         }
         else{                       // Reading trend value
-            valueTrend = commonData.data.batteryVoltage10;
+            valueTrend = commonData->data.batteryVoltage10;
         }
 
         // Get raw value for trend indicator
-        raw = commonData.data.batteryVoltage;        // Live data
+        raw = commonData->data.batteryVoltage;        // Live data
 
         // Switch average values
         switch (average) {
             case 0:
-                value1 = commonData.data.batteryVoltage;        // Live data
+                value1 = commonData->data.batteryVoltage;        // Live data
                 break;
             case 1:
-                value1 = commonData.data.batteryVoltage10;      // Average 10s
+                value1 = commonData->data.batteryVoltage10;      // Average 10s
                 break;
             case 2:
-                value1 = commonData.data.batteryVoltage60;      // Average 60s
+                value1 = commonData->data.batteryVoltage60;      // Average 60s
                 break;
             case 3:
-                value1 = commonData.data.batteryVoltage300;     // Average 300s
+                value1 = commonData->data.batteryVoltage300;     // Average 300s
                 break;
             default:
-                value1 = commonData.data.batteryVoltage;        // Default
+                value1 = commonData->data.batteryVoltage;        // Default
                 break;
         }
         bool valid1 = true;
@@ -193,7 +192,7 @@ public:
             // Display mode digital
 
             // Show name
-            getdisplay().setTextColor(commonData.fgcolor);
+            getdisplay().setTextColor(commonData->fgcolor);
             getdisplay().setFont(&Ubuntu_Bold32pt7b);
             getdisplay().setCursor(20, 100);
             getdisplay().print(name1);                           // Value name
@@ -246,18 +245,18 @@ public:
             // Trend indicator
             // Show trend indicator
             if(trend == true){
-                getdisplay().fillRect(310, 240, 40, 120, commonData.bgcolor);   // Clear area
-                getdisplay().fillRect(315, 183, 35, 4, commonData.fgcolor);   // Draw separator
+                getdisplay().fillRect(310, 240, 40, 120, commonData->bgcolor);   // Clear area
+                getdisplay().fillRect(315, 183, 35, 4, commonData->fgcolor);   // Draw separator
                 if(int(raw * 10) > int(valueTrend * 10)){
-                    displayTrendHigh(320, 174, 11, commonData.fgcolor);  // Show high indicator
+                    displayTrendHigh(320, 174, 11, commonData->fgcolor);  // Show high indicator
                 }
                 if(int(raw * 10) < int(valueTrend * 10)){
-                    displayTrendLow(320, 195, 11, commonData.fgcolor);   // Show low indicator
+                    displayTrendLow(320, 195, 11, commonData->fgcolor);   // Show low indicator
                 }
             }
             // No trend indicator
             else{
-                getdisplay().fillRect(310, 240, 40, 120, commonData.bgcolor);   // Clear area
+                getdisplay().fillRect(310, 240, 40, 120, commonData->bgcolor);   // Clear area
             }
 
         }
@@ -272,9 +271,9 @@ public:
             std::vector<Point> pts;
 
             // Instrument
-            getdisplay().drawCircleHelper(c.x, c.y, r + 2, 0x01, commonData.fgcolor);
-            getdisplay().drawCircleHelper(c.x, c.y, r + 1, 0x01, commonData.fgcolor);
-            getdisplay().drawCircleHelper(c.x, c.y, r    , 0x01, commonData.fgcolor);
+            getdisplay().drawCircleHelper(c.x, c.y, r + 2, 0x01, commonData->fgcolor);
+            getdisplay().drawCircleHelper(c.x, c.y, r + 1, 0x01, commonData->fgcolor);
+            getdisplay().drawCircleHelper(c.x, c.y, r    , 0x01, commonData->fgcolor);
 
             // Scale
             // angle to voltage scale mapping
@@ -290,14 +289,14 @@ public:
             getdisplay().setFont(&Ubuntu_Bold10pt7b);
             for (int angle = 3; angle < 90; angle += 3) {
                 if (angle % 15 == 0) {
-                    fillPoly4(rotatePoints(c, pts, angle), commonData.fgcolor);
+                    fillPoly4(rotatePoints(c, pts, angle), commonData->fgcolor);
                     p1 = rotatePoint(c, {c.x - r + 30, c.y}, angle);
                     drawTextCenter(p1.x, p1.y, mapping[angle]);
                 }
                 else {
                     p1 = rotatePoint(c, {c.x - r, c.y}, angle);
                     p2 = rotatePoint(c, {c.x - r + 6, c.y}, angle);
-                    getdisplay().drawLine(p1.x, p1.y, p2.x, p2.y, commonData.fgcolor);
+                    getdisplay().drawLine(p1.x, p1.y, p2.x, p2.y, commonData->fgcolor);
                 }
             }
 
@@ -326,7 +325,7 @@ public:
                 {c.x - r + 38, c.y - 2},
                 {c.x - 2, c.y - 3}
             };
-            fillPoly4(rotatePoints(c, pts, angle), commonData.fgcolor);
+            fillPoly4(rotatePoints(c, pts, angle), commonData->fgcolor);
             // thin part
             pts = {
                 {c.x - r + 40, c.y + 1},
@@ -334,14 +333,14 @@ public:
                 {c.x - r + 5, c.y -1},
                 {c.x - r + 40, c.y - 1},
             };
-            fillPoly4(rotatePoints(c, pts, angle), commonData.fgcolor);
+            fillPoly4(rotatePoints(c, pts, angle), commonData->fgcolor);
 
             // base
-            getdisplay().fillCircle(c.x, c.y, 7, commonData.fgcolor);
-            getdisplay().fillCircle(c.x, c.y, 4, commonData.bgcolor);
+            getdisplay().fillCircle(c.x, c.y, 7, commonData->fgcolor);
+            getdisplay().fillCircle(c.x, c.y, 4, commonData->bgcolor);
 
             // Symbol
-            printVoltageSymbol(40, 60, commonData.fgcolor);
+            printVoltageSymbol(40, 60, commonData->fgcolor);
 
             // Additional information at right side
             getdisplay().setFont(&Ubuntu_Bold8pt7b);
@@ -361,31 +360,25 @@ public:
 
             // FRAM indicator
             if (hasFRAM) {
-                getdisplay().drawXBitmap(300, 240, fram_bits, fram_width, fram_height, commonData.fgcolor);
+                getdisplay().drawXBitmap(300, 240, fram_bits, fram_width, fram_height, commonData->fgcolor);
             }
 
         }
 
         // Key Layout
-        getdisplay().setTextColor(commonData.fgcolor);
+        getdisplay().setTextColor(commonData->fgcolor);
         getdisplay().setFont(&Ubuntu_Bold8pt7b);
-        if(keylock == false){
+        if(commonData->keylock == false){
             getdisplay().setCursor(10, 290);
             getdisplay().print("[AVG]");
             getdisplay().setCursor(62, 290);
             getdisplay().print("[MODE]");
-            getdisplay().setCursor(130, 290);
-            getdisplay().print("[  <<<<  " + String(commonData.data.actpage) + "/" + String(commonData.data.maxpage) + "  >>>>  ]");
             getdisplay().setCursor(293, 290);
-                getdisplay().print("[TRD]");
+            getdisplay().print("[TRD]");
             if(String(backlightMode) == "Control by Key"){              // Key for illumination
                 getdisplay().setCursor(343, 290);
                 getdisplay().print("[ILUM]");
             }
-        }
-        else{
-            getdisplay().setCursor(130, 290);
-            getdisplay().print(" [    Keylock active    ]");
         }
 
         // Update display

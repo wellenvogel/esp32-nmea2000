@@ -6,26 +6,23 @@
 
 class PageSolar : public Page
 {
-bool init = false;                  // Marker for init done
-bool keylock = false;               // Keylock
-
 public:
     PageSolar(CommonData &common){
-        common.logger->logDebug(GwLog::LOG,"Show PageSolar");
+        commonData = &common;
+        common.logger->logDebug(GwLog::LOG,"Instantiate PageSolar");
     }
     virtual int handleKey(int key){
         // Code for keylock
         if(key == 11){
-            keylock = !keylock;         // Toggle keylock
+            commonData->keylock = !commonData->keylock;
             return 0;                   // Commit the key
         }
         return key;
     }
 
-    virtual void displayPage(CommonData &commonData, PageData &pageData)
-    {
-        GwConfigHandler *config = commonData.config;
-        GwLog *logger=commonData.logger;
+    virtual void displayPage(PageData &pageData){
+        GwConfigHandler *config = commonData->config;
+        GwLog *logger = commonData->logger;
         
         // Get config data
         bool simulation = config->getBool(config->useSimuData);
@@ -47,13 +44,13 @@ public:
 
         // Get raw value for trend indicator
         if(powerSensor != "off"){
-            value1 = commonData.data.solarVoltage;  // Use voltage from external sensor
+            value1 = commonData->data.solarVoltage;  // Use voltage from external sensor
         }
         else{
-            value1 = commonData.data.batteryVoltage; // Use internal voltage sensor
+            value1 = commonData->data.batteryVoltage; // Use internal voltage sensor
         }
-        value2 = commonData.data.solarCurrent;
-        value3 = commonData.data.solarPower;
+        value2 = commonData->data.solarCurrent;
+        value3 = commonData->data.solarPower;
         solPercentage = value3 * 100 / (double)solPower;    // Load value
         // Limits for battery level
         if(solPercentage < 0) solPercentage = 0;
@@ -87,7 +84,7 @@ public:
         // Set display in partial refresh mode
         getdisplay().setPartialWindow(0, 0, getdisplay().width(), getdisplay().height()); // Set partial update
 
-        getdisplay().setTextColor(commonData.fgcolor);
+        getdisplay().setTextColor(commonData->fgcolor);
 
         // Show name
         getdisplay().setFont(&Ubuntu_Bold20pt7b);
@@ -121,7 +118,7 @@ public:
         getdisplay().print("Solar Modul");
 
         // Show solar panel
-        solarGraphic(150, 45, commonData.fgcolor, commonData.bgcolor);
+        solarGraphic(150, 45, commonData->fgcolor, commonData->bgcolor);
 
         // Show load level in percent
         getdisplay().setFont(&DSEG7Classic_BoldItalic20pt7b);
@@ -204,17 +201,11 @@ public:
 
         // Key Layout
         getdisplay().setFont(&Ubuntu_Bold8pt7b);
-        if(keylock == false){
-            getdisplay().setCursor(130, 290);
-            getdisplay().print("[  <<<<  " + String(commonData.data.actpage) + "/" + String(commonData.data.maxpage) + "  >>>>  ]");
+        if(commonData->keylock == false){
             if(String(backlightMode) == "Control by Key"){              // Key for illumination
                 getdisplay().setCursor(343, 290);
                 getdisplay().print("[ILUM]");
             }
-        }
-        else{
-            getdisplay().setCursor(130, 290);
-            getdisplay().print(" [    Keylock active    ]");
         }
 
         // Update display

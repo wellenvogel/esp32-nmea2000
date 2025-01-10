@@ -5,27 +5,26 @@
 
 class PageClock : public Page
 {
-bool keylock = false;               // Keylock
-
 public:
     PageClock(CommonData &common){
-        common.logger->logDebug(GwLog::LOG,"Show PageClock");
+        commonData = &common;
+        common.logger->logDebug(GwLog::LOG,"Instantiate PageClock");
     }
 
     // Key functions
     virtual int handleKey(int key){
-        // Keylock function
-        if(key == 11){              // Code for keylock
-            keylock = !keylock;     // Toggle keylock
+         // Code for keylock
+        if(key == 11){
+            commonData->keylock = !commonData->keylock;
             return 0;               // Commit the key
         }
         return key;
     }
 
-    virtual void displayPage(CommonData &commonData, PageData &pageData)
+    virtual void displayPage(PageData &pageData)
     {
-        GwConfigHandler *config = commonData.config;
-        GwLog *logger=commonData.logger;
+        GwConfigHandler *config = commonData->config;
+        GwLog *logger = commonData->logger;
 
         static String svalue1old = "";
         static String unit1old = "";
@@ -61,8 +60,8 @@ public:
             value1 = 38160;                             // Simulation data for time value 11:36 in seconds
         }                                               // Other simulation data see OBP60Formater.cpp
         bool valid1 = bvalue1->valid;                   // Valid information 
-        String svalue1 = formatValue(bvalue1, commonData).svalue;    // Formatted value as string including unit conversion and switching decimal places
-        String unit1 = formatValue(bvalue1, commonData).unit;        // Unit of value
+        String svalue1 = formatValue(bvalue1, *commonData).svalue;    // Formatted value as string including unit conversion and switching decimal places
+        String unit1 = formatValue(bvalue1, *commonData).unit;        // Unit of value
         if(valid1 == true){
             svalue1old = svalue1;   	                // Save old value
             unit1old = unit1;                           // Save old unit
@@ -74,8 +73,8 @@ public:
         name2 = name2.substring(0, 6);                  // String length limit for value name
         value2 = bvalue2->value;                        // Value as double in SI unit
         bool valid2 = bvalue2->valid;                   // Valid information 
-        String svalue2 = formatValue(bvalue2, commonData).svalue;    // Formatted value as string including unit conversion and switching decimal places
-        String unit2 = formatValue(bvalue2, commonData).unit;        // Unit of value
+        String svalue2 = formatValue(bvalue2, *commonData).svalue;    // Formatted value as string including unit conversion and switching decimal places
+        String unit2 = formatValue(bvalue2, *commonData).unit;        // Unit of value
         if(valid2 == true){
             svalue2old = svalue2;   	                // Save old value
             unit2old = unit2;                           // Save old unit
@@ -87,8 +86,8 @@ public:
         name3 = name3.substring(0, 6);                  // String length limit for value name
         value3 = bvalue3->value;                        // Value as double in SI unit
         bool valid3 = bvalue3->valid;                   // Valid information 
-        String svalue3 = formatValue(bvalue3, commonData).svalue;    // Formatted value as string including unit conversion and switching decimal places
-        String unit3 = formatValue(bvalue3, commonData).unit;        // Unit of value
+        String svalue3 = formatValue(bvalue3, *commonData).svalue;    // Formatted value as string including unit conversion and switching decimal places
+        String unit3 = formatValue(bvalue3, *commonData).unit;        // Unit of value
         if(valid3 == true){
             svalue3old = svalue3;   	                // Save old value
             unit3old = unit3;                           // Save old unit
@@ -110,7 +109,7 @@ public:
         // Set display in partial refresh mode
         getdisplay().setPartialWindow(0, 0, getdisplay().width(), getdisplay().height()); // Set partial update
 
-        getdisplay().setTextColor(commonData.fgcolor);
+        getdisplay().setTextColor(commonData->fgcolor);
 
         // Show values GPS date
         getdisplay().setFont(&Ubuntu_Bold8pt7b);
@@ -122,7 +121,7 @@ public:
         getdisplay().print("Date");                          // Name
 
         // Horizintal separator left
-        getdisplay().fillRect(0, 149, 60, 3, commonData.fgcolor);
+        getdisplay().fillRect(0, 149, 60, 3, commonData->fgcolor);
 
         // Show values GPS time
         getdisplay().setFont(&Ubuntu_Bold8pt7b);
@@ -136,7 +135,7 @@ public:
         // Show values sunrise
         String sunrise = "---";
         if(valid1 == true && valid2 == true && valid3 == true){
-            sunrise = String(commonData.sundata.sunriseHour) + ":" + String(commonData.sundata.sunriseMinute + 100).substring(1);
+            sunrise = String(commonData->sundata.sunriseHour) + ":" + String(commonData->sundata.sunriseMinute + 100).substring(1);
             svalue5old = sunrise;
         }
 
@@ -149,12 +148,12 @@ public:
         getdisplay().print("SunR");                          // Name
 
         // Horizintal separator right
-        getdisplay().fillRect(340, 149, 80, 3, commonData.fgcolor);
+        getdisplay().fillRect(340, 149, 80, 3, commonData->fgcolor);
 
         // Show values sunset
         String sunset = "---";
         if(valid1 == true && valid2 == true && valid3 == true){
-            sunset = String(commonData.sundata.sunsetHour) + ":" +  String(commonData.sundata.sunsetMinute + 100).substring(1);
+            sunset = String(commonData->sundata.sunsetHour) + ":" +  String(commonData->sundata.sunsetMinute + 100).substring(1);
             svalue6old = sunset;
         }
 
@@ -172,8 +171,8 @@ public:
         int rInstrument = 110;     // Radius of clock
         float pi = 3.141592;
 
-        getdisplay().fillCircle(200, 150, rInstrument + 10, commonData.fgcolor);    // Outer circle
-        getdisplay().fillCircle(200, 150, rInstrument + 7, commonData.bgcolor);     // Outer circle
+        getdisplay().fillCircle(200, 150, rInstrument + 10, commonData->fgcolor);    // Outer circle
+        getdisplay().fillCircle(200, 150, rInstrument + 7, commonData->bgcolor);     // Outer circle
 
         for(int i=0; i<360; i=i+1)
         {
@@ -214,7 +213,7 @@ public:
              if(i % 6 == 0){
                 float x1c = 200 + rInstrument*sin(i/180.0*pi);
                 float y1c = 150 - rInstrument*cos(i/180.0*pi);
-                getdisplay().fillCircle((int)x1c, (int)y1c, 2, commonData.fgcolor);
+                getdisplay().fillCircle((int)x1c, (int)y1c, 2, commonData->fgcolor);
                 sinx=sin(i/180.0*pi);
                 cosx=cos(i/180.0*pi);
              }
@@ -228,10 +227,10 @@ public:
                 float yy2 =  -(rInstrument+10);
                 getdisplay().fillTriangle(200+(int)(cosx*xx1-sinx*yy1),150+(int)(sinx*xx1+cosx*yy1),
                         200+(int)(cosx*xx2-sinx*yy1),150+(int)(sinx*xx2+cosx*yy1),
-                        200+(int)(cosx*xx1-sinx*yy2),150+(int)(sinx*xx1+cosx*yy2),commonData.fgcolor);
+                        200+(int)(cosx*xx1-sinx*yy2),150+(int)(sinx*xx1+cosx*yy2),commonData->fgcolor);
                 getdisplay().fillTriangle(200+(int)(cosx*xx2-sinx*yy1),150+(int)(sinx*xx2+cosx*yy1),
                         200+(int)(cosx*xx1-sinx*yy2),150+(int)(sinx*xx1+cosx*yy2),
-                        200+(int)(cosx*xx2-sinx*yy2),150+(int)(sinx*xx2+cosx*yy2),commonData.fgcolor);
+                        200+(int)(cosx*xx2-sinx*yy2),150+(int)(sinx*xx2+cosx*yy2),commonData->fgcolor);
             }
         }
 
@@ -270,7 +269,7 @@ public:
             float yy2 = -(rInstrument * 0.5); 
             getdisplay().fillTriangle(200+(int)(cosx*xx1-sinx*yy1),150+(int)(sinx*xx1+cosx*yy1),
                 200+(int)(cosx*xx2-sinx*yy1),150+(int)(sinx*xx2+cosx*yy1),
-                200+(int)(cosx*0-sinx*yy2),150+(int)(sinx*0+cosx*yy2),commonData.fgcolor);
+                200+(int)(cosx*0-sinx*yy2),150+(int)(sinx*0+cosx*yy2),commonData->fgcolor);
             // Inverted pointer
             // Pointer as triangle with center base 2*width
             float endwidth = 2;         // End width of pointer
@@ -280,7 +279,7 @@ public:
             float iy2 = -endwidth;
             getdisplay().fillTriangle(200+(int)(cosx*ix1-sinx*iy1),150+(int)(sinx*ix1+cosx*iy1),
                 200+(int)(cosx*ix2-sinx*iy1),150+(int)(sinx*ix2+cosx*iy1),
-                200+(int)(cosx*0-sinx*iy2),150+(int)(sinx*0+cosx*iy2),commonData.fgcolor);
+                200+(int)(cosx*0-sinx*iy2),150+(int)(sinx*0+cosx*iy2),commonData->fgcolor);
         }
 
         // Draw minute pointer
@@ -296,7 +295,7 @@ public:
             float yy2 = -(rInstrument - 15); 
             getdisplay().fillTriangle(200+(int)(cosx*xx1-sinx*yy1),150+(int)(sinx*xx1+cosx*yy1),
                 200+(int)(cosx*xx2-sinx*yy1),150+(int)(sinx*xx2+cosx*yy1),
-                200+(int)(cosx*0-sinx*yy2),150+(int)(sinx*0+cosx*yy2),commonData.fgcolor);   
+                200+(int)(cosx*0-sinx*yy2),150+(int)(sinx*0+cosx*yy2),commonData->fgcolor);
             // Inverted pointer
             // Pointer as triangle with center base 2*width
             float endwidth = 2;         // End width of pointer
@@ -306,27 +305,21 @@ public:
             float iy2 = -endwidth;
             getdisplay().fillTriangle(200+(int)(cosx*ix1-sinx*iy1),150+(int)(sinx*ix1+cosx*iy1),
                 200+(int)(cosx*ix2-sinx*iy1),150+(int)(sinx*ix2+cosx*iy1),
-                200+(int)(cosx*0-sinx*iy2),150+(int)(sinx*0+cosx*iy2),commonData.fgcolor);
+                200+(int)(cosx*0-sinx*iy2),150+(int)(sinx*0+cosx*iy2),commonData->fgcolor);
         }
 
         // Center circle
-        getdisplay().fillCircle(200, 150, startwidth + 6, commonData.bgcolor);
-        getdisplay().fillCircle(200, 150, startwidth + 4, commonData.fgcolor);
+        getdisplay().fillCircle(200, 150, startwidth + 6, commonData->bgcolor);
+        getdisplay().fillCircle(200, 150, startwidth + 4, commonData->fgcolor);
 
 //*******************************************************************************************
         // Key Layout
         getdisplay().setFont(&Ubuntu_Bold8pt7b);
-        if(keylock == false){
-            getdisplay().setCursor(130, 290);
-            getdisplay().print("[  <<<<  " + String(commonData.data.actpage) + "/" + String(commonData.data.maxpage) + "  >>>>  ]");
+        if(commonData->keylock == false){
             if(String(backlightMode) == "Control by Key"){                  // Key for illumination
                 getdisplay().setCursor(343, 290);
                 getdisplay().print("[ILUM]");
             }
-        }
-        else{
-            getdisplay().setCursor(130, 290);
-            getdisplay().print(" [    Keylock active    ]");
         }
 
         // Update display
