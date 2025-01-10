@@ -921,7 +921,6 @@
         "default": "Voltage",
         "description": "Type of page for page 1",
         "list": [
-            "ApparentWind",
             "BME280",
             "Battery",
             "Battery2",
@@ -940,6 +939,7 @@
             "TwoValues",
             "Voltage",
             "White",
+            "Wind",
             "WindRose",
             "WindRoseFlex",
             "XTETrack"
@@ -1178,7 +1178,6 @@
         "default": "WindRose",
         "description": "Type of page for page 2",
         "list": [
-            "ApparentWind",
             "BME280",
             "Battery",
             "Battery2",
@@ -1197,6 +1196,7 @@
             "TwoValues",
             "Voltage",
             "White",
+            "Wind",
             "WindRose",
             "WindRoseFlex",
             "XTETrack"
@@ -1432,7 +1432,6 @@
         "default": "OneValue",
         "description": "Type of page for page 3",
         "list": [
-            "ApparentWind",
             "BME280",
             "Battery",
             "Battery2",
@@ -1451,6 +1450,7 @@
             "TwoValues",
             "Voltage",
             "White",
+            "Wind",
             "WindRose",
             "WindRoseFlex",
             "XTETrack"
@@ -1683,7 +1683,6 @@
         "default": "TwoValues",
         "description": "Type of page for page 4",
         "list": [
-            "ApparentWind",
             "BME280",
             "Battery",
             "Battery2",
@@ -1702,6 +1701,7 @@
             "TwoValues",
             "Voltage",
             "White",
+            "Wind",
             "WindRose",
             "WindRoseFlex",
             "XTETrack"
@@ -1931,7 +1931,6 @@
         "default": "ThreeValues",
         "description": "Type of page for page 5",
         "list": [
-            "ApparentWind",
             "BME280",
             "Battery",
             "Battery2",
@@ -1950,6 +1949,7 @@
             "TwoValues",
             "Voltage",
             "White",
+            "Wind",
             "WindRose",
             "WindRoseFlex",
             "XTETrack"
@@ -2176,7 +2176,6 @@
         "default": "FourValues",
         "description": "Type of page for page 6",
         "list": [
-            "ApparentWind",
             "BME280",
             "Battery",
             "Battery2",
@@ -2195,6 +2194,7 @@
             "TwoValues",
             "Voltage",
             "White",
+            "Wind",
             "WindRose",
             "WindRoseFlex",
             "XTETrack"
@@ -2418,7 +2418,6 @@
         "default": "FourValues2",
         "description": "Type of page for page 7",
         "list": [
-            "ApparentWind",
             "BME280",
             "Battery",
             "Battery2",
@@ -2437,6 +2436,7 @@
             "TwoValues",
             "Voltage",
             "White",
+            "Wind",
             "WindRose",
             "WindRoseFlex",
             "XTETrack"
@@ -2657,7 +2657,6 @@
         "default": "Clock",
         "description": "Type of page for page 8",
         "list": [
-            "ApparentWind",
             "BME280",
             "Battery",
             "Battery2",
@@ -2676,6 +2675,7 @@
             "TwoValues",
             "Voltage",
             "White",
+            "Wind",
             "WindRose",
             "WindRoseFlex",
             "XTETrack"
@@ -2893,7 +2893,6 @@
         "default": "RollPitch",
         "description": "Type of page for page 9",
         "list": [
-            "ApparentWind",
             "BME280",
             "Battery",
             "Battery2",
@@ -2912,6 +2911,7 @@
             "TwoValues",
             "Voltage",
             "White",
+            "Wind",
             "WindRose",
             "WindRoseFlex",
             "XTETrack"
@@ -3126,7 +3126,6 @@
         "default": "Battery2",
         "description": "Type of page for page 10",
         "list": [
-            "ApparentWind",
             "BME280",
             "Battery",
             "Battery2",
@@ -3145,6 +3144,7 @@
             "TwoValues",
             "Voltage",
             "White",
+            "Wind",
             "WindRose",
             "WindRoseFlex",
             "XTETrack"
@@ -3350,4 +3350,3 @@
         ]
     }
 ]
-
