@@ -185,7 +185,8 @@ public:
         getdisplay().setFont(&DSEG7Classic_BoldItalic20pt7b);
         getdisplay().setCursor(295, 65);
         if(valid3 == true){
-            getdisplay().print(abs(value3 * 180 / PI), 0);   // Value
+           // getdisplay().print(abs(value3 * 180 / PI), 0);   // Value          
+            getdisplay().print(svalue3);     // Value
         }
         else{
             getdisplay().print("---");                   // Value
