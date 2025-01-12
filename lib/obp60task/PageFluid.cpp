@@ -59,11 +59,13 @@ static unsigned char gasoline_bits[] = {
 
 class PageFluid : public Page{
     bool keylock = false;               // Keylock
+    bool holdvalues = false;
     int fluidtype;
 
     public:
     PageFluid(CommonData &common){
         common.logger->logDebug(GwLog::LOG,"Instantiate PageFluid");
+        holdvalues = common.config->getBool(common.config->holdvalues);
     }
 
     virtual int handleKey(int key){
@@ -83,6 +85,9 @@ class PageFluid : public Page{
         GwConfigHandler *config = commonData.config;
         GwLog *logger=commonData.logger;
 
+        // Old values for hold function
+        static double value1old;
+
         // Get config data
         String flashLED = config->getString(config->flashLED);
         String backlightMode = config->getString(config->backlight);
@@ -93,13 +98,14 @@ class PageFluid : public Page{
             setFlashLED(false);
         }
 
-        // Logging boat values
-        LOG_DEBUG(GwLog::LOG,"Drawing at PageFluid");
-
         GwApi::BoatValue *bvalue1 = pageData.values[0];
         String name1 = bvalue1->getName();
-        double value1 = bvalue1->value;
-        bool valid1 = bvalue1->valid;
+        if (holdvalues and bvalue1->valid) {
+            value1old = bvalue1->value;
+        }
+
+        // Logging boat values
+        LOG_DEBUG(GwLog::LOG,"Drawing at PageFluid: value=%f", bvalue1->value);
 
         // Draw page
         //***********************************************************
