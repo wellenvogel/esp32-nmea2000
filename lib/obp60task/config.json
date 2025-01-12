@@ -1012,6 +1012,9 @@
             },
             {
                 "page1type": "WindRoseFlex"
+            },
+            {
+                "page1type": "Fluid"
             }
         ]
     },
@@ -1266,7 +1269,11 @@
             },
             {
                 "page2type": "WindRoseFlex"
+            },
+            {
+                "page2type": "Fluid"
             }
+
         ]
     },
     {
@@ -1517,6 +1524,9 @@
             },
             {
                 "page3type": "WindRoseFlex"
+            },
+            {
+                "page3type": "Fluid"
             }
         ]
     },
@@ -1765,6 +1775,9 @@
             },
             {
                 "page4type": "WindRoseFlex"
+            },
+            {
+                "page4type": "Fluid"
             }
         ]
     },
@@ -2010,6 +2023,9 @@
             },
             {
                 "page5type": "WindRoseFlex"
+            },
+            {
+                "page5type": "Fluid"
             }
         ]
     },
@@ -2252,6 +2268,9 @@
             },
             {
                 "page6type": "WindRoseFlex"
+            },
+            {
+                "page6type": "Fluid"
             }
         ]
     },
@@ -2491,6 +2510,9 @@
             },
             {
                 "page7type": "WindRoseFlex"
+            },
+            {
+                "page7type": "Fluid"
             }
         ]
     },
@@ -2727,6 +2749,9 @@
             },
             {
                 "page8type": "WindRoseFlex"
+            },
+            {
+                "page8type": "Fluid"
             }
         ]
     },
@@ -2960,6 +2985,9 @@
             },
             {
                 "page9type": "WindRoseFlex"
+            },
+            {
+                "page9type": "Fluid"
             }
         ]
     },
@@ -3190,6 +3218,9 @@
             },
             {
                 "page10type": "WindRoseFlex"
+            },
+            {
+                "page10type": "Fluid"
             }
         ]
     },
