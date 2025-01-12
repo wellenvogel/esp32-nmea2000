@@ -5,14 +5,14 @@ import json
 
 # List of all pages and the number of parameters they expect.
 no_of_fields_per_page = {
-    "ApparentWind": 0,
+    "Wind": 0,
     "XTETrack": 0,
     "Battery2": 0,
     "Battery": 0,
     "BME280": 0,
     "Clock": 0,
     "DST810": 0,
-    "Fluid": 0,
+    "Fluid": 1,
     "FourValues2": 4,
     "FourValues": 4,
     "Generator": 0,
@@ -27,6 +27,7 @@ no_of_fields_per_page = {
     "White": 0,
     "WindRose": 0,
     "WindRoseFlex": 6,
+    "SixValues" : 6,
 }
 
 # No changes needed beyond this point
