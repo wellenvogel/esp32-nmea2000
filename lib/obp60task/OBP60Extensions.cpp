@@ -102,11 +102,6 @@ void hardwareInit(GwApi *api)
     }
 }
 
-void startLedTask(GwApi *api){
-    ledTaskData=new LedTaskData(api);
-    createSpiLedTask(ledTaskData);
-}
-
 void setPortPin(uint pin, bool value){
     pinMode(pin, OUTPUT);
     digitalWrite(pin, value);
@@ -115,6 +110,11 @@ void setPortPin(uint pin, bool value){
 void togglePortPin(uint pin){
     pinMode(pin, OUTPUT);
     digitalWrite(pin, !digitalRead(pin));
+}
+
+void startLedTask(GwApi *api){
+    ledTaskData=new LedTaskData(api);
+    createSpiLedTask(ledTaskData);
 }
 
 // Valid colors see hue
