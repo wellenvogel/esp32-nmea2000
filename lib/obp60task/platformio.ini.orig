@@ -54,8 +54,8 @@ build_flags=
 #    -D DISPLAY_SE0420NQ04           #alternativ E-Ink display from SID Technology, R10 2.2 ohm
     ${env.build_flags}
 #CONFIG_ESP_TASK_WDT_TIMEOUT_S = 10 #Task Watchdog timeout period (seconds) [1...60] 5 default
-#upload_port = /dev/ttyACM0          #OBP60 original
-upload_port = /dev/ttyUSB0          #OBP60 clone
+upload_port = /dev/ttyACM0          #OBP60 original
+#upload_port = /dev/ttyUSB0          #OBP60 clone
 upload_protocol = esptool           #firmware upload via USB OTG seriell, by first upload need to set the ESP32-S3 in the upload mode with shortcut GND to Pin27 
 upload_speed = 230400
 monitor_speed = 115200
