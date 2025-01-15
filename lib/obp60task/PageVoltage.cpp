@@ -22,6 +22,14 @@ public:
             mode = fram.read(FRAM_VOLTAGE_MODE);
         }
     }
+
+    virtual void setupKeys(){
+        Page::setupKeys();
+        commonData->keydata[0].label = "AVG";
+        commonData->keydata[1].label = "MODE";
+        commonData->keydata[4].label = "TRD";
+    }
+
     virtual int handleKey(int key){
          // Change average
         if(key == 1){
@@ -242,10 +250,8 @@ public:
                 }
             }
 
-            // Trend indicator
             // Show trend indicator
             if(trend == true){
-                getdisplay().fillRect(310, 240, 40, 120, commonData->bgcolor);   // Clear area
                 getdisplay().fillRect(315, 183, 35, 4, commonData->fgcolor);   // Draw separator
                 if(int(raw * 10) > int(valueTrend * 10)){
                     displayTrendHigh(320, 174, 11, commonData->fgcolor);  // Show high indicator
@@ -253,10 +259,6 @@ public:
                 if(int(raw * 10) < int(valueTrend * 10)){
                     displayTrendLow(320, 195, 11, commonData->fgcolor);   // Show low indicator
                 }
-            }
-            // No trend indicator
-            else{
-                getdisplay().fillRect(310, 240, 40, 120, commonData->bgcolor);   // Clear area
             }
 
         }
@@ -360,25 +362,9 @@ public:
 
             // FRAM indicator
             if (hasFRAM) {
-                getdisplay().drawXBitmap(300, 240, fram_bits, fram_width, fram_height, commonData->fgcolor);
+                getdisplay().drawXBitmap(300, 240, fram_bits, icon_width, icon_height, commonData->fgcolor);
             }
 
-        }
-
-        // Key Layout
-        getdisplay().setTextColor(commonData->fgcolor);
-        getdisplay().setFont(&Ubuntu_Bold8pt7b);
-        if(commonData->keylock == false){
-            getdisplay().setCursor(10, 290);
-            getdisplay().print("[AVG]");
-            getdisplay().setCursor(62, 290);
-            getdisplay().print("[MODE]");
-            getdisplay().setCursor(293, 290);
-            getdisplay().print("[TRD]");
-            if(String(backlightMode) == "Control by Key"){              // Key for illumination
-                getdisplay().setCursor(343, 290);
-                getdisplay().print("[ILUM]");
-            }
         }
 
         // Update display

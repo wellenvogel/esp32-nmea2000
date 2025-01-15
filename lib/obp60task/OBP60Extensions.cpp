@@ -22,6 +22,7 @@
 #include "DSEG7Classic-BoldItalic30pt7b.h"
 #include "DSEG7Classic-BoldItalic42pt7b.h"
 #include "DSEG7Classic-BoldItalic60pt7b.h"
+#include "Atari16px8b.h" // Key label font
 
 // E-Ink Display
 #define GxEPD_WIDTH 400     // Display width
@@ -128,6 +129,21 @@ Color colorMapping(const String &colorString){
     if(colorString == "Violet"){color = Color(255,0,102);}
     if(colorString == "White"){color = COLOR_WHITE;}
     return color;
+}
+
+BacklightMode backlightMapping(const String &backlightString) {
+    static std::map<String, BacklightMode> const table = {
+        {"Off", BacklightMode::OFF},
+        {"Control by Bus", BacklightMode::BUS},
+        {"Control by Time", BacklightMode::TIME},
+        {"Control by Key", BacklightMode::KEY},
+        {"On", BacklightMode::ON},
+    };
+    auto it = table.find(backlightString);
+    if (it != table.end()) {
+        return it->second;
+    }
+    return BacklightMode::OFF;
 }
 
 // All defined colors see pixeltypes.h in FastLED lib
@@ -362,6 +378,49 @@ void displayHeader(CommonData &commonData, GwApi::BoatValue *date, GwApi::BoatVa
             }
         }
     }
+}
+
+void displayFooter(CommonData &commonData) {
+
+    static const uint16_t cx[6] = {35, 101, 167, 233, 299, 365}; // label center positions
+    static const uint16_t cy = 290;
+
+    getdisplay().setFont(&Atari16px);
+    getdisplay().setTextColor(commonData.fgcolor);
+
+    // Frame around key icon area
+    getdisplay().drawLine(0, 280, 399, 280, commonData.fgcolor);
+    getdisplay().drawLine(68, 280, 68, 299, commonData.fgcolor);
+    getdisplay().drawLine(134, 280, 134, 299, commonData.fgcolor);
+    getdisplay().drawLine(200, 280, 200, 299, commonData.fgcolor);
+    getdisplay().drawLine(266, 280, 266, 299, commonData.fgcolor);
+    getdisplay().drawLine(332, 280, 332, 299, commonData.fgcolor);
+
+    for (int i=0; i<6; i++) {
+        uint16_t x, y;
+        if (commonData.keydata[i].label.length() > 0) {
+            // check if icon is enabled
+            String icon_name = commonData.keydata[i].label.substring(1);
+            if (commonData.keydata[i].label[0] == '#') {
+                if (iconmap.find(icon_name) != iconmap.end()) {
+                    x = commonData.keydata[i].x + (commonData.keydata[i].w - icon_width) / 2;
+                    y = commonData.keydata[i].y + (commonData.keydata[i].h - icon_height) / 2;
+                    getdisplay().drawXBitmap(x, y, iconmap[icon_name], icon_width, icon_height, commonData.fgcolor);
+                } else {
+                    // icon is missing, use name instead
+                    x = commonData.keydata[i].x + commonData.keydata[i].w / 2;
+                    y = commonData.keydata[i].y + commonData.keydata[i].h / 2;
+                    drawTextCenter(x, y, icon_name);
+                }
+            } else {
+                //drawTextCenter(cx[i], cy, commonData.keydata[i].label);
+                x = commonData.keydata[i].x + commonData.keydata[i].w / 2;
+                y = commonData.keydata[i].y + commonData.keydata[i].h / 2;
+                drawTextCenter(x, y, commonData.keydata[i].label);
+            }
+        }
+    }
+
 }
 
 // Sunset und sunrise calculation

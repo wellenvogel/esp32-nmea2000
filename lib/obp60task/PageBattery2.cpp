@@ -16,6 +16,12 @@ public:
         commonData = &common;
         common.logger->logDebug(GwLog::LOG,"Instantiate PageBattery2");
     }
+
+    virtual void setupKeys(){
+        Page::setupKeys();
+        commonData->keydata[0].label = "AVG";
+    }
+
     virtual int handleKey(int key){
          // Change average
         if(key == 1){
@@ -327,17 +333,6 @@ public:
         else  getdisplay().print("---");
         getdisplay().setFont(&Ubuntu_Bold16pt7b);
         getdisplay().print("W");
-
-        // Key Layout
-        getdisplay().setFont(&Ubuntu_Bold8pt7b);
-        if(commonData->keylock == false){
-            getdisplay().setCursor(10, 290);
-            getdisplay().print("[AVG]");
-            if(String(backlightMode) == "Control by Key"){              // Key for illumination
-                getdisplay().setCursor(343, 290);
-                getdisplay().print("[ILUM]");
-            }
-        }
 
         // Update display
         getdisplay().nextPage();    // Partial update (fast)

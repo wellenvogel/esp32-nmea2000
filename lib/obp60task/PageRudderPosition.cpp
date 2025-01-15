@@ -205,16 +205,6 @@ public:
         getdisplay().fillCircle(200, 150, startwidth + 6, commonData->bgcolor);
         getdisplay().fillCircle(200, 150, startwidth + 4, commonData->fgcolor);
 
-//*******************************************************************************************
-        // Key Layout
-        getdisplay().setFont(&Ubuntu_Bold8pt7b);
-        if(commonData->keylock == false){
-            if(String(backlightMode) == "Control by Key"){                  // Key for illumination
-                getdisplay().setCursor(343, 290);
-                getdisplay().print("[ILUM]");
-            }
-        }
-
         // Update display
         getdisplay().nextPage();    // Partial update (fast)
     };

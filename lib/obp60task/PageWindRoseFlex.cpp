@@ -10,7 +10,7 @@ int16_t lp = 80;                    // Pointer length
 public:
     PageWindRoseFlex(CommonData &common){
         commonData = &common;
-        common.logger->logDebug(GwLog::LOG,"Show PageWindRoseFlex");
+        common.logger->logDebug(GwLog::LOG,"Instantiate PageWindRoseFlex");
     }
 
     // Key functions
@@ -349,15 +349,6 @@ public:
         }
         else{  
             getdisplay().print(unit6old);                // Unit
-        }
-
-        // Key Layout
-        getdisplay().setFont(&Ubuntu_Bold8pt7b);
-        if(commonData->keylock == false){
-            if(String(backlightMode) == "Control by Key"){                  // Key for illumination
-                getdisplay().setCursor(343, 290);
-                getdisplay().print("[ILUM]");
-            }
         }
 
         // Update display

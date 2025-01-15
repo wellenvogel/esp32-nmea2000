@@ -13,6 +13,11 @@ class PageBattery : public Page
         common.logger->logDebug(GwLog::LOG,"Instantiate PageBattery");
     }
 
+    virtual void setupKeys(){
+        Page::setupKeys();
+        commonData->keydata[0].label = "AVG";
+    }
+
     virtual int handleKey(int key){
         // Change average
         if(key == 1){
@@ -281,20 +286,6 @@ class PageBattery : public Page
         }
         else{
             getdisplay().print("---");                       // No sensor data (sensor is off)
-        }
-
-
-        // ############### Key Layout ################
-
-        // Key Layout
-        getdisplay().setFont(&Ubuntu_Bold8pt7b);
-        if(commonData->keylock == false){
-            getdisplay().setCursor(10, 290);
-            getdisplay().print("[AVG]");
-            if(String(backlightMode) == "Control by Key"){              // Key for illumination
-                getdisplay().setCursor(343, 290);
-                getdisplay().print("[ILUM]");
-            }
         }
 
         // Update display

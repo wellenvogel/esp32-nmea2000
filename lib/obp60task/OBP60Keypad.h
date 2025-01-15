@@ -19,6 +19,38 @@ int keydelay = 250;     // Delay after key pressed in  [ms]
 bool keylock = false;   // Key lock after pressed key is valid (repeat protection by conginous pressing)
 long starttime = 0;     // Start time point for pressed key
 
+void initKeys(CommonData &commonData) {
+    // coordinates for virtual keyboard keys
+    commonData.keydata[0].x = 1;
+    commonData.keydata[0].y = 281;
+    commonData.keydata[0].w = 67;
+    commonData.keydata[0].h = 18;
+
+    commonData.keydata[1].x = 69;
+    commonData.keydata[1].y = 281;
+    commonData.keydata[1].w = 66;
+    commonData.keydata[1].h = 18;
+
+    commonData.keydata[2].x = 135;
+    commonData.keydata[2].y = 281;
+    commonData.keydata[2].w = 66;
+    commonData.keydata[2].h = 18;
+
+    commonData.keydata[3].x = 201;
+    commonData.keydata[3].y = 281;
+    commonData.keydata[3].w = 66;
+    commonData.keydata[3].h = 18;
+
+    commonData.keydata[4].x = 267;
+    commonData.keydata[4].y = 281;
+    commonData.keydata[4].w = 66;
+    commonData.keydata[4].h = 18;
+
+    commonData.keydata[5].x = 333;
+    commonData.keydata[5].y = 281;
+    commonData.keydata[5].w = 66;
+    commonData.keydata[5].h = 18;
+}
 
 int readKeypad(uint thSensitivity) {
   

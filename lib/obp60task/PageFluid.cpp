@@ -57,6 +57,13 @@ static unsigned char gasoline_bits[] = {
    0x98, 0xcf, 0x38, 0xe7, 0x78, 0xf0, 0xf8, 0xfa, 0xf8, 0xfa, 0x78, 0xf0,
    0x38, 0xe7, 0x98, 0xcf, 0xf8, 0xff, 0xf0, 0x7f };
 
+#define fish_width 16
+#define fish_height 16
+static unsigned char fish_bits[] = {
+   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xe0, 0x01, 0xf0, 0x03, 0xf8, 0x37,
+   0xfc, 0x7f, 0xfc, 0x7f, 0xec, 0x3f, 0xfc, 0x7f, 0xfc, 0x7f, 0xf8, 0x37,
+   0xf0, 0x03, 0xe0, 0x01, 0x00, 0x00, 0x00, 0x00 };
+
 class PageFluid : public Page
 {
     int fluidtype;
@@ -150,6 +157,12 @@ class PageFluid : public Page
             case 1:
                 getdisplay().drawXBitmap(c.x-8, c.y-50, water_bits, water_width, water_height, commonData->fgcolor);
                 break;
+            case 2: // gray water no symbol yet
+                // getdisplay().drawXBitmap(c.x-8, c.y-50, gray_bits, gray_width, gray_height, commonData->fgcolor);
+                break;
+            case 3:
+                getdisplay().drawXBitmap(c.x-8, c.y-50, fish_bits, fish_width, fish_height, commonData->fgcolor);
+                break;
             case 4:
                 getdisplay().drawXBitmap(c.x-8, c.y-50, oil_bits, oil_width, oil_height, commonData->fgcolor);
                 break;
@@ -215,15 +228,6 @@ class PageFluid : public Page
             getdisplay().fillCircle(c.x, c.y, 6, commonData->bgcolor);
         }
  
-        // Key Layout
-        getdisplay().setFont(&Ubuntu_Bold8pt7b);
-        if(commonData->keylock == false){
-            if(String(backlightMode) == "Control by Key"){                  // Key for illumination
-                getdisplay().setCursor(343, 296);
-                getdisplay().print("[ILUM]");
-            }
-        }
-
         // Update display
         getdisplay().nextPage();    // Partial update (fast)
 

@@ -229,6 +229,17 @@ public:
         }
     }
 
+    virtual void setupKeys(){
+        Page::setupKeys();
+        commonData->keydata[0].label = "MODE";
+        if (mode == 'X') {
+            commonData->keydata[1].label = "#MINUS";
+            commonData->keydata[4].label = "#PLUS";
+        } else {
+            commonData->keydata[1].label = "SRC";
+        }
+    }
+
     // Key functions
     virtual int handleKey(int key){
 
@@ -241,26 +252,28 @@ public:
                 mode = 'N';
             }
             if (hasFRAM) fram.write(FRAM_WIND_MODE, mode);
+            setupKeys();
             return 0;               // Commit the key
         }
 
-        if(key == 3){               // Source switch
-            if(source == 'A'){
-                source = 'T';
+        // Set source or reduce instrument size
+        if(key == 2){
+            if(mode == 'X'){
+                // Code for reduce
+                lp = lp - 10;
+                if(lp < 10){
+                    lp = 10;
+                }
+                if (hasFRAM) fram.write(FRAM_WIND_SIZE, lp);
             } else {
-                source = 'A';
+                // Code for set source
+                if(source == 'A'){
+                    source = 'T';
+                } else {
+                    source = 'A';
+                }
+                if (hasFRAM) fram.write(FRAM_WIND_SRC, source);
             }
-            if (hasFRAM) fram.write(FRAM_WIND_SRC, source);
-            return 0;               // Commit the key
-        }
-
-        // Reduce instrument size
-        if(key == 2 && mode == 'X'){    // Code for reduce
-            lp = lp - 10;
-            if(lp < 10){
-                lp = 10;
-            }
-            if (hasFRAM) fram.write(FRAM_WIND_SIZE, lp);
             return 0;               // Commit the key
         }
 
@@ -597,25 +610,6 @@ public:
                 drawTextCenter(c.x, c.y, "no data");
             }
 
-        }
-
-        // Key Layout
-        getdisplay().setFont(&Ubuntu_Bold8pt7b);
-        if(commonData->keylock == false){
-            getdisplay().setCursor(10, 290);
-            getdisplay().print("[MODE]");
-
-            if (mode == 'X') {
-                getdisplay().setCursor(85, 290);
-                getdisplay().print("[ - ]");
-                getdisplay().setCursor(295, 290);
-                getdisplay().print("[ + ]");
-            }
-
-            if(String(backlightMode) == "Control by Key"){                  // Key for illumination
-                getdisplay().setCursor(343, 290);
-                getdisplay().print("[ILUM]");
-            }
         }
 
         // Update display

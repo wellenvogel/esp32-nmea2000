@@ -222,18 +222,6 @@ class PageThreeValues : public Page
             unit3old = unit3;                                           // Save the old unit
         }
 
-
-        // ############### Key Layout ################
-
-        // Key Layout
-        getdisplay().setFont(&Ubuntu_Bold8pt7b);
-        if(commonData->keylock == false){
-            if(String(backlightMode) == "Control by Key"){                  // Key for illumination
-                getdisplay().setCursor(343, 290);
-                getdisplay().print("[ILUM]");
-            }
-        }
-
         // Update display
         getdisplay().nextPage();    // Partial update (fast)
     };

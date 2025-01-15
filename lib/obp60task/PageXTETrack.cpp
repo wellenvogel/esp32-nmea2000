@@ -197,15 +197,6 @@ class PageXTETrack : public Page
         drawSegment(399, 100, 318, 24, 289, 24, 350, 100, commonData->fgcolor, seg[4]);
         drawSegment(399, 54, 354, 24, 325, 24, 399, 90, commonData->fgcolor, seg[5]);
 
-        // Key Layout
-        getdisplay().setFont(&Ubuntu_Bold8pt7b);
-        if(commonData->keylock == false){
-            if(String(backlightMode) == "Control by Key"){                  // Key for illumination
-                getdisplay().setCursor(343, 296);
-                getdisplay().print("[ILUM]");
-            }
-        }
-
         // Update display
         getdisplay().nextPage();    // Partial update (fast)
 
