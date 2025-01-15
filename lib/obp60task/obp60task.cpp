@@ -49,10 +49,20 @@ void OBP60Init(GwApi *api){
     String powermode = api->getConfig()->getConfigItem(api->getConfig()->powerMode,true)->asString();
     api->getLogger()->logDebug(GwLog::DEBUG,"Power Mode is: %s", powermode.c_str());
     if(powermode == "Max Power" || powermode == "Only 5.0V"){
+        #ifdef HARDWARE_V21
         setPortPin(OBP_POWER_50, true); // Power on 5.0V rail
+        #endif
+        #ifdef HARDWARE_LIGHT
+        setPortPin(OBP_POWER_EPD, true);// Power on ePaper display
+        #endif
     }
     else{
+        #ifdef HARDWARE_V21
         setPortPin(OBP_POWER_50, false); // Power off 5.0V rail
+        #endif
+        #ifdef HARDWARE_LIGHT
+        setPortPin(OBP_POWER_EPD, false);// Power off ePaper display
+        #endif
     }
 
     // Settings for e-paper display

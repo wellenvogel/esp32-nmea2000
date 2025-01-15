@@ -4,7 +4,6 @@
 #include "GwApi.h"
 #include "OBP60Hardware.h"
 
-
 class Color{
     public:
     uint8_t r;
@@ -92,6 +91,5 @@ class LedTaskData{
 
 //task function
 void createSpiLedTask(LedTaskData *param);
-
 
 #endif
