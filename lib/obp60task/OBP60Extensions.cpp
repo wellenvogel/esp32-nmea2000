@@ -287,15 +287,11 @@ void displayHeader(CommonData &commonData, GwApi::BoatValue *date, GwApi::BoatVa
 
     if(commonData.config->getBool(commonData.config->statusLine) == true){
 
-        if(commonData.config->getString(commonData.config->displaycolor) == "Normal"){
-            textcolor = GxEPD_BLACK;
-        }
-        else{
-            textcolor = GxEPD_WHITE;
-        }
+        // Header separator line (optional)
+        // getdisplay().drawLine(0, 19, 399, 19, commonData.fgcolor);
 
         // Show status info
-        getdisplay().setTextColor(textcolor);
+        getdisplay().setTextColor(commonData.fgcolor);
         getdisplay().setFont(&Ubuntu_Bold8pt7b);
         getdisplay().setCursor(0, 15);
         if(commonData.status.wifiApOn){
@@ -339,18 +335,18 @@ void displayHeader(CommonData &commonData, GwApi::BoatValue *date, GwApi::BoatVa
 
         // Current page number in a small box
         getdisplay().setFont(&Ubuntu_Bold8pt7b);
-        getdisplay().drawRect(170, 2, 20, 15, textcolor);
+        getdisplay().drawRect(170, 2, 20, 15, commonData.fgcolor);
         drawTextCenter(179, 9, String(commonData.data.actpage));
 
         // Heartbeat as dot
-        getdisplay().setTextColor(textcolor);
+        getdisplay().setTextColor(commonData.fgcolor);
         getdisplay().setFont(&Ubuntu_Bold32pt7b);
         getdisplay().setCursor(205, 14);
         getdisplay().print(heartbeat ? "." : " ");
         heartbeat = !heartbeat; 
 
         // Date and time
-        getdisplay().setTextColor(textcolor);
+        getdisplay().setTextColor(commonData.fgcolor);
         getdisplay().setFont(&Ubuntu_Bold8pt7b);
         getdisplay().setCursor(230, 15);
         // Show date and time if date present
@@ -382,45 +378,44 @@ void displayHeader(CommonData &commonData, GwApi::BoatValue *date, GwApi::BoatVa
 
 void displayFooter(CommonData &commonData) {
 
-    static const uint16_t cx[6] = {35, 101, 167, 233, 299, 365}; // label center positions
-    static const uint16_t cy = 290;
-
     getdisplay().setFont(&Atari16px);
     getdisplay().setTextColor(commonData.fgcolor);
 
     // Frame around key icon area
     getdisplay().drawLine(0, 280, 399, 280, commonData.fgcolor);
-    getdisplay().drawLine(68, 280, 68, 299, commonData.fgcolor);
-    getdisplay().drawLine(134, 280, 134, 299, commonData.fgcolor);
-    getdisplay().drawLine(200, 280, 200, 299, commonData.fgcolor);
-    getdisplay().drawLine(266, 280, 266, 299, commonData.fgcolor);
-    getdisplay().drawLine(332, 280, 332, 299, commonData.fgcolor);
-
-    for (int i=0; i<6; i++) {
-        uint16_t x, y;
-        if (commonData.keydata[i].label.length() > 0) {
-            // check if icon is enabled
-            String icon_name = commonData.keydata[i].label.substring(1);
-            if (commonData.keydata[i].label[0] == '#') {
-                if (iconmap.find(icon_name) != iconmap.end()) {
-                    x = commonData.keydata[i].x + (commonData.keydata[i].w - icon_width) / 2;
-                    y = commonData.keydata[i].y + (commonData.keydata[i].h - icon_height) / 2;
-                    getdisplay().drawXBitmap(x, y, iconmap[icon_name], icon_width, icon_height, commonData.fgcolor);
+    if (! commonData.keylock) {
+        getdisplay().drawLine(68, 280, 68, 299, commonData.fgcolor);
+        getdisplay().drawLine(134, 280, 134, 299, commonData.fgcolor);
+        getdisplay().drawLine(200, 280, 200, 299, commonData.fgcolor);
+        getdisplay().drawLine(266, 280, 266, 299, commonData.fgcolor);
+        getdisplay().drawLine(332, 280, 332, 299, commonData.fgcolor);
+        for (int i = 0; i < 6; i++) {
+            uint16_t x, y;
+            if (commonData.keydata[i].label.length() > 0) {
+                // check if icon is enabled
+                String icon_name = commonData.keydata[i].label.substring(1);
+                if (commonData.keydata[i].label[0] == '#') {
+                    if (iconmap.find(icon_name) != iconmap.end()) {
+                        x = commonData.keydata[i].x + (commonData.keydata[i].w - icon_width) / 2;
+                        y = commonData.keydata[i].y + (commonData.keydata[i].h - icon_height) / 2;
+                        getdisplay().drawXBitmap(x, y, iconmap[icon_name], icon_width, icon_height, commonData.fgcolor);
+                    } else {
+                        // icon is missing, use name instead
+                        x = commonData.keydata[i].x + commonData.keydata[i].w / 2;
+                        y = commonData.keydata[i].y + commonData.keydata[i].h / 2;
+                        drawTextCenter(x, y, icon_name);
+                    }
                 } else {
-                    // icon is missing, use name instead
                     x = commonData.keydata[i].x + commonData.keydata[i].w / 2;
                     y = commonData.keydata[i].y + commonData.keydata[i].h / 2;
-                    drawTextCenter(x, y, icon_name);
+                    drawTextCenter(x, y, commonData.keydata[i].label);
                 }
-            } else {
-                //drawTextCenter(cx[i], cy, commonData.keydata[i].label);
-                x = commonData.keydata[i].x + commonData.keydata[i].w / 2;
-                y = commonData.keydata[i].y + commonData.keydata[i].h / 2;
-                drawTextCenter(x, y, commonData.keydata[i].label);
             }
         }
+    } else {
+        getdisplay().setCursor(65, 295);
+        getdisplay().print("Press 1 and 6 fast to unlock keys");
     }
-
 }
 
 // Sunset und sunrise calculation
