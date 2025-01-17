@@ -40,7 +40,7 @@ lib_deps =
 build_flags=
     #https://thingpulse.com/usb-settings-for-logging-with-the-esp32-s3-in-platformio/?srsltid=AfmBOopGskbkr4GoeVkNlFaZXe_zXkLceKF6Rn-tmoXABCeAR2vWsdHL
 #    -D ARDUINO_USB_MODE=1           #0=OTG (to implement other external devices), 1=CDC (is a serial device) 
-#    -D ARDUINO_USB_CDC_ON_BOOT=1    #0=JTAG, 1=CDC (serial device)
+    -D ARDUINO_USB_CDC_ON_BOOT=0    #Serial output via RX/TX
 #    -D CORE_DEBUG_LEVEL=1           #Debug level for CPU core via CDC (seral device)
 #    -D TIME=$UNIX_TIME              #Set PC time for RTC (only settable via VSC)
     -D DISABLE_DIAGNOSTIC_OUTPUT    #Disable diagnostic output for GxEPD2 lib
