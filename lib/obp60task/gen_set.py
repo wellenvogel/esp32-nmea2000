@@ -124,5 +124,7 @@ for page_no in range(1, no_of_pages + 1):
 
 json_output = json.dumps(output, indent=4)
 # print omitting first and last line containing [ ] of JSON array
+#print(json_output[1:-1])
+# print omitting first line containing [  of JSON array
 print(json_output[1:])
 # print(",")
