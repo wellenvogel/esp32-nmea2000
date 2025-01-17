@@ -328,15 +328,10 @@ void displayHeader(CommonData &commonData, GwApi::BoatValue *date, GwApi::BoatVa
 
         // Display key lock status
         if (commonData.keylock) {
-            getdisplay().drawXBitmap(150, 1, lock_bits, icon_width, icon_height, commonData.fgcolor);
+            getdisplay().drawXBitmap(170, 1, lock_bits, icon_width, icon_height, commonData.fgcolor);
         } else {
-            getdisplay().drawXBitmap(150, 1, swipe_bits, icon_width, icon_height, commonData.fgcolor);
+            getdisplay().drawXBitmap(166, 1, swipe_bits, swipe_width, swipe_height, commonData.fgcolor);
         }
-
-        // Current page number in a small box
-        getdisplay().setFont(&Ubuntu_Bold8pt7b);
-        getdisplay().drawRect(170, 2, 20, 15, commonData.fgcolor);
-        drawTextCenter(179, 9, String(commonData.data.actpage));
 
         // Heartbeat as dot
         getdisplay().setTextColor(commonData.fgcolor);
@@ -382,13 +377,21 @@ void displayFooter(CommonData &commonData) {
     getdisplay().setTextColor(commonData.fgcolor);
 
     // Frame around key icon area
-    getdisplay().drawLine(0, 280, 399, 280, commonData.fgcolor);
     if (! commonData.keylock) {
-        getdisplay().drawLine(68, 280, 68, 299, commonData.fgcolor);
-        getdisplay().drawLine(134, 280, 134, 299, commonData.fgcolor);
-        getdisplay().drawLine(200, 280, 200, 299, commonData.fgcolor);
-        getdisplay().drawLine(266, 280, 266, 299, commonData.fgcolor);
-        getdisplay().drawLine(332, 280, 332, 299, commonData.fgcolor);
+        // horizontal elements
+        const uint16_t top = 280;
+        const uint16_t bottom = 299;
+        getdisplay().drawLine(commonData.keydata[0].x, top, commonData.keydata[0].x+10, top, commonData.fgcolor);
+        getdisplay().drawLine(commonData.keydata[1].x-10, top, commonData.keydata[1].x+10, top, commonData.fgcolor);
+        getdisplay().drawLine(commonData.keydata[2].x-10, top, commonData.keydata[2].x+10, top, commonData.fgcolor);
+        getdisplay().drawLine(commonData.keydata[4].x-10, top, commonData.keydata[4].x+10, top, commonData.fgcolor);
+        getdisplay().drawLine(commonData.keydata[5].x-10, top, commonData.keydata[5].x+10, top, commonData.fgcolor);
+        getdisplay().drawLine(commonData.keydata[5].x + commonData.keydata[5].w - 10, top, commonData.keydata[5].x + commonData.keydata[5].w + 1, top, commonData.fgcolor);
+        // vertical key separators
+        getdisplay().drawLine(commonData.keydata[0].x + commonData.keydata[0].w, top, commonData.keydata[0].x + commonData.keydata[0].w, bottom, commonData.fgcolor);
+        getdisplay().drawLine(commonData.keydata[1].x + commonData.keydata[1].w, top, commonData.keydata[1].x + commonData.keydata[1].w, bottom, commonData.fgcolor);
+        getdisplay().drawLine(commonData.keydata[3].x + commonData.keydata[3].w, top, commonData.keydata[3].x + commonData.keydata[3].w, bottom, commonData.fgcolor);
+        getdisplay().drawLine(commonData.keydata[4].x + commonData.keydata[4].w, top, commonData.keydata[4].x + commonData.keydata[4].w, bottom, commonData.fgcolor);
         for (int i = 0; i < 6; i++) {
             uint16_t x, y;
             if (commonData.keydata[i].label.length() > 0) {
@@ -412,6 +415,9 @@ void displayFooter(CommonData &commonData) {
                 }
             }
         }
+        // Current page number in a small box
+        getdisplay().drawRect(190, 280, 23, 19, commonData.fgcolor);
+        drawTextCenter(200, 289, String(commonData.data.actpage));
     } else {
         getdisplay().setCursor(65, 295);
         getdisplay().print("Press 1 and 6 fast to unlock keys");
