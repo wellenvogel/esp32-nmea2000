@@ -1,18 +1,22 @@
 #!/usr/bin/env python3
 # A tool to generate that part of config.json  that deals with pages and fields.
+#
+#Usage: 1. modify this script (e.g.add a page, change number of fields, etc.)
+#       2. Delete all lines from config.json from the curly backet before "name": "page1type"  to o the end of the file (as of today, delete from line 917 to the end of the File)
+#       3. run ./gen_set.py >> config.json
 
 import json
 
 # List of all pages and the number of parameters they expect.
 no_of_fields_per_page = {
-    "ApparentWind": 0,
+    "Wind": 0,
     "XTETrack": 0,
     "Battery2": 0,
     "Battery": 0,
     "BME280": 0,
     "Clock": 0,
     "DST810": 0,
-    "Fluid": 0,
+    "Fluid": 1,
     "FourValues2": 4,
     "FourValues": 4,
     "Generator": 0,
@@ -27,6 +31,7 @@ no_of_fields_per_page = {
     "White": 0,
     "WindRose": 0,
     "WindRoseFlex": 6,
+    "SixValues" : 6,
 }
 
 # No changes needed beyond this point
@@ -119,5 +124,7 @@ for page_no in range(1, no_of_pages + 1):
 
 json_output = json.dumps(output, indent=4)
 # print omitting first and last line containing [ ] of JSON array
-print(json_output[1:-1])
+#print(json_output[1:-1])
+# print omitting first line containing [  of JSON array
+print(json_output[1:])
 # print(",")
