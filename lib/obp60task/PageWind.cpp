@@ -220,11 +220,23 @@ char source = 'A';                  // data source (A)pparent | (T)rue
 
 public:
     PageWind(CommonData &common){
+        commonData = &common;
         common.logger->logDebug(GwLog::LOG,"Instantiate PageWind");
         if (hasFRAM) {
             lp = fram.read(FRAM_WIND_SIZE);
             source = fram.read(FRAM_WIND_SRC);
             mode = fram.read(FRAM_WIND_MODE);
+        }
+    }
+
+    virtual void setupKeys(){
+        Page::setupKeys();
+        commonData->keydata[0].label = "MODE";
+        if (mode == 'X') {
+            commonData->keydata[1].label = "#MINUS";
+            commonData->keydata[4].label = "#PLUS";
+        } else {
+            commonData->keydata[1].label = "SRC";
         }
     }
 
@@ -240,26 +252,28 @@ public:
                 mode = 'N';
             }
             if (hasFRAM) fram.write(FRAM_WIND_MODE, mode);
+            setupKeys();
             return 0;               // Commit the key
         }
 
-        if(key == 3){               // Source switch
-            if(source == 'A'){
-                source = 'T';
+        // Set source or reduce instrument size
+        if(key == 2){
+            if(mode == 'X'){
+                // Code for reduce
+                lp = lp - 10;
+                if(lp < 10){
+                    lp = 10;
+                }
+                if (hasFRAM) fram.write(FRAM_WIND_SIZE, lp);
             } else {
-                source = 'A';
+                // Code for set source
+                if(source == 'A'){
+                    source = 'T';
+                } else {
+                    source = 'A';
+                }
+                if (hasFRAM) fram.write(FRAM_WIND_SRC, source);
             }
-            if (hasFRAM) fram.write(FRAM_WIND_SRC, source);
-            return 0;               // Commit the key
-        }
-
-        // Reduce instrument size
-        if(key == 2 && mode == 'X'){    // Code for reduce
-            lp = lp - 10;
-            if(lp < 10){
-                lp = 10;
-            }
-            if (hasFRAM) fram.write(FRAM_WIND_SIZE, lp);
             return 0;               // Commit the key
         }
 
@@ -275,16 +289,16 @@ public:
 
         // Keylock function
         if(key == 11){              // Code for keylock
-            keylock = !keylock;     // Toggle keylock
+            commonData->keylock = !commonData->keylock;
             return 0;               // Commit the key
         }
         return key;
     }
 
-    virtual void displayPage(CommonData &commonData, PageData &pageData)
+    virtual void displayPage(PageData &pageData)
     {
-        GwConfigHandler *config = commonData.config;
-        GwLog *logger=commonData.logger;
+        GwConfigHandler *config = commonData->config;
+        GwLog *logger = commonData->logger;
 
         static String svalue1old = "";
         static String unit1old = "";
@@ -311,8 +325,8 @@ public:
         name1 = name1.substring(0, 6);                  // String length limit for value name
         double value1 = bvalue1->value;                 // Value as double in SI unit
         // bool valid1 = bvalue1->valid;                   // Valid information
-        String svalue1 = formatValue(bvalue1, commonData).svalue;    // Formatted value as string including unit conversion and switching decimal places
-        String unit1 = formatValue(bvalue1, commonData).unit;        // Unit of value
+        String svalue1 = formatValue(bvalue1, *commonData).svalue;    // Formatted value as string including unit conversion and switching decimal places
+        String unit1 = formatValue(bvalue1, *commonData).unit;        // Unit of value
 
         // Get boat values for angle (AWD/TWD)
         if (source == 'A') {
@@ -324,8 +338,8 @@ public:
         name2 = name2.substring(0, 6);                  // String length limit for value name
         double value2 = bvalue2->value;                 // Value as double in SI unit
         // bool valid2 = bvalue2->valid;                   // Valid information
-        String svalue2 = formatValue(bvalue2, commonData).svalue;    // Formatted value as string including unit conversion and switching decimal places
-        String unit2 = formatValue(bvalue2, commonData).unit;        // Unit of value
+        String svalue2 = formatValue(bvalue2, *commonData).svalue;    // Formatted value as string including unit conversion and switching decimal places
+        String unit2 = formatValue(bvalue2, *commonData).unit;        // Unit of value
 
         // Optical warning by limit violation (unused)
         if(String(flashLED) == "Limit Violation"){
@@ -343,7 +357,7 @@ public:
         // Set display in partial refresh mode
         getdisplay().setPartialWindow(0, 0, getdisplay().width(), getdisplay().height()); // Set partial update
 
-        getdisplay().setTextColor(commonData.fgcolor);
+        getdisplay().setTextColor(commonData->fgcolor);
 
 
         if (mode == 'X') {
@@ -384,8 +398,8 @@ public:
             Point c = {200, 145};
 
             // Draw instrument
-            getdisplay().fillCircle(c.x, c.y, lp + 5, commonData.fgcolor);
-            getdisplay().fillCircle(c.x, c.y, lp + 1, commonData.bgcolor);
+            getdisplay().fillCircle(c.x, c.y, lp + 5, commonData->fgcolor);
+            getdisplay().fillCircle(c.x, c.y, lp + 1, commonData->bgcolor);
 
             // Wind pointer
             if (bvalue2->valid) {
@@ -398,7 +412,7 @@ public:
                     {c.x, c.y - lp + lp1},
                     {c.x + 7, c.y - lp + lp0}
                 };
-                fillPoly4(rotatePoints(c, pts, RadToDeg(value2)), commonData.fgcolor);
+                fillPoly4(rotatePoints(c, pts, RadToDeg(value2)), commonData->fgcolor);
             } else {
                 getdisplay().setFont(&Ubuntu_Bold12pt7b);
                 drawTextCenter(c.x, c.y, "no data");
@@ -427,13 +441,13 @@ public:
                   p = rotatePoint(c, {c.x, c.y - r + 40}, i);
                   drawTextCenter(p.x, p.y, String(angle));
                   angle += 10;
-                  fillPoly4(rotatePoints(c, pts, i), commonData.fgcolor);
+                  fillPoly4(rotatePoints(c, pts, i), commonData->fgcolor);
             }
             // dots
             for (int i = 30; i < 138; i += 6) {
                  if (i % 15 != 0) {
                       p = rotatePoint(c, {c.x, c.y - r + 5}, i);
-                      getdisplay().fillCircle(p.x, p.y, 2, commonData.fgcolor);
+                      getdisplay().fillCircle(p.x, p.y, 2, commonData->fgcolor);
                  }
             }
 
@@ -444,13 +458,13 @@ public:
                   p = rotatePoint(c, {c.x, c.y - r + 40}, i);
                   drawTextCenter(p.x, p.y, String(angle));
                   angle -= 10;
-                  fillPoly4(rotatePoints(c, pts, i), commonData.fgcolor);
+                  fillPoly4(rotatePoints(c, pts, i), commonData->fgcolor);
             }
             // dots
             for (int i = 228; i < 330; i += 6) {
                  if (i % 15 != 0) {
                       p = rotatePoint(c, {c.x, c.y - r + 5}, i);
-                      getdisplay().fillCircle(p.x, p.y, 2, commonData.fgcolor);
+                      getdisplay().fillCircle(p.x, p.y, 2, commonData->fgcolor);
                  }
             }
 
@@ -480,15 +494,15 @@ public:
                     alpha *= -1;
                 }
 
-                getdisplay().fillCircle(c.x, c.y, 8, commonData.fgcolor);
+                getdisplay().fillCircle(c.x, c.y, 8, commonData->fgcolor);
                 pts = {
                     {c.x - 1, c.y - (r - 20)},
                     {c.x + 1, c.y - (r - 20)},
                     {c.x + 6, c.y + 15},
                     {c.x - 6, c.y + 15}
                 };
-                fillPoly4(rotatePoints(c, pts, alpha), commonData.fgcolor);
-                getdisplay().fillCircle(c.x, c.y, 6, commonData.bgcolor);
+                fillPoly4(rotatePoints(c, pts, alpha), commonData->fgcolor);
+                getdisplay().fillCircle(c.x, c.y, 6, commonData->bgcolor);
             } else {
                 getdisplay().setFont(&Ubuntu_Bold12pt7b);
                 drawTextCenter(c.x, c.y, "no data");
@@ -520,7 +534,7 @@ public:
             }
 
             // draw ship front symbol (as bitmap)
-            getdisplay().drawXBitmap(140, 30, front_bits, front_width, front_height, commonData.fgcolor);
+            getdisplay().drawXBitmap(140, 30, front_bits, front_width, front_height, commonData->fgcolor);
 
             Point c = {200, 155};
             uint16_t r = 150;
@@ -539,13 +553,13 @@ public:
             for (int i = 30; i < 150; i += 30) {
                   p = rotatePoint(c, {c.x, c.y - r + 40}, i);
                   drawTextCenter(p.x, p.y, String(i));
-                  fillPoly4(rotatePoints(c, pts, i), commonData.fgcolor);
+                  fillPoly4(rotatePoints(c, pts, i), commonData->fgcolor);
             }
             // dots
             for (int i = 30; i < 150; i += 10) {
                  if (i % 30 != 0) {
                       p = rotatePoint(c, {c.x, c.y - r + 5}, i);
-                      getdisplay().fillCircle(p.x, p.y, 3, commonData.fgcolor);
+                      getdisplay().fillCircle(p.x, p.y, 3, commonData->fgcolor);
                  }
             }
 
@@ -556,13 +570,13 @@ public:
                   p = rotatePoint(c, {c.x, c.y - r + 40}, i);
                   drawTextCenter(p.x, p.y, String(angle));
                   angle -= 30;
-                  fillPoly4(rotatePoints(c, pts, i), commonData.fgcolor);
+                  fillPoly4(rotatePoints(c, pts, i), commonData->fgcolor);
             }
             // dots
             for (int i = 210; i < 340; i += 10) {
                  if (i % 30 != 0) {
                       p = rotatePoint(c, {c.x, c.y - r + 5}, i);
-                      getdisplay().fillCircle(p.x, p.y, 3, commonData.fgcolor);
+                      getdisplay().fillCircle(p.x, p.y, 3, commonData->fgcolor);
                  }
             }
 
@@ -582,45 +596,20 @@ public:
             // Wind pointer (angle)
             if (bvalue2->valid) {
                 float alpha = RadToDeg(value2);
-                getdisplay().fillCircle(c.x, c.y, 8, commonData.fgcolor);
+                getdisplay().fillCircle(c.x, c.y, 8, commonData->fgcolor);
                 pts = {
                     {c.x - 1, c.y - (r - 20)},
                     {c.x + 1, c.y - (r - 20)},
                     {c.x + 6, c.y + 15},
                     {c.x - 6, c.y + 15}
                 };
-                fillPoly4(rotatePoints(c, pts, alpha), commonData.fgcolor);
-                getdisplay().fillCircle(c.x, c.y, 6, commonData.bgcolor);
+                fillPoly4(rotatePoints(c, pts, alpha), commonData->fgcolor);
+                getdisplay().fillCircle(c.x, c.y, 6, commonData->bgcolor);
             } else {
                 getdisplay().setFont(&Ubuntu_Bold12pt7b);
                 drawTextCenter(c.x, c.y, "no data");
             }
 
-        }
-
-        // Key Layout
-        getdisplay().setFont(&Ubuntu_Bold8pt7b);
-        if(keylock == false){
-            getdisplay().setCursor(10, 290);
-            getdisplay().print("[MODE]");
-            getdisplay().setCursor(130, 290);
-            getdisplay().print("[  <<<<  " + String(commonData.data.actpage) + "/" + String(commonData.data.maxpage) + "  >>>>  ]");
-
-            if (mode == 'X') {
-                getdisplay().setCursor(85, 290);
-                getdisplay().print("[ - ]");
-                getdisplay().setCursor(295, 290);
-                getdisplay().print("[ + ]");
-            }
-
-            if(String(backlightMode) == "Control by Key"){                  // Key for illumination
-                getdisplay().setCursor(343, 290);
-                getdisplay().print("[ILUM]");
-            }
-        }
-        else{
-            getdisplay().setCursor(130, 290);
-            getdisplay().print(" [    Keylock active    ]");
         }
 
         // Update display

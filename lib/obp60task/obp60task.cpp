@@ -86,10 +86,10 @@ void OBP60Init(GwApi *api){
     if(String(backlightMode) == "On"){
            setBacklightLED(brightness, colorMapping(backlightColor));
     }
-    if(String(backlightMode) == "Off"){
+    else if(String(backlightMode) == "Off"){
            setBacklightLED(0, COLOR_BLACK); // Backlight LEDs off (blue without britghness)
     }
-    if(String(backlightMode) == "Control by Key"){
+    else if(String(backlightMode) == "Control by Key"){
            setBacklightLED(0, COLOR_BLUE); // Backlight LEDs off (blue without britghness)
     }
 
@@ -295,13 +295,16 @@ void OBP60Task(GwApi *api){
     commonData.logger=logger;
     commonData.config=config;
 
+    // Keyboard coordinates for page footer
+    initKeys(commonData);
+
     tN2kMsg N2kMsg;
 
     LOG_DEBUG(GwLog::LOG,"obp60task started");
     for (auto it=allPages.pages.begin();it != allPages.pages.end();it++){
         LOG_DEBUG(GwLog::LOG,"found registered page %s",(*it)->pageName.c_str());
     }
-    
+
     // Init E-Ink display
     String displaymode = api->getConfig()->getConfigItem(api->getConfig()->display,true)->asString();
     String displaycolor = api->getConfig()->getConfigItem(api->getConfig()->displaycolor,true)->asString();
@@ -426,12 +429,13 @@ void OBP60Task(GwApi *api){
 
     // Configuration values for main loop
     String gpsFix = api->getConfig()->getConfigItem(api->getConfig()->flashLED,true)->asString();
-    String backlight = api->getConfig()->getConfigItem(api->getConfig()->backlight,true)->asString();
     String gpsOn=api->getConfig()->getConfigItem(api->getConfig()->useGPS,true)->asString();
     String tz = api->getConfig()->getConfigItem(api->getConfig()->timeZone,true)->asString();
-    String backlightColor = api->getConfig()->getConfigItem(api->getConfig()->blColor,true)->asString();
-    Color color = colorMapping(backlightColor);
-    uint brightness = 2.55 * uint(api->getConfig()->getConfigItem(api->getConfig()->blBrightness,true)->asInt());
+
+    commonData.backlight.mode = backlightMapping(config->getConfigItem(config->backlight,true)->asString());
+    commonData.backlight.color = colorMapping(config->getConfigItem(config->blColor,true)->asString());
+    commonData.backlight.brightness = 2.55 * uint(config->getConfigItem(config->blBrightness,true)->asInt());
+
     bool uvoltage = api->getConfig()->getConfigItem(api->getConfig()->underVoltage,true)->asBoolean();
     String cpuspeed = api->getConfig()->getConfigItem(api->getConfig()->cpuSpeed,true)->asString();
     uint hdopAccuracy = uint(api->getConfig()->getConfigItem(api->getConfig()->hdopAccuracy,true)->asInt());
@@ -458,7 +462,9 @@ void OBP60Task(GwApi *api){
     long starttime3 = millis();     // Display update all 1s
     long starttime4 = millis();     // Delayed display update after 4s when select a new page
     long starttime5 = millis();     // Calculate sunrise and sunset all 1s
-    
+
+    pages[pageNumber].page->setupKeys(); // Initialize keys for first page
+
     // Main loop runs with 100ms
     //####################################################################################
     
@@ -515,14 +521,15 @@ void OBP60Task(GwApi *api){
                 {
                     // Decoding all key codes
                     // #6 Backlight on if key controled
-                    if(String(backlight) == "Control by Key"){
+                    if (commonData.backlight.mode == BacklightMode::KEY) {
+                    // if(String(backlight) == "Control by Key"){
                         if(keyboardMessage == 6){
                             LOG_DEBUG(GwLog::LOG,"Toggle Backlight LED");
-                            toggleBacklightLED(brightness, color);
+                            toggleBacklightLED(commonData.backlight.brightness, commonData.backlight.color);
                         }
                     }
-                    // #9 Swipe right
-                    if (keyboardMessage == 9)
+                    // #9 Swipe right or #4 key right
+                    if ((keyboardMessage == 9) or (keyboardMessage == 4))
                     {
                         pageNumber++;
                         if (pageNumber >= numPages){
@@ -531,8 +538,8 @@ void OBP60Task(GwApi *api){
                         commonData.data.actpage = pageNumber + 1;
                         commonData.data.maxpage = numPages;
                     }
-                    // #10 Swipe left
-                    if (keyboardMessage == 10)
+                    // #10 Swipe left or #3 key left
+                    if ((keyboardMessage == 10) or (keyboardMessage == 3))
                     {
                         pageNumber--;
                         if (pageNumber < 0){
@@ -559,9 +566,10 @@ void OBP60Task(GwApi *api){
                     // Provide sundata to all pages
                     commonData.sundata = calcSunsetSunrise(api, time->value , date->value, lat->value, lon->value, tz.toDouble());
                     // Backlight with sun control
-                    if(String(backlight) == "Control by Sun"){
+                    if (commonData.backlight.mode == BacklightMode::SUN) {
+                    // if(String(backlight) == "Control by Sun"){
                         if(commonData.sundata.sunDown == true){
-                            setBacklightLED(brightness, color);
+                            setBacklightLED(commonData.backlight.brightness, commonData.backlight.color);
                         }
                         else{
                             setBacklightLED(0, COLOR_BLUE); // Backlight LEDs off (blue without britghness)
@@ -626,11 +634,11 @@ void OBP60Task(GwApi *api){
                 // Show header if enabled
                 getdisplay().fillRect(0, 0, getdisplay().width(), getdisplay().height(), commonData.bgcolor);   // Clear display
                 if (pages[pageNumber].description && pages[pageNumber].description->header){
-                    //build some header and footer using commonData
-                    getdisplay().fillScreen(commonData.bgcolor);             // Clear display
-                    displayHeader(commonData, date, time, hdop);  // Sown header
+                    // build header using commonData
+                    getdisplay().fillScreen(commonData.bgcolor);  // Clear display
+                    displayHeader(commonData, date, time, hdop);  // Show page header
                 }
-                
+
                 // Call the particular page
                 Page *currentPage=pages[pageNumber].page;
                 if (currentPage == NULL){
@@ -639,12 +647,18 @@ void OBP60Task(GwApi *api){
                 }
                 else{
                     if (lastPage != pageNumber){
-                        currentPage->displayNew(commonData,pages[pageNumber].parameters);
+                        if (hasFRAM) fram.write(FRAM_PAGE_NO, pageNumber); // remember page for device restart
+                        currentPage->setupKeys();
+                        currentPage->displayNew(pages[pageNumber].parameters);
                         lastPage=pageNumber;
                     }
                     //call the page code
                     LOG_DEBUG(GwLog::DEBUG,"calling page %d",pageNumber);
-                    currentPage->displayPage(commonData,pages[pageNumber].parameters);
+                    // Show footer if enabled (together with header)
+                    if (pages[pageNumber].description && pages[pageNumber].description->header){
+                        displayFooter(commonData);
+                    }
+                    currentPage->displayPage(pages[pageNumber].parameters);
                 }
             }
         }

@@ -6,26 +6,24 @@
 
 class PageGenerator : public Page
 {
-bool init = false;                  // Marker for init done
-bool keylock = false;               // Keylock
-
 public:
     PageGenerator(CommonData &common){
-        common.logger->logDebug(GwLog::LOG,"Show PageGenerator");
+        commonData = &common;
+        common.logger->logDebug(GwLog::LOG,"Instantiate PageGenerator");
     }
     virtual int handleKey(int key){
         // Code for keylock
         if(key == 11){
-            keylock = !keylock;         // Toggle keylock
+            commonData->keylock = !commonData->keylock;
             return 0;                   // Commit the key
         }
         return key;
     }
 
-    virtual void displayPage(CommonData &commonData, PageData &pageData)
+    virtual void displayPage(PageData &pageData)
     {
-        GwConfigHandler *config = commonData.config;
-        GwLog *logger=commonData.logger;
+        GwConfigHandler *config = commonData->config;
+        GwLog *logger = commonData->logger;
         
         // Get config data
         bool simulation = config->getBool(config->useSimuData);
@@ -47,13 +45,13 @@ public:
 
         // Get raw value for trend indicator
         if(powerSensor != "off"){
-            value1 = commonData.data.generatorVoltage;  // Use voltage from external sensor
+            value1 = commonData->data.generatorVoltage;  // Use voltage from external sensor
         }
         else{
-            value1 = commonData.data.batteryVoltage; // Use internal voltage sensor
+            value1 = commonData->data.batteryVoltage; // Use internal voltage sensor
         }
-        value2 = commonData.data.generatorCurrent;
-        value3 = commonData.data.generatorPower;
+        value2 = commonData->data.generatorCurrent;
+        value3 = commonData->data.generatorPower;
         genPercentage = value3 * 100 / (double)genPower;    // Load value
         // Limits for battery level
         if(genPercentage < 0) genPercentage = 0;
@@ -87,7 +85,7 @@ public:
         // Set display in partial refresh mode
         getdisplay().setPartialWindow(0, 0, getdisplay().width(), getdisplay().height()); // Set partial update
 
-        getdisplay().setTextColor(commonData.fgcolor);
+        getdisplay().setTextColor(commonData->fgcolor);
 
         // Show name
         getdisplay().setFont(&Ubuntu_Bold20pt7b);
@@ -124,7 +122,7 @@ public:
         getdisplay().print("Power Modul");
 
         // Show generator
-        generatorGraphic(200, 95, commonData.fgcolor, commonData.bgcolor);
+        generatorGraphic(200, 95, commonData->fgcolor, commonData->bgcolor);
 
         // Show load level in percent
         getdisplay().setFont(&DSEG7Classic_BoldItalic20pt7b);
@@ -204,21 +202,6 @@ public:
         else  getdisplay().print("---");
         getdisplay().setFont(&Ubuntu_Bold16pt7b);
         getdisplay().print("W");
-
-        // Key Layout
-        getdisplay().setFont(&Ubuntu_Bold8pt7b);
-        if(keylock == false){
-            getdisplay().setCursor(130, 290);
-            getdisplay().print("[  <<<<  " + String(commonData.data.actpage) + "/" + String(commonData.data.maxpage) + "  >>>>  ]");
-            if(String(backlightMode) == "Control by Key"){              // Key for illumination
-                getdisplay().setCursor(343, 290);
-                getdisplay().print("[ILUM]");
-            }
-        }
-        else{
-            getdisplay().setCursor(130, 290);
-            getdisplay().print(" [    Keylock active    ]");
-        }
 
         // Update display
         getdisplay().nextPage();    // Partial update (fast)

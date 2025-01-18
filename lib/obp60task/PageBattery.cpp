@@ -5,12 +5,17 @@
 
 class PageBattery : public Page
 {
-    bool keylock = false;               // Keylock
     int average = 0;                    // Average type [0...3], 0=off, 1=10s, 2=60s, 3=300s
 
     public:
     PageBattery(CommonData &common){
-        common.logger->logDebug(GwLog::LOG,"Show PageBattery");
+        commonData = &common;
+        common.logger->logDebug(GwLog::LOG,"Instantiate PageBattery");
+    }
+
+    virtual void setupKeys(){
+        Page::setupKeys();
+        commonData->keydata[0].label = "AVG";
     }
 
     virtual int handleKey(int key){
@@ -23,15 +28,15 @@ class PageBattery : public Page
 
         // Code for keylock
         if(key == 11){
-            keylock = !keylock;         // Toggle keylock
+            commonData->keylock = !commonData->keylock;
             return 0;                   // Commit the key
         }
         return key;
     }
 
-    virtual void displayPage(CommonData &commonData, PageData &pageData){
-        GwConfigHandler *config = commonData.config;
-        GwLog *logger=commonData.logger;
+    virtual void displayPage(PageData &pageData){
+        GwConfigHandler *config = commonData->config;
+        GwLog *logger = commonData->logger;
         
         // Old values for hold function
         double value1 = 0;
@@ -58,19 +63,19 @@ class PageBattery : public Page
             // Switch average values
             switch (average) {
                 case 0:
-                    value1 = commonData.data.batteryVoltage;        // Live data
+                    value1 = commonData->data.batteryVoltage;        // Live data
                     break;
                 case 1:
-                    value1 = commonData.data.batteryVoltage10;      // Average 10s
+                    value1 = commonData->data.batteryVoltage10;      // Average 10s
                     break;
                 case 2:
-                    value1 = commonData.data.batteryVoltage60;      // Average 60s
+                    value1 = commonData->data.batteryVoltage60;      // Average 60s
                     break;
                 case 3:
-                    value1 = commonData.data.batteryVoltage300;     // Average 300s
+                    value1 = commonData->data.batteryVoltage300;     // Average 300s
                     break;
                 default:
-                     value1 = commonData.data.batteryVoltage;       // Default
+                     value1 = commonData->data.batteryVoltage;       // Default
                     break;
             }
         }
@@ -87,19 +92,19 @@ class PageBattery : public Page
         if(String(powsensor1) == "INA219" || String(powsensor1) == "INA226"){
             switch (average) {
                 case 0:
-                    value2 = commonData.data.batteryCurrent;        // Live data
+                    value2 = commonData->data.batteryCurrent;        // Live data
                     break;
                 case 1:
-                    value2 = commonData.data.batteryCurrent10;      // Average 10s
+                    value2 = commonData->data.batteryCurrent10;      // Average 10s
                     break;
                 case 2:
-                    value2 = commonData.data.batteryCurrent60;      // Average 60s
+                    value2 = commonData->data.batteryCurrent60;      // Average 60s
                     break;
                 case 3:
-                    value2 = commonData.data.batteryCurrent300;     // Average 300s
+                    value2 = commonData->data.batteryCurrent300;     // Average 300s
                     break;
                 default:
-                     value2 = commonData.data.batteryCurrent;       // Default
+                     value2 = commonData->data.batteryCurrent;       // Default
                     break;
             }
         }
@@ -116,19 +121,19 @@ class PageBattery : public Page
         if(String(powsensor1) == "INA219" || String(powsensor1) == "INA226"){
             switch (average) {
                 case 0:
-                    value3 = commonData.data.batteryPower;        // Live data
+                    value3 = commonData->data.batteryPower;        // Live data
                     break;
                 case 1:
-                    value3 = commonData.data.batteryPower10;      // Average 10s
+                    value3 = commonData->data.batteryPower10;      // Average 10s
                     break;
                 case 2:
-                    value3 = commonData.data.batteryPower60;      // Average 60s
+                    value3 = commonData->data.batteryPower60;      // Average 60s
                     break;
                 case 3:
-                    value3 = commonData.data.batteryPower300;     // Average 300s
+                    value3 = commonData->data.batteryPower300;     // Average 300s
                     break;
                 default:
-                     value3 = commonData.data.batteryPower;       // Default
+                     value3 = commonData->data.batteryPower;       // Default
                     break;
             }
         }
@@ -156,7 +161,7 @@ class PageBattery : public Page
         getdisplay().setPartialWindow(0, 0, getdisplay().width(), getdisplay().height()); // Set partial update
 
         // Show average settings
-        getdisplay().setTextColor(commonData.fgcolor);
+        getdisplay().setTextColor(commonData->fgcolor);
         getdisplay().setFont(&Ubuntu_Bold8pt7b);
         switch (average) {
             case 0:
@@ -228,7 +233,7 @@ class PageBattery : public Page
         // ############### Horizontal Line ################
 
         // Horizontal line 3 pix
-        getdisplay().fillRect(0, 105, 400, 3, commonData.fgcolor);
+        getdisplay().fillRect(0, 105, 400, 3, commonData->fgcolor);
 
         // ############### Value 2 ################
 
@@ -257,7 +262,7 @@ class PageBattery : public Page
         // ############### Horizontal Line ################
 
         // Horizontal line 3 pix
-        getdisplay().fillRect(0, 195, 400, 3, commonData.fgcolor);
+        getdisplay().fillRect(0, 195, 400, 3, commonData->fgcolor);
 
         // ############### Value 3 ################
 
@@ -281,26 +286,6 @@ class PageBattery : public Page
         }
         else{
             getdisplay().print("---");                       // No sensor data (sensor is off)
-        }
-
-
-        // ############### Key Layout ################
-
-        // Key Layout
-        getdisplay().setFont(&Ubuntu_Bold8pt7b);
-        if(keylock == false){
-            getdisplay().setCursor(10, 290);
-            getdisplay().print("[AVG]");
-            getdisplay().setCursor(130, 290);
-            getdisplay().print("[  <<<<  " + String(commonData.data.actpage) + "/" + String(commonData.data.maxpage) + "  >>>>  ]");
-            if(String(backlightMode) == "Control by Key"){              // Key for illumination
-                getdisplay().setCursor(343, 290);
-                getdisplay().print("[ILUM]");
-            }
-        }
-        else{
-            getdisplay().setCursor(130, 290);
-            getdisplay().print(" [    Keylock active    ]");
         }
 
         // Update display

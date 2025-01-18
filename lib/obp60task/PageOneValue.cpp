@@ -3,25 +3,26 @@
 #include "Pagedata.h"
 #include "OBP60Extensions.h"
 
-class PageOneValue : public Page{
-    bool keylock = false;               // Keylock
-
+class PageOneValue : public Page
+{
     public:
     PageOneValue(CommonData &common){
-        common.logger->logDebug(GwLog::LOG,"Show PageOneValue");
+        commonData = &common;
+        common.logger->logDebug(GwLog::LOG,"Instantiate PageOneValue");
     }
 
     virtual int handleKey(int key){
-        if(key == 11){                  // Code for keylock
-            keylock = !keylock;         // Toggle keylock
+        // Code for keylock
+        if(key == 11){
+            commonData->keylock = !commonData->keylock;
             return 0;                   // Commit the key
         }
         return key;
     }
 
-    virtual void displayPage(CommonData &commonData, PageData &pageData){
-        GwConfigHandler *config = commonData.config;
-        GwLog *logger=commonData.logger;
+    virtual void displayPage(PageData &pageData){
+        GwConfigHandler *config = commonData->config;
+        GwLog *logger = commonData->logger;
 
         // Old values for hold function
         static String svalue1old = "";
@@ -40,8 +41,8 @@ class PageOneValue : public Page{
         name1 = name1.substring(0, 6);                  // String length limit for value name
         double value1 = bvalue1->value;                 // Value as double in SI unit
         bool valid1 = bvalue1->valid;                   // Valid information 
-        String svalue1 = formatValue(bvalue1, commonData).svalue;    // Formatted value as string including unit conversion and switching decimal places
-        String unit1 = formatValue(bvalue1, commonData).unit;        // Unit of value
+        String svalue1 = formatValue(bvalue1, *commonData).svalue;    // Formatted value as string including unit conversion and switching decimal places
+        String unit1 = formatValue(bvalue1, *commonData).unit;        // Unit of value
 
         // Optical warning by limit violation (unused)
         if(String(flashLED) == "Limit Violation"){
@@ -60,7 +61,7 @@ class PageOneValue : public Page{
         getdisplay().setPartialWindow(0, 0, getdisplay().width(), getdisplay().height()); // Set partial update
 
         // Show name
-        getdisplay().setTextColor(commonData.fgcolor);
+        getdisplay().setTextColor(commonData->fgcolor);
         getdisplay().setFont(&Ubuntu_Bold32pt7b);
         getdisplay().setCursor(20, 100);
         getdisplay().print(name1);                           // Page name
@@ -99,21 +100,6 @@ class PageOneValue : public Page{
         if(valid1 == true){
             svalue1old = svalue1;                                       // Save the old value
             unit1old = unit1;                                           // Save the old unit
-        }
-
-        // Key Layout
-        getdisplay().setFont(&Ubuntu_Bold8pt7b);
-        if(keylock == false){
-            getdisplay().setCursor(130, 290);
-            getdisplay().print("[  <<<<  " + String(commonData.data.actpage) + "/" + String(commonData.data.maxpage) + "  >>>>  ]");
-            if(String(backlightMode) == "Control by Key"){                  // Key for illumination
-                getdisplay().setCursor(343, 290);
-                getdisplay().print("[ILUM]");
-            }
-        }
-        else{
-            getdisplay().setCursor(130, 290);
-            getdisplay().print(" [    Keylock active    ]");
         }
 
         // Update display

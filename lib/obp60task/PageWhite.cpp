@@ -3,17 +3,17 @@
 #include "Pagedata.h"
 #include "OBP60Extensions.h"
 
-class PageWhite : public Page{
-    bool keylock = false;               // Keylock
-
+class PageWhite : public Page
+{
     public:
     PageWhite(CommonData &common){
-        common.logger->logDebug(GwLog::LOG,"Show PageWhite");
+        commonData = &common;
+        common.logger->logDebug(GwLog::LOG,"Instantiate PageWhite");
     }
 
-    virtual void displayPage(CommonData &commonData, PageData &pageData){
-        GwConfigHandler *config = commonData.config;
-        GwLog *logger=commonData.logger;
+    virtual void displayPage(PageData &pageData){
+        GwConfigHandler *config = commonData->config;
+        GwLog *logger = commonData->logger;
 
         // Get config data
         String flashLED = config->getString(config->flashLED);

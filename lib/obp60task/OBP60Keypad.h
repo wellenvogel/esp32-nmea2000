@@ -20,6 +20,44 @@ int keydelay = 250;     // Delay after key pressed in  [ms]
 bool keylock = false;   // Key lock after pressed key is valid (repeat protection by conginous pressing)
 long starttime = 0;     // Start time point for pressed key
 
+void initKeys(CommonData &commonData) {
+    // coordinates for virtual keyboard keys
+
+    static uint16_t top = 281;
+    static uint16_t width = 65;
+    static uint16_t height = 18;
+
+    commonData.keydata[0].x = 0;
+    commonData.keydata[0].y = top;
+    commonData.keydata[0].w = width + 1;
+    commonData.keydata[0].h = height;
+
+    commonData.keydata[1].x = commonData.keydata[0].x + commonData.keydata[0].w + 1;
+    commonData.keydata[1].y = top;
+    commonData.keydata[1].w = width;
+    commonData.keydata[1].h = height;
+
+    commonData.keydata[2].x = commonData.keydata[1].x + commonData.keydata[1].w + 1;
+    commonData.keydata[2].y = top;
+    commonData.keydata[2].w = width;
+    commonData.keydata[2].h = height;
+
+    commonData.keydata[3].x = commonData.keydata[2].x + commonData.keydata[2].w + 1;
+    commonData.keydata[3].y = top;
+    commonData.keydata[3].w = width;
+    commonData.keydata[3].h = height;
+
+    commonData.keydata[4].x = commonData.keydata[3].x + commonData.keydata[3].w + 1;
+    commonData.keydata[4].y = top;
+    commonData.keydata[4].w = width;
+    commonData.keydata[4].h = height;
+
+    commonData.keydata[5].x = commonData.keydata[4].x + commonData.keydata[4].w + 1;
+    commonData.keydata[5].y = top;
+    commonData.keydata[5].w = width;
+    commonData.keydata[5].h = height;
+}
+
   #ifdef HARDWARE_V21
   // Keypad functions for original OBP60 hardware
   int readKeypad(uint thSensitivity) {

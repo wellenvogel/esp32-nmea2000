@@ -5,28 +5,27 @@
 
 class PageWindRoseFlex : public Page
 {
-bool keylock = false;               // Keylock
 int16_t lp = 80;                    // Pointer length
 
 public:
     PageWindRoseFlex(CommonData &common){
-        common.logger->logDebug(GwLog::LOG,"Show PageWindRoseFlex");
+        commonData = &common;
+        common.logger->logDebug(GwLog::LOG,"Instantiate PageWindRoseFlex");
     }
 
     // Key functions
     virtual int handleKey(int key){
-        // Keylock function
-        if(key == 11){              // Code for keylock
-            keylock = !keylock;     // Toggle keylock
+        // Code for keylock
+        if(key == 11){
+            commonData->keylock = !commonData->keylock;
             return 0;               // Commit the key
         }
         return key;
     }
 
-    virtual void displayPage(CommonData &commonData, PageData &pageData)
-    {
-        GwConfigHandler *config = commonData.config;
-        GwLog *logger=commonData.logger;
+    virtual void displayPage(PageData &pageData){
+        GwConfigHandler *config = commonData->config;
+        GwLog *logger = commonData->logger;
 
         static String svalue1old = "";
         static String unit1old = "";
@@ -54,9 +53,9 @@ public:
         name1 = name1.substring(0, 6);                  // String length limit for value name
         double value1 = bvalue1->value;                 // Value as double in SI unit
         bool valid1 = bvalue1->valid;                   // Valid information
-        value1 = formatValue(bvalue1, commonData).value;// Format only nesaccery for simulation data for pointer
-        String svalue1 = formatValue(bvalue1, commonData).svalue;    // Formatted value as string including unit conversion and switching decimal places
-        String unit1 = formatValue(bvalue1, commonData).unit;        // Unit of value
+        value1 = formatValue(bvalue1, *commonData).value;// Format only nesaccery for simulation data for pointer
+        String svalue1 = formatValue(bvalue1, *commonData).svalue;    // Formatted value as string including unit conversion and switching decimal places
+        String unit1 = formatValue(bvalue1, *commonData).unit;        // Unit of value
         if(valid1 == true){
             svalue1old = svalue1;   	                // Save old value
             unit1old = unit1;                           // Save old unit
@@ -68,8 +67,8 @@ public:
         name2 = name2.substring(0, 6);                  // String length limit for value name
         double value2 = bvalue2->value;                 // Value as double in SI unit
         bool valid2 = bvalue2->valid;                   // Valid information 
-        String svalue2 = formatValue(bvalue2, commonData).svalue;    // Formatted value as string including unit conversion and switching decimal places
-        String unit2 = formatValue(bvalue2, commonData).unit;        // Unit of value
+        String svalue2 = formatValue(bvalue2, *commonData).svalue;    // Formatted value as string including unit conversion and switching decimal places
+        String unit2 = formatValue(bvalue2, *commonData).unit;        // Unit of value
         if(valid2 == true){
             svalue2old = svalue2;   	                // Save old value
             unit2old = unit2;                           // Save old unit
@@ -81,8 +80,8 @@ public:
         name3 = name3.substring(0, 6);                  // String length limit for value name
         double value3 = bvalue3->value;                 // Value as double in SI unit
         bool valid3 = bvalue3->valid;                   // Valid information 
-        String svalue3 = formatValue(bvalue3, commonData).svalue;    // Formatted value as string including unit conversion and switching decimal places
-        String unit3 = formatValue(bvalue3, commonData).unit;        // Unit of value
+        String svalue3 = formatValue(bvalue3, *commonData).svalue;    // Formatted value as string including unit conversion and switching decimal places
+        String unit3 = formatValue(bvalue3, *commonData).unit;        // Unit of value
         if(valid3 == true){
             svalue3old = svalue3;   	                // Save old value
             unit3old = unit3;                           // Save old unit
@@ -94,8 +93,8 @@ public:
         name4 = name4.substring(0, 6);                  // String length limit for value name
         double value4 = bvalue4->value;                 // Value as double in SI unit
         bool valid4 = bvalue4->valid;                   // Valid information 
-        String svalue4 = formatValue(bvalue4, commonData).svalue;    // Formatted value as string including unit conversion and switching decimal places
-        String unit4 = formatValue(bvalue4, commonData).unit;        // Unit of value
+        String svalue4 = formatValue(bvalue4, *commonData).svalue;    // Formatted value as string including unit conversion and switching decimal places
+        String unit4 = formatValue(bvalue4, *commonData).unit;        // Unit of value
         if(valid4 == true){
             svalue4old = svalue4;   	                // Save old value
             unit4old = unit4;                           // Save old unit
@@ -107,8 +106,8 @@ public:
         name5 = name5.substring(0, 6);                  // String length limit for value name
         double value5 = bvalue5->value;                 // Value as double in SI unit
         bool valid5 = bvalue5->valid;                   // Valid information 
-        String svalue5 = formatValue(bvalue5, commonData).svalue;    // Formatted value as string including unit conversion and switching decimal places
-        String unit5 = formatValue(bvalue5, commonData).unit;        // Unit of value
+        String svalue5 = formatValue(bvalue5, *commonData).svalue;    // Formatted value as string including unit conversion and switching decimal places
+        String unit5 = formatValue(bvalue5, *commonData).unit;        // Unit of value
         if(valid5 == true){
             svalue5old = svalue5;   	                // Save old value
             unit5old = unit5;                           // Save old unit
@@ -120,8 +119,8 @@ public:
         name6 = name6.substring(0, 6);                  // String length limit for value name
         double value6 = bvalue6->value;                 // Value as double in SI unit
         bool valid6 = bvalue6->valid;                   // Valid information 
-        String svalue6 = formatValue(bvalue6, commonData).svalue;    // Formatted value as string including unit conversion and switching decimal places
-        String unit6 = formatValue(bvalue6, commonData).unit;        // Unit of value
+        String svalue6 = formatValue(bvalue6, *commonData).svalue;    // Formatted value as string including unit conversion and switching decimal places
+        String unit6 = formatValue(bvalue6, *commonData).unit;        // Unit of value
         if(valid6 == true){
             svalue6old = svalue6;   	                // Save old value
             unit6old = unit6;                           // Save old unit
@@ -143,7 +142,7 @@ public:
         // Set display in partial refresh mode
         getdisplay().setPartialWindow(0, 0, getdisplay().width(), getdisplay().height()); // Set partial update
 
-        getdisplay().setTextColor(commonData.fgcolor);
+        getdisplay().setTextColor(commonData->fgcolor);
 
         // Show values AWA
         getdisplay().setFont(&DSEG7Classic_BoldItalic20pt7b);
@@ -163,7 +162,7 @@ public:
         }
 
         // Horizintal separator left
-        getdisplay().fillRect(0, 149, 60, 3, commonData.fgcolor);
+        getdisplay().fillRect(0, 149, 60, 3, commonData->fgcolor);
 
         // Show values AWS
         getdisplay().setFont(&DSEG7Classic_BoldItalic20pt7b);
@@ -206,7 +205,7 @@ public:
         }
 
         // Horizintal separator right
-        getdisplay().fillRect(340, 149, 80, 3, commonData.fgcolor);
+        getdisplay().fillRect(340, 149, 80, 3, commonData->fgcolor);
 
         // Show values TWS
         getdisplay().setFont(&DSEG7Classic_BoldItalic20pt7b);
@@ -231,10 +230,10 @@ public:
         int rInstrument = 110;     // Radius of grafic instrument
         float pi = 3.141592;
 
-        getdisplay().fillCircle(200, 150, rInstrument + 10, commonData.fgcolor);    // Outer circle
-        getdisplay().fillCircle(200, 150, rInstrument + 7, commonData.bgcolor);     // Outer circle
-        getdisplay().fillCircle(200, 150, rInstrument - 10, commonData.fgcolor);    // Inner circle
-        getdisplay().fillCircle(200, 150, rInstrument - 13, commonData.bgcolor);    // Inner circle
+        getdisplay().fillCircle(200, 150, rInstrument + 10, commonData->fgcolor);    // Outer circle
+        getdisplay().fillCircle(200, 150, rInstrument + 7, commonData->bgcolor);     // Outer circle
+        getdisplay().fillCircle(200, 150, rInstrument - 10, commonData->fgcolor);    // Inner circle
+        getdisplay().fillCircle(200, 150, rInstrument - 13, commonData->bgcolor);    // Inner circle
 
         for(int i=0; i<360; i=i+10)
         {
@@ -272,7 +271,7 @@ public:
             // Draw sub scale with dots
             float x1c = 200 + rInstrument*sin(i/180.0*pi);
             float y1c = 150 - rInstrument*cos(i/180.0*pi);
-            getdisplay().fillCircle((int)x1c, (int)y1c, 2, commonData.fgcolor);
+            getdisplay().fillCircle((int)x1c, (int)y1c, 2, commonData->fgcolor);
             float sinx=sin(i/180.0*pi);
             float cosx=cos(i/180.0*pi); 
 
@@ -285,10 +284,10 @@ public:
                 float yy2 =  -(rInstrument+10);
                 getdisplay().fillTriangle(200+(int)(cosx*xx1-sinx*yy1),150+(int)(sinx*xx1+cosx*yy1),
                         200+(int)(cosx*xx2-sinx*yy1),150+(int)(sinx*xx2+cosx*yy1),
-                        200+(int)(cosx*xx1-sinx*yy2),150+(int)(sinx*xx1+cosx*yy2),commonData.fgcolor);
+                        200+(int)(cosx*xx1-sinx*yy2),150+(int)(sinx*xx1+cosx*yy2),commonData->fgcolor);
                 getdisplay().fillTriangle(200+(int)(cosx*xx2-sinx*yy1),150+(int)(sinx*xx2+cosx*yy1),
                         200+(int)(cosx*xx1-sinx*yy2),150+(int)(sinx*xx1+cosx*yy2),
-                        200+(int)(cosx*xx2-sinx*yy2),150+(int)(sinx*xx2+cosx*yy2),commonData.fgcolor);
+                        200+(int)(cosx*xx2-sinx*yy2),150+(int)(sinx*xx2+cosx*yy2),commonData->fgcolor);
             }
         }
 
@@ -305,7 +304,7 @@ public:
             float yy2 = -(rInstrument-15); 
             getdisplay().fillTriangle(200+(int)(cosx*xx1-sinx*yy1),150+(int)(sinx*xx1+cosx*yy1),
                 200+(int)(cosx*xx2-sinx*yy1),150+(int)(sinx*xx2+cosx*yy1),
-                200+(int)(cosx*0-sinx*yy2),150+(int)(sinx*0+cosx*yy2),commonData.fgcolor);   
+                200+(int)(cosx*0-sinx*yy2),150+(int)(sinx*0+cosx*yy2),commonData->fgcolor);
             // Inverted pointer
             // Pointer as triangle with center base 2*width
             float endwidth = 2;         // End width of pointer
@@ -315,12 +314,12 @@ public:
             float iy2 = -endwidth;
             getdisplay().fillTriangle(200+(int)(cosx*ix1-sinx*iy1),150+(int)(sinx*ix1+cosx*iy1),
                 200+(int)(cosx*ix2-sinx*iy1),150+(int)(sinx*ix2+cosx*iy1),
-                200+(int)(cosx*0-sinx*iy2),150+(int)(sinx*0+cosx*iy2),commonData.fgcolor);
+                200+(int)(cosx*0-sinx*iy2),150+(int)(sinx*0+cosx*iy2),commonData->fgcolor);
         }
 
         // Center circle
-        getdisplay().fillCircle(200, 150, startwidth + 6, commonData.bgcolor);
-        getdisplay().fillCircle(200, 150, startwidth + 4, commonData.fgcolor);
+        getdisplay().fillCircle(200, 150, startwidth + 6, commonData->bgcolor);
+        getdisplay().fillCircle(200, 150, startwidth + 4, commonData->fgcolor);
 
 //*******************************************************************************************
 
@@ -350,21 +349,6 @@ public:
         }
         else{  
             getdisplay().print(unit6old);                // Unit
-        }
-
-        // Key Layout
-        getdisplay().setFont(&Ubuntu_Bold8pt7b);
-        if(keylock == false){
-            getdisplay().setCursor(130, 290);
-            getdisplay().print("[  <<<<  " + String(commonData.data.actpage) + "/" + String(commonData.data.maxpage) + "  >>>>  ]");
-            if(String(backlightMode) == "Control by Key"){                  // Key for illumination
-                getdisplay().setCursor(343, 290);
-                getdisplay().print("[ILUM]");
-            }
-        }
-        else{
-            getdisplay().setCursor(130, 290);
-            getdisplay().print(" [    Keylock active    ]");
         }
 
         // Update display

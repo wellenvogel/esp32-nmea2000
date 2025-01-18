@@ -5,27 +5,26 @@
 
 class PageKeelPosition : public Page
 {
-bool keylock = false;               // Keylock
-
 public:
     PageKeelPosition(CommonData &common){
-        common.logger->logDebug(GwLog::LOG,"Show PageKeelPosition");
+        commonData = &common;
+        common.logger->logDebug(GwLog::LOG,"Instantiate PageKeelPosition");
     }
 
     // Key functions
     virtual int handleKey(int key){
-        // Keylock function
-        if(key == 11){              // Code for keylock
-            keylock = !keylock;     // Toggle keylock
+        // Code for keylock
+        if(key == 11){
+            commonData->keylock = !commonData->keylock;
             return 0;               // Commit the key
         }
         return key;
     }
 
-    virtual void displayPage(CommonData &commonData, PageData &pageData)
+    virtual void displayPage(PageData &pageData)
     {
-        GwConfigHandler *config = commonData.config;
-        GwLog *logger=commonData.logger;
+        GwConfigHandler *config = commonData->config;
+        GwLog *logger = commonData->logger;
 
         double value1 = 0;
         double value1old = 0;
@@ -40,9 +39,9 @@ public:
         String rotfunction = config->getString(config->rotFunction);
 
         // Get boat values for Keel position
-        bool valid1 = commonData.data.validRotAngle;    // Valid information 
+        bool valid1 = commonData->data.validRotAngle;    // Valid information 
         if(simulation == false && rotsensor == "AS5600" && rotfunction == "Keel"){
-            value1 = commonData.data.rotationAngle; // Raw value without unit convertion
+            value1 = commonData->data.rotationAngle; // Raw value without unit convertion
         }
         else{
             value1 = 0;
@@ -77,9 +76,9 @@ public:
         int rInstrument = 110;     // Radius of KeelPosition
         float pi = 3.141592;
 
-        getdisplay().fillCircle(200, 150, rInstrument + 10, commonData.fgcolor);       // Outer circle
-        getdisplay().fillCircle(200, 150, rInstrument + 7, commonData.bgcolor);        // Outer circle
-        getdisplay().fillRect(0, 30, 400, 122, commonData.bgcolor);                    // Delete half top circle
+        getdisplay().fillCircle(200, 150, rInstrument + 10, commonData->fgcolor);       // Outer circle
+        getdisplay().fillCircle(200, 150, rInstrument + 7, commonData->bgcolor);        // Outer circle
+        getdisplay().fillRect(0, 30, 400, 122, commonData->bgcolor);                    // Delete half top circle
 
         for(int i=90; i<=270; i=i+10)
         {
@@ -117,7 +116,7 @@ public:
             // Draw sub scale with dots
             float x1c = 200 + rInstrument*sin(i/180.0*pi);
             float y1c = 150 - rInstrument*cos(i/180.0*pi);
-            getdisplay().fillCircle((int)x1c, (int)y1c, 2, commonData.fgcolor);
+            getdisplay().fillCircle((int)x1c, (int)y1c, 2, commonData->fgcolor);
             float sinx=sin(i/180.0*pi);
             float cosx=cos(i/180.0*pi); 
 
@@ -130,10 +129,10 @@ public:
                 float yy2 =  -(rInstrument+10);
                 getdisplay().fillTriangle(200+(int)(cosx*xx1-sinx*yy1),150+(int)(sinx*xx1+cosx*yy1),
                         200+(int)(cosx*xx2-sinx*yy1),150+(int)(sinx*xx2+cosx*yy1),
-                        200+(int)(cosx*xx1-sinx*yy2),150+(int)(sinx*xx1+cosx*yy2),commonData.fgcolor);
+                        200+(int)(cosx*xx1-sinx*yy2),150+(int)(sinx*xx1+cosx*yy2),commonData->fgcolor);
                 getdisplay().fillTriangle(200+(int)(cosx*xx2-sinx*yy1),150+(int)(sinx*xx2+cosx*yy1),
                         200+(int)(cosx*xx1-sinx*yy2),150+(int)(sinx*xx1+cosx*yy2),
-                        200+(int)(cosx*xx2-sinx*yy2),150+(int)(sinx*xx2+cosx*yy2),commonData.fgcolor);
+                        200+(int)(cosx*xx2-sinx*yy2),150+(int)(sinx*xx2+cosx*yy2),commonData->fgcolor);
             }
 
         }
@@ -167,7 +166,7 @@ public:
             float yy2 = -(rInstrument * 0.6); 
             getdisplay().fillTriangle(200+(int)(cosx*xx1-sinx*yy1),150+(int)(sinx*xx1+cosx*yy1),
                 200+(int)(cosx*xx2-sinx*yy1),150+(int)(sinx*xx2+cosx*yy1),
-                200+(int)(cosx*0-sinx*yy2),150+(int)(sinx*0+cosx*yy2),commonData.fgcolor);
+                200+(int)(cosx*0-sinx*yy2),150+(int)(sinx*0+cosx*yy2),commonData->fgcolor);
             // Inverted pointer
             // Pointer as triangle with center base 2*width
             float endwidth = 2;         // End width of pointer
@@ -177,17 +176,17 @@ public:
             float iy2 = -endwidth;
             getdisplay().fillTriangle(200+(int)(cosx*ix1-sinx*iy1),150+(int)(sinx*ix1+cosx*iy1),
                 200+(int)(cosx*ix2-sinx*iy1),150+(int)(sinx*ix2+cosx*iy1),
-                200+(int)(cosx*0-sinx*iy2),150+(int)(sinx*0+cosx*iy2),commonData.fgcolor);
+                200+(int)(cosx*0-sinx*iy2),150+(int)(sinx*0+cosx*iy2),commonData->fgcolor);
 
             // Draw counterweight
-            getdisplay().fillCircle(200+(int)(cosx*0-sinx*yy2),150+(int)(sinx*0+cosx*yy2), 5, commonData.fgcolor);
+            getdisplay().fillCircle(200+(int)(cosx*0-sinx*yy2),150+(int)(sinx*0+cosx*yy2), 5, commonData->fgcolor);
         }
 
         // Center circle
-        getdisplay().fillCircle(200, 140, startwidth + 22, commonData.bgcolor);
-        getdisplay().fillCircle(200, 140, startwidth + 20, commonData.fgcolor);      // Boat circle
-        getdisplay().fillRect(200 - 30, 140 - 30, 2 * 30, 30, commonData.bgcolor);      // Delete half top of boat circle
-        getdisplay().fillRect(150, 150, 100, 4, commonData.fgcolor);                 // Water line
+        getdisplay().fillCircle(200, 140, startwidth + 22, commonData->bgcolor);
+        getdisplay().fillCircle(200, 140, startwidth + 20, commonData->fgcolor);      // Boat circle
+        getdisplay().fillRect(200 - 30, 140 - 30, 2 * 30, 30, commonData->bgcolor);   // Delete half top of boat circle
+        getdisplay().fillRect(150, 150, 100, 4, commonData->fgcolor);                 // Water line
 
         // Print label
         getdisplay().setFont(&Ubuntu_Bold16pt7b);
@@ -205,22 +204,6 @@ public:
             getdisplay().setFont(&Ubuntu_Bold8pt7b);
             getdisplay().setCursor(145, 110);
             getdisplay().print("No sensor data");            // Info missing sensor
-        }
-
-//*******************************************************************************************
-        // Key Layout
-        getdisplay().setFont(&Ubuntu_Bold8pt7b);
-        if(keylock == false){
-            getdisplay().setCursor(130, 290);
-            getdisplay().print("[  <<<<  " + String(commonData.data.actpage) + "/" + String(commonData.data.maxpage) + "  >>>>  ]");
-            if(String(backlightMode) == "Control by Key"){                  // Key for illumination
-                getdisplay().setCursor(343, 290);
-                getdisplay().print("[ILUM]");
-            }
-        }
-        else{
-            getdisplay().setCursor(130, 290);
-            getdisplay().print(" [    Keylock active    ]");
         }
 
         // Update display
