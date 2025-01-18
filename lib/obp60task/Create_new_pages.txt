@@ -2,5 +2,5 @@ Craete new page for OBP60
 1. Create page under /lib/obp60task/PageXXXX.cpp
 2. Set page name in PageXXXX.cpp on file name
 3. Register new page in  /lib/obp60task/obp60task.cpp line 242 (registerAllPages)
-4. Add new page in /lib/obp60task/config.json for each page type or add new page to gen_set.pl and run it to auto-generate the relevant section of  config.json
+4. Add new page in /lib/obp60task/config.json for each page type or add new page to gen_set.py and run it to auto-generate the relevant section of  config.json
 
