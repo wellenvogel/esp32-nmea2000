@@ -26,12 +26,12 @@ static unsigned char ship_bits[] PROGMEM = {
    0x00, 0xf8, 0x3f, 0x00, 0x00, 0xf8, 0x3f, 0x00, 0x00, 0xf8, 0x3f, 0x00,
    0x00, 0xf0, 0x1f, 0x00, 0x00, 0x00, 0x00, 0x00 };
 
-class PageXTETrack : public Page{
-    bool keylock = false;               // Keylock
-
+class PageXTETrack : public Page
+{
     public:
     PageXTETrack(CommonData &common){
-        common.logger->logDebug(GwLog::LOG,"Show PageXTETrack");
+        commonData = &common;
+        common.logger->logDebug(GwLog::LOG,"Instantiate PageXTETrack");
     }
 
     void drawSegment(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1,
@@ -52,20 +52,20 @@ class PageXTETrack : public Page{
     }
 
     virtual int handleKey(int key){
-        if(key == 11){                  // Code for keylock
-            keylock = !keylock;         // Toggle keylock
+        // Code for keylock
+        if(key == 11){
+            commonData->keylock = !commonData->keylock;
             return 0;                   // Commit the key
         }
         return key;
     }
 
-    virtual void displayPage(CommonData &commonData, PageData &pageData){
-        GwConfigHandler *config = commonData.config;
-        GwLog *logger=commonData.logger;
+    virtual void displayPage(PageData &pageData){
+        GwConfigHandler *config = commonData->config;
+        GwLog *logger = commonData->logger;
 
         // Get config data
         String flashLED = config->getString(config->flashLED);
-        String displaycolor = config->getString(config->displaycolor);
         String backlightMode = config->getString(config->backlight);
 
         String trackStep = config->getString(config->trackStep);
@@ -83,17 +83,10 @@ class PageXTETrack : public Page{
         // Draw page
         //***********************************************************
 
-        // Set background color and text color
-        int textcolor = GxEPD_BLACK;
-        int pixelcolor = GxEPD_BLACK;
-        int bgcolor = GxEPD_WHITE;
-        if(displaycolor != "Normal"){
-            textcolor = GxEPD_WHITE;
-            pixelcolor = GxEPD_WHITE;
-            bgcolor = GxEPD_BLACK;
-        }
         // Set display in partial refresh mode
         getdisplay().setPartialWindow(0, 0, getdisplay().width(), getdisplay().height()); // Set partial update
+
+        getdisplay().setTextColor(commonData->fgcolor);
 
         // descriptions
         getdisplay().setFont(&Ubuntu_Bold8pt7b);
@@ -113,25 +106,25 @@ class PageXTETrack : public Page{
         uint16_t w, h;
 
         GwApi::BoatValue *bv_xte = pageData.values[0]; // XTE
-        String sval_xte = formatValue(bv_xte, commonData).svalue;
+        String sval_xte = formatValue(bv_xte, *commonData).svalue;
         getdisplay().getTextBounds(sval_xte, 0, 0, &x, &y, &w, &h);
         getdisplay().setCursor(160-w, 170);
         getdisplay().print(sval_xte);
 
         GwApi::BoatValue *bv_cog = pageData.values[1]; // COG
-        String sval_cog = formatValue(bv_cog, commonData).svalue;
+        String sval_cog = formatValue(bv_cog, *commonData).svalue;
         getdisplay().getTextBounds(sval_cog, 0, 0, &x, &y, &w, &h);
         getdisplay().setCursor(360-w, 170);
         getdisplay().print(sval_cog);
 
         GwApi::BoatValue *bv_dtw = pageData.values[2]; // DTW
-        String sval_dtw = formatValue(bv_dtw, commonData).svalue;
+        String sval_dtw = formatValue(bv_dtw, *commonData).svalue;
         getdisplay().getTextBounds(sval_dtw, 0, 0, &x, &y, &w, &h);
         getdisplay().setCursor(160-w, 257);
         getdisplay().print(sval_dtw);
 
         GwApi::BoatValue *bv_btw = pageData.values[3]; // BTW
-        String sval_btw = formatValue(bv_btw, commonData).svalue;
+        String sval_btw = formatValue(bv_btw, *commonData).svalue;
         getdisplay().getTextBounds(sval_btw, 0, 0, &x, &y, &w, &h);
         getdisplay().setCursor(360-w, 257);
         getdisplay().print(sval_btw);
@@ -141,7 +134,7 @@ class PageXTETrack : public Page{
         // XTETrack view
 
         // draw ship symbol (as bitmap)
-        getdisplay().drawXBitmap(184, 68, ship_bits, ship_width, ship_height, pixelcolor);
+        getdisplay().drawXBitmap(184, 68, ship_bits, ship_width, ship_height, commonData->fgcolor);
 
         // draw next waypoint name
         String sval_wpname = "no data";
@@ -196,28 +189,13 @@ class PageXTETrack : public Page{
         }
 
         // left segments
-        drawSegment(0, 54, 46, 24, 75, 24, 0, 90, pixelcolor, seg[2]);
-        drawSegment(0, 100, 82, 24, 112, 24, 50, 100, pixelcolor, seg[1]);
-        drawSegment(60, 100, 117, 24, 147, 24, 110, 100, pixelcolor,seg[0]);
+        drawSegment(0, 54, 46, 24, 75, 24, 0, 90, commonData->fgcolor, seg[2]);
+        drawSegment(0, 100, 82, 24, 112, 24, 50, 100, commonData->fgcolor, seg[1]);
+        drawSegment(60, 100, 117, 24, 147, 24, 110, 100, commonData->fgcolor,seg[0]);
         // right segments
-        drawSegment(340, 100, 283, 24, 253, 24, 290, 100, pixelcolor, seg[3]);
-        drawSegment(399, 100, 318, 24, 289, 24, 350, 100, pixelcolor, seg[4]);
-        drawSegment(399, 54, 354, 24, 325, 24, 399, 90, pixelcolor, seg[5]);
-
-        // Key Layout
-        getdisplay().setFont(&Ubuntu_Bold8pt7b);
-        if(keylock == false){
-            getdisplay().setCursor(130, 296);
-            getdisplay().print("[  <<<<  " + String(commonData.data.actpage) + "/" + String(commonData.data.maxpage) + "  >>>>  ]");
-            if(String(backlightMode) == "Control by Key"){                  // Key for illumination
-                getdisplay().setCursor(343, 296);
-                getdisplay().print("[ILUM]");
-            }
-        }
-        else{
-            getdisplay().setCursor(130, 296);
-            getdisplay().print(" [    Keylock active    ]");
-        }
+        drawSegment(340, 100, 283, 24, 253, 24, 290, 100, commonData->fgcolor, seg[3]);
+        drawSegment(399, 100, 318, 24, 289, 24, 350, 100, commonData->fgcolor, seg[4]);
+        drawSegment(399, 54, 354, 24, 325, 24, 399, 90, commonData->fgcolor, seg[5]);
 
         // Update display
         getdisplay().nextPage();    // Partial update (fast)

@@ -1,9 +1,6 @@
 #ifdef BOARD_OBP60S3
 
 #include <Arduino.h>
-#define FASTLED_ALL_PINS_HARDWARE_SPI
-#define FASTLED_ESP32_SPI_BUS FSPI
-#define FASTLED_ESP32_FLASH_LOCK 1
 #include <PCF8574.h>      // Driver for PCF8574 output modul from Horter
 #include <Wire.h>         // I2C
 #include <RTClib.h>       // Driver for DS1388 RTC
@@ -11,6 +8,7 @@
 #include "Pagedata.h"
 #include "OBP60Hardware.h"
 #include "OBP60Extensions.h"
+#include "imglib.h"
 
 // Character sets
 #include "Ubuntu_Bold8pt7b.h"
@@ -24,6 +22,7 @@
 #include "DSEG7Classic-BoldItalic30pt7b.h"
 #include "DSEG7Classic-BoldItalic42pt7b.h"
 #include "DSEG7Classic-BoldItalic60pt7b.h"
+#include "Atari16px8b.h" // Key label font
 
 // E-Ink Display
 #define GxEPD_WIDTH 400     // Display width
@@ -60,6 +59,10 @@ GxEPD2_BW<GxEPD2_420_SE0420NQ04, GxEPD2_420_SE0420NQ04::HEIGHT> & getdisplay(){r
 // Horter I2C moduls
 PCF8574 pcf8574_Out(PCF8574_I2C_ADDR1); // First digital output modul PCF8574 from Horter
 
+// FRAM
+Adafruit_FRAM_I2C fram;
+bool hasFRAM = false;
+
 // Global vars
 bool blinkingLED = false;       // Enable / disable blinking flash LED
 bool statusLED = false;         // Actual status of flash LED on/off
@@ -69,7 +72,7 @@ int uvDuration = 0;             // Under voltage duration in n x 100ms
 
 LedTaskData *ledTaskData=nullptr;
 
-void hardwareInit()
+void hardwareInit(GwApi *api)
 {
     Wire.begin();
     // Init PCF8574 digital outputs
@@ -77,12 +80,27 @@ void hardwareInit()
     if(pcf8574_Out.begin()){        // Initialize PCF8574
         pcf8574_Out.write8(255);    // Clear all outputs
     }
-
-}
-
-void startLedTask(GwApi *api){
-    ledTaskData=new LedTaskData(api);
-    createSpiLedTask(ledTaskData);
+    fram = Adafruit_FRAM_I2C();
+    if (esp_reset_reason() ==  ESP_RST_POWERON) {
+        // help initialize FRAM
+        api->getLogger()->logDebug(GwLog::LOG,"Delaying I2C init for 250ms due to cold boot");
+        delay(250);
+    }
+    // FRAM (e.g. MB85RC256V)
+    if (fram.begin(FRAM_I2C_ADDR)) {
+        hasFRAM = true;
+        uint16_t manufacturerID;
+        uint16_t productID;
+        fram.getDeviceID(&manufacturerID, &productID);
+        // Boot counter
+        uint8_t framcounter = fram.read(0x0000);
+        fram.write(0x0000, framcounter+1);
+        api->getLogger()->logDebug(GwLog::LOG,"FRAM detected: 0x%04x/0x%04x (counter=%d)", manufacturerID, productID, framcounter);
+    }
+    else {
+        hasFRAM = false;
+        api->getLogger()->logDebug(GwLog::LOG,"NO FRAM detected");
+    }
 }
 
 void setPortPin(uint pin, bool value){
@@ -93,6 +111,11 @@ void setPortPin(uint pin, bool value){
 void togglePortPin(uint pin){
     pinMode(pin, OUTPUT);
     digitalWrite(pin, !digitalRead(pin));
+}
+
+void startLedTask(GwApi *api){
+    ledTaskData=new LedTaskData(api);
+    createSpiLedTask(ledTaskData);
 }
 
 // Valid colors see hue
@@ -106,6 +129,21 @@ Color colorMapping(const String &colorString){
     if(colorString == "Violet"){color = Color(255,0,102);}
     if(colorString == "White"){color = COLOR_WHITE;}
     return color;
+}
+
+BacklightMode backlightMapping(const String &backlightString) {
+    static std::map<String, BacklightMode> const table = {
+        {"Off", BacklightMode::OFF},
+        {"Control by Bus", BacklightMode::BUS},
+        {"Control by Time", BacklightMode::TIME},
+        {"Control by Key", BacklightMode::KEY},
+        {"On", BacklightMode::ON},
+    };
+    auto it = table.find(backlightString);
+    if (it != table.end()) {
+        return it->second;
+    }
+    return BacklightMode::OFF;
 }
 
 // All defined colors see pixeltypes.h in FastLED lib
@@ -179,6 +217,48 @@ String xdrDelete(String input){
     return input;
 }
 
+Point rotatePoint(const Point& origin, const Point& p, double angle) {
+    // rotate poind around origin by degrees
+    Point rotated;
+    double phi = angle * M_PI / 180.0;
+    double dx = p.x - origin.x;
+    double dy = p.y - origin.y;
+    rotated.x = origin.x + cos(phi) * dx - sin(phi) * dy;
+    rotated.y = origin.y + sin(phi) * dx + cos(phi) * dy;
+    return rotated;
+}
+
+std::vector<Point> rotatePoints(const Point& origin, const std::vector<Point>& pts, double angle) {
+    std::vector<Point> rotatedPoints;
+    for (const auto& p : pts) {
+         rotatedPoints.push_back(rotatePoint(origin, p, angle));
+    }
+     return rotatedPoints;
+}
+
+void fillPoly4(const std::vector<Point>& p4, uint16_t color) {
+    getdisplay().fillTriangle(p4[0].x, p4[0].y, p4[1].x, p4[1].y, p4[2].x, p4[2].y, color);
+    getdisplay().fillTriangle(p4[0].x, p4[0].y, p4[2].x, p4[2].y, p4[3].x, p4[3].y, color);
+}
+
+// Draw centered text
+void drawTextCenter(int16_t cx, int16_t cy, String text) {
+    int16_t x1, y1;
+    uint16_t w, h;
+    getdisplay().getTextBounds(text, 0, 150, &x1, &y1, &w, &h);
+    getdisplay().setCursor(cx - w / 2, cy + h / 2);
+    getdisplay().print(text);
+}
+
+// Draw right aligned text
+void drawTextRalign(int16_t x, int16_t y, String text) {
+    int16_t x1, y1;
+    uint16_t w, h;
+    getdisplay().getTextBounds(text, 0, 150, &x1, &y1, &w, &h);
+    getdisplay().setCursor(x - w, y);
+    getdisplay().print(text);
+}
+
 // Show a triangle for trend direction high (x, y is the left edge)
 void displayTrendHigh(int16_t x, int16_t y, uint16_t size, uint16_t color){
     getdisplay().fillTriangle(x, y, x+size*2, y, x+size, y-size*2, color);
@@ -207,15 +287,11 @@ void displayHeader(CommonData &commonData, GwApi::BoatValue *date, GwApi::BoatVa
 
     if(commonData.config->getBool(commonData.config->statusLine) == true){
 
-        if(commonData.config->getString(commonData.config->displaycolor) == "Normal"){
-            textcolor = GxEPD_BLACK;
-        }
-        else{
-            textcolor = GxEPD_WHITE;
-        }
+        // Header separator line (optional)
+        // getdisplay().drawLine(0, 19, 399, 19, commonData.fgcolor);
 
         // Show status info
-        getdisplay().setTextColor(textcolor);
+        getdisplay().setTextColor(commonData.fgcolor);
         getdisplay().setFont(&Ubuntu_Bold8pt7b);
         getdisplay().setCursor(0, 15);
         if(commonData.status.wifiApOn){
@@ -250,20 +326,22 @@ void displayHeader(CommonData &commonData, GwApi::BoatValue *date, GwApi::BoatVa
         usbRxOld = commonData.status.usbRx;
         usbTxOld = commonData.status.usbTx;
 
+        // Display key lock status
+        if (commonData.keylock) {
+            getdisplay().drawXBitmap(170, 1, lock_bits, icon_width, icon_height, commonData.fgcolor);
+        } else {
+            getdisplay().drawXBitmap(166, 1, swipe_bits, swipe_width, swipe_height, commonData.fgcolor);
+        }
+
         // Heartbeat as dot
-        getdisplay().setTextColor(textcolor);
+        getdisplay().setTextColor(commonData.fgcolor);
         getdisplay().setFont(&Ubuntu_Bold32pt7b);
         getdisplay().setCursor(205, 14);
-        if(heartbeat == true){
-        getdisplay().print(".");
-        }
-        else{
-        getdisplay().print(" ");
-        }
+        getdisplay().print(heartbeat ? "." : " ");
         heartbeat = !heartbeat; 
 
         // Date and time
-        getdisplay().setTextColor(textcolor);
+        getdisplay().setTextColor(commonData.fgcolor);
         getdisplay().setFont(&Ubuntu_Bold8pt7b);
         getdisplay().setCursor(230, 15);
         // Show date and time if date present
@@ -290,6 +368,59 @@ void displayHeader(CommonData &commonData, GwApi::BoatValue *date, GwApi::BoatVa
                 getdisplay().print("No GPS data");
             }
         }
+    }
+}
+
+void displayFooter(CommonData &commonData) {
+
+    getdisplay().setFont(&Atari16px);
+    getdisplay().setTextColor(commonData.fgcolor);
+
+    // Frame around key icon area
+    if (! commonData.keylock) {
+        // horizontal elements
+        const uint16_t top = 280;
+        const uint16_t bottom = 299;
+        getdisplay().drawLine(commonData.keydata[0].x, top, commonData.keydata[0].x+10, top, commonData.fgcolor);
+        getdisplay().drawLine(commonData.keydata[1].x-10, top, commonData.keydata[1].x+10, top, commonData.fgcolor);
+        getdisplay().drawLine(commonData.keydata[2].x-10, top, commonData.keydata[2].x+10, top, commonData.fgcolor);
+        getdisplay().drawLine(commonData.keydata[4].x-10, top, commonData.keydata[4].x+10, top, commonData.fgcolor);
+        getdisplay().drawLine(commonData.keydata[5].x-10, top, commonData.keydata[5].x+10, top, commonData.fgcolor);
+        getdisplay().drawLine(commonData.keydata[5].x + commonData.keydata[5].w - 10, top, commonData.keydata[5].x + commonData.keydata[5].w + 1, top, commonData.fgcolor);
+        // vertical key separators
+        getdisplay().drawLine(commonData.keydata[0].x + commonData.keydata[0].w, top, commonData.keydata[0].x + commonData.keydata[0].w, bottom, commonData.fgcolor);
+        getdisplay().drawLine(commonData.keydata[1].x + commonData.keydata[1].w, top, commonData.keydata[1].x + commonData.keydata[1].w, bottom, commonData.fgcolor);
+        getdisplay().drawLine(commonData.keydata[3].x + commonData.keydata[3].w, top, commonData.keydata[3].x + commonData.keydata[3].w, bottom, commonData.fgcolor);
+        getdisplay().drawLine(commonData.keydata[4].x + commonData.keydata[4].w, top, commonData.keydata[4].x + commonData.keydata[4].w, bottom, commonData.fgcolor);
+        for (int i = 0; i < 6; i++) {
+            uint16_t x, y;
+            if (commonData.keydata[i].label.length() > 0) {
+                // check if icon is enabled
+                String icon_name = commonData.keydata[i].label.substring(1);
+                if (commonData.keydata[i].label[0] == '#') {
+                    if (iconmap.find(icon_name) != iconmap.end()) {
+                        x = commonData.keydata[i].x + (commonData.keydata[i].w - icon_width) / 2;
+                        y = commonData.keydata[i].y + (commonData.keydata[i].h - icon_height) / 2;
+                        getdisplay().drawXBitmap(x, y, iconmap[icon_name], icon_width, icon_height, commonData.fgcolor);
+                    } else {
+                        // icon is missing, use name instead
+                        x = commonData.keydata[i].x + commonData.keydata[i].w / 2;
+                        y = commonData.keydata[i].y + commonData.keydata[i].h / 2;
+                        drawTextCenter(x, y, icon_name);
+                    }
+                } else {
+                    x = commonData.keydata[i].x + commonData.keydata[i].w / 2;
+                    y = commonData.keydata[i].y + commonData.keydata[i].h / 2;
+                    drawTextCenter(x, y, commonData.keydata[i].label);
+                }
+            }
+        }
+        // Current page number in a small box
+        getdisplay().drawRect(190, 280, 23, 19, commonData.fgcolor);
+        drawTextCenter(200, 289, String(commonData.data.actpage));
+    } else {
+        getdisplay().setCursor(65, 295);
+        getdisplay().print("Press 1 and 6 fast to unlock keys");
     }
 }
 
@@ -402,6 +533,47 @@ void generatorGraphic(uint x, uint y, int pcolor, int bcolor){
         getdisplay().setFont(&Ubuntu_Bold32pt7b);
         getdisplay().setCursor(xb-22, yb+20);
         getdisplay().print("G");
+}
+
+// Function to handle HTTP image request
+// http://192.168.15.1/api/user/OBP60Task/screenshot
+void doImageRequest(GwApi *api, int *pageno, const PageStruct pages[MAX_PAGE_NUMBER], AsyncWebServerRequest *request) {
+    GwLog *logger = api->getLogger();
+
+    String imgformat = api->getConfig()->getConfigItem(api->getConfig()->imageFormat,true)->asString();
+    imgformat.toLowerCase();
+    String filename = "Page" + String(*pageno) + "_" +  pages[*pageno].description->pageName + "." + imgformat;
+
+    logger->logDebug(GwLog::LOG,"handle image request [%s]: %s", imgformat, filename);
+
+    uint8_t *fb = getdisplay().getBuffer(); // EPD framebuffer
+    std::vector<uint8_t> imageBuffer;       // image in webserver transferbuffer
+    String mimetype;
+
+    if (imgformat == "gif") {
+        // GIF is commpressed with LZW, so small
+        mimetype = "image/gif";
+        if (!createGIF(fb, &imageBuffer, GxEPD_WIDTH, GxEPD_HEIGHT)) {
+             logger->logDebug(GwLog::LOG,"GIF creation failed: Hashtable init error!");
+             return;
+        }
+    }
+    else if (imgformat == "bmp") {
+        // Microsoft BMP bitmap
+        mimetype = "image/bmp";
+        createBMP(fb, &imageBuffer, GxEPD_WIDTH, GxEPD_HEIGHT);
+    }
+    else {
+        // PBM simple portable bitmap
+        mimetype = "image/x-portable-bitmap";
+        createPBM(fb, &imageBuffer, GxEPD_WIDTH, GxEPD_HEIGHT);
+    }
+
+    AsyncWebServerResponse *response = request->beginResponse_P(200, mimetype, (const uint8_t*)imageBuffer.data(), imageBuffer.size());
+    response->addHeader("Content-Disposition", "inline; filename=" + filename);
+    request->send(response);
+
+    imageBuffer.clear();
 }
 
 #endif

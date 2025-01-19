@@ -6,30 +6,26 @@
 
 class PageSolar : public Page
 {
-bool init = false;                  // Marker for init done
-bool keylock = false;               // Keylock
-
 public:
     PageSolar(CommonData &common){
-        common.logger->logDebug(GwLog::LOG,"Show PageSolar");
+        commonData = &common;
+        common.logger->logDebug(GwLog::LOG,"Instantiate PageSolar");
     }
     virtual int handleKey(int key){
         // Code for keylock
         if(key == 11){
-            keylock = !keylock;         // Toggle keylock
+            commonData->keylock = !commonData->keylock;
             return 0;                   // Commit the key
         }
         return key;
     }
 
-    virtual void displayPage(CommonData &commonData, PageData &pageData)
-    {
-        GwConfigHandler *config = commonData.config;
-        GwLog *logger=commonData.logger;
+    virtual void displayPage(PageData &pageData){
+        GwConfigHandler *config = commonData->config;
+        GwLog *logger = commonData->logger;
         
         // Get config data
         bool simulation = config->getBool(config->useSimuData);
-        String displaycolor = config->getString(config->displaycolor);
         bool holdvalues = config->getBool(config->holdvalues);
         String flashLED = config->getString(config->flashLED);
         String batVoltage = config->getString(config->batteryVoltage);
@@ -48,13 +44,13 @@ public:
 
         // Get raw value for trend indicator
         if(powerSensor != "off"){
-            value1 = commonData.data.solarVoltage;  // Use voltage from external sensor
+            value1 = commonData->data.solarVoltage;  // Use voltage from external sensor
         }
         else{
-            value1 = commonData.data.batteryVoltage; // Use internal voltage sensor
+            value1 = commonData->data.batteryVoltage; // Use internal voltage sensor
         }
-        value2 = commonData.data.solarCurrent;
-        value3 = commonData.data.solarPower;
+        value2 = commonData->data.solarCurrent;
+        value3 = commonData->data.solarPower;
         solPercentage = value3 * 100 / (double)solPower;    // Load value
         // Limits for battery level
         if(solPercentage < 0) solPercentage = 0;
@@ -85,31 +81,17 @@ public:
         // Draw page
         //***********************************************************
 
-        // Clear display, set background color and text color
-        int textcolor = GxEPD_BLACK;
-        int pixelcolor = GxEPD_BLACK;
-        int bgcolor = GxEPD_WHITE;
-        if(displaycolor == "Normal"){
-            textcolor = GxEPD_BLACK;
-            pixelcolor = GxEPD_BLACK;
-            bgcolor = GxEPD_WHITE;
-        }
-        else{
-            textcolor = GxEPD_WHITE;
-            pixelcolor = GxEPD_WHITE;
-            bgcolor = GxEPD_BLACK;
-        }
         // Set display in partial refresh mode
         getdisplay().setPartialWindow(0, 0, getdisplay().width(), getdisplay().height()); // Set partial update
 
+        getdisplay().setTextColor(commonData->fgcolor);
+
         // Show name
-        getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&Ubuntu_Bold20pt7b);
         getdisplay().setCursor(10, 65);
         getdisplay().print("Solar");
 
         // Show voltage type
-        getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&DSEG7Classic_BoldItalic20pt7b);
         getdisplay().setCursor(10, 140);
         int bvoltage = 0;
@@ -120,7 +102,6 @@ public:
         getdisplay().print("V");
 
         // Show solar power
-        getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&DSEG7Classic_BoldItalic20pt7b);
         getdisplay().setCursor(10, 200);
         if(solPower <= 999) getdisplay().print(solPower, 0);
@@ -137,10 +118,9 @@ public:
         getdisplay().print("Solar Modul");
 
         // Show solar panel
-        solarGraphic(150, 45, pixelcolor, bgcolor);
+        solarGraphic(150, 45, commonData->fgcolor, commonData->bgcolor);
 
         // Show load level in percent
-        getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&DSEG7Classic_BoldItalic20pt7b);
         getdisplay().setCursor(150, 200);
         getdisplay().print(solPercentage);
@@ -168,7 +148,6 @@ public:
         getdisplay().print("Sensor Modul");
 
         // Reading bus data or using simulation data
-        getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&DSEG7Classic_BoldItalic20pt7b);
         getdisplay().setCursor(260, 140);
         if(simulation == true){
@@ -197,7 +176,6 @@ public:
         getdisplay().print("V");
 
         // Show actual current in A
-        getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&DSEG7Classic_BoldItalic20pt7b);
         getdisplay().setCursor(260, 200);
         if((powerSensor == "INA219" || powerSensor == "INA226") && simulation == false){
@@ -210,7 +188,6 @@ public:
         getdisplay().print("A");
 
         // Show actual consumption in W
-        getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&DSEG7Classic_BoldItalic20pt7b);
         getdisplay().setCursor(260, 260);
         if((powerSensor == "INA219" || powerSensor == "INA226") && simulation == false){
@@ -221,22 +198,6 @@ public:
         else  getdisplay().print("---");
         getdisplay().setFont(&Ubuntu_Bold16pt7b);
         getdisplay().print("W");
-
-        // Key Layout
-        getdisplay().setTextColor(textcolor);
-        getdisplay().setFont(&Ubuntu_Bold8pt7b);
-        if(keylock == false){
-            getdisplay().setCursor(130, 290);
-            getdisplay().print("[  <<<<  " + String(commonData.data.actpage) + "/" + String(commonData.data.maxpage) + "  >>>>  ]");
-            if(String(backlightMode) == "Control by Key"){              // Key for illumination
-                getdisplay().setCursor(343, 290);
-                getdisplay().print("[ILUM]");
-            }
-        }
-        else{
-            getdisplay().setCursor(130, 290);
-            getdisplay().print(" [    Keylock active    ]");
-        }
 
         // Update display
         getdisplay().nextPage();    // Partial update (fast)

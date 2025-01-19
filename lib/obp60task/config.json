@@ -899,16 +899,87 @@
         }
     },
     {
+        "name": "imageFormat",
+        "label": "Screenshot Format",
+        "type": "list",
+        "default":"PBM",
+        "description": "Graphics file format for screenshots [GIF|PBM|BMP]",
+        "list": [
+            {"l":"Compressed image (GIF)","v":"GIF"},
+            {"l":"Portable bitmap (PBM)","v":"PBM"},
+            {"l":"Windows bitmap (BMP)","v":"BMP"}
+        ],
+        "category":"OBP60 Pages",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
         "name": "page1type",
         "label": "Type",
         "type": "list",
         "default": "Voltage",
         "description": "Type of page for page 1",
-        "list":["OneValue","TwoValues","ThreeValues","FourValues","FourValues2","ApparentWind","WindRose","WindRoseFlex","Voltage","DST810","Clock","WhitePage","BME280","RudderPosition","KeelPosition","Battery","Battery2","RollPitch","Solar","Generator","XTETrack","Fluid"],
+        "list": [
+            "BME280",
+            "Battery",
+            "Battery2",
+            "Clock",
+            "DST810",
+            "Fluid",
+            "FourValues",
+            "FourValues2",
+            "Generator",
+            "KeelPosition",
+            "OneValue",
+            "RollPitch",
+            "RudderPosition",
+            "Solar",
+            "ThreeValues",
+            "TwoValues",
+            "Voltage",
+            "White",
+            "Wind",
+            "WindRose",
+            "WindRoseFlex",
+            "XTETrack"
+        ],
         "category": "OBP60 Page 1",
         "capabilities": {
-            "obp60":"true"
-        }
+            "obp60": "true"
+        },
+        "condition": [
+            {
+                "visiblePages": 1
+            },
+            {
+                "visiblePages": 2
+            },
+            {
+                "visiblePages": 3
+            },
+            {
+                "visiblePages": 4
+            },
+            {
+                "visiblePages": 5
+            },
+            {
+                "visiblePages": 6
+            },
+            {
+                "visiblePages": 7
+            },
+            {
+                "visiblePages": 8
+            },
+            {
+                "visiblePages": 9
+            },
+            {
+                "visiblePages": 10
+            }
+        ]
     },
     {
         "name": "page1value1",
@@ -918,9 +989,34 @@
         "description": "The display for field one",
         "category": "OBP60 Page 1",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"page1type":"OneValue"},{"page1type":"TwoValues"},{"page1type":"ThreeValues"},{"page1type":"FourValues"},{"page1type":"FourValues2"},{"page1type":"WindRoseFlex"}]
+        "condition": [
+            {
+                "page1type": "FourValues"
+            },
+            {
+                "page1type": "FourValues2"
+            },
+            {
+                "page1type": "OneValue"
+            },
+            {
+                "page1type": "RollPitch"
+            },
+            {
+                "page1type": "ThreeValues"
+            },
+            {
+                "page1type": "TwoValues"
+            },
+            {
+                "page1type": "WindRoseFlex"
+            },
+            {
+                "page1type": "Fluid"
+            }
+        ]
     },
     {
         "name": "page1value2",
@@ -930,57 +1026,107 @@
         "description": "The display for field two",
         "category": "OBP60 Page 1",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"page1type":"TwoValues"},{"page1type":"ThreeValues"},{"page1type":"FourValues"},{"page1type":"FourValues2"},{"page1type":"WindRoseFlex"}]
+        "condition": [
+            {
+                "page1type": "FourValues"
+            },
+            {
+                "page1type": "FourValues2"
+            },
+            {
+                "page1type": "RollPitch"
+            },
+            {
+                "page1type": "ThreeValues"
+            },
+            {
+                "page1type": "TwoValues"
+            },
+            {
+                "page1type": "WindRoseFlex"
+            }
+        ]
     },
     {
         "name": "page1value3",
         "label": "Field 3",
         "type": "boatData",
         "default": "",
-        "description": "The display for field 3",
+        "description": "The display for field three",
         "category": "OBP60 Page 1",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"page1type":"ThreeValues"},{"page1type":"FourValues"},{"page1type":"FourValues2"},{"page1type":"WindRoseFlex"}]
+        "condition": [
+            {
+                "page1type": "FourValues"
+            },
+            {
+                "page1type": "FourValues2"
+            },
+            {
+                "page1type": "ThreeValues"
+            },
+            {
+                "page1type": "WindRoseFlex"
+            }
+        ]
     },
     {
         "name": "page1value4",
         "label": "Field 4",
         "type": "boatData",
         "default": "",
-        "description": "The display for field 4",
+        "description": "The display for field four",
         "category": "OBP60 Page 1",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"page1type":"FourValues"},{"page1type":"FourValues2"},{"page1type":"WindRoseFlex"}]
+        "condition": [
+            {
+                "page1type": "FourValues"
+            },
+            {
+                "page1type": "FourValues2"
+            },
+            {
+                "page1type": "WindRoseFlex"
+            }
+        ]
     },
     {
         "name": "page1value5",
         "label": "Field 5",
         "type": "boatData",
         "default": "",
-        "description": "The display for field 5",
+        "description": "The display for field five",
         "category": "OBP60 Page 1",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"page1type":"WindRoseFlex"}]
+        "condition": [
+            {
+                "page1type": "WindRoseFlex"
+            }
+        ]
     },
     {
         "name": "page1value6",
         "label": "Field 6",
         "type": "boatData",
         "default": "",
-        "description": "The display for field 6",
+        "description": "The display for field six",
         "category": "OBP60 Page 1",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"page1type":"WindRoseFlex"}]
+        "condition": [
+            {
+                "page1type": "WindRoseFlex"
+            }
+        ]
     },
     {
         "name": "page1fluid",
@@ -988,20 +1134,45 @@
         "type": "list",
         "default": "0",
         "list": [
-            {"l":"Fuel (0)","v":"0"},
-            {"l":"Water (1)","v":"1"},
-            {"l":"Gray Water (2)","v":"2"},
-            {"l":"Live Well (3)","v":"3"},
-            {"l":"Oil (4)","v":"4"},
-            {"l":"Black Water (5)","v":"5"},
-            {"l":"Fuel Gasoline (6)","v":"6"}
+            {
+                "l": "Fuel (0)",
+                "v": "0"
+            },
+            {
+                "l": "Water (1)",
+                "v": "1"
+            },
+            {
+                "l": "Gray Water (2)",
+                "v": "2"
+            },
+            {
+                "l": "Live Well (3)",
+                "v": "3"
+            },
+            {
+                "l": "Oil (4)",
+                "v": "4"
+            },
+            {
+                "l": "Black Water (5)",
+                "v": "5"
+            },
+            {
+                "l": "Fuel Gasoline (6)",
+                "v": "6"
+            }
         ],
         "description": "Fluid type in tank",
         "category": "OBP60 Page 1",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"page1type":"Fluid"}]
+        "condition": [
+            {
+                "page1type": "Fluid"
+            }
+        ]
     },
     {
         "name": "page2type",
@@ -1009,12 +1180,63 @@
         "type": "list",
         "default": "WindRose",
         "description": "Type of page for page 2",
-        "list":["OneValue","TwoValues","ThreeValues","FourValues","FourValues2","ApparentWind","WindRose","WindRoseFlex","Voltage","DST810","Clock","WhitePage","BME280","RudderPosition","KeelPosition","Battery","Battery2","RollPitch","Solar","Generator","XTETrack","Fluid"],
+        "list": [
+            "BME280",
+            "Battery",
+            "Battery2",
+            "Clock",
+            "DST810",
+            "Fluid",
+            "FourValues",
+            "FourValues2",
+            "Generator",
+            "KeelPosition",
+            "OneValue",
+            "RollPitch",
+            "RudderPosition",
+            "Solar",
+            "ThreeValues",
+            "TwoValues",
+            "Voltage",
+            "White",
+            "Wind",
+            "WindRose",
+            "WindRoseFlex",
+            "XTETrack"
+        ],
         "category": "OBP60 Page 2",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"visiblePages":"2"},{"visiblePages":"3"},{"visiblePages":"4"},{"visiblePages":"5"},{"visiblePages":"6"},{"visiblePages":"7"},{"visiblePages":"8"},{"visiblePages":"9"},{"visiblePages":"10"}]
+        "condition": [
+            {
+                "visiblePages": 2
+            },
+            {
+                "visiblePages": 3
+            },
+            {
+                "visiblePages": 4
+            },
+            {
+                "visiblePages": 5
+            },
+            {
+                "visiblePages": 6
+            },
+            {
+                "visiblePages": 7
+            },
+            {
+                "visiblePages": 8
+            },
+            {
+                "visiblePages": 9
+            },
+            {
+                "visiblePages": 10
+            }
+        ]
     },
     {
         "name": "page2value1",
@@ -1024,9 +1246,35 @@
         "description": "The display for field one",
         "category": "OBP60 Page 2",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"page2type":"OneValue"},{"page2type":"TwoValues"},{"page2type":"ThreeValues"},{"page2type":"FourValues"},{"page2type":"FourValues2"},{"page2type":"WindRoseFlex"}]
+        "condition": [
+            {
+                "page2type": "FourValues"
+            },
+            {
+                "page2type": "FourValues2"
+            },
+            {
+                "page2type": "OneValue"
+            },
+            {
+                "page2type": "RollPitch"
+            },
+            {
+                "page2type": "ThreeValues"
+            },
+            {
+                "page2type": "TwoValues"
+            },
+            {
+                "page2type": "WindRoseFlex"
+            },
+            {
+                "page2type": "Fluid"
+            }
+
+        ]
     },
     {
         "name": "page2value2",
@@ -1036,57 +1284,107 @@
         "description": "The display for field two",
         "category": "OBP60 Page 2",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"page2type":"TwoValues"},{"page2type":"ThreeValues"},{"page2type":"FourValues"},{"page2type":"FourValues2"},{"page2type":"WindRoseFlex"}]
+        "condition": [
+            {
+                "page2type": "FourValues"
+            },
+            {
+                "page2type": "FourValues2"
+            },
+            {
+                "page2type": "RollPitch"
+            },
+            {
+                "page2type": "ThreeValues"
+            },
+            {
+                "page2type": "TwoValues"
+            },
+            {
+                "page2type": "WindRoseFlex"
+            }
+        ]
     },
     {
         "name": "page2value3",
         "label": "Field 3",
         "type": "boatData",
         "default": "",
-        "description": "The display for field 3",
+        "description": "The display for field three",
         "category": "OBP60 Page 2",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"page2type":"ThreeValues"},{"page2type":"FourValues"},{"page2type":"FourValues2"},{"page2type":"WindRoseFlex"}]
+        "condition": [
+            {
+                "page2type": "FourValues"
+            },
+            {
+                "page2type": "FourValues2"
+            },
+            {
+                "page2type": "ThreeValues"
+            },
+            {
+                "page2type": "WindRoseFlex"
+            }
+        ]
     },
     {
         "name": "page2value4",
         "label": "Field 4",
         "type": "boatData",
         "default": "",
-        "description": "The display for field 4",
+        "description": "The display for field four",
         "category": "OBP60 Page 2",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"page2type":"FourValues"},{"page2type":"FourValues2"},{"page2type":"WindRoseFlex"}]
+        "condition": [
+            {
+                "page2type": "FourValues"
+            },
+            {
+                "page2type": "FourValues2"
+            },
+            {
+                "page2type": "WindRoseFlex"
+            }
+        ]
     },
     {
         "name": "page2value5",
         "label": "Field 5",
         "type": "boatData",
         "default": "",
-        "description": "The display for field 5",
+        "description": "The display for field five",
         "category": "OBP60 Page 2",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"page2type":"WindRoseFlex"}]
+        "condition": [
+            {
+                "page2type": "WindRoseFlex"
+            }
+        ]
     },
     {
         "name": "page2value6",
         "label": "Field 6",
         "type": "boatData",
         "default": "",
-        "description": "The display for field 6",
+        "description": "The display for field six",
         "category": "OBP60 Page 2",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"page2type":"WindRoseFlex"}]
+        "condition": [
+            {
+                "page2type": "WindRoseFlex"
+            }
+        ]
     },
     {
         "name": "page2fluid",
@@ -1094,20 +1392,45 @@
         "type": "list",
         "default": "0",
         "list": [
-            {"l":"Fuel (0)","v":"0"},
-            {"l":"Water (1)","v":"1"},
-            {"l":"Gray Water (2)","v":"2"},
-            {"l":"Live Well (3)","v":"3"},
-            {"l":"Oil (4)","v":"4"},
-            {"l":"Black Water (5)","v":"5"},
-            {"l":"Fuel Gasoline (6)","v":"6"}
+            {
+                "l": "Fuel (0)",
+                "v": "0"
+            },
+            {
+                "l": "Water (1)",
+                "v": "1"
+            },
+            {
+                "l": "Gray Water (2)",
+                "v": "2"
+            },
+            {
+                "l": "Live Well (3)",
+                "v": "3"
+            },
+            {
+                "l": "Oil (4)",
+                "v": "4"
+            },
+            {
+                "l": "Black Water (5)",
+                "v": "5"
+            },
+            {
+                "l": "Fuel Gasoline (6)",
+                "v": "6"
+            }
         ],
         "description": "Fluid type in tank",
         "category": "OBP60 Page 2",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"page2type":"Fluid"}]
+        "condition": [
+            {
+                "page2type": "Fluid"
+            }
+        ]
     },
     {
         "name": "page3type",
@@ -1115,24 +1438,97 @@
         "type": "list",
         "default": "OneValue",
         "description": "Type of page for page 3",
-        "list":["OneValue","TwoValues","ThreeValues","FourValues","FourValues2","ApparentWind","WindRose","WindRoseFlex","Voltage","DST810","Clock","WhitePage","BME280","RudderPosition","KeelPosition","Battery","Battery2","RollPitch","Solar","Generator","XTETrack","Fluid"],
+        "list": [
+            "BME280",
+            "Battery",
+            "Battery2",
+            "Clock",
+            "DST810",
+            "Fluid",
+            "FourValues",
+            "FourValues2",
+            "Generator",
+            "KeelPosition",
+            "OneValue",
+            "RollPitch",
+            "RudderPosition",
+            "Solar",
+            "ThreeValues",
+            "TwoValues",
+            "Voltage",
+            "White",
+            "Wind",
+            "WindRose",
+            "WindRoseFlex",
+            "XTETrack"
+        ],
         "category": "OBP60 Page 3",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"visiblePages":"3"},{"visiblePages":"4"},{"visiblePages":"5"},{"visiblePages":"6"},{"visiblePages":"7"},{"visiblePages":"8"},{"visiblePages":"9"},{"visiblePages":"10"}]
+        "condition": [
+            {
+                "visiblePages": 3
+            },
+            {
+                "visiblePages": 4
+            },
+            {
+                "visiblePages": 5
+            },
+            {
+                "visiblePages": 6
+            },
+            {
+                "visiblePages": 7
+            },
+            {
+                "visiblePages": 8
+            },
+            {
+                "visiblePages": 9
+            },
+            {
+                "visiblePages": 10
+            }
+        ]
     },
     {
         "name": "page3value1",
         "label": "Field 1",
         "type": "boatData",
-        "default": "AWA",
+        "default": "",
         "description": "The display for field one",
         "category": "OBP60 Page 3",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"page3type":"OneValue"},{"page3type":"TwoValues"},{"page3type":"ThreeValues"},{"page3type":"FourValues"},{"page3type":"FourValues2"},{"page3type":"WindRoseFlex"}]
+        "condition": [
+            {
+                "page3type": "FourValues"
+            },
+            {
+                "page3type": "FourValues2"
+            },
+            {
+                "page3type": "OneValue"
+            },
+            {
+                "page3type": "RollPitch"
+            },
+            {
+                "page3type": "ThreeValues"
+            },
+            {
+                "page3type": "TwoValues"
+            },
+            {
+                "page3type": "WindRoseFlex"
+            },
+            {
+                "page3type": "Fluid"
+            }
+        ]
     },
     {
         "name": "page3value2",
@@ -1142,57 +1538,107 @@
         "description": "The display for field two",
         "category": "OBP60 Page 3",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"page3type":"TwoValues"},{"page3type":"ThreeValues"},{"page3type":"FourValues"},{"page3type":"FourValues2"},{"page3type":"WindRoseFlex"}]
+        "condition": [
+            {
+                "page3type": "FourValues"
+            },
+            {
+                "page3type": "FourValues2"
+            },
+            {
+                "page3type": "RollPitch"
+            },
+            {
+                "page3type": "ThreeValues"
+            },
+            {
+                "page3type": "TwoValues"
+            },
+            {
+                "page3type": "WindRoseFlex"
+            }
+        ]
     },
     {
         "name": "page3value3",
         "label": "Field 3",
         "type": "boatData",
         "default": "",
-        "description": "The display for field 3",
+        "description": "The display for field three",
         "category": "OBP60 Page 3",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"page3type":"ThreeValues"},{"page3type":"FourValues"},{"page3type":"FourValues2"},{"page3type":"WindRoseFlex"}]
+        "condition": [
+            {
+                "page3type": "FourValues"
+            },
+            {
+                "page3type": "FourValues2"
+            },
+            {
+                "page3type": "ThreeValues"
+            },
+            {
+                "page3type": "WindRoseFlex"
+            }
+        ]
     },
     {
         "name": "page3value4",
         "label": "Field 4",
         "type": "boatData",
         "default": "",
-        "description": "The display for field 4",
+        "description": "The display for field four",
         "category": "OBP60 Page 3",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"page3type":"FourValues"},{"page3type":"FourValues2"},{"page3type":"WindRoseFlex"}]
+        "condition": [
+            {
+                "page3type": "FourValues"
+            },
+            {
+                "page3type": "FourValues2"
+            },
+            {
+                "page3type": "WindRoseFlex"
+            }
+        ]
     },
     {
         "name": "page3value5",
         "label": "Field 5",
         "type": "boatData",
         "default": "",
-        "description": "The display for field 5",
+        "description": "The display for field five",
         "category": "OBP60 Page 3",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"page3type":"WindRoseFlex"}]
+        "condition": [
+            {
+                "page3type": "WindRoseFlex"
+            }
+        ]
     },
     {
         "name": "page3value6",
         "label": "Field 6",
         "type": "boatData",
         "default": "",
-        "description": "The display for field 6",
+        "description": "The display for field six",
         "category": "OBP60 Page 3",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"page3type":"WindRoseFlex"}]
+        "condition": [
+            {
+                "page3type": "WindRoseFlex"
+            }
+        ]
     },
     {
         "name": "page3fluid",
@@ -1200,20 +1646,45 @@
         "type": "list",
         "default": "0",
         "list": [
-            {"l":"Fuel (0)","v":"0"},
-            {"l":"Water (1)","v":"1"},
-            {"l":"Gray Water (2)","v":"2"},
-            {"l":"Live Well (3)","v":"3"},
-            {"l":"Oil (4)","v":"4"},
-            {"l":"Black Water (5)","v":"5"},
-            {"l":"Fuel Gasoline (6)","v":"6"}
+            {
+                "l": "Fuel (0)",
+                "v": "0"
+            },
+            {
+                "l": "Water (1)",
+                "v": "1"
+            },
+            {
+                "l": "Gray Water (2)",
+                "v": "2"
+            },
+            {
+                "l": "Live Well (3)",
+                "v": "3"
+            },
+            {
+                "l": "Oil (4)",
+                "v": "4"
+            },
+            {
+                "l": "Black Water (5)",
+                "v": "5"
+            },
+            {
+                "l": "Fuel Gasoline (6)",
+                "v": "6"
+            }
         ],
         "description": "Fluid type in tank",
         "category": "OBP60 Page 3",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"page3type":"Fluid"}]
+        "condition": [
+            {
+                "page3type": "Fluid"
+            }
+        ]
     },
     {
         "name": "page4type",
@@ -1221,84 +1692,204 @@
         "type": "list",
         "default": "TwoValues",
         "description": "Type of page for page 4",
-        "list":["OneValue","TwoValues","ThreeValues","FourValues","FourValues2","ApparentWind","WindRose","WindRoseFlex","Voltage","DST810","Clock","WhitePage","BME280","RudderPosition","KeelPosition","Battery","Battery2","RollPitch","Solar","Generator","XTETrack","Fluid"],
+        "list": [
+            "BME280",
+            "Battery",
+            "Battery2",
+            "Clock",
+            "DST810",
+            "Fluid",
+            "FourValues",
+            "FourValues2",
+            "Generator",
+            "KeelPosition",
+            "OneValue",
+            "RollPitch",
+            "RudderPosition",
+            "Solar",
+            "ThreeValues",
+            "TwoValues",
+            "Voltage",
+            "White",
+            "Wind",
+            "WindRose",
+            "WindRoseFlex",
+            "XTETrack"
+        ],
         "category": "OBP60 Page 4",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"visiblePages":"4"},{"visiblePages":"5"},{"visiblePages":"6"},{"visiblePages":"7"},{"visiblePages":"8"},{"visiblePages":"9"},{"visiblePages":"10"}]
+        "condition": [
+            {
+                "visiblePages": 4
+            },
+            {
+                "visiblePages": 5
+            },
+            {
+                "visiblePages": 6
+            },
+            {
+                "visiblePages": 7
+            },
+            {
+                "visiblePages": 8
+            },
+            {
+                "visiblePages": 9
+            },
+            {
+                "visiblePages": 10
+            }
+        ]
     },
     {
         "name": "page4value1",
         "label": "Field 1",
         "type": "boatData",
-        "default": "STW",
+        "default": "",
         "description": "The display for field one",
         "category": "OBP60 Page 4",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"page4type":"OneValue"},{"page4type":"TwoValues"},{"page4type":"ThreeValues"},{"page4type":"FourValues"},{"page4type":"FourValues2"},{"page4type":"WindRoseFlex"}]
+        "condition": [
+            {
+                "page4type": "FourValues"
+            },
+            {
+                "page4type": "FourValues2"
+            },
+            {
+                "page4type": "OneValue"
+            },
+            {
+                "page4type": "RollPitch"
+            },
+            {
+                "page4type": "ThreeValues"
+            },
+            {
+                "page4type": "TwoValues"
+            },
+            {
+                "page4type": "WindRoseFlex"
+            },
+            {
+                "page4type": "Fluid"
+            }
+        ]
     },
     {
         "name": "page4value2",
         "label": "Field 2",
         "type": "boatData",
-        "default": "DBT",
+        "default": "",
         "description": "The display for field two",
         "category": "OBP60 Page 4",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"page4type":"TwoValues"},{"page4type":"ThreeValues"},{"page4type":"FourValues"},{"page4type":"FourValues2"},{"page4type":"WindRoseFlex"}]
+        "condition": [
+            {
+                "page4type": "FourValues"
+            },
+            {
+                "page4type": "FourValues2"
+            },
+            {
+                "page4type": "RollPitch"
+            },
+            {
+                "page4type": "ThreeValues"
+            },
+            {
+                "page4type": "TwoValues"
+            },
+            {
+                "page4type": "WindRoseFlex"
+            }
+        ]
     },
     {
         "name": "page4value3",
         "label": "Field 3",
         "type": "boatData",
         "default": "",
-        "description": "The display for field 3",
+        "description": "The display for field three",
         "category": "OBP60 Page 4",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"page4type":"ThreeValues"},{"page4type":"FourValues"},{"page4type":"FourValues2"},{"page4type":"WindRoseFlex"}]
+        "condition": [
+            {
+                "page4type": "FourValues"
+            },
+            {
+                "page4type": "FourValues2"
+            },
+            {
+                "page4type": "ThreeValues"
+            },
+            {
+                "page4type": "WindRoseFlex"
+            }
+        ]
     },
     {
         "name": "page4value4",
         "label": "Field 4",
         "type": "boatData",
         "default": "",
-        "description": "The display for field 4",
+        "description": "The display for field four",
         "category": "OBP60 Page 4",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"page4type":"FourValues"},{"page4type":"FourValues2"},{"page4type":"WindRoseFlex"}]
+        "condition": [
+            {
+                "page4type": "FourValues"
+            },
+            {
+                "page4type": "FourValues2"
+            },
+            {
+                "page4type": "WindRoseFlex"
+            }
+        ]
     },
     {
         "name": "page4value5",
         "label": "Field 5",
         "type": "boatData",
         "default": "",
-        "description": "The display for field 5",
+        "description": "The display for field five",
         "category": "OBP60 Page 4",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"page4type":"WindRoseFlex"}]
+        "condition": [
+            {
+                "page4type": "WindRoseFlex"
+            }
+        ]
     },
     {
         "name": "page4value6",
         "label": "Field 6",
         "type": "boatData",
         "default": "",
-        "description": "The display for field 6",
+        "description": "The display for field six",
         "category": "OBP60 Page 4",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"page4type":"WindRoseFlex"}]
+        "condition": [
+            {
+                "page4type": "WindRoseFlex"
+            }
+        ]
     },
     {
         "name": "page4fluid",
@@ -1306,20 +1897,45 @@
         "type": "list",
         "default": "0",
         "list": [
-            {"l":"Fuel (0)","v":"0"},
-            {"l":"Water (1)","v":"1"},
-            {"l":"Gray Water (2)","v":"2"},
-            {"l":"Live Well (3)","v":"3"},
-            {"l":"Oil (4)","v":"4"},
-            {"l":"Black Water (5)","v":"5"},
-            {"l":"Fuel Gasoline (6)","v":"6"}
+            {
+                "l": "Fuel (0)",
+                "v": "0"
+            },
+            {
+                "l": "Water (1)",
+                "v": "1"
+            },
+            {
+                "l": "Gray Water (2)",
+                "v": "2"
+            },
+            {
+                "l": "Live Well (3)",
+                "v": "3"
+            },
+            {
+                "l": "Oil (4)",
+                "v": "4"
+            },
+            {
+                "l": "Black Water (5)",
+                "v": "5"
+            },
+            {
+                "l": "Fuel Gasoline (6)",
+                "v": "6"
+            }
         ],
         "description": "Fluid type in tank",
         "category": "OBP60 Page 4",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"page4type":"Fluid"}]
+        "condition": [
+            {
+                "page4type": "Fluid"
+            }
+        ]
     },
     {
         "name": "page5type",
@@ -1327,84 +1943,201 @@
         "type": "list",
         "default": "ThreeValues",
         "description": "Type of page for page 5",
-        "list":["OneValue","TwoValues","ThreeValues","FourValues","FourValues2","ApparentWind","WindRose","WindRoseFlex","Voltage","DST810","Clock","WhitePage","BME280","RudderPosition","KeelPosition","Battery","Battery2","RollPitch","Solar","Generator","XTETrack","Fluid"],
+        "list": [
+            "BME280",
+            "Battery",
+            "Battery2",
+            "Clock",
+            "DST810",
+            "Fluid",
+            "FourValues",
+            "FourValues2",
+            "Generator",
+            "KeelPosition",
+            "OneValue",
+            "RollPitch",
+            "RudderPosition",
+            "Solar",
+            "ThreeValues",
+            "TwoValues",
+            "Voltage",
+            "White",
+            "Wind",
+            "WindRose",
+            "WindRoseFlex",
+            "XTETrack"
+        ],
         "category": "OBP60 Page 5",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"visiblePages":"5"},{"visiblePages":"6"},{"visiblePages":"7"},{"visiblePages":"8"},{"visiblePages":"9"},{"visiblePages":"10"}]
+        "condition": [
+            {
+                "visiblePages": 5
+            },
+            {
+                "visiblePages": 6
+            },
+            {
+                "visiblePages": 7
+            },
+            {
+                "visiblePages": 8
+            },
+            {
+                "visiblePages": 9
+            },
+            {
+                "visiblePages": 10
+            }
+        ]
     },
     {
         "name": "page5value1",
         "label": "Field 1",
         "type": "boatData",
-        "default": "COG",
+        "default": "",
         "description": "The display for field one",
         "category": "OBP60 Page 5",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"page5type":"OneValue"},{"page5type":"TwoValues"},{"page5type":"ThreeValues"},{"page5type":"FourValues"},{"page5type":"FourValues2"},{"page4type":"WindRoseFlex"}]
+        "condition": [
+            {
+                "page5type": "FourValues"
+            },
+            {
+                "page5type": "FourValues2"
+            },
+            {
+                "page5type": "OneValue"
+            },
+            {
+                "page5type": "RollPitch"
+            },
+            {
+                "page5type": "ThreeValues"
+            },
+            {
+                "page5type": "TwoValues"
+            },
+            {
+                "page5type": "WindRoseFlex"
+            },
+            {
+                "page5type": "Fluid"
+            }
+        ]
     },
     {
         "name": "page5value2",
         "label": "Field 2",
         "type": "boatData",
-        "default": "STW",
+        "default": "",
         "description": "The display for field two",
         "category": "OBP60 Page 5",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"page5type":"TwoValues"},{"page5type":"ThreeValues"},{"page5type":"FourValues"},{"page5type":"FourValues2"},{"page4type":"WindRoseFlex"}]
+        "condition": [
+            {
+                "page5type": "FourValues"
+            },
+            {
+                "page5type": "FourValues2"
+            },
+            {
+                "page5type": "RollPitch"
+            },
+            {
+                "page5type": "ThreeValues"
+            },
+            {
+                "page5type": "TwoValues"
+            },
+            {
+                "page5type": "WindRoseFlex"
+            }
+        ]
     },
     {
         "name": "page5value3",
         "label": "Field 3",
         "type": "boatData",
-        "default": "DBT",
-        "description": "The display for field 3",
+        "default": "",
+        "description": "The display for field three",
         "category": "OBP60 Page 5",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"page5type":"ThreeValues"},{"page5type":"FourValues"},{"page5type":"FourValues2"},{"page5type":"WindRoseFlex"}]
+        "condition": [
+            {
+                "page5type": "FourValues"
+            },
+            {
+                "page5type": "FourValues2"
+            },
+            {
+                "page5type": "ThreeValues"
+            },
+            {
+                "page5type": "WindRoseFlex"
+            }
+        ]
     },
     {
         "name": "page5value4",
         "label": "Field 4",
         "type": "boatData",
         "default": "",
-        "description": "The display for field 4",
+        "description": "The display for field four",
         "category": "OBP60 Page 5",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"page5type":"FourValues"},{"page5type":"FourValues2"},{"page5type":"WindRoseFlex"}]
+        "condition": [
+            {
+                "page5type": "FourValues"
+            },
+            {
+                "page5type": "FourValues2"
+            },
+            {
+                "page5type": "WindRoseFlex"
+            }
+        ]
     },
     {
         "name": "page5value5",
         "label": "Field 5",
         "type": "boatData",
         "default": "",
-        "description": "The display for field 5",
+        "description": "The display for field five",
         "category": "OBP60 Page 5",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"page5type":"WindRoseFlex"}]
+        "condition": [
+            {
+                "page5type": "WindRoseFlex"
+            }
+        ]
     },
     {
         "name": "page5value6",
         "label": "Field 6",
         "type": "boatData",
         "default": "",
-        "description": "The display for field 6",
+        "description": "The display for field six",
         "category": "OBP60 Page 5",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"page5type":"WindRoseFlex"}]
+        "condition": [
+            {
+                "page5type": "WindRoseFlex"
+            }
+        ]
     },
     {
         "name": "page5fluid",
@@ -1412,20 +2145,45 @@
         "type": "list",
         "default": "0",
         "list": [
-            {"l":"Fuel (0)","v":"0"},
-            {"l":"Water (1)","v":"1"},
-            {"l":"Gray Water (2)","v":"2"},
-            {"l":"Live Well (3)","v":"3"},
-            {"l":"Oil (4)","v":"4"},
-            {"l":"Black Water (5)","v":"5"},
-            {"l":"Fuel Gasoline (6)","v":"6"}
+            {
+                "l": "Fuel (0)",
+                "v": "0"
+            },
+            {
+                "l": "Water (1)",
+                "v": "1"
+            },
+            {
+                "l": "Gray Water (2)",
+                "v": "2"
+            },
+            {
+                "l": "Live Well (3)",
+                "v": "3"
+            },
+            {
+                "l": "Oil (4)",
+                "v": "4"
+            },
+            {
+                "l": "Black Water (5)",
+                "v": "5"
+            },
+            {
+                "l": "Fuel Gasoline (6)",
+                "v": "6"
+            }
         ],
         "description": "Fluid type in tank",
         "category": "OBP60 Page 5",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"page5type":"Fluid"}]
+        "condition": [
+            {
+                "page5type": "Fluid"
+            }
+        ]
     },
     {
         "name": "page6type",
@@ -1433,84 +2191,198 @@
         "type": "list",
         "default": "FourValues",
         "description": "Type of page for page 6",
-        "list":["OneValue","TwoValues","ThreeValues","FourValues","FourValues2","ApparentWind","WindRose","WindRoseFlex","Voltage","DST810","Clock","WhitePage","BME280","RudderPosition","KeelPosition","Battery","Battery2","RollPitch","Solar","Generator","XTETrack","Fluid"],
+        "list": [
+            "BME280",
+            "Battery",
+            "Battery2",
+            "Clock",
+            "DST810",
+            "Fluid",
+            "FourValues",
+            "FourValues2",
+            "Generator",
+            "KeelPosition",
+            "OneValue",
+            "RollPitch",
+            "RudderPosition",
+            "Solar",
+            "ThreeValues",
+            "TwoValues",
+            "Voltage",
+            "White",
+            "Wind",
+            "WindRose",
+            "WindRoseFlex",
+            "XTETrack"
+        ],
         "category": "OBP60 Page 6",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"visiblePages":"6"},{"visiblePages":"7"},{"visiblePages":"8"},{"visiblePages":"9"},{"visiblePages":"10"}]
+        "condition": [
+            {
+                "visiblePages": 6
+            },
+            {
+                "visiblePages": 7
+            },
+            {
+                "visiblePages": 8
+            },
+            {
+                "visiblePages": 9
+            },
+            {
+                "visiblePages": 10
+            }
+        ]
     },
     {
         "name": "page6value1",
         "label": "Field 1",
         "type": "boatData",
-        "default": "AWA",
+        "default": "",
         "description": "The display for field one",
         "category": "OBP60 Page 6",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"page6type":"OneValue"},{"page6type":"TwoValues"},{"page6type":"ThreeValues"},{"page6type":"FourValues"},{"page6type":"FourValues2"},{"page6type":"WindRoseFlex"}]
+        "condition": [
+            {
+                "page6type": "FourValues"
+            },
+            {
+                "page6type": "FourValues2"
+            },
+            {
+                "page6type": "OneValue"
+            },
+            {
+                "page6type": "RollPitch"
+            },
+            {
+                "page6type": "ThreeValues"
+            },
+            {
+                "page6type": "TwoValues"
+            },
+            {
+                "page6type": "WindRoseFlex"
+            },
+            {
+                "page6type": "Fluid"
+            }
+        ]
     },
     {
         "name": "page6value2",
         "label": "Field 2",
         "type": "boatData",
-        "default": "AWS",
+        "default": "",
         "description": "The display for field two",
         "category": "OBP60 Page 6",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"page6type":"TwoValues"},{"page6type":"ThreeValues"},{"page6type":"FourValues"},{"page6type":"FourValues2"},{"page6type":"WindRoseFlex"}]
+        "condition": [
+            {
+                "page6type": "FourValues"
+            },
+            {
+                "page6type": "FourValues2"
+            },
+            {
+                "page6type": "RollPitch"
+            },
+            {
+                "page6type": "ThreeValues"
+            },
+            {
+                "page6type": "TwoValues"
+            },
+            {
+                "page6type": "WindRoseFlex"
+            }
+        ]
     },
     {
         "name": "page6value3",
         "label": "Field 3",
         "type": "boatData",
-        "default": "COG",
-        "description": "The display for field 3",
+        "default": "",
+        "description": "The display for field three",
         "category": "OBP60 Page 6",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"page6type":"ThreeValues"},{"page6type":"FourValues"},{"page6type":"FourValues2"},{"page6type":"WindRoseFlex"}]
+        "condition": [
+            {
+                "page6type": "FourValues"
+            },
+            {
+                "page6type": "FourValues2"
+            },
+            {
+                "page6type": "ThreeValues"
+            },
+            {
+                "page6type": "WindRoseFlex"
+            }
+        ]
     },
     {
         "name": "page6value4",
         "label": "Field 4",
         "type": "boatData",
-        "default": "STW",
-        "description": "The display for field 4",
+        "default": "",
+        "description": "The display for field four",
         "category": "OBP60 Page 6",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"page6type":"FourValues"},{"page6type":"FourValues2"},{"page6type":"WindRoseFlex"}]
+        "condition": [
+            {
+                "page6type": "FourValues"
+            },
+            {
+                "page6type": "FourValues2"
+            },
+            {
+                "page6type": "WindRoseFlex"
+            }
+        ]
     },
     {
         "name": "page6value5",
         "label": "Field 5",
         "type": "boatData",
         "default": "",
-        "description": "The display for field 5",
+        "description": "The display for field five",
         "category": "OBP60 Page 6",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"page6type":"WindRoseFlex"}]
+        "condition": [
+            {
+                "page6type": "WindRoseFlex"
+            }
+        ]
     },
     {
         "name": "page6value6",
         "label": "Field 6",
         "type": "boatData",
         "default": "",
-        "description": "The display for field 6",
+        "description": "The display for field six",
         "category": "OBP60 Page 6",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"page6type":"WindRoseFlex"}]
+        "condition": [
+            {
+                "page6type": "WindRoseFlex"
+            }
+        ]
     },
     {
         "name": "page6fluid",
@@ -1518,20 +2390,45 @@
         "type": "list",
         "default": "0",
         "list": [
-            {"l":"Fuel (0)","v":"0"},
-            {"l":"Water (1)","v":"1"},
-            {"l":"Gray Water (2)","v":"2"},
-            {"l":"Live Well (3)","v":"3"},
-            {"l":"Oil (4)","v":"4"},
-            {"l":"Black Water (5)","v":"5"},
-            {"l":"Fuel Gasoline (6)","v":"6"}
+            {
+                "l": "Fuel (0)",
+                "v": "0"
+            },
+            {
+                "l": "Water (1)",
+                "v": "1"
+            },
+            {
+                "l": "Gray Water (2)",
+                "v": "2"
+            },
+            {
+                "l": "Live Well (3)",
+                "v": "3"
+            },
+            {
+                "l": "Oil (4)",
+                "v": "4"
+            },
+            {
+                "l": "Black Water (5)",
+                "v": "5"
+            },
+            {
+                "l": "Fuel Gasoline (6)",
+                "v": "6"
+            }
         ],
         "description": "Fluid type in tank",
         "category": "OBP60 Page 6",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"page6type":"Fluid"}]
+        "condition": [
+            {
+                "page6type": "Fluid"
+            }
+        ]
     },
     {
         "name": "page7type",
@@ -1539,84 +2436,195 @@
         "type": "list",
         "default": "FourValues2",
         "description": "Type of page for page 7",
-        "list":["OneValue","TwoValues","ThreeValues","FourValues","FourValues2","ApparentWind","WindRose","WindRoseFlex","Voltage","DST810","Clock","WhitePage","BME280","RudderPosition","KeelPosition","Battery","Battery2","RollPitch","Solar","Generator","XTETrack","Fluid"],
+        "list": [
+            "BME280",
+            "Battery",
+            "Battery2",
+            "Clock",
+            "DST810",
+            "Fluid",
+            "FourValues",
+            "FourValues2",
+            "Generator",
+            "KeelPosition",
+            "OneValue",
+            "RollPitch",
+            "RudderPosition",
+            "Solar",
+            "ThreeValues",
+            "TwoValues",
+            "Voltage",
+            "White",
+            "Wind",
+            "WindRose",
+            "WindRoseFlex",
+            "XTETrack"
+        ],
         "category": "OBP60 Page 7",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"visiblePages":"7"},{"visiblePages":"8"},{"visiblePages":"9"},{"visiblePages":"10"}]
+        "condition": [
+            {
+                "visiblePages": 7
+            },
+            {
+                "visiblePages": 8
+            },
+            {
+                "visiblePages": 9
+            },
+            {
+                "visiblePages": 10
+            }
+        ]
     },
     {
         "name": "page7value1",
         "label": "Field 1",
         "type": "boatData",
-        "default": "AWA",
+        "default": "",
         "description": "The display for field one",
         "category": "OBP60 Page 7",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"page7type":"OneValue"},{"page7type":"TwoValues"},{"page7type":"ThreeValues"},{"page7type":"FourValues"},{"page7type":"FourValues2"},{"page7type":"WindRoseFlex"}]
+        "condition": [
+            {
+                "page7type": "FourValues"
+            },
+            {
+                "page7type": "FourValues2"
+            },
+            {
+                "page7type": "OneValue"
+            },
+            {
+                "page7type": "RollPitch"
+            },
+            {
+                "page7type": "ThreeValues"
+            },
+            {
+                "page7type": "TwoValues"
+            },
+            {
+                "page7type": "WindRoseFlex"
+            },
+            {
+                "page7type": "Fluid"
+            }
+        ]
     },
     {
         "name": "page7value2",
         "label": "Field 2",
         "type": "boatData",
-        "default": "AWS",
+        "default": "",
         "description": "The display for field two",
         "category": "OBP60 Page 7",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"page7type":"TwoValues"},{"page7type":"ThreeValues"},{"page7type":"FourValues"},{"page7type":"FourValues2"},{"page7type":"WindRoseFlex"}]
+        "condition": [
+            {
+                "page7type": "FourValues"
+            },
+            {
+                "page7type": "FourValues2"
+            },
+            {
+                "page7type": "RollPitch"
+            },
+            {
+                "page7type": "ThreeValues"
+            },
+            {
+                "page7type": "TwoValues"
+            },
+            {
+                "page7type": "WindRoseFlex"
+            }
+        ]
     },
     {
         "name": "page7value3",
         "label": "Field 3",
         "type": "boatData",
-        "default": "COG",
-        "description": "The display for field 3",
+        "default": "",
+        "description": "The display for field three",
         "category": "OBP60 Page 7",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"page7type":"ThreeValues"},{"page7type":"FourValues"},{"page7type":"FourValues2"},{"page7type":"WindRoseFlex"}]
+        "condition": [
+            {
+                "page7type": "FourValues"
+            },
+            {
+                "page7type": "FourValues2"
+            },
+            {
+                "page7type": "ThreeValues"
+            },
+            {
+                "page7type": "WindRoseFlex"
+            }
+        ]
     },
     {
         "name": "page7value4",
         "label": "Field 4",
         "type": "boatData",
-        "default": "STW",
-        "description": "The display for field 4",
+        "default": "",
+        "description": "The display for field four",
         "category": "OBP60 Page 7",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"page7type":"FourValues"},{"page7type":"FourValues2"},{"page7type":"WindRoseFlex"}]
+        "condition": [
+            {
+                "page7type": "FourValues"
+            },
+            {
+                "page7type": "FourValues2"
+            },
+            {
+                "page7type": "WindRoseFlex"
+            }
+        ]
     },
     {
         "name": "page7value5",
         "label": "Field 5",
         "type": "boatData",
         "default": "",
-        "description": "The display for field 5",
+        "description": "The display for field five",
         "category": "OBP60 Page 7",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"page7type":"WindRoseFlex"}]
+        "condition": [
+            {
+                "page7type": "WindRoseFlex"
+            }
+        ]
     },
     {
         "name": "page7value6",
         "label": "Field 6",
         "type": "boatData",
         "default": "",
-        "description": "The display for field 6",
+        "description": "The display for field six",
         "category": "OBP60 Page 7",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"page7type":"WindRoseFlex"}]
+        "condition": [
+            {
+                "page7type": "WindRoseFlex"
+            }
+        ]
     },
     {
         "name": "page7fluid",
@@ -1624,20 +2632,45 @@
         "type": "list",
         "default": "0",
         "list": [
-            {"l":"Fuel (0)","v":"0"},
-            {"l":"Water (1)","v":"1"},
-            {"l":"Gray Water (2)","v":"2"},
-            {"l":"Live Well (3)","v":"3"},
-            {"l":"Oil (4)","v":"4"},
-            {"l":"Black Water (5)","v":"5"},
-            {"l":"Fuel Gasoline (6)","v":"6"}
+            {
+                "l": "Fuel (0)",
+                "v": "0"
+            },
+            {
+                "l": "Water (1)",
+                "v": "1"
+            },
+            {
+                "l": "Gray Water (2)",
+                "v": "2"
+            },
+            {
+                "l": "Live Well (3)",
+                "v": "3"
+            },
+            {
+                "l": "Oil (4)",
+                "v": "4"
+            },
+            {
+                "l": "Black Water (5)",
+                "v": "5"
+            },
+            {
+                "l": "Fuel Gasoline (6)",
+                "v": "6"
+            }
         ],
         "description": "Fluid type in tank",
         "category": "OBP60 Page 7",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"page7type":"Fluid"}]
+        "condition": [
+            {
+                "page7type": "Fluid"
+            }
+        ]
     },
     {
         "name": "page8type",
@@ -1645,24 +2678,82 @@
         "type": "list",
         "default": "Clock",
         "description": "Type of page for page 8",
-        "list":["OneValue","TwoValues","ThreeValues","FourValues","FourValues2","ApparentWind","WindRose","WindRoseFlex","Voltage","DST810","Clock","WhitePage","BME280","RudderPosition","KeelPosition","Battery","Battery2","RollPitch","Solar","Generator","XTETrack","Fluid"],
+        "list": [
+            "BME280",
+            "Battery",
+            "Battery2",
+            "Clock",
+            "DST810",
+            "Fluid",
+            "FourValues",
+            "FourValues2",
+            "Generator",
+            "KeelPosition",
+            "OneValue",
+            "RollPitch",
+            "RudderPosition",
+            "Solar",
+            "ThreeValues",
+            "TwoValues",
+            "Voltage",
+            "White",
+            "Wind",
+            "WindRose",
+            "WindRoseFlex",
+            "XTETrack"
+        ],
         "category": "OBP60 Page 8",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"visiblePages":"8"},{"visiblePages":"9"},{"visiblePages":"10"}]
+        "condition": [
+            {
+                "visiblePages": 8
+            },
+            {
+                "visiblePages": 9
+            },
+            {
+                "visiblePages": 10
+            }
+        ]
     },
     {
         "name": "page8value1",
         "label": "Field 1",
         "type": "boatData",
-        "default": "AWS",
+        "default": "",
         "description": "The display for field one",
         "category": "OBP60 Page 8",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"page8type":"OneValue"},{"page8type":"TwoValues"},{"page8type":"ThreeValues"},{"page8type":"FourValues"},{"page8type":"FourValues2"},{"page8type":"WindRoseFlex"}]
+        "condition": [
+            {
+                "page8type": "FourValues"
+            },
+            {
+                "page8type": "FourValues2"
+            },
+            {
+                "page8type": "OneValue"
+            },
+            {
+                "page8type": "RollPitch"
+            },
+            {
+                "page8type": "ThreeValues"
+            },
+            {
+                "page8type": "TwoValues"
+            },
+            {
+                "page8type": "WindRoseFlex"
+            },
+            {
+                "page8type": "Fluid"
+            }
+        ]
     },
     {
         "name": "page8value2",
@@ -1672,57 +2763,107 @@
         "description": "The display for field two",
         "category": "OBP60 Page 8",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"page8type":"TwoValues"},{"page8type":"ThreeValues"},{"page8type":"FourValues"},{"page8type":"FourValues2"},{"page8type":"WindRoseFlex"}]
+        "condition": [
+            {
+                "page8type": "FourValues"
+            },
+            {
+                "page8type": "FourValues2"
+            },
+            {
+                "page8type": "RollPitch"
+            },
+            {
+                "page8type": "ThreeValues"
+            },
+            {
+                "page8type": "TwoValues"
+            },
+            {
+                "page8type": "WindRoseFlex"
+            }
+        ]
     },
     {
         "name": "page8value3",
         "label": "Field 3",
         "type": "boatData",
         "default": "",
-        "description": "The display for field 3",
+        "description": "The display for field three",
         "category": "OBP60 Page 8",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"page8type":"ThreeValues"},{"page8type":"FourValues"},{"page8type":"FourValues2"},{"page8type":"WindRoseFlex"}]
+        "condition": [
+            {
+                "page8type": "FourValues"
+            },
+            {
+                "page8type": "FourValues2"
+            },
+            {
+                "page8type": "ThreeValues"
+            },
+            {
+                "page8type": "WindRoseFlex"
+            }
+        ]
     },
     {
         "name": "page8value4",
         "label": "Field 4",
         "type": "boatData",
         "default": "",
-        "description": "The display for field 4",
+        "description": "The display for field four",
         "category": "OBP60 Page 8",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"page8type":"FourValues"},{"page8type":"FourValues2"},{"page88type":"WindRoseFlex"}]
+        "condition": [
+            {
+                "page8type": "FourValues"
+            },
+            {
+                "page8type": "FourValues2"
+            },
+            {
+                "page8type": "WindRoseFlex"
+            }
+        ]
     },
     {
         "name": "page8value5",
         "label": "Field 5",
         "type": "boatData",
         "default": "",
-        "description": "The display for field 5",
+        "description": "The display for field five",
         "category": "OBP60 Page 8",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"page8type":"WindRoseFlex"}]
+        "condition": [
+            {
+                "page8type": "WindRoseFlex"
+            }
+        ]
     },
     {
         "name": "page8value6",
         "label": "Field 6",
         "type": "boatData",
         "default": "",
-        "description": "The display for field 6",
+        "description": "The display for field six",
         "category": "OBP60 Page 8",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"page8type":"WindRoseFlex"}]
+        "condition": [
+            {
+                "page8type": "WindRoseFlex"
+            }
+        ]
     },
     {
         "name": "page8fluid",
@@ -1730,20 +2871,45 @@
         "type": "list",
         "default": "0",
         "list": [
-            {"l":"Fuel (0)","v":"0"},
-            {"l":"Water (1)","v":"1"},
-            {"l":"Gray Water (2)","v":"2"},
-            {"l":"Live Well (3)","v":"3"},
-            {"l":"Oil (4)","v":"4"},
-            {"l":"Black Water (5)","v":"5"},
-            {"l":"Fuel Gasoline (6)","v":"6"}
+            {
+                "l": "Fuel (0)",
+                "v": "0"
+            },
+            {
+                "l": "Water (1)",
+                "v": "1"
+            },
+            {
+                "l": "Gray Water (2)",
+                "v": "2"
+            },
+            {
+                "l": "Live Well (3)",
+                "v": "3"
+            },
+            {
+                "l": "Oil (4)",
+                "v": "4"
+            },
+            {
+                "l": "Black Water (5)",
+                "v": "5"
+            },
+            {
+                "l": "Fuel Gasoline (6)",
+                "v": "6"
+            }
         ],
         "description": "Fluid type in tank",
         "category": "OBP60 Page 8",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"page8type":"Fluid"}]
+        "condition": [
+            {
+                "page8type": "Fluid"
+            }
+        ]
     },
     {
         "name": "page9type",
@@ -1751,24 +2917,79 @@
         "type": "list",
         "default": "RollPitch",
         "description": "Type of page for page 9",
-        "list":["OneValue","TwoValues","ThreeValues","FourValues","FourValues2","ApparentWind","WindRose","WindRoseFlex","Voltage","DST810","Clock","WhitePage","BME280","RudderPosition","KeelPosition","Battery","Battery2","RollPitch","Solar","Generator","XTETrack","Fluid"],
+        "list": [
+            "BME280",
+            "Battery",
+            "Battery2",
+            "Clock",
+            "DST810",
+            "Fluid",
+            "FourValues",
+            "FourValues2",
+            "Generator",
+            "KeelPosition",
+            "OneValue",
+            "RollPitch",
+            "RudderPosition",
+            "Solar",
+            "ThreeValues",
+            "TwoValues",
+            "Voltage",
+            "White",
+            "Wind",
+            "WindRose",
+            "WindRoseFlex",
+            "XTETrack"
+        ],
         "category": "OBP60 Page 9",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"visiblePages":"9"},{"visiblePages":"10"}]
+        "condition": [
+            {
+                "visiblePages": 9
+            },
+            {
+                "visiblePages": 10
+            }
+        ]
     },
     {
         "name": "page9value1",
         "label": "Field 1",
         "type": "boatData",
-        "default": "AWS",
+        "default": "",
         "description": "The display for field one",
         "category": "OBP60 Page 9",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"page9type":"OneValue"},{"page9type":"TwoValues"},{"page9type":"ThreeValues"},{"page9type":"FourValues"},{"page9type":"FourValues2"},{"page9type":"WindRoseFlex"}]
+        "condition": [
+            {
+                "page9type": "FourValues"
+            },
+            {
+                "page9type": "FourValues2"
+            },
+            {
+                "page9type": "OneValue"
+            },
+            {
+                "page9type": "RollPitch"
+            },
+            {
+                "page9type": "ThreeValues"
+            },
+            {
+                "page9type": "TwoValues"
+            },
+            {
+                "page9type": "WindRoseFlex"
+            },
+            {
+                "page9type": "Fluid"
+            }
+        ]
     },
     {
         "name": "page9value2",
@@ -1778,57 +2999,107 @@
         "description": "The display for field two",
         "category": "OBP60 Page 9",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"page9type":"TwoValues"},{"page9type":"ThreeValues"},{"page9type":"FourValues"},{"page9type":"FourValues2"},{"page9type":"WindRoseFlex"}]
+        "condition": [
+            {
+                "page9type": "FourValues"
+            },
+            {
+                "page9type": "FourValues2"
+            },
+            {
+                "page9type": "RollPitch"
+            },
+            {
+                "page9type": "ThreeValues"
+            },
+            {
+                "page9type": "TwoValues"
+            },
+            {
+                "page9type": "WindRoseFlex"
+            }
+        ]
     },
     {
         "name": "page9value3",
         "label": "Field 3",
         "type": "boatData",
         "default": "",
-        "description": "The display for field 3",
+        "description": "The display for field three",
         "category": "OBP60 Page 9",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"page9type":"ThreeValues"},{"page9type":"FourValues"},{"page9type":"FourValues2"},{"page9type":"WindRoseFlex"}]
+        "condition": [
+            {
+                "page9type": "FourValues"
+            },
+            {
+                "page9type": "FourValues2"
+            },
+            {
+                "page9type": "ThreeValues"
+            },
+            {
+                "page9type": "WindRoseFlex"
+            }
+        ]
     },
     {
         "name": "page9value4",
         "label": "Field 4",
         "type": "boatData",
         "default": "",
-        "description": "The display for field 4",
+        "description": "The display for field four",
         "category": "OBP60 Page 9",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"page9type":"FourValues"},{"page9type":"FourValues2"},{"page9type":"WindRoseFlex"}]
+        "condition": [
+            {
+                "page9type": "FourValues"
+            },
+            {
+                "page9type": "FourValues2"
+            },
+            {
+                "page9type": "WindRoseFlex"
+            }
+        ]
     },
     {
         "name": "page9value5",
         "label": "Field 5",
         "type": "boatData",
         "default": "",
-        "description": "The display for field 5",
+        "description": "The display for field five",
         "category": "OBP60 Page 9",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"page9type":"WindRoseFlex"}]
+        "condition": [
+            {
+                "page9type": "WindRoseFlex"
+            }
+        ]
     },
     {
         "name": "page9value6",
         "label": "Field 6",
         "type": "boatData",
         "default": "",
-        "description": "The display for field 6",
+        "description": "The display for field six",
         "category": "OBP60 Page 9",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"page9type":"WindRoseFlex"}]
+        "condition": [
+            {
+                "page9type": "WindRoseFlex"
+            }
+        ]
     },
     {
         "name": "page9fluid",
@@ -1836,20 +3107,45 @@
         "type": "list",
         "default": "0",
         "list": [
-            {"l":"Fuel (0)","v":"0"},
-            {"l":"Water (1)","v":"1"},
-            {"l":"Gray Water (2)","v":"2"},
-            {"l":"Live Well (3)","v":"3"},
-            {"l":"Oil (4)","v":"4"},
-            {"l":"Black Water (5)","v":"5"},
-            {"l":"Fuel Gasoline (6)","v":"6"}
+            {
+                "l": "Fuel (0)",
+                "v": "0"
+            },
+            {
+                "l": "Water (1)",
+                "v": "1"
+            },
+            {
+                "l": "Gray Water (2)",
+                "v": "2"
+            },
+            {
+                "l": "Live Well (3)",
+                "v": "3"
+            },
+            {
+                "l": "Oil (4)",
+                "v": "4"
+            },
+            {
+                "l": "Black Water (5)",
+                "v": "5"
+            },
+            {
+                "l": "Fuel Gasoline (6)",
+                "v": "6"
+            }
         ],
         "description": "Fluid type in tank",
         "category": "OBP60 Page 9",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"page9type":"Fluid"}]
+        "condition": [
+            {
+                "page9type": "Fluid"
+            }
+        ]
     },
     {
         "name": "page10type",
@@ -1857,24 +3153,76 @@
         "type": "list",
         "default": "Battery2",
         "description": "Type of page for page 10",
-        "list":["OneValue","TwoValues","ThreeValues","FourValues","FourValues2","ApparentWind","WindRose","WindRoseFlex","Voltage","DST810","Clock","WhitePage","BME280","RudderPosition","KeelPosition","Battery","Battery2","RollPitch","Solar","Generator","XTETrack","Fluid"],
+        "list": [
+            "BME280",
+            "Battery",
+            "Battery2",
+            "Clock",
+            "DST810",
+            "Fluid",
+            "FourValues",
+            "FourValues2",
+            "Generator",
+            "KeelPosition",
+            "OneValue",
+            "RollPitch",
+            "RudderPosition",
+            "Solar",
+            "ThreeValues",
+            "TwoValues",
+            "Voltage",
+            "White",
+            "Wind",
+            "WindRose",
+            "WindRoseFlex",
+            "XTETrack"
+        ],
         "category": "OBP60 Page 10",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"visiblePages":"10"}]
+        "condition": [
+            {
+                "visiblePages": 10
+            }
+        ]
     },
     {
         "name": "page10value1",
         "label": "Field 1",
         "type": "boatData",
-        "default": "AWS",
+        "default": "",
         "description": "The display for field one",
         "category": "OBP60 Page 10",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"page10type":"OneValue"},{"page10type":"TwoValues"},{"page10type":"ThreeValues"},{"page10type":"FourValues"},{"page10type":"FourValues2"},{"page10type":"WindRoseFlex"}]
+        "condition": [
+            {
+                "page10type": "FourValues"
+            },
+            {
+                "page10type": "FourValues2"
+            },
+            {
+                "page10type": "OneValue"
+            },
+            {
+                "page10type": "RollPitch"
+            },
+            {
+                "page10type": "ThreeValues"
+            },
+            {
+                "page10type": "TwoValues"
+            },
+            {
+                "page10type": "WindRoseFlex"
+            },
+            {
+                "page10type": "Fluid"
+            }
+        ]
     },
     {
         "name": "page10value2",
@@ -1884,57 +3232,107 @@
         "description": "The display for field two",
         "category": "OBP60 Page 10",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"page10type":"TwoValues"},{"page10type":"ThreeValues"},{"page10type":"FourValues"},{"page10type":"FourValues2"},{"page10type":"WindRoseFlex"}]
+        "condition": [
+            {
+                "page10type": "FourValues"
+            },
+            {
+                "page10type": "FourValues2"
+            },
+            {
+                "page10type": "RollPitch"
+            },
+            {
+                "page10type": "ThreeValues"
+            },
+            {
+                "page10type": "TwoValues"
+            },
+            {
+                "page10type": "WindRoseFlex"
+            }
+        ]
     },
     {
         "name": "page10value3",
         "label": "Field 3",
         "type": "boatData",
         "default": "",
-        "description": "The display for field 3",
+        "description": "The display for field three",
         "category": "OBP60 Page 10",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"page10type":"ThreeValues"},{"page10type":"FourValues"},{"page10type":"FourValues2"},{"page10type":"WindRoseFlex"}]
+        "condition": [
+            {
+                "page10type": "FourValues"
+            },
+            {
+                "page10type": "FourValues2"
+            },
+            {
+                "page10type": "ThreeValues"
+            },
+            {
+                "page10type": "WindRoseFlex"
+            }
+        ]
     },
     {
         "name": "page10value4",
         "label": "Field 4",
         "type": "boatData",
         "default": "",
-        "description": "The display for field 4",
+        "description": "The display for field four",
         "category": "OBP60 Page 10",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"page10type":"FourValues"},{"page10type":"FourValues2"},{"page10type":"WindRoseFlex"}]
-    },   
+        "condition": [
+            {
+                "page10type": "FourValues"
+            },
+            {
+                "page10type": "FourValues2"
+            },
+            {
+                "page10type": "WindRoseFlex"
+            }
+        ]
+    },
     {
         "name": "page10value5",
         "label": "Field 5",
         "type": "boatData",
         "default": "",
-        "description": "The display for field 5",
+        "description": "The display for field five",
         "category": "OBP60 Page 10",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"page10type":"WindRoseFlex"}]
+        "condition": [
+            {
+                "page10type": "WindRoseFlex"
+            }
+        ]
     },
     {
         "name": "page10value6",
         "label": "Field 6",
         "type": "boatData",
         "default": "",
-        "description": "The display for field 6",
+        "description": "The display for field six",
         "category": "OBP60 Page 10",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"page10type":"WindRoseFlex"}]
+        "condition": [
+            {
+                "page10type": "WindRoseFlex"
+            }
+        ]
     },
     {
         "name": "page10fluid",
@@ -1942,19 +3340,44 @@
         "type": "list",
         "default": "0",
         "list": [
-            {"l":"Fuel (0)","v":"0"},
-            {"l":"Water (1)","v":"1"},
-            {"l":"Gray Water (2)","v":"2"},
-            {"l":"Live Well (3)","v":"3"},
-            {"l":"Oil (4)","v":"4"},
-            {"l":"Black Water (5)","v":"5"},
-            {"l":"Fuel Gasoline (6)","v":"6"}
+            {
+                "l": "Fuel (0)",
+                "v": "0"
+            },
+            {
+                "l": "Water (1)",
+                "v": "1"
+            },
+            {
+                "l": "Gray Water (2)",
+                "v": "2"
+            },
+            {
+                "l": "Live Well (3)",
+                "v": "3"
+            },
+            {
+                "l": "Oil (4)",
+                "v": "4"
+            },
+            {
+                "l": "Black Water (5)",
+                "v": "5"
+            },
+            {
+                "l": "Fuel Gasoline (6)",
+                "v": "6"
+            }
         ],
         "description": "Fluid type in tank",
         "category": "OBP60 Page 10",
         "capabilities": {
-            "obp60":"true"
+            "obp60": "true"
         },
-        "condition":[{"page10type":"Fluid"}]
+        "condition": [
+            {
+                "page10type": "Fluid"
+            }
+        ]
     }
 ]

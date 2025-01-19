@@ -5,24 +5,24 @@
 
 class PageBME280 : public Page
 {
-    bool keylock = false;               // Keylock
-
     public:
     PageBME280(CommonData &common){
-        common.logger->logDebug(GwLog::LOG,"Show PageBME280");
+        commonData = &common;
+        common.logger->logDebug(GwLog::LOG,"Instantiate PageBME280");
     }
 
     virtual int handleKey(int key){
-        if(key == 11){                  // Code for keylock
-            keylock = !keylock;         // Toggle keylock
+        // Code for keylock
+        if(key == 11){
+            commonData->keylock = !commonData->keylock;
             return 0;                   // Commit the key
         }
         return key;
     }
 
-    virtual void displayPage(CommonData &commonData, PageData &pageData){
-        GwConfigHandler *config = commonData.config;
-        GwLog *logger=commonData.logger;
+    virtual void displayPage(PageData &pageData){
+        GwConfigHandler *config = commonData->config;
+        GwLog *logger = commonData->logger;
 
         double value1 = 0;
         double value2 = 0;
@@ -34,7 +34,6 @@ class PageBME280 : public Page
         // Get config data
         String tempformat = config->getString(config->tempFormat);
         bool simulation = config->getBool(config->useSimuData);
-        String displaycolor = config->getString(config->displaycolor);
         String flashLED = config->getString(config->flashLED);
         String backlightMode = config->getString(config->backlight);
         String useenvsensor = config->getString(config->useEnvSensor);
@@ -43,7 +42,7 @@ class PageBME280 : public Page
         String name1 = "Temp";                          // Value name
         name1 = name1.substring(0, 6);                  // String length limit for value name
         if(simulation == false){
-            value1 = commonData.data.airTemperature;    // Value as double in SI unit 
+            value1 = commonData->data.airTemperature;    // Value as double in SI unit
         }
         else{
             value1 = 23.0 + float(random(0, 10)) / 10.0;
@@ -61,7 +60,7 @@ class PageBME280 : public Page
         String name2 = "Humid";                         // Value name
         name2 = name2.substring(0, 6);                  // String length limit for value name
         if(simulation == false){
-            value2 = commonData.data.airHumidity;       // Value as double in SI unit 
+            value2 = commonData->data.airHumidity;       // Value as double in SI unit
         }
         else{
             value2 = 43 + float(random(0, 4));
@@ -79,14 +78,14 @@ class PageBME280 : public Page
         String name3 = "Press";                         // Value name
         name3 = name3.substring(0, 6);                  // String length limit for value name
          if(simulation == false){
-            value3 = commonData.data.airPressure;       // Value as double in SI unit 
+            value3 = commonData->data.airPressure;       // Value as double in SI unit
         }
         else{
             value3 = 1006 + float(random(0, 5));
         }
         // Display data when sensor activated
         if((String(useenvsensor) == "BME280") or (String(useenvsensor) == "BMP280")){
-            svalue3 = String(value3, 0);                // Formatted value as string including unit conversion and switching decimal places
+            svalue3 = String(value3 / 100, 1);          // Formatted value as string including unit conversion and switching decimal places
         }
         else{
             svalue3 = "---";
@@ -105,33 +104,19 @@ class PageBME280 : public Page
         // Draw page
         //***********************************************************
 
-        // Set background color and text color
-        int textcolor = GxEPD_BLACK;
-        int pixelcolor = GxEPD_BLACK;
-        int bgcolor = GxEPD_WHITE;
-        if(displaycolor == "Normal"){
-            textcolor = GxEPD_BLACK;
-            pixelcolor = GxEPD_BLACK;
-            bgcolor = GxEPD_WHITE;
-        }
-        else{
-            textcolor = GxEPD_WHITE;
-            pixelcolor = GxEPD_WHITE;
-            bgcolor = GxEPD_BLACK;
-        }
         // Set display in partial refresh mode
         getdisplay().setPartialWindow(0, 0, getdisplay().width(), getdisplay().height()); // Set partial update
+
+        getdisplay().setTextColor(commonData->fgcolor);
 
         // ############### Value 1 ################
 
         // Show name
-        getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&Ubuntu_Bold20pt7b);
         getdisplay().setCursor(20, 55);
         getdisplay().print(name1);                           // Page name
 
         // Show unit
-        getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&Ubuntu_Bold12pt7b);
         getdisplay().setCursor(20, 90);
         getdisplay().print(unit1);                           // Unit
@@ -146,18 +131,16 @@ class PageBME280 : public Page
         // ############### Horizontal Line ################
 
         // Horizontal line 3 pix
-        getdisplay().fillRect(0, 105, 400, 3, pixelcolor);
+        getdisplay().fillRect(0, 105, 400, 3, commonData->fgcolor);
 
         // ############### Value 2 ################
 
         // Show name
-        getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&Ubuntu_Bold20pt7b);
         getdisplay().setCursor(20, 145);
         getdisplay().print(name2);                           // Page name
 
         // Show unit
-        getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&Ubuntu_Bold12pt7b);
         getdisplay().setCursor(20, 180);
         getdisplay().print(unit2);                           // Unit
@@ -172,46 +155,26 @@ class PageBME280 : public Page
         // ############### Horizontal Line ################
 
         // Horizontal line 3 pix
-        getdisplay().fillRect(0, 195, 400, 3, pixelcolor);
+        getdisplay().fillRect(0, 195, 400, 3, commonData->fgcolor);
 
         // ############### Value 3 ################
 
         // Show name
-        getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&Ubuntu_Bold20pt7b);
         getdisplay().setCursor(20, 235);
         getdisplay().print(name3);                           // Page name
 
         // Show unit
-        getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&Ubuntu_Bold12pt7b);
         getdisplay().setCursor(20, 270);
         getdisplay().print(unit3);                           // Unit
 
         // Switch font if format for any values
         getdisplay().setFont(&DSEG7Classic_BoldItalic30pt7b);
-        getdisplay().setCursor(180, 270);
+        getdisplay().setCursor(140, 270);
 
         // Show bus data
         getdisplay().print(svalue3);                         // Real value as formated string
-
-        // ############### Key Layout ################
-
-        // Key Layout
-        getdisplay().setTextColor(textcolor);
-        getdisplay().setFont(&Ubuntu_Bold8pt7b);
-        if(keylock == false){
-            getdisplay().setCursor(130, 290);
-            getdisplay().print("[  <<<<  " + String(commonData.data.actpage) + "/" + String(commonData.data.maxpage) + "  >>>>  ]");
-            if(String(backlightMode) == "Control by Key"){                  // Key for illumination
-                getdisplay().setCursor(343, 290);
-                getdisplay().print("[ILUM]");
-            }
-        }
-        else{
-            getdisplay().setCursor(130, 290);
-            getdisplay().print(" [    Keylock active    ]");
-        }
 
         // Update display
         getdisplay().nextPage();    // Partial update (fast)

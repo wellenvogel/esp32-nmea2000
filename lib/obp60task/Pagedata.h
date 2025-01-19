@@ -3,10 +3,14 @@
 #include "GwApi.h"
 #include <functional>
 #include <vector>
+#include "LedSpiTask.h"
+
+#define MAX_PAGE_NUMBER 10    // Max number of pages for show data
 
 typedef std::vector<GwApi::BoatValue *> ValueList;
 typedef struct{
   String pageName;
+  uint8_t pageNumber; // page number in sequence of visible pages
   //the values will always contain the user defined values first
   ValueList values;
 } PageData;
@@ -61,20 +65,55 @@ typedef struct{
 } SunData;
 
 typedef struct{
+  String label = "";
+  bool selected = false;    // for virtual keyboard function
+  uint16_t x;
+  uint16_t y;
+  uint16_t w;
+  uint16_t h;
+} TouchKeyData;
+
+typedef struct{
+    Color color;        // red, orange, yellow, green, blue, aqua, violet, white
+    BacklightMode mode; // off, on, sun, bus, time, key
+    uint8_t brightness; // 0% (off), user setting from 20% to 100% full power
+    bool on;            // fast on/off detector
+} BacklightData;
+
+typedef struct{
   GwApi::Status status;
   GwLog *logger=NULL;
   GwConfigHandler *config=NULL;
   SensorData data;
   SunData sundata;
+  TouchKeyData keydata[6];
+  BacklightData backlight;
   GwApi::BoatValue *time=NULL;
   GwApi::BoatValue *date=NULL;
+  uint16_t fgcolor;
+  uint16_t bgcolor;
+  bool keylock = false;
 } CommonData;
 
 //a base class that all pages must inherit from
 class Page{
+  protected:
+    CommonData *commonData;
   public:
-    virtual void displayPage(CommonData &commonData, PageData &pageData)=0;
-    virtual void displayNew(CommonData &commonData, PageData &pageData){}
+    virtual void displayPage(PageData &pageData)=0;
+    virtual void displayNew(PageData &pageData){}
+    virtual void setupKeys() {
+        commonData->keydata[0].label = "";
+        commonData->keydata[1].label = "";
+        commonData->keydata[2].label = "#LEFT";
+        commonData->keydata[3].label = "#RIGHT";
+        commonData->keydata[4].label = "";
+        if (commonData->backlight.mode == KEY) {
+            commonData->keydata[5].label = "ILUM";
+        } else {
+            commonData->keydata[5].label = "";
+        }
+    }
     //return -1 if handled by the page
     virtual int handleKey(int key){return key;}
 };
@@ -110,6 +149,13 @@ class PageDescription{
             this->creator=creator;
             this->header=header;
         }
+};
+
+class PageStruct{
+    public:
+        Page *page=NULL;
+        PageData parameters;
+        PageDescription *description=NULL;
 };
 
 // Structure for formated boat values

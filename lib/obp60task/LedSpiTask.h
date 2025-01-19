@@ -4,7 +4,6 @@
 #include "GwApi.h"
 #include "OBP60Hardware.h"
 
-
 class Color{
     public:
     uint8_t r;
@@ -33,6 +32,7 @@ static Color COLOR_BLACK=Color(0,0,0);
 
 Color setBrightness(const Color &color,uint8_t brightness);
 
+enum BacklightMode {OFF, ON, SUN, BUS, TIME, KEY};
 
 class LedInterface {
     private:
@@ -91,6 +91,5 @@ class LedTaskData{
 
 //task function
 void createSpiLedTask(LedTaskData *param);
-
 
 #endif

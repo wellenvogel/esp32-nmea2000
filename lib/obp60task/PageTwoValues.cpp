@@ -5,24 +5,24 @@
 
 class PageTwoValues : public Page
 {
-    bool keylock = false;               // Keylock
-
     public:
     PageTwoValues(CommonData &common){
-        common.logger->logDebug(GwLog::LOG,"Show PageTwoValue");
+        commonData = &common;
+        common.logger->logDebug(GwLog::LOG,"Instantiate PageTwoValue");
     }
 
     virtual int handleKey(int key){
-        if(key == 11){                  // Code for keylock
-            keylock = !keylock;         // Toggle keylock
+        // Code for keylock
+        if(key == 11){
+            commonData->keylock = !commonData->keylock;
             return 0;                   // Commit the key
         }
         return key;
     }
 
-    virtual void displayPage(CommonData &commonData, PageData &pageData){
-        GwConfigHandler *config = commonData.config;
-        GwLog *logger=commonData.logger;
+    virtual void displayPage(PageData &pageData){
+        GwConfigHandler *config = commonData->config;
+        GwLog *logger = commonData->logger;
 
         // Old values for hold function
         static String svalue1old = "";
@@ -33,7 +33,6 @@ class PageTwoValues : public Page
         // Get config data
         String lengthformat = config->getString(config->lengthFormat);
         // bool simulation = config->getBool(config->useSimuData);
-        String displaycolor = config->getString(config->displaycolor);
         bool holdvalues = config->getBool(config->holdvalues);
         String flashLED = config->getString(config->flashLED);
         String backlightMode = config->getString(config->backlight);
@@ -44,8 +43,8 @@ class PageTwoValues : public Page
         name1 = name1.substring(0, 6);                  // String length limit for value name
         double value1 = bvalue1->value;                 // Value as double in SI unit
         bool valid1 = bvalue1->valid;                   // Valid information 
-        String svalue1 = formatValue(bvalue1, commonData).svalue;    // Formatted value as string including unit conversion and switching decimal places
-        String unit1 = formatValue(bvalue1, commonData).unit;        // Unit of value
+        String svalue1 = formatValue(bvalue1, *commonData).svalue;    // Formatted value as string including unit conversion and switching decimal places
+        String unit1 = formatValue(bvalue1, *commonData).unit;        // Unit of value
 
         // Get boat values #2
         GwApi::BoatValue *bvalue2 = pageData.values[1]; // Second element in list (only one value by PageOneValue)
@@ -53,8 +52,8 @@ class PageTwoValues : public Page
         name2 = name2.substring(0, 6);                  // String length limit for value name
         double value2 = bvalue2->value;                 // Value as double in SI unit
         bool valid2 = bvalue2->valid;                   // Valid information 
-        String svalue2 = formatValue(bvalue2, commonData).svalue;    // Formatted value as string including unit conversion and switching decimal places
-        String unit2 = formatValue(bvalue2, commonData).unit;        // Unit of value
+        String svalue2 = formatValue(bvalue2, *commonData).svalue;    // Formatted value as string including unit conversion and switching decimal places
+        String unit2 = formatValue(bvalue2, *commonData).unit;        // Unit of value
 
         // Optical warning by limit violation (unused)
         if(String(flashLED) == "Limit Violation"){
@@ -69,33 +68,18 @@ class PageTwoValues : public Page
         // Draw page
         //***********************************************************
 
-        // Set background color and text color
-        int textcolor = GxEPD_BLACK;
-        int pixelcolor = GxEPD_BLACK;
-        int bgcolor = GxEPD_WHITE;
-        if(displaycolor == "Normal"){
-            textcolor = GxEPD_BLACK;
-            pixelcolor = GxEPD_BLACK;
-            bgcolor = GxEPD_WHITE;
-        }
-        else{
-            textcolor = GxEPD_WHITE;
-            pixelcolor = GxEPD_WHITE;
-            bgcolor = GxEPD_BLACK;
-        }
         // Set display in partial refresh mode
         getdisplay().setPartialWindow(0, 0, getdisplay().width(), getdisplay().height()); // Set partial update
 
         // ############### Value 1 ################
 
         // Show name
-        getdisplay().setTextColor(textcolor);
+        getdisplay().setTextColor(commonData->fgcolor);
         getdisplay().setFont(&Ubuntu_Bold20pt7b);
         getdisplay().setCursor(20, 80);
         getdisplay().print(name1);                           // Page name
 
         // Show unit
-        getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&Ubuntu_Bold12pt7b);
         getdisplay().setCursor(20, 130);
         if(holdvalues == false){
@@ -134,18 +118,16 @@ class PageTwoValues : public Page
         // ############### Horizontal Line ################
 
         // Horizontal line 3 pix
-        getdisplay().fillRect(0, 145, 400, 3, pixelcolor);
+        getdisplay().fillRect(0, 145, 400, 3, commonData->fgcolor);
 
         // ############### Value 2 ################
 
         // Show name
-        getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&Ubuntu_Bold20pt7b);
         getdisplay().setCursor(20, 190);
         getdisplay().print(name2);                           // Page name
 
         // Show unit
-        getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&Ubuntu_Bold12pt7b);
         getdisplay().setCursor(20, 240);
         if(holdvalues == false){
@@ -179,25 +161,6 @@ class PageTwoValues : public Page
         if(valid2 == true){
             svalue2old = svalue2;                                       // Save the old value
             unit2old = unit2;                                           // Save the old unit
-        }
-
-
-        // ############### Key Layout ################
-
-        // Key Layout
-        getdisplay().setTextColor(textcolor);
-        getdisplay().setFont(&Ubuntu_Bold8pt7b);
-        if(keylock == false){
-            getdisplay().setCursor(130, 290);
-            getdisplay().print("[  <<<<  " + String(commonData.data.actpage) + "/" + String(commonData.data.maxpage) + "  >>>>  ]");
-            if(String(backlightMode) == "Control by Key"){                  // Key for illumination
-                getdisplay().setCursor(343, 290);
-                getdisplay().print("[ILUM]");
-            }
-        }
-        else{
-            getdisplay().setCursor(130, 290);
-            getdisplay().print(" [    Keylock active    ]");
         }
 
         // Update display

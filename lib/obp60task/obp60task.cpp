@@ -43,16 +43,26 @@ void OBP60Init(GwApi *api){
     
 
     // Init hardware
-    hardwareInit();
+    hardwareInit(api);
 
     // Init power rail 5.0V
     String powermode = api->getConfig()->getConfigItem(api->getConfig()->powerMode,true)->asString();
     api->getLogger()->logDebug(GwLog::DEBUG,"Power Mode is: %s", powermode.c_str());
     if(powermode == "Max Power" || powermode == "Only 5.0V"){
+        #ifdef HARDWARE_V21
         setPortPin(OBP_POWER_50, true); // Power on 5.0V rail
+        #endif
+        #ifdef HARDWARE_LIGHT
+        setPortPin(OBP_POWER_EPD, true);// Power on ePaper display
+        #endif
     }
     else{
+        #ifdef HARDWARE_V21
         setPortPin(OBP_POWER_50, false); // Power off 5.0V rail
+        #endif
+        #ifdef HARDWARE_LIGHT
+        setPortPin(OBP_POWER_EPD, false);// Power off ePaper display
+        #endif
     }
 
     // Settings for e-paper display
@@ -76,10 +86,10 @@ void OBP60Init(GwApi *api){
     if(String(backlightMode) == "On"){
            setBacklightLED(brightness, colorMapping(backlightColor));
     }
-    if(String(backlightMode) == "Off"){
+    else if(String(backlightMode) == "Off"){
            setBacklightLED(0, COLOR_BLACK); // Backlight LEDs off (blue without britghness)
     }
-    if(String(backlightMode) == "Control by Key"){
+    else if(String(backlightMode) == "Control by Key"){
            setBacklightLED(0, COLOR_BLUE); // Backlight LEDs off (blue without britghness)
     }
 
@@ -183,13 +193,6 @@ class PageList{
         }
 };
 
-class PageStruct{
-    public:
-        Page *page=NULL;
-        PageData parameters;
-        PageDescription *description=NULL;
-};
-
 /**
  * this function will add all the pages we know to the pagelist
  * each page should have defined a registerXXXPage variable of type
@@ -214,8 +217,8 @@ void registerAllPages(PageList &list){
     list.add(&registerPageFourValues);
     extern PageDescription registerPageFourValues2;
     list.add(&registerPageFourValues2);
-    extern PageDescription registerPageApparentWind;
-    list.add(&registerPageApparentWind);
+    extern PageDescription registerPageWind;
+    list.add(&registerPageWind);
     extern PageDescription registerPageWindRose;
     list.add(&registerPageWindRose);
     extern PageDescription registerPageWindRoseFlex;
@@ -251,15 +254,11 @@ void registerAllPages(PageList &list){
 }
 
 // Undervoltage detection for shutdown display
-void underVoltageDetection(GwApi *api){
-    int textcolor = GxEPD_BLACK;
-    int pixelcolor = GxEPD_BLACK;
-    int bgcolor = GxEPD_WHITE;
+void underVoltageDetection(GwApi *api, CommonData &common){
     // Read settings
-    String displaycolor = api->getConfig()->getConfigItem(api->getConfig()->displaycolor,true)->asString();
     float vslope = uint(api->getConfig()->getConfigItem(api->getConfig()->vSlope,true)->asFloat());
     float voffset = uint(api->getConfig()->getConfigItem(api->getConfig()->vOffset,true)->asFloat());
-    // Read supplay voltage
+    // Read supply voltage
     float actVoltage = (float(analogRead(OBP_ANALOG0)) * 3.3 / 4096 + 0.17) * 20;   // V = 1/20 * Vin
     actVoltage = actVoltage * vslope + voffset;
     if(actVoltage < MIN_VOLTAGE){
@@ -269,17 +268,9 @@ void underVoltageDetection(GwApi *api){
         buzzer(TONE4, 20);                      // Buzzer tone 4kHz 20ms
         setPortPin(OBP_POWER_50, false);        // Power rail 5.0V Off
         // Shutdown EInk display
-        if(displaycolor == "Normal"){
-            textcolor = GxEPD_BLACK;
-            bgcolor = GxEPD_WHITE;
-        }
-        else{
-            textcolor = GxEPD_WHITE;
-            bgcolor = GxEPD_BLACK;
-        }
         getdisplay().setPartialWindow(0, 0, getdisplay().width(), getdisplay().height()); // Set partial update
-        getdisplay().fillScreen(bgcolor);       // Clear screen
-        getdisplay().setTextColor(textcolor);
+        getdisplay().fillScreen(common.bgcolor);       // Clear screen
+        getdisplay().setTextColor(common.fgcolor);
         getdisplay().setFont(&Ubuntu_Bold20pt7b);
         getdisplay().setCursor(65, 150);
         getdisplay().print("Undervoltage");
@@ -302,6 +293,12 @@ void OBP60Task(GwApi *api){
     startLedTask(api);
     PageList allPages;
     registerAllPages(allPages);
+    CommonData commonData;
+    commonData.logger=logger;
+    commonData.config=config;
+
+    // Keyboard coordinates for page footer
+    initKeys(commonData);
 
     tN2kMsg N2kMsg;
 
@@ -309,18 +306,23 @@ void OBP60Task(GwApi *api){
     for (auto it=allPages.pages.begin();it != allPages.pages.end();it++){
         LOG_DEBUG(GwLog::LOG,"found registered page %s",(*it)->pageName.c_str());
     }
-    
+
     // Init E-Ink display
     String displaymode = api->getConfig()->getConfigItem(api->getConfig()->display,true)->asString();
     String displaycolor = api->getConfig()->getConfigItem(api->getConfig()->displaycolor,true)->asString();
+    if (displaycolor == "Normal") {
+        commonData.fgcolor = GxEPD_BLACK;
+        commonData.bgcolor = GxEPD_WHITE;
+    }
+    else{
+        commonData.fgcolor = GxEPD_WHITE;
+        commonData.bgcolor = GxEPD_BLACK;
+    }
     String systemname = api->getConfig()->getConfigItem(api->getConfig()->systemName,true)->asString();
     String wifipass = api->getConfig()->getConfigItem(api->getConfig()->apPassword,true)->asString();
     bool refreshmode = api->getConfig()->getConfigItem(api->getConfig()->refresh,true)->asBoolean();
     String fastrefresh = api->getConfig()->getConfigItem(api->getConfig()->fastRefresh,true)->asString();
     uint fullrefreshtime = uint(api->getConfig()->getConfigItem(api->getConfig()->fullRefreshTime,true)->asInt());
-    int textcolor = GxEPD_BLACK;
-    int pixelcolor = GxEPD_BLACK;
-    int bgcolor = GxEPD_WHITE;
 
     #ifdef DISPLAY_GDEY042T81
         getdisplay().init(115200, true, 2, false);  // Use this for Waveshare boards with "clever" reset circuit, 2ms reset pulse
@@ -329,39 +331,29 @@ void OBP60Task(GwApi *api){
     #endif
 
     getdisplay().setRotation(0);                 // Set display orientation (horizontal)
-    if(displaycolor == "Normal"){
-        textcolor = GxEPD_BLACK;
-        pixelcolor = GxEPD_BLACK;
-        bgcolor = GxEPD_WHITE;
-    }
-    else{
-        textcolor = GxEPD_WHITE;
-        pixelcolor = GxEPD_WHITE;
-        bgcolor = GxEPD_BLACK;
-    }
     getdisplay().setFullWindow();                // Set full Refresh
     getdisplay().firstPage();                    // set first page
-    getdisplay().fillScreen(bgcolor);            // Draw white sreen
-    getdisplay().setTextColor(textcolor);        // Set display color
+    getdisplay().fillScreen(commonData.bgcolor);
+    getdisplay().setTextColor(commonData.fgcolor);
     getdisplay().nextPage();                     // Full Refresh
     getdisplay().setPartialWindow(0, 0, getdisplay().width(), getdisplay().height()); // Set partial update
-    getdisplay().fillScreen(bgcolor);            // Draw white sreen
+    getdisplay().fillScreen(commonData.bgcolor);
     getdisplay().nextPage();                     // Fast Refresh
     getdisplay().nextPage();                     // Fast Refresh
     if(String(displaymode) == "Logo + QR Code" || String(displaymode) == "Logo"){
-        getdisplay().fillScreen(bgcolor);        // Draw white sreen
-        getdisplay().drawBitmap(0, 0, gImage_Logo_OBP_400x300_sw, getdisplay().width(), getdisplay().height(), pixelcolor); // Draw start logo
+        getdisplay().fillScreen(commonData.bgcolor);
+        getdisplay().drawBitmap(0, 0, gImage_Logo_OBP_400x300_sw, getdisplay().width(), getdisplay().height(), commonData.fgcolor); // Draw start logo
         getdisplay().nextPage();                 // Fast Refresh
         getdisplay().nextPage();                 // Fast Refresh
         delay(SHOW_TIME);                        // Logo show time
         if(String(displaymode) == "Logo + QR Code"){
-            getdisplay().fillScreen(bgcolor);    // Draw white sreen
-            qrWiFi(systemname, wifipass, displaycolor);  // Show QR code for WiFi connection
+            getdisplay().fillScreen(commonData.bgcolor);
+            qrWiFi(systemname, wifipass, commonData.fgcolor, commonData.bgcolor);  // Show QR code for WiFi connection
             getdisplay().nextPage();             // Fast Refresh
             getdisplay().nextPage();             // Fast Refresh
             delay(SHOW_TIME);                    // QR code show time
         }
-        getdisplay().fillScreen(bgcolor);        // Draw white sreen
+        getdisplay().fillScreen(commonData.bgcolor);
         getdisplay().nextPage();                 // Fast Refresh
         getdisplay().nextPage();                 // Fast Refresh
     }
@@ -369,9 +361,10 @@ void OBP60Task(GwApi *api){
     // Init pages
     int numPages=1;
     PageStruct pages[MAX_PAGE_NUMBER];
-    CommonData commonData;
-    commonData.logger=logger;
-    commonData.config=config;
+    // Set start page
+    int pageNumber = int(api->getConfig()->getConfigItem(api->getConfig()->startPage,true)->asInt()) - 1;
+    int lastPage=pageNumber;
+
     BoatValueList boatValues; //all the boat values for the api query
     //commonData.distanceformat=config->getString(xxx);
     //add all necessary data to common data
@@ -395,6 +388,7 @@ void OBP60Task(GwApi *api){
        pages[i].description=description;
        pages[i].page=description->creator(commonData);
        pages[i].parameters.pageName=pageType;
+       pages[i].parameters.pageNumber = i + 1;
        LOG_DEBUG(GwLog::DEBUG,"found page %s for number %d",pageType.c_str(),i);
        //fill in all the user defined parameters
        for (int uid=0;uid<description->userParam;uid++){
@@ -414,6 +408,13 @@ void OBP60Task(GwApi *api){
             pages[i].parameters.values.push_back(value); 
        }
     }
+
+    // Display screenshot handler for HTTP request
+    // http://192.168.15.1/api/user/OBP60Task/screenshot
+    api->registerRequestHandler("screenshot", [api, &pageNumber, pages](AsyncWebServerRequest *request) {
+        doImageRequest(api, &pageNumber, pages, request);
+    });
+
     //now we have prepared the page data
     //we start a separate task that will fetch our keys...
     MyData allParameters;
@@ -430,21 +431,18 @@ void OBP60Task(GwApi *api){
 
     // Configuration values for main loop
     String gpsFix = api->getConfig()->getConfigItem(api->getConfig()->flashLED,true)->asString();
-    String backlight = api->getConfig()->getConfigItem(api->getConfig()->backlight,true)->asString();
     String gpsOn=api->getConfig()->getConfigItem(api->getConfig()->useGPS,true)->asString();
     String tz = api->getConfig()->getConfigItem(api->getConfig()->timeZone,true)->asString();
-    String backlightColor = api->getConfig()->getConfigItem(api->getConfig()->blColor,true)->asString();
-    Color color = colorMapping(backlightColor);
-    uint brightness = 2.55 * uint(api->getConfig()->getConfigItem(api->getConfig()->blBrightness,true)->asInt());
+
+    commonData.backlight.mode = backlightMapping(config->getConfigItem(config->backlight,true)->asString());
+    commonData.backlight.color = colorMapping(config->getConfigItem(config->blColor,true)->asString());
+    commonData.backlight.brightness = 2.55 * uint(config->getConfigItem(config->blBrightness,true)->asInt());
+
     bool uvoltage = api->getConfig()->getConfigItem(api->getConfig()->underVoltage,true)->asBoolean();
     String cpuspeed = api->getConfig()->getConfigItem(api->getConfig()->cpuSpeed,true)->asString();
     uint hdopAccuracy = uint(api->getConfig()->getConfigItem(api->getConfig()->hdopAccuracy,true)->asInt());
 
     // refreshmode defined in init section
-    // displaycolor defined in init section
-    // textcolor defined in init section
-    // pixelcolor defined in init section
-    // bgcolor defined in init section
 
     // Boat values for main loop
     GwApi::BoatValue *date = boatValues.findValueOrCreate("GPSD");      // Load GpsDate
@@ -454,9 +452,6 @@ void OBP60Task(GwApi *api){
     GwApi::BoatValue *hdop = boatValues.findValueOrCreate("HDOP");       // Load GpsHDOP
 
     LOG_DEBUG(GwLog::LOG,"obp60task: start mainloop");
-    // Set start page
-    int pageNumber = int(api->getConfig()->getConfigItem(api->getConfig()->startPage,true)->asInt()) - 1;
-    int lastPage=pageNumber;
     
     commonData.time = boatValues.findValueOrCreate("GPST");      // Load GpsTime
     commonData.date = boatValues.findValueOrCreate("GPSD");      // Load GpsTime
@@ -469,7 +464,9 @@ void OBP60Task(GwApi *api){
     long starttime3 = millis();     // Display update all 1s
     long starttime4 = millis();     // Delayed display update after 4s when select a new page
     long starttime5 = millis();     // Calculate sunrise and sunset all 1s
-    
+
+    pages[pageNumber].page->setupKeys(); // Initialize keys for first page
+
     // Main loop runs with 100ms
     //####################################################################################
 
@@ -479,7 +476,7 @@ void OBP60Task(GwApi *api){
 
         // Undervoltage detection
         if(uvoltage == true){
-            underVoltageDetection(api);
+            underVoltageDetection(api, commonData);
         }  
 
         // Set CPU speed after boot after 1min 
@@ -536,14 +533,15 @@ void OBP60Task(GwApi *api){
                 {
                     // Decoding all key codes
                     // #6 Backlight on if key controled
-                    if(String(backlight) == "Control by Key"){
+                    if (commonData.backlight.mode == BacklightMode::KEY) {
+                    // if(String(backlight) == "Control by Key"){
                         if(keyboardMessage == 6){
                             LOG_DEBUG(GwLog::LOG,"Toggle Backlight LED");
-                            toggleBacklightLED(brightness, color);
+                            toggleBacklightLED(commonData.backlight.brightness, commonData.backlight.color);
                         }
                     }
-                    // #9 Swipe right
-                    if (keyboardMessage == 9)
+                    // #9 Swipe right or #4 key right
+                    if ((keyboardMessage == 9) or (keyboardMessage == 4))
                     {
                         pageNumber++;
                         if (pageNumber >= numPages){
@@ -552,8 +550,8 @@ void OBP60Task(GwApi *api){
                         commonData.data.actpage = pageNumber + 1;
                         commonData.data.maxpage = numPages;
                     }
-                    // #10 Swipe left
-                    if (keyboardMessage == 10)
+                    // #10 Swipe left or #3 key left
+                    if ((keyboardMessage == 10) or (keyboardMessage == 3))
                     {
                         pageNumber--;
                         if (pageNumber < 0){
@@ -580,9 +578,10 @@ void OBP60Task(GwApi *api){
                     // Provide sundata to all pages
                     commonData.sundata = calcSunsetSunrise(api, time->value , date->value, lat->value, lon->value, tz.toDouble());
                     // Backlight with sun control
-                    if(String(backlight) == "Control by Sun"){
+                    if (commonData.backlight.mode == BacklightMode::SUN) {
+                    // if(String(backlight) == "Control by Sun"){
                         if(commonData.sundata.sunDown == true){
-                            setBacklightLED(brightness, color);
+                            setBacklightLED(commonData.backlight.brightness, commonData.backlight.color);
                         }
                         else{
                             setBacklightLED(0, COLOR_BLUE); // Backlight LEDs off (blue without britghness)
@@ -599,10 +598,10 @@ void OBP60Task(GwApi *api){
                 getdisplay().setFullWindow();    // Set full update
                 getdisplay().nextPage();
                 if(fastrefresh == "false"){
-                    getdisplay().fillScreen(pixelcolor);// Clear display
-                    getdisplay().nextPage();            // Full update
-                    getdisplay().fillScreen(bgcolor);   // Clear display
-                    getdisplay().nextPage();            // Full update
+                    getdisplay().fillScreen(commonData.fgcolor); // Clear display
+                    getdisplay().nextPage();                     // Full update
+                    getdisplay().fillScreen(commonData.bgcolor); // Clear display
+                    getdisplay().nextPage();                     // Full update
                 }
                 delayedDisplayUpdate = false;
             }
@@ -616,10 +615,10 @@ void OBP60Task(GwApi *api){
                 getdisplay().setFullWindow();    // Set full update
                 getdisplay().nextPage();
                 if(fastrefresh == "false"){
-                    getdisplay().fillScreen(pixelcolor);// Clear display
-                    getdisplay().nextPage();            // Full update
-                    getdisplay().fillScreen(bgcolor);   // Clear display
-                    getdisplay().nextPage();            // Full update
+                    getdisplay().fillScreen(commonData.fgcolor); // Clear display
+                    getdisplay().nextPage();                     // Full update
+                    getdisplay().fillScreen(commonData.bgcolor); // Clear display
+                    getdisplay().nextPage();                     // Full update
                 }
             }
 
@@ -630,10 +629,10 @@ void OBP60Task(GwApi *api){
                 getdisplay().setFullWindow();    // Set full update
                 getdisplay().nextPage();
                 if(fastrefresh == "false"){
-                    getdisplay().fillScreen(pixelcolor);// Clear display
-                    getdisplay().nextPage();            // Full update
-                    getdisplay().fillScreen(bgcolor);   // Clear display
-                    getdisplay().nextPage();            // Full update
+                    getdisplay().fillScreen(commonData.fgcolor); // Clear display
+                    getdisplay().nextPage();                     // Full update
+                    getdisplay().fillScreen(commonData.bgcolor); // Clear display
+                    getdisplay().nextPage();                     // Full update
                 }
             }
             
@@ -645,13 +644,13 @@ void OBP60Task(GwApi *api){
                 api->getStatus(commonData.status);
 
                 // Show header if enabled
-                getdisplay().fillRect(0, 0, getdisplay().width(), getdisplay().height(), bgcolor);   // Clear display
+                getdisplay().fillRect(0, 0, getdisplay().width(), getdisplay().height(), commonData.bgcolor);   // Clear display
                 if (pages[pageNumber].description && pages[pageNumber].description->header){
-                    //build some header and footer using commonData
-                    getdisplay().fillScreen(bgcolor);             // Clear display
-                    displayHeader(commonData, date, time, hdop);  // Sown header
+                    // build header using commonData
+                    getdisplay().fillScreen(commonData.bgcolor);  // Clear display
+                    displayHeader(commonData, date, time, hdop);  // Show page header
                 }
-                
+
                 // Call the particular page
                 Page *currentPage;
                 if (systemPage) {
@@ -667,13 +666,20 @@ void OBP60Task(GwApi *api){
                     }
                     else{
                         if (lastPage != pageNumber){
-                            currentPage->displayNew(commonData,pages[pageNumber].parameters);
+                            if (hasFRAM) fram.write(FRAM_PAGE_NO, pageNumber); // remember page for device restart
+                            currentPage->setupKeys();
+                            currentPage->displayNew(pages[pageNumber].parameters);
                             lastPage=pageNumber;
                         }
                         //call the page code
                         LOG_DEBUG(GwLog::DEBUG,"calling page %d",pageNumber);
-                        currentPage->displayPage(commonData,pages[pageNumber].parameters);
+                        // Show footer if enabled (together with header)
+                        if (pages[pageNumber].description && pages[pageNumber].description->header){
+                            displayFooter(commonData);
+                        }
+                        currentPage->displayPage(pages[pageNumber].parameters);
                     }
+
                 }
             }
         }

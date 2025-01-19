@@ -5,21 +5,7 @@
 #include "OBP60Extensions.h"
 #include "qrcode.h"
   
-void qrWiFi(String ssid, String passwd, String displaycolor){
-  // Set display color
-  int textcolor = GxEPD_BLACK;
-  int pixelcolor = GxEPD_BLACK;
-  int bgcolor = GxEPD_WHITE;
-  if(displaycolor == "Normal"){
-      textcolor = GxEPD_BLACK;
-      pixelcolor = GxEPD_BLACK;
-      bgcolor = GxEPD_WHITE;
-  }
-  else{
-      textcolor = GxEPD_WHITE;
-      pixelcolor = GxEPD_WHITE;
-      bgcolor = GxEPD_BLACK;
-  }
+void qrWiFi(String ssid, String passwd, uint16_t fgcolor, uint16_t bgcolor){
 
   // Set start point and pixel size
   int16_t box_x = 100;      // X offset
@@ -40,7 +26,7 @@ void qrWiFi(String ssid, String passwd, String displaycolor){
     // Each horizontal module
     for (uint8_t x = 0; x < qrcode.size; x++) {
       if(qrcode_getModule(&qrcode, x, y)){
-        getdisplay().fillRect(box_x, box_y, box_s, box_s, pixelcolor);
+        getdisplay().fillRect(box_x, box_y, box_s, box_s, fgcolor);
       } else {
         getdisplay().fillRect(box_x, box_y, box_s, box_s, bgcolor);
       }
@@ -50,7 +36,7 @@ void qrWiFi(String ssid, String passwd, String displaycolor){
     box_x = init_x;
   }
   getdisplay().setFont(&Ubuntu_Bold32pt7b);
-  getdisplay().setTextColor(textcolor);
+  getdisplay().setTextColor(fgcolor);
   getdisplay().setCursor(140, 285);
   getdisplay().print("WiFi");
   getdisplay().nextPage();                 // Full Refresh

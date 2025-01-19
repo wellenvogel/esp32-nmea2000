@@ -198,7 +198,7 @@ void sensorTask(void *param){
         else{
             api->getLogger()->logDebug(GwLog::LOG,"Modul BME280 found");
             sensors.airTemperature = bme280.readTemperature();
-            sensors.airPressure = bme280.readPressure()/100;
+            sensors.airPressure = bme280.readPressure();
             sensors.airHumidity = bme280.readHumidity();
             BME280_ready = true;
         }
@@ -210,7 +210,7 @@ void sensorTask(void *param){
         else{
             api->getLogger()->logDebug(GwLog::LOG,"Modul BMP280 found");
             sensors.airTemperature = bmp280.readTemperature();
-            sensors.airPressure  =bmp280.readPressure()/100;
+            sensors.airPressure = bmp280.readPressure();
             BMP280_ready = true;
         }
     }
@@ -221,7 +221,7 @@ void sensorTask(void *param){
         else{
             api->getLogger()->logDebug(GwLog::LOG,"Modul BMP085/BMP180 found");
             sensors.airTemperature = bmp085.readTemperature();
-            sensors.airPressure  =bmp085.readPressure()/100;
+            sensors.airPressure = bmp085.readPressure();
             BMP180_ready = true;
         }
     }
@@ -456,7 +456,7 @@ void sensorTask(void *param){
             }
         }
 
-        // Send supplay voltage value all 1s
+        // Send supply voltage value all 1s
         if(millis() > starttime5 + 1000 && String(powsensor1) == "off"){
             starttime5 = millis();
             sensors.batteryVoltage = (float(analogRead(OBP_ANALOG0)) * 3.3 / 4096 + 0.17) * 20;   // Vin = 1/20
@@ -479,10 +479,10 @@ void sensorTask(void *param){
             starttime6 = millis();
             unsigned char TempSource = 2;       // Inside temperature
             unsigned char PressureSource = 0;   // Atmospheric pressure
-            unsigned char HumiditySource=0;     // Inside humidity
+            unsigned char HumiditySource = 0;   // Inside humidity
             if(envsensor == "BME280" && BME280_ready == true){
                 sensors.airTemperature = bme280.readTemperature();
-                sensors.airPressure = bme280.readPressure()/100;
+                sensors.airPressure = bme280.readPressure();
                 sensors.airHumidity = bme280.readHumidity();
                 // Send to NMEA200 bus
                 if(!isnan(sensors.airTemperature)){
@@ -494,33 +494,33 @@ void sensorTask(void *param){
                     api->sendN2kMessage(N2kMsg);
                 }
                 if(!isnan(sensors.airPressure)){
-                    SetN2kPGN130314(N2kMsg, 0, 0, (tN2kPressureSource) mBarToPascal(PressureSource), sensors.airPressure);
+                    SetN2kPGN130314(N2kMsg, 0, 0, (tN2kPressureSource) PressureSource, sensors.airPressure);
                     api->sendN2kMessage(N2kMsg);
                 }
             }
             else if(envsensor == "BMP280" && BMP280_ready == true){
                 sensors.airTemperature = bmp280.readTemperature();
-                sensors.airPressure  =bmp280.readPressure()/100;
+                sensors.airPressure = bmp280.readPressure();
                 // Send to NMEA200 bus
                 if(!isnan(sensors.airTemperature)){
                     SetN2kPGN130312(N2kMsg, 0, 0,(tN2kTempSource) TempSource, CToKelvin(sensors.airTemperature), N2kDoubleNA);
                     api->sendN2kMessage(N2kMsg);
                 }
                 if(!isnan(sensors.airPressure)){
-                    SetN2kPGN130314(N2kMsg, 0, 0, (tN2kPressureSource) mBarToPascal(PressureSource), sensors.airPressure);
+                    SetN2kPGN130314(N2kMsg, 0, 0, (tN2kPressureSource) PressureSource, sensors.airPressure);
                     api->sendN2kMessage(N2kMsg);
                 }
             }
             else if((envsensor == "BMP085" || envsensor == "BMP180") && BMP180_ready == true){
                 sensors.airTemperature = bmp085.readTemperature();
-                sensors.airPressure  =bmp085.readPressure()/100;
+                sensors.airPressure = bmp085.readPressure();
                 // Send to NMEA200 bus
                 if(!isnan(sensors.airTemperature)){
                     SetN2kPGN130312(N2kMsg, 0, 0,(tN2kTempSource) TempSource, CToKelvin(sensors.airTemperature), N2kDoubleNA);
                     api->sendN2kMessage(N2kMsg);
                 }
                 if(!isnan(sensors.airPressure)){
-                    SetN2kPGN130314(N2kMsg, 0, 0, (tN2kPressureSource) mBarToPascal(PressureSource), sensors.airPressure);
+                    SetN2kPGN130314(N2kMsg, 0, 0, (tN2kPressureSource) PressureSource, sensors.airPressure);
                     api->sendN2kMessage(N2kMsg);
                 }
             }

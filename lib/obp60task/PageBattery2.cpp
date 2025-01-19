@@ -7,15 +7,21 @@
 class PageBattery2 : public Page
 {
 bool init = false;                  // Marker for init done
-bool keylock = false;               // Keylock
 int average = 0;                    // Average type [0...3], 0=off, 1=10s, 2=60s, 3=300s
 bool trend = true;                  // Trend indicator [0|1], 0=off, 1=on
 double raw = 0;
 
 public:
     PageBattery2(CommonData &common){
-        common.logger->logDebug(GwLog::LOG,"Show PageBattery2");
+        commonData = &common;
+        common.logger->logDebug(GwLog::LOG,"Instantiate PageBattery2");
     }
+
+    virtual void setupKeys(){
+        Page::setupKeys();
+        commonData->keydata[0].label = "AVG";
+    }
+
     virtual int handleKey(int key){
          // Change average
         if(key == 1){
@@ -32,16 +38,16 @@ public:
 
         // Code for keylock
         if(key == 11){
-            keylock = !keylock;         // Toggle keylock
+            commonData->keylock = !commonData->keylock;
             return 0;                   // Commit the key
         }
         return key;
     }
 
-    virtual void displayPage(CommonData &commonData, PageData &pageData)
+    virtual void displayPage(PageData &pageData)
     {
-        GwConfigHandler *config = commonData.config;
-        GwLog *logger=commonData.logger;
+        GwConfigHandler *config = commonData->config;
+        GwLog *logger = commonData->logger;
 
         // Polynominal coefficients second order for battery energy level calculation
         // index 0 = Pb, 1 = Gel, 2 = AGM, 3 = LiFePo4
@@ -53,7 +59,6 @@ public:
         
         // Get config data
         bool simulation = config->getBool(config->useSimuData);
-        String displaycolor = config->getString(config->displaycolor);
         bool holdvalues = config->getBool(config->holdvalues);
         String flashLED = config->getString(config->flashLED);
         String batVoltage = config->getString(config->batteryVoltage);
@@ -72,42 +77,42 @@ public:
 
         // Create trend value
         if(init == false){          // Load start values for first page run
-            valueTrend = commonData.data.batteryVoltage10;
+            valueTrend = commonData->data.batteryVoltage10;
             init = true;
         }
         else{                       // Reading trend value
-            valueTrend = commonData.data.batteryVoltage10;
+            valueTrend = commonData->data.batteryVoltage10;
         }
 
         // Get raw value for trend indicator
-        raw = commonData.data.batteryVoltage;        // Live data
+        raw = commonData->data.batteryVoltage;        // Live data
 
         // Switch average values
         switch (average) {
             case 0:
-                value1 = commonData.data.batteryVoltage;        // Live data
-                value2 = commonData.data.batteryCurrent;
-                value3 = commonData.data.batteryPower;
+                value1 = commonData->data.batteryVoltage;        // Live data
+                value2 = commonData->data.batteryCurrent;
+                value3 = commonData->data.batteryPower;
                 break;
             case 1:
-                value1 = commonData.data.batteryVoltage10;      // Average 10s
-                value2 = commonData.data.batteryCurrent10;
-                value3 = commonData.data.batteryPower10;
+                value1 = commonData->data.batteryVoltage10;      // Average 10s
+                value2 = commonData->data.batteryCurrent10;
+                value3 = commonData->data.batteryPower10;
                 break;
             case 2:
-                value1 = commonData.data.batteryVoltage60;      // Average 60s
-                value2 = commonData.data.batteryCurrent60;
-                value3 = commonData.data.batteryPower60;
+                value1 = commonData->data.batteryVoltage60;      // Average 60s
+                value2 = commonData->data.batteryCurrent60;
+                value3 = commonData->data.batteryPower60;
                 break;
             case 3:
-                value1 = commonData.data.batteryVoltage300;     // Average 300s
-                value2 = commonData.data.batteryCurrent300;
-                value3 = commonData.data.batteryPower300;
+                value1 = commonData->data.batteryVoltage300;     // Average 300s
+                value2 = commonData->data.batteryCurrent300;
+                value3 = commonData->data.batteryPower300;
                 break;
             default:
-                value1 = commonData.data.batteryVoltage;        // Default
-                value2 = commonData.data.batteryCurrent;
-                value3 = commonData.data.batteryPower;
+                value1 = commonData->data.batteryVoltage;        // Default
+                value2 = commonData->data.batteryCurrent;
+                value3 = commonData->data.batteryPower;
                 break;
         }
         bool valid1 = true;
@@ -178,37 +183,22 @@ public:
         // Draw page
         //***********************************************************
 
-        // Clear display, set background color and text color
-        int textcolor = GxEPD_BLACK;
-        int pixelcolor = GxEPD_BLACK;
-        int bgcolor = GxEPD_WHITE;
-        if(displaycolor == "Normal"){
-            textcolor = GxEPD_BLACK;
-            pixelcolor = GxEPD_BLACK;
-            bgcolor = GxEPD_WHITE;
-        }
-        else{
-            textcolor = GxEPD_WHITE;
-            pixelcolor = GxEPD_WHITE;
-            bgcolor = GxEPD_BLACK;
-        }
         // Set display in partial refresh mode
         getdisplay().setPartialWindow(0, 0, getdisplay().width(), getdisplay().height()); // Set partial update
 
+        getdisplay().setTextColor(commonData->fgcolor);
+
         // Show name
-        getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&Ubuntu_Bold20pt7b);
         getdisplay().setCursor(10, 65);
         getdisplay().print("Bat.");
 
          // Show battery type
-        getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&Ubuntu_Bold8pt7b);
         getdisplay().setCursor(90, 65);
         getdisplay().print(batType);
 
         // Show voltage type
-        getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&DSEG7Classic_BoldItalic20pt7b);
         getdisplay().setCursor(10, 140);
         int bvoltage = 0;
@@ -219,7 +209,6 @@ public:
         getdisplay().print("V");
 
         // Show battery capacity
-        getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&DSEG7Classic_BoldItalic20pt7b);
         getdisplay().setCursor(10, 200);
         if(batCapacity <= 999) getdisplay().print(batCapacity, 0);
@@ -236,10 +225,9 @@ public:
         getdisplay().print("Battery Type");
 
         // Show battery with fill level
-        batteryGraphic(150, 45, batPercentage, pixelcolor, bgcolor);
+        batteryGraphic(150, 45, batPercentage, commonData->fgcolor, commonData->bgcolor);
 
         // Show average settings
-        getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&Ubuntu_Bold8pt7b);
         getdisplay().setCursor(150, 145);
         switch (average) {
@@ -261,7 +249,6 @@ public:
         } 
 
         // Show fill level in percent
-        getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&DSEG7Classic_BoldItalic20pt7b);
         getdisplay().setCursor(150, 200);
         getdisplay().print(batPercentage);
@@ -269,7 +256,6 @@ public:
         getdisplay().print("%");
 
         // Show time to full discharge
-        getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&DSEG7Classic_BoldItalic20pt7b);
         getdisplay().setCursor(150, 260);
         if((powerSensor == "INA219" || powerSensor == "INA226") && simulation == false){
@@ -297,7 +283,6 @@ public:
         getdisplay().print("Sensor Modul");
 
         // Reading bus data or using simulation data
-        getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&DSEG7Classic_BoldItalic20pt7b);
         getdisplay().setCursor(260, 140);
         if(simulation == true){
@@ -326,7 +311,6 @@ public:
         getdisplay().print("V");
 
         // Show actual current in A
-        getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&DSEG7Classic_BoldItalic20pt7b);
         getdisplay().setCursor(260, 200);
         if((powerSensor == "INA219" || powerSensor == "INA226") && simulation == false){
@@ -339,7 +323,6 @@ public:
         getdisplay().print("A");
 
         // Show actual consumption in W
-        getdisplay().setTextColor(textcolor);
         getdisplay().setFont(&DSEG7Classic_BoldItalic20pt7b);
         getdisplay().setCursor(260, 260);
         if((powerSensor == "INA219" || powerSensor == "INA226") && simulation == false){
@@ -350,24 +333,6 @@ public:
         else  getdisplay().print("---");
         getdisplay().setFont(&Ubuntu_Bold16pt7b);
         getdisplay().print("W");
-
-        // Key Layout
-        getdisplay().setTextColor(textcolor);
-        getdisplay().setFont(&Ubuntu_Bold8pt7b);
-        if(keylock == false){
-            getdisplay().setCursor(10, 290);
-            getdisplay().print("[AVG]");
-            getdisplay().setCursor(130, 290);
-            getdisplay().print("[  <<<<  " + String(commonData.data.actpage) + "/" + String(commonData.data.maxpage) + "  >>>>  ]");
-            if(String(backlightMode) == "Control by Key"){              // Key for illumination
-                getdisplay().setCursor(343, 290);
-                getdisplay().print("[ILUM]");
-            }
-        }
-        else{
-            getdisplay().setCursor(130, 290);
-            getdisplay().print(" [    Keylock active    ]");
-        }
 
         // Update display
         getdisplay().nextPage();    // Partial update (fast)
