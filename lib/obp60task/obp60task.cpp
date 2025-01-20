@@ -20,10 +20,10 @@
 //#include GxEPD_BitmapExamples         // Example picture
 #include "MFD_OBP60_400x300_sw.h"       // MFD with logo
 #include "Logo_OBP_400x300_sw.h"        // OBP Logo
+#include "images/unknown.xbm"           // unknown page indicator
 #include "OBP60QRWiFi.h"                // Functions lib for WiFi QR code
 #include "OBPSensorTask.h"              // Functions lib for sensor data
 
-#include "LedSpiTask.h"
 
 // Global vars
 bool initComplete = false;      // Initialization complete
@@ -408,6 +408,8 @@ void OBP60Task(GwApi *api){
             pages[i].parameters.values.push_back(value); 
        }
     }
+    // add out of band system page (always available)
+    Page *syspage = allPages.pages[0]->creator(commonData);
 
     // Display screenshot handler for HTTP request
     // http://192.168.15.1/api/user/OBP60Task/screenshot
@@ -471,9 +473,6 @@ void OBP60Task(GwApi *api){
     //####################################################################################
 
     bool systemPage = false;
-    //PageDescription *description = allPages.find("System");
-    // PageStruct syspagestruct;
-    Page *syspage = allPages.pages[0]->creator(commonData);
     while (true){
         delay(100);     // Delay 100ms (loop time)
 
@@ -522,21 +521,22 @@ void OBP60Task(GwApi *api){
                 if (keyboardMessage == 12) {
                     LOG_DEBUG(GwLog::LOG, "Calling system page");
                     systemPage = true; // System page is out of band
-                    currentPage = syspage;
                     syspage->setupKeys();
                 }
                 else {
+                    currentPage = pages[pageNumber].page;
                     if (systemPage && keyboardMessage == 1) {
                         // exit system mode with exit key number 1
                         systemPage = false;
-                        currentPage  = pages[pageNumber].page;
+                        currentPage->setupKeys();
                     }
                 }
-
-                if (currentPage) {
-                    keyboardMessage=currentPage->handleKey(keyboardMessage);
+                if (systemPage) {
+                    keyboardMessage = syspage->handleKey(keyboardMessage);
+                } else if (currentPage) {
+                    keyboardMessage = currentPage->handleKey(keyboardMessage);
                 }
-                if (keyboardMessage > 0)
+                if (keyboardMessage > 0) // not handled by page
                 {
                     // Decoding all key codes
                     // #6 Backlight on if key controled
@@ -649,26 +649,34 @@ void OBP60Task(GwApi *api){
                 api->getBoatDataValues(boatValues.numValues,boatValues.allBoatValues);
                 api->getStatus(commonData.status);
 
+                // Clear display
+                // getdisplay().fillRect(0, 0, getdisplay().width(), getdisplay().height(), commonData.bgcolor);
+                getdisplay().fillScreen(commonData.bgcolor);  // Clear display
+
                 // Show header if enabled
-                getdisplay().fillRect(0, 0, getdisplay().width(), getdisplay().height(), commonData.bgcolor);   // Clear display
-                if (pages[pageNumber].description && pages[pageNumber].description->header){
+                if (pages[pageNumber].description && pages[pageNumber].description->header or systemPage){
                     // build header using commonData
-                    getdisplay().fillScreen(commonData.bgcolor);  // Clear display
                     displayHeader(commonData, date, time, hdop);  // Show page header
                 }
 
                 // Call the particular page
-                //Page *currentPage;
                 if (systemPage) {
                     displayFooter(commonData);
-                    PageData sysparams;
+                    PageData sysparams; // empty
                     syspage->displayPage(sysparams);
                 }
                 else {
                     Page *currentPage = pages[pageNumber].page;
                     if (currentPage == NULL){
-                        LOG_DEBUG(GwLog::ERROR,"page number %d not found",pageNumber);
+                        LOG_DEBUG(GwLog::ERROR,"page number %d not found", pageNumber);
                         // Error handling for missing page
+                        getdisplay().setPartialWindow(0, 0, getdisplay().width(), getdisplay().height()); // Set partial update
+                        getdisplay().fillScreen(commonData.bgcolor);  // Clear display
+                        getdisplay().drawXBitmap(200 - unknown_width / 2, 150 - unknown_height / 2, unknown_bits, unknown_width, unknown_height, commonData.fgcolor);
+                        getdisplay().setCursor(140, 250);
+                        getdisplay().setFont(&Atari16px);
+                        getdisplay().print("Here be dragons!");
+                        getdisplay().nextPage(); // Partial update (fast)
                     }
                     else{
                         if (lastPage != pageNumber){
@@ -687,7 +695,7 @@ void OBP60Task(GwApi *api){
                     }
 
                 }
-            }
+            } // refresh display all 1s
         }
     }
     vTaskDelete(NULL);

@@ -144,14 +144,14 @@ void initKeys(CommonData &commonData) {
         logger->logDebug(GwLog::LOG,"Very short 20ms key touch: %d", keycode);
 
         // Process only valid keys
-        //if(keycode == 1 || keycode == 6){
+        if(keycode == 1 || keycode == 4 || keycode == 5 || keycode == 6){
           keycode2 = keycode;
-        //}
+        }
         // Clear by invalid keys
-        //else{
-        //  keycode2 = 0;
-        //  keycodeold2 = 0;
-        //}
+        else{
+          keycode2 = 0;
+          keycodeold2 = 0;
+        }
       }
       // Timeout for very short pressed key
       if(millis() > starttime + 200){
