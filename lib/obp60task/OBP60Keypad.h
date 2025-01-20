@@ -60,7 +60,7 @@ void initKeys(CommonData &commonData) {
 
   #ifdef HARDWARE_V21
   // Keypad functions for original OBP60 hardware
-  int readKeypad(uint thSensitivity) {
+  int readKeypad(GwLog* logger, uint thSensitivity) {
     
     // Touch sensor values
     // 35000 - Not touched
@@ -110,14 +110,14 @@ void initKeys(CommonData &commonData) {
       keypad[6] = 0;
     }
     // Nothing touched
-    if(keypad[1] == 0 && keypad[2] == 0 && keypad[3] == 0 &&  keypad[4] == 0 && keypad[5] == 0 && keypad[6] == 0){
+/*    if(keypad[1] == 0 && keypad[2] == 0 && keypad[3] == 0 &&  keypad[4] == 0 && keypad[5] == 0 && keypad[6] == 0){
       keypad[0] = 1;
     }
     else{
       keypad[0] = 0;
-    } 
+    }  */
 
-    for (int i = 0; i < 9; i++) {
+    for (int i = 1; i <= 6; i++) {
         if(i > 0){
             // Convert keypad to keycode
             if(keypad[i] == 1){
@@ -141,11 +141,13 @@ void initKeys(CommonData &commonData) {
       }
       // Detect a very short keynumber (10ms)
       if (millis() > starttime + 10 && keycode == keycodeold && keylock == true) {
+        logger->logDebug(GwLog::LOG,"Very short 20ms key touch: %d", keycode);
+
         // Process only valid keys
-        if(keycode == 1 || keycode == 6){
+        if(keycode == 1 || keycode == 4 || keycode == 5 || keycode == 6){
           keycode2 = keycode;
         }
-        // Clear by unvalid keys
+        // Clear by invalid keys
         else{
           keycode2 = 0;
           keycodeold2 = 0;
@@ -157,6 +159,7 @@ void initKeys(CommonData &commonData) {
       }
       // Detect a short keynumber (200ms)
       if (keyoff == false && millis() > starttime + 200 && keycode == keycodeold && keylock == true) {
+        logger->logDebug(GwLog::LOG,"Short 200ms key touch: %d", keycode);
         keystatus = keycode;
         keycode = 0;
         keycodeold = 0;
@@ -166,6 +169,21 @@ void initKeys(CommonData &commonData) {
         keylock = false;
         delay(keydelay);
       }
+    }
+
+    // System page with key 5 and 4 in fast series
+    if (keycode2 == 5 && keycodeold2 == 4) {
+        logger->logDebug(GwLog::LOG,"Keycode for system page");
+      keycode = 0;
+      keycodeold = 0;
+      keycode2 = 0;
+      keycodeold2 = 0;
+      keystatus = 12;
+      buzzer(TONE4, 50);
+      delay(30);
+      buzzer(TONE4, 50);
+      delay(30);
+      buzzer(TONE4, 50);
     }
 
     // Key lock with key 1 and 6 or 6 and 1 in fast series
@@ -243,7 +261,7 @@ void initKeys(CommonData &commonData) {
     }
 
   // Keypad functions for OBP60 clone (thSensitivity is inactiv)
-  int readKeypad(uint thSensitivity) {
+  int readKeypad(GwLog* logger, uint thSensitivity) {
     pinMode(UP, INPUT);
     pinMode(DOWN, INPUT);
     pinMode(CONF, INPUT);

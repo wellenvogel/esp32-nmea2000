@@ -36,6 +36,7 @@ extern const GFXfont DSEG7Classic_BoldItalic20pt7b;
 extern const GFXfont DSEG7Classic_BoldItalic30pt7b;
 extern const GFXfont DSEG7Classic_BoldItalic42pt7b;
 extern const GFXfont DSEG7Classic_BoldItalic60pt7b;
+extern const GFXfont Atari16px;
 
 // Global functions
 #ifdef DISPLAY_GDEW042T2
