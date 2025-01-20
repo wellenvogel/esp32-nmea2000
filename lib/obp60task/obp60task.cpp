@@ -127,7 +127,7 @@ void keyboardTask(void *param){
 
     // Loop for keyboard task
     while (true){
-        keycode = readKeypad(data->sensitivity);
+        keycode = readKeypad(data->logger, data->sensitivity);
         //send a key event
         if(keycode != 0){
             xQueueSend(data->queue, &keycode, 0);
@@ -471,6 +471,9 @@ void OBP60Task(GwApi *api){
     //####################################################################################
 
     bool systemPage = false;
+    //PageDescription *description = allPages.find("System");
+    // PageStruct syspagestruct;
+    Page *syspage = allPages.pages[0]->creator(commonData);
     while (true){
         delay(100);     // Delay 100ms (loop time)
 
@@ -519,11 +522,15 @@ void OBP60Task(GwApi *api){
                 if (keyboardMessage == 12) {
                     LOG_DEBUG(GwLog::LOG, "Calling system page");
                     systemPage = true; // System page is out of band
-                    currentPage = allPages.pages[0]->creator(commonData);
+                    currentPage = syspage;
+                    syspage->setupKeys();
                 }
                 else {
-                    systemPage = false;
-                    currentPage  = pages[pageNumber].page;
+                    if (systemPage && keyboardMessage == 1) {
+                        // exit system mode with exit key number 1
+                        systemPage = false;
+                        currentPage  = pages[pageNumber].page;
+                    }
                 }
 
                 if (currentPage) {
@@ -585,8 +592,7 @@ void OBP60Task(GwApi *api){
                         }
                         else{
                             setBacklightLED(0, COLOR_BLUE); // Backlight LEDs off (blue without britghness)
-                        }           
-
+                        }
                     }
                 }
             }
@@ -652,14 +658,14 @@ void OBP60Task(GwApi *api){
                 }
 
                 // Call the particular page
-                Page *currentPage;
+                //Page *currentPage;
                 if (systemPage) {
-                    currentPage = allPages.pages[0]->creator(commonData);
+                    displayFooter(commonData);
                     PageData sysparams;
-                    currentPage->displayPage(commonData, sysparams);
+                    syspage->displayPage(sysparams);
                 }
                 else {
-                    currentPage = pages[pageNumber].page;
+                    Page *currentPage = pages[pageNumber].page;
                     if (currentPage == NULL){
                         LOG_DEBUG(GwLog::ERROR,"page number %d not found",pageNumber);
                         // Error handling for missing page
