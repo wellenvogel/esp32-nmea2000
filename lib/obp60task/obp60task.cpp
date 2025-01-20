@@ -13,6 +13,12 @@
 #include "OBP60Extensions.h"            // Functions lib for extension board
 #include "OBP60Keypad.h"                // Functions for keypad
 
+#ifdef HARDWARE_LIGHT
+#include <FS.h> // SD-Card access
+#include <SD.h>
+#include <SPI.h>
+#endif
+
 // True type character sets includes
 // See OBP60ExtensionPort.cpp
 
@@ -33,6 +39,9 @@ int taskRunCounter = 0;         // Task couter for loop section
 //####################################################################################
 void OBP60Init(GwApi *api){
 
+    GwLog *logger = api->getLogger();
+    GwConfigHandler *config = api->getConfig();
+
     // Set a new device name and hidden the original name in the main config
     String devicename = api->getConfig()->getConfigItem(api->getConfig()->deviceName,true)->asString();
     api->getConfig()->setValue(GwConfigDefinitions::systemName, devicename, GwConfigInterface::ConfigType::HIDDEN);
@@ -44,6 +53,33 @@ void OBP60Init(GwApi *api){
 
     // Init hardware
     hardwareInit(api);
+
+#ifdef HARDWARE_LIGHT
+    String sdcard = config->getConfigItem(config->useSDCard, true)->asString();
+    if (sdcard == "on") {
+        setPortPin(OBP_POWER_SD, true); // Power on SD
+        delay(10);
+        SPIClass SD_SPI = SPIClass(HSPI);
+        SD_SPI.begin(SD_SPI_CLK, SD_SPI_MISO, SD_SPI_MOSI);
+        if (SD.begin(SD_SPI_CS, SD_SPI, 80000000)) {
+            String sdtype = "unknown";
+            uint8_t cardType = SD.cardType();
+            switch (cardType) {
+                case CARD_MMC:
+                   sdtype = "MMC";
+                   break;
+                case CARD_SD:
+                   sdtype = "SDSC";
+                   break;
+                case CARD_SDHC:
+                   sdtype = "SDHC";
+                   break;
+            }
+            uint64_t cardSize = SD.cardSize() / (1024 * 1024);
+            LOG_DEBUG(GwLog::LOG,"SD card type %s of size %d MB detected", sdtype, cardSize);
+        }
+    }
+#endif
 
     // Init power rail 5.0V
     String powermode = api->getConfig()->getConfigItem(api->getConfig()->powerMode,true)->asString();
@@ -288,15 +324,19 @@ void OBP60Task(GwApi *api){
 //    return;
     GwLog *logger=api->getLogger();
     GwConfigHandler *config=api->getConfig();
+#ifdef HARDWARE_V21
     startLedTask(api);
+#endif
     PageList allPages;
     registerAllPages(allPages);
     CommonData commonData;
     commonData.logger=logger;
     commonData.config=config;
 
+#ifdef HARDWARE_V21
     // Keyboard coordinates for page footer
     initKeys(commonData);
+#endif
 
     tN2kMsg N2kMsg;
 

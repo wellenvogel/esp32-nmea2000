@@ -326,12 +326,14 @@ void displayHeader(CommonData &commonData, GwApi::BoatValue *date, GwApi::BoatVa
         usbRxOld = commonData.status.usbRx;
         usbTxOld = commonData.status.usbTx;
 
+#ifdef HARDWARE_V21
         // Display key lock status
         if (commonData.keylock) {
             getdisplay().drawXBitmap(170, 1, lock_bits, icon_width, icon_height, commonData.fgcolor);
         } else {
             getdisplay().drawXBitmap(166, 1, swipe_bits, swipe_width, swipe_height, commonData.fgcolor);
         }
+#endif
 
         // Heartbeat as dot
         getdisplay().setTextColor(commonData.fgcolor);
@@ -376,6 +378,7 @@ void displayFooter(CommonData &commonData) {
     getdisplay().setFont(&Atari16px);
     getdisplay().setTextColor(commonData.fgcolor);
 
+#ifdef HARDWARE_V21
     // Frame around key icon area
     if (! commonData.keylock) {
         // horizontal elements
@@ -422,6 +425,32 @@ void displayFooter(CommonData &commonData) {
         getdisplay().setCursor(65, 295);
         getdisplay().print("Press 1 and 6 fast to unlock keys");
     }
+#endif
+#ifdef HARDWARE_LIGHT
+    // grapical page indicator
+    static const uint16_t r = 5;
+    static const uint16_t space = 4;
+    uint16_t w = commonData.data.maxpage * r * 2 + (commonData.data.maxpage - 1) * space;
+    uint16_t x0 = (GxEPD_WIDTH - w) / 2 + r * 2;
+    for (int i = 0; i < commonData.data.maxpage; i++) {
+        if (i == (commonData.data.actpage - 1)) {
+            getdisplay().fillCircle(x0 + i * (r * 2 + space), 290, r, commonData.fgcolor);
+        } else {
+            getdisplay().drawCircle(x0 + i * (r * 2 + space), 290, r, commonData.fgcolor);
+        }
+    }
+    // key indicators
+    // left side = top key "menu"
+    getdisplay().drawLine(0, 280, 10, 280, commonData.fgcolor);
+    getdisplay().drawLine(55, 280, 65, 280, commonData.fgcolor);
+    getdisplay().drawLine(65, 280, 65, 299, commonData.fgcolor);
+    drawTextCenter(33, 291, commonData.keydata[0].label);
+    // right side = bottom key "exit"
+    getdisplay().drawLine(390, 280, 399, 280, commonData.fgcolor);
+    getdisplay().drawLine(335, 280, 345, 280, commonData.fgcolor);
+    getdisplay().drawLine(335, 280, 335, 399, commonData.fgcolor);
+    drawTextCenter(366, 291, commonData.keydata[1].label);
+#endif
 }
 
 // Sunset und sunrise calculation

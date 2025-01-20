@@ -103,6 +103,7 @@ class Page{
     virtual void displayPage(PageData &pageData)=0;
     virtual void displayNew(PageData &pageData){}
     virtual void setupKeys() {
+#ifdef HARDWARE_V21
         commonData->keydata[0].label = "";
         commonData->keydata[1].label = "";
         commonData->keydata[2].label = "#LEFT";
@@ -113,6 +114,12 @@ class Page{
         } else {
             commonData->keydata[5].label = "";
         }
+#endif
+#ifdef HARDWARE_LIGHT
+        commonData->keydata[0].label = "";
+        commonData->keydata[1].label = "";
+
+#endif
     }
     //return -1 if handled by the page
     virtual int handleKey(int key){return key;}
