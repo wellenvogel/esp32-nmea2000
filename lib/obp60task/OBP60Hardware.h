@@ -76,9 +76,9 @@
     #define OBP_POWER_50 5          // 5.0V power rail
 #endif
 
-// Hardware configuration for OBP60 LIGHT
+// Hardware configuration for OBP40
 
-#ifdef HARDWARE_LIGHT
+#ifdef BOARD_OBP40S3
     // Direction pin for RS485 NMEA0183
     #define OBP_DIRECTION_PIN 8
     // I2C

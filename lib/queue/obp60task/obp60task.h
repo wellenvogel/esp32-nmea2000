@@ -1,7 +1,7 @@
 #pragma once
 #include "GwApi.h"
 //we only compile for some boards
-#ifdef BOARD_OBP60S3
+#if defined BOARD_OBP60S3 || defined BOARD_OBP40S3
     #define USBSerial Serial
     // CAN NMEA2000
     #define ESP32_CAN_TX_PIN 46

@@ -1,4 +1,4 @@
-#ifdef BOARD_OBP60S3
+#if defined BOARD_OBP60S3 || defined BOARD_OBP40S3
 
 /****************************************************
   AMS 5600 class for Arduino platform

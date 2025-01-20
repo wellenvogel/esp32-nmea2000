@@ -115,7 +115,7 @@ class Page{
             commonData->keydata[5].label = "";
         }
 #endif
-#ifdef HARDWARE_LIGHT
+#ifdef BOARD_OBP40S3
         commonData->keydata[0].label = "";
         commonData->keydata[1].label = "";
 

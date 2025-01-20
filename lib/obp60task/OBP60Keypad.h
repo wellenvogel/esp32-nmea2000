@@ -236,7 +236,7 @@ void initKeys(CommonData &commonData) {
   }
   #endif
 
-  #ifdef HARDWARE_LIGHT
+  #ifdef BOARD_OBP40S3
   int readSensorpads(){
       // Read key code
       if(digitalRead(UP) == LOW){

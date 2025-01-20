@@ -1,4 +1,4 @@
-#ifdef BOARD_OBP60S3
+#if defined BOARD_OBP60S3 || defined BOARD_OBP40S3
 #include "obp60task.h"
 #include "Pagedata.h"                   // Data exchange for pages
 #include "OBP60Hardware.h"              // PIN definitions
@@ -13,7 +13,7 @@
 #include "OBP60Extensions.h"            // Functions lib for extension board
 #include "OBP60Keypad.h"                // Functions for keypad
 
-#ifdef HARDWARE_LIGHT
+#ifdef BOARD_OBP40S3
 #include <FS.h> // SD-Card access
 #include <SD.h>
 #include <SPI.h>
@@ -54,8 +54,9 @@ void OBP60Init(GwApi *api){
     // Init hardware
     hardwareInit(api);
 
-#ifdef HARDWARE_LIGHT
-    String sdcard = config->getConfigItem(config->useSDCard, true)->asString();
+#ifdef BOARD_OBP40S3
+    //String sdcard = config->getConfigItem(config->useSDCard, true)->asString();
+    String sdcard = "on";
     if (sdcard == "on") {
         setPortPin(OBP_POWER_SD, true); // Power on SD
         delay(10);
@@ -88,7 +89,7 @@ void OBP60Init(GwApi *api){
         #ifdef HARDWARE_V21
         setPortPin(OBP_POWER_50, true); // Power on 5.0V rail
         #endif
-        #ifdef HARDWARE_LIGHT
+        #ifdef BOARD_OBP40S3
         setPortPin(OBP_POWER_EPD, true);// Power on ePaper display
         #endif
     }
@@ -96,7 +97,7 @@ void OBP60Init(GwApi *api){
         #ifdef HARDWARE_V21
         setPortPin(OBP_POWER_50, false); // Power off 5.0V rail
         #endif
-        #ifdef HARDWARE_LIGHT
+        #ifdef BOARD_OBP40S3
         setPortPin(OBP_POWER_EPD, false);// Power off ePaper display
         #endif
     }

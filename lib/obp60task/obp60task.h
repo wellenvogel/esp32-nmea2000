@@ -1,7 +1,7 @@
 #pragma once
 #include "GwApi.h"
 //we only compile for some boards
-#ifdef BOARD_OBP60S3
+#if defined BOARD_OBP60S3 || defined BOARD_OBP40S3
     #define USBSerial Serial
     #ifdef HARDWARE_V21
         // CAN NMEA2000
@@ -14,7 +14,7 @@
         #define GWSERIAL_RX 8
         #define GWSERIAL_MODE "UNI"
     #endif
-    #ifdef HARDWARE_LIGHT
+    #ifdef BOARD_OBP40S3
         // CAN NMEA2000
         #define ESP32_CAN_TX_PIN 15
         #define ESP32_CAN_RX_PIN 16
@@ -38,7 +38,7 @@
     #ifdef HARDWARE_V21
     DECLARE_CAPABILITY(obp60,true);
     #endif
-    #ifdef HARDWARE_LIGHT
+    #ifdef BOARD_OBP40S3
     DECLARE_CAPABILITY(obp40,true)
     #endif
     DECLARE_STRING_CAPABILITY(HELP_URL, "https://obp60-v2-docu.readthedocs.io/de/latest/"); // Link to help pages

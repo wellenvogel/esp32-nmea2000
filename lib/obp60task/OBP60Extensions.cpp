@@ -1,4 +1,4 @@
-#ifdef BOARD_OBP60S3
+#if defined BOARD_OBP60S3 || defined BOARD_OBP40S3
 
 #include <Arduino.h>
 #include <PCF8574.h>      // Driver for PCF8574 output modul from Horter
@@ -426,7 +426,7 @@ void displayFooter(CommonData &commonData) {
         getdisplay().print("Press 1 and 6 fast to unlock keys");
     }
 #endif
-#ifdef HARDWARE_LIGHT
+#ifdef BOARD_OBP40S3
     // grapical page indicator
     static const uint16_t r = 5;
     static const uint16_t space = 4;

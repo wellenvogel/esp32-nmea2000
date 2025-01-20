@@ -1,4 +1,4 @@
-#ifdef BOARD_OBP60S3
+#if defined BOARD_OBP60S3 || defined BOARD_OBP40S3
 
 #include <Arduino.h>
 #include "GwApi.h"
