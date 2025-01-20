@@ -220,7 +220,7 @@ void initKeys(CommonData &commonData) {
 
   #ifdef HARDWARE_LIGHT
   int readSensorpads(){
-      // Read key code 
+      // Read key code
       if(digitalRead(UP) == LOW){
         keycode = 10; // Left swipe
       }
@@ -250,7 +250,7 @@ void initKeys(CommonData &commonData) {
     pinMode(MENUE, INPUT);
     pinMode(EXIT, INPUT);
 
-    // Raed pad values
+    // Read pad values
     readSensorpads();
 
     // Detect key
@@ -264,7 +264,7 @@ void initKeys(CommonData &commonData) {
         keystatus = keycode;
         // Copy keycode
         keycodeold = keycode;
-        while(readSensorpads() > 0){} // Wait for pad lesease
+        while(readSensorpads() > 0){} // Wait for pad release
         delay(keydelay);
       }
     }

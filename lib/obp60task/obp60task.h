@@ -19,7 +19,7 @@
         #define ESP32_CAN_TX_PIN 15
         #define ESP32_CAN_RX_PIN 16
         // Bus load in 50mA steps
-        #define N2K_LOAD_LEVEL 2 // 5x50mA = 100mA max bus load with back light on
+        #define N2K_LOAD_LEVEL 2 // 2x50mA = 100mA max bus load
         // RS485 NMEA0183
         #define GWSERIAL_TX 9
         #define GWSERIAL_RX 14
@@ -35,6 +35,11 @@
     // OBP60 Task
     void OBP60Task(GwApi *param);
     DECLARE_USERTASK_PARAM(OBP60Task, 35000);   // Need 35k RAM as stack size
+    #ifdef HARDWARE_V21
     DECLARE_CAPABILITY(obp60,true);
+    #endif
+    #ifdef HARDWARE_LIGHT
+    DECLARE_CAPABILITY(obp40,true)
+    #endif
     DECLARE_STRING_CAPABILITY(HELP_URL, "https://obp60-v2-docu.readthedocs.io/de/latest/"); // Link to help pages
 #endif
