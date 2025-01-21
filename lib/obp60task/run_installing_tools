@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# This script installing the tool chain
+# in the Gitpod Docker container.
+
+# Attention! Start this cript only in the Gitpod Docker container.
+# Start the script with: bash run
+
+# Install tools
+echo "Installing tools"
+cd /workspace/esp32-nmea2000
+pip3 install -U esptool
+pip3 install  platformio
