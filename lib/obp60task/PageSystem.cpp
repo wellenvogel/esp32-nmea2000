@@ -3,7 +3,7 @@
 #include "Pagedata.h"
 #include "OBP60Extensions.h"
 #include "images/logo64.xbm"
-#include <esp_clk.h>
+#include <esp32/clk.h>
 
 #define STRINGIZE_IMPL(x) #x
 #define STRINGIZE(x) STRINGIZE_IMPL(x)
@@ -31,6 +31,9 @@ public:
     PageSystem(CommonData &common){
         commonData = &common;
         common.logger->logDebug(GwLog::LOG,"Instantiate PageSystem");
+        if (hasFRAM) {
+            mode = fram.read(FRAM_SYSTEM_MODE);
+        }
         chipid = ESP.getEfuseMac();
         simulation = common.config->getBool(common.config->useSimuData);
         buzzer_mode = common.config->getString(common.config->buzzerMode);
@@ -60,7 +63,7 @@ public:
             } else {
                 mode = 'N';
             }
-            if (hasFRAM) fram.write(FRAM_VOLTAGE_MODE, mode);
+            if (hasFRAM) fram.write(FRAM_SYSTEM_MODE, mode);
             return 0;
         }
         // grab cursor keys to disable page navigation
