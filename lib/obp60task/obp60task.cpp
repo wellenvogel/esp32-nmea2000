@@ -55,12 +55,32 @@ void OBP60Init(GwApi *api){
     // Init hardware
     hardwareInit(api);
 
-#ifdef BOARD_OBP40S3
+    // Init power rail 5.0V
+    String powermode = api->getConfig()->getConfigItem(api->getConfig()->powerMode,true)->asString();
+    api->getLogger()->logDebug(GwLog::DEBUG,"Power Mode is: %s", powermode.c_str());
+    if(powermode == "Max Power" || powermode == "Only 5.0V"){
+        #ifdef HARDWARE_V21
+        setPortPin(OBP_POWER_50, true); // Power on 5.0V rail
+        #endif
+        #ifdef BOARD_OBP40S3
+        setPortPin(OBP_POWER_EPD, true);// Power on ePaper display
+        setPortPin(OBP_POWER_SD, true); // Power on SD card
+        #endif
+    }
+    else{
+        #ifdef HARDWARE_V21
+        setPortPin(OBP_POWER_50, false); // Power off 5.0V rail
+        #endif
+        #ifdef BOARD_OBP40S3
+        setPortPin(OBP_POWER_EPD, false);// Power off ePaper display
+        setPortPin(OBP_POWER_SD, false); // Power off SD card
+        #endif
+    }
+
+    #ifdef BOARD_OBP40S3
     //String sdcard = config->getConfigItem(config->useSDCard, true)->asString();
     String sdcard = "on";
     if (sdcard == "on") {
-        setPortPin(OBP_POWER_SD, true); // Power on SD
-        delay(10);
         SPIClass SD_SPI = SPIClass(HSPI);
         SD_SPI.begin(SD_SPI_CLK, SD_SPI_MISO, SD_SPI_MOSI);
         if (SD.begin(SD_SPI_CS, SD_SPI, 80000000)) {
@@ -87,26 +107,6 @@ void OBP60Init(GwApi *api){
     rtc_gpio_pullup_en(OBP_WAKEWUP_PIN);                // Activate pullup resistor
     rtc_gpio_pulldown_dis(OBP_WAKEWUP_PIN);             // Disable pulldown resistor
 #endif
-
-    // Init power rail 5.0V
-    String powermode = api->getConfig()->getConfigItem(api->getConfig()->powerMode,true)->asString();
-    api->getLogger()->logDebug(GwLog::DEBUG,"Power Mode is: %s", powermode.c_str());
-    if(powermode == "Max Power" || powermode == "Only 5.0V"){
-        #ifdef HARDWARE_V21
-        setPortPin(OBP_POWER_50, true); // Power on 5.0V rail
-        #endif
-        #ifdef BOARD_OBP40S3
-        setPortPin(OBP_POWER_EPD, true);// Power on ePaper display
-        #endif
-    }
-    else{
-        #ifdef HARDWARE_V21
-        setPortPin(OBP_POWER_50, false); // Power off 5.0V rail
-        #endif
-        #ifdef BOARD_OBP40S3
-        setPortPin(OBP_POWER_EPD, false);// Power off ePaper display
-        #endif
-    }
 
     // Settings for e-paper display
     String fastrefresh = api->getConfig()->getConfigItem(api->getConfig()->fastRefresh,true)->asString();
@@ -334,18 +334,20 @@ void deepSleep(CommonData &common){
     setFlashLED(false);                     // Flash LED Off            
     buzzer(TONE4, 20);                      // Buzzer tone 4kHz 20ms
     // Shutdown EInk display
-    getdisplay().setPartialWindow(0, 0, getdisplay().width(), getdisplay().height()); // Set partial update
-    getdisplay().fillScreen(common.bgcolor);       // Clear screen
+    getdisplay().setFullWindow();               // Set full Refresh
+    //getdisplay().setPartialWindow(0, 0, getdisplay().width(), getdisplay().height()); // Set partial update
+    getdisplay().fillScreen(common.bgcolor);    // Clear screen
     getdisplay().setTextColor(common.fgcolor);
     getdisplay().setFont(&Ubuntu_Bold20pt7b);
     getdisplay().setCursor(85, 150);
     getdisplay().print("Sleep Mode");
     getdisplay().setFont(&Ubuntu_Bold8pt7b);
     getdisplay().setCursor(65, 175);
-    getdisplay().print(" For wakeup press wheel and wait 5s");
+    getdisplay().print("For wakeup press wheel and wait 5s");
     getdisplay().nextPage();                // Partial update
     getdisplay().powerOff();                // Display power off
     setPortPin(OBP_POWER_EPD, false);       // Power off ePaper display
+    setPortPin(OBP_POWER_SD, false);        // Power off SD card
     // Stop system
     while(true){
         esp_deep_sleep_start();             // Deep Sleep with weakup via GPIO pin

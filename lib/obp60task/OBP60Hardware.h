@@ -149,10 +149,10 @@
 
     // Flash LED (1x WS2812B)
     #define NUM_FLASH_LED 1         // Number of flash LED
-    #define OBP_FLASH_LED 10        // GPIO port
+    #define OBP_FLASH_LED 41        // GPIO port (power LED)
     // Backlight LEDs (6x WS2812B)
     #define NUM_BACKLIGHT_LED 6     // Number of Backlight LEDs
-    #define OBP_BACKLIGHT_LED 40    // GPIO port
+    #define OBP_BACKLIGHT_LED 41    // GPIO port (power LED)
     // Power Rail
     #define OBP_POWER_50 41         // Power LED
     #define OBP_POWER_EPD 7         // ePaper power
