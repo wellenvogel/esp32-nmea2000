@@ -2,13 +2,32 @@
 
 #include "Pagedata.h"
 #include "OBP60Extensions.h"
+#include "MFD_OBP60_400x300_sw.h"       // MFD with logo
+#include "Logo_OBP_400x300_sw.h"        // OBP Logo
 
 class PageWhite : public Page
 {
-    public:
+char mode = 'W';  // display mode (W)hite | (L)ogo | (M)FD logo
+
+public:
     PageWhite(CommonData &common){
         commonData = &common;
         common.logger->logDebug(GwLog::LOG,"Instantiate PageWhite");
+    }
+
+    virtual int handleKey(int key) {
+         // Change display mode
+        if (key == 1) {
+            if (mode == 'W') {
+                mode = 'L';
+            } else if (mode == 'L') {
+                mode = 'M';
+            } else {
+                mode = 'W';
+            }
+            return 0;
+        }
+        return key;
     }
 
     virtual void displayPage(PageData &pageData){
@@ -35,6 +54,12 @@ class PageWhite : public Page
 
         // Set display in partial refresh mode
         getdisplay().setPartialWindow(0, 0, getdisplay().width(), getdisplay().height()); // Set partial update
+
+        if (mode == 'L') {
+            getdisplay().drawBitmap(0, 0, gImage_Logo_OBP_400x300_sw, getdisplay().width(), getdisplay().height(), commonData->fgcolor);
+        } else if (mode == 'M') {
+            getdisplay().drawBitmap(0, 0, gImage_MFD_OBP60_400x300_sw, getdisplay().width(), getdisplay().height(), commonData->fgcolor);
+        }
 
         // Update display
         getdisplay().nextPage();    // Partial update (fast)

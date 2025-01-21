@@ -28,7 +28,7 @@ no_of_fields_per_page = {
     "ThreeValues": 3,
     "TwoValues": 2,
     "Voltage": 0,
-    "White": 0,
+    "WhitePage": 0,
     "WindRose": 0,
     "WindRoseFlex": 6,
    # "SixValues" : 6,
