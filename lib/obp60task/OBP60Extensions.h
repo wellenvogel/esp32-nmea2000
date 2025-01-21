@@ -10,6 +10,7 @@
 // FRAM address reservations 32kB: 0x0000 - 0x7FFF
 // 0x0000 - 0x03ff: single variables
 #define FRAM_PAGE_NO 0x0002
+#define FRAM_SYSTEM_MODE 0x009
 // Voltage page
 #define FRAM_VOLTAGE_AVG 0x000A
 #define FRAM_VOLTAGE_TREND 0x000B
