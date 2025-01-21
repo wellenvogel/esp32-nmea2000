@@ -10,7 +10,7 @@ from datetime import datetime
 import re
 import pprint
 from platformio.project.config import ProjectConfig
-
+from platformio.project.exception import InvalidProjectConfError
 
 Import("env")
 #print(env.Dump())
@@ -104,7 +104,17 @@ def writeFileIfChanged(fileName,data):
     return True    
 
 def mergeConfig(base,other):
+    try:
+        customconfig = env.GetProjectOption("custom_config")
+    except InvalidProjectConfError:
+        customconfig = None
     for bdir in other:
+        if customconfig and os.path.exists(os.path.join(bdir,customconfig)):
+            cname=os.path.join(bdir,customconfig)
+            print("merge custom config {}".format(cname))
+            with open(cname,'rb') as ah:
+                base += json.load(ah)
+            continue   
         cname=os.path.join(bdir,"config.json")
         if os.path.exists(cname):
             print("merge config %s"%cname)
