@@ -1,4 +1,0 @@
-git status
-git fetch upstream
-git diff --name-status upstream/master
-git checkout upstream/master platformio.ini

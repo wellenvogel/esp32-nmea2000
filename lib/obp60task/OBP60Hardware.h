@@ -157,5 +157,9 @@
     #define OBP_POWER_50 41         // Power LED
     #define OBP_POWER_EPD 7         // ePaper power
     #define OBP_POWER_SD 42         // SD card power
+    // Deep sleep wakeup
+    #define OBP_WAKEUP_LEVEL 0      // //1 = High, 0 = Low, depends on switch
+    #define OBP_WAKEWUP_PIN GPIO_NUM_5// Wakeup pin, same as CONF (wheel press)
+                                      // Must define as GPIO_NUM_X
 #endif
 

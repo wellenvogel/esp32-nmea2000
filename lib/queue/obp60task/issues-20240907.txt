@@ -1,6 +1,0 @@
-initHardware:
-* OBP60Extensions.cpp:60 setting clock speed for Wire does not work
-* why real hardware init in init task?
-
-logging:
-* %s needs c-string not String! - e.g. obp60task.cpp:52,67,82
