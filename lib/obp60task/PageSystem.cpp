@@ -48,7 +48,7 @@ public:
         commonData->keydata[0].label = "EXIT";
         commonData->keydata[1].label = "MODE";
         commonData->keydata[2].label = "";
-        commonData->keydata[3].label = "";
+        commonData->keydata[3].label = "RST";
         commonData->keydata[4].label = "STBY";
         commonData->keydata[5].label = "ILUM";
     }
@@ -67,8 +67,12 @@ public:
             return 0;
         }
         // grab cursor keys to disable page navigation
-        if (key == 3 or key == 4) {
+        if (key == 3) {
             return 0;
+        }
+        // soft reset
+        if (key == 4) {
+            ESP.restart();
         }
         // Code for keylock
         if (key == 11) {
@@ -133,10 +137,24 @@ public:
             getdisplay().setCursor(120, y0 + 16);
             getdisplay().print(env_module);
 
+            // total RAM free
+            int Heap_free = esp_get_free_heap_size();
+            getdisplay().setCursor(202, y0 + 16);
+            getdisplay().print("Total free:");
+            getdisplay().setCursor(300, y0 + 16);
+            getdisplay().print(String(Heap_free));
+
             getdisplay().setCursor(2, y0 + 32);
             getdisplay().print("Buzzer:");
             getdisplay().setCursor(120, y0 + 32);
             getdisplay().print(buzzer_mode);
+
+            // RAM free for task
+            int RAM_free = uxTaskGetStackHighWaterMark(NULL);
+            getdisplay().setCursor(202, y0 + 32);
+            getdisplay().print("Task free:");
+            getdisplay().setCursor(300, y0 + 32);
+            getdisplay().print(String(RAM_free));
 
             getdisplay().setCursor(2, y0 + 48);
             getdisplay().print("CPU speed:");
@@ -145,11 +163,6 @@ public:
             getdisplay().print(" / ");
             int cpu_freq = esp_clk_cpu_freq() / 1000000;
             getdisplay().print(String(cpu_freq));
-
-            getdisplay().setCursor(2, y0 + 64);
-            getdisplay().print("RTC:");
-            getdisplay().setCursor(120, y0 + 64);
-            getdisplay().print(rtc_module);
 
             getdisplay().setCursor(202, y0 + 64);
             getdisplay().print("GPS:");
@@ -160,6 +173,11 @@ public:
             getdisplay().print("FRAM:");
             getdisplay().setCursor(120, y0 + 80);
             getdisplay().print(hasFRAM ? "available" : "not found");
+
+            getdisplay().setCursor(202, y0 + 80);
+            getdisplay().print("RTC:");
+            getdisplay().setCursor(300, y0 + 80);
+            getdisplay().print(rtc_module);
 
             getdisplay().setCursor(2, y0 + 120);
             getdisplay().print("Firmware Version: ");
