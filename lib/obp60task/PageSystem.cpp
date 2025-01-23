@@ -74,6 +74,10 @@ public:
         if (key == 4) {
             ESP.restart();
         }
+        // standby / deep sleep
+        if (key == 5) {
+           deepSleep(*commonData);
+        }
         // Code for keylock
         if (key == 11) {
             commonData->keylock = !commonData->keylock;

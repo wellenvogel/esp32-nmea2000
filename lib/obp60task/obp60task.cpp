@@ -117,6 +117,16 @@ void OBP60Init(GwApi *api){
     }
     #endif
 
+    #ifdef BOARD_OBP60S3
+    touchSleepWakeUpEnable(TP1, 45);
+    touchSleepWakeUpEnable(TP2, 45);
+    touchSleepWakeUpEnable(TP3, 45);
+    touchSleepWakeUpEnable(TP4, 45);
+    touchSleepWakeUpEnable(TP5, 45);
+    touchSleepWakeUpEnable(TP6, 45);
+    esp_sleep_enable_touchpad_wakeup();
+    #endif
+
     // Get CPU speed
     int freq = getCpuFrequencyMhz();
     api->getLogger()->logDebug(GwLog::LOG,"CPU speed at boot: %i MHz", freq);
@@ -356,6 +366,8 @@ void deepSleep(CommonData &common){
 }
 #endif
 
+
+
 // OBP60 Task
 //####################################################################################
 void OBP60Task(GwApi *api){
@@ -440,6 +452,18 @@ void OBP60Task(GwApi *api){
     PageStruct pages[MAX_PAGE_NUMBER];
     // Set start page
     int pageNumber = int(api->getConfig()->getConfigItem(api->getConfig()->startPage,true)->asInt()) - 1;
+
+#ifdef BOARD_OBP60S3
+    LOG_DEBUG(GwLog::LOG,"Checking wakeup...");
+    if (esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_TOUCHPAD) {
+        LOG_DEBUG(GwLog::LOG,"Wake up by touch pad %d",esp_sleep_get_touchpad_wakeup_status());
+        pageNumber = getLastPage();
+    } else {
+        LOG_DEBUG(GwLog::LOG,"Other wakeup reason");
+    }
+    LOG_DEBUG(GwLog::LOG,"...done");
+#endif
+
     int lastPage=pageNumber;
 
     BoatValueList boatValues; //all the boat values for the api query
