@@ -550,8 +550,10 @@ void OBP60Task(GwApi *api){
     //####################################################################################
 
     bool systemPage = false;
+    Page *currentPage;
     while (true){
         delay(100);     // Delay 100ms (loop time)
+        bool keypressed = false;
 
         // Undervoltage detection
         if(uvoltage == true){
@@ -593,8 +595,8 @@ void OBP60Task(GwApi *api){
             int keyboardMessage=0;
             while (xQueueReceive(allParameters.queue,&keyboardMessage,0)){
                 LOG_DEBUG(GwLog::LOG,"new key from keyboard %d",keyboardMessage);
+                keypressed = true;
 
-                Page *currentPage;
                 if (keyboardMessage == 12) {
                     LOG_DEBUG(GwLog::LOG, "Calling system page");
                     systemPage = true; // System page is out of band
@@ -725,9 +727,17 @@ void OBP60Task(GwApi *api){
                 }
             }
             
-            // Refresh display data all 1s
-            if(millis() > starttime3 + 1000){
+            // Refresh display data, default all 1s
+            currentPage = pages[pageNumber].page;
+            int pagetime = 1000;
+            if ((lastPage == pageNumber) and (!keypressed)) {
+                // same page we use page defined time
+                pagetime = currentPage->refreshtime;
+            }
+            if(millis() > starttime3 + pagetime){
+                LOG_DEBUG(GwLog::DEBUG,"Page with refreshtime=%d", pagetime);
                 starttime3 = millis();
+
                 //refresh data from api
                 api->getBoatDataValues(boatValues.numValues,boatValues.allBoatValues);
                 api->getStatus(commonData.status);
@@ -749,7 +759,6 @@ void OBP60Task(GwApi *api){
                     syspage->displayPage(sysparams);
                 }
                 else {
-                    Page *currentPage = pages[pageNumber].page;
                     if (currentPage == NULL){
                         LOG_DEBUG(GwLog::ERROR,"page number %d not found", pageNumber);
                         // Error handling for missing page

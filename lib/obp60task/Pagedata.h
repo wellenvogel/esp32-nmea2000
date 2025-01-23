@@ -100,6 +100,7 @@ class Page{
   protected:
     CommonData *commonData;
   public:
+    int refreshtime = 1000;
     virtual void displayPage(PageData &pageData)=0;
     virtual void displayNew(PageData &pageData){}
     virtual void setupKeys() {
