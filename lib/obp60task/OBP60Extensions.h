@@ -64,6 +64,12 @@ Point rotatePoint(const Point& origin, const Point& p, double angle);
 std::vector<Point> rotatePoints(const Point& origin, const std::vector<Point>& pts, double angle);
 void fillPoly4(const std::vector<Point>& p4, uint16_t color);
 
+#ifdef BOARD_OBP60S3
+void deepSleep(CommonData &common);
+#endif
+
+uint8_t getLastPage();
+
 void hardwareInit(GwApi *api);
 
 void setPortPin(uint pin, bool value);          // Set port pin for extension port

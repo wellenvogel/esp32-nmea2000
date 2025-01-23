@@ -117,6 +117,16 @@ void OBP60Init(GwApi *api){
     }
     #endif
 
+    #ifdef BOARD_OBP60S3
+    touchSleepWakeUpEnable(TP1, 45);
+    touchSleepWakeUpEnable(TP2, 45);
+    touchSleepWakeUpEnable(TP3, 45);
+    touchSleepWakeUpEnable(TP4, 45);
+    touchSleepWakeUpEnable(TP5, 45);
+    touchSleepWakeUpEnable(TP6, 45);
+    esp_sleep_enable_touchpad_wakeup();
+    #endif
+
     // Get CPU speed
     int freq = getCpuFrequencyMhz();
     api->getLogger()->logDebug(GwLog::LOG,"CPU speed at boot: %i MHz", freq);
@@ -356,6 +366,8 @@ void deepSleep(CommonData &common){
 }
 #endif
 
+
+
 // OBP60 Task
 //####################################################################################
 void OBP60Task(GwApi *api){
@@ -440,6 +452,18 @@ void OBP60Task(GwApi *api){
     PageStruct pages[MAX_PAGE_NUMBER];
     // Set start page
     int pageNumber = int(api->getConfig()->getConfigItem(api->getConfig()->startPage,true)->asInt()) - 1;
+
+#ifdef BOARD_OBP60S3
+    LOG_DEBUG(GwLog::LOG,"Checking wakeup...");
+    if (esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_TOUCHPAD) {
+        LOG_DEBUG(GwLog::LOG,"Wake up by touch pad %d",esp_sleep_get_touchpad_wakeup_status());
+        pageNumber = getLastPage();
+    } else {
+        LOG_DEBUG(GwLog::LOG,"Other wakeup reason");
+    }
+    LOG_DEBUG(GwLog::LOG,"...done");
+#endif
+
     int lastPage=pageNumber;
 
     BoatValueList boatValues; //all the boat values for the api query
@@ -550,8 +574,10 @@ void OBP60Task(GwApi *api){
     //####################################################################################
 
     bool systemPage = false;
+    Page *currentPage;
     while (true){
         delay(100);     // Delay 100ms (loop time)
+        bool keypressed = false;
 
         // Undervoltage detection
         if(uvoltage == true){
@@ -593,8 +619,8 @@ void OBP60Task(GwApi *api){
             int keyboardMessage=0;
             while (xQueueReceive(allParameters.queue,&keyboardMessage,0)){
                 LOG_DEBUG(GwLog::LOG,"new key from keyboard %d",keyboardMessage);
+                keypressed = true;
 
-                Page *currentPage;
                 if (keyboardMessage == 12) {
                     LOG_DEBUG(GwLog::LOG, "Calling system page");
                     systemPage = true; // System page is out of band
@@ -725,9 +751,17 @@ void OBP60Task(GwApi *api){
                 }
             }
             
-            // Refresh display data all 1s
-            if(millis() > starttime3 + 1000){
+            // Refresh display data, default all 1s
+            currentPage = pages[pageNumber].page;
+            int pagetime = 1000;
+            if ((lastPage == pageNumber) and (!keypressed)) {
+                // same page we use page defined time
+                pagetime = currentPage->refreshtime;
+            }
+            if(millis() > starttime3 + pagetime){
+                LOG_DEBUG(GwLog::DEBUG,"Page with refreshtime=%d", pagetime);
                 starttime3 = millis();
+
                 //refresh data from api
                 api->getBoatDataValues(boatValues.numValues,boatValues.allBoatValues);
                 api->getStatus(commonData.status);
@@ -749,7 +783,6 @@ void OBP60Task(GwApi *api){
                     syspage->displayPage(sysparams);
                 }
                 else {
-                    Page *currentPage = pages[pageNumber].page;
                     if (currentPage == NULL){
                         LOG_DEBUG(GwLog::ERROR,"page number %d not found", pageNumber);
                         // Error handling for missing page
