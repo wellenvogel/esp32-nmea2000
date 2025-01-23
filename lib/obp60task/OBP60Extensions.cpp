@@ -70,6 +70,9 @@ bool statusBacklightLED = false;// Actual status of flash LED on/off
 
 int uvDuration = 0;             // Under voltage duration in n x 100ms
 
+RTC_DATA_ATTR uint8_t RTC_lastpage; // Remember last page while deep sleeping
+
+
 LedTaskData *ledTaskData=nullptr;
 
 void hardwareInit(GwApi *api)
@@ -117,6 +120,35 @@ void startLedTask(GwApi *api){
     ledTaskData=new LedTaskData(api);
     createSpiLedTask(ledTaskData);
 }
+
+uint8_t getLastPage() {
+    return RTC_lastpage;
+}
+
+#ifdef BOARD_OBP60S3
+void deepSleep(CommonData &common){
+    RTC_lastpage = common.data.actpage - 1;
+    // Switch off all power lines
+    setPortPin(OBP_BACKLIGHT_LED, false);   // Backlight Off
+    setFlashLED(false);                     // Flash LED Off
+    buzzer(TONE4, 20);                      // Buzzer tone 4kHz 20ms
+    // Shutdown EInk display
+    getdisplay().setFullWindow();               // Set full Refresh
+    getdisplay().fillScreen(common.bgcolor);    // Clear screen
+    getdisplay().setTextColor(common.fgcolor);
+    getdisplay().setFont(&Ubuntu_Bold20pt7b);
+    getdisplay().setCursor(85, 150);
+    getdisplay().print("Sleep Mode");
+    getdisplay().setFont(&Ubuntu_Bold8pt7b);
+    getdisplay().setCursor(65, 175);
+    getdisplay().print("For wakeup press key and wait 5s");
+    getdisplay().nextPage();                // Update display contents
+    getdisplay().powerOff();                // Display power off
+    setPortPin(OBP_POWER_50, false);        // Power off ePaper display
+    // Stop system
+    esp_deep_sleep_start();             // Deep Sleep with weakup via GPIO pin
+}
+#endif
 
 // Valid colors see hue
 Color colorMapping(const String &colorString){

@@ -48,7 +48,7 @@ class PageBME280 : public Page
             value1 = 23.0 + float(random(0, 10)) / 10.0;
         }
         // Display data when sensor activated
-        if((String(useenvsensor) == "BME280") or (String(useenvsensor) == "BMP280")){
+        if((useenvsensor == "BME280") or (useenvsensor == "BMP280") or (useenvsensor == "BMP180")){
             svalue1 = String(value1, 1);                // Formatted value as string including unit conversion and switching decimal places
         }
         else{
@@ -66,7 +66,7 @@ class PageBME280 : public Page
             value2 = 43 + float(random(0, 4));
         }
         // Display data when sensor activated
-        if(String(useenvsensor) == "BME280"){
+        if(useenvsensor == "BME280"){
             svalue2 = String(value2, 0);                // Formatted value as string including unit conversion and switching decimal places
         }
         else{
@@ -84,7 +84,7 @@ class PageBME280 : public Page
             value3 = 1006 + float(random(0, 5));
         }
         // Display data when sensor activated
-        if((String(useenvsensor) == "BME280") or (String(useenvsensor) == "BMP280")){
+        if((useenvsensor == "BME280") or (useenvsensor == "BMP280") or (useenvsensor == "BMP180")){
             svalue3 = String(value3 / 100, 1);          // Formatted value as string including unit conversion and switching decimal places
         }
         else{
