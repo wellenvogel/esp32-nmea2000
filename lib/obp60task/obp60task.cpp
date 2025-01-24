@@ -339,7 +339,7 @@ void underVoltageDetection(GwApi *api, CommonData &common){
         getdisplay().print("Undervoltage");
         getdisplay().setFont(&Ubuntu_Bold8pt7b);
         getdisplay().setCursor(65, 175);
-        getdisplay().print("To wake up press reset");
+        getdisplay().print("Charge battery and restart");
         getdisplay().nextPage();                // Partial update
         getdisplay().powerOff();                // Display power off
         setPortPin(OBP_POWER_EPD, false);       // Power off ePaper display
@@ -416,7 +416,7 @@ void OBP60Task(GwApi *api){
     uint fullrefreshtime = uint(api->getConfig()->getConfigItem(api->getConfig()->fullRefreshTime,true)->asInt());
     #ifdef BOARD_OBP40S3
 //    bool syspage_enabled = config->getBool(config->systemPage);
-    bool syspage_enabled = false;
+    bool syspage_enabled = true;
     #endif
 
     #ifdef DISPLAY_GDEY042T81
