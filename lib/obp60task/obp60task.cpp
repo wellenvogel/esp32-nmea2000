@@ -370,7 +370,7 @@ void underVoltageDetection(GwApi *api, CommonData &common){
 }
 
 #ifdef BOARD_OBP40S3
-// Deep sleep funktion 
+// Deep sleep function 
 void deepSleep(CommonData &common){
     // Switch off all power lines
     setPortPin(OBP_BACKLIGHT_LED, false);   // Backlight Off
