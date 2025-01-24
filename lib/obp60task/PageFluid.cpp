@@ -66,6 +66,10 @@ static unsigned char fish_bits[] = {
 
 class PageFluid : public Page
 {
+    bool simulation = false;
+    double simgoto;
+    double simval;
+    double simstep;
     bool holdvalues = false;
     int fluidtype;
 
@@ -73,7 +77,11 @@ class PageFluid : public Page
     PageFluid(CommonData &common){
         commonData = &common;
         common.logger->logDebug(GwLog::LOG,"Instantiate PageFluid");
+        simulation = common.config->getBool(common.config->useSimuData);
         holdvalues = common.config->getBool(common.config->holdvalues);
+        simval = double(random(0, 100));
+        simgoto = double(random(0, 100));
+        simstep = (simgoto - simval) / 20.0;
     }
 
     virtual int handleKey(int key){
@@ -109,8 +117,18 @@ class PageFluid : public Page
 
         GwApi::BoatValue *bvalue1 = pageData.values[0];
         String name1 = bvalue1->getName();
-        if (holdvalues and bvalue1->valid) {
-            value1old = bvalue1->value;
+        double fluidlevel = bvalue1->value;
+        if (!simulation) {
+            if (holdvalues and bvalue1->valid) {
+                value1old = bvalue1->value;
+            }
+        } else {
+            fluidlevel = simval;
+            simval += simstep;
+            if ((simgoto - simval) < 1.5 * simstep) {
+                simgoto = double(random(0, 100));
+                simstep = (simgoto - simval) / 20.0;
+            }
         }
 
         // Logging boat values
@@ -148,8 +166,8 @@ class PageFluid : public Page
 
         // value down centered
         char buffer[6];
-        if (bvalue1->valid) {
-            snprintf(buffer, 6, "%3.0f%%", bvalue1->value);
+        if (bvalue1->valid or simulation) {
+            snprintf(buffer, 6, "%3.0f%%", fluidlevel);
         } else {
             strcpy(buffer, "---");
         }
@@ -222,14 +240,14 @@ class PageFluid : public Page
         }
 
         // pointer
-        if (bvalue1->valid) {
+        if (bvalue1->valid or simulation) {
             pts = {
                 {c.x - 1, c.y - (r - 20)},
                 {c.x + 1, c.y - (r - 20)},
                 {c.x + 6, c.y + 15},
                 {c.x - 6, c.y + 15}
             };
-            fillPoly4(rotatePoints(c, pts, -120 + bvalue1->value * 2.4), commonData->fgcolor);
+            fillPoly4(rotatePoints(c, pts, -120 + fluidlevel * 2.4), commonData->fgcolor);
             // Pointer axis is white
             getdisplay().fillCircle(c.x, c.y, 6, commonData->bgcolor);
         }
