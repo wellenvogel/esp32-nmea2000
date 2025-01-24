@@ -307,7 +307,7 @@ public:
 
         // Get config data
         String lengthformat = config->getString(config->lengthFormat);
-        // bool simulation = config->getBool(config->useSimuData);
+        bool simulation = config->getBool(config->useSimuData);
         bool holdvalues = config->getBool(config->holdvalues);
         String flashLED = config->getString(config->flashLED);
         String backlightMode = config->getString(config->backlight);
@@ -338,6 +338,9 @@ public:
         name2 = name2.substring(0, 6);                  // String length limit for value name
         double value2 = bvalue2->value;                 // Value as double in SI unit
         // bool valid2 = bvalue2->valid;                   // Valid information
+        if (simulation) {
+            value2 = 0.62731; // some random value
+        }
         String svalue2 = formatValue(bvalue2, *commonData).svalue;    // Formatted value as string including unit conversion and switching decimal places
         String unit2 = formatValue(bvalue2, *commonData).unit;        // Unit of value
 
@@ -402,7 +405,7 @@ public:
             getdisplay().fillCircle(c.x, c.y, lp + 1, commonData->bgcolor);
 
             // Wind pointer
-            if (bvalue2->valid) {
+            if (bvalue2->valid or simulation) {
                 uint8_t lp0 = lp * 0.6; // effective pointer outside size
                 uint8_t lp1 = lp * 0.4; // effective pointer inside size
                 // zero position
@@ -478,7 +481,7 @@ public:
             }
 
             // Wind pointer (angle)
-            if (bvalue2->valid) {
+            if (bvalue2->valid or simulation) {
                 float alpha = RadToDeg(value2);
                 bool port = (alpha > 180);
                 if (port) {
@@ -594,7 +597,7 @@ public:
             getdisplay().print("kts");
 
             // Wind pointer (angle)
-            if (bvalue2->valid) {
+            if (bvalue2->valid or simulation) {
                 float alpha = RadToDeg(value2);
                 getdisplay().fillCircle(c.x, c.y, 8, commonData->fgcolor);
                 pts = {

@@ -28,10 +28,15 @@ static unsigned char ship_bits[] PROGMEM = {
 
 class PageXTETrack : public Page
 {
+    bool simulation = false;
+    bool holdvalues = false;
+
     public:
     PageXTETrack(CommonData &common){
         commonData = &common;
         common.logger->logDebug(GwLog::LOG,"Instantiate PageXTETrack");
+        simulation = common.config->getBool(common.config->useSimuData);
+        holdvalues = common.config->getBool(common.config->holdvalues);
     }
 
     void drawSegment(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1,
@@ -140,7 +145,7 @@ class PageXTETrack : public Page
         String sval_wpname = "no data";
 
         if (valid) {
-			sval_wpname = "Tonne 122";
+            sval_wpname = "Tonne 122";
         }
 
         getdisplay().setFont(&Ubuntu_Bold10pt7b);
@@ -153,7 +158,12 @@ class PageXTETrack : public Page
 
         // draw course segments
 
-        double diff = bv_cog->value - bv_btw->value;
+        double diff;
+        if (!simulation) {
+            diff = bv_cog->value - bv_btw->value;
+        } else {
+            diff = 7.0;
+        }
         if (diff < -180) {
             diff += 360;
         } else if (diff > 180) {
