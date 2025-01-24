@@ -88,8 +88,16 @@ void sensorTask(void *param){
     double voffset = (api->getConfig()->getConfigItem(api->getConfig()->vOffset,true)->asString()).toFloat();
     double vslope = (api->getConfig()->getConfigItem(api->getConfig()->vSlope,true)->asString()).toFloat();
     if(String(powsensor1) == "off"){
-        sensors.batteryVoltage = (float(analogRead(OBP_ANALOG0)) * 3.3 / 4096 + 0.17) * 20;   // Vin = 1/20
+        #ifdef VOLTAGE_SENSOR
+        sensors.batteryVoltage = (float(analogRead(OBP_ANALOG0)) * 3.3 / 4096 + 0.53) * 2;   // Vin = 1/2 for OBP40
+        #else
+        sensors.batteryVoltage = (float(analogRead(OBP_ANALOG0)) * 3.3 / 4096 + 0.17) * 20;   // Vin = 1/20 for OBP60    
+        #endif
         sensors.batteryVoltage = sensors.batteryVoltage * vslope + voffset; // Calibration
+        #ifdef LIPO_ACCU_1200
+        sensors.BatteryChargeStatus = 0;    // Set to discharging
+        sensors.batteryLevelLiPo = 0;       // Level 0...100%
+        #endif
         sensors.batteryCurrent = 0;
         sensors.batteryPower = 0;
         // Fill average arrays with start values
@@ -459,8 +467,29 @@ void sensorTask(void *param){
         // Send supply voltage value all 1s
         if(millis() > starttime5 + 1000 && String(powsensor1) == "off"){
             starttime5 = millis();
-            sensors.batteryVoltage = (float(analogRead(OBP_ANALOG0)) * 3.3 / 4096 + 0.17) * 20;   // Vin = 1/20
+            #ifdef VOLTAGE_SENSOR
+            sensors.batteryVoltage = (float(analogRead(OBP_ANALOG0)) * 3.3 / 4096 + 0.53) * 2;   // Vin = 1/2 for OBP40
+            #else
+            sensors.batteryVoltage = (float(analogRead(OBP_ANALOG0)) * 3.3 / 4096 + 0.17) * 20;   // Vin = 1/20 for OBP60    
+            #endif
             sensors.batteryVoltage = sensors.batteryVoltage * vslope + voffset; // Calibration
+            #ifdef LIPO_ACCU_1200
+            if(sensors.batteryVoltage > 4.1){
+                sensors.BatteryChargeStatus = 1;    // Charging active
+            }
+            else{
+                sensors.BatteryChargeStatus = 0;    // Discharging
+            }
+            // Polynomfit for LiPo capacity calculation for 3,7V LiPo accus, 0...100%
+            sensors.batteryLevelLiPo = sensors.batteryVoltage * sensors.batteryVoltage * 174.9513 + sensors.batteryVoltage * 1147,7686 + 1868.5120;
+            // Limiter
+            if(sensors.batteryLevelLiPo > 100){
+                sensors.batteryLevelLiPo = 100;
+            }
+            if(sensors.batteryLevelLiPo < 0){
+                sensors.batteryLevelLiPo = 0;
+            }
+            #endif
             // Save new data in average array
             batV.reading(int(sensors.batteryVoltage * 100));
             // Calculate the average values for different time lines from integer values

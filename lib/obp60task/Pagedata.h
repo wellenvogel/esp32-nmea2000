@@ -31,6 +31,8 @@ typedef struct{
   double batteryVoltage300 = 0; // Sliding average over 300 values
   double batteryCurrent300 = 0;
   double batteryPower300 = 0;
+  double batteryLevelLiPo = 0;  // Battery level for OBP40 LiPo accu
+  int BatteryChargeStatus = 0;  // LiPo charge status: 0 = discharge, 1 = loading activ
   double solarVoltage = 0;
   double solarCurrent = 0;
   double solarPower = 0;
