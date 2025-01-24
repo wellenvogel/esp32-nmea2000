@@ -74,10 +74,12 @@ public:
         if (key == 4) {
             ESP.restart();
         }
+#ifdef BOARD_OBP60S3
         // standby / deep sleep
         if (key == 5) {
            deepSleep(*commonData);
         }
+#endif
         // Code for keylock
         if (key == 11) {
             commonData->keylock = !commonData->keylock;
