@@ -308,13 +308,42 @@ void registerAllPages(PageList &list){
 
 // Undervoltage detection for shutdown display
 void underVoltageDetection(GwApi *api, CommonData &common){
+    float actVoltage = 0;
+    float minVoltage = 0;
     // Read settings
     float vslope = uint(api->getConfig()->getConfigItem(api->getConfig()->vSlope,true)->asFloat());
     float voffset = uint(api->getConfig()->getConfigItem(api->getConfig()->vOffset,true)->asFloat());
     // Read supply voltage
-    float actVoltage = (float(analogRead(OBP_ANALOG0)) * 3.3 / 4096 + 0.17) * 20;   // V = 1/20 * Vin
+    #if defined VOLTAGE_SENSOR && defined LIPO_ACCU_1200
+    actVoltage = (float(analogRead(OBP_ANALOG0)) * 3.3 / 4096 + 0.53) * 2;   // Vin = 1/2 for OBP40
+    minVoltage = 3.65;  // Absolut minimum volatge for 3,7V LiPo accu
+    #else
+    actVoltage = (float(analogRead(OBP_ANALOG0)) * 3.3 / 4096 + 0.17) * 20;   // Vin = 1/20 for OBP60
+    minVoltage = MIN_VOLTAGE;
+    #endif
     actVoltage = actVoltage * vslope + voffset;
-    if(actVoltage < MIN_VOLTAGE){
+    if(actVoltage < minVoltage){
+        #if defined VOLTAGE_SENSOR && defined LIPO_ACCU_1200
+        // Switch off all power lines
+        setPortPin(OBP_BACKLIGHT_LED, false);   // Backlight Off
+        setFlashLED(false);                     // Flash LED Off            
+        buzzer(TONE4, 20);                      // Buzzer tone 4kHz 20ms
+        // Shutdown EInk display
+        getdisplay().setFullWindow();               // Set full Refresh
+        //getdisplay().setPartialWindow(0, 0, getdisplay().width(), getdisplay().height()); // Set partial update
+        getdisplay().fillScreen(common.bgcolor);    // Clear screen
+        getdisplay().setTextColor(common.fgcolor);
+        getdisplay().setFont(&Ubuntu_Bold20pt7b);
+        getdisplay().setCursor(65, 150);
+        getdisplay().print("Undervoltage");
+        getdisplay().setFont(&Ubuntu_Bold8pt7b);
+        getdisplay().setCursor(65, 175);
+        getdisplay().print("To wake up press reset");
+        getdisplay().nextPage();                // Partial update
+        getdisplay().powerOff();                // Display power off
+        setPortPin(OBP_POWER_EPD, false);       // Power off ePaper display
+        setPortPin(OBP_POWER_SD, false);        // Power off SD card
+        #else
         // Switch off all power lines
         setPortPin(OBP_BACKLIGHT_LED, false);   // Backlight Off
         setFlashLED(false);                     // Flash LED Off            
@@ -327,8 +356,12 @@ void underVoltageDetection(GwApi *api, CommonData &common){
         getdisplay().setFont(&Ubuntu_Bold20pt7b);
         getdisplay().setCursor(65, 150);
         getdisplay().print("Undervoltage");
+        getdisplay().setFont(&Ubuntu_Bold8pt7b);
+        getdisplay().setCursor(65, 175);
+        getdisplay().print("To wake up repower system");
         getdisplay().nextPage();                // Partial update
         getdisplay().powerOff();                // Display power off
+        #endif
         // Stop system
         while(true){
             esp_deep_sleep_start();             // Deep Sleep without weakup. Weakup only after power cycle (restart).
@@ -353,7 +386,7 @@ void deepSleep(CommonData &common){
     getdisplay().print("Sleep Mode");
     getdisplay().setFont(&Ubuntu_Bold8pt7b);
     getdisplay().setCursor(65, 175);
-    getdisplay().print("For wakeup press wheel and wait 5s");
+    getdisplay().print("To wake up press wheel and wait 5s");
     getdisplay().nextPage();                // Partial update
     getdisplay().powerOff();                // Display power off
     setPortPin(OBP_POWER_EPD, false);       // Power off ePaper display
