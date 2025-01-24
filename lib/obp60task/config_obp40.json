@@ -914,6 +914,17 @@
         }
     },
     {
+        "name": "systemPage",
+        "label": "System Page",
+        "type": "boolean",
+        "default": "false",
+        "description": "Use wheel button for system page or direct deep sleep mode",
+        "category":"OBP40 Pages",
+        "capabilities": {
+            "obp40": "true"
+        }
+    },
+    {
         "name": "imageFormat",
         "label": "Screenshot Format",
         "type": "list",

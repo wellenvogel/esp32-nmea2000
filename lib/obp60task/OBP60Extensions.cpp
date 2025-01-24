@@ -146,6 +146,32 @@ void deepSleep(CommonData &common){
     getdisplay().powerOff();                // Display power off
     setPortPin(OBP_POWER_50, false);        // Power off ePaper display
     // Stop system
+    esp_deep_sleep_start();             // Deep Sleep with weakup via touch pin
+}
+#endif
+#ifdef BOARD_OBP40S3
+// Deep sleep funktion
+void deepSleep(CommonData &common){
+    RTC_lastpage = common.data.actpage - 1;
+    // Switch off all power lines
+    setPortPin(OBP_BACKLIGHT_LED, false);   // Backlight Off
+    setFlashLED(false);                     // Flash LED Off
+    // Shutdown EInk display
+    getdisplay().setFullWindow();               // Set full Refresh
+    //getdisplay().setPartialWindow(0, 0, getdisplay().width(), getdisplay().height()); // Set partial update
+    getdisplay().fillScreen(common.bgcolor);    // Clear screen
+    getdisplay().setTextColor(common.fgcolor);
+    getdisplay().setFont(&Ubuntu_Bold20pt7b);
+    getdisplay().setCursor(85, 150);
+    getdisplay().print("Sleep Mode");
+    getdisplay().setFont(&Ubuntu_Bold8pt7b);
+    getdisplay().setCursor(65, 175);
+    getdisplay().print("For wakeup press wheel and wait 5s");
+    getdisplay().nextPage();                // Partial update
+    getdisplay().powerOff();                // Display power off
+    setPortPin(OBP_POWER_EPD, false);       // Power off ePaper display
+    setPortPin(OBP_POWER_SD, false);        // Power off SD card
+    // Stop system
     esp_deep_sleep_start();             // Deep Sleep with weakup via GPIO pin
 }
 #endif

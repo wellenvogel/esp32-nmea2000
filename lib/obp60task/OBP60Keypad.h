@@ -60,7 +60,7 @@ void initKeys(CommonData &commonData) {
 
   #ifdef HARDWARE_V21
   // Keypad functions for original OBP60 hardware
-  int readKeypad(GwLog* logger, uint thSensitivity) {
+  int readKeypad(GwLog* logger, uint thSensitivity, bool use_syspage) {
     
     // Touch sensor values
     // 35000 - Not touched
@@ -261,7 +261,7 @@ void initKeys(CommonData &commonData) {
     }
 
   // Keypad functions for OBP60 clone (thSensitivity is inactiv)
-  int readKeypad(GwLog* logger, uint thSensitivity) {
+  int readKeypad(GwLog* logger, uint thSensitivity, bool use_syspage) {
     pinMode(UP, INPUT);
     pinMode(DOWN, INPUT);
     pinMode(CONF, INPUT);
@@ -279,7 +279,11 @@ void initKeys(CommonData &commonData) {
       }
       // If key pressed longer than 200ms
       if(millis() > starttime + 200 && keycode == keycodeold) {
-        keystatus = keycode;
+        if (use_syspage and keycode == 3) {
+            keystatus = 12;
+        } else {
+            keystatus = keycode;
+        }
         // Copy keycode
         keycodeold = keycode;
         while(readSensorpads() > 0){} // Wait for pad release

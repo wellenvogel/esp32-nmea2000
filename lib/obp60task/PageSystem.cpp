@@ -4,6 +4,7 @@
 #include "OBP60Extensions.h"
 #include "images/logo64.xbm"
 #include <esp32/clk.h>
+#include "qrcode.h"
 
 #define STRINGIZE_IMPL(x) #x
 #define STRINGIZE(x) STRINGIZE_IMPL(x)
@@ -66,7 +67,8 @@ public:
             if (hasFRAM) fram.write(FRAM_SYSTEM_MODE, mode);
             return 0;
         }
-        // grab cursor keys to disable page navigation
+#ifdef BOARD_OBP60S3
+        // grab cursor key to disable page navigation
         if (key == 3) {
             return 0;
         }
@@ -74,18 +76,53 @@ public:
         if (key == 4) {
             ESP.restart();
         }
-#ifdef BOARD_OBP60S3
         // standby / deep sleep
         if (key == 5) {
            deepSleep(*commonData);
         }
-#endif
         // Code for keylock
         if (key == 11) {
             commonData->keylock = !commonData->keylock;
             return 0;
         }
+#endif
+#ifdef BOARD_OBP40S3
+        // grab cursor keys to disable page navigation
+        if (key == 9 or key == 10) {
+            return 0;
+        }
+        // standby / deep sleep
+        if (key == 12) {
+            deepSleep(*commonData);
+        }
+#endif
         return key;
+    }
+
+    void displayBarcode(String serialno, uint16_t x, uint16_t y, uint16_t s) {
+        // Barcode with serial number
+        // x, y is top left corner
+        // s is pixel size of a single box
+        QRCode qrcode;
+        uint8_t qrcodeData[qrcode_getBufferSize(4)];
+        #ifdef BOARD_OBP40S3
+        String prefix = "OBP40:SN:";
+        #endif
+        #ifdef BOARD_OBP60S3
+        String prefix = "OBP60:SN:";
+        #endif
+        qrcode_initText(&qrcode, qrcodeData, 4, 0, (prefix + serialno).c_str());
+        int16_t x0 = x;
+        for (uint8_t j = 0; j < qrcode.size; j++) {
+            for (uint8_t i = 0; i < qrcode.size; i++) {
+                if (qrcode_getModule(&qrcode, i, j)) {
+                    getdisplay().fillRect(x, y, s, s, commonData->fgcolor);
+                }
+                x += s;
+            }
+            y += s;
+            x = x0;
+        }
     }
 
     virtual void displayPage(PageData &pageData){
@@ -114,29 +151,35 @@ public:
 
         if (mode == 'N') {
             getdisplay().setFont(&Ubuntu_Bold12pt7b);
-            getdisplay().setCursor(20, 50);
+            getdisplay().setCursor(8, 50);
             getdisplay().print("System Information");
 
             getdisplay().drawXBitmap(320, 25, logo64_bits, logo64_width, logo64_height, commonData->fgcolor);
 
             getdisplay().setFont(&Ubuntu_Bold8pt7b);
 
-            char ssid[23];
-            snprintf(ssid, 23, "MCUDEVICE-%04X%08X", (uint16_t)(chipid >> 32), (uint32_t)chipid);
-            getdisplay().setCursor(20, 70);
-            getdisplay().print(ssid);
-            getdisplay().setCursor(20, 100);
-            getdisplay().print("Press STBY for white page and standby");
+            char ssid[13];
+            snprintf(ssid, 13, "%04X%08X", (uint16_t)(chipid >> 32), (uint32_t)chipid);
+            displayBarcode(String(ssid), 320, 200, 2);
+            getdisplay().setCursor(8, 70);
+            getdisplay().print(String("MUDEVICE-") + String(ssid));
+
+            getdisplay().setCursor(8, 90);
+            getdisplay().print("Firmware Version: ");
+            getdisplay().print(VERSINFO);
+
+            getdisplay().setCursor(8, 265);
+            #ifdef BOARD_OBP60S3
+            getdisplay().print("Press STBY to enter deep sleep mode");
+            #endif
+            #ifdef BOARD_OBP40S3
+            getdisplay().print("Press wheel to enter deep sleep mode");
+            #endif
 
             getdisplay().setCursor(2, y0);
             getdisplay().print("Simulation:");
             getdisplay().setCursor(120, y0);
             getdisplay().print(simulation ? "on" : "off");
-
-            getdisplay().setCursor(202, y0);
-            getdisplay().print("Wifi:");
-            getdisplay().setCursor(300, y0);
-            getdisplay().print(commonData->status.wifiApOn ? "On" : "Off");
 
             getdisplay().setCursor(2, y0 + 16);
             getdisplay().print("Environment:");
@@ -145,9 +188,9 @@ public:
 
             // total RAM free
             int Heap_free = esp_get_free_heap_size();
-            getdisplay().setCursor(202, y0 + 16);
+            getdisplay().setCursor(202, y0);
             getdisplay().print("Total free:");
-            getdisplay().setCursor(300, y0 + 16);
+            getdisplay().setCursor(300, y0);
             getdisplay().print(String(Heap_free));
 
             getdisplay().setCursor(2, y0 + 32);
@@ -157,37 +200,39 @@ public:
 
             // RAM free for task
             int RAM_free = uxTaskGetStackHighWaterMark(NULL);
-            getdisplay().setCursor(202, y0 + 32);
+            getdisplay().setCursor(202, y0 + 16);
             getdisplay().print("Task free:");
-            getdisplay().setCursor(300, y0 + 32);
+            getdisplay().setCursor(300, y0 + 16);
             getdisplay().print(String(RAM_free));
 
-            getdisplay().setCursor(2, y0 + 48);
+            // FRAM available / status
+            getdisplay().setCursor(202, y0 + 32);
+            getdisplay().print("FRAM:");
+            getdisplay().setCursor(300, y0 + 32);
+            getdisplay().print(hasFRAM ? "available" : "not found");
+
+            getdisplay().setCursor(202, y0 + 64);
             getdisplay().print("CPU speed:");
-            getdisplay().setCursor(120, y0 + 48);
+            getdisplay().setCursor(300, y0 + 64);
             getdisplay().print(cpuspeed);
             getdisplay().print(" / ");
             int cpu_freq = esp_clk_cpu_freq() / 1000000;
             getdisplay().print(String(cpu_freq));
 
-            getdisplay().setCursor(202, y0 + 64);
+            getdisplay().setCursor(2, y0 + 64);
             getdisplay().print("GPS:");
-            getdisplay().setCursor(300, y0 + 64);
+            getdisplay().setCursor(120, y0 + 64);
             getdisplay().print(gps_module);
 
             getdisplay().setCursor(2, y0 + 80);
-            getdisplay().print("FRAM:");
-            getdisplay().setCursor(120, y0 + 80);
-            getdisplay().print(hasFRAM ? "available" : "not found");
-
-            getdisplay().setCursor(202, y0 + 80);
             getdisplay().print("RTC:");
-            getdisplay().setCursor(300, y0 + 80);
+            getdisplay().setCursor(120, y0 + 80);
             getdisplay().print(rtc_module);
 
-            getdisplay().setCursor(2, y0 + 120);
-            getdisplay().print("Firmware Version: ");
-            getdisplay().print(VERSINFO);
+            getdisplay().setCursor(2, y0 + 96);
+            getdisplay().print("Wifi:");
+            getdisplay().setCursor(120, y0 + 96);
+            getdisplay().print(commonData->status.wifiApOn ? "On" : "Off");
 
 
         } else {
