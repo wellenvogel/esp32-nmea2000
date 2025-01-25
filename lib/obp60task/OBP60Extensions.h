@@ -100,8 +100,8 @@ void displayFooter(CommonData &commonData);
 SunData calcSunsetSunrise(GwApi *api, double time, double date, double latitude, double longitude, double timezone); // Calulate sunset and sunrise
 
 void batteryGraphic(uint x, uint y, float percent, int pcolor, int bcolor); // Battery graphic with fill level
-void solarGraphic(uint x, uint y, int pcolor, int bcolor);                  // Solar graphic with fill level
-void generatorGraphic(uint x, uint y, int pcolor, int bcolor);              // Generator graphic with fill level
+void solarGraphic(uint x, uint y, int pcolor, int bcolor);                  // Solar graphic
+void generatorGraphic(uint x, uint y, int pcolor, int bcolor);              // Generator graphic
 void startLedTask(GwApi *api);
 
 void doImageRequest(GwApi *api, int *pageno, const PageStruct pages[MAX_PAGE_NUMBER], AsyncWebServerRequest *request);

@@ -309,30 +309,28 @@ void registerAllPages(PageList &list){
 
 // Undervoltage detection for shutdown display
 void underVoltageDetection(GwApi *api, CommonData &common){
-    float actVoltage = 0;
-    float minVoltage = 0;
     // Read settings
     float vslope = uint(api->getConfig()->getConfigItem(api->getConfig()->vSlope,true)->asFloat());
     float voffset = uint(api->getConfig()->getConfigItem(api->getConfig()->vOffset,true)->asFloat());
     // Read supply voltage
     #if defined VOLTAGE_SENSOR && defined LIPO_ACCU_1200
-    actVoltage = (float(analogRead(OBP_ANALOG0)) * 3.3 / 4096 + 0.53) * 2;   // Vin = 1/2 for OBP40
-    minVoltage = 3.65;  // Absolut minimum volatge for 3,7V LiPo accu
+    float actVoltage = (float(analogRead(OBP_ANALOG0)) * 3.3 / 4096 + 0.53) * 2;   // Vin = 1/2 for OBP40
+    float minVoltage = 3.65;  // Absolut minimum volatge for 3,7V LiPo accu
     #else
-    actVoltage = (float(analogRead(OBP_ANALOG0)) * 3.3 / 4096 + 0.17) * 20;   // Vin = 1/20 for OBP60
-    minVoltage = MIN_VOLTAGE;
+    float actVoltage = (float(analogRead(OBP_ANALOG0)) * 3.3 / 4096 + 0.17) * 20;   // Vin = 1/20 for OBP60
+    float minVoltage = MIN_VOLTAGE;
     #endif
-    actVoltage = actVoltage * vslope + voffset;
-    if(actVoltage < minVoltage){
+    float corrVoltage = actVoltage * vslope + voffset;  // Calibration
+    if(corrVoltage < minVoltage){
         #if defined VOLTAGE_SENSOR && defined LIPO_ACCU_1200
         // Switch off all power lines
         setPortPin(OBP_BACKLIGHT_LED, false);   // Backlight Off
         setFlashLED(false);                     // Flash LED Off            
         buzzer(TONE4, 20);                      // Buzzer tone 4kHz 20ms
         // Shutdown EInk display
-        getdisplay().setFullWindow();               // Set full Refresh
+        getdisplay().setFullWindow();           // Set full Refresh
         //getdisplay().setPartialWindow(0, 0, getdisplay().width(), getdisplay().height()); // Set partial update
-        getdisplay().fillScreen(common.bgcolor);    // Clear screen
+        getdisplay().fillScreen(common.bgcolor);// Clear screen
         getdisplay().setTextColor(common.fgcolor);
         getdisplay().setFont(&Ubuntu_Bold20pt7b);
         getdisplay().setCursor(65, 150);

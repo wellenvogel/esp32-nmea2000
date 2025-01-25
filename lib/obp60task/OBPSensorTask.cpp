@@ -89,11 +89,11 @@ void sensorTask(void *param){
     double vslope = (api->getConfig()->getConfigItem(api->getConfig()->vSlope,true)->asString()).toFloat();
     if(String(powsensor1) == "off"){
         #ifdef VOLTAGE_SENSOR
-        sensors.batteryVoltage = (float(analogRead(OBP_ANALOG0)) * 3.3 / 4096 + 0.53) * 2;   // Vin = 1/2 for OBP40
+        float rawVoltage = (float(analogRead(OBP_ANALOG0)) * 3.3 / 4096 + 0.53) * 2;   // Vin = 1/2 for OBP40
         #else
-        sensors.batteryVoltage = (float(analogRead(OBP_ANALOG0)) * 3.3 / 4096 + 0.17) * 20;   // Vin = 1/20 for OBP60    
+        float rawVoltage = (float(analogRead(OBP_ANALOG0)) * 3.3 / 4096 + 0.17) * 20;   // Vin = 1/20 for OBP60    
         #endif
-        sensors.batteryVoltage = sensors.batteryVoltage * vslope + voffset; // Calibration
+        sensors.batteryVoltage = rawVoltage * vslope + voffset; // Calibration
         #ifdef LIPO_ACCU_1200
         sensors.BatteryChargeStatus = 0;    // Set to discharging
         sensors.batteryLevelLiPo = 0;       // Level 0...100%
@@ -468,20 +468,14 @@ void sensorTask(void *param){
         if(millis() > starttime5 + 1000 && String(powsensor1) == "off"){
             starttime5 = millis();
             #ifdef VOLTAGE_SENSOR
-            sensors.batteryVoltage = (float(analogRead(OBP_ANALOG0)) * 3.3 / 4096 + 0.53) * 2;   // Vin = 1/2 for OBP40
+            float rawVoltage = (float(analogRead(OBP_ANALOG0)) * 3.3 / 4096 + 0.53) * 2;   // Vin = 1/2 for OBP40
             #else
-            sensors.batteryVoltage = (float(analogRead(OBP_ANALOG0)) * 3.3 / 4096 + 0.17) * 20;   // Vin = 1/20 for OBP60    
+            float rawVoltage = (float(analogRead(OBP_ANALOG0)) * 3.3 / 4096 + 0.17) * 20;   // Vin = 1/20 for OBP60    
             #endif
-            sensors.batteryVoltage = sensors.batteryVoltage * vslope + voffset; // Calibration
+            sensors.batteryVoltage = rawVoltage * vslope + voffset; // Calibration
             #ifdef LIPO_ACCU_1200
-            if(sensors.batteryVoltage > 4.1){
-                sensors.BatteryChargeStatus = 1;    // Charging active
-            }
-            else{
-                sensors.BatteryChargeStatus = 0;    // Discharging
-            }
             // Polynomfit for LiPo capacity calculation for 3,7V LiPo accus, 0...100%
-            sensors.batteryLevelLiPo = sensors.batteryVoltage * sensors.batteryVoltage * 174.9513 + sensors.batteryVoltage * 1147,7686 + 1868.5120;
+            sensors.batteryLevelLiPo = sensors.batteryVoltage * sensors.batteryVoltage * 174.9513 + sensors.batteryVoltage * 1147.7686 + 1868.5120;
             // Limiter
             if(sensors.batteryLevelLiPo > 100){
                 sensors.batteryLevelLiPo = 100;
@@ -496,11 +490,28 @@ void sensorTask(void *param){
             sensors.batteryVoltage10 = batV.getAvg(10) / 100.0;
             sensors.batteryVoltage60 = batV.getAvg(60) / 100.0;
             sensors.batteryVoltage300 = batV.getAvg(300) / 100.0;
+            // Charging detection
+            float deltaV = sensors.batteryVoltage - sensors.batteryVoltage10;
+            if(deltaV > 0.03){
+                sensors.BatteryChargeStatus = 1;    // Charging active
+            }
+            if(deltaV < -0.03){
+                sensors.BatteryChargeStatus = 0;    // Discharging
+            }
+            #ifdef BOARD_OBP40S3
+            // Send to NMEA200 bus as instance 10
+            if(!isnan(sensors.batteryVoltage)){
+                SetN2kDCBatStatus(N2kMsg, 10, sensors.batteryVoltage, N2kDoubleNA, N2kDoubleNA, 0);
+                api->sendN2kMessage(N2kMsg);
+            }
+            #endif
+            #ifdef BOARD_OBP60S3
             // Send to NMEA200 bus
             if(!isnan(sensors.batteryVoltage)){
                 SetN2kDCBatStatus(N2kMsg, 0, sensors.batteryVoltage, N2kDoubleNA, N2kDoubleNA, 1);
                 api->sendN2kMessage(N2kMsg);
             }
+            #endif
         }
 
         // Send data from environment sensor all 2s
