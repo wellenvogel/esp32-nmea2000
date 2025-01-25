@@ -277,8 +277,8 @@ void initKeys(CommonData &commonData) {
         starttime = millis();   // Start key pressed
         keycodeold = keycode;
       }
-      // If key pressed longer than 200ms
-      if(millis() > starttime + 200 && keycode == keycodeold) {
+      // If key pressed longer than 100ms
+      if(millis() > starttime + 100 && keycode == keycodeold) {
         if (use_syspage and keycode == 3) {
             keystatus = 12;
         } else {

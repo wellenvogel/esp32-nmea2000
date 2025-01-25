@@ -205,7 +205,7 @@ public:
             getdisplay().setCursor(20, 100);
             getdisplay().print(name1);                           // Value name
 
-            #ifdef BOARD_OBP40S3
+            #if defined BOARD_OBP40S3 && defined LIPO_ACCU_1200 && defined VOLTAGE_SENSOR
             // Show charge status
             getdisplay().setFont(&Ubuntu_Bold8pt7b);
             getdisplay().setCursor(185, 100);
@@ -228,7 +228,7 @@ public:
             #ifdef BOARD_OBP60S3
             getdisplay().print(batType);
             #endif
-            #ifdef BOARD_OBP40S3
+            #if defined BOARD_OBP40S3 && defined LIPO_ACCU_1200 && defined VOLTAGE_SENSOR
             getdisplay().print("LiPo");
             #endif
 
