@@ -341,12 +341,8 @@ void displayHeader(CommonData &commonData, GwApi::BoatValue *date, GwApi::BoatVa
     static unsigned long tcpClTxOld = 0;
     static unsigned long n2kRxOld = 0;
     static unsigned long n2kTxOld = 0;
-    int textcolor = GxEPD_BLACK;
 
     if(commonData.config->getBool(commonData.config->statusLine) == true){
-
-        // Header separator line (optional)
-        // getdisplay().drawLine(0, 19, 399, 19, commonData.fgcolor);
 
         // Show status info
         getdisplay().setTextColor(commonData.fgcolor);
@@ -393,12 +389,17 @@ void displayHeader(CommonData &commonData, GwApi::BoatValue *date, GwApi::BoatVa
         }
 #endif
 
-        // Heartbeat as dot
-        getdisplay().setTextColor(commonData.fgcolor);
-        getdisplay().setFont(&Ubuntu_Bold32pt7b);
-        getdisplay().setCursor(205, 14);
-        getdisplay().print(heartbeat ? "." : " ");
-        heartbeat = !heartbeat; 
+        // Heartbeat as page number
+        if (heartbeat) {
+            getdisplay().setTextColor(commonData.bgcolor);
+            getdisplay().fillRect(201, 0, 23, 19, commonData.fgcolor);
+        } else {
+            getdisplay().setTextColor(commonData.fgcolor);
+            getdisplay().drawRect(201, 0, 23, 19, commonData.fgcolor);
+        }
+        getdisplay().setFont(&Ubuntu_Bold8pt7b);
+        drawTextCenter(211, 9, String(commonData.data.actpage));
+        heartbeat = !heartbeat;
 
         // Date and time
         getdisplay().setTextColor(commonData.fgcolor);
@@ -442,17 +443,16 @@ void displayFooter(CommonData &commonData) {
         // horizontal elements
         const uint16_t top = 280;
         const uint16_t bottom = 299;
+        // horizontal stub lines
         getdisplay().drawLine(commonData.keydata[0].x, top, commonData.keydata[0].x+10, top, commonData.fgcolor);
-        getdisplay().drawLine(commonData.keydata[1].x-10, top, commonData.keydata[1].x+10, top, commonData.fgcolor);
-        getdisplay().drawLine(commonData.keydata[2].x-10, top, commonData.keydata[2].x+10, top, commonData.fgcolor);
-        getdisplay().drawLine(commonData.keydata[4].x-10, top, commonData.keydata[4].x+10, top, commonData.fgcolor);
-        getdisplay().drawLine(commonData.keydata[5].x-10, top, commonData.keydata[5].x+10, top, commonData.fgcolor);
+        for (int i = 1; i <= 5; i++) {
+            getdisplay().drawLine(commonData.keydata[i].x-10, top, commonData.keydata[i].x+10, top, commonData.fgcolor);
+        }
         getdisplay().drawLine(commonData.keydata[5].x + commonData.keydata[5].w - 10, top, commonData.keydata[5].x + commonData.keydata[5].w + 1, top, commonData.fgcolor);
         // vertical key separators
-        getdisplay().drawLine(commonData.keydata[0].x + commonData.keydata[0].w, top, commonData.keydata[0].x + commonData.keydata[0].w, bottom, commonData.fgcolor);
-        getdisplay().drawLine(commonData.keydata[1].x + commonData.keydata[1].w, top, commonData.keydata[1].x + commonData.keydata[1].w, bottom, commonData.fgcolor);
-        getdisplay().drawLine(commonData.keydata[3].x + commonData.keydata[3].w, top, commonData.keydata[3].x + commonData.keydata[3].w, bottom, commonData.fgcolor);
-        getdisplay().drawLine(commonData.keydata[4].x + commonData.keydata[4].w, top, commonData.keydata[4].x + commonData.keydata[4].w, bottom, commonData.fgcolor);
+        for (int i = 0; i <= 4; i++) {
+            getdisplay().drawLine(commonData.keydata[i].x + commonData.keydata[i].w, top, commonData.keydata[i].x + commonData.keydata[i].w, bottom, commonData.fgcolor);
+        }
         for (int i = 0; i < 6; i++) {
             uint16_t x, y;
             if (commonData.keydata[i].label.length() > 0) {
@@ -476,9 +476,6 @@ void displayFooter(CommonData &commonData) {
                 }
             }
         }
-        // Current page number in a small box
-        getdisplay().drawRect(190, 280, 23, 19, commonData.fgcolor);
-        drawTextCenter(200, 289, String(commonData.data.actpage));
     } else {
         getdisplay().setCursor(65, 295);
         getdisplay().print("Press 1 and 6 fast to unlock keys");
