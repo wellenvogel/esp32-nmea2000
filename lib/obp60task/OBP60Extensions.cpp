@@ -392,6 +392,25 @@ void displayHeader(CommonData &commonData, GwApi::BoatValue *date, GwApi::BoatVa
             getdisplay().drawXBitmap(166, 1, swipe_bits, swipe_width, swipe_height, commonData.fgcolor);
         }
 #endif
+#ifdef LIPO_ACCU_1200
+        if (commonData.data.BatteryChargeStatus == 1) {
+             getdisplay().drawXBitmap(170, 1, battery_loading_bits, battery_width, battery_height, commonData.fgcolor);
+        } else {
+#ifdef VOLTAGE_SENSOR
+            if (commonData.data.batteryLevelLiPo < 10) {
+                getdisplay().drawXBitmap(170, 1, battery_0_bits, battery_width, battery_height, commonData.fgcolor);
+            } else if (commonData.data.batteryLevelLiPo < 25) {
+                getdisplay().drawXBitmap(170, 1, battery_25_bits, battery_width, battery_height, commonData.fgcolor);
+            } else if (commonData.data.batteryLevelLiPo < 50) {
+                getdisplay().drawXBitmap(170, 1, battery_50_bits, battery_width, battery_height, commonData.fgcolor);
+            } else if (commonData.data.batteryLevelLiPo < 75) {
+                getdisplay().drawXBitmap(170, 1, battery_75_bits, battery_width, battery_height, commonData.fgcolor);
+            } else {
+                getdisplay().drawXBitmap(170, 1, battery_100_bits, battery_width, battery_height, commonData.fgcolor);
+            }
+#endif // VOLTAGE_SENSOR
+        }
+#endif // LIPO_ACCU_1200
 
         // Heartbeat as dot
         getdisplay().setTextColor(commonData.fgcolor);
