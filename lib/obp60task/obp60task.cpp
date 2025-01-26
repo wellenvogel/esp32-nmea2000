@@ -337,7 +337,7 @@ void underVoltageDetection(GwApi *api, CommonData &common){
         getdisplay().print("Undervoltage");
         getdisplay().setFont(&Ubuntu_Bold8pt7b);
         getdisplay().setCursor(65, 175);
-        getdisplay().print("Charge battery and restart");
+        getdisplay().print("Charge battery and restart system");
         getdisplay().nextPage();                // Partial update
         getdisplay().powerOff();                // Display power off
         setPortPin(OBP_POWER_EPD, false);       // Power off ePaper display

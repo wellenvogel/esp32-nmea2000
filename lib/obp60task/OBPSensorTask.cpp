@@ -493,19 +493,19 @@ void sensorTask(void *param){
             float deltaV = sensors.batteryVoltage - sensors.batteryVoltage10;
             // Higher limits for lower voltages
             if(sensors.batteryVoltage10 < 4.0){
-                if(deltaV > 0.045 && deltaV < 4,15){
+                if(deltaV > 0.045 && deltaV < 4.15){
                     sensors.BatteryChargeStatus = 1;    // Charging active
                 }
-                if(deltaV < -0.04 || deltaV >= 4,15){   // Charging stops by grater than 4,15V
+                if(deltaV < -0.04 || deltaV >= 4.15){   // Charging stops by grater than 4,15V
                     sensors.BatteryChargeStatus = 0;    // Discharging
                 }
             }
             // Lower limits for higher voltages
             else{
-                if(deltaV > 0.03 && deltaV < 4,15){
+                if(deltaV > 0.03 && deltaV < 4.15){
                     sensors.BatteryChargeStatus = 1;    // Charging active
                 }
-                if(deltaV < -0.03 || deltaV >= 4,15){   // Charging stops by grater than 4,15V
+                if(deltaV < -0.03 || deltaV >= 4.15){   // Charging stops by grater than 4,15V
                     sensors.BatteryChargeStatus = 0;    // Discharging
                 }
             }
