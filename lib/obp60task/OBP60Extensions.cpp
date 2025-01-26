@@ -70,6 +70,9 @@ bool statusBacklightLED = false;// Actual status of flash LED on/off
 
 int uvDuration = 0;             // Under voltage duration in n x 100ms
 
+RTC_DATA_ATTR uint8_t RTC_lastpage; // Remember last page while deep sleeping
+
+
 LedTaskData *ledTaskData=nullptr;
 
 void hardwareInit(GwApi *api)
@@ -117,6 +120,61 @@ void startLedTask(GwApi *api){
     ledTaskData=new LedTaskData(api);
     createSpiLedTask(ledTaskData);
 }
+
+uint8_t getLastPage() {
+    return RTC_lastpage;
+}
+
+#ifdef BOARD_OBP60S3
+void deepSleep(CommonData &common){
+    RTC_lastpage = common.data.actpage - 1;
+    // Switch off all power lines
+    setPortPin(OBP_BACKLIGHT_LED, false);   // Backlight Off
+    setFlashLED(false);                     // Flash LED Off
+    buzzer(TONE4, 20);                      // Buzzer tone 4kHz 20ms
+    // Shutdown EInk display
+    getdisplay().setFullWindow();               // Set full Refresh
+    getdisplay().fillScreen(common.bgcolor);    // Clear screen
+    getdisplay().setTextColor(common.fgcolor);
+    getdisplay().setFont(&Ubuntu_Bold20pt7b);
+    getdisplay().setCursor(85, 150);
+    getdisplay().print("Sleep Mode");
+    getdisplay().setFont(&Ubuntu_Bold8pt7b);
+    getdisplay().setCursor(65, 175);
+    getdisplay().print("To wake up press key and wait 5s");
+    getdisplay().nextPage();                // Update display contents
+    getdisplay().powerOff();                // Display power off
+    setPortPin(OBP_POWER_50, false);        // Power off ePaper display
+    // Stop system
+    esp_deep_sleep_start();                 // Deep Sleep with weakup via touch pin
+}
+#endif
+#ifdef BOARD_OBP40S3
+// Deep sleep funktion
+void deepSleep(CommonData &common){
+    RTC_lastpage = common.data.actpage - 1;
+    // Switch off all power lines
+    setPortPin(OBP_BACKLIGHT_LED, false);   // Backlight Off
+    setFlashLED(false);                     // Flash LED Off
+    // Shutdown EInk display
+    getdisplay().setFullWindow();               // Set full Refresh
+    //getdisplay().setPartialWindow(0, 0, getdisplay().width(), getdisplay().height()); // Set partial update
+    getdisplay().fillScreen(common.bgcolor);    // Clear screen
+    getdisplay().setTextColor(common.fgcolor);
+    getdisplay().setFont(&Ubuntu_Bold20pt7b);
+    getdisplay().setCursor(85, 150);
+    getdisplay().print("Sleep Mode");
+    getdisplay().setFont(&Ubuntu_Bold8pt7b);
+    getdisplay().setCursor(65, 175);
+    getdisplay().print("To wake up press wheel and wait 5s");
+    getdisplay().nextPage();                // Partial update
+    getdisplay().powerOff();                // Display power off
+    setPortPin(OBP_POWER_EPD, false);       // Power off ePaper display
+    setPortPin(OBP_POWER_SD, false);        // Power off SD card
+    // Stop system
+    esp_deep_sleep_start();             // Deep Sleep with weakup via GPIO pin
+}
+#endif
 
 // Valid colors see hue
 Color colorMapping(const String &colorString){
@@ -334,6 +392,25 @@ void displayHeader(CommonData &commonData, GwApi::BoatValue *date, GwApi::BoatVa
             getdisplay().drawXBitmap(166, 1, swipe_bits, swipe_width, swipe_height, commonData.fgcolor);
         }
 #endif
+#ifdef LIPO_ACCU_1200
+        if (commonData.data.BatteryChargeStatus == 1) {
+             getdisplay().drawXBitmap(170, 1, battery_loading_bits, battery_width, battery_height, commonData.fgcolor);
+        } else {
+#ifdef VOLTAGE_SENSOR
+            if (commonData.data.batteryLevelLiPo < 10) {
+                getdisplay().drawXBitmap(170, 1, battery_0_bits, battery_width, battery_height, commonData.fgcolor);
+            } else if (commonData.data.batteryLevelLiPo < 25) {
+                getdisplay().drawXBitmap(170, 1, battery_25_bits, battery_width, battery_height, commonData.fgcolor);
+            } else if (commonData.data.batteryLevelLiPo < 50) {
+                getdisplay().drawXBitmap(170, 1, battery_50_bits, battery_width, battery_height, commonData.fgcolor);
+            } else if (commonData.data.batteryLevelLiPo < 75) {
+                getdisplay().drawXBitmap(170, 1, battery_75_bits, battery_width, battery_height, commonData.fgcolor);
+            } else {
+                getdisplay().drawXBitmap(170, 1, battery_100_bits, battery_width, battery_height, commonData.fgcolor);
+            }
+#endif // VOLTAGE_SENSOR
+        }
+#endif // LIPO_ACCU_1200
 
         // Heartbeat as dot
         getdisplay().setTextColor(commonData.fgcolor);

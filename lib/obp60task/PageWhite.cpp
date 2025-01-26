@@ -13,6 +13,7 @@ public:
     PageWhite(CommonData &common){
         commonData = &common;
         common.logger->logDebug(GwLog::LOG,"Instantiate PageWhite");
+        refreshtime = 15000;
     }
 
     virtual int handleKey(int key) {
@@ -53,7 +54,11 @@ public:
         int bgcolor = GxEPD_WHITE;
 
         // Set display in partial refresh mode
-        getdisplay().setPartialWindow(0, 0, getdisplay().width(), getdisplay().height()); // Set partial update
+        if (mode == 'W') {
+            getdisplay().setFullWindow();
+        } else {
+            getdisplay().setPartialWindow(0, 0, getdisplay().width(), getdisplay().height()); // Set partial update
+        }
 
         if (mode == 'L') {
             getdisplay().drawBitmap(0, 0, gImage_Logo_OBP_400x300_sw, getdisplay().width(), getdisplay().height(), commonData->fgcolor);
@@ -62,7 +67,10 @@ public:
         }
 
         // Update display
-        getdisplay().nextPage();    // Partial update (fast)
+        getdisplay().nextPage();
+        if (mode == 'W') {
+            getdisplay().hibernate();
+        }
 
     };
 };

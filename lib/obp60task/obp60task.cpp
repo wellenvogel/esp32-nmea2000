@@ -9,7 +9,7 @@
 #include <NMEA0183.h>                   // NMEA0183
 #include <NMEA0183Msg.h>
 #include <NMEA0183Messages.h>
-#include <GxEPD2_BW.h>                  // GxEPD2 lib for black 6 white E-Ink displays
+#include <GxEPD2_BW.h>                  // GxEPD2 lib for b/w E-Ink displays
 #include "OBP60Extensions.h"            // Functions lib for extension board
 #include "OBP60Keypad.h"                // Functions for keypad
 
@@ -78,7 +78,7 @@ void OBP60Init(GwApi *api){
     }
 
     #ifdef BOARD_OBP40S3
-    //String sdcard = config->getConfigItem(config->useSDCard, true)->asString();
+//    String sdcard = config->getConfigItem(config->useSDCard, true)->asString();
     String sdcard = "on";
     if (sdcard == "on") {
         SPIClass SD_SPI = SPIClass(HSPI);
@@ -115,6 +115,16 @@ void OBP60Init(GwApi *api){
     if(fastrefresh == "true"){
         static const bool useFastFullUpdate = true;   // Enable fast full display update only for GDEY042T81
     }
+    #endif
+
+    #ifdef BOARD_OBP60S3
+    touchSleepWakeUpEnable(TP1, 45); // TODO sensitivity should be configurable via web interface
+    touchSleepWakeUpEnable(TP2, 45);
+    touchSleepWakeUpEnable(TP3, 45);
+    touchSleepWakeUpEnable(TP4, 45);
+    touchSleepWakeUpEnable(TP5, 45);
+    touchSleepWakeUpEnable(TP6, 45);
+    esp_sleep_enable_touchpad_wakeup();
     #endif
 
     // Get CPU speed
@@ -159,6 +169,7 @@ typedef struct {
         GwLog* logger = NULL;
 //        GwApi* api = NULL;
         uint sensitivity = 100;
+        bool use_syspage = true;
     } MyData;
 
 // Keyboard Task
@@ -170,7 +181,7 @@ void keyboardTask(void *param){
 
     // Loop for keyboard task
     while (true){
-        keycode = readKeypad(data->logger, data->sensitivity);
+        keycode = readKeypad(data->logger, data->sensitivity, data->use_syspage);
         //send a key event
         if(keycode != 0){
             xQueueSend(data->queue, &keycode, 0);
@@ -302,9 +313,36 @@ void underVoltageDetection(GwApi *api, CommonData &common){
     float vslope = uint(api->getConfig()->getConfigItem(api->getConfig()->vSlope,true)->asFloat());
     float voffset = uint(api->getConfig()->getConfigItem(api->getConfig()->vOffset,true)->asFloat());
     // Read supply voltage
-    float actVoltage = (float(analogRead(OBP_ANALOG0)) * 3.3 / 4096 + 0.17) * 20;   // V = 1/20 * Vin
-    actVoltage = actVoltage * vslope + voffset;
-    if(actVoltage < MIN_VOLTAGE){
+    #if defined VOLTAGE_SENSOR && defined LIPO_ACCU_1200
+    float actVoltage = (float(analogRead(OBP_ANALOG0)) * 3.3 / 4096 + 0.53) * 2;   // Vin = 1/2 for OBP40
+    float minVoltage = 3.65;  // Absolut minimum volatge for 3,7V LiPo accu
+    #else
+    float actVoltage = (float(analogRead(OBP_ANALOG0)) * 3.3 / 4096 + 0.17) * 20;   // Vin = 1/20 for OBP60
+    float minVoltage = MIN_VOLTAGE;
+    #endif
+    float corrVoltage = actVoltage * vslope + voffset;  // Calibration
+    if(corrVoltage < minVoltage){
+        #if defined VOLTAGE_SENSOR && defined LIPO_ACCU_1200
+        // Switch off all power lines
+        setPortPin(OBP_BACKLIGHT_LED, false);   // Backlight Off
+        setFlashLED(false);                     // Flash LED Off            
+        buzzer(TONE4, 20);                      // Buzzer tone 4kHz 20ms
+        // Shutdown EInk display
+        getdisplay().setFullWindow();           // Set full Refresh
+        //getdisplay().setPartialWindow(0, 0, getdisplay().width(), getdisplay().height()); // Set partial update
+        getdisplay().fillScreen(common.bgcolor);// Clear screen
+        getdisplay().setTextColor(common.fgcolor);
+        getdisplay().setFont(&Ubuntu_Bold20pt7b);
+        getdisplay().setCursor(65, 150);
+        getdisplay().print("Undervoltage");
+        getdisplay().setFont(&Ubuntu_Bold8pt7b);
+        getdisplay().setCursor(65, 175);
+        getdisplay().print("Charge battery and restart");
+        getdisplay().nextPage();                // Partial update
+        getdisplay().powerOff();                // Display power off
+        setPortPin(OBP_POWER_EPD, false);       // Power off ePaper display
+        setPortPin(OBP_POWER_SD, false);        // Power off SD card
+        #else
         // Switch off all power lines
         setPortPin(OBP_BACKLIGHT_LED, false);   // Backlight Off
         setFlashLED(false);                     // Flash LED Off            
@@ -317,44 +355,18 @@ void underVoltageDetection(GwApi *api, CommonData &common){
         getdisplay().setFont(&Ubuntu_Bold20pt7b);
         getdisplay().setCursor(65, 150);
         getdisplay().print("Undervoltage");
+        getdisplay().setFont(&Ubuntu_Bold8pt7b);
+        getdisplay().setCursor(65, 175);
+        getdisplay().print("To wake up repower system");
         getdisplay().nextPage();                // Partial update
         getdisplay().powerOff();                // Display power off
+        #endif
         // Stop system
         while(true){
             esp_deep_sleep_start();             // Deep Sleep without weakup. Weakup only after power cycle (restart).
         }
     }
 }
-
-#ifdef BOARD_OBP40S3
-// Deep sleep funktion 
-void deepSleep(CommonData &common){
-    // Switch off all power lines
-    setPortPin(OBP_BACKLIGHT_LED, false);   // Backlight Off
-    setFlashLED(false);                     // Flash LED Off            
-    buzzer(TONE4, 20);                      // Buzzer tone 4kHz 20ms
-    // Shutdown EInk display
-    getdisplay().setFullWindow();               // Set full Refresh
-    //getdisplay().setPartialWindow(0, 0, getdisplay().width(), getdisplay().height()); // Set partial update
-    getdisplay().fillScreen(common.bgcolor);    // Clear screen
-    getdisplay().setTextColor(common.fgcolor);
-    getdisplay().setFont(&Ubuntu_Bold20pt7b);
-    getdisplay().setCursor(85, 150);
-    getdisplay().print("Sleep Mode");
-    getdisplay().setFont(&Ubuntu_Bold8pt7b);
-    getdisplay().setCursor(65, 175);
-    getdisplay().print("For wakeup press wheel and wait 5s");
-    getdisplay().nextPage();                // Partial update
-    getdisplay().powerOff();                // Display power off
-    setPortPin(OBP_POWER_EPD, false);       // Power off ePaper display
-    setPortPin(OBP_POWER_SD, false);        // Power off SD card
-    // Stop system
-    while(true){
-        esp_deep_sleep_start();             // Deep Sleep with weakup via GPIO pin
-    }
-
-}
-#endif
 
 // OBP60 Task
 //####################################################################################
@@ -400,6 +412,10 @@ void OBP60Task(GwApi *api){
     bool refreshmode = api->getConfig()->getConfigItem(api->getConfig()->refresh,true)->asBoolean();
     String fastrefresh = api->getConfig()->getConfigItem(api->getConfig()->fastRefresh,true)->asString();
     uint fullrefreshtime = uint(api->getConfig()->getConfigItem(api->getConfig()->fullRefreshTime,true)->asInt());
+    #ifdef BOARD_OBP40S3
+//    bool syspage_enabled = config->getBool(config->systemPage);
+    bool syspage_enabled = true;
+    #endif
 
     #ifdef DISPLAY_GDEY042T81
         getdisplay().init(115200, true, 2, false);  // Use this for Waveshare boards with "clever" reset circuit, 2ms reset pulse
@@ -440,6 +456,26 @@ void OBP60Task(GwApi *api){
     PageStruct pages[MAX_PAGE_NUMBER];
     // Set start page
     int pageNumber = int(api->getConfig()->getConfigItem(api->getConfig()->startPage,true)->asInt()) - 1;
+
+    LOG_DEBUG(GwLog::LOG,"Checking wakeup...");
+#ifdef BOARD_OBP60S3
+    if (esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_TOUCHPAD) {
+        LOG_DEBUG(GwLog::LOG,"Wake up by touch pad %d",esp_sleep_get_touchpad_wakeup_status());
+        pageNumber = getLastPage();
+    } else {
+        LOG_DEBUG(GwLog::LOG,"Other wakeup reason");
+    }
+#endif
+#ifdef BOARD_OBP40S3
+    if (esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_EXT0) {
+        LOG_DEBUG(GwLog::LOG,"Wake up by key");
+        pageNumber = getLastPage();
+    } else {
+        LOG_DEBUG(GwLog::LOG,"Other wakeup reason");
+    }
+#endif
+    LOG_DEBUG(GwLog::LOG,"...done");
+
     int lastPage=pageNumber;
 
     BoatValueList boatValues; //all the boat values for the api query
@@ -501,6 +537,9 @@ void OBP60Task(GwApi *api){
     allParameters.page0=3;
     allParameters.queue=xQueueCreate(10,sizeof(int));
     allParameters.sensitivity= api->getConfig()->getInt(GwConfigDefinitions::tSensitivity);
+    #ifdef BOARD_OBP40S3
+    allParameters.use_syspage = syspage_enabled;
+    #endif
     xTaskCreate(keyboardTask,"keyboard",2000,&allParameters,configMAX_PRIORITIES-1,NULL);
     SharedData *shared=new SharedData(api);
     createSensorTask(shared);
@@ -550,8 +589,10 @@ void OBP60Task(GwApi *api){
     //####################################################################################
 
     bool systemPage = false;
+    Page *currentPage;
     while (true){
         delay(100);     // Delay 100ms (loop time)
+        bool keypressed = false;
 
         // Undervoltage detection
         if(uvoltage == true){
@@ -593,12 +634,13 @@ void OBP60Task(GwApi *api){
             int keyboardMessage=0;
             while (xQueueReceive(allParameters.queue,&keyboardMessage,0)){
                 LOG_DEBUG(GwLog::LOG,"new key from keyboard %d",keyboardMessage);
+                keypressed = true;
 
-                Page *currentPage;
-                if (keyboardMessage == 12) {
+                if (keyboardMessage == 12 and !systemPage) {
                     LOG_DEBUG(GwLog::LOG, "Calling system page");
                     systemPage = true; // System page is out of band
                     syspage->setupKeys();
+                    keyboardMessage = 0;
                 }
                 else {
                     currentPage = pages[pageNumber].page;
@@ -606,6 +648,7 @@ void OBP60Task(GwApi *api){
                         // exit system mode with exit key number 1
                         systemPage = false;
                         currentPage->setupKeys();
+                        keyboardMessage = 0;
                     }
                 }
                 if (systemPage) {
@@ -626,7 +669,7 @@ void OBP60Task(GwApi *api){
                     }
                     #ifdef BOARD_OBP40S3
                     // #3 Deep sleep mode for OBP40
-                    if (keyboardMessage == 3){
+                    if ((keyboardMessage == 3) and !syspage_enabled){
                         deepSleep(commonData);
                     }
                     #endif
@@ -725,9 +768,17 @@ void OBP60Task(GwApi *api){
                 }
             }
             
-            // Refresh display data all 1s
-            if(millis() > starttime3 + 1000){
+            // Refresh display data, default all 1s
+            currentPage = pages[pageNumber].page;
+            int pagetime = 1000;
+            if ((lastPage == pageNumber) and (!keypressed)) {
+                // same page we use page defined time
+                pagetime = currentPage->refreshtime;
+            }
+            if(millis() > starttime3 + pagetime){
+                LOG_DEBUG(GwLog::DEBUG,"Page with refreshtime=%d", pagetime);
                 starttime3 = millis();
+
                 //refresh data from api
                 api->getBoatDataValues(boatValues.numValues,boatValues.allBoatValues);
                 api->getStatus(commonData.status);
@@ -749,7 +800,6 @@ void OBP60Task(GwApi *api){
                     syspage->displayPage(sysparams);
                 }
                 else {
-                    Page *currentPage = pages[pageNumber].page;
                     if (currentPage == NULL){
                         LOG_DEBUG(GwLog::ERROR,"page number %d not found", pageNumber);
                         // Error handling for missing page

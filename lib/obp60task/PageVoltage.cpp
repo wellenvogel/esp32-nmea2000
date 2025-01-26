@@ -205,6 +205,18 @@ public:
             getdisplay().setCursor(20, 100);
             getdisplay().print(name1);                           // Value name
 
+            #if defined BOARD_OBP40S3 && defined LIPO_ACCU_1200 && defined VOLTAGE_SENSOR
+            // Show charge status
+            getdisplay().setFont(&Ubuntu_Bold8pt7b);
+            getdisplay().setCursor(185, 100);
+            if(commonData->data.BatteryChargeStatus == true){
+                getdisplay().print("Charge");
+            }
+            else{
+                getdisplay().print("Discharge");
+            }
+            #endif
+
             // Show unit
             getdisplay().setFont(&Ubuntu_Bold20pt7b);
             getdisplay().setCursor(270, 100);
@@ -213,7 +225,12 @@ public:
             // Show battery type
             getdisplay().setFont(&Ubuntu_Bold8pt7b);
             getdisplay().setCursor(295, 100);
+            #ifdef BOARD_OBP60S3
             getdisplay().print(batType);
+            #endif
+            #if defined BOARD_OBP40S3 && defined LIPO_ACCU_1200 && defined VOLTAGE_SENSOR
+            getdisplay().print("LiPo");
+            #endif
 
             // Show average settings
             printAvg(average, 320, 84, true);
