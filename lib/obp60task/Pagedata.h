@@ -95,6 +95,7 @@ typedef struct{
   uint16_t fgcolor;
   uint16_t bgcolor;
   bool keylock = false;
+  String powermode;
 } CommonData;
 
 //a base class that all pages must inherit from
@@ -112,7 +113,7 @@ class Page{
         commonData->keydata[2].label = "#LEFT";
         commonData->keydata[3].label = "#RIGHT";
         commonData->keydata[4].label = "";
-        if (commonData->backlight.mode == KEY) {
+        if ((commonData->backlight.mode == KEY) && !(commonData->powermode == "Min Power")) {
             commonData->keydata[5].label = "ILUM";
         } else {
             commonData->keydata[5].label = "";
