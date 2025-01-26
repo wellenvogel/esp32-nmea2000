@@ -491,11 +491,23 @@ void sensorTask(void *param){
             }
             // Charging detection
             float deltaV = sensors.batteryVoltage - sensors.batteryVoltage10;
-            if(deltaV > 0.045){
-                sensors.BatteryChargeStatus = 1;    // Charging active
+            // Higher limits for lower voltages
+            if(sensors.batteryVoltage10 < 4.0){
+                if(deltaV > 0.045 && deltaV < 4,15){
+                    sensors.BatteryChargeStatus = 1;    // Charging active
+                }
+                if(deltaV < -0.04 || deltaV >= 4,15){   // Charging stops by grater than 4,15V
+                    sensors.BatteryChargeStatus = 0;    // Discharging
+                }
             }
-            if(deltaV < -0.04){
-                sensors.BatteryChargeStatus = 0;    // Discharging
+            // Lower limits for higher voltages
+            else{
+                if(deltaV > 0.03 && deltaV < 4,15){
+                    sensors.BatteryChargeStatus = 1;    // Charging active
+                }
+                if(deltaV < -0.03 || deltaV >= 4,15){   // Charging stops by grater than 4,15V
+                    sensors.BatteryChargeStatus = 0;    // Discharging
+                }
             }
             // Send to NMEA200 bus as instance 10
             if(!isnan(sensors.batteryVoltage)){

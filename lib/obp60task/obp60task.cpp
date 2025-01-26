@@ -310,8 +310,8 @@ void registerAllPages(PageList &list){
 // Undervoltage detection for shutdown display
 void underVoltageDetection(GwApi *api, CommonData &common){
     // Read settings
-    float vslope = uint(api->getConfig()->getConfigItem(api->getConfig()->vSlope,true)->asFloat());
-    float voffset = uint(api->getConfig()->getConfigItem(api->getConfig()->vOffset,true)->asFloat());
+    double voffset = (api->getConfig()->getConfigItem(api->getConfig()->vOffset,true)->asString()).toFloat();
+    double vslope = (api->getConfig()->getConfigItem(api->getConfig()->vSlope,true)->asString()).toFloat();
     // Read supply voltage
     #if defined VOLTAGE_SENSOR && defined LIPO_ACCU_1200
     float actVoltage = (float(analogRead(OBP_ANALOG0)) * 3.3 / 4096 + 0.53) * 2;   // Vin = 1/2 for OBP40
@@ -320,8 +320,8 @@ void underVoltageDetection(GwApi *api, CommonData &common){
     float actVoltage = (float(analogRead(OBP_ANALOG0)) * 3.3 / 4096 + 0.17) * 20;   // Vin = 1/20 for OBP60
     float minVoltage = MIN_VOLTAGE;
     #endif
-    float corrVoltage = actVoltage * vslope + voffset;  // Calibration
-    if(corrVoltage < minVoltage){
+    double calVoltage = actVoltage * vslope + voffset;  // Calibration
+    if(calVoltage < minVoltage){
         #if defined VOLTAGE_SENSOR && defined LIPO_ACCU_1200
         // Switch off all power lines
         setPortPin(OBP_BACKLIGHT_LED, false);   // Backlight Off
@@ -350,7 +350,7 @@ void underVoltageDetection(GwApi *api, CommonData &common){
         setPortPin(OBP_POWER_50, false);        // Power rail 5.0V Off
         // Shutdown EInk display
         getdisplay().setPartialWindow(0, 0, getdisplay().width(), getdisplay().height()); // Set partial update
-        getdisplay().fillScreen(common.bgcolor);       // Clear screen
+        getdisplay().fillScreen(common.bgcolor);// Clear screen
         getdisplay().setTextColor(common.fgcolor);
         getdisplay().setFont(&Ubuntu_Bold20pt7b);
         getdisplay().setCursor(65, 150);
