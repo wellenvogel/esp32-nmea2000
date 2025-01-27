@@ -609,10 +609,10 @@
         "label": "Undervoltage",
         "type": "boolean",
         "default": "false",
-        "description": "Switch off device if voltage drops below 9V [on|off]",
+        "description": "Switch off device if LiPo voltage drops below 3.65V [on|off]",
         "category": "OBP40 Hardware",
         "capabilities": {
-            "obp40": "false"
+            "obp40":"true"
         }
     },
     {

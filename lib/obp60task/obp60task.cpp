@@ -78,7 +78,7 @@ void OBP60Init(GwApi *api){
     }
 
     #ifdef BOARD_OBP40S3
-    //String sdcard = config->getConfigItem(config->useSDCard, true)->asString();
+//    String sdcard = config->getConfigItem(config->useSDCard, true)->asString();
     String sdcard = "on";
     if (sdcard == "on") {
         SPIClass SD_SPI = SPIClass(HSPI);
@@ -310,12 +310,39 @@ void registerAllPages(PageList &list){
 // Undervoltage detection for shutdown display
 void underVoltageDetection(GwApi *api, CommonData &common){
     // Read settings
-    float vslope = uint(api->getConfig()->getConfigItem(api->getConfig()->vSlope,true)->asFloat());
-    float voffset = uint(api->getConfig()->getConfigItem(api->getConfig()->vOffset,true)->asFloat());
+    double voffset = (api->getConfig()->getConfigItem(api->getConfig()->vOffset,true)->asString()).toFloat();
+    double vslope = (api->getConfig()->getConfigItem(api->getConfig()->vSlope,true)->asString()).toFloat();
     // Read supply voltage
-    float actVoltage = (float(analogRead(OBP_ANALOG0)) * 3.3 / 4096 + 0.17) * 20;   // V = 1/20 * Vin
-    actVoltage = actVoltage * vslope + voffset;
-    if(actVoltage < MIN_VOLTAGE){
+    #if defined VOLTAGE_SENSOR && defined LIPO_ACCU_1200
+    float actVoltage = (float(analogRead(OBP_ANALOG0)) * 3.3 / 4096 + 0.53) * 2;   // Vin = 1/2 for OBP40
+    float minVoltage = 3.65;  // Absolut minimum volatge for 3,7V LiPo accu
+    #else
+    float actVoltage = (float(analogRead(OBP_ANALOG0)) * 3.3 / 4096 + 0.17) * 20;   // Vin = 1/20 for OBP60
+    float minVoltage = MIN_VOLTAGE;
+    #endif
+    double calVoltage = actVoltage * vslope + voffset;  // Calibration
+    if(calVoltage < minVoltage){
+        #if defined VOLTAGE_SENSOR && defined LIPO_ACCU_1200
+        // Switch off all power lines
+        setPortPin(OBP_BACKLIGHT_LED, false);   // Backlight Off
+        setFlashLED(false);                     // Flash LED Off            
+        buzzer(TONE4, 20);                      // Buzzer tone 4kHz 20ms
+        // Shutdown EInk display
+        getdisplay().setFullWindow();           // Set full Refresh
+        //getdisplay().setPartialWindow(0, 0, getdisplay().width(), getdisplay().height()); // Set partial update
+        getdisplay().fillScreen(common.bgcolor);// Clear screen
+        getdisplay().setTextColor(common.fgcolor);
+        getdisplay().setFont(&Ubuntu_Bold20pt7b);
+        getdisplay().setCursor(65, 150);
+        getdisplay().print("Undervoltage");
+        getdisplay().setFont(&Ubuntu_Bold8pt7b);
+        getdisplay().setCursor(65, 175);
+        getdisplay().print("Charge battery and restart system");
+        getdisplay().nextPage();                // Partial update
+        getdisplay().powerOff();                // Display power off
+        setPortPin(OBP_POWER_EPD, false);       // Power off ePaper display
+        setPortPin(OBP_POWER_SD, false);        // Power off SD card
+        #else
         // Switch off all power lines
         setPortPin(OBP_BACKLIGHT_LED, false);   // Backlight Off
         setFlashLED(false);                     // Flash LED Off            
@@ -323,13 +350,17 @@ void underVoltageDetection(GwApi *api, CommonData &common){
         setPortPin(OBP_POWER_50, false);        // Power rail 5.0V Off
         // Shutdown EInk display
         getdisplay().setPartialWindow(0, 0, getdisplay().width(), getdisplay().height()); // Set partial update
-        getdisplay().fillScreen(common.bgcolor);       // Clear screen
+        getdisplay().fillScreen(common.bgcolor);// Clear screen
         getdisplay().setTextColor(common.fgcolor);
         getdisplay().setFont(&Ubuntu_Bold20pt7b);
         getdisplay().setCursor(65, 150);
         getdisplay().print("Undervoltage");
+        getdisplay().setFont(&Ubuntu_Bold8pt7b);
+        getdisplay().setCursor(65, 175);
+        getdisplay().print("To wake up repower system");
         getdisplay().nextPage();                // Partial update
         getdisplay().powerOff();                // Display power off
+        #endif
         // Stop system
         while(true){
             esp_deep_sleep_start();             // Deep Sleep without weakup. Weakup only after power cycle (restart).
@@ -382,7 +413,8 @@ void OBP60Task(GwApi *api){
     String fastrefresh = api->getConfig()->getConfigItem(api->getConfig()->fastRefresh,true)->asString();
     uint fullrefreshtime = uint(api->getConfig()->getConfigItem(api->getConfig()->fullRefreshTime,true)->asInt());
     #ifdef BOARD_OBP40S3
-    bool syspage_enabled = config->getBool(config->systemPage);
+//    bool syspage_enabled = config->getBool(config->systemPage);
+    bool syspage_enabled = true;
     #endif
 
     #ifdef DISPLAY_GDEY042T81
@@ -523,6 +555,7 @@ void OBP60Task(GwApi *api){
     commonData.backlight.mode = backlightMapping(config->getConfigItem(config->backlight,true)->asString());
     commonData.backlight.color = colorMapping(config->getConfigItem(config->blColor,true)->asString());
     commonData.backlight.brightness = 2.55 * uint(config->getConfigItem(config->blBrightness,true)->asInt());
+    commonData.powermode = api->getConfig()->getConfigItem(api->getConfig()->powerMode,true)->asString();
 
     bool uvoltage = api->getConfig()->getConfigItem(api->getConfig()->underVoltage,true)->asBoolean();
     String cpuspeed = api->getConfig()->getConfigItem(api->getConfig()->cpuSpeed,true)->asString();

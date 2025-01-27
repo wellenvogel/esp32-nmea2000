@@ -141,12 +141,12 @@ void deepSleep(CommonData &common){
     getdisplay().print("Sleep Mode");
     getdisplay().setFont(&Ubuntu_Bold8pt7b);
     getdisplay().setCursor(65, 175);
-    getdisplay().print("For wakeup press key and wait 5s");
+    getdisplay().print("To wake up press key and wait 5s");
     getdisplay().nextPage();                // Update display contents
     getdisplay().powerOff();                // Display power off
     setPortPin(OBP_POWER_50, false);        // Power off ePaper display
     // Stop system
-    esp_deep_sleep_start();             // Deep Sleep with weakup via touch pin
+    esp_deep_sleep_start();                 // Deep Sleep with weakup via touch pin
 }
 #endif
 #ifdef BOARD_OBP40S3
@@ -166,7 +166,7 @@ void deepSleep(CommonData &common){
     getdisplay().print("Sleep Mode");
     getdisplay().setFont(&Ubuntu_Bold8pt7b);
     getdisplay().setCursor(65, 175);
-    getdisplay().print("For wakeup press wheel and wait 5s");
+    getdisplay().print("To wake up press wheel and wait 5s");
     getdisplay().nextPage();                // Partial update
     getdisplay().powerOff();                // Display power off
     setPortPin(OBP_POWER_EPD, false);       // Power off ePaper display
@@ -341,12 +341,8 @@ void displayHeader(CommonData &commonData, GwApi::BoatValue *date, GwApi::BoatVa
     static unsigned long tcpClTxOld = 0;
     static unsigned long n2kRxOld = 0;
     static unsigned long n2kTxOld = 0;
-    int textcolor = GxEPD_BLACK;
 
     if(commonData.config->getBool(commonData.config->statusLine) == true){
-
-        // Header separator line (optional)
-        // getdisplay().drawLine(0, 19, 399, 19, commonData.fgcolor);
 
         // Show status info
         getdisplay().setTextColor(commonData.fgcolor);
@@ -392,13 +388,37 @@ void displayHeader(CommonData &commonData, GwApi::BoatValue *date, GwApi::BoatVa
             getdisplay().drawXBitmap(166, 1, swipe_bits, swipe_width, swipe_height, commonData.fgcolor);
         }
 #endif
+#ifdef LIPO_ACCU_1200
+        if (commonData.data.BatteryChargeStatus == 1) {
+             getdisplay().drawXBitmap(170, 1, battery_loading_bits, battery_width, battery_height, commonData.fgcolor);
+        } else {
+#ifdef VOLTAGE_SENSOR
+            if (commonData.data.batteryLevelLiPo < 10) {
+                getdisplay().drawXBitmap(170, 1, battery_0_bits, battery_width, battery_height, commonData.fgcolor);
+            } else if (commonData.data.batteryLevelLiPo < 25) {
+                getdisplay().drawXBitmap(170, 1, battery_25_bits, battery_width, battery_height, commonData.fgcolor);
+            } else if (commonData.data.batteryLevelLiPo < 50) {
+                getdisplay().drawXBitmap(170, 1, battery_50_bits, battery_width, battery_height, commonData.fgcolor);
+            } else if (commonData.data.batteryLevelLiPo < 75) {
+                getdisplay().drawXBitmap(170, 1, battery_75_bits, battery_width, battery_height, commonData.fgcolor);
+            } else {
+                getdisplay().drawXBitmap(170, 1, battery_100_bits, battery_width, battery_height, commonData.fgcolor);
+            }
+#endif // VOLTAGE_SENSOR
+        }
+#endif // LIPO_ACCU_1200
 
-        // Heartbeat as dot
-        getdisplay().setTextColor(commonData.fgcolor);
-        getdisplay().setFont(&Ubuntu_Bold32pt7b);
-        getdisplay().setCursor(205, 14);
-        getdisplay().print(heartbeat ? "." : " ");
-        heartbeat = !heartbeat; 
+        // Heartbeat as page number
+        if (heartbeat) {
+            getdisplay().setTextColor(commonData.bgcolor);
+            getdisplay().fillRect(201, 0, 23, 19, commonData.fgcolor);
+        } else {
+            getdisplay().setTextColor(commonData.fgcolor);
+            getdisplay().drawRect(201, 0, 23, 19, commonData.fgcolor);
+        }
+        getdisplay().setFont(&Ubuntu_Bold8pt7b);
+        drawTextCenter(211, 9, String(commonData.data.actpage));
+        heartbeat = !heartbeat;
 
         // Date and time
         getdisplay().setTextColor(commonData.fgcolor);
@@ -442,17 +462,16 @@ void displayFooter(CommonData &commonData) {
         // horizontal elements
         const uint16_t top = 280;
         const uint16_t bottom = 299;
+        // horizontal stub lines
         getdisplay().drawLine(commonData.keydata[0].x, top, commonData.keydata[0].x+10, top, commonData.fgcolor);
-        getdisplay().drawLine(commonData.keydata[1].x-10, top, commonData.keydata[1].x+10, top, commonData.fgcolor);
-        getdisplay().drawLine(commonData.keydata[2].x-10, top, commonData.keydata[2].x+10, top, commonData.fgcolor);
-        getdisplay().drawLine(commonData.keydata[4].x-10, top, commonData.keydata[4].x+10, top, commonData.fgcolor);
-        getdisplay().drawLine(commonData.keydata[5].x-10, top, commonData.keydata[5].x+10, top, commonData.fgcolor);
+        for (int i = 1; i <= 5; i++) {
+            getdisplay().drawLine(commonData.keydata[i].x-10, top, commonData.keydata[i].x+10, top, commonData.fgcolor);
+        }
         getdisplay().drawLine(commonData.keydata[5].x + commonData.keydata[5].w - 10, top, commonData.keydata[5].x + commonData.keydata[5].w + 1, top, commonData.fgcolor);
         // vertical key separators
-        getdisplay().drawLine(commonData.keydata[0].x + commonData.keydata[0].w, top, commonData.keydata[0].x + commonData.keydata[0].w, bottom, commonData.fgcolor);
-        getdisplay().drawLine(commonData.keydata[1].x + commonData.keydata[1].w, top, commonData.keydata[1].x + commonData.keydata[1].w, bottom, commonData.fgcolor);
-        getdisplay().drawLine(commonData.keydata[3].x + commonData.keydata[3].w, top, commonData.keydata[3].x + commonData.keydata[3].w, bottom, commonData.fgcolor);
-        getdisplay().drawLine(commonData.keydata[4].x + commonData.keydata[4].w, top, commonData.keydata[4].x + commonData.keydata[4].w, bottom, commonData.fgcolor);
+        for (int i = 0; i <= 4; i++) {
+            getdisplay().drawLine(commonData.keydata[i].x + commonData.keydata[i].w, top, commonData.keydata[i].x + commonData.keydata[i].w, bottom, commonData.fgcolor);
+        }
         for (int i = 0; i < 6; i++) {
             uint16_t x, y;
             if (commonData.keydata[i].label.length() > 0) {
@@ -476,9 +495,6 @@ void displayFooter(CommonData &commonData) {
                 }
             }
         }
-        // Current page number in a small box
-        getdisplay().drawRect(190, 280, 23, 19, commonData.fgcolor);
-        drawTextCenter(200, 289, String(commonData.data.actpage));
     } else {
         getdisplay().setCursor(65, 295);
         getdisplay().print("Press 1 and 6 fast to unlock keys");

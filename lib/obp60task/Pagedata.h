@@ -31,6 +31,8 @@ typedef struct{
   double batteryVoltage300 = 0; // Sliding average over 300 values
   double batteryCurrent300 = 0;
   double batteryPower300 = 0;
+  double batteryLevelLiPo = 0;  // Battery level for OBP40 LiPo accu
+  int BatteryChargeStatus = 0;  // LiPo charge status: 0 = discharge, 1 = loading activ
   double solarVoltage = 0;
   double solarCurrent = 0;
   double solarPower = 0;
@@ -93,6 +95,7 @@ typedef struct{
   uint16_t fgcolor;
   uint16_t bgcolor;
   bool keylock = false;
+  String powermode;
 } CommonData;
 
 //a base class that all pages must inherit from
@@ -110,7 +113,7 @@ class Page{
         commonData->keydata[2].label = "#LEFT";
         commonData->keydata[3].label = "#RIGHT";
         commonData->keydata[4].label = "";
-        if (commonData->backlight.mode == KEY) {
+        if ((commonData->backlight.mode == KEY) && !(commonData->powermode == "Min Power")) {
             commonData->keydata[5].label = "ILUM";
         } else {
             commonData->keydata[5].label = "";
