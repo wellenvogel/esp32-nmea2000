@@ -12,7 +12,7 @@ class PageClock : public Page
     PageClock(CommonData &common){
         commonData = &common;
         common.logger->logDebug(GwLog::LOG,"Instantiate PageClock");
-        simulation = config->getBool(config->useSimuData);
+        simulation = common.config->getBool(common.config->useSimuData);
         simtime = 38160; // time value 11:36
     }
 
