@@ -80,8 +80,12 @@ GwConfigHandler::~GwConfigHandler(){
 bool GwConfigHandler::loadConfig(){
     prefs->begin(PREF_NAME,true);
     for (int i=0;i<getNumConfig();i++){
+        if (!prefs->isKey(configs[i]->getName().c_str())) {
+             continue;
+        }
         String v=prefs->getString(configs[i]->getName().c_str(),configs[i]->getDefault());
         configs[i]->value=v;
+        LOG_DEBUG(GwLog::DEBUG, "loaded config[%d] with '%s'", i, v);
     }
     prefs->end();
     return true;
