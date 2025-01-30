@@ -78,8 +78,7 @@ void OBP60Init(GwApi *api){
     }
 
     #ifdef BOARD_OBP40S3
-//    String sdcard = config->getConfigItem(config->useSDCard, true)->asString();
-    String sdcard = "on";
+    String sdcard = config->getConfigItem(config->useSDCard, true)->asString();
     if (sdcard == "on") {
         SPIClass SD_SPI = SPIClass(HSPI);
         SD_SPI.begin(SD_SPI_CLK, SD_SPI_MISO, SD_SPI_MOSI);
@@ -413,8 +412,7 @@ void OBP60Task(GwApi *api){
     String fastrefresh = api->getConfig()->getConfigItem(api->getConfig()->fastRefresh,true)->asString();
     uint fullrefreshtime = uint(api->getConfig()->getConfigItem(api->getConfig()->fullRefreshTime,true)->asInt());
     #ifdef BOARD_OBP40S3
-//    bool syspage_enabled = config->getBool(config->systemPage);
-    bool syspage_enabled = true;
+    bool syspage_enabled = config->getBool(config->systemPage);
     #endif
 
     #ifdef DISPLAY_GDEY042T81
