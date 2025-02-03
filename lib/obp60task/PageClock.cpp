@@ -5,10 +5,15 @@
 
 class PageClock : public Page
 {
-public:
+    bool simulation = false;
+    int simtime;
+
+    public:
     PageClock(CommonData &common){
         commonData = &common;
         common.logger->logDebug(GwLog::LOG,"Instantiate PageClock");
+        simulation = common.config->getBool(common.config->useSimuData);
+        simtime = 38160; // time value 11:36
     }
 
     // Key functions
@@ -42,7 +47,6 @@ public:
 
         // Get config data
         String lengthformat = config->getString(config->lengthFormat);
-        bool simulation = config->getBool(config->useSimuData);
         bool holdvalues = config->getBool(config->holdvalues);
         String flashLED = config->getString(config->flashLED);
         String backlightMode = config->getString(config->backlight);
@@ -57,7 +61,7 @@ public:
             value1 = bvalue1->value;                    // Value as double in SI unit
         }
         else{
-            value1 = 38160;                             // Simulation data for time value 11:36 in seconds
+            value1 = simtime++;                         // Simulation data for time value 11:36 in seconds
         }                                               // Other simulation data see OBP60Formater.cpp
         bool valid1 = bvalue1->valid;                   // Valid information 
         String svalue1 = formatValue(bvalue1, *commonData).svalue;    // Formatted value as string including unit conversion and switching decimal places
@@ -137,6 +141,8 @@ public:
         if(valid1 == true && valid2 == true && valid3 == true){
             sunrise = String(commonData->sundata.sunriseHour) + ":" + String(commonData->sundata.sunriseMinute + 100).substring(1);
             svalue5old = sunrise;
+        } else if (simulation) {
+            sunrise = String("06:42");
         }
 
         getdisplay().setFont(&Ubuntu_Bold8pt7b);
@@ -155,6 +161,8 @@ public:
         if(valid1 == true && valid2 == true && valid3 == true){
             sunset = String(commonData->sundata.sunsetHour) + ":" +  String(commonData->sundata.sunsetMinute + 100).substring(1);
             svalue6old = sunset;
+        } else if (simulation) {
+            sunset = String("21:03");
         }
 
         getdisplay().setFont(&Ubuntu_Bold8pt7b);

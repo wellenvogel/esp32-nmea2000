@@ -380,8 +380,14 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
     }
     //########################################################
     else if (value->getFormat() == "formatXte"){
-		double xte = abs(value->value);
-		rawvalue = value->value;
+        double xte = 0;
+        if (!usesimudata) {
+            xte = abs(value->value);
+            rawvalue = value->value;
+        } else {
+            rawvalue = 6.0 + float(random(0, 4));
+            xte = rawvalue;
+        }
         if (xte >= 100) {
             snprintf(buffer,bsize,"%3.0f",value->value);
         } else if (xte >= 10) {
