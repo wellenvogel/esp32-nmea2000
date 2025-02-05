@@ -706,6 +706,21 @@
         }
     },
     {
+        "name": "timeSource",
+        "label": "Status Time Source",
+        "type": "list",
+        "default": "GPS",
+        "description": "Data source for date and time display in status line [RTC|GPS]",
+        "list": [
+            {"l":"Internal real time clock (RTC)","v":"RTC"},
+            {"l":"External time via bus (GPS)","v":"GPS"}
+        ],
+        "category": "OBP40 Display",
+        "capabilities": {
+            "obp40":"true"
+        }
+    },
+    {
         "name": "refresh",
         "label": "Refresh",
         "type": "boolean",

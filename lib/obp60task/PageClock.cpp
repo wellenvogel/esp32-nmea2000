@@ -19,16 +19,25 @@ class PageClock : public Page
 bool simulation = false;
 int simtime;
 bool keylock = false;
-char source = 'R';  // time source (R)TC | (G)PS
+char source = 'R';  // time source (R)TC | (G)PS | (N)TP
 char mode = 'A';    // display mode (A)nalog | (D)igital | race (T)imer
 char tz = 'L';      // time zone (L)ocal | (U)TC
+double timezone = 0; // there are timezones with non int offsets, e.g. 5.5 or 5.75
 
     public:
     PageClock(CommonData &common){
         commonData = &common;
         common.logger->logDebug(GwLog::LOG,"Instantiate PageClock");
         simulation = common.config->getBool(common.config->useSimuData);
+        timezone = common.config->getString(common.config->timeZone).toDouble();
         simtime = 38160; // time value 11:36
+    }
+
+    virtual void setupKeys(){
+        Page::setupKeys();
+        commonData->keydata[0].label = "SRC";
+        commonData->keydata[1].label = "MODE";
+        commonData->keydata[4].label = "TZ";
     }
 
     // Key functions
@@ -92,12 +101,9 @@ char tz = 'L';      // time zone (L)ocal | (U)TC
         // Get config data
         String lengthformat = config->getString(config->lengthFormat);
         String dateformat = config->getString(config->dateFormat);
-        bool simulation = config->getBool(config->useSimuData);
         bool holdvalues = config->getBool(config->holdvalues);
         String flashLED = config->getString(config->flashLED);
         String backlightMode = config->getString(config->backlight);
-        String stimezone = config->getString(config->timeZone);
-        double timezone = stimezone.toDouble();
 
         // Get boat values for GPS time
         GwApi::BoatValue *bvalue1 = pageData.values[0]; // First element in list (only one value by PageOneValue)
@@ -161,7 +167,7 @@ char tz = 'L';      // time zone (L)ocal | (U)TC
 
         getdisplay().setTextColor(commonData->fgcolor);
 
-        time_t tv = mktime(&commonData.data.rtcTime) + timezone * 3600;
+        time_t tv = mktime(&commonData->data.rtcTime) + timezone * 3600;
         struct tm *local_tm = localtime(&tv);
 
         // Show values GPS date
@@ -177,7 +183,7 @@ char tz = 'L';      // time zone (L)ocal | (U)TC
                      getdisplay().print(formatDate(dateformat, local_tm->tm_year + 1900, local_tm->tm_mon + 1, local_tm->tm_mday));
                  }
                  else {
-                     getdisplay().print(formatDate(dateformat, commonData.data.rtcTime.tm_year + 1900, commonData.data.rtcTime.tm_mon + 1, commonData.data.rtcTime.tm_mday));
+                     getdisplay().print(formatDate(dateformat, commonData->data.rtcTime.tm_year + 1900, commonData->data.rtcTime.tm_mon + 1, commonData->data.rtcTime.tm_mday));
                  }
             }
         } else {
@@ -202,7 +208,7 @@ char tz = 'L';      // time zone (L)ocal | (U)TC
                       getdisplay().print(formatTime('s', local_tm->tm_hour, local_tm->tm_min, local_tm->tm_sec));
                  }
                  else {
-                      getdisplay().print(formatTime('s', commonData.data.rtcTime.tm_hour, commonData.data.rtcTime.tm_min, commonData.data.rtcTime.tm_sec));
+                      getdisplay().print(formatTime('s', commonData->data.rtcTime.tm_hour, commonData->data.rtcTime.tm_min, commonData->data.rtcTime.tm_sec));
                  }
             }
         }
@@ -324,7 +330,7 @@ char tz = 'L';      // time zone (L)ocal | (U)TC
         getdisplay().setCursor(175, 110);
         if(holdvalues == false){
             if (tz == 'L') {
-                getdisplay().print(unit2);                       // Unit
+                getdisplay().print(unit2);                   // Unit
             } else {
                 getdisplay().print("UTC");
             }
@@ -346,21 +352,21 @@ char tz = 'L';      // time zone (L)ocal | (U)TC
         double minute = 0;
         if (source == 'R') {
             if (tz == 'L') {
-                time_t tv = mktime(&commonData.data.rtcTime) + timezone * 3600;
+                time_t tv = mktime(&commonData->data.rtcTime) + timezone * 3600;
                 struct tm *local_tm = localtime(&tv);
                 minute = local_tm->tm_min;
                 hour = local_tm->tm_hour;
             } else {
-                minute = commonData.data.rtcTime.tm_min;
-                hour = commonData.data.rtcTime.tm_hour;
+                minute = commonData->data.rtcTime.tm_min;
+                hour = commonData->data.rtcTime.tm_hour;
             }
             hour += minute / 60;
         } else {
             if (tz == 'L') {
-                value1 += int(timezone*3600);
+                value1 += timezone * 3600;
             }
-            if (value1 > 86400) {value1 = value1 - 86400;}
-            if (value1 < 0) {value1 = value1 + 86400;}
+            if (value1 > 86400) {value1 -= 86400;}
+            if (value1 < 0) {value1 += 86400;}
             hour = (value1 / 3600.0);
     //        minute = (hour - int(hour)) * 3600.0 / 60.0;        // Analog minute pointer smooth moving
             minute = int((hour - int(hour)) * 3600.0 / 60.0);   // Jumping minute pointer from minute to minute
@@ -425,28 +431,6 @@ char tz = 'L';      // time zone (L)ocal | (U)TC
         // Center circle
         getdisplay().fillCircle(200, 150, startwidth + 6, commonData->bgcolor);
         getdisplay().fillCircle(200, 150, startwidth + 4, commonData->fgcolor);
-
-//*******************************************************************************************
-        // Key Layout
-        getdisplay().setFont(&Ubuntu_Bold8pt7b);
-        if(keylock == false){
-            getdisplay().setCursor(10, 290);
-            getdisplay().print("[SRC]");
-            getdisplay().setCursor(60, 290);
-            getdisplay().print("[MODE]");
-            getdisplay().setCursor(293, 290);
-            getdisplay().print("[TZ]");
-            getdisplay().setCursor(130, 290);
-            getdisplay().print("[  <<<<  " + String(commonData.data.actpage) + "/" + String(commonData.data.maxpage) + "  >>>>  ]");
-            if(String(backlightMode) == "Control by Key"){                  // Key for illumination
-                getdisplay().setCursor(343, 290);
-                getdisplay().print("[ILUM]");
-            }
-        }
-        else{
-            getdisplay().setCursor(130, 290);
-            getdisplay().print(" [    Keylock active    ]");
-        }
 
         // Update display
         getdisplay().nextPage();    // Partial update (fast)

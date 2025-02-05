@@ -424,7 +424,7 @@ void displayHeader(CommonData &commonData, GwApi::BoatValue *date, GwApi::BoatVa
         String fmttype = commonData.config->getString(commonData.config->dateFormat);
         String timesource = commonData.config->getString(commonData.config->timeSource);
         int tz = commonData.config->getInt(commonData.config->timeZone);
-        getdisplay().setTextColor(textcolor);
+        getdisplay().setTextColor(commonData.fgcolor);
         getdisplay().setFont(&Ubuntu_Bold8pt7b);
         getdisplay().setCursor(230, 15);
         if (timesource == "RTC") {
