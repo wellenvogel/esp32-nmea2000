@@ -9,6 +9,17 @@
         "category": "system"
     },
     {
+        "name": "timeServer",
+        "label": "time server",
+        "type": "string",
+        "default": "pool.ntp.org",
+        "description": "NTP time server. Use only one hostname or IP address",
+        "category": "wifi client",
+        "capabilities": {
+            "obp40": "true"
+        }
+    },
+    {
         "name": "timeZone",
         "label": "Time Zone",
         "type": "number",
@@ -710,9 +721,10 @@
         "label": "Status Time Source",
         "type": "list",
         "default": "GPS",
-        "description": "Data source for date and time display in status line [RTC|GPS]",
+        "description": "Data source for date and time display in status line [RTC|iRTC|GPS]",
         "list": [
-            {"l":"Internal real time clock (RTC)","v":"RTC"},
+            {"l":"Internal real time clock (iRTC)","v":"iRTC"},
+            {"l":"External real time clock (RTC)","v":"RTC"},
             {"l":"External time via bus (GPS)","v":"GPS"}
         ],
         "category": "OBP40 Display",

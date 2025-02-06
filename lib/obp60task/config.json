@@ -697,8 +697,8 @@
         "default": "GPS",
         "description": "Data source for date and time display in status line [RTC|GPS]",
         "list": [
-            {"l":"Internal real time clock (RTC)","v":"RTC"},
-            {"l":"External time via bus (GPS)","v":"GPS"}
+            {"l":"Real time clock (RTC)","v":"RTC"},
+            {"l":"Time via bus (GPS)","v":"GPS"}
         ],
         "category": "OBP60 Display",
         "capabilities": {

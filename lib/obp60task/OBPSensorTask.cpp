@@ -17,6 +17,8 @@
 #include "ObpNmea0183.h"                // Check NMEA0183 sentence for uncorrect content
 #include "OBP60Extensions.h"            // Lib for hardware extensions
 #include "movingAvg.h"                  // Lib for moving average building
+#include "time.h"                       // For getting NTP time
+#include <ESP32Time.h>                  // Internal ESP32 RTC clock
 
 // Timer for hardware functions
 Ticker Timer1(blinkingFlashLED, 500);   // Start Timer1 for flash LED all 500ms
@@ -150,6 +152,7 @@ void sensorTask(void *param){
                 // ds1388.adjust(DateTime(__DATE__, __TIME__));  // Set date and time from PC file time
             }
             RTC_ready = true;
+            sensors.rtcValid = true;
         }
     }
 
@@ -366,6 +369,28 @@ void sensorTask(void *param){
     GwApi::BoatValue *hdop=new GwApi::BoatValue(GwBoatData::_HDOP);
     GwApi::BoatValue *valueList[]={gpsdays, gpsseconds, hdop};
 
+    // Internal RTC with NTP init
+    ESP32Time rtc(0);
+    if (api->getConfig()->getString(api->getConfig()->timeSource) == "iRTC") {
+        GwApi::Status status;
+        api->getStatus(status);
+        if (status.wifiClientConnected) {
+            const char *ntpServer = api->getConfig()->getCString(api->getConfig()->timeServer);
+            api->getLogger()->logDebug(GwLog::LOG,"Fetching date and time from NTP server '%s'.", ntpServer);
+            configTime(0, 0, ntpServer); // get time in UTC
+            struct tm timeinfo;
+            if (getLocalTime(&timeinfo)) {
+                api->getLogger()->logDebug(GwLog::LOG,"NTP time: %04d-%02d-%02d %02d:%02d:%02d UTC", timeinfo.tm_year+1900, timeinfo.tm_mon+1, timeinfo.tm_mday, timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
+                rtc.setTimeStruct(timeinfo);
+                sensors.rtcValid = true;
+            } else {
+                api->getLogger()->logDebug(GwLog::LOG,"NTP time fetch failed!");
+            }
+        } else {
+            api->getLogger()->logDebug(GwLog::LOG,"Wifi client not connected, NTP not available.");
+        }
+    }
+
     // Sensor task loop runs with 100ms
     //####################################################################################
 
@@ -464,6 +489,9 @@ void sensorTask(void *param){
                         api->sendN2kMessage(N2kMsg);
                     // }
                 }
+            } else if (sensors.rtcValid) {
+                // use internal rtc feature
+                sensors.rtcTime = rtc.getTimeStruct();
             }
         }
 

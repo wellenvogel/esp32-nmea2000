@@ -119,7 +119,7 @@ double timezone = 0; // there are timezones with non int offsets, e.g. 5.5 or 5.
         String svalue1 = formatValue(bvalue1, *commonData).svalue;    // Formatted value as string including unit conversion and switching decimal places
         String unit1 = formatValue(bvalue1, *commonData).unit;        // Unit of value
         if(valid1 == true){
-            svalue1old = svalue1;   	                // Save old value
+            svalue1old = svalue1;                       // Save old value
             unit1old = unit1;                           // Save old unit
         }
 
@@ -132,7 +132,7 @@ double timezone = 0; // there are timezones with non int offsets, e.g. 5.5 or 5.
         String svalue2 = formatValue(bvalue2, *commonData).svalue;    // Formatted value as string including unit conversion and switching decimal places
         String unit2 = formatValue(bvalue2, *commonData).unit;        // Unit of value
         if(valid2 == true){
-            svalue2old = svalue2;   	                // Save old value
+            svalue2old = svalue2;                       // Save old value
             unit2old = unit2;                           // Save old unit
         }
 
@@ -145,7 +145,7 @@ double timezone = 0; // there are timezones with non int offsets, e.g. 5.5 or 5.
         String svalue3 = formatValue(bvalue3, *commonData).svalue;    // Formatted value as string including unit conversion and switching decimal places
         String unit3 = formatValue(bvalue3, *commonData).unit;        // Unit of value
         if(valid3 == true){
-            svalue3old = svalue3;   	                // Save old value
+            svalue3old = svalue3;                       // Save old value
             unit3old = unit3;                           // Save old unit
         }
 
@@ -177,7 +177,7 @@ double timezone = 0; // there are timezones with non int offsets, e.g. 5.5 or 5.
             if (source == 'G') {
                  // GPS value
                  getdisplay().print(svalue2);
-            } else {
+            } else if (commonData->data.rtcValid) {
                 // RTC value
                  if (tz == 'L') {
                      getdisplay().print(formatDate(dateformat, local_tm->tm_year + 1900, local_tm->tm_mon + 1, local_tm->tm_mday));
@@ -185,6 +185,8 @@ double timezone = 0; // there are timezones with non int offsets, e.g. 5.5 or 5.
                  else {
                      getdisplay().print(formatDate(dateformat, commonData->data.rtcTime.tm_year + 1900, commonData->data.rtcTime.tm_mon + 1, commonData->data.rtcTime.tm_mday));
                  }
+            } else {
+                getdisplay().print("---");
             }
         } else {
             getdisplay().print(svalue2old);
@@ -203,13 +205,15 @@ double timezone = 0; // there are timezones with non int offsets, e.g. 5.5 or 5.
             if (source == 'G') {
                 getdisplay().print(svalue1); // Value
             }
-            else {
+            else if (commonData->data.rtcValid) {
                  if (tz == 'L') {
                       getdisplay().print(formatTime('s', local_tm->tm_hour, local_tm->tm_min, local_tm->tm_sec));
                  }
                  else {
                       getdisplay().print(formatTime('s', commonData->data.rtcTime.tm_hour, commonData->data.rtcTime.tm_min, commonData->data.rtcTime.tm_sec));
                  }
+            } else {
+                getdisplay().print("---");
             }
         }
         else {
@@ -329,14 +333,10 @@ double timezone = 0; // there are timezones with non int offsets, e.g. 5.5 or 5.
         getdisplay().setFont(&Ubuntu_Bold12pt7b);
         getdisplay().setCursor(175, 110);
         if(holdvalues == false){
-            if (tz == 'L') {
-                getdisplay().print(unit2);                   // Unit
-            } else {
-                getdisplay().print("UTC");
-            }
+            getdisplay().print(tz == 'L' ? "LOT" : "UTC");
         }
         else{
-            getdisplay().print(unit2old);                    // Unit
+            getdisplay().print(unit2old); // date unit
         }
 
         getdisplay().setFont(&Ubuntu_Bold8pt7b);
@@ -378,7 +378,7 @@ double timezone = 0; // there are timezones with non int offsets, e.g. 5.5 or 5.
 
         // Draw hour pointer
         float startwidth = 8;       // Start width of pointer
-        if(valid1 == true || holdvalues == true || simulation == true){
+        if(valid1 == true || commonData->data.rtcValid || holdvalues == true || simulation == true){
             float sinx=sin(hour * 30.0 * pi / 180);     // Hour
             float cosx=cos(hour * 30.0 * pi / 180);
             // Normal pointer
@@ -404,7 +404,7 @@ double timezone = 0; // there are timezones with non int offsets, e.g. 5.5 or 5.
 
         // Draw minute pointer
         startwidth = 8;       // Start width of pointer
-        if(valid1 == true || holdvalues == true || simulation == true){
+        if(valid1 == true || commonData->data.rtcValid || holdvalues == true || simulation == true){
             float sinx=sin(minute * 6.0 * pi / 180);     // Minute
             float cosx=cos(minute * 6.0 * pi / 180);
             // Normal pointer
