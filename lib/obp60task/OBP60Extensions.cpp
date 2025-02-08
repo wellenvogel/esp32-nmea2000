@@ -438,7 +438,7 @@ void displayHeader(CommonData &commonData, GwApi::BoatValue *date, GwApi::BoatVa
                 getdisplay().print(" ");
                 getdisplay().print(tz == 0 ? "UTC" : "LOT");
             } else {
-                getdisplay().print("RTC invalid");
+                drawTextRalign(396, 15, "RTC invalid");
             }
         }
         else if (timesource == "GPS") {
@@ -458,7 +458,7 @@ void displayHeader(CommonData &commonData, GwApi::BoatValue *date, GwApi::BoatVa
                     getdisplay().print("12:00 01.01.2024 LOT");
                 }
                 else{
-                    getdisplay().print("No GPS data");
+                    drawTextRalign(396, 15, "No GPS data");
                 }
             }
         } // timesource == "GPS"

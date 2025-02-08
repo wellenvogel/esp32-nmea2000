@@ -378,7 +378,7 @@ double timezone = 0; // there are timezones with non int offsets, e.g. 5.5 or 5.
 
         // Draw hour pointer
         float startwidth = 8;       // Start width of pointer
-        if(valid1 == true || commonData->data.rtcValid || holdvalues == true || simulation == true){
+        if(valid1 == true || (source == 'R' && commonData->data.rtcValid) || holdvalues == true || simulation == true){
             float sinx=sin(hour * 30.0 * pi / 180);     // Hour
             float cosx=cos(hour * 30.0 * pi / 180);
             // Normal pointer
@@ -404,7 +404,7 @@ double timezone = 0; // there are timezones with non int offsets, e.g. 5.5 or 5.
 
         // Draw minute pointer
         startwidth = 8;       // Start width of pointer
-        if(valid1 == true || commonData->data.rtcValid || holdvalues == true || simulation == true){
+        if(valid1 == true || (source == 'R' && commonData->data.rtcValid) || holdvalues == true || simulation == true){
             float sinx=sin(minute * 6.0 * pi / 180);     // Minute
             float cosx=cos(minute * 6.0 * pi / 180);
             // Normal pointer
