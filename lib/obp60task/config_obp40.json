@@ -34,6 +34,34 @@
         }
     },
     {
+        "name": "homeLAT",
+        "label": "Home latitude",
+        "type": "number",
+        "default": "0.00000",
+        "check": "checkMinMax",
+        "min": -90.0,
+        "max": 90.0,
+        "description": "Latitude of boat home location [-90.0...+90.0]",
+        "category": "OBP40 Settings",
+        "capabilities": {
+            "obp40": "true"
+        }
+    },
+    {
+        "name": "homeLON",
+        "label": "Home longitude",
+        "type": "number",
+        "default": "0.00000",
+        "check": "checkMinMax",
+        "min": -180.0,
+        "max": 180.0,
+        "description": "Longitude of boat home location [-90.0...+90.0]",
+        "category": "OBP40 Settings",
+        "capabilities": {
+            "obp40": "true"
+        }
+    },
+    {
         "name": "draft",
         "label": "Boat Draft [m]",
         "type": "number",

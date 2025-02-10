@@ -548,7 +548,7 @@ void OBP60Task(GwApi *api){
     // Configuration values for main loop
     String gpsFix = api->getConfig()->getConfigItem(api->getConfig()->flashLED,true)->asString();
     String gpsOn=api->getConfig()->getConfigItem(api->getConfig()->useGPS,true)->asString();
-    String tz = api->getConfig()->getConfigItem(api->getConfig()->timeZone,true)->asString();
+    float tz = api->getConfig()->getConfigItem(api->getConfig()->timeZone,true)->asFloat();
 
     commonData.backlight.mode = backlightMapping(config->getConfigItem(config->backlight,true)->asString());
     commonData.backlight.color = colorMapping(config->getConfigItem(config->blColor,true)->asString());
@@ -558,6 +558,15 @@ void OBP60Task(GwApi *api){
     bool uvoltage = api->getConfig()->getConfigItem(api->getConfig()->underVoltage,true)->asBoolean();
     String cpuspeed = api->getConfig()->getConfigItem(api->getConfig()->cpuSpeed,true)->asString();
     uint hdopAccuracy = uint(api->getConfig()->getConfigItem(api->getConfig()->hdopAccuracy,true)->asInt());
+
+    double homelat = commonData.config->getString(commonData.config->homeLAT).toDouble();
+    double homelon = commonData.config->getString(commonData.config->homeLON).toDouble();
+    bool homevalid = homelat >= -180.0 and homelat <= 180 and homelon >= -90.0 and homelon <= 90.0;
+    if (homevalid) {
+        LOG_DEBUG(GwLog::LOG, "Home location set to %f : %f", homelat, homelon);
+    } else {
+        LOG_DEBUG(GwLog::LOG, "No valid home location found");
+    }
 
     // refreshmode defined in init section
 
@@ -708,7 +717,7 @@ void OBP60Task(GwApi *api){
                 starttime5 = millis();
                 if(time->valid == true && date->valid == true && lat->valid == true && lon->valid == true){
                     // Provide sundata to all pages
-                    commonData.sundata = calcSunsetSunrise(api, time->value , date->value, lat->value, lon->value, tz.toDouble());
+                    commonData.sundata = calcSunsetSunrise(time->value , date->value, lat->value, lon->value, tz);
                     // Backlight with sun control
                     if (commonData.backlight.mode == BacklightMode::SUN) {
                     // if(String(backlight) == "Control by Sun"){
@@ -719,6 +728,9 @@ void OBP60Task(GwApi *api){
                             setBacklightLED(0, COLOR_BLUE); // Backlight LEDs off (blue without britghness)
                         }
                     }
+                } else if (homevalid and commonData.data.rtcValid) {
+                    // No gps fix but valid home location and time configured
+                    commonData.sundata = calcSunsetSunriseRTC(&commonData.data.rtcTime, homelat, homelon, tz);
                 }
             }
             

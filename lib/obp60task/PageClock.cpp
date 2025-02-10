@@ -23,6 +23,9 @@ char source = 'R';  // time source (R)TC | (G)PS | (N)TP
 char mode = 'A';    // display mode (A)nalog | (D)igital | race (T)imer
 char tz = 'L';      // time zone (L)ocal | (U)TC
 double timezone = 0; // there are timezones with non int offsets, e.g. 5.5 or 5.75
+double homelat;
+double homelon;
+bool homevalid = false; // homelat and homelon are valid
 
     public:
     PageClock(CommonData &common){
@@ -30,6 +33,9 @@ double timezone = 0; // there are timezones with non int offsets, e.g. 5.5 or 5.
         common.logger->logDebug(GwLog::LOG,"Instantiate PageClock");
         simulation = common.config->getBool(common.config->useSimuData);
         timezone = common.config->getString(common.config->timeZone).toDouble();
+        homelat = common.config->getString(common.config->homeLAT).toDouble();
+        homelon = common.config->getString(common.config->homeLON).toDouble();
+        homevalid = homelat >= -180.0 and homelat <= 180 and homelon >= -90.0 and homelon <= 90.0;
         simtime = 38160; // time value 11:36
     }
 
@@ -225,7 +231,7 @@ double timezone = 0; // there are timezones with non int offsets, e.g. 5.5 or 5.
 
         // Show values sunrise
         String sunrise = "---";
-        if(valid1 == true && valid2 == true && valid3 == true){
+        if ((valid1 and valid2 and valid3 == true) or (homevalid and commonData->data.rtcValid)) {
             sunrise = String(commonData->sundata.sunriseHour) + ":" + String(commonData->sundata.sunriseMinute + 100).substring(1);
             svalue5old = sunrise;
         } else if (simulation) {
@@ -245,7 +251,7 @@ double timezone = 0; // there are timezones with non int offsets, e.g. 5.5 or 5.
 
         // Show values sunset
         String sunset = "---";
-        if(valid1 == true && valid2 == true && valid3 == true){
+        if ((valid1 and valid2 and valid3 == true) or (homevalid and commonData->data.rtcValid)) {
             sunset = String(commonData->sundata.sunsetHour) + ":" +  String(commonData->sundata.sunsetMinute + 100).substring(1);
             svalue6old = sunset;
         } else if (simulation) {

@@ -545,8 +545,7 @@ void displayFooter(CommonData &commonData) {
 }
 
 // Sunset und sunrise calculation
-SunData calcSunsetSunrise(GwApi *api, double time, double date, double latitude, double longitude, double timezone){
-    GwLog *logger=api->getLogger();
+SunData calcSunsetSunrise(double time, double date, double latitude, double longitude, float timezone){
     SunData returnset;
     SunRise sr;
     int secPerHour = 3600;
@@ -560,8 +559,7 @@ SunData calcSunsetSunrise(GwApi *api, double time, double date, double latitude,
     if (!isnan(time) && !isnan(date) && !isnan(latitude) && !isnan(longitude) && !isnan(timezone)) {
         
         // Calculate local epoch
-        t = (date * secPerYear) + time;    
-        // api->getLogger()->logDebug(GwLog::DEBUG,"... calcSun: Lat %f, Lon  %f, at: %d ", latitude, longitude, t);
+        t = (date * secPerYear) + time;
         sr.calculate(latitude, longitude, t);       // LAT, LON, EPOCH
         // Sunrise
         if (sr.hasRise) {
@@ -581,6 +579,37 @@ SunData calcSunsetSunrise(GwApi *api, double time, double date, double latitude,
         else returnset.sunDown = true;
     }
     // Return values
+    return returnset;
+}
+
+SunData calcSunsetSunriseRTC(struct tm *rtctime, double latitude, double longitude, float timezone) {
+    SunData returnset;
+    SunRise sr;
+    const int secPerHour = 3600;
+    const int secPerYear = 86400;
+    sr.hasRise = false;
+    sr.hasSet = false;
+    time_t t =  mktime(rtctime) + timezone * 3600;;
+    time_t sunR = 0;
+    time_t sunS = 0;
+
+    sr.calculate(latitude, longitude, t);       // LAT, LON, EPOCH
+    // Sunrise
+    if (sr.hasRise) {
+        sunR = (sr.riseTime + int(timezone * secPerHour) + 30) % secPerYear; // add 30 seconds: round to minutes
+        returnset.sunriseHour = int (sunR / secPerHour);
+        returnset.sunriseMinute = int((sunR - returnset.sunriseHour * secPerHour) / 60);
+    }
+    // Sunset
+    if (sr.hasSet) {
+        sunS = (sr.setTime + int(timezone * secPerHour) + 30) % secPerYear; // add 30 seconds: round to minutes
+        returnset.sunsetHour = int (sunS / secPerHour);
+        returnset.sunsetMinute = int((sunS - returnset.sunsetHour * secPerHour) / 60);
+    }
+    // Sun control (return value by sun on sky = false, sun down = true)
+    if ((t >= sr.riseTime) && (t <= sr.setTime))
+         returnset.sunDown = false;
+    else returnset.sunDown = true;
     return returnset;
 }
 
