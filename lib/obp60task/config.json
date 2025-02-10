@@ -55,7 +55,7 @@
         "check": "checkMinMax",
         "min": -180.0,
         "max": 180.0,
-        "description": "Longitude of boat home location [-90.0...+90.0]",
+        "description": "Longitude of boat home location [-180.0...+180.0]",
         "category": "OBP60 Settings",
         "capabilities": {
             "obp60":"true"
