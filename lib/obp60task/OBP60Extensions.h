@@ -97,7 +97,8 @@ void displayTrendLow(int16_t x, int16_t y, uint16_t size, uint16_t color);
 void displayHeader(CommonData &commonData, GwApi::BoatValue *date, GwApi::BoatValue *time, GwApi::BoatValue *hdop); // Draw display header
 void displayFooter(CommonData &commonData);
 
-SunData calcSunsetSunrise(GwApi *api, double time, double date, double latitude, double longitude, double timezone); // Calulate sunset and sunrise
+SunData calcSunsetSunrise(double time, double date, double latitude, double longitude, float timezone); // Calulate sunset and sunrise
+SunData calcSunsetSunriseRTC(struct tm *rtctime, double latitude, double longitude, float timezone);
 
 void batteryGraphic(uint x, uint y, float percent, int pcolor, int bcolor); // Battery graphic with fill level
 void solarGraphic(uint x, uint y, int pcolor, int bcolor);                  // Solar graphic

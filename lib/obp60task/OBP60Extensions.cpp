@@ -421,32 +421,49 @@ void displayHeader(CommonData &commonData, GwApi::BoatValue *date, GwApi::BoatVa
         heartbeat = !heartbeat;
 
         // Date and time
+        String fmttype = commonData.config->getString(commonData.config->dateFormat);
+        String timesource = commonData.config->getString(commonData.config->timeSource);
+        double tz = commonData.config->getString(commonData.config->timeZone).toDouble();
         getdisplay().setTextColor(commonData.fgcolor);
         getdisplay().setFont(&Ubuntu_Bold8pt7b);
         getdisplay().setCursor(230, 15);
-        // Show date and time if date present
-        if(date->valid == true){
-            String acttime = formatValue(time, commonData).svalue;
-            acttime = acttime.substring(0, 5);
-            String actdate = formatValue(date, commonData).svalue;
-            getdisplay().print(acttime);
-            getdisplay().print(" ");
-            getdisplay().print(actdate);
-            getdisplay().print(" ");
-            if(commonData.config->getInt(commonData.config->timeZone) == 0){
-                getdisplay().print("UTC");
-            }
-            else{
-                getdisplay().print("LOT");
+        if (timesource == "RTC" or timesource == "iRTC") {
+            // TODO take DST into account
+            if (commonData.data.rtcValid) {
+                time_t tv = mktime(&commonData.data.rtcTime) + (int)(tz * 3600);
+                struct tm *local_tm = localtime(&tv);
+                getdisplay().print(formatTime('m', local_tm->tm_hour, local_tm->tm_min, 0));
+                getdisplay().print(" ");
+                getdisplay().print(formatDate(fmttype, local_tm->tm_year + 1900, local_tm->tm_mon + 1, local_tm->tm_mday));
+                getdisplay().print(" ");
+                getdisplay().print(tz == 0 ? "UTC" : "LOT");
+            } else {
+                drawTextRalign(396, 15, "RTC invalid");
             }
         }
-        else{
-            if(commonData.config->getBool(commonData.config->useSimuData) == true){
-                getdisplay().print("12:00 01.01.2024 LOT");
+        else if (timesource == "GPS") {
+            // Show date and time if date present
+            if(date->valid == true){
+                String acttime = formatValue(time, commonData).svalue;
+                acttime = acttime.substring(0, 5);
+                String actdate = formatValue(date, commonData).svalue;
+                getdisplay().print(acttime);
+                getdisplay().print(" ");
+                getdisplay().print(actdate);
+                getdisplay().print(" ");
+                getdisplay().print(tz == 0 ? "UTC" : "LOT");
             }
             else{
-                getdisplay().print("No GPS data");
+                if(commonData.config->getBool(commonData.config->useSimuData) == true){
+                    getdisplay().print("12:00 01.01.2024 LOT");
+                }
+                else{
+                    drawTextRalign(396, 15, "No GPS data");
+                }
             }
+        } // timesource == "GPS"
+        else {
+            getdisplay().print("No time source");
         }
     }
 }
@@ -528,8 +545,7 @@ void displayFooter(CommonData &commonData) {
 }
 
 // Sunset und sunrise calculation
-SunData calcSunsetSunrise(GwApi *api, double time, double date, double latitude, double longitude, double timezone){
-    GwLog *logger=api->getLogger();
+SunData calcSunsetSunrise(double time, double date, double latitude, double longitude, float timezone){
     SunData returnset;
     SunRise sr;
     int secPerHour = 3600;
@@ -543,8 +559,7 @@ SunData calcSunsetSunrise(GwApi *api, double time, double date, double latitude,
     if (!isnan(time) && !isnan(date) && !isnan(latitude) && !isnan(longitude) && !isnan(timezone)) {
         
         // Calculate local epoch
-        t = (date * secPerYear) + time;    
-        // api->getLogger()->logDebug(GwLog::DEBUG,"... calcSun: Lat %f, Lon  %f, at: %d ", latitude, longitude, t);
+        t = (date * secPerYear) + time;
         sr.calculate(latitude, longitude, t);       // LAT, LON, EPOCH
         // Sunrise
         if (sr.hasRise) {
@@ -564,6 +579,37 @@ SunData calcSunsetSunrise(GwApi *api, double time, double date, double latitude,
         else returnset.sunDown = true;
     }
     // Return values
+    return returnset;
+}
+
+SunData calcSunsetSunriseRTC(struct tm *rtctime, double latitude, double longitude, float timezone) {
+    SunData returnset;
+    SunRise sr;
+    const int secPerHour = 3600;
+    const int secPerYear = 86400;
+    sr.hasRise = false;
+    sr.hasSet = false;
+    time_t t =  mktime(rtctime) + timezone * 3600;;
+    time_t sunR = 0;
+    time_t sunS = 0;
+
+    sr.calculate(latitude, longitude, t);       // LAT, LON, EPOCH
+    // Sunrise
+    if (sr.hasRise) {
+        sunR = (sr.riseTime + int(timezone * secPerHour) + 30) % secPerYear; // add 30 seconds: round to minutes
+        returnset.sunriseHour = int (sunR / secPerHour);
+        returnset.sunriseMinute = int((sunR - returnset.sunriseHour * secPerHour) / 60);
+    }
+    // Sunset
+    if (sr.hasSet) {
+        sunS = (sr.setTime + int(timezone * secPerHour) + 30) % secPerYear; // add 30 seconds: round to minutes
+        returnset.sunsetHour = int (sunS / secPerHour);
+        returnset.sunsetMinute = int((sunS - returnset.sunsetHour * secPerHour) / 60);
+    }
+    // Sun control (return value by sun on sky = false, sun down = true)
+    if ((t >= sr.riseTime) && (t <= sr.setTime))
+         returnset.sunDown = false;
+    else returnset.sunDown = true;
     return returnset;
 }
 

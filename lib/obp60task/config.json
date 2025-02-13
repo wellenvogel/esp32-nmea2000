@@ -9,6 +9,17 @@
         "category": "system"
     },
     {
+        "name": "timeServer",
+        "label": "time server",
+        "type": "string",
+        "default": "pool.ntp.org",
+        "description": "NTP time server. Use only one hostname or IP address",
+        "category": "wifi client",
+        "capabilities": {
+            "obp40": "true"
+        }
+    },
+    {
         "name": "timeZone",
         "label": "Time Zone",
         "type": "number",
@@ -17,6 +28,34 @@
         "min": -12.00,
         "max": 14.00,
         "description": "Time zone [UTC -12...+14]",
+        "category": "OBP60 Settings",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "homeLAT",
+        "label": "Home latitude",
+        "type": "number",
+        "default": "",
+        "check": "checkMinMax",
+        "min": -90.0,
+        "max": 90.0,
+        "description": "Latitude of boat home location [-90.0...+90.0]",
+        "category": "OBP60 Settings",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "homeLON",
+        "label": "Home longitude",
+        "type": "number",
+        "default": "",
+        "check": "checkMinMax",
+        "min": -180.0,
+        "max": 180.0,
+        "description": "Longitude of boat home location [-180.0...+180.0]",
         "category": "OBP60 Settings",
         "capabilities": {
             "obp60":"true"
@@ -685,6 +724,21 @@
         "type": "boolean",
         "default": "true",
         "description": "Show status line [on|off]",
+        "category": "OBP60 Display",
+        "capabilities": {
+            "obp60":"true"
+        }
+    },
+    {
+        "name": "timeSource",
+        "label": "Status Time Source",
+        "type": "list",
+        "default": "GPS",
+        "description": "Data source for date and time display in status line [RTC|GPS]",
+        "list": [
+            {"l":"Real time clock (RTC)","v":"RTC"},
+            {"l":"Time via bus (GPS)","v":"GPS"}
+        ],
         "category": "OBP60 Display",
         "capabilities": {
             "obp60":"true"

@@ -17,9 +17,11 @@
 #include "ObpNmea0183.h"                // Check NMEA0183 sentence for uncorrect content
 #include "OBP60Extensions.h"            // Lib for hardware extensions
 #include "movingAvg.h"                  // Lib for moving average building
+#include "time.h"                       // For getting NTP time
+#include <ESP32Time.h>                  // Internal ESP32 RTC clock
 
 // Timer for hardware functions
-Ticker Timer1(blinkingFlashLED, 500);   // Satrt Timer1 for flash LED all 500ms
+Ticker Timer1(blinkingFlashLED, 500);   // Start Timer1 for flash LED all 500ms
 
 // Initialization for all sensors (RS232, I2C, 1Wire, IOs)
 //####################################################################################
@@ -150,6 +152,7 @@ void sensorTask(void *param){
                 // ds1388.adjust(DateTime(__DATE__, __TIME__));  // Set date and time from PC file time
             }
             RTC_ready = true;
+            sensors.rtcValid = true;
         }
     }
 
@@ -366,6 +369,28 @@ void sensorTask(void *param){
     GwApi::BoatValue *hdop=new GwApi::BoatValue(GwBoatData::_HDOP);
     GwApi::BoatValue *valueList[]={gpsdays, gpsseconds, hdop};
 
+    // Internal RTC with NTP init
+    ESP32Time rtc(0);
+    if (api->getConfig()->getString(api->getConfig()->timeSource) == "iRTC") {
+        GwApi::Status status;
+        api->getStatus(status);
+        if (status.wifiClientConnected) {
+            const char *ntpServer = api->getConfig()->getCString(api->getConfig()->timeServer);
+            api->getLogger()->logDebug(GwLog::LOG,"Fetching date and time from NTP server '%s'.", ntpServer);
+            configTime(0, 0, ntpServer); // get time in UTC
+            struct tm timeinfo;
+            if (getLocalTime(&timeinfo)) {
+                api->getLogger()->logDebug(GwLog::LOG,"NTP time: %04d-%02d-%02d %02d:%02d:%02d UTC", timeinfo.tm_year+1900, timeinfo.tm_mon+1, timeinfo.tm_mday, timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
+                rtc.setTimeStruct(timeinfo);
+                sensors.rtcValid = true;
+            } else {
+                api->getLogger()->logDebug(GwLog::LOG,"NTP time fetch failed!");
+            }
+        } else {
+            api->getLogger()->logDebug(GwLog::LOG,"Wifi client not connected, NTP not available.");
+        }
+    }
+
     // Sensor task loop runs with 100ms
     //####################################################################################
 
@@ -428,39 +453,45 @@ void sensorTask(void *param){
             loopCounter++;
         }
 
-        // If GPS not ready or installed then send RTC time on bus all 500ms
-        if(millis() > starttime12 + 500){
+        // Get current RTC date and time all 500ms
+        if (millis() > starttime12 + 500) {
             starttime12 = millis();
-            if((rtcOn == "DS1388" && RTC_ready == true && GPS_ready == false) || (rtcOn == "DS1388" && RTC_ready == true && GPS_ready == true && hdop->valid == false)){
-                // Convert RTC time to Unix system time
-                // https://de.wikipedia.org/wiki/Unixzeit
-                const short daysOfYear[12] = {0,31,59,90,120,151,181,212,243,273,304,334};
-                long unixtime = ds1388.now().get();
-                uint16_t year = ds1388.now().year();
-                uint8_t month = ds1388.now().month();
-                uint8_t hour = ds1388.now().hour();
-                uint8_t minute = ds1388.now().minute();
-                uint8_t second = ds1388.now().second();
-                uint8_t day = ds1388.now().day();
-                uint16_t switchYear = ((year-1)-1968)/4 - ((year-1)-1900)/100 + ((year-1)-1600)/400;
-                long daysAt1970 = (year-1970)*365 + switchYear + daysOfYear[month-1] + day-1;
-                // If switch year then add one day
-                if ( (month>2) && (year%4==0 && (year%100!=0 || year%400==0)) ){
-                    daysAt1970 += 1;
+            if (rtcOn == "DS1388" && RTC_ready) {
+                DateTime dt = ds1388.now();
+                sensors.rtcTime.tm_year  = dt.year() - 1900; // Save values in SensorData
+                sensors.rtcTime.tm_mon = dt.month() - 1;
+                sensors.rtcTime.tm_mday = dt.day();
+                sensors.rtcTime.tm_hour = dt.hour();
+                sensors.rtcTime.tm_min = dt.minute();
+                sensors.rtcTime.tm_sec = dt.second();
+                sensors.rtcTime.tm_isdst = 0; // Not considering daylight saving time
+
+                // If GPS not ready or installed then send RTC time on bus
+                // TODO If there are other time sources on the bus there should
+                //      be a logic not to send or to send with lower frequency
+                //      or something totally different
+                if ((GPS_ready == false) || (GPS_ready == true && hdop->valid == false)) {
+                    // TODO implement daysAt1970 and sysTime as methods of DateTime
+                    const short daysOfYear[12] = {0,31,59,90,120,151,181,212,243,273,304,334};
+                    uint16_t switchYear = ((dt.year()-1)-1968)/4 - ((dt.year()-1)-1900)/100 + ((dt.year()-1)-1600)/400;
+                    long daysAt1970 = (dt.year()-1970)*365 + switchYear + daysOfYear[dt.month()-1] + dt.day()-1;
+                    // If switch year then add one day
+                    if ((dt.month() > 2) && (dt.year() % 4 == 0  && (dt.year() % 100 != 0 || dt.year() % 400 == 0))) {
+                        daysAt1970 += 1;
+                    }
+                    // N2K sysTime is double in n2klib
+                    double sysTime = (dt.hour() * 3600) + (dt.minute() * 60) + dt.second();
+                    // WHY? isnan should always fail here
+                    //if(!isnan(daysAt1970) && !isnan(sysTime)){
+                        //api->getLogger()->logDebug(GwLog::LOG,"RTC time: %04d/%02d/%02d %02d:%02d:%02d",sensors.rtcTime.tm_year+1900,sensors.rtcTime.tm_mon, sensors.rtcTime.tm_mday, sensors.rtcTime.tm_hour, sensors.rtcTime.tm_min, sensors.rtcTime.tm_sec);
+                        //api->getLogger()->logDebug(GwLog::LOG,"Send PGN126992: %10d %10d",daysAt1970, (uint16_t)sysTime);
+                        SetN2kPGN126992(N2kMsg,0,daysAt1970,sysTime,N2ktimes_LocalCrystalClock);
+                        api->sendN2kMessage(N2kMsg);
+                    // }
                 }
-                double sysTime = (hour * 3600) + (minute * 60) + second;
-                if(!isnan(daysAt1970) && !isnan(sysTime)){
-                    sensors.rtcYear = year; // Save values in SensorData
-                    sensors.rtcMonth = month;
-                    sensors.rtcDay = day;
-                    sensors.rtcHour = hour;
-                    sensors.rtcMinute = minute;
-                    sensors.rtcSecond = second;
-                    // api->getLogger()->logDebug(GwLog::LOG,"RTC time: %04d/%02d/%02d %02d:%02d:%02d",year, month, day, hour, minute, second);
-                    // api->getLogger()->logDebug(GwLog::LOG,"Send PGN126992: %10d %10d",daysAt1970, (uint16_t)sysTime);
-                    SetN2kPGN126992(N2kMsg,0,daysAt1970,sysTime,N2ktimes_LocalCrystalClock);
-                    api->sendN2kMessage(N2kMsg);
-                }
+            } else if (sensors.rtcValid) {
+                // use internal rtc feature
+                sensors.rtcTime = rtc.getTimeStruct();
             }
         }
 
