@@ -528,6 +528,30 @@ private:
                 {
                     SendMessage(NMEA0183Msg);
                 }
+
+                if (shouldSend && NMEA0183Reference == NMEA0183Wind_Apparent)
+                {
+                    if (!NMEA0183Msg.Init("VWR", talkerId))
+                      return;
+                    if (!NMEA0183Msg.AddUInt32Field((abs(WindAngle) > 180 ) ? 360-abs(WindAngle) : abs(WindAngle) ))
+                      return;
+                    if (!NMEA0183Msg.AddStrField((WindAngle >= 0 && WindAngle <= 180) ? 'R' : 'L'))
+                      return;
+                    if (!NMEA0183Msg.AddDoubleField(WindSpeed * 3600.0/1852.0))
+                      return;
+                    if (!NMEA0183Msg.AddStrField("N"))
+                      return;
+                    if (!NMEA0183Msg.AddDoubleField(WindSpeed))
+                      return;
+                    if (!NMEA0183Msg.AddStrField("M"))
+                      return;
+                    if (!NMEA0183Msg.AddDoubleField(WindSpeed *  3600.0/1000.0))
+                      return;
+                    if (!NMEA0183Msg.AddStrField("K"))
+                      return;
+
+                   SendMessage(NMEA0183Msg);
+                }
             }
 
             /* if (WindReference == N2kWind_Apparent && boatData->SOG->isValid())
