@@ -129,6 +129,7 @@ double formatCourse(double cv);
 double formatDegToRad(double deg);
 double formatWind(double cv);
 double formatKnots(double cv);
+double formatKmh(double cv);
 uint32_t mtr2nm(uint32_t m);
 double mtr2nm(double m);
 

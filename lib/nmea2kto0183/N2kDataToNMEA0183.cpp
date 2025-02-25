@@ -537,7 +537,7 @@ private:
                       return;
                     if (!NMEA0183Msg.AddStrField((WindAngle >= 0 && WindAngle <= 180) ? 'R' : 'L'))
                       return;
-                    if (!NMEA0183Msg.AddDoubleField(WindSpeed * 3600.0/1852.0))
+                    if (!NMEA0183Msg.AddDoubleField(formatKnots(WindSpeed)))
                       return;
                     if (!NMEA0183Msg.AddStrField("N"))
                       return;
@@ -545,7 +545,7 @@ private:
                       return;
                     if (!NMEA0183Msg.AddStrField("M"))
                       return;
-                    if (!NMEA0183Msg.AddDoubleField(WindSpeed *  3600.0/1000.0))
+                    if (!NMEA0183Msg.AddDoubleField(formatKmh(WindSpeed)))
                       return;
                     if (!NMEA0183Msg.AddStrField("K"))
                       return;
