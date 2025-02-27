@@ -531,11 +531,12 @@ private:
 
                 if (shouldSend && NMEA0183Reference == NMEA0183Wind_Apparent)
                 {
+                    double wa = formatCourse(WindAngle);
                     if (!NMEA0183Msg.Init("VWR", talkerId))
                       return;
-                    if (!NMEA0183Msg.AddUInt32Field((abs(WindAngle) > 180 ) ? 360-abs(WindAngle) : abs(WindAngle) ))
+                    if (!NMEA0183Msg.AddDoubleField(( wa > 180 ) ? 360-wa : wa))
                       return;
-                    if (!NMEA0183Msg.AddStrField((WindAngle >= 0 && WindAngle <= 180) ? 'R' : 'L'))
+                    if (!NMEA0183Msg.AddStrField(( wa >= 0 && wa <= 180) ? 'R' : 'L'))
                       return;
                     if (!NMEA0183Msg.AddDoubleField(formatKnots(WindSpeed)))
                       return;
