@@ -112,7 +112,7 @@ class SSISensor : public SensorTemplate<BUSTYPE,SensorBase::SPI>{
                 .flags = SPI_TRANS_USE_RXDATA,
                 .cmd = 0,
                 .addr = 0,
-                .length = bits+1,
+                .length = (size_t)bits+1,
                 .rxlength = 0};
             esp_err_t ret = spi_device_queue_trans(device->device(), &ta, portMAX_DELAY);
             if (ret != ESP_OK) return ret;

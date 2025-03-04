@@ -917,7 +917,7 @@ void setup() {
   logger.flush();
   NMEA2000.SetMode(tNMEA2000::N2km_ListenAndNode, NodeAddress);
   NMEA2000.SetForwardOwnMessages(false);
-  NMEA2000.SetHeartbeatInterval(NMEA2000_HEARTBEAT_INTERVAL);
+  NMEA2000.SetHeartbeatIntervalAndOffset(NMEA2000_HEARTBEAT_INTERVAL);
   if (sendOutN2k){
     // Set the information for other bus devices, which messages we support
     unsigned long *pgns=toN2KConverter->handledPgns();
