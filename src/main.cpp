@@ -801,6 +801,7 @@ void setup() {
   MDNS.begin(config.getConfigItem(config.systemName)->asCString());
   channels.begin(fallbackSerial);
   logger.flush();
+  config.logConfig(GwLog::DEBUG);
   webserver.registerMainHandler("/api/reset", [](AsyncWebServerRequest *request)->GwRequestMessage *{
     return new ResetRequest(request->arg("_hash"));
   });
