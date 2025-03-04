@@ -86,7 +86,7 @@ class PageThreeValues : public Page
 
         // Show name
         getdisplay().setTextColor(commonData->fgcolor);
-        getdisplay().setFont(&Ubuntu_Bold20pt7b);
+        getdisplay().setFont(&Ubuntu_Bold20pt8b);
         getdisplay().setCursor(20, 55);
         getdisplay().print(name1);                           // Page name
 
@@ -102,11 +102,11 @@ class PageThreeValues : public Page
 
         // Switch font if format for any values
         if(bvalue1->getFormat() == "formatLatitude" || bvalue1->getFormat() == "formatLongitude"){
-            getdisplay().setFont(&Ubuntu_Bold20pt7b);
+            getdisplay().setFont(&Ubuntu_Bold20pt8b);
             getdisplay().setCursor(50, 90);
         }
         else if(bvalue1->getFormat() == "formatTime" || bvalue1->getFormat() == "formatDate"){
-            getdisplay().setFont(&Ubuntu_Bold20pt7b);
+            getdisplay().setFont(&Ubuntu_Bold20pt8b);
             getdisplay().setCursor(170, 68);
         }
         else{
@@ -134,7 +134,7 @@ class PageThreeValues : public Page
         // ############### Value 2 ################
 
         // Show name
-        getdisplay().setFont(&Ubuntu_Bold20pt7b);
+        getdisplay().setFont(&Ubuntu_Bold20pt8b);
         getdisplay().setCursor(20, 145);
         getdisplay().print(name2);                           // Page name
 
@@ -150,11 +150,11 @@ class PageThreeValues : public Page
 
         // Switch font if format for any values
         if(bvalue2->getFormat() == "formatLatitude" || bvalue2->getFormat() == "formatLongitude"){
-            getdisplay().setFont(&Ubuntu_Bold20pt7b);
+            getdisplay().setFont(&Ubuntu_Bold20pt8b);
             getdisplay().setCursor(50, 180);
         }
         else if(bvalue2->getFormat() == "formatTime" || bvalue2->getFormat() == "formatDate"){
-            getdisplay().setFont(&Ubuntu_Bold20pt7b);
+            getdisplay().setFont(&Ubuntu_Bold20pt8b);
             getdisplay().setCursor(170, 158);
         }
         else{
@@ -182,7 +182,7 @@ class PageThreeValues : public Page
         // ############### Value 3 ################
 
         // Show name
-        getdisplay().setFont(&Ubuntu_Bold20pt7b);
+        getdisplay().setFont(&Ubuntu_Bold20pt8b);
         getdisplay().setCursor(20, 235);
         getdisplay().print(name3);                           // Page name
 
@@ -198,11 +198,11 @@ class PageThreeValues : public Page
 
         // Switch font if format for any values
         if(bvalue3->getFormat() == "formatLatitude" || bvalue3->getFormat() == "formatLongitude"){
-            getdisplay().setFont(&Ubuntu_Bold20pt7b);
+            getdisplay().setFont(&Ubuntu_Bold20pt8b);
             getdisplay().setCursor(50, 270);
         }
         else if(bvalue3->getFormat() == "formatTime" || bvalue3->getFormat() == "formatDate"){
-            getdisplay().setFont(&Ubuntu_Bold20pt7b);
+            getdisplay().setFont(&Ubuntu_Bold20pt8b);
             getdisplay().setCursor(170, 248);
         }
         else{

@@ -98,7 +98,7 @@ class PageFourValues2 : public Page
         // ############### Value 1 ################
 
         // Show name
-        getdisplay().setFont(&Ubuntu_Bold20pt7b);
+        getdisplay().setFont(&Ubuntu_Bold20pt8b);
         getdisplay().setCursor(20, 55);
         getdisplay().print(name1);                           // Page name
 
@@ -146,7 +146,7 @@ class PageFourValues2 : public Page
         // ############### Value 2 ################
 
         // Show name
-        getdisplay().setFont(&Ubuntu_Bold20pt7b);
+        getdisplay().setFont(&Ubuntu_Bold20pt8b);
         getdisplay().setCursor(20, 145);
         getdisplay().print(name2);                           // Page name
 

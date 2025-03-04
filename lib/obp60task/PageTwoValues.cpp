@@ -123,7 +123,7 @@ class PageTwoValues : public Page
         // ############### Value 2 ################
 
         // Show name
-        getdisplay().setFont(&Ubuntu_Bold20pt7b);
+        getdisplay().setFont(&Ubuntu_Bold20pt8b);
         getdisplay().setCursor(20, 190);
         getdisplay().print(name2);                           // Page name
 
@@ -143,7 +143,7 @@ class PageTwoValues : public Page
             getdisplay().setCursor(50, 240);
         }
         else if(bvalue2->getFormat() == "formatTime" || bvalue2->getFormat() == "formatDate"){
-            getdisplay().setFont(&Ubuntu_Bold20pt7b);
+            getdisplay().setFont(&Ubuntu_Bold20pt8b);
             getdisplay().setCursor(170, 215);
         }
         else{

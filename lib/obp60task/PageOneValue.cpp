@@ -67,7 +67,7 @@ class PageOneValue : public Page
         getdisplay().print(name1);                           // Page name
 
         // Show unit
-        getdisplay().setFont(&Ubuntu_Bold20pt7b);
+        getdisplay().setFont(&Ubuntu_Bold20pt8b);
         getdisplay().setCursor(270, 100);
         if(holdvalues == false){
             getdisplay().print(unit1);                       // Unit
@@ -78,7 +78,7 @@ class PageOneValue : public Page
 
         // Switch font if format for any values
         if(bvalue1->getFormat() == "formatLatitude" || bvalue1->getFormat() == "formatLongitude"){
-            getdisplay().setFont(&Ubuntu_Bold20pt7b);
+            getdisplay().setFont(&Ubuntu_Bold20pt8b);
             getdisplay().setCursor(20, 180);
         }
         else if(bvalue1->getFormat() == "formatTime" || bvalue1->getFormat() == "formatDate"){
