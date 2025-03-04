@@ -493,6 +493,11 @@ double formatKnots(double cv)
     return cv * 3600.0 / 1852.0;
 }
 
+double formatKmh(double cv)
+{
+    return cv *3600.0 / 1000.0;
+}
+
 uint32_t mtr2nm(uint32_t m)
 {
     return m / 1852;
