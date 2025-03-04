@@ -24,6 +24,8 @@
 #include "DSEG7Classic-BoldItalic60pt7b.h"
 #include "Atari16px8b.h" // Key label font
 
+#include "Ubuntu_Bold20pt8b.h"
+
 // E-Ink Display
 #define GxEPD_WIDTH 400     // Display width
 #define GxEPD_HEIGHT 300    // Display height

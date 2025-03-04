@@ -346,7 +346,7 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
             else{
                 latdir = "S";
             }
-            latitude = String(degree,0) + "\" " + String(minute,4) + "' " + latdir;
+            latitude = String(degree,0) + "\x90 " + String(minute,4) + "' " + latdir;
             result.unit = "";
             strcpy(buffer, latitude.c_str());
         }
@@ -370,7 +370,7 @@ FormatedData formatValue(GwApi::BoatValue *value, CommonData &commondata){
             else{
                 londir = "W";
             }
-            longitude = String(degree,0) + "\" " + String(minute,4) + "' " + londir;
+            longitude = String(degree,0) + "\x90 " + String(minute,4) + "' " + londir;
             result.unit = "";
             strcpy(buffer, longitude.c_str());
         }
