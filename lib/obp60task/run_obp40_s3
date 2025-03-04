@@ -7,4 +7,4 @@
 
 # Compile the firmware
 echo "Compiling Firmware"
-platformio run -e obp60_s3
+platformio run -e obp40_s3

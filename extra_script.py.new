@@ -10,7 +10,7 @@ from datetime import datetime
 import re
 import pprint
 from platformio.project.config import ProjectConfig
-
+from platformio.project.exception import InvalidProjectConfError
 
 Import("env")
 #print(env.Dump())
@@ -104,7 +104,17 @@ def writeFileIfChanged(fileName,data):
     return True    
 
 def mergeConfig(base,other):
+    try:
+        customconfig = env.GetProjectOption("custom_config")
+    except InvalidProjectConfError:
+        customconfig = None
     for bdir in other:
+        if customconfig and os.path.exists(os.path.join(bdir,customconfig)):
+            cname=os.path.join(bdir,customconfig)
+            print("merge custom config {}".format(cname))
+            with open(cname,'rb') as ah:
+                base += json.load(ah)
+            continue   
         cname=os.path.join(bdir,"config.json")
         if os.path.exists(cname):
             print("merge config %s"%cname)
@@ -274,9 +284,9 @@ class Grove:
     def _ss(self,z=False):
         if z:
             return self.name
-        return self.name if self.name is not 'Z' else ''
+        return self.name if self.name != 'Z' else ''
     def _suffix(self):
-        return '_'+self.name if self.name is not 'Z' else ''
+        return '_'+self.name if self.name != 'Z' else ''
     def replace(self,line):
         if line is None:
             return line
