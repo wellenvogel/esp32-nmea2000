@@ -32,7 +32,7 @@ Files
      This file allows to add some config definitions that are needed for our task. For the possible options have a look at the global [config.json](../../web/config.json). Be careful not to overwrite config defitions from the global file. A good practice wood be to prefix the names of definitions with parts of the library name. Always put them in a separate category so that they do not interfere with the system ones.
      The defined config items can later be accessed in the code (see the example in [GwExampleTask.cpp](GwExampleTask.cpp)).<br>
      
-     Starting from Version 202503xx you should normally not use this file name any more as those configs would be added for all build environments. Instead define a parameter _custom_config_ in your [platformio.ini](platformio.ini) for the environments you would like to add some configurations for. This parameter accepts a list of file names (relative to the project root, separated by ,).
+     Starting from Version 20250305 you should normally not use this file name any more as those configs would be added for all build environments. Instead define a parameter _custom_config_ in your [platformio.ini](platformio.ini) for the environments you would like to add some configurations for. This parameter accepts a list of file names (relative to the project root, separated by ,).
 
    * [index.js](example.js)<br>
      You can add javascript code that will contribute to the UI of the system. The WebUI provides a small API that allows you to "hook" into some functions to include your own parts of the UI. This includes adding new tabs, modifying/replacing the data display items, modifying the status display or accessing the config items.
@@ -50,12 +50,12 @@ Files
      with nnn being the local port and x.x.x.x the address of a running system. Open `http://localhost:nnn` in your browser.<br>
      After a change just start the compilation and reload the page.<br>
      
-     Starting from Version 202503xx you should normally not use this file name any more as those js code would be added for all build environments. Instead define a parameter _custom_js_ in your [platformio.ini](platformio.ini) for the environments you would like to add the js code for. This parameter accepts a list of file names (relative to the project root, separated by ,). This will also allow you to skip the check for capabilities in your code.
+     Starting from Version 20250305 you should normally not use this file name any more as those js code would be added for all build environments. Instead define a parameter _custom_js_ in your [platformio.ini](platformio.ini) for the environments you would like to add the js code for. This parameter accepts a list of file names (relative to the project root, separated by ,). This will also allow you to skip the check for capabilities in your code.
 
    * [index.css](index.css)<br>
      You can add own css to influence the styling of the display.<br>
      
-     Starting from Version 202503xx you should normally not use this file name any more as those styles would be added for all build environments. Instead define a parameter _custom_css_ in your [platformio.ini](platformio.ini) for the environments you would like to add some styles for. This parameter accepts a list of file names (relative to the project root, separated by , or as multi line entry)
+     Starting from Version 20250305 you should normally not use this file name any more as those styles would be added for all build environments. Instead define a parameter _custom_css_ in your [platformio.ini](platformio.ini) for the environments you would like to add some styles for. This parameter accepts a list of file names (relative to the project root, separated by , or as multi line entry)
 
 
  Interfaces

@@ -170,6 +170,12 @@ For details refer to the [example description](lib/exampletask/Readme.md).
 
 Changelog
 ---------
+[20250305](../../releases/tag/20250305)
+*********
+* better handling for reconnect to a raspberry pi after reset [#102](../../issues/102)
+* introduce _custom_config_, _custom_js_, _custom_css_, refer to [extending the core](lib/exampletask/Readme.md) [#100](../../pull/100)
+* create VWR [#103](../../issues/103)
+
 [20241128](../../releases/tag/20241128)
 *********
 * additional correction for: USB connection on S3 stops [#81](../../issues/81)
