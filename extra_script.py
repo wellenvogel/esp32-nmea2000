@@ -465,7 +465,9 @@ def getOption(env,name,toArray=True):
         if toArray:
             if opt is None:
                 return []
-            return opt.split(',')
+            if isinstance(opt,list):
+                return opt
+            return opt.split("\n" if "\n" in opt else ",")
         return opt
     except:
         pass
@@ -488,9 +490,9 @@ def prebuild(env):
     if ldf_mode == 'off':
         print("##ldf off - own dependency handling")
         handleDeps(env)
-    extraConfigs=getOption(env,'extra_config',toArray=True)
-    extraJs=getOption(env,'extra_js',toArray=True)
-    extraCss=getOption(env,'extra_css',toArray=True)
+    extraConfigs=getOption(env,'custom_config',toArray=True)
+    extraJs=getOption(env,'custom_js',toArray=True)
+    extraCss=getOption(env,'custom_css',toArray=True)
 
     userTaskDirs=getUserTaskDirs()
     mergedConfig=os.path.join(outPath(),os.path.basename(CFG_FILE))
