@@ -104,8 +104,7 @@ def writeFileIfChanged(fileName,data):
     return True    
 
 def mergeConfig(base,other):
-    for bdir in other:
-        cname=os.path.join(bdir,"config.json")
+    for cname in other:
         if os.path.exists(cname):
             print("merge config %s"%cname)
             with open(cname,'rb') as ah:
@@ -151,13 +150,25 @@ def expandConfig(config):
                     rt.append(replaceTexts(c,replace))
     return rt
 
-def generateMergedConfig(inFile,outFile,addDirs=[]):
+def createUserItemList(dirs,itemName,files):
+    rt=[]
+    for d in dirs:
+        iname=os.path.join(d,itemName)
+        if os.path.exists(iname):
+            rt.append(iname)
+    for f in files:
+        if not os.path.exists(f):
+            raise Exception("user item %s not found"%f)
+        rt.append(f)
+    return rt
+
+def generateMergedConfig(inFile,outFile,addFiles=[]):
     if not os.path.exists(inFile):
         raise Exception("unable to read cfg file %s"%inFile)
     data=""
     with open(inFile,'rb') as ch:    
         config=json.load(ch)
-        config=mergeConfig(config,addDirs)
+        config=mergeConfig(config,addFiles)
         config=expandConfig(config)
         data=json.dumps(config,indent=2)
         writeFileIfChanged(outFile,data)
@@ -377,12 +388,7 @@ def getLibs():
 
 
 
-def joinFiles(target,pattern,dirlist):
-    flist=[]
-    for dir in dirlist:
-            fn=os.path.join(dir,pattern)
-            if os.path.exists(fn):
-                flist.append(fn)
+def joinFiles(target,flist):
     current=False
     if os.path.exists(target):
         current=True
@@ -453,7 +459,26 @@ def handleDeps(env):
         )
     env.AddBuildMiddleware(injectIncludes)
 
+def getOption(env,name,toArray=True):
+    try:
+        opt=env.GetProjectOption(name)
+        if toArray:
+            if opt is None:
+                return []
+            return opt.split(',')
+        return opt
+    except:
+        pass
+    if toArray:
+        return []
 
+def getFileList(files):
+    base=basePath()
+    rt=[]
+    for f in files:
+        if f is not None and f != "":
+            rt.append(os.path.join(base,f))
+    return rt
 def prebuild(env):
     global userTaskDirs
     print("#prebuild running")
@@ -463,14 +488,18 @@ def prebuild(env):
     if ldf_mode == 'off':
         print("##ldf off - own dependency handling")
         handleDeps(env)
+    extraConfigs=getOption(env,'extra_config',toArray=True)
+    extraJs=getOption(env,'extra_js',toArray=True)
+    extraCss=getOption(env,'extra_css',toArray=True)
+
     userTaskDirs=getUserTaskDirs()
     mergedConfig=os.path.join(outPath(),os.path.basename(CFG_FILE))
-    generateMergedConfig(os.path.join(basePath(),CFG_FILE),mergedConfig,userTaskDirs)
+    generateMergedConfig(os.path.join(basePath(),CFG_FILE),mergedConfig,createUserItemList(userTaskDirs,"config.json", getFileList(extraConfigs)))
     compressFile(mergedConfig,mergedConfig+".gz")
     generateCfg(mergedConfig,os.path.join(outPath(),CFG_INCLUDE),False)
     generateCfg(mergedConfig,os.path.join(outPath(),CFG_INCLUDE_IMPL),True)
-    joinFiles(os.path.join(outPath(),INDEXJS+".gz"),INDEXJS,["web"]+userTaskDirs)
-    joinFiles(os.path.join(outPath(),INDEXCSS+".gz"),INDEXCSS,["web"]+userTaskDirs)
+    joinFiles(os.path.join(outPath(),INDEXJS+".gz"),createUserItemList(["web"]+userTaskDirs,INDEXJS,getFileList(extraJs)))
+    joinFiles(os.path.join(outPath(),INDEXCSS+".gz"),createUserItemList(["web"]+userTaskDirs,INDEXCSS,getFileList(extraCss)))
     embedded=getEmbeddedFiles(env)
     filedefs=[]
     for ef in embedded:
