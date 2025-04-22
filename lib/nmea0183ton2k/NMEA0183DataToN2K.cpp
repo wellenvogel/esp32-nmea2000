@@ -351,8 +351,8 @@ private:
                 rmb.vmg
             );
             send(n2kMsg,msg.sourceId);
-            SetN2kPGN129285(n2kMsg,sourceId,1,1,true,true,"default");
-            AppendN2kPGN129285(n2kMsg,destinationId,rmb.destID,rmb.latitude,rmb.longitude);
+            SetN2kRouteWPInfo(n2kMsg,sourceId,1,1,N2kdir_forward,"default");
+            AppendN2kRouteWPInfo(n2kMsg,destinationId,rmb.destID,rmb.latitude,rmb.longitude);
             send(n2kMsg,msg.sourceId);
             }
     }
