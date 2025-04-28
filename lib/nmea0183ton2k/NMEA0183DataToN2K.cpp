@@ -662,8 +662,8 @@ private:
                 //we can only send if we have a valid depth beloww tranducer
                 //to compute the offset
                 if (! boatData->DBT->isValid()) return;
-                double dbs=boatData->DBT->getData();
-                double offset=Depth-dbs;
+                double dbt=boatData->DBT->getData();
+                double offset=Depth-dbt;
                 if (offset >= 0 && dt == DBK){
                     logger->logDebug(GwLog::DEBUG, "strange DBK - more depth then transducer %s", msg.line);    
                     return;
@@ -676,7 +676,7 @@ private:
                     if (! boatData->DBS->update(Depth,msg.sourceId)) return;
                 }
                 tN2kMsg n2kMsg;
-                SetN2kWaterDepth(n2kMsg,1,dbs,offset); //on the N2K side we always have depth below transducer
+                SetN2kWaterDepth(n2kMsg,1,dbt,offset); //on the N2K side we always have depth below transducer
                 send(n2kMsg,msg.sourceId,(n2kMsg.PGN)+String((offset >=0)?1:0));
             }            
         }        
