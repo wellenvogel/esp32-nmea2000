@@ -73,7 +73,7 @@ If you are on Windows you will need to have the correct driver installed before 
 
 You can also install an update from the flash page but normally it is easier to do this from the Web Gui of the device (see [below](#update)).
 
-The [Flash Page](https://wellenvogel.github.io/esp32-nmea2000/install.html) will also allow you to open a console window to your ESP32.
+The [Flash Page](https://wellenvogel.de/software/esp32/install.html) will also allow you to open a console window to your ESP32.
 
 __Tool based__
 
