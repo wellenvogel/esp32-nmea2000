@@ -266,6 +266,8 @@ void registerAllPages(PageList &list){
     list.add(&registerPageTwoValues);
     extern PageDescription registerPageThreeValues;
     list.add(&registerPageThreeValues);
+    extern PageDescription registerPageSixValues;
+    list.add(&registerPageSixValues);
     extern PageDescription registerPageFourValues;
     list.add(&registerPageFourValues);
     extern PageDescription registerPageFourValues2;

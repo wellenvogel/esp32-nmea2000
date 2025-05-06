@@ -968,6 +968,7 @@
             "obp60":"true"
         }
     },
+ 
     {
         "name": "page1type",
         "label": "Type",
@@ -988,6 +989,7 @@
             "OneValue",
             "RollPitch",
             "RudderPosition",
+            "SixValues",
             "Solar",
             "ThreeValues",
             "TwoValues",
@@ -1047,6 +1049,9 @@
         },
         "condition": [
             {
+                "page1type": "Fluid"
+            },
+            {
                 "page1type": "FourValues"
             },
             {
@@ -1059,6 +1064,9 @@
                 "page1type": "RollPitch"
             },
             {
+                "page1type": "SixValues"
+            },
+            {
                 "page1type": "ThreeValues"
             },
             {
@@ -1066,9 +1074,6 @@
             },
             {
                 "page1type": "WindRoseFlex"
-            },
-            {
-                "page1type": "Fluid"
             }
         ]
     },
@@ -1091,6 +1096,9 @@
             },
             {
                 "page1type": "RollPitch"
+            },
+            {
+                "page1type": "SixValues"
             },
             {
                 "page1type": "ThreeValues"
@@ -1121,6 +1129,9 @@
                 "page1type": "FourValues2"
             },
             {
+                "page1type": "SixValues"
+            },
+            {
                 "page1type": "ThreeValues"
             },
             {
@@ -1146,6 +1157,9 @@
                 "page1type": "FourValues2"
             },
             {
+                "page1type": "SixValues"
+            },
+            {
                 "page1type": "WindRoseFlex"
             }
         ]
@@ -1162,6 +1176,9 @@
         },
         "condition": [
             {
+                "page1type": "SixValues"
+            },
+            {
                 "page1type": "WindRoseFlex"
             }
         ]
@@ -1177,6 +1194,9 @@
             "obp60": "true"
         },
         "condition": [
+            {
+                "page1type": "SixValues"
+            },
             {
                 "page1type": "WindRoseFlex"
             }
@@ -1248,6 +1268,7 @@
             "OneValue",
             "RollPitch",
             "RudderPosition",
+            "SixValues",
             "Solar",
             "ThreeValues",
             "TwoValues",
@@ -1304,6 +1325,9 @@
         },
         "condition": [
             {
+                "page2type": "Fluid"
+            },
+            {
                 "page2type": "FourValues"
             },
             {
@@ -1316,6 +1340,9 @@
                 "page2type": "RollPitch"
             },
             {
+                "page2type": "SixValues"
+            },
+            {
                 "page2type": "ThreeValues"
             },
             {
@@ -1323,11 +1350,7 @@
             },
             {
                 "page2type": "WindRoseFlex"
-            },
-            {
-                "page2type": "Fluid"
             }
-
         ]
     },
     {
@@ -1349,6 +1372,9 @@
             },
             {
                 "page2type": "RollPitch"
+            },
+            {
+                "page2type": "SixValues"
             },
             {
                 "page2type": "ThreeValues"
@@ -1379,6 +1405,9 @@
                 "page2type": "FourValues2"
             },
             {
+                "page2type": "SixValues"
+            },
+            {
                 "page2type": "ThreeValues"
             },
             {
@@ -1404,6 +1433,9 @@
                 "page2type": "FourValues2"
             },
             {
+                "page2type": "SixValues"
+            },
+            {
                 "page2type": "WindRoseFlex"
             }
         ]
@@ -1420,6 +1452,9 @@
         },
         "condition": [
             {
+                "page2type": "SixValues"
+            },
+            {
                 "page2type": "WindRoseFlex"
             }
         ]
@@ -1435,6 +1470,9 @@
             "obp60": "true"
         },
         "condition": [
+            {
+                "page2type": "SixValues"
+            },
             {
                 "page2type": "WindRoseFlex"
             }
@@ -1506,6 +1544,7 @@
             "OneValue",
             "RollPitch",
             "RudderPosition",
+            "SixValues",
             "Solar",
             "ThreeValues",
             "TwoValues",
@@ -1559,6 +1598,9 @@
         },
         "condition": [
             {
+                "page3type": "Fluid"
+            },
+            {
                 "page3type": "FourValues"
             },
             {
@@ -1571,6 +1613,9 @@
                 "page3type": "RollPitch"
             },
             {
+                "page3type": "SixValues"
+            },
+            {
                 "page3type": "ThreeValues"
             },
             {
@@ -1578,9 +1623,6 @@
             },
             {
                 "page3type": "WindRoseFlex"
-            },
-            {
-                "page3type": "Fluid"
             }
         ]
     },
@@ -1603,6 +1645,9 @@
             },
             {
                 "page3type": "RollPitch"
+            },
+            {
+                "page3type": "SixValues"
             },
             {
                 "page3type": "ThreeValues"
@@ -1633,6 +1678,9 @@
                 "page3type": "FourValues2"
             },
             {
+                "page3type": "SixValues"
+            },
+            {
                 "page3type": "ThreeValues"
             },
             {
@@ -1658,6 +1706,9 @@
                 "page3type": "FourValues2"
             },
             {
+                "page3type": "SixValues"
+            },
+            {
                 "page3type": "WindRoseFlex"
             }
         ]
@@ -1674,6 +1725,9 @@
         },
         "condition": [
             {
+                "page3type": "SixValues"
+            },
+            {
                 "page3type": "WindRoseFlex"
             }
         ]
@@ -1689,6 +1743,9 @@
             "obp60": "true"
         },
         "condition": [
+            {
+                "page3type": "SixValues"
+            },
             {
                 "page3type": "WindRoseFlex"
             }
@@ -1760,6 +1817,7 @@
             "OneValue",
             "RollPitch",
             "RudderPosition",
+            "SixValues",
             "Solar",
             "ThreeValues",
             "TwoValues",
@@ -1810,6 +1868,9 @@
         },
         "condition": [
             {
+                "page4type": "Fluid"
+            },
+            {
                 "page4type": "FourValues"
             },
             {
@@ -1822,6 +1883,9 @@
                 "page4type": "RollPitch"
             },
             {
+                "page4type": "SixValues"
+            },
+            {
                 "page4type": "ThreeValues"
             },
             {
@@ -1829,9 +1893,6 @@
             },
             {
                 "page4type": "WindRoseFlex"
-            },
-            {
-                "page4type": "Fluid"
             }
         ]
     },
@@ -1854,6 +1915,9 @@
             },
             {
                 "page4type": "RollPitch"
+            },
+            {
+                "page4type": "SixValues"
             },
             {
                 "page4type": "ThreeValues"
@@ -1884,6 +1948,9 @@
                 "page4type": "FourValues2"
             },
             {
+                "page4type": "SixValues"
+            },
+            {
                 "page4type": "ThreeValues"
             },
             {
@@ -1909,6 +1976,9 @@
                 "page4type": "FourValues2"
             },
             {
+                "page4type": "SixValues"
+            },
+            {
                 "page4type": "WindRoseFlex"
             }
         ]
@@ -1925,6 +1995,9 @@
         },
         "condition": [
             {
+                "page4type": "SixValues"
+            },
+            {
                 "page4type": "WindRoseFlex"
             }
         ]
@@ -1940,6 +2013,9 @@
             "obp60": "true"
         },
         "condition": [
+            {
+                "page4type": "SixValues"
+            },
             {
                 "page4type": "WindRoseFlex"
             }
@@ -2011,6 +2087,7 @@
             "OneValue",
             "RollPitch",
             "RudderPosition",
+            "SixValues",
             "Solar",
             "ThreeValues",
             "TwoValues",
@@ -2058,6 +2135,9 @@
         },
         "condition": [
             {
+                "page5type": "Fluid"
+            },
+            {
                 "page5type": "FourValues"
             },
             {
@@ -2070,6 +2150,9 @@
                 "page5type": "RollPitch"
             },
             {
+                "page5type": "SixValues"
+            },
+            {
                 "page5type": "ThreeValues"
             },
             {
@@ -2077,9 +2160,6 @@
             },
             {
                 "page5type": "WindRoseFlex"
-            },
-            {
-                "page5type": "Fluid"
             }
         ]
     },
@@ -2102,6 +2182,9 @@
             },
             {
                 "page5type": "RollPitch"
+            },
+            {
+                "page5type": "SixValues"
             },
             {
                 "page5type": "ThreeValues"
@@ -2132,6 +2215,9 @@
                 "page5type": "FourValues2"
             },
             {
+                "page5type": "SixValues"
+            },
+            {
                 "page5type": "ThreeValues"
             },
             {
@@ -2157,6 +2243,9 @@
                 "page5type": "FourValues2"
             },
             {
+                "page5type": "SixValues"
+            },
+            {
                 "page5type": "WindRoseFlex"
             }
         ]
@@ -2173,6 +2262,9 @@
         },
         "condition": [
             {
+                "page5type": "SixValues"
+            },
+            {
                 "page5type": "WindRoseFlex"
             }
         ]
@@ -2188,6 +2280,9 @@
             "obp60": "true"
         },
         "condition": [
+            {
+                "page5type": "SixValues"
+            },
             {
                 "page5type": "WindRoseFlex"
             }
@@ -2259,6 +2354,7 @@
             "OneValue",
             "RollPitch",
             "RudderPosition",
+            "SixValues",
             "Solar",
             "ThreeValues",
             "TwoValues",
@@ -2303,6 +2399,9 @@
         },
         "condition": [
             {
+                "page6type": "Fluid"
+            },
+            {
                 "page6type": "FourValues"
             },
             {
@@ -2315,6 +2414,9 @@
                 "page6type": "RollPitch"
             },
             {
+                "page6type": "SixValues"
+            },
+            {
                 "page6type": "ThreeValues"
             },
             {
@@ -2322,9 +2424,6 @@
             },
             {
                 "page6type": "WindRoseFlex"
-            },
-            {
-                "page6type": "Fluid"
             }
         ]
     },
@@ -2347,6 +2446,9 @@
             },
             {
                 "page6type": "RollPitch"
+            },
+            {
+                "page6type": "SixValues"
             },
             {
                 "page6type": "ThreeValues"
@@ -2377,6 +2479,9 @@
                 "page6type": "FourValues2"
             },
             {
+                "page6type": "SixValues"
+            },
+            {
                 "page6type": "ThreeValues"
             },
             {
@@ -2402,6 +2507,9 @@
                 "page6type": "FourValues2"
             },
             {
+                "page6type": "SixValues"
+            },
+            {
                 "page6type": "WindRoseFlex"
             }
         ]
@@ -2418,6 +2526,9 @@
         },
         "condition": [
             {
+                "page6type": "SixValues"
+            },
+            {
                 "page6type": "WindRoseFlex"
             }
         ]
@@ -2433,6 +2544,9 @@
             "obp60": "true"
         },
         "condition": [
+            {
+                "page6type": "SixValues"
+            },
             {
                 "page6type": "WindRoseFlex"
             }
@@ -2504,6 +2618,7 @@
             "OneValue",
             "RollPitch",
             "RudderPosition",
+            "SixValues",
             "Solar",
             "ThreeValues",
             "TwoValues",
@@ -2545,6 +2660,9 @@
         },
         "condition": [
             {
+                "page7type": "Fluid"
+            },
+            {
                 "page7type": "FourValues"
             },
             {
@@ -2557,6 +2675,9 @@
                 "page7type": "RollPitch"
             },
             {
+                "page7type": "SixValues"
+            },
+            {
                 "page7type": "ThreeValues"
             },
             {
@@ -2564,9 +2685,6 @@
             },
             {
                 "page7type": "WindRoseFlex"
-            },
-            {
-                "page7type": "Fluid"
             }
         ]
     },
@@ -2589,6 +2707,9 @@
             },
             {
                 "page7type": "RollPitch"
+            },
+            {
+                "page7type": "SixValues"
             },
             {
                 "page7type": "ThreeValues"
@@ -2619,6 +2740,9 @@
                 "page7type": "FourValues2"
             },
             {
+                "page7type": "SixValues"
+            },
+            {
                 "page7type": "ThreeValues"
             },
             {
@@ -2644,6 +2768,9 @@
                 "page7type": "FourValues2"
             },
             {
+                "page7type": "SixValues"
+            },
+            {
                 "page7type": "WindRoseFlex"
             }
         ]
@@ -2660,6 +2787,9 @@
         },
         "condition": [
             {
+                "page7type": "SixValues"
+            },
+            {
                 "page7type": "WindRoseFlex"
             }
         ]
@@ -2675,6 +2805,9 @@
             "obp60": "true"
         },
         "condition": [
+            {
+                "page7type": "SixValues"
+            },
             {
                 "page7type": "WindRoseFlex"
             }
@@ -2746,6 +2879,7 @@
             "OneValue",
             "RollPitch",
             "RudderPosition",
+            "SixValues",
             "Solar",
             "ThreeValues",
             "TwoValues",
@@ -2784,6 +2918,9 @@
         },
         "condition": [
             {
+                "page8type": "Fluid"
+            },
+            {
                 "page8type": "FourValues"
             },
             {
@@ -2796,6 +2933,9 @@
                 "page8type": "RollPitch"
             },
             {
+                "page8type": "SixValues"
+            },
+            {
                 "page8type": "ThreeValues"
             },
             {
@@ -2803,9 +2943,6 @@
             },
             {
                 "page8type": "WindRoseFlex"
-            },
-            {
-                "page8type": "Fluid"
             }
         ]
     },
@@ -2828,6 +2965,9 @@
             },
             {
                 "page8type": "RollPitch"
+            },
+            {
+                "page8type": "SixValues"
             },
             {
                 "page8type": "ThreeValues"
@@ -2858,6 +2998,9 @@
                 "page8type": "FourValues2"
             },
             {
+                "page8type": "SixValues"
+            },
+            {
                 "page8type": "ThreeValues"
             },
             {
@@ -2883,6 +3026,9 @@
                 "page8type": "FourValues2"
             },
             {
+                "page8type": "SixValues"
+            },
+            {
                 "page8type": "WindRoseFlex"
             }
         ]
@@ -2899,6 +3045,9 @@
         },
         "condition": [
             {
+                "page8type": "SixValues"
+            },
+            {
                 "page8type": "WindRoseFlex"
             }
         ]
@@ -2914,6 +3063,9 @@
             "obp60": "true"
         },
         "condition": [
+            {
+                "page8type": "SixValues"
+            },
             {
                 "page8type": "WindRoseFlex"
             }
@@ -2985,6 +3137,7 @@
             "OneValue",
             "RollPitch",
             "RudderPosition",
+            "SixValues",
             "Solar",
             "ThreeValues",
             "TwoValues",
@@ -3020,6 +3173,9 @@
         },
         "condition": [
             {
+                "page9type": "Fluid"
+            },
+            {
                 "page9type": "FourValues"
             },
             {
@@ -3032,6 +3188,9 @@
                 "page9type": "RollPitch"
             },
             {
+                "page9type": "SixValues"
+            },
+            {
                 "page9type": "ThreeValues"
             },
             {
@@ -3039,9 +3198,6 @@
             },
             {
                 "page9type": "WindRoseFlex"
-            },
-            {
-                "page9type": "Fluid"
             }
         ]
     },
@@ -3064,6 +3220,9 @@
             },
             {
                 "page9type": "RollPitch"
+            },
+            {
+                "page9type": "SixValues"
             },
             {
                 "page9type": "ThreeValues"
@@ -3094,6 +3253,9 @@
                 "page9type": "FourValues2"
             },
             {
+                "page9type": "SixValues"
+            },
+            {
                 "page9type": "ThreeValues"
             },
             {
@@ -3119,6 +3281,9 @@
                 "page9type": "FourValues2"
             },
             {
+                "page9type": "SixValues"
+            },
+            {
                 "page9type": "WindRoseFlex"
             }
         ]
@@ -3135,6 +3300,9 @@
         },
         "condition": [
             {
+                "page9type": "SixValues"
+            },
+            {
                 "page9type": "WindRoseFlex"
             }
         ]
@@ -3150,6 +3318,9 @@
             "obp60": "true"
         },
         "condition": [
+            {
+                "page9type": "SixValues"
+            },
             {
                 "page9type": "WindRoseFlex"
             }
@@ -3221,6 +3392,7 @@
             "OneValue",
             "RollPitch",
             "RudderPosition",
+            "SixValues",
             "Solar",
             "ThreeValues",
             "TwoValues",
@@ -3253,6 +3425,9 @@
         },
         "condition": [
             {
+                "page10type": "Fluid"
+            },
+            {
                 "page10type": "FourValues"
             },
             {
@@ -3265,6 +3440,9 @@
                 "page10type": "RollPitch"
             },
             {
+                "page10type": "SixValues"
+            },
+            {
                 "page10type": "ThreeValues"
             },
             {
@@ -3272,9 +3450,6 @@
             },
             {
                 "page10type": "WindRoseFlex"
-            },
-            {
-                "page10type": "Fluid"
             }
         ]
     },
@@ -3297,6 +3472,9 @@
             },
             {
                 "page10type": "RollPitch"
+            },
+            {
+                "page10type": "SixValues"
             },
             {
                 "page10type": "ThreeValues"
@@ -3327,6 +3505,9 @@
                 "page10type": "FourValues2"
             },
             {
+                "page10type": "SixValues"
+            },
+            {
                 "page10type": "ThreeValues"
             },
             {
@@ -3352,6 +3533,9 @@
                 "page10type": "FourValues2"
             },
             {
+                "page10type": "SixValues"
+            },
+            {
                 "page10type": "WindRoseFlex"
             }
         ]
@@ -3368,6 +3552,9 @@
         },
         "condition": [
             {
+                "page10type": "SixValues"
+            },
+            {
                 "page10type": "WindRoseFlex"
             }
         ]
@@ -3383,6 +3570,9 @@
             "obp60": "true"
         },
         "condition": [
+            {
+                "page10type": "SixValues"
+            },
             {
                 "page10type": "WindRoseFlex"
             }
@@ -3435,3 +3625,4 @@
         ]
     }
 ]
+
