@@ -22,7 +22,7 @@ class GwConfigHandler: public GwConfigDefinitions{
         void stopChanges();
         bool updateValue(String name, String value);
         bool reset();
-        String toString() const;
+        void logConfig(int level) const;
         String toJson() const;
         String getString(const String name,const String defaultv="") const;
         bool getBool(const String name,bool defaultv=false) const ;

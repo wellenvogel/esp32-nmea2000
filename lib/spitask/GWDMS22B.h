@@ -18,5 +18,5 @@ SSI sensor DMS22B - https://www.mouser.de/datasheet/2/54/bour_s_a0011704065_1-22
 #ifndef _GWDMS22B_H
 #define _GWDMS22B_H
 #include "GwSpiSensor.h"
-void registerDMS22B(GwApi *api,SpiSensorList &sensors);
+void registerDMS22B(GwApi *api);
 #endif

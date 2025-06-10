@@ -140,7 +140,7 @@ class GwXDRMappingDef{
         rt += xdrUnit;
         return rt;
     }
-    String getTransducerName(int instance);
+    String getTransducerName(int instance) const;
     private:
     static bool handleToken(String tok,int index,GwXDRMappingDef *def);
 };
@@ -163,12 +163,12 @@ class GwXDRFoundMapping : public GwBoatItemNameProvider{
             String entry;
             String transducer;
         };
-        GwXDRMappingDef *definition=NULL;
-        GwXDRType *type=NULL;
+        const GwXDRMappingDef *definition=NULL;
+        const GwXDRType *type=NULL;
         int instanceId=-1;
         bool empty=true;
         unsigned long timeout=0;
-        GwXDRFoundMapping(GwXDRMappingDef *definition,GwXDRType *type, unsigned long timeout){
+        GwXDRFoundMapping(const GwXDRMappingDef *definition,const GwXDRType *type, unsigned long timeout){
             this->definition=definition;
             this->type=type;
             this->timeout=timeout;
@@ -182,7 +182,7 @@ class GwXDRFoundMapping : public GwBoatItemNameProvider{
             empty=false;
         }
         GwXDRFoundMapping(){}
-        String getTransducerName(){
+        virtual String getTransducerName(){
             return definition->getTransducerName(instanceId);
         }
         double valueFromXdr(double value){
@@ -201,6 +201,24 @@ class GwXDRFoundMapping : public GwBoatItemNameProvider{
         virtual unsigned long getInvalidTime() override{
             return timeout;
         }
+};
+
+class GwXdrUnknownMapping : public GwXDRFoundMapping{
+    String name;
+    String unit;
+    public:
+    GwXdrUnknownMapping(const String &xdrName, const String &xdrUnit,const GwXDRType *type,unsigned long timeout):
+        name(xdrName),unit(xdrUnit), GwXDRFoundMapping(nullptr,type,timeout){
+
+    }
+    virtual String getTransducerName(){
+        return name;
+    }
+    virtual String getBoatItemFormat(){
+        String rt=GwXDRFoundMapping::getBoatItemFormat();
+        if (type->xdrunit.isEmpty()) rt+=unit;
+        return rt;
+    }
 };
 
 //the class GwXDRMappings is not intended to be deleted
@@ -229,6 +247,7 @@ class GwXDRMappings{
         GwXDRFoundMapping getMapping(GwXDRCategory category,int selector,int field=0,int instance=-1);
         String getXdrEntry(String mapping, double value,int instance=0);
         const char * getUnMapped();
+        const GwXDRType * findType(const String &typeString, const String &unitString) const;
 
 };
 

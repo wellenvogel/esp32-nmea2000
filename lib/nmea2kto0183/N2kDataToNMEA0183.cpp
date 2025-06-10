@@ -267,21 +267,29 @@ private:
         double DepthBelowTransducer;
         double Offset;
         double Range;
-        double WaterDepth;
         if (ParseN2kWaterDepth(N2kMsg, SID, DepthBelowTransducer, Offset, Range))
         {
-
-            WaterDepth = DepthBelowTransducer + Offset;
-            updateDouble(boatData->DBS, WaterDepth);
-            updateDouble(boatData->DBT,DepthBelowTransducer);
-            tNMEA0183Msg NMEA0183Msg;
-            if (NMEA0183SetDPT(NMEA0183Msg, DepthBelowTransducer, Offset,talkerId))
+            if (updateDouble(boatData->DBT, DepthBelowTransducer))
             {
-                SendMessage(NMEA0183Msg);
-            }
-            if (NMEA0183SetDBx(NMEA0183Msg, DepthBelowTransducer, Offset,talkerId))
-            {
-                SendMessage(NMEA0183Msg);
+                tNMEA0183Msg NMEA0183Msg;
+                bool offsetValid=true;
+                if (N2kIsNA(Offset)) {
+                    Offset=NMEA0183DoubleNA;
+                    offsetValid=false;
+                }
+                if (NMEA0183SetDPT(NMEA0183Msg, DepthBelowTransducer, Offset, talkerId))
+                {
+                    SendMessage(NMEA0183Msg);
+                }
+                if (offsetValid)
+                {
+                    double WaterDepth = DepthBelowTransducer + Offset;
+                    updateDouble(boatData->DBS, WaterDepth);
+                }
+                if (NMEA0183SetDBx(NMEA0183Msg, DepthBelowTransducer, Offset, talkerId))
+                {
+                    SendMessage(NMEA0183Msg);
+                }
             }
         }
     }
@@ -527,6 +535,31 @@ private:
                 if (shouldSend && NMEA0183SetMWV(NMEA0183Msg, formatCourse(WindAngle), NMEA0183Reference, WindSpeed, talkerId))
                 {
                     SendMessage(NMEA0183Msg);
+                }
+
+                if (shouldSend && NMEA0183Reference == NMEA0183Wind_Apparent)
+                {
+                    double wa = formatCourse(WindAngle);
+                    if (!NMEA0183Msg.Init("VWR", talkerId))
+                      return;
+                    if (!NMEA0183Msg.AddDoubleField(( wa > 180 ) ? 360-wa : wa))
+                      return;
+                    if (!NMEA0183Msg.AddStrField(( wa >= 0 && wa <= 180) ? 'R' : 'L'))
+                      return;
+                    if (!NMEA0183Msg.AddDoubleField(formatKnots(WindSpeed)))
+                      return;
+                    if (!NMEA0183Msg.AddStrField("N"))
+                      return;
+                    if (!NMEA0183Msg.AddDoubleField(WindSpeed))
+                      return;
+                    if (!NMEA0183Msg.AddStrField("M"))
+                      return;
+                    if (!NMEA0183Msg.AddDoubleField(formatKmh(WindSpeed)))
+                      return;
+                    if (!NMEA0183Msg.AddStrField("K"))
+                      return;
+
+                   SendMessage(NMEA0183Msg);
                 }
             }
 

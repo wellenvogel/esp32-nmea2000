@@ -85,6 +85,7 @@ bool GwWifi::connectInternal(){
     if (wifiClient->asBoolean()){
         clientIsConnected=false;
         LOG_DEBUG(GwLog::LOG,"creating wifiClient ssid=%s",wifiSSID->asString().c_str());
+        WiFi.setAutoReconnect(false); //#102
         wl_status_t rt=WiFi.begin(wifiSSID->asCString(),wifiPass->asCString());
         LOG_DEBUG(GwLog::LOG,"wifiClient connect returns %d",(int)rt);
         lastConnectStart=millis();
@@ -92,7 +93,8 @@ bool GwWifi::connectInternal(){
     }
     return false;
 }
-#define RETRY_MILLIS 20000
+//#102: we should have a wifi connect retry being > 30s - with some headroom
+#define RETRY_MILLIS 40000
 void GwWifi::loop(){
     if (wifiClient->asBoolean())
     {
@@ -108,7 +110,7 @@ void GwWifi::loop(){
         }
         else{
             if (! clientIsConnected){
-                LOG_DEBUG(GwLog::LOG,"wifiClient %s now connected to",wifiSSID->asCString());
+                LOG_DEBUG(GwLog::LOG,"wifiClient now connected to %s at %s",wifiSSID->asCString(),WiFi.localIP().toString().c_str());
                 clientIsConnected=true;
             }
         }

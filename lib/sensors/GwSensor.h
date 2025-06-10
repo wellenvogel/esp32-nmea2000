@@ -14,42 +14,124 @@
 */
 #ifndef _GWSENSORS_H
 #define _GWSENSORS_H
-#include "GwApi.h"
-#include "GwLog.h"
-template<typename BUS>
+#include "GwConfigItem.h"
+#include <Arduino.h>
+#include <memory>
+#include <vector>
+class GwApi;
+class GwConfigHandler;
 class SensorBase{
     public:
+    using BusType=enum{
+        IIC=0,
+        SPI=1,
+        UNKNOWN=-1
+    };
+    using Ptr=std::shared_ptr<SensorBase>;
+    BusType busType=BusType::UNKNOWN;
     int busId=0;
     int iid=99; //N2K instanceId
     int addr=-1;
     const String prefix;
-    const String type;
     long intv=0;
     bool ok=false;
-    virtual void readConfig(GwConfigHandler *cfg)=0;
-    SensorBase(const String &tn,GwApi *api,const String &prfx):type(tn),prefix(prfx){
+    SensorBase(BusType bt,GwApi *api,const String &prfx)
+        :busType(bt),prefix(prfx){
     }
-    using Creator=std::function<SensorBase<BUS> *(GwApi *api,const String &prfx)>;
+    using Creator=std::function<SensorBase *(GwApi *api,const String &prfx)>;
     virtual bool isActive(){return false;};
-    virtual bool initDevice(GwApi *api,BUS *wire){return false;};
+    virtual bool initDevice(GwApi *api,void *bus){return false;};
     virtual bool preinit(GwApi * api){return false;}
-    virtual void measure(GwApi * api,BUS *wire, int counterId){};
+    virtual void measure(GwApi * api,void *bus, int counterId){};
     virtual ~SensorBase(){}
+    virtual void readConfig(GwConfigHandler *cfg)=0;
+
+};
+template<typename BUS,SensorBase::BusType bt>
+class SensorTemplate : public SensorBase{
+    public:
+    SensorTemplate(GwApi *api,const String &prfx)
+        :SensorBase(bt,api,prfx){}
+    virtual bool initDevice(GwApi *api,BUS *bus){return false;};
+    virtual bool initDevice(GwApi *api,void *bus){
+        if (busType != bt) return false;
+        return initDevice(api,(BUS*)bus);
+    }
+    virtual void measure(GwApi * api,void *bus, int counterId){
+        if (busType != bt) return;
+        measure(api,(BUS*)bus,counterId);
+    };
+    protected:
+    virtual void measure(GwApi *api,BUS *bus, int counterId)=0;
 };
 
-template<typename BUS>
-class SensorList : public std::vector<SensorBase<BUS>*>{
+
+class SensorList : public std::vector<SensorBase::Ptr>{
     public:
-    void add(GwApi *api, SensorBase<BUS> *sensor){
-        sensor->readConfig(api->getConfig());
-        api->getLogger()->logDebug(GwLog::LOG,"configured sensor %s, status %d",sensor->prefix.c_str(),(int)sensor->ok);
-        this->push_back(sensor);
-    }
-    using std::vector<SensorBase<BUS>*>::vector;
+    void add(SensorBase::Ptr sensor);
+    using std::vector<SensorBase::Ptr>::vector;
 };
+
+/**
+ * helper classes for a simplified sensor configuration
+ * by creating a list of type GwSensorConfigInitializerList<SensorClass> we can populate
+ * it by static instances of GwSensorConfigInitializer (using GWSENSORCONFIG ) that each has
+ * a function that populates the sensor config from the config data. 
+ * For using sensors this is not really necessary - but it can simplify the code for a sensor
+ * if you want to support a couple of instances on different buses. 
+ * By using this approach you still can write functions using the CFG_SGET macros that will check
+ * your config definitions at compile time.
+ * 
+*/
+template <typename T>
+class GwSensorConfig{
+    public:
+    using ReadConfig=std::function<void(T*,GwConfigHandler*)>;
+    ReadConfig configReader;
+    String prefix;
+    GwSensorConfig(const String &prfx,ReadConfig f):prefix(prfx),configReader(f){
+    }
+    bool readConfig(T* s,GwConfigHandler *cfg){
+        if (s == nullptr) return false;
+        configReader(s,cfg);
+        return s->ok;
+    }
+};
+
+template<typename T>
+class GwSensorConfigInitializer : public GwInitializer<GwSensorConfig<T>>{
+    public:
+    using GwInitializer<GwSensorConfig<T>>::GwInitializer;
+};
+template<typename T>
+class GwSensorConfigInitializerList : public GwInitializer<GwSensorConfig<T>>::List{
+    public:
+    using GwInitializer<GwSensorConfig<T>>::List::List;
+    bool readConfig(T *s,GwConfigHandler *cfg){
+        for (auto &&scfg:*this){
+            if (scfg.readConfig(s,cfg)) return true;
+        }
+        return false;
+    }
+    bool knowsPrefix(const String &prefix){
+        for (auto &&scfg:*this){
+            if (scfg.prefix == prefix) return true;
+        }
+        return false;
+    }
+};
+
+#define CFG_SGET(s, name, prefix) \
+    cfg->getValue(s->name, GwConfigDefinitions::prefix##name)
+
+#define GWSENSORCONFIG(list,type,prefix,initFunction) \
+    GwSensorConfigInitializer<type> __init ## type ## prefix(list,GwSensorConfig<type>(#prefix,initFunction));
+#define GWSENSORDEF(list,type,init,prefix,bus,baddr) \
+    GWSENSORCONFIG(list, type, prefix, [](type *s, GwConfigHandler *cfg) { init(s, prefix, bus, baddr); });
 
 
 #define CFG_GET(name,prefix) \
     cfg->getValue(name, GwConfigDefinitions::prefix ## name)
+
     
 #endif

@@ -16,7 +16,7 @@
 #ifndef _GWSPISENSOR_H
 #define _GWSPISENSOR_H
 #include <driver/spi_master.h>
-#include "GwSensor.h"
+#include "GwApi.h"
 #include <memory>
 
 class SPIBus{
@@ -48,7 +48,7 @@ class SPIBus{
     spi_host_device_t host() const { return hd;} 
 };
 
-using BusType=SPIBus;
+using BUSTYPE=SPIBus;
 
 class SSIDevice{
     spi_device_handle_t spi;
@@ -90,15 +90,16 @@ class SSIDevice{
 };
 
 
-class SSISensor : public SensorBase<BusType>{
+class SSISensor : public SensorTemplate<BUSTYPE,SensorBase::SPI>{
     std::unique_ptr<SSIDevice> device;
-    protected:
+    public:
     int bits=12;
     int mask=0xffff;
     int cs=-1;
     int clock=0;
     bool act=false;
     float fintv=0;
+    protected:
     virtual bool initSSI(GwLog*logger,const SPIBus *bus,
         int clock,int cs, int bits){
             mask= (1 << bits)-1;
@@ -111,7 +112,7 @@ class SSISensor : public SensorBase<BusType>{
                 .flags = SPI_TRANS_USE_RXDATA,
                 .cmd = 0,
                 .addr = 0,
-                .length = bits+1,
+                .length = (size_t)bits+1,
                 .rxlength = 0};
             esp_err_t ret = spi_device_queue_trans(device->device(), &ta, portMAX_DELAY);
             if (ret != ESP_OK) return ret;
@@ -125,17 +126,16 @@ class SSISensor : public SensorBase<BusType>{
         }
 
     public:
-    SSISensor(const String &type,GwApi *api,const String &prfx, int host):SensorBase(type,api,prfx)
+    SSISensor(GwApi *api,const String &prfx):SensorTemplate<BUSTYPE,SensorBase::SPI>(api,prfx)
     {
-        busId=host;
     }
     virtual bool isActive(){return act;};
-    virtual bool initDevice(GwApi *api,BusType *bus){
+    virtual bool initDevice(GwApi *api,BUSTYPE *bus){
         return initSSI(api->getLogger(),bus, clock,cs,bits);
     };
     
 };
-using SpiSensorList=SensorList<BusType>;
+using SpiSensorList=SensorList;
 #define GWSPI1_HOST SPI2_HOST
 #define GWSPI2_HOST SPI3_HOST
 #endif

@@ -4,6 +4,7 @@
 #include "GwLog.h"
 #include "GwBuffer.h"
 #include "GwChannelInterface.h"
+#include "GwSynchronized.h"
 #if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S3
   #include "hal/usb_serial_jtag_ll.h"
 #endif
@@ -26,8 +27,12 @@ class GwSerial : public GwChannelInterface{
         virtual long getFlushTimeout(){return 2000;}
         virtual int availableForWrite()=0;
         int type=0;
+        SemaphoreHandle_t lock=nullptr;
     public:
         GwSerial(GwLog *logger,Stream *stream,int id,int type,bool allowRead=true);
+        void enableWriteLock(){
+            lock=xSemaphoreCreateMutex();
+        }
         virtual ~GwSerial();
         bool isInitialized();
         virtual size_t sendToClients(const char *buf,int sourceId,bool partial=false);
@@ -94,6 +99,7 @@ template<typename T>
                 if (c->isConnected()){
                     //this retriggers the ISR
                     usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
+                    usb_serial_jtag_ll_txfifo_flush();
                 }
             }
             return rt;

@@ -27,18 +27,19 @@ class DummyConfig : public GwConfigInterface{
 };
 
 DummyConfig dummyConfig;
-String GwConfigHandler::toString() const{
-        String rt;
-        rt+="Config: ";
-        for (int i=0;i<getNumConfig();i++){
-            rt+=configs[i]->getName();
-            rt+="=";
-            rt+=configs[i]->asString();
-            rt+=", ";
-        }
-        return rt;   
+void GwConfigHandler::logConfig(int level) const
+{
+    if (!logger->isActive(level))
+        return;
+    for (int i = 0; i < getNumConfig(); i++)
+    {
+        String v=configs[i]->asString();
+        bool isChanged=v != configs[i]->getDefault();
+        logger->logDebug(level, "Config[%s]%s='%s'", configs[i]->getName().c_str(),isChanged?"*":"", configs[i]->isSecret() ? "***" : configs[i]->asString().c_str());
+        if ((i%20) == 19) logger->flush();
     }
-
+    logger->flush();
+}
 String GwConfigHandler::toJson() const{
     String rt;
     int num=getNumConfig();
@@ -80,6 +81,9 @@ GwConfigHandler::~GwConfigHandler(){
 bool GwConfigHandler::loadConfig(){
     prefs->begin(PREF_NAME,true);
     for (int i=0;i<getNumConfig();i++){
+        if (!prefs->isKey(configs[i]->getName().c_str())) {
+             continue;
+        }
         String v=prefs->getString(configs[i]->getName().c_str(),configs[i]->getDefault());
         configs[i]->value=v;
     }

@@ -686,7 +686,7 @@ class PipelineInfo{
             let allowed=allowedResources[ak];
             if (allowed === undefined) allowed=1;
             if (resList.length > allowed){
-                errors+=" more than "+allowed+" "+k+" device(s) used";
+                errors+=" more than "+allowed+" device(s) of type "+k+" used";
             }
             
         }
@@ -867,5 +867,27 @@ class PipelineInfo{
         buildSelectors(ROOT_PATH,structure.config.children,true);
         if (! isRunning()) findPipeline();
         updateStatus();
+        const translationCheck=()=>{
+            const lang = document.documentElement.lang;
+            if (lang != "en"){
+                alert(
+                    "This page will not work correctly with translation enabled"
+                );
+            }
+        }
+        // Works at least for Chrome, Firefox, Safari and probably more. Not Microsoft
+        // Edge though. They're special.
+        // Yell at clouds if a translator doesn't change it
+        const observer = new MutationObserver(() => {
+            translationCheck();
+        });
+        observer.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ['lang'],
+            childList: false,
+            characterData: false,
+        });
+        translationCheck();
+
     }
 })();

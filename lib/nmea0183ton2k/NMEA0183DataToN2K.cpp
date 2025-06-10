@@ -189,6 +189,7 @@ private:
         if (N2kIsNA(v)) return N2kInt8NA;
         return v;
     }
+    
     void convertXDR(const SNMEA0183Msg &msg){
         XdrMappingList foundMappings;
         for (int offset=0;offset <= (msg.FieldCount()-4);offset+=4){
@@ -199,7 +200,19 @@ private:
             String unit=msg.Field(offset+2);
             String transducerName=msg.Field(offset+3);
             GwXDRFoundMapping found=xdrMappings->getMapping(transducerName,type,unit);
-            if (found.empty) continue;
+            if (found.empty) {
+                if (config.unmappedXdr){
+                    const GwXDRType *typeDef=xdrMappings->findType(type,unit);
+                    GwXdrUnknownMapping mapping(transducerName,unit,typeDef,config.xdrTimeout);
+                    value=mapping.valueFromXdr(value);
+                    if (boatData->update(value,msg.sourceId,&mapping)){
+                        //TODO: potentially update the format
+                        LOG_DEBUG(GwLog::DEBUG+1,"found unmapped XDR %s:%s, value %f",
+                        transducerName.c_str(),mapping.getBoatItemFormat().c_str(),value);
+                    }
+                }
+                continue;
+            }
             value=found.valueFromXdr(value);
             if (!boatData->update(value,msg.sourceId,&found)) continue;
             LOG_DEBUG(GwLog::DEBUG+1,"found mapped XDR %s:%s, value %f",
@@ -307,7 +320,7 @@ private:
             return;   
         }
         tN2kMsg n2kMsg;
-        if (boatData->XTE->update(rmb.xte,msg.sourceId)){
+        if (updateDouble(boatData->XTE,rmb.xte,msg.sourceId)){
             tN2kXTEMode mode=N2kxtem_Autonomous;
             if (msg.FieldCount() > 13){
                 const char *modeChar=msg.Field(13);
@@ -318,10 +331,10 @@ private:
         }
         uint8_t destinationId=getWaypointId(rmb.destID);
         uint8_t sourceId=getWaypointId(rmb.originID);
-        if (boatData->DTW->update(rmb.dtw,msg.sourceId)
-            && boatData->BTW->update(rmb.btw,msg.sourceId)
-            && boatData->WPLat->update(rmb.latitude,msg.sourceId)
-            && boatData->WPLon->update(rmb.longitude,msg.sourceId)
+        if (updateDouble(boatData->DTW,rmb.dtw,msg.sourceId)
+            && updateDouble(boatData->BTW,rmb.btw,msg.sourceId)
+            && updateDouble(boatData->WPLat,rmb.latitude,msg.sourceId)
+            && updateDouble(boatData->WPLon,rmb.longitude,msg.sourceId)
             ){
             SetN2kNavigationInfo(n2kMsg,1,rmb.dtw,N2khr_true,
                 false,
@@ -338,8 +351,8 @@ private:
                 rmb.vmg
             );
             send(n2kMsg,msg.sourceId);
-            SetN2kPGN129285(n2kMsg,sourceId,1,1,true,true,"default");
-            AppendN2kPGN129285(n2kMsg,destinationId,rmb.destID,rmb.latitude,rmb.longitude);
+            SetN2kRouteWPInfo(n2kMsg,sourceId,1,1,N2kdir_forward,"default");
+            AppendN2kRouteWPInfo(n2kMsg,destinationId,rmb.destID,rmb.latitude,rmb.longitude);
             send(n2kMsg,msg.sourceId);
             }
     }
@@ -625,8 +638,8 @@ private:
         for (int i=0;i< 3;i++){
             if (msg.FieldLen(0)>0){
                 Depth=atof(msg.Field(0));
-                char dt=msg.Field(i+1)[0];
-                switch(dt){
+                char du=msg.Field(i+1)[0];
+                switch(du){
                     case 'f':
                         Depth=Depth/mToFeet;
                         break;
@@ -649,8 +662,9 @@ private:
                 //we can only send if we have a valid depth beloww tranducer
                 //to compute the offset
                 if (! boatData->DBT->isValid()) return;
-                double offset=Depth-boatData->DBT->getData();
-                if (offset >= 0 && dt == DBT){
+                double dbt=boatData->DBT->getData();
+                double offset=Depth-dbt;
+                if (offset >= 0 && dt == DBK){
                     logger->logDebug(GwLog::DEBUG, "strange DBK - more depth then transducer %s", msg.line);    
                     return;
                 }
@@ -662,8 +676,8 @@ private:
                     if (! boatData->DBS->update(Depth,msg.sourceId)) return;
                 }
                 tN2kMsg n2kMsg;
-                SetN2kWaterDepth(n2kMsg,1,Depth,offset);
-                send(n2kMsg,msg.sourceId,(n2kMsg.PGN)+String((offset != N2kDoubleNA)?1:0));
+                SetN2kWaterDepth(n2kMsg,1,dbt,offset); //on the N2K side we always have depth below transducer
+                send(n2kMsg,msg.sourceId,(n2kMsg.PGN)+String((offset >=0)?1:0));
             }            
         }        
     }
