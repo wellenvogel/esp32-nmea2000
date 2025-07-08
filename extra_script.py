@@ -547,3 +547,17 @@ env.Append(
 )
 #script does not run on clean yet - maybe in the future
 env.AddPostAction("clean",cleangenerated)
+
+#look for extra task scripts and include them here
+for taskdir in userTaskDirs:
+    script = os.path.join(taskdir, "extra_task.py")
+    if os.path.isfile(script):
+        taskname = os.path.basename(os.path.normpath(taskdir))
+        print("#extra task script for '{}'".format(taskname))
+        with open(script) as fh:
+            try:
+                code = compile(fh.read(), task, 'exec')
+            except SyntaxError:
+                print("#ERROR: script does not compile")
+                continue
+            exec(code)
