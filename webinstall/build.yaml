@@ -179,6 +179,11 @@ types:
         description: "M5 Gps Unit"
         url: "https://docs.m5stack.com/en/unit/gps"
         resource: serial
+      - label: "Gps Unit v1.1"
+        value: M5_GPSV11_UNIT#grv#
+        description: "M5 Gps Unit v1.1"
+        url: "https://docs.m5stack.com/en/unit/Unit-GPS%20v1.1"
+        resource: serial
       - label: "RS232/RS422"
         value: SERIAL_GROOVE_232#grv#
         description: "Generic RS232/RS422 Unit (bidirectional)"

@@ -44,6 +44,13 @@
 #endif
 
 #GROVE
+//https://docs.m5stack.com/en/unit/Unit-GPS%20v1.1
+#ifdef M5_GPSV11_UNIT$GS$
+  GWRESOURCE_USE(GROOVE$G$,M5_GPSV11_UNIT$GS$)
+  #define _GWI_SERIAL_GROOVE$GS$ GWSERIAL_TYPE_RX,115200
+#endif
+
+#GROVE
 //CAN via groove 
 #ifdef M5_CANUNIT$GS$
   GWRESOURCE_USE(GROOVE$G$,M5_CANUNIT$GS$)
