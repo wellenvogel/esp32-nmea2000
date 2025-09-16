@@ -68,12 +68,12 @@ Initial Flash
 __Browser__
 
 If you run a system with a modern Chrome or Edge Browser you can directly flash your device from within the browser.
-Just go to the [Flash Page](https://wellenvogel.github.io/esp32-nmea2000/install.html) and select the "Initial" flash for your Hardware. This will install the most current software to your device.
+Just go to the [Flash Page](https://wellenvogel.de/software/esp32/install.html) and select the "Initial" flash for your Hardware. This will install the most current software to your device. If you are using a forked project (like OBP60) refer to the documentation of the fork. You can just install any flash binary from your local computer with the browser based installation using the "upload" button.<br>
 If you are on Windows you will need to have the correct driver installed before (see below at [windows users](#windows) - only install the driver, not the flashtool).
 
 You can also install an update from the flash page but normally it is easier to do this from the Web Gui of the device (see [below](#update)).
 
-The [Flash Page](https://wellenvogel.github.io/esp32-nmea2000/install.html) will also allow you to open a console window to your ESP32.
+The [Flash Page](https://wellenvogel.de/software/esp32/install.html) will also allow you to open a console window to your ESP32.
 
 __Tool based__
 
