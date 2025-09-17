@@ -43,6 +43,10 @@ What is included
 
 For the details of the mapped PGNs and NMEA sentences refer to [Conversions](doc/Conversions.pdf).
 
+License
+-------
+This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either [version 2 of the License](LICENSE), or (at your option) any later version.
+
 Hardware
 --------
 The software is prepared to run on different kinds of ESP32 based modules and accessoirs. For some of them prebuild binaries are available that only need to be flashed, others would require to add some definitions of the used PINs and features and to build the binary.
