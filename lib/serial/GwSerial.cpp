@@ -79,6 +79,9 @@ String GwSerial::getMode(){
     }
     return "UNKNOWN";
 }
+int GwSerial::getType() {
+    return type;
+}
 
 bool GwSerial::isInitialized() { return initialized; }
 size_t GwSerial::enqueue(const uint8_t *data, size_t len, bool partial)

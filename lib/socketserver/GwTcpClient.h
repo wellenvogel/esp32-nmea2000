@@ -53,4 +53,5 @@ public:
     virtual void readMessages(GwMessageFetcher *writer);
     bool isConnected();
     String getError(){return error;}
+    virtual int getType() override;
 };

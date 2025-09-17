@@ -4,6 +4,7 @@
 #include "GwBuffer.h"
 #include "GwSocketConnection.h"
 #include "GwSocketHelper.h"
+#include "GwHardware.h"
 
 GwSocketServer::GwSocketServer(const GwConfigHandler *config, GwLog *logger, int minId)
 {
@@ -186,3 +187,5 @@ int GwSocketServer::numClients()
 GwSocketServer::~GwSocketServer()
 {
 }
+
+int GwSocketServer::getType() {return GWSERIAL_TYPE_BI;}

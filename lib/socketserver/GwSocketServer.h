@@ -27,5 +27,6 @@ class GwSocketServer: public GwChannelInterface{
         virtual size_t sendToClients(const char *buf,int sourceId, bool partialWrite=false);
         int numClients();
         virtual void readMessages(GwMessageFetcher *writer);
+        virtual int getType() override;
 };
 #endif

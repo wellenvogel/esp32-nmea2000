@@ -41,5 +41,6 @@ class GwUdpReader: public GwChannelInterface{
         virtual void loop(bool handleRead=true,bool handleWrite=true);
         virtual size_t sendToClients(const char *buf,int sourceId, bool partialWrite=false);
         virtual void readMessages(GwMessageFetcher *writer);
+        virtual int getType() override;
 };
 #endif

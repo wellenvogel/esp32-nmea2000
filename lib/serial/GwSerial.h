@@ -43,6 +43,7 @@ class GwSerial : public GwChannelInterface{
         bool getAvailableWrite(){return availableWrite;}
         virtual void begin(unsigned long baud, uint32_t config=SERIAL_8N1, int8_t rxPin=-1, int8_t txPin=-1)=0;
         virtual String getMode() override;
+        virtual int getType() override;
     friend GwSerialStream;
 };
 
@@ -121,6 +122,7 @@ template<typename T>
             beginImpl(serial,baud,config,rxPin,txPin);
             setError(serial,logger);
         };
+
 
     };
 

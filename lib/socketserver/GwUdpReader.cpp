@@ -5,6 +5,7 @@
 #include "GwSocketConnection.h"
 #include "GwSocketHelper.h"
 #include "GWWifi.h"
+#include "GwHardware.h"
 
 
 GwUdpReader::GwUdpReader(const GwConfigHandler *config, GwLog *logger, int minId)
@@ -165,3 +166,4 @@ size_t GwUdpReader::sendToClients(const char *buf, int source,bool partial)
 GwUdpReader::~GwUdpReader()
 {
 }
+int GwUdpReader::getType(){return GWSERIAL_TYPE_BI;}

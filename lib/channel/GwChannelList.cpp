@@ -285,8 +285,8 @@ static  ChannelParam channelParameters[]={
 };
 
 template<typename T>
-GwSerial* createSerial(GwLog *logger, T* s,int id, bool canRead=true){
-    return new GwSerialImpl<T>(logger,s,id,canRead);
+GwSerial* createSerial(GwLog *logger, T* s,int id, int type, bool canRead=true){
+    return new GwSerialImpl<T>(logger,s,id,type,canRead);
 } 
 
 static ChannelParam * findChannelParam(int id){
@@ -300,7 +300,7 @@ static ChannelParam * findChannelParam(int id){
     return param;
 }
 
-static GwSerial * createSerialImpl(GwConfigHandler *config,GwLog *logger, int idx,int rx,int tx, bool setLog=false){
+static GwSerial * createSerialImpl(GwConfigHandler *config,GwLog *logger, int idx,int type,int rx,int tx, bool setLog){
     LOG_DEBUG(GwLog::DEBUG,"create serial: channel=%d, rx=%d,tx=%d",
         idx,rx,tx);
     ChannelParam *param=findChannelParam(idx);
@@ -312,13 +312,13 @@ static GwSerial * createSerialImpl(GwConfigHandler *config,GwLog *logger, int id
     GwLog *streamLog=setLog?nullptr:logger;
     switch(param->id){
         case USB_CHANNEL_ID:
-            serialStream=createSerial(streamLog,&USBSerial,param->id);
+            serialStream=createSerial(streamLog,&USBSerial,param->id,type);
             break;
         case SERIAL1_CHANNEL_ID:
-            serialStream=createSerial(streamLog,&Serial1,param->id);
+            serialStream=createSerial(streamLog,&Serial1,param->id,type);
             break;
         case SERIAL2_CHANNEL_ID:
-            serialStream=createSerial(streamLog,&Serial2,param->id);
+            serialStream=createSerial(streamLog,&Serial2,param->id,type);
             break;
     }
     if (serialStream == nullptr){
@@ -332,12 +332,13 @@ static GwSerial * createSerialImpl(GwConfigHandler *config,GwLog *logger, int id
     }
     return serialStream;
 }
-static GwChannel * createChannel(GwLog *logger, GwConfigHandler *config, int id,GwChannelInterface *impl, int type=GWSERIAL_TYPE_BI){
+static GwChannel * createChannel(GwLog *logger, GwConfigHandler *config, int id,GwChannelInterface *impl){
     ChannelParam *param=findChannelParam(id);
     if (param == nullptr){
         LOG_DEBUG(GwLog::ERROR,"invalid channel id %d",id);
         return nullptr;
     }
+    int type=impl->getType();
     bool canRead=false;
     bool canWrite=false;
     bool validType=false;
@@ -425,10 +426,10 @@ void GwChannelList::begin(bool fallbackSerial){
     GwChannel *channel=NULL;
     //usb
     if (! fallbackSerial){
-        GwSerial *usbSerial=createSerialImpl(config, logger,USB_CHANNEL_ID,GWUSB_RX,GWUSB_TX,true);
+        GwSerial *usbSerial=createSerialImpl(config, logger,USB_CHANNEL_ID,GWSERIAL_TYPE_BI,GWUSB_RX,GWUSB_TX,true);
         if (usbSerial != nullptr){
             usbSerial->enableWriteLock(); //as it is used for logging we need this additionally
-            GwChannel *usbChannel=createChannel(logger,config,USB_CHANNEL_ID,usbSerial,GWSERIAL_TYPE_BI);
+            GwChannel *usbChannel=createChannel(logger,config,USB_CHANNEL_ID,usbSerial);
             if (usbChannel != nullptr){
                 addChannel(usbChannel);
             }
@@ -445,9 +446,9 @@ void GwChannelList::begin(bool fallbackSerial){
     //new serial config handling
     for (auto &&init:serialInits){
         LOG_INFO("creating serial channel %d, rx=%d,tx=%d,type=%d",init.serial,init.rx,init.tx,init.mode);
-        GwSerial *ser=createSerialImpl(config,logger,init.serial,init.rx,init.tx);
+        GwSerial *ser=createSerialImpl(config,logger,init.serial,init.mode,init.rx,init.tx,false);
         if (ser != nullptr){
-            channel=createChannel(logger,config,init.serial,ser,init.mode);
+            channel=createChannel(logger,config,init.serial,ser);
             if (channel != nullptr){
                 addChannel(channel);
             }
@@ -466,8 +467,8 @@ void GwChannelList::begin(bool fallbackSerial){
             config->getInt(config->remotePort),
             config->getBool(config->readTCL)
         );
+        addChannel(createChannel(logger,config,TCP_CLIENT_CHANNEL_ID,client));
     }
-    addChannel(createChannel(logger,config,TCP_CLIENT_CHANNEL_ID,client));
 
     //udp writer
     if (config->getBool(GwConfigDefinitions::udpwEnabled)){
