@@ -77,7 +77,8 @@ class GwChannel{
         if (maxSourceId < 0) return source == sourceId;
         return (source >= sourceId && source <= maxSourceId);
     }
-    String getMode(){return impl->getMode();}
+    static String typeString(int type);
+    String getMode(){return typeString(impl->getType());}
     int getMinId(){return sourceId;};
 };
 

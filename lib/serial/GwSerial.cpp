@@ -66,19 +66,6 @@ GwSerial::~GwSerial()
     if (lock != nullptr) vSemaphoreDelete(lock);
 }
 
-String GwSerial::getMode(){
-    switch (type){
-        case GWSERIAL_TYPE_UNI:
-            return "UNI";
-        case GWSERIAL_TYPE_BI:
-            return "BI";
-        case GWSERIAL_TYPE_RX:
-            return "RX";
-        case GWSERIAL_TYPE_TX:
-            return "TX";
-    }
-    return "UNKNOWN";
-}
 int GwSerial::getType() {
     return type;
 }

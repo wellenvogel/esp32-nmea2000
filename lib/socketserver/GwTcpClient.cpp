@@ -2,7 +2,6 @@
 #include <functional>
 #include <ESPmDNS.h>
 #include "GwSocketHelper.h"
-#include "GwHardware.h"
 
 class ResolveArgs{
     public:
@@ -293,5 +292,3 @@ GwTcpClient::ResolvedAddress GwTcpClient::getResolved(){
     GWSYNCHRONIZED(locker);
     return resolvedAddress;
 }
-
-int GwTcpClient::getType(){return GWSERIAL_TYPE_BI;}

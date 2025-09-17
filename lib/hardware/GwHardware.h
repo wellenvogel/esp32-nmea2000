@@ -20,11 +20,7 @@
 #endif
 #ifndef _GWHARDWARE_H
 #define _GWHARDWARE_H
-#define GWSERIAL_TYPE_UNI 1
-#define GWSERIAL_TYPE_BI 2
-#define GWSERIAL_TYPE_RX 3
-#define GWSERIAL_TYPE_TX 4
-#define GWSERIAL_TYPE_UNK 0
+#include "GwChannelModes.h"
 #include <GwConfigItem.h>
 #include <HardwareSerial.h>
 #include "GwAppInfo.h"

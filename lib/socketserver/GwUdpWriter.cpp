@@ -5,7 +5,6 @@
 #include "GwSocketConnection.h"
 #include "GwSocketHelper.h"
 #include "GWWifi.h"
-#include "GwHardware.h"
 
 GwUdpWriter::WriterSocket::WriterSocket(GwLog *l,int p,const String &src,const String &dst, SourceMode sm) :
      sourceMode(sm), source(src), destination(dst), port(p),logger(l)
@@ -202,5 +201,3 @@ size_t GwUdpWriter::sendToClients(const char *buf, int source,bool partial)
 GwUdpWriter::~GwUdpWriter()
 {
 }
-
-int GwUdpWriter::getType() {return GWSERIAL_TYPE_BI;}
