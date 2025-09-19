@@ -713,7 +713,6 @@ private:
     void HandleAISClassAPosReport(const tN2kMsg &N2kMsg)
     {
 
-        unsigned char SID;
         tN2kAISRepeat _Repeat;
         uint32_t _UserID; // MMSI
         double _Latitude =N2kDoubleNA;
@@ -732,7 +731,7 @@ private:
         uint8_t _MessageType = 1;
         tNMEA0183AISMsg NMEA0183AISMsg;
 
-        if (ParseN2kPGN129038(N2kMsg, SID, _Repeat, _UserID, _Latitude, _Longitude, _Accuracy, _RAIM, _Seconds,
+        if (ParseN2kPGN129038(N2kMsg, _MessageType, _Repeat, _UserID, _Latitude, _Longitude, _Accuracy, _RAIM, _Seconds,
                               _COG, _SOG, _Heading, _ROT, _NavStatus,_AISTransceiverInformation,_SID))
         {
 
@@ -770,6 +769,7 @@ private:
             Serial.println(_NavStatus);
 #endif
 
+            if (_MessageType < 1 || _MessageType > 3) _MessageType=1; //only allow type 1...3 for 129038
             if (SetAISClassABMessage1(NMEA0183AISMsg, _MessageType, _Repeat, _UserID, _Latitude, _Longitude, _Accuracy,
                                       _RAIM, _Seconds, _COG, _SOG, _Heading, _ROT, _NavStatus))
             {
