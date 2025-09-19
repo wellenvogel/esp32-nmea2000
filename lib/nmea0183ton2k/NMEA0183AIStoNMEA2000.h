@@ -27,6 +27,8 @@ const double nmTom = 1.852 * 1000;
 
 uint16_t DaysSince1970 = 0;
 
+#define boolbit(b) (b?1:0)
+
 class MyAisDecoder : public AIS::AisDecoder
 {
   public:
@@ -255,9 +257,40 @@ class MyAisDecoder : public AIS::AisDecoder
       send(N2kMsg);      
     }
 
-
-    virtual void onType21(unsigned int , unsigned int , const std::string &, bool , int , int , unsigned int , unsigned int , unsigned int , unsigned int ) override {
+    //mmsi, aidType, name + nameExt, posAccuracy, posLon, posLat, toBow, toStern, toPort, toStarboard
+    virtual void onType21(unsigned int mmsi , unsigned int aidType , const std::string & name, bool accuracy, int posLon, int posLat, unsigned int toBow, unsigned int toStern, unsigned int toPort, unsigned int toStarboard) override {
       //Serial.println("21");
+      //in principle we should use tN2kAISAtoNReportData to directly call the library
+      //function for 129041. But this makes the conversion really complex.
+      int repeat=0; //TODO: should be part of the parameters
+      int seconds=0;
+      bool raim=false;
+      bool offPosition=false;
+      bool assignedMode=false;
+      bool virtualAton=false;
+      tN2kGNSStype gnssType=tN2kGNSStype::N2kGNSSt_GPS; //canboat considers 0 as undefined...
+      tN2kAISTransceiverInformation transceiverInfo=tN2kAISTransceiverInformation::N2kaischannel_A_VDL_reception;
+      tN2kMsg N2kMsg;
+      N2kMsg.SetPGN(129041);
+      N2kMsg.Priority=4;
+      N2kMsg.AddByte((repeat & 0x03) << 6 | (21 & 0x3f));
+      N2kMsg.Add4ByteUInt(mmsi); //N2kData.UserID
+      N2kMsg.Add4ByteDouble(posLon / 600000.0, 1e-07);
+      N2kMsg.Add4ByteDouble(posLat / 600000.0, 1e-07);
+      N2kMsg.AddByte((seconds & 0x3f)<<2 | boolbit(raim)<<1 | boolbit(accuracy)); 
+      N2kMsg.Add2ByteUDouble(toBow+toStern, 0.1);
+      N2kMsg.Add2ByteUDouble(toPort+toStarboard, 0.1);
+      N2kMsg.Add2ByteUDouble(toStarboard, 0.1);
+      N2kMsg.Add2ByteUDouble(toBow, 0.1);
+      N2kMsg.AddByte(boolbit(assignedMode) << 7 
+                    | boolbit(virtualAton) << 6 
+                    | boolbit(offPosition) << 5
+                    | (aidType & 0x1f)); 
+      N2kMsg.AddByte((gnssType & 0x0F) << 1 | 0xe0);
+      N2kMsg.AddByte(N2kUInt8NA); //status
+      N2kMsg.AddByte((transceiverInfo & 0x1f) | 0xe0);
+      N2kMsg.AddVarStr(name.c_str());
+      send(N2kMsg);
     }
 
     virtual void onType24A(unsigned int _uMsgType, unsigned int _repeat, unsigned int _uMmsi,
