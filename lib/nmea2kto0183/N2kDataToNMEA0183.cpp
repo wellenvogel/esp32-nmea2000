@@ -1076,6 +1076,40 @@ private:
         return;
     }
 
+    //*****************************************************************************
+    // PGN 129041 Aton
+    void HandleAISMessage21(const tN2kMsg &N2kMsg)
+    {
+        tN2kAISAtoNReportData data;
+        if (ParseN2kPGN129041(N2kMsg,data)){
+            tNMEA0183AISMsg nmea0183Msg;
+            if (SetAISMessage21(
+                nmea0183Msg,
+                data.Repeat,
+                data.UserID,
+                data.Latitude,
+                data.Longitude,
+                data.Accuracy,
+                data.RAIM,
+                data.Seconds,
+                data.Length,
+                data.Beam,
+                data.PositionReferenceStarboard,
+                data.PositionReferenceTrueNorth,
+                data.AtoNType,
+                data.OffPositionIndicator,
+                data.VirtualAtoNFlag,
+                data.AssignedModeFlag,
+                data.GNSSType,
+                data.AtoNStatus,
+                data.AISTransceiverInformation,
+                data.AtoNName
+            )){
+                //TODO: SendMessage(nmea0183Msg);
+            }
+        }
+    }
+
     void HandleSystemTime(const tN2kMsg &msg){
         unsigned char sid=-1;
         uint16_t DaysSince1970=N2kUInt16NA;
@@ -1614,6 +1648,7 @@ private:
       converters.registerConverter(129794UL, &N2kToNMEA0183Functions::HandleAISClassAMessage5);   // AIS Class A Ship Static and Voyage related data, Message Type 5
       converters.registerConverter(129809UL, &N2kToNMEA0183Functions::HandleAISClassBMessage24A); // AIS Class B "CS" Static Data Report, Part A
       converters.registerConverter(129810UL, &N2kToNMEA0183Functions::HandleAISClassBMessage24B); // AIS Class B "CS" Static Data Report, Part B
+      converters.registerConverter(129041UL, &N2kToNMEA0183Functions::HandleAISMessage21);        // AIS Aton
 #endif
     }
 
