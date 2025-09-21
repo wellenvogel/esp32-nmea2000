@@ -84,25 +84,24 @@ class MyAisDecoder : public AIS::AisDecoder
 
       tN2kMsg N2kMsg;
 
-      // PGN129038
-      
-      N2kMsg.SetPGN(129038L);
-      N2kMsg.Priority = 4;
-      N2kMsg.AddByte((_Repeat & 0x03) << 6 | (_uMsgType & 0x3f));
-      N2kMsg.Add4ByteUInt(_uMmsi);
-      N2kMsg.Add4ByteDouble(_iPosLon / 600000.0, 1e-07);
-      N2kMsg.Add4ByteDouble(_iPosLat / 600000.0, 1e-07);
-      N2kMsg.AddByte((_timestamp & 0x3f) << 2 | (_Raim & 0x01) << 1 | (_bPosAccuracy & 0x01));
-      N2kMsg.Add2ByteUDouble(decodeCog(_iCog), 1e-04);
-      N2kMsg.Add2ByteUDouble(_uSog * knToms/10.0, 0.01);
-      N2kMsg.AddByte(0x00); // Communication State (19 bits)
-      N2kMsg.AddByte(0x00);
-      N2kMsg.AddByte(0x00); // AIS transceiver information (5 bits)
-      N2kMsg.Add2ByteUDouble(decodeHeading(_iHeading), 1e-04);
-      N2kMsg.Add2ByteDouble(decodeRot(_iRot), 3.125E-05); // 1e-3/32.0
-      N2kMsg.AddByte(0xF0 | (_uNavstatus & 0x0f));
-      N2kMsg.AddByte(0xff); // Reserved
-      N2kMsg.AddByte(0xff); // SID (NA)
+      SetN2kPGN129038(
+        N2kMsg,
+        _uMsgType,
+        (tN2kAISRepeat)_Repeat,
+        _uMmsi,
+        _iPosLon/ 600000.0,
+        _iPosLat / 600000.0,
+        _bPosAccuracy,
+        _Raim,
+        _timestamp,
+        decodeCog(_iCog),
+        _uSog * knToms/10.0,
+        tN2kAISTransceiverInformation::N2kaischannel_A_VDL_reception,
+        decodeHeading(_iHeading),
+        decodeRot(_iRot),
+        (tN2kAISNavStatus)_uNavstatus,
+        0xff
+      );
 
       send(N2kMsg);
     }
@@ -258,16 +257,14 @@ class MyAisDecoder : public AIS::AisDecoder
     }
 
     //mmsi, aidType, name + nameExt, posAccuracy, posLon, posLat, toBow, toStern, toPort, toStarboard
-    virtual void onType21(unsigned int mmsi , unsigned int aidType , const std::string & name, bool accuracy, int posLon, int posLat, unsigned int toBow, unsigned int toStern, unsigned int toPort, unsigned int toStarboard) override {
+    virtual void onType21(unsigned int mmsi , unsigned int aidType , const std::string & name, bool accuracy, int posLon, int posLat, unsigned int toBow, 
+      unsigned int toStern, unsigned int toPort, unsigned int toStarboard,
+      unsigned int repeat,unsigned int timestamp, bool raim, bool virtualAton, bool offPosition) override {
       //Serial.println("21");
+      //the name can be at most 120bit+88bit (35 byte) + termination -> 36 Byte
       //in principle we should use tN2kAISAtoNReportData to directly call the library
       //function for 129041. But this makes the conversion really complex.
-      int repeat=0; //TODO: should be part of the parameters
-      int seconds=0;
-      bool raim=false;
-      bool offPosition=false;
       bool assignedMode=false;
-      bool virtualAton=false;
       tN2kGNSStype gnssType=tN2kGNSStype::N2kGNSSt_GPS; //canboat considers 0 as undefined...
       tN2kAISTransceiverInformation transceiverInfo=tN2kAISTransceiverInformation::N2kaischannel_A_VDL_reception;
       tN2kMsg N2kMsg;
@@ -277,7 +274,7 @@ class MyAisDecoder : public AIS::AisDecoder
       N2kMsg.Add4ByteUInt(mmsi); //N2kData.UserID
       N2kMsg.Add4ByteDouble(posLon / 600000.0, 1e-07);
       N2kMsg.Add4ByteDouble(posLat / 600000.0, 1e-07);
-      N2kMsg.AddByte((seconds & 0x3f)<<2 | boolbit(raim)<<1 | boolbit(accuracy)); 
+      N2kMsg.AddByte((timestamp & 0x3f)<<2 | boolbit(raim)<<1 | boolbit(accuracy)); 
       N2kMsg.Add2ByteUDouble(toBow+toStern, 0.1);
       N2kMsg.Add2ByteUDouble(toPort+toStarboard, 0.1);
       N2kMsg.Add2ByteUDouble(toStarboard, 0.1);
@@ -289,6 +286,8 @@ class MyAisDecoder : public AIS::AisDecoder
       N2kMsg.AddByte((gnssType & 0x0F) << 1 | 0xe0);
       N2kMsg.AddByte(N2kUInt8NA); //status
       N2kMsg.AddByte((transceiverInfo & 0x1f) | 0xe0);
+      //bit offset 208 (see canboat/pgns.xml) -> 26 bytes from start
+      //as MaxDataLen is 223 and the string can be at most 36 bytes + 2 byte heading - no further check here 
       N2kMsg.AddVarStr(name.c_str());
       send(N2kMsg);
     }

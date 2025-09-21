@@ -297,7 +297,8 @@ namespace AIS
                               bool assigned, unsigned int repeat, bool raim) = 0;
         
         virtual void onType21(unsigned int _uMmsi, unsigned int _uAidType, const std::string &_strName, bool _bPosAccuracy, int _iPosLon, int _iPosLat,
-                              unsigned int _uToBow, unsigned int _uToStern, unsigned int _uToPort, unsigned int _uToStarboard) = 0;
+                              unsigned int _uToBow, unsigned int _uToStern, unsigned int _uToPort, unsigned int _uToStarboard, 
+                              unsigned int repeat,unsigned int timestamp, bool raim, bool virtualAton, bool offPosition) = 0;
         
         virtual void onType24A(unsigned int _uMsgType, unsigned int _repeat, unsigned int _uMmsi, const std::string &_strName) = 0;
         

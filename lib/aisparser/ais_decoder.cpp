@@ -627,7 +627,7 @@ void AisDecoder::decodeType21(PayloadBuffer &_buffer, unsigned int _uMsgType, in
   }
 
   // decode message fields (binary buffer has to go through all fields, but some fields are not used)
-  _buffer.getUnsignedValue(2);                 // repeatIndicator
+  auto repeat=_buffer.getUnsignedValue(2);                 // repeatIndicator
   auto mmsi = _buffer.getUnsignedValue(30);
   auto aidType = _buffer.getUnsignedValue(5);
   auto name = _buffer.getString(120);
@@ -640,11 +640,11 @@ void AisDecoder::decodeType21(PayloadBuffer &_buffer, unsigned int _uMsgType, in
   auto toStarboard = _buffer.getUnsignedValue(6);
 
   _buffer.getUnsignedValue(4);        // epfd type
-  _buffer.getUnsignedValue(6);        // timestamp
-  _buffer.getBoolValue();             // off position
+  auto timestamp=_buffer.getUnsignedValue(6);        // timestamp
+  auto offPosition=_buffer.getBoolValue();             // off position
   _buffer.getUnsignedValue(8);        // reserved
-  _buffer.getBoolValue();             // RAIM
-  _buffer.getBoolValue();             // virtual aid
+  auto raim=_buffer.getBoolValue();             // RAIM
+  auto virtualAton=_buffer.getBoolValue();             // virtual aid
   _buffer.getBoolValue();             // assigned mode
   _buffer.getUnsignedValue(1);        // spare
 
@@ -654,7 +654,9 @@ void AisDecoder::decodeType21(PayloadBuffer &_buffer, unsigned int _uMsgType, in
     nameExt = _buffer.getString(88);
   }
 
-  onType21(mmsi, aidType, name + nameExt, posAccuracy, posLon, posLat, toBow, toStern, toPort, toStarboard);
+  onType21(mmsi, aidType, name + nameExt, posAccuracy, posLon, posLat, 
+    toBow, toStern, toPort, toStarboard,
+    repeat,timestamp, raim, virtualAton, offPosition);
 }
 
 /* decode Voyage Report and Static Data (type nibble already pulled from buffer) */
