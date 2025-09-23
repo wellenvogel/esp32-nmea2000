@@ -4,6 +4,7 @@ import sys
 import os
 import datetime
 import getopt
+import time
 
 ###generated with getPgnType.py from canboat pgns.json
 PGNM_Fast=0
@@ -422,6 +423,7 @@ class CanFrame:
         self.prio=prio
         self.sequence=None
         self.frame=None
+        self.len=8
         if self.mode == PGNM_Fast and data is not None and len(self.data) >= 2:
             fb=int(data[0:2],16)
             self.frame=fb & 0x1f
@@ -443,7 +445,7 @@ class CanFrame:
         return frames
     
     def __str__(self):
-        return f"{self.ts},{self.prio},{self.pgn},{self.src},{self.dst},{int(len(self.data)/2 if self.data else 0)},{dataToSep(self.data)}"
+        return f"{self.ts},{self.prio},{self.pgn},{self.src},{self.dst},{self.len},{dataToSep(self.data)}"
     
     
     @classmethod
@@ -476,10 +478,14 @@ class CanFrame:
     
 class MultiFrame:
     def __init__(self,firstFrame: CanFrame):
-        self.bytes=""
-        self.firstFrame=firstFrame
+        self.data=""
+        self.prio=firstFrame.prio
+        self.pgn=firstFrame.pgn
+        self.src=firstFrame.src
+        self.dst=firstFrame.dst
+        self.ts=firstFrame.ts
         self.numFrames=firstFrame.getFPNum(bytes=False)
-        self.numBytes=firstFrame.getFPNum(bytes=True)
+        self.len=firstFrame.getFPNum(bytes=True)
         self.finished=False
         self.addFrame(firstFrame)
     def addFrame(self,frame:CanFrame):
@@ -488,27 +494,102 @@ class MultiFrame:
         if frame.frame is None:
             return False
         if frame.frame == 0:
-            self.bytes+=frame.data[4:]
+            self.data+=frame.data[4:]
         else:
-            self.bytes+=frame.data[2:]
+            self.data+=frame.data[2:]
         if frame.frame >= (self.numFrames-1):
             self.finished=True
             return True
     
     def __str__(self):
-        return f"{self.firstFrame.ts},{self.firstFrame.prio},{self.firstFrame.pgn},{self.firstFrame.src},{self.firstFrame.dst},{self.numBytes},{dataToSep(self.bytes,self.numBytes)}"
+        return f"{self.ts},{self.prio},{self.pgn},{self.src},{self.dst},{self.len},{dataToSep(self.data,self.numBytes)}"
 
 def usage():
-    print(f"usage: {sys.argv[0]} [-q] [-p pgn,pgn,...] file")
+    print(f"usage: {sys.argv[0]} [-q] [-p pgn,pgn,...] [-w waitsec] [ -f plain|actisense] file")
     sys.exit(1)
+
+F_PLAIN=0
+F_ACT=1
+FORMATS={
+    'plain':F_PLAIN,
+    'actisense':F_ACT
+}
+
+MAX_ACT=400
+ACT_ESC=0x10
+ACT_START=0x2
+ACT_N2K=0x93
+ACT_END=0x3
+
+class ActBuffer:
+    def __init__(self):
+        self.buf=bytearray(MAX_ACT)
+        self.sum=0
+        self.idx=0
+        self.clear()
+    def clear(self):
+        self.sum=0
+        self.idx=2
+        self.buf[0:2]=(ACT_ESC,ACT_START)
+    def add(self,val):
+        #TODO: len check?
+        val=val & 0xff
+        self.buf[self.idx]=val
+        self.sum = (self.sum + val) & 0xff
+        self.idx+=1
+        if val == ACT_ESC:
+            self.buf[self.idx]=ACT_ESC
+            self.idx+=1
+    def finalize(self):
+        self.sum=self.sum % 256
+        self.sum = 256 - self.sum if self.sum != 0 else 0
+        self.add(self.sum)
+        self.buf[self.idx]=ACT_ESC
+        self.idx+=1
+        self.buf[self.idx]=ACT_END
+        self.idx+=1
+
+actBuffer=ActBuffer()
+
+def send_act(frame_like,quiet):
+    try:
+        actBuffer.clear()
+        actBuffer.add(ACT_N2K)
+        actBuffer.add(frame_like.len+11)
+        actBuffer.add(frame_like.prio)
+        pgn=frame_like.pgn
+        actBuffer.add(pgn)
+        pgn = pgn >> 8
+        actBuffer.add(pgn)
+        pgn = pgn >> 8;
+        actBuffer.add(pgn)
+        actBuffer.add(frame_like.dst)
+        actBuffer.add(frame_like.src)
+        #Time
+        actBuffer.add(0)
+        actBuffer.add(0)
+        actBuffer.add(0)
+        actBuffer.add(0)
+
+        actBuffer.add(frame_like.len)
+        for i in range(0,frame_like.len*2,2):
+            actBuffer.add(int(frame_like.data[i:i+2],16))
+        actBuffer.finalize()
+        sys.stdout.buffer.write(memoryview(actBuffer.buf)[0:actBuffer.idx])
+        sys.stdout.buffer.flush()
+    except Exception as e:
+        if not quiet:
+            print(f"Error writing actisense for pgn {frame_like.pgn}, idx={actBuffer.idx}: {e}",file=sys.stderr)
 
 if __name__ == '__main__':
     try:
-        opts,args=getopt.getopt(sys.argv[1:],"hp:q")
-    except getopt.GetoptError as err:
-        err(err)
+        opts,args=getopt.getopt(sys.argv[1:],"hp:qw:f:")
+    except getopt.GetoptError as e:
+        logError(e)
     pgnlist=[]
     quiet=False
+    delay=0.0
+    format=F_PLAIN
     for o,a in opts:
         if o == '-h':
             usage()
@@ -517,6 +598,12 @@ if __name__ == '__main__':
         elif o == '-p':
             pgns=(int(x) for x in a.split(","))
             pgnlist.extend(pgns)
+        elif o == '-w':
+            delay=float(a)
+        elif o == '-f':
+            format=FORMATS.get(a)
+            if format is None:
+                logError(f"invalid format {a}, allowed {','.join(FORMATS.keys())}")
     if len(args) < 1:
         usage()
     hasFilter=len(pgnlist) > 0
@@ -531,7 +618,12 @@ if __name__ == '__main__':
             if hasFilter and not frame.pgn in pgnlist:
                 continue
             if frame.sequence is None:
-                print(frame)
+                if format == F_PLAIN:
+                    print(frame)
+                else:
+                    send_act(frame,quiet)
+                if delay > 0:
+                    time.sleep(delay)
             else:
                 key=frame.key()
                 mf=buffer.get(key)
@@ -548,6 +640,12 @@ if __name__ == '__main__':
                     mf.addFrame(frame)
                     mustDelete=True
                 if mf.finished:
-                    print(mf)
-                    del buffer[key]    
+                    if format == F_PLAIN:
+                        print(mf)
+                    else:
+                        send_act(mf,quiet)
+                    if mustDelete:
+                        del buffer[key]
+                    if delay > 0:
+                        time.sleep(delay)    
         
