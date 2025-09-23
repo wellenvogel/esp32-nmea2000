@@ -3,6 +3,7 @@ import re
 import sys
 import os
 import datetime
+import getopt
 
 ###generated with getPgnType.py from canboat pgns.json
 PGNM_Fast=0
@@ -429,7 +430,7 @@ class CanFrame:
     def key(self):
         if self.sequence is None or self.pgn == 0:
             return None
-        return f"{self.pgn}-{self.sequence}"
+        return f"{self.pgn}-{self.sequence}-{self.src}"
     def getFPNum(self,bytes=False):
         if self.frame != 0:
             return None
@@ -497,14 +498,38 @@ class MultiFrame:
     def __str__(self):
         return f"{self.firstFrame.ts},{self.firstFrame.prio},{self.firstFrame.pgn},{self.firstFrame.src},{self.firstFrame.dst},{self.numBytes},{dataToSep(self.bytes,self.numBytes)}"
 
+def usage():
+    print(f"usage: {sys.argv[0]} [-q] [-p pgn,pgn,...] file")
+    sys.exit(1)
 
 if __name__ == '__main__':
-    with open (sys.argv[1],"r") as fh:
+    try:
+        opts,args=getopt.getopt(sys.argv[1:],"hp:q")
+    except getopt.GetoptError as err:
+        err(err)
+    pgnlist=[]
+    quiet=False
+    for o,a in opts:
+        if o == '-h':
+            usage()
+        elif o == '-q':
+            quiet=True
+        elif o == '-p':
+            pgns=(int(x) for x in a.split(","))
+            pgnlist.extend(pgns)
+    if len(args) < 1:
+        usage()
+    hasFilter=len(pgnlist) > 0
+    if not quiet and hasFilter:
+        print(f"PGNs: {','.join(str(x) for x in pgnlist)}")
+    with open (args[0],"r") as fh:
         buffer={}
         lnr=0
         for line in fh:
             lnr+=1
             frame=CanFrame.fromDump(line)
+            if hasFilter and not frame.pgn in pgnlist:
+                continue
             if frame.sequence is None:
                 print(frame)
             else:
@@ -513,7 +538,8 @@ if __name__ == '__main__':
                 mustDelete=False
                 if mf is None:
                     if frame.frame != 0:
-                        print(f"floating multi frame in line {lnr}: {frame}",file=sys.stderr)
+                        if not quiet:
+                            print(f"floating multi frame in line {lnr}: {frame}",file=sys.stderr)
                         continue
                     mf=MultiFrame(frame)
                     if not mf.finished:
