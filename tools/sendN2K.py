@@ -394,8 +394,10 @@ PGN_MODES={
 
 
 
-def logError(fmt,*args):
-    print("ERROR:" +fmt%(args))
+def logError(fmt,*args,keep=False):
+    print("ERROR:" +fmt%(args),file=sys.stderr)
+    if not keep:
+        sys.exit(1)
 
 def dataToSep(data,maxbytes=None):
     pd=None
@@ -453,7 +455,7 @@ class CanFrame:
         '''(1658058069.867835) can0 09F80103#ACAF6C20B79AAC06'''
         match=cls.DUMP_PAT.search(line)
         if match is None:
-            logError("no dump pattern in line %s",line)
+            logError("no dump pattern in line %s",line,keep=True)
             return
         ts=match[1]
         dt=datetime.datetime.fromtimestamp(float(ts),tz=datetime.UTC)
@@ -476,18 +478,16 @@ class CanFrame:
             pgn=(RDP << 16) + (PF << 8)+PS
         return CanFrame(tstr,pgn,src=src,dst=dst,prio=prio,data=data)
     
-class MultiFrame:
+class MultiFrame(CanFrame):
     def __init__(self,firstFrame: CanFrame):
+        super().__init__(firstFrame.ts,firstFrame.pgn,
+                       src=firstFrame.src,dst=firstFrame.dst,prio=firstFrame.prio)
         self.data=""
-        self.prio=firstFrame.prio
-        self.pgn=firstFrame.pgn
-        self.src=firstFrame.src
-        self.dst=firstFrame.dst
-        self.ts=firstFrame.ts
         self.numFrames=firstFrame.getFPNum(bytes=False)
         self.len=firstFrame.getFPNum(bytes=True)
         self.finished=False
         self.addFrame(firstFrame)
+    
     def addFrame(self,frame:CanFrame):
         if self.finished:
             return False
@@ -502,18 +502,27 @@ class MultiFrame:
             return True
     
     def __str__(self):
-        return f"{self.ts},{self.prio},{self.pgn},{self.src},{self.dst},{self.len},{dataToSep(self.data,self.numBytes)}"
+        return f"{self.ts},{self.prio},{self.pgn},{self.src},{self.dst},{self.len},{dataToSep(self.data,self.len)}"
 
 def usage():
     print(f"usage: {sys.argv[0]} [-q] [-p pgn,pgn,...] [-w waitsec] [ -f plain|actisense] file")
     sys.exit(1)
 
-F_PLAIN=0
-F_ACT=1
-FORMATS={
-    'plain':F_PLAIN,
-    'actisense':F_ACT
-}
+
+class Format:
+    F_PLAIN=0
+    N_PLAIN='plain'
+    F_ACT=1
+    N_ACT='actisense'
+    def __init__(self,name,key,merge=True):
+        self.key=key
+        self.name=name
+        self.merge=merge
+
+FORMATS=[
+    Format(Format.N_PLAIN,Format.F_PLAIN),
+    Format(Format.N_ACT,Format.F_ACT)
+]
 
 MAX_ACT=400
 ACT_ESC=0x10
@@ -551,7 +560,7 @@ class ActBuffer:
 
 actBuffer=ActBuffer()
 
-def send_act(frame_like,quiet):
+def send_act(frame_like:CanFrame,quiet):
     try:
         actBuffer.clear()
         actBuffer.add(ACT_N2K)
@@ -575,11 +584,59 @@ def send_act(frame_like,quiet):
         for i in range(0,frame_like.len*2,2):
             actBuffer.add(int(frame_like.data[i:i+2],16))
         actBuffer.finalize()
-        sys.stdout.buffer.write(memoryview(actBuffer.buf)[0:actBuffer.idx])
+        written=sys.stdout.buffer.write(memoryview(actBuffer.buf)[0:actBuffer.idx])
+        if (written != actBuffer.idx):
+            if not quiet:
+                logError(f"actisense not all bytes written {written}/{actBuffer.idx} for pgn={frame_like.pgn} ts={frame_like.ts}",keep=True)
         sys.stdout.buffer.flush()
+        return True
     except Exception as e:
         if not quiet:
             print(f"Error writing actisense for pgn {frame_like.pgn}, idx={actBuffer.idx}: {e}",file=sys.stderr)
+        return False
+
+class Counters:
+    C_OK=1
+    C_FAIL=2
+    C_FRAME=3
+    TITLES={
+        C_OK:'OK',
+        C_FAIL:'FAIL',
+        C_FRAME:'FRAMES'
+    }
+    def __init__(self):
+        self.counters={}
+        for i in self.TITLES.keys():
+            self.counters[i]=0
+    def add(self,idx:int):
+        if idx not in self.TITLES.keys():
+            return
+        self.counters[idx]+=1
+    def __str__(self):
+        rt=None
+        for i in self.TITLES.keys():
+            v=f"{self.TITLES[i]}:{self.counters[i]}"
+            if rt is None:
+                rt=v
+            else:
+                rt+=","+v
+        return rt
+
+def writeOut(frame:CanFrame,format:Format,quiet:bool,counters:Counters):
+    rt=False
+    if format.key == Format.F_ACT:
+        rt= send_act(frame,quiet)
+    elif format.key == Format.F_PLAIN:
+        print(frame)
+        rt=True
+    counters.add(Counters.C_OK if rt else Counters.C_FAIL)
+    return rt
+
+def findFormat(name:str)->Format:
+    for f in FORMATS:
+        if f.name == name:
+            return f
+    return None
 
 if __name__ == '__main__':
     try:
@@ -589,7 +646,7 @@ if __name__ == '__main__':
     pgnlist=[]
     quiet=False
     delay=0.0
-    format=F_PLAIN
+    format=findFormat(Format.N_PLAIN)
     for o,a in opts:
         if o == '-h':
             usage()
@@ -601,14 +658,15 @@ if __name__ == '__main__':
         elif o == '-w':
             delay=float(a)
         elif o == '-f':
-            format=FORMATS.get(a)
+            format=findFormat(a)
             if format is None:
-                logError(f"invalid format {a}, allowed {','.join(FORMATS.keys())}")
+                logError(f"invalid format {a}, allowed {','.join(x.name for x in FORMATS)}")
     if len(args) < 1:
         usage()
     hasFilter=len(pgnlist) > 0
     if not quiet and hasFilter:
-        print(f"PGNs: {','.join(str(x) for x in pgnlist)}")
+        print(f"PGNs: {','.join(str(x) for x in pgnlist)}",file=sys.stderr)
+    counters=Counters()
     with open (args[0],"r") as fh:
         buffer={}
         lnr=0
@@ -617,11 +675,9 @@ if __name__ == '__main__':
             frame=CanFrame.fromDump(line)
             if hasFilter and not frame.pgn in pgnlist:
                 continue
-            if frame.sequence is None:
-                if format == F_PLAIN:
-                    print(frame)
-                else:
-                    send_act(frame,quiet)
+            counters.add(Counters.C_FRAME)
+            if frame.sequence is None or not format.merge:
+                writeOut(frame,format,quiet,counters=counters)
                 if delay > 0:
                     time.sleep(delay)
             else:
@@ -640,12 +696,11 @@ if __name__ == '__main__':
                     mf.addFrame(frame)
                     mustDelete=True
                 if mf.finished:
-                    if format == F_PLAIN:
-                        print(mf)
-                    else:
-                        send_act(mf,quiet)
+                    writeOut(mf,format,quiet,counters=counters)
                     if mustDelete:
                         del buffer[key]
                     if delay > 0:
-                        time.sleep(delay)    
+                        time.sleep(delay)
+    if not quiet:
+        print(f"STATISTICS: {counters}",file=sys.stderr)
         
