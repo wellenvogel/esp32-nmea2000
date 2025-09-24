@@ -411,11 +411,22 @@ def dataToSep(data,maxbytes=None):
         else:
             pd+=","+data[i:i+2]
     return pd
+class Format:
+    F_PLAIN=0
+    N_PLAIN='plain'
+    F_ACT=1
+    N_ACT='actisense'
+    F_PASS=2
+    N_PASS='pass'
+    def __init__(self,name,key,merge=True):
+        self.key=key
+        self.name=name
+        self.merge=merge
 
 class CanFrame:
     DUMP_PAT=re.compile(r'\(([^)]*)\) *([^ ]*) *([^#]*)#(.*)')
 
-    def __init__(self,ts,pgn,src=1,dst=255,prio=1,data=None):
+    def __init__(self,ts,pgn,src=1,dst=255,prio=1,dev=None,hdr=None,data=None):
         self.pgn=pgn
         self.mode=PGN_MODES.get(pgn)
         self.ts=ts
@@ -426,6 +437,8 @@ class CanFrame:
         self.sequence=None
         self.frame=None
         self.len=8
+        self.dev=dev
+        self.hdr=hdr
         if self.mode == PGNM_Fast and data is not None and len(self.data) >= 2:
             fb=int(data[0:2],16)
             self.frame=fb & 0x1f
@@ -446,9 +459,19 @@ class CanFrame:
         frames=int((numbytes-6-1)/7)+1+1 if numbytes > 6 else 1 
         return frames
     
+    def _formatTs(self):
+        dt=datetime.datetime.fromtimestamp(self.ts,tz=datetime.UTC)
+        return dt.strftime("%F-%T.")+dt.strftime("%f")[0:3]
+
     def __str__(self):
-        return f"{self.ts},{self.prio},{self.pgn},{self.src},{self.dst},{self.len},{dataToSep(self.data)}"
+        return f"{self._formatTs()},{self.prio},{self.pgn},{self.src},{self.dst},{self.len},{dataToSep(self.data)}"
     
+    def printOut(self,format:Format):
+        if format.key == Format.F_PASS:
+            return f"({self.ts}) {self.dev} {self.hdr}#{self.data}"
+        else:
+            return str(self)
+
     
     @classmethod
     def fromDump(cls,line):
@@ -458,8 +481,6 @@ class CanFrame:
             logError("no dump pattern in line %s",line,keep=True)
             return
         ts=match[1]
-        dt=datetime.datetime.fromtimestamp(float(ts),tz=datetime.UTC)
-        tstr=dt.strftime("%F-%T.")+dt.strftime("%f")[0:3]
         data=match[4]
         hdr=match[3]
         hdrval=int(hdr,16)
@@ -476,12 +497,13 @@ class CanFrame:
         else:
             dst=0xff
             pgn=(RDP << 16) + (PF << 8)+PS
-        return CanFrame(tstr,pgn,src=src,dst=dst,prio=prio,data=data)
+        return CanFrame(float(ts),pgn,src=src,dst=dst,prio=prio,data=data,dev=match[2],hdr=hdr)
     
 class MultiFrame(CanFrame):
     def __init__(self,firstFrame: CanFrame):
         super().__init__(firstFrame.ts,firstFrame.pgn,
-                       src=firstFrame.src,dst=firstFrame.dst,prio=firstFrame.prio)
+                       src=firstFrame.src,dst=firstFrame.dst,prio=firstFrame.prio,
+                       dev=firstFrame.dev,hdr=firstFrame.hdr)
         self.data=""
         self.numFrames=firstFrame.getFPNum(bytes=False)
         self.len=firstFrame.getFPNum(bytes=True)
@@ -502,26 +524,19 @@ class MultiFrame(CanFrame):
             return True
     
     def __str__(self):
-        return f"{self.ts},{self.prio},{self.pgn},{self.src},{self.dst},{self.len},{dataToSep(self.data,self.len)}"
+        return f"{self._formatTs()},{self.prio},{self.pgn},{self.src},{self.dst},{self.len},{dataToSep(self.data,self.len)}"
 
 def usage():
     print(f"usage: {sys.argv[0]} [-q] [-p pgn,pgn,...] [-w waitsec] [ -f plain|actisense] file")
     sys.exit(1)
 
 
-class Format:
-    F_PLAIN=0
-    N_PLAIN='plain'
-    F_ACT=1
-    N_ACT='actisense'
-    def __init__(self,name,key,merge=True):
-        self.key=key
-        self.name=name
-        self.merge=merge
+
 
 FORMATS=[
     Format(Format.N_PLAIN,Format.F_PLAIN),
-    Format(Format.N_ACT,Format.F_ACT)
+    Format(Format.N_ACT,Format.F_ACT),
+    Format(Format.N_PASS,Format.F_PASS,False)
 ]
 
 MAX_ACT=400
@@ -626,8 +641,8 @@ def writeOut(frame:CanFrame,format:Format,quiet:bool,counters:Counters):
     rt=False
     if format.key == Format.F_ACT:
         rt= send_act(frame,quiet)
-    elif format.key == Format.F_PLAIN:
-        print(frame)
+    else:
+        print(frame.printOut(format))
         rt=True
     counters.add(Counters.C_OK if rt else Counters.C_FAIL)
     return rt
