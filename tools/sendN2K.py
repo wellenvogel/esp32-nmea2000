@@ -418,6 +418,8 @@ class Format:
     N_ACT='actisense'
     F_PASS=2
     N_PASS='pass'
+    F_SEASMART=3
+    N_SEASMART="seasmart"
     def __init__(self,name,key,merge=True):
         self.key=key
         self.name=name
@@ -536,7 +538,8 @@ def usage():
 FORMATS=[
     Format(Format.N_PLAIN,Format.F_PLAIN),
     Format(Format.N_ACT,Format.F_ACT),
-    Format(Format.N_PASS,Format.F_PASS,False)
+    Format(Format.N_PASS,Format.F_PASS,False),
+    Format(Format.N_SEASMART,Format.F_SEASMART)
 ]
 
 MAX_ACT=400
@@ -575,7 +578,41 @@ class ActBuffer:
 
 actBuffer=ActBuffer()
 
-def send_act(frame_like:CanFrame,quiet):
+
+LB=b'0000000000000'
+B_STAR=0x2a
+class SeasmartBuffer:
+    def __init__(self):
+        self.buf=bytearray(500)
+        self.idx=0
+        self.clear()
+    def clear(self):
+        self.idx=0
+    def addB(self,bv):
+        l=len(bv)
+        self.buf[self.idx:self.idx+l]=bv
+        self.idx+=l
+    def addVal(self,val,blen=2):
+        hs=hex(val)[2:].encode()
+        if len(hs) != blen:
+            hs=(LB+hs)[-blen:]
+        self.addB(hs)        
+        
+    def finalize(self):
+        sum=0
+        self.buf[self.idx]=B_STAR
+        self.idx+=1
+        for b in memoryview(self.buf)[1:]:
+            if b == B_STAR:
+                break
+            sum ^= b
+            sum = sum & 0xff
+        self.addVal(sum)
+        self.addB(b'\x0d\x0a')
+
+seasmartBuffer=SeasmartBuffer()        
+
+def send_act(frame_like:CanFrame,quiet,stream):
     try:
         actBuffer.clear()
         actBuffer.add(ACT_N2K)
@@ -599,15 +636,39 @@ def send_act(frame_like:CanFrame,quiet):
         for i in range(0,frame_like.len*2,2):
             actBuffer.add(int(frame_like.data[i:i+2],16))
         actBuffer.finalize()
-        written=sys.stdout.buffer.write(memoryview(actBuffer.buf)[0:actBuffer.idx])
+        written=stream.write(memoryview(actBuffer.buf)[0:actBuffer.idx])
         if (written != actBuffer.idx):
             if not quiet:
                 logError(f"actisense not all bytes written {written}/{actBuffer.idx} for pgn={frame_like.pgn} ts={frame_like.ts}",keep=True)
-        sys.stdout.buffer.flush()
+        stream.flush()
         return True
     except Exception as e:
         if not quiet:
             print(f"Error writing actisense for pgn {frame_like.pgn}, idx={actBuffer.idx}: {e}",file=sys.stderr)
+        return False
+
+BK=b','    
+def send_seasmart(frame_like:CanFrame,quiet,stream):
+    try:
+        seasmartBuffer.clear()
+        seasmartBuffer.addB(b'$PCDIN,')
+        seasmartBuffer.addVal(frame_like.pgn,6)
+        seasmartBuffer.addB(BK)
+        seasmartBuffer.addVal(int(time.time()),8)
+        seasmartBuffer.addB(BK)
+        seasmartBuffer.addVal(frame_like.src)
+        seasmartBuffer.addB(BK)
+        seasmartBuffer.addB(frame_like.data.encode())
+        seasmartBuffer.finalize()
+        written=stream.write(memoryview(seasmartBuffer.buf)[0:seasmartBuffer.idx])
+        if (written != seasmartBuffer.idx):
+            if not quiet:
+                raise Exception(f"seasmart not all bytes written {written}/{seasmartBuffer.idx} for pgn={frame_like.pgn} ts={frame_like.ts}")
+        stream.flush()
+        return True
+    except Exception as e:
+        if not quiet:
+            logError(f"writing seasmart for pgn {frame_like.pgn}, idx={seasmartBuffer.idx}: {e}",keep=True)
         return False
 
 class Counters:
@@ -640,7 +701,9 @@ class Counters:
 def writeOut(frame:CanFrame,format:Format,quiet:bool,counters:Counters):
     rt=False
     if format.key == Format.F_ACT:
-        rt= send_act(frame,quiet)
+        rt= send_act(frame,quiet,sys.stdout.buffer)
+    elif format.key == Format.F_SEASMART:
+        rt= send_seasmart(frame,quiet,sys.stdout.buffer)
     else:
         print(frame.printOut(format))
         rt=True
