@@ -529,7 +529,7 @@ class MultiFrame(CanFrame):
         return f"{self._formatTs()},{self.prio},{self.pgn},{self.src},{self.dst},{self.len},{dataToSep(self.data,self.len)}"
 
 def usage():
-    print(f"usage: {sys.argv[0]} [-q] [-p pgn,pgn,...] [-w waitsec] [ -f plain|actisense] file")
+    print(f"usage: {sys.argv[0]} [-q] [-p pgn,pgn,...] [-w waitsec] [ -f plain|actisense] file",file=sys.stderr)
     sys.exit(1)
 
 
@@ -627,10 +627,11 @@ def send_act(frame_like:CanFrame,quiet,stream):
         actBuffer.add(frame_like.dst)
         actBuffer.add(frame_like.src)
         #Time
-        actBuffer.add(0)
-        actBuffer.add(0)
-        actBuffer.add(0)
-        actBuffer.add(0)
+        ts=int(frame_like.ts)
+        actBuffer.add(ts>>24)
+        actBuffer.add(ts>>16)
+        actBuffer.add(ts>>8)
+        actBuffer.add(ts)
 
         actBuffer.add(frame_like.len)
         for i in range(0,frame_like.len*2,2):
@@ -654,7 +655,7 @@ def send_seasmart(frame_like:CanFrame,quiet,stream):
         seasmartBuffer.addB(b'$PCDIN,')
         seasmartBuffer.addVal(frame_like.pgn,6)
         seasmartBuffer.addB(BK)
-        seasmartBuffer.addVal(int(time.time()),8)
+        seasmartBuffer.addVal(int(frame_like.ts),8)
         seasmartBuffer.addB(BK)
         seasmartBuffer.addVal(frame_like.src)
         seasmartBuffer.addB(BK)
