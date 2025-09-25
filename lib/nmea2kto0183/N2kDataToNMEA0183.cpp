@@ -708,6 +708,32 @@ private:
         }
     }
 
+    //helper for converting the AIS transceiver info to talker/channel
+
+    void setTalkerChannel(tNMEA0183AISMsg &msg, tN2kAISTransceiverInformation &transceiver){
+        bool channelA=true;
+        bool own=false;
+        switch (transceiver){
+            case tN2kAISTransceiverInformation::N2kaischannel_A_VDL_reception:
+                channelA=true;
+                own=false;
+                break;
+            case tN2kAISTransceiverInformation::N2kaischannel_B_VDL_reception:
+                channelA=false;
+                own=false;
+                break;
+            case tN2kAISTransceiverInformation::N2kaischannel_A_VDL_transmission:
+                channelA=true;
+                own=true;
+                break;
+            case tN2kAISTransceiverInformation::N2kaischannel_B_VDL_transmission:
+                channelA=false;
+                own=true;
+                break;
+        }
+        msg.SetChannelAndTalker(channelA,own);
+    }
+
     //*****************************************************************************
     // 129038 AIS Class A Position Report (Message 1, 2, 3)
     void HandleAISClassAPosReport(const tN2kMsg &N2kMsg)
@@ -736,7 +762,7 @@ private:
         {
 
 
-
+            setTalkerChannel(NMEA0183AISMsg,_AISTransceiverInformation);
             if (_MessageType < 1 || _MessageType > 3) _MessageType=1; //only allow type 1...3 for 129038
             if (SetAISClassABMessage1(NMEA0183AISMsg, _MessageType, _Repeat, _UserID, _Latitude, _Longitude, _Accuracy,
                                       _RAIM, _Seconds, _COG, _SOG, _Heading, _ROT, _NavStatus))
@@ -779,11 +805,10 @@ private:
                               _Length, _Beam, _PosRefStbd, _PosRefBow, _ETAdate, _ETAtime, _Draught, _Destination,21,
                               _AISversion, _GNSStype, _DTE, _AISinfo,_SID))
         {
-
-
+            setTalkerChannel(NMEA0183AISMsg,_AISinfo);
             if (SetAISClassAMessage5(NMEA0183AISMsg, _MessageID, _Repeat, _UserID, _IMONumber, _Callsign, _Name, _VesselType,
                                      _Length, _Beam, _PosRefStbd, _PosRefBow, _ETAdate, _ETAtime, _Draught, _Destination,
-                                     _GNSStype, _DTE))
+                                     _GNSStype, _DTE,_AISversion))
             {
                 if (NMEA0183AISMsg.BuildMsg5Part1()){
                     SendMessage(NMEA0183AISMsg);
@@ -815,15 +840,15 @@ private:
         tN2kAISUnit _Unit;
         bool _Display, _DSC, _Band, _Msg22, _State;
         tN2kAISMode _Mode;
-        tN2kAISTransceiverInformation  _AISTranceiverInformation;
+        tN2kAISTransceiverInformation  _AISTransceiverInformation;
         uint8_t _SID;
 
         if (ParseN2kPGN129039(N2kMsg, _MessageID, _Repeat, _UserID, _Latitude, _Longitude, _Accuracy, _RAIM,
-                              _Seconds, _COG, _SOG, _AISTranceiverInformation, _Heading, _Unit, _Display, _DSC, _Band, _Msg22, _Mode, _State,_SID))
+                              _Seconds, _COG, _SOG, _AISTransceiverInformation, _Heading, _Unit, _Display, _DSC, _Band, _Msg22, _Mode, _State,_SID))
         {
 
             tNMEA0183AISMsg NMEA0183AISMsg;
-
+            setTalkerChannel(NMEA0183AISMsg,_AISTransceiverInformation);
             if (SetAISClassBMessage18(NMEA0183AISMsg, _MessageID, _Repeat, _UserID, _Latitude, _Longitude, _Accuracy, _RAIM,
                                       _Seconds, _COG, _SOG,  _Heading, _Unit, _Display, _DSC, _Band, _Msg22, _Mode, _State))
             {
@@ -851,6 +876,7 @@ private:
         {
 
             tNMEA0183AISMsg NMEA0183AISMsg;
+            setTalkerChannel(NMEA0183AISMsg,_AISInfo);
             if (SetAISClassBMessage24PartA(NMEA0183AISMsg, _MessageID, _Repeat, _UserID, _Name))
             {
             }
@@ -881,7 +907,7 @@ private:
         {
 
             tNMEA0183AISMsg NMEA0183AISMsg;
-
+            setTalkerChannel(NMEA0183AISMsg,_AISInfo);
             if (SetAISClassBMessage24(NMEA0183AISMsg, _MessageID, _Repeat, _UserID, _VesselType, _Vendor, _Callsign,
                                       _Length, _Beam, _PosRefStbd, _PosRefBow, _MothershipID))
             {
@@ -905,6 +931,7 @@ private:
         tN2kAISAtoNReportData data;
         if (ParseN2kPGN129041(N2kMsg,data)){
             tNMEA0183AISMsg nmea0183Msg;
+            setTalkerChannel(nmea0183Msg,data.AISTransceiverInformation);
             if (SetAISMessage21(
                 nmea0183Msg,
                 data.Repeat,
