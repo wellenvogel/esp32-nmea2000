@@ -951,7 +951,6 @@ private:
                 data.AssignedModeFlag,
                 data.GNSSType,
                 data.AtoNStatus,
-                data.AISTransceiverInformation,
                 data.AtoNName
             )){
                 SendMessage(nmea0183Msg);
