@@ -470,14 +470,16 @@ class CanFrame:
     
     def printOut(self,format:Format):
         if format.key == Format.F_PASS:
-            return f"({self.ts}) {self.dev} {self.hdr}#{self.data}"
+            return f"({self.ts:.6f}) {self.dev} {self.hdr}#{self.data}"
         else:
             return str(self)
 
     
     @classmethod
-    def fromDump(cls,line):
+    def fromDump(cls,line:str):
         '''(1658058069.867835) can0 09F80103#ACAF6C20B79AAC06'''
+        if line is None or line == '':
+            return None
         match=cls.DUMP_PAT.search(line)
         if match is None:
             logError("no dump pattern in line %s",line,keep=True)
@@ -588,9 +590,13 @@ class SeasmartBuffer:
         self.clear()
     def clear(self):
         self.idx=0
-    def addB(self,bv):
+    def addB(self,bv,mlen=None):
         l=len(bv)
-        self.buf[self.idx:self.idx+l]=bv
+        if mlen is not None and mlen < l:
+            l=mlen
+            self.buf[self.idx:self.idx+l]=memoryview(bv)[0:l]
+        else:
+            self.buf[self.idx:self.idx+l]=bv
         self.idx+=l
     def addVal(self,val,blen=2):
         hs=hex(val)[2:].encode()
@@ -659,7 +665,7 @@ def send_seasmart(frame_like:CanFrame,quiet,stream):
         seasmartBuffer.addB(BK)
         seasmartBuffer.addVal(frame_like.src)
         seasmartBuffer.addB(BK)
-        seasmartBuffer.addB(frame_like.data.encode())
+        seasmartBuffer.addB(frame_like.data.encode(),mlen=frame_like.len*2)
         seasmartBuffer.finalize()
         written=stream.write(memoryview(seasmartBuffer.buf)[0:seasmartBuffer.idx])
         if (written != seasmartBuffer.idx):
@@ -752,6 +758,8 @@ if __name__ == '__main__':
         for line in fh:
             lnr+=1
             frame=CanFrame.fromDump(line)
+            if frame is None:
+                continue
             if hasFilter and not frame.pgn in pgnlist:
                 continue
             counters.add(Counters.C_FRAME)
