@@ -147,13 +147,13 @@ bool initWire(GwLog *logger, TwoWire &wire, int num){
         #ifdef _GWI_IIC1
             return initWireDo(logger,wire,num,_GWI_IIC1);
         #endif
-        return initWireDo(logger,wire,num,"",GWIIC_SDA,GWIIC_SCL);
+        return initWireDo(logger,wire,num,"",GWIIC_SCL,GWIIC_SDA);
     }
     if (num == 2){
         #ifdef _GWI_IIC2
             return initWireDo(logger,wire,num,_GWI_IIC2);
         #endif
-        return initWireDo(logger,wire,num,"",GWIIC_SDA2,GWIIC_SCL2);
+        return initWireDo(logger,wire,num,"",GWIIC_SCL2,GWIIC_SDA2);
     }
     return false;
 }
