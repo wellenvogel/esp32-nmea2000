@@ -879,6 +879,7 @@ private:
             setTalkerChannel(NMEA0183AISMsg,_AISInfo);
             if (SetAISClassBMessage24PartA(NMEA0183AISMsg, _MessageID, _Repeat, _UserID, _Name))
             {
+                SendMessage(NMEA0183AISMsg);
             }
         }
         return;
@@ -908,17 +909,10 @@ private:
 
             tNMEA0183AISMsg NMEA0183AISMsg;
             setTalkerChannel(NMEA0183AISMsg,_AISInfo);
-            if (SetAISClassBMessage24(NMEA0183AISMsg, _MessageID, _Repeat, _UserID, _VesselType, _Vendor, _Callsign,
+            if (SetAISClassBMessage24PartB(NMEA0183AISMsg, _MessageID, _Repeat, _UserID, _VesselType, _Vendor, _Callsign,
                                       _Length, _Beam, _PosRefStbd, _PosRefBow, _MothershipID))
             {
-                if (NMEA0183AISMsg.BuildMsg24PartA()){
-                    SendMessage(NMEA0183AISMsg);
-                }
-
-                if (NMEA0183AISMsg.BuildMsg24PartB()){
-                    SendMessage(NMEA0183AISMsg);
-                }
-
+                SendMessage(NMEA0183AISMsg);             
             }
         }
         return;
