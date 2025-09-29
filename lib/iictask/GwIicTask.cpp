@@ -91,6 +91,7 @@ void initIicTask(GwApi *api){
     GwConfigHandler *config=api->getConfig();
     std::vector<SensorBase::Creator> creators;
     creators.push_back(registerSHT3X(api));
+    creators.push_back(registerSHT4X(api));
     creators.push_back(registerQMP6988(api));
     creators.push_back(registerBME280(api));
     creators.push_back(registerBMP280(api));

@@ -104,6 +104,7 @@ void sendN2kTemperature(GwApi *api,CFG &cfg,double value, int counterId){
 
 template <class CFG>
 void sendN2kEnvironmentalParameters(GwApi *api,CFG &cfg,double tmValue, double huValue, double prValue, int counterId){
+    if (! cfg.sEnv) return;
     tN2kMsg msg;
     SetN2kEnvironmentalParameters(msg,1,cfg.tmSrc,tmValue,cfg.huSrc,huValue,prValue);
     api->sendN2kMessage(msg);

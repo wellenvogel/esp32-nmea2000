@@ -9,6 +9,7 @@ class QMP6988Config : public IICSensorBase{
     public:
         String prNam="Pressure";
         bool prAct=true;
+        bool sEnv=true;
         tN2kPressureSource prSrc=tN2kPressureSource::N2kps_Atmospheric;
         float prOff=0;
         QMP6988 *device=nullptr;
@@ -90,6 +91,7 @@ SensorBase::Creator registerQMP6988(GwApi *api){
             CFG_SGET(s,prAct,prefix); \
             CFG_SGET(s,intv,prefix); \
             CFG_SGET(s,prOff,prefix); \
+            CFG_SGET(s,sEnv,prefix); \
             s->busId = bus;                       \
             s->addr = baddr;                      \
             s->ok = true;                         \

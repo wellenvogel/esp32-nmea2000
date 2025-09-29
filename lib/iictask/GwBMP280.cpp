@@ -29,6 +29,7 @@ class BMP280Config : public IICSensorBase{
     public:
     bool prAct=true;
     bool tmAct=true;
+    bool sEnv=true;
     tN2kTempSource tmSrc=tN2kTempSource::N2kts_InsideTemperature;
     tN2kPressureSource prSrc=tN2kPressureSource::N2kps_Atmospheric;
     tN2kHumiditySource huSrc=tN2kHumiditySource::N2khs_Undef;
@@ -150,6 +151,7 @@ SensorBase::Creator registerBMP280(GwApi *api){
     CFG_SGET(s, prNam, prefix);           \
     CFG_SGET(s, tmOff, prefix);           \
     CFG_SGET(s, prOff, prefix);           \
+    CFG_SGET(s, sEnv,prefix);           \
     s->busId = bus;                       \
     s->addr = baddr;                      \
     s->ok = true;                         \
