@@ -339,6 +339,26 @@ types:
     help: 'number of the GPIO pin for the transmit function'
     target: "define:#serial#TX"
     mandatory: true
+  - &serialEnablePin
+    <<: *gpiopin
+    key: ENA
+    label: "enable pin"
+    help: "GPIO pin for output enable"
+    target: "define:#serial#ENA"
+    mandatory: false
+  - &serialEnableLow
+    type: checkbox
+    key: ELOW
+    label: "enable low"
+    target: "define:#serial#ELO"
+    default: true
+    help: "set: low on enable pin for output, unset: high on enable pin for output"
+    values:
+    - key: true
+      value: 1
+    - key: false
+      value: 0
+
   - &serialValues
       - key: true
         children:
@@ -355,6 +375,8 @@ types:
               children:
                 - *serialRX
                 - *serialTX
+                - *serialEnablePin
+                - *serialEnableLow
             - key: bi
               value: 2
               label: "BiDir" 
