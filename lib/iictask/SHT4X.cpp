@@ -1,4 +1,6 @@
-#include "SHT4X.h"
+#include "GwSHTXX.h"
+#ifdef _GWSHT4X
+
 uint8_t crc8(const uint8_t *data, int len) {
     /*
      *
@@ -126,3 +128,4 @@ void SHT4X::setHeater(sht4x_heater_t heat) {
 sht4x_heater_t SHT4X::getHeater(void) {
     return _heater;
 }
+#endif
