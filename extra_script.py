@@ -547,3 +547,16 @@ env.Append(
 )
 #script does not run on clean yet - maybe in the future
 env.AddPostAction("clean",cleangenerated)
+extraScripts=getFileList(getOption(env,'custom_script',toArray=True))
+for script in extraScripts:
+    if os.path.isfile(script):
+        print(f"#extra {script}")
+        with open(script) as fh:
+            try:
+                code = compile(fh.read(), script, 'exec')
+            except SyntaxError as e:
+                print(f"#ERROR: script {script} does not compile: {e}")
+                continue
+            exec(code)
+    else:
+        print(f"#ERROR: script {script} not found")

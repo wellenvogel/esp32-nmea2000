@@ -57,6 +57,44 @@ Files
      
      Starting from Version 20250305 you should normally not use this file name any more as those styles would be added for all build environments. Instead define a parameter _custom_css_ in your [platformio.ini](platformio.ini) for the environments you would like to add some styles for. This parameter accepts a list of file names (relative to the project root, separated by , or as multi line entry)
 
+   * [script.py](script.py)<br>
+     Starting from version 202509xx you can define a parameter "custom_script" in your [platformio.ini](platformio.ini).
+     This parameter can contain a list of file names (relative to the project root) that will be added as a [platformio extra script](https://docs.platformio.org/en/latest/scripting/index.html#scripting). The scripts will be loaded at the end of the main [extra_script](../../extra_script.py).
+     You can add code there that is specific for your build.
+     Example:
+     ```
+      # PlatformIO extra script for obp60task
+      epdtype = "unknown"
+      pcbvers = "unknown"
+      for x in env["BUILD_FLAGS"]:
+          if x.startswith("-D HARDWARE_"):
+              pcbvers = x.split('_')[1]
+          if x.startswith("-D DISPLAY_"):
+              epdtype = x.split('_')[1]
+
+      propfilename = os.path.join(env["PROJECT_LIBDEPS_DIR"], env     ["PIOENV"], "GxEPD2/library.properties")
+      properties = {}
+      with open(propfilename, 'r') as file:
+          for line in file:
+              match = re.match(r'^([^=]+)=(.*)$', line)
+              if match:
+                  key = match.group(1).strip()
+                  value = match.group(2).strip()
+                  properties[key] = value
+
+      gxepd2vers = "unknown"
+      try:
+          if properties["name"] == "GxEPD2":
+              gxepd2vers = properties["version"]
+      except:
+          pass
+
+      env["CPPDEFINES"].extend([("BOARD", env["BOARD"]), ("EPDTYPE",      epdtype), ("PCBVERS", pcbvers), ("GXEPD2VERS", gxepd2vers)])
+
+      print("added hardware info to CPPDEFINES")
+      print("friendly board name is '{}'".format(env.GetProjectOption     ("board_name")))
+     ```
+
 
  Interfaces
  ----------
