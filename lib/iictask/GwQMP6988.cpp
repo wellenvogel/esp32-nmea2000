@@ -10,6 +10,8 @@ class QMP6988Config : public IICSensorBase{
         String prNam="Pressure";
         bool prAct=true;
         bool sEnv=true;
+        tN2kTempSource tmSrc=tN2kTempSource::N2kts_InsideTemperature;
+        tN2kHumiditySource huSrc=tN2kHumiditySource::N2khs_Undef;
         tN2kPressureSource prSrc=tN2kPressureSource::N2kps_Atmospheric;
         float prOff=0;
         QMP6988 *device=nullptr;
@@ -40,6 +42,7 @@ class QMP6988Config : public IICSensorBase{
             float computed=pressure+prOff;
             LOG_DEBUG(GwLog::DEBUG,"%s measure %2.0fPa, computed %2.0fPa",prefix.c_str(), pressure,computed);
             sendN2kPressure(api,*this,computed,counterId);
+            sendN2kEnvironmentalParameters(api,*this,N2kDoubleNA,N2kDoubleNA,computed,counterId);
         }
         
         

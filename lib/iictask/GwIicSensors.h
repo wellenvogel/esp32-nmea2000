@@ -108,9 +108,15 @@ void sendN2kEnvironmentalParameters(GwApi *api,CFG &cfg,double tmValue, double h
     tN2kMsg msg;
     SetN2kEnvironmentalParameters(msg,1,cfg.tmSrc,tmValue,cfg.huSrc,huValue,prValue);
     api->sendN2kMessage(msg);
-    api->increment(counterId,cfg.prefix+String("hum"));
-    api->increment(counterId,cfg.prefix+String("press"));
-    api->increment(counterId,cfg.prefix+String("temp"));
+    if (huValue != N2kDoubleNA){
+        api->increment(counterId,cfg.prefix+String("ehum"));
+    }
+    if (prValue != N2kDoubleNA){
+        api->increment(counterId,cfg.prefix+String("epress"));
+    }
+    if (tmValue != N2kDoubleNA){
+        api->increment(counterId,cfg.prefix+String("etemp"));
+    }
 }
 
 #ifndef _GWI_IIC1
