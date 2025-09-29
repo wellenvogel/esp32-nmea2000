@@ -198,6 +198,203 @@
     },
     {
         "type": "array",
+        "name": "SHT4X",
+        "replace": [
+            {
+                "b": "1",
+                "i": "11",
+                "n": "119"
+            },
+            {
+                "b": "1",
+                "i": "12",
+                "n": "118"
+            },
+            {
+                "b": "2",
+                "i": "21",
+                "n": "129"
+            },
+            {
+                "b": "2",
+                "i": "22",
+                "n": "128"
+            }
+
+
+        ],
+        "children": [
+            {
+                "name": "SHT4X$itmAct",
+                "label": "SHT4X$i Temp",
+                "type": "boolean",
+                "default": "true",
+                "description": "Enable the $i. I2C SHT4X temp sensor (bus $b)",
+                "category": "iicsensors$b",
+                "capabilities": {
+                    "SHT4X$i": "true"
+                }
+            },
+            {
+                "name": "SHT4X$itmSrc",
+                "label": "SHT4X$i Temp Type",
+                "type": "list",
+                "default": "2",
+                "description": "the NMEA2000 source type for the temperature",
+                "list": [
+                    {
+                        "l": "SeaTemperature",
+                        "v": "0"
+                    },
+                    {
+                        "l": "OutsideTemperature",
+                        "v": "1"
+                    },
+                    {
+                        "l": "InsideTemperature",
+                        "v": "2"
+                    },
+                    {
+                        "l": "EngineRoomTemperature",
+                        "v": "3"
+                    },
+                    {
+                        "l": "MainCabinTemperature",
+                        "v": "4"
+                    },
+                    {
+                        "l": "LiveWellTemperature",
+                        "v": "5"
+                    },
+                    {
+                        "l": "BaitWellTemperature",
+                        "v": "6"
+                    },
+                    {
+                        "l": "RefridgerationTemperature",
+                        "v": "7"
+                    },
+                    {
+                        "l": "HeatingSystemTemperature",
+                        "v": "8"
+                    },
+                    {
+                        "l": "DewPointTemperature",
+                        "v": "9"
+                    },
+                    {
+                        "l": "ApparentWindChillTemperature",
+                        "v": "10"
+                    },
+                    {
+                        "l": "TheoreticalWindChillTemperature",
+                        "v": "11"
+                    },
+                    {
+                        "l": "HeatIndexTemperature",
+                        "v": "12"
+                    },
+                    {
+                        "l": "FreezerTemperature",
+                        "v": "13"
+                    },
+                    {
+                        "l": "ExhaustGasTemperature",
+                        "v": "14"
+                    },
+                    {
+                        "l": "ShaftSealTemperature",
+                        "v": "15"
+                    }
+                ],
+                "category": "iicsensors$b",
+                "capabilities": {
+                    "SHT4X$i": "true"
+                }
+            },
+            {
+                "name": "SHT4X$ihuAct",
+                "label": "SHT4X$i Humidity",
+                "type": "boolean",
+                "default": "true",
+                "description": "Enable the $i. I2C SHT4X humidity sensor (bus $b)",
+                "category": "iicsensors$b",
+                "capabilities": {
+                    "SHT4X$i": "true"
+                }
+            },
+            {
+                "name": "SHT4X$ihuSrc",
+                "label": "SHT4X$i Humid Type",
+                "list": [
+                    {
+                        "l": "OutsideHumidity",
+                        "v": "1"
+                    },
+                    {
+                        "l": "Undef",
+                        "v": "0xff"
+                    }
+                ],
+                "category": "iicsensors$b",
+                "capabilities": {
+                    "SHT4X": "true"
+                }
+            },
+            {
+                "name": "SHT4X$iiid",
+                "label": "SHT4X$i N2K iid",
+                "type": "number",
+                "default": "$n",
+                "description": "the N2K instance id for the $i. SHT4X Temperature and Humidity ",
+                "category": "iicsensors$b",
+                "min": 0,
+                "max": 253,
+                "check": "checkMinMax",
+                "capabilities": {
+                    "SHT4X$i": "true"
+                }
+            },
+            {
+                "name": "SHT4X$iintv",
+                "label": "SHT4X$i Interval",
+                "type": "number",
+                "default": 2,
+                "description": "Interval(s) to query SHT4X Temperature and Humidity (1...300)",
+                "category": "iicsensors$b",
+                "min": 1,
+                "max": 300,
+                "check": "checkMinMax",
+                "capabilities": {
+                    "SHT4X$i": "true"
+                }
+            },
+            {
+                "name": "SHT4X$itmNam",
+                "label": "SHT4X$i Temp XDR",
+                "type": "String",
+                "default": "Temp$i",
+                "description": "set the XDR transducer name for the $i. SHT4X Temperature, leave empty to disable NMEA0183 XDR ",
+                "category": "iicsensors$b",
+                "capabilities": {
+                    "SHT4X$i": "true"
+                }
+            },
+            {
+                "name": "SHT4X$ihuNam",
+                "label": "SHT4X$i Humid XDR",
+                "type": "String",
+                "default": "Humidity$i",
+                "description": "set the XDR transducer name for the $i. SHT4X Humidity, leave empty to disable NMEA0183 XDR",
+                "category": "iicsensors$b",
+                "capabilities": {
+                    "SHT4X$i": "true"
+                }
+            }
+        ]
+    },
+    {
+        "type": "array",
         "name": "QMP6988",
         "replace": [
             {

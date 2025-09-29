@@ -93,6 +93,7 @@ class GwSensorConfig{
     }
     bool readConfig(T* s,GwConfigHandler *cfg){
         if (s == nullptr) return false;
+        if (prefix != s->prefix) return false;
         configReader(s,cfg);
         return s->ok;
     }

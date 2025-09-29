@@ -23,7 +23,7 @@ static std::vector<IICGrove> iicGroveList;
 #include "GwBME280.h"
 #include "GwBMP280.h"
 #include "GwQMP6988.h"
-#include "GwSHT3X.h"
+#include "GwSHTXX.h"
 #include <map>
 
 #include "GwTimer.h"

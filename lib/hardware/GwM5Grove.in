@@ -71,15 +71,15 @@
 #endif
 
 #GROVE
-//#ifdef M5_ENV4$GS$
-//  #ifndef M5_GROOVEIIC$GS$
-//    #define M5_GROOVEIIC$GS$
-//  #endif
-//  GROOVE_IIC(SHT3X,$Z$,1)
-//  GROOVE_IIC(BMP280,$Z$,1)
-//  #define _GWSHT3X
-//  #define _GWBMP280
-//#endif
+#ifdef M5_ENV4$GS$
+  #ifndef M5_GROOVEIIC$GS$
+    #define M5_GROOVEIIC$GS$
+  #endif
+  GROOVE_IIC(SHT4X,$Z$,1)
+  GROOVE_IIC(BMP280,$Z$,1)
+  #define _GWSHT4X
+  #define _GWBMP280
+#endif
 
 #GROVE
 //example: -DSHT3XG1_A : defines STH3Xn1 on grove A - x depends on the other devices
@@ -98,6 +98,25 @@
   #endif
   GROOVE_IIC(SHT3X,$Z$,2)
   #define _GWSHT3X
+#endif
+
+#GROVE
+//example: -DSHT4XG1_A : defines STH4Xn1 on grove A - x depends on the other devices
+#ifdef GWSHT4XG1$GS$
+  #ifndef M5_GROOVEIIC$GS$
+    #define M5_GROOVEIIC$GS$
+  #endif
+  GROOVE_IIC(SHT4X,$Z$,1)
+  #define _GWSHT4X
+#endif
+
+#GROVE
+#ifdef GWSHT4XG2$GS$
+  #ifndef M5_GROOVEIIC$GS$
+    #define M5_GROOVEIIC$GS$
+  #endif
+  GROOVE_IIC(SHT4X,$Z$,2)
+  #define _GWSHT4X
 #endif
 
 #GROVE
