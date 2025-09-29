@@ -346,15 +346,23 @@ static GwSerial * createSerialImpl(GwConfigHandler *config,GwLog *logger, int id
         return nullptr;
     }
     if (ena >= 0){
+        int value=-1;
         if (type == GWSERIAL_TYPE_UNI){
-             String cfgMode=config->getString(param->direction);
-             int value=0;
-             if (cfgMode == "send"){
+            String cfgMode=config->getString(param->direction);
+            if (cfgMode == "send"){
                 value=elow?0:1;
-             } 
-             else{
-                value=elow?1:0;
-             }
+            } 
+            else{
+               value=elow?1:0;
+            }
+        }
+        if (type == GWSERIAL_TYPE_RX){
+            value=elow?1:0;
+        }
+        if (type == GWSERIAL_TYPE_TX){
+            value=elow?0:1;
+        }
+        if (value >= 0){
              LOG_DEBUG(GwLog::LOG,"serial %d: setting output enable %d to %d",param->id,ena,value);
              pinMode(ena,OUTPUT); 
              digitalWrite(ena,value); 
@@ -483,7 +491,8 @@ void GwChannelList::begin(bool fallbackSerial){
 
     //new serial config handling
     for (auto &&init:serialInits){
-        LOG_INFO("creating serial channel %d, rx=%d,tx=%d,type=%d",init.serial,init.rx,init.tx,init.mode);
+        LOG_INFO("creating serial channel %d, rx=%d,tx=%d,type=%d fixedBaud=%d ena=%d elow=%d",
+            init.serial,init.rx,init.tx,init.mode,init.fixedBaud,init.ena,init.elow);
         GwSerial *ser=createSerialImpl(config,logger,init.serial,init.mode,init.rx,init.tx,false,init.ena,init.elow);
         if (ser != nullptr){
             channel=createChannel(logger,config,init.serial,ser);

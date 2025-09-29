@@ -326,6 +326,24 @@ types:
       - PPIN23
       - PPIN25
       - PPIN33
+
+  - &baudselect
+    type: dropdown
+    help: 'Select the baud rate'
+    values: 
+            - {label: unset,value:}
+            - 1200
+            - 2400
+            - 4800
+            - 9600
+            - 14400
+            - 19200
+            - 28800
+            - 38400
+            - 57600
+            - 115200
+            - 230400
+            - 460800
   
   - &serialRX
     <<: *gpioinput
@@ -358,6 +376,13 @@ types:
       value: 1
     - key: false
       value: 0
+  
+  - &serialFixedBaud
+    <<: *baudselect
+    key: fixedBaud
+    label: "fixed baud"
+    help: "you can set a fixed baud rate here, this disables changing the baud rate in the UI"
+    target: "define:#serial#BAUD"
 
   - &serialValues
       - key: true
@@ -377,6 +402,7 @@ types:
                 - *serialTX
                 - *serialEnablePin
                 - *serialEnableLow
+                - *serialFixedBaud
             - key: bi
               value: 2
               label: "BiDir" 
@@ -385,18 +411,25 @@ types:
               children:
                 - *serialRX
                 - *serialTX
+                - *serialFixedBaud
             - key: rx
               value: 3
               label: "RX"    
               description: "Input only"
               children:
                 - *serialRX
+                - *serialEnablePin
+                - *serialEnableLow
+                - *serialFixedBaud
             - key: tx
               value: 1
               label: "TX"
               description: "output only"    
               children:
                 - *serialTX
+                - *serialEnablePin
+                - *serialEnableLow
+                - *serialFixedBaud
   - &serial1
     type: checkbox
     label: 'Serial 1'
