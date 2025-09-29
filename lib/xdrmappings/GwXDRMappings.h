@@ -244,7 +244,7 @@ class GwXDRMappings{
         //get the mappings
         //the returned mapping will exactly contain one mapping def
         GwXDRFoundMapping getMapping(String xName,String xType,String xUnit);
-        GwXDRFoundMapping getMapping(GwXDRCategory category,int selector,int field=0,int instance=-1);
+        GwXDRFoundMapping getMapping(double value,GwXDRCategory category,int selector,int field=0,int instance=-1);
         String getXdrEntry(String mapping, double value,int instance=0);
         const char * getUnMapped();
         const GwXDRType * findType(const String &typeString, const String &unitString) const;

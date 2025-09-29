@@ -431,7 +431,8 @@ GwXDRFoundMapping GwXDRMappings::getMapping(String xName,String xType,String xUn
     }
     return selectMapping(&(it->second),instance,n183Key.c_str());
 }
-GwXDRFoundMapping GwXDRMappings::getMapping(GwXDRCategory category,int selector,int field,int instance){
+GwXDRFoundMapping GwXDRMappings::getMapping(double value,GwXDRCategory category,int selector,int field,int instance){
+    if (value == N2kDoubleNA) return GwXDRFoundMapping(); //do not add to unknown mappings
     unsigned long n2kKey=GwXDRMappingDef::n2kKey(category,selector,field);
     auto it=n2kMap.find(n2kKey);
     if (it == n2kMap.end()){

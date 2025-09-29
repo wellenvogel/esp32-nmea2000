@@ -143,7 +143,7 @@ private:
      */
     GwXDRFoundMapping getOtherFieldMapping(GwXDRFoundMapping &found, int field){
         if (found.empty) return GwXDRFoundMapping();
-        return xdrMappings->getMapping(found.definition->category,
+        return xdrMappings->getMapping(0,found.definition->category,
             found.definition->selector,
             field,
             found.instanceId);
