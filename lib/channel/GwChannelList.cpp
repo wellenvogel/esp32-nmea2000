@@ -53,7 +53,7 @@ static int typeFromMode(const char *mode){
 #define GWSERIAL_ENA -1
 #endif
 #ifndef GWSERIAL_ELO
-#define GWSERIAL_ELO 1
+#define GWSERIAL_ELO 0
 #endif
 #ifndef GWSERIAL_BAUD
 #define GWSERIAL_BAUD -1
@@ -76,7 +76,7 @@ CFG_SERIAL(SERIAL1_CHANNEL_ID, GWSERIAL_RX, GWSERIAL_TX, typeFromMode(GWSERIAL_M
 #define GWSERIAL2_ENA -1
 #endif
 #ifndef GWSERIAL2_ELO
-#define GWSERIAL2_ELO 1
+#define GWSERIAL2_ELO 0
 #endif
 #ifndef GWSERIAL2_BAUD
 #define GWSERIAL2_BAUD -1
