@@ -167,8 +167,17 @@ class PipelineInfo{
         updateStatus();
         if (gitSha !== undefined) param.tag=gitSha;
         param.config=JSON.stringify(config);
+        let buildname=config['root:buildname']
+        if (buildname){
+            param.suffix="-"+buildname
+        }
         if (buildVersion !== undefined){
-            param.suffix="-"+buildVersion;
+            if (param.suffix){
+               param.suffix+="-"+buildVersion;
+            }
+            else{
+                param.suffix="-"+buildVersion;
+            }
         }
         fetchJson(API,Object.assign({
             api:'start'},param))
@@ -528,28 +537,32 @@ class PipelineInfo{
         if (config.type === 'string'){
             let ip=addEl('input','t'+config.type,inputFrame);
             addDescription(config,inputFrame);
-            ip.value=current?current:"";
+            const buildChild=(value)=>{
+                if (value) {
+                    if (config.max) {
+                        if (value && value.length > config.max) {
+                            value = value.substring(0, config.max);
+                        }
+                    }
+                    if (config.allowed) {
+                        let check = new RegExp("[^" + config.allowed + "]", "g");
+                        let nv = value.replace(check, "");
+                        if (nv != value) {
+                            value = nv;
+                        }
+                    }
+                }
+                return Object.assign({},config,{key: value,value:value});
+            }
+            initialConfig=buildChild(current);
+            ip.value=initialConfig.value||"";
             ip.addEventListener('change',(ev)=>{
                 let value=ev.target.value;
-                let modified=false;
-                if (config.max){
-                    if (value && value.length > config.max){
-                        modified=true;
-                        value=value.substring(0,config.max);
-                    }
+                let cbv=buildChild(value);
+                if (cbv.value != value){
+                    ev.target.value=cbv.value;
                 }
-                if (config.allowed){
-                    let check=new RegExp("[^"+config.allowed+"]","g");
-                    let nv=value.replace(check,"");
-                    if (nv != value){
-                        modified=true;
-                        value=nv;
-                    }
-                }
-                if (modified){
-                    ev.target.value=value;
-                }
-                callback(Object.assign({},config,{key: value,value:value}),false);
+                callback(cbv,false);
 
             });
         }
