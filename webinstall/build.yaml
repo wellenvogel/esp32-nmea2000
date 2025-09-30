@@ -320,13 +320,22 @@ types:
   
   - &protogpio
       - {label: unset,value:}
-      - PPIN19
-      - PPIN21
-      - PPIN22
-      - PPIN23
-      - PPIN25
-      - PPIN33
-
+      - {label: "PPIN19(left-2,gpio 19)", value: PPIN19}
+      - {label: "PPIN21(right-1,gpio 21)", value: PPIN21}
+      - {label: "PPIN22(left-1,gpio 22)", value: PPIN22}
+      - {label: "PPIN23(left-3,gpio 23)", value: PPIN23}
+      - {label: "PPIN25(right-2,gpio 25)", value: PPIN25}
+      - {label: "PPIN33(left-4,gpio 33)", value: PPIN33}
+  
+  - &protogpios3
+      - {label: unset,value:}
+      - {label: "PPIN19(left-2,gpio 6)", value: PPIN19}
+      - {label: "PPIN21(right-1,gpio 39)", value: PPIN21}
+      - {label: "PPIN22(left-1,gpio 5)", value: PPIN22}
+      - {label: "PPIN23(left-3,gpio 7)", value: PPIN23}
+      - {label: "PPIN25(right-2,gpio 38)", value: PPIN25}
+      - {label: "PPIN33(left-4,gpio 8)", value: PPIN33}  
+  
   - &baudselect
     type: dropdown
     help: 'Select the baud rate'
@@ -369,7 +378,7 @@ types:
     key: ELOW
     label: "enable low"
     target: "define:#serial#ELO"
-    default: true
+    default: false
     help: "set: low on enable pin for output, unset: high on enable pin for output"
     values:
     - key: true
@@ -774,8 +783,8 @@ types:
           url: "https://docs.m5stack.com/en/atom/atomhub"
           label: "Hub Proto"
           base:
-            gpioinputv: *protogpio
-            gpiopinv: *protogpio
+            gpioinputv: "#protogpio#"
+            gpiopinv: "#protogpio#"
           children:
             *m5protochildren
         - value: M5_PORTABC
@@ -802,6 +811,7 @@ config:
         gpiopinv: *gpiopinv
         gpioinputv: *gpioinputv
         grv: ""
+        protogpio: *protogpio
       values: 
         - value: m5stack-atom-generic
           label: m5stack-atom
@@ -816,6 +826,8 @@ config:
           description: "M5 Stack AtomS3 light"
           url: "http://docs.m5stack.com/en/core/AtomS3%20Lite"
           resource: *esp32default
+          base:
+            protogpio: *protogpios3
           children:
             - *m5base    
             - *m5groove
@@ -830,7 +842,7 @@ config:
 
         - value: nodemcu-generic
           label: nodemcu
-          description: "Node mcu esp32"
+          description: "Node mcu esp32,4MB flash, no PSRAM"
           url: "https://docs.platformio.org/en/stable/boards/espressif32/nodemcu-32s.html"
           resource: *esp32default
           children:
@@ -864,6 +876,7 @@ config:
           base:
             gpiopinv: *gpiopinvs3
             gpioinputv: *gpiopinvs3
+            protogpio: *protogpios3
           children:
             - *serial1
             - *serial2
