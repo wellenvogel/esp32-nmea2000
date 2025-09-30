@@ -2,6 +2,7 @@ Import("env", "projenv")
 import os
 import glob
 import shutil
+import re
 
 print("##post script running")
 HDROFFSET=288
@@ -39,6 +40,7 @@ def post(source,target,env):
     appoffset=env.subst("$ESP32_APP_OFFSET")
     firmware=env.subst("$BUILD_DIR/${PROGNAME}.bin")
     (fwname,version)=getFirmwareInfo(firmware)
+    fwname=re.sub(r"[^0-9A-Za-z_.-]*","",fwname)
     print("found fwname=%s, fwversion=%s"%(fwname,version))
     python=env.subst("$PYTHONEXE")
     print("base=%s,esptool=%s,appoffset=%s,uploaderflags=%s"%(base,esptool,appoffset,uploaderflags))
@@ -70,10 +72,12 @@ def post(source,target,env):
     print("running %s"%" ".join(cmd))
     env.Execute(" ".join(cmd),"#testpost")
     ofversion="-"+version
-    versionedFile=os.path.join(outdir,"%s%s-update.bin"%(base,ofversion))
+    versionedFile=os.path.join(outdir,"%s%s-update.bin"%(fwname,ofversion))
     shutil.copyfile(firmware,versionedFile)
-    versioneOutFile=os.path.join(outdir,"%s%s-all.bin"%(base,ofversion))
+    print(f"wrote {versionedFile}")
+    versioneOutFile=os.path.join(outdir,"%s%s-all.bin"%(fwname,ofversion))
     shutil.copyfile(outfile,versioneOutFile)
+    print(f"wrote {versioneOutFile}")
 env.AddPostAction(
     "$BUILD_DIR/${PROGNAME}.bin",
     post

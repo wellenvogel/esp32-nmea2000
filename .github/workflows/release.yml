@@ -62,5 +62,5 @@ jobs:
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ steps.version.outputs.version}}
-          file: ./.pio/build/*/*-{all,update}.bin
+          file: ./.pio/build/*/*${{ steps.version.outputs.version }}*-{all,update}.bin
           file_glob: true

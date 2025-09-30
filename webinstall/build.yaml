@@ -803,6 +803,13 @@ resources:
 
 config:
   children:
+    - type: string
+      label: 'Build Name'
+      key: buildname
+      target: "define:GWBUILD_NAME"
+      help: "Set a name to identify your build. Will also become the name for the generated files and the firmware type in the image. Max 31 characters."
+      max: 31
+      allowed: "0-9A-Za-z_-"
     - type: select
       target: environment
       label: 'Board'

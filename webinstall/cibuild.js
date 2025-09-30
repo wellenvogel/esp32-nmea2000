@@ -234,7 +234,11 @@ class PipelineInfo{
     }
     const downloadConfig=()=>{
         let name=configName;
-        if (isModified) name=name.replace(/[0-9]*$/,'')+formatDate(undefined,true);
+        const buildname=config["root:buildname"]
+        if (buildname && name != buildname){
+            name+="-"+buildname+"-";
+        }
+        name=name.replace(/[0-9]*$/,'')+formatDate(undefined,true);
         name+=".json";
         fileDownload(JSON.stringify(config),name);
     }
@@ -520,6 +524,34 @@ class PipelineInfo{
             let cb=addEl('div','t'+config.type,inputFrame);
             addDescription(config,inputFrame);
             initialConfig=expandedValues[0];
+        }
+        if (config.type === 'string'){
+            let ip=addEl('input','t'+config.type,inputFrame);
+            addDescription(config,inputFrame);
+            ip.value=current?current:"";
+            ip.addEventListener('change',(ev)=>{
+                let value=ev.target.value;
+                let modified=false;
+                if (config.max){
+                    if (value && value.length > config.max){
+                        modified=true;
+                        value=value.substring(0,config.max);
+                    }
+                }
+                if (config.allowed){
+                    let check=new RegExp("[^"+config.allowed+"]","g");
+                    let nv=value.replace(check,"");
+                    if (nv != value){
+                        modified=true;
+                        value=nv;
+                    }
+                }
+                if (modified){
+                    ev.target.value=value;
+                }
+                callback(Object.assign({},config,{key: value,value:value}),false);
+
+            });
         }
         let childFrame=addEl('div','childFrame',frame);
         if (initialConfig !== undefined){
