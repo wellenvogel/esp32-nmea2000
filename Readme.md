@@ -174,6 +174,19 @@ For details refer to the [example description](lib/exampletask/Readme.md).
 
 Changelog
 ---------
+[20251007](../../releases/tag/20251007)
+*********
+* add AIS Aton translations (PGN 129041 <-> Ais class 21)
+* improved mapping of AIS transducer information (NMEA2000) to AIS channel and Talker on NMEA0183
+* [#114](../../issues/114) correctly translate AIS type 1/3 from PGN 129038
+* add support for a generic S3 build in the build UI
+* [#117](../../issues/117) add support for a transmit enable pin for RS 485 conections (also in the build UI)
+* [#116](../../issues/116) SDA and SCL are swapped in the build UI
+* [#112](../../issues/112) clearify licenses
+* [#110](../../issues/110) / [#115](../../pull/115) support for the M5 GPS unit v1.1
+* [#102](../../issues/102) optimize Wifi reconnect handling
+* [#111](../../pull/111) allow for a custom python build script
+
 [20250305](../../releases/tag/20250305)
 *********
 * better handling for reconnect to a raspberry pi after reset [#102](../../issues/102)

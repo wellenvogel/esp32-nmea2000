@@ -58,7 +58,7 @@ Files
      Starting from Version 20250305 you should normally not use this file name any more as those styles would be added for all build environments. Instead define a parameter _custom_css_ in your [platformio.ini](platformio.ini) for the environments you would like to add some styles for. This parameter accepts a list of file names (relative to the project root, separated by , or as multi line entry)
 
    * [script.py](script.py)<br>
-     Starting from version 202509xx you can define a parameter "custom_script" in your [platformio.ini](platformio.ini).
+     Starting from version 20251007 you can define a parameter "custom_script" in your [platformio.ini](platformio.ini).
      This parameter can contain a list of file names (relative to the project root) that will be added as a [platformio extra script](https://docs.platformio.org/en/latest/scripting/index.html#scripting). The scripts will be loaded at the end of the main [extra_script](../../extra_script.py).
      You can add code there that is specific for your build.
      Example:
