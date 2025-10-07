@@ -186,6 +186,7 @@ Changelog
 * [#110](../../issues/110) / [#115](../../pull/115) support for the M5 GPS unit v1.1
 * [#102](../../issues/102) optimize Wifi reconnect handling
 * [#111](../../pull/111) allow for a custom python build script
+* [#113](../../issues/113) support for M5 stack Env4
 
 [20250305](../../releases/tag/20250305)
 *********
