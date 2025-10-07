@@ -178,6 +178,7 @@ Changelog
 *********
 * add AIS Aton translations (PGN 129041 <-> Ais class 21)
 * improved mapping of AIS transducer information (NMEA2000) to AIS channel and Talker on NMEA0183
+* use a forked version of the NMEA2000 library (as an intermediate workaround)
 * [#114](../../issues/114) correctly translate AIS type 1/3 from PGN 129038
 * add support for a generic S3 build in the build UI
 * [#117](../../issues/117) add support for a transmit enable pin for RS 485 conections (also in the build UI)
