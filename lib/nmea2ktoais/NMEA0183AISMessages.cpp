@@ -369,33 +369,50 @@ bool AddText(tNMEA0183AISMsg &NMEA0183AISMsg, char *FieldVal, uint8_t length) {
 //  the special value 511 indicates 511 meters or greater;
 //  for the dimensions to port and starboard, the special value 63 indicates 63 meters or greater.
 // 30 Bit
+//  If PosRefStbd or PosRefBow is not set we assume the antenna to be in the middle 
+//  of the ship. This way we can still transfer the length and beam values on the 0183 side.
+//  This also avoids "0" values for this fields on the 0183 side potentially confusing
+//  display devices.
+//  see https://github.com/wellenvogel/esp32-nmea2000/issues/134
+uint16_t clampDim(double dim,uint16_t max){
+  if (dim < 0) return 0;
+  if (dim > max) return max;
+  return dim;
+}
 bool AddDimensions(tNMEA0183AISMsg &NMEA0183AISMsg, double Length, double Beam, double PosRefStbd, double PosRefBow) {
   uint16_t _PosRefBow = 0;
   uint16_t _PosRefStern = 0;
   uint16_t _PosRefStbd = 0;
   uint16_t _PosRefPort = 0;
 
-  if ( PosRefBow >= 0.0 && PosRefBow <= 511.0 ) {
-    _PosRefBow = ceil(PosRefBow);
-  } else {
-    _PosRefBow = 511;
+  if (N2kIsNA(PosRefBow)) {
+    if ( !N2kIsNA(Length)){
+      _PosRefBow=clampDim(ceil(Length/2),511);
+      _PosRefStern=clampDim(floor(Length/2),511);
+    }
+      /* else: values already 0 */
+  }
+  else{
+    _PosRefBow=clampDim(ceil(PosRefBow),511);
+    if ( !N2kIsNA(Length) ) {
+      _PosRefStern = clampDim(floor( Length  - PosRefBow),511);
+    }
+    /* else: values already 0 */
   }
 
-  if ( PosRefStbd >= 0.0 && PosRefStbd <= 63.0 ) {
-    _PosRefStbd = ceil(PosRefStbd);
-  } else {
-    _PosRefStbd = 63;
+  if (N2kIsNA(PosRefStbd)){
+    if ( !N2kIsNA(Beam)){
+      _PosRefPort=clampDim(ceil(Beam/2),63);
+      _PosRefStbd=clampDim(floor(Beam/2),63);
+    }
+     /* else: values already 0 */
   }
-
-  if ( !N2kIsNA(Length) ) {
-    _PosRefStern = ceil( Length ) - _PosRefBow;
-    if ( _PosRefStern < 0 ) _PosRefStern = 0;
-    if ( _PosRefStern > 511 ) _PosRefStern = 511;
-  }
-  if ( !N2kIsNA(Beam) ) {
-    _PosRefPort = ceil( Beam ) - _PosRefStbd;
-    if ( _PosRefPort < 0 ) _PosRefPort = 0;
-    if ( _PosRefPort > 63 ) _PosRefPort = 63;
+  else{
+    _PosRefStbd=clampDim(ceil(PosRefStbd),63);
+    if ( !N2kIsNA(Beam) ) {
+      _PosRefPort = clampDim(floor( Beam - PosRefStbd),63);
+    }
+    /* else: values already 0 */
   }
 
   if ( ! NMEA0183AISMsg.AddIntToPayloadBin(_PosRefBow, 9) ) return false;
