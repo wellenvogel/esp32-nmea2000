@@ -174,6 +174,13 @@ For details refer to the [example description](lib/exampletask/Readme.md).
 
 Changelog
 ---------
+[20260819](../../releases/tag/20260819)
+* [#135](../../issues/135) improve Wifi stability
+* [#134](../../issues/134) better handling for AIS ship dimensions
+* [#122](../../issues/122) fix inversion of lat/lon for 129038
+* [#124](../../issues/124) avoid regexp python warnings
+* add support for C3
+
 [20251126](../../releases/tag/20251126)
 * fix a bug in the Actisense reader that could lead to an endless loop (making the device completely non responsive)
 * upgrade to 4.24.1 of the NMEA2000 library (2025/11/01) - refer to the [changes](https://github.com/ttlappalainen/NMEA2000/blob/master/Documents/src/changes.md) - Especially UTF8 support
