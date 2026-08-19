@@ -10,6 +10,37 @@ GwWifi::GwWifi(const GwConfigHandler *config,GwLog *log, bool fixedApPass){
     wifiPass=config->getConfigItem(config->wifiPass,true);
     this->fixedApPass=fixedApPass;
 }
+
+/* some google info about ESP32 AP issues
+The technical adjustments proposed for the ESP32 to bypass strict modern Linux driver frameworks (rtl8xxxu/mac80211) are thoroughly documented in Espressif’s official developer specifications. [1, 2] 
+The primary references for each code change are detailed below:
+------------------------------
+## 1. Forcing Legacy 802.11b/g Mode
+
+* The Source: [Espressif Systems ESP-IDF Programming Guide — Wi-Fi API Reference](https://docs.espressif.com/projects/esp-idf/en/stable/esp32/api-reference/network/esp_wifi.html). [3] 
+* The Mechanism: The function esp_wifi_set_protocol() configures the specific wireless standard allowed on a given network interface. By passing the bitwise masks WIFI_PROTOCOL_11B | WIFI_PROTOCOL_11G, you strictly strip out High Throughput (802.11n / HT) functionality. [4, 5, 6, 7, 8] 
+* Why it stops the timeout: Modern mac80211 kernel drivers on Linux require complex multi-antenna and spatial configuration parsing from 802.11n access points. Forcing legacy "g" mode forces the ESP32 to drop custom 802.11n parameters, allowing strict drivers to register the management frames without failing packet checks. [5, 6] 
+
+## 2. Standardizing the 20MHz Channel Bandwidth (HT20)
+
+* The Source: [Espressif GitHub Core Repository — Tracking Issue #6624](https://github.com/espressif/arduino-esp32/issues/6624) & [ESP32 Developer Forum Archive](https://esp32.com/viewtopic.php?t=28025). [9, 10] 
+* The Mechanism: The native ESP32 Arduino wrapper defaults to HT40 (40MHz wide channel) allocations for Soft-AP configurations. Calling esp_wifi_set_bandwidth(WIFI_IF_AP, WIFI_BW_HT20) explicitly forces the chip to use standard 20MHz pipelines. [9, 10, 11] 
+* Why it stops the timeout: Strict drivers like rtl8xxxu require precise HT20/HT40 coexistence agreements in the 2.4GHz spectrum. Because the ESP32 lacks dynamic bandwidth negotiation fallback logic, forcing a static HT20 configuration prevents the Linux kernel from dropping misaligned beacon packets. [10, 12] 
+
+## 3. Disabling PMF (Protected Management Frames)
+
+* The Source: [Espressif Programming Guide — Wi-Fi MAC Layer Protocols](https://docs.espressif.com/projects/esp-idf/en/stable/esp32/api-guides/wifi-driver/wifi-mac-protocols.html).
+* The Mechanism: Configured via the wifi_auth_mode_t options inside the core softap_config struct. Passing the argument configuration flag 4 via WiFi.softAP() strictly enforces WIFI_AUTH_WPA2_PSK.
+* Why it stops the timeout: Linux Kernel 6.12 implements PMF (802.11w) mandates whenever it detects a WPA2/WPA3 mixed capability frame layout. By explicitly restricting the ESP32 to strict, un-mixed legacy WPA2-PSK, you bypass the advanced encryption layer negotiations that the microcontroller's lightweight software stack often fails to reply to fast enough. [5, 12, 13] 
+
+------------------------------
+If you are developing your firmware, let me know:
+
+* Would you like the exact library dependencies (#include lines) needed to compile these functions across the Arduino IDE or PlatformIO/ESP-IDF?
+* I can provide a copy-paste template tailored to your specific builder tool.
+
+
+*/
 void GwWifi::setup(){
     LOG_DEBUG(GwLog::LOG,"Wifi setup");
     IPAddress defaultAddr(192,168,15,1);
@@ -66,6 +97,8 @@ void GwWifi::setup(){
     else{
         WiFi.softAP(ssid,config->getConfigItem(config->apPassword)->asCString());
     }
+    esp_wifi_set_bandwidth(WIFI_IF_AP, WIFI_BW_HT20);
+    esp_wifi_set_ps(WIFI_PS_NONE);
     delay(100);
     WiFi.softAPConfig(AP_local_ip, AP_gateway, AP_subnet);
     LOG_DEBUG(GwLog::ERROR,"WifiAP created: ssid=%s,adress=%s",
