@@ -394,7 +394,7 @@ private:
                 boatData->GPSD->update(DaysSince1970,sourceId);
             int quality=0;
             if ((int)GNSSmethod <= 5) quality=(int)GNSSmethod;
-            tNMEA0183AISMsg nmeaMsg;
+            tNMEA0183Msg nmeaMsg;
             if (NMEA0183SetGGA(nmeaMsg,GpsTime,Latitude,Longitude,
                 quality,nSatellites,HDOP,Altitude,GeoidalSeparation,AgeOfCorrection,
                 ReferenceSationID,talkerId)){
@@ -773,6 +773,7 @@ private:
             }
         }
     } // end 129038 AIS Class A Position Report Message 1/3
+
 
     //*****************************************************************************
     // 129039 AIS Class B Position Report -> AIS Message Type 5: Static and Voyage Related Data
