@@ -283,7 +283,7 @@ types:
     type: dropdown
     resource: "gpio:"
     help: 'Select the number of the GPIO pin for this function'
-    values: "#gpiopinv#"
+    values: "#gpioinputv#"
       
   - &gpioinputv    
       - {label: unset,value:}
