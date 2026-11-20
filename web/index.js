@@ -1,4 +1,5 @@
 (function () {
+    'use strict';
     let lastUpdate = (new Date()).getTime();
     let reloadConfig = false;
     let needAdminPass = true;
@@ -569,8 +570,8 @@
         //el.disabled=true;
         cb.addEventListener('click', (ev) => {
             const sv = function (val, cfg) {
+                let v = parseFloat(val);
                 if (configItem.eval) {
-                    let v = parseFloat(val);
                     let c = parseFloat(cfg);
                     return (eval(configItem.eval));
                 }
@@ -715,7 +716,7 @@
         return rt;
     }
     function getXdrCategoryName(cid) {
-        category = parseInt(cid);
+        let category = parseInt(cid);
         for (let c in xdrConfig) {
             let base = xdrConfig[c];
             if (parseInt(base.id) == category) {
@@ -724,7 +725,7 @@
         }
     }
     function getXdrCategory(cid) {
-        category = parseInt(cid);
+        let category = parseInt(cid);
         for (let c in xdrConfig) {
             let base = xdrConfig[c];
             if (parseInt(base.id) == category) {
@@ -1294,7 +1295,7 @@
                         valueEl.dispatchEvent(changeEvent);
                     })
                 }
-                bt = addEl('button', 'infoButton', btContainer, '?');
+                let bt = addEl('button', 'infoButton', btContainer, '?');
                 bt.addEventListener('click', function (ev) {
                     if (item.description) {
                         showOverlay(item.description);
