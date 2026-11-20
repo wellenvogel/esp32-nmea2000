@@ -43,7 +43,11 @@ void GwConfigHandler::logConfig(int level) const
 String GwConfigHandler::toJson() const{
     String rt;
     int num=getNumConfig();
-    DynamicJsonDocument jdoc(JSON_OBJECT_SIZE(num*2));
+    size_t capacity = JSON_OBJECT_SIZE(num);
+    for (int i = 0; i < num; ++i) {
+        capacity += configs[i]->getName().length() + 1;
+    }
+    DynamicJsonDocument jdoc(capacity);
     for (int i=0;i<num;i++){
         if (configs[i]->isSecret()){
             jdoc[configs[i]->getName()]="";    

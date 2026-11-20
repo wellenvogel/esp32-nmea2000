@@ -610,6 +610,23 @@ protected:
   }
 };
 
+class TestTimeRequest : public GwRequestMessage
+{
+public:
+  String time;
+  TestTimeRequest(String time) : GwRequestMessage(F("application/json"),F("testTime")){
+    this->time=time;
+  };
+
+protected:
+  virtual void processRequest()
+  {
+    usleep(strtol(time.c_str(), NULL, 10) * 1000); // sleep for the specified time in milliseconds
+    DynamicJsonDocument jdoc(1024);
+    jdoc["time"] = time;
+    serializeJson(jdoc,result);
+  }
+};
 
 void handleConfigRequestData(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total){
   typedef struct{
@@ -834,6 +851,13 @@ void setup() {
                                 String hash=request->arg("hash");
                                 return new CheckPassRequest(hash); 
                               });
+  /* uncomment to add a delay test
+  webserver.registerMainHandler("/api/testTime", [](AsyncWebServerRequest *request)->GwRequestMessage *
+                              { 
+                                String time=request->arg("time");
+                                return new TestTimeRequest(time); 
+                              });
+  */
   webserver.registerPostHandler("/api/setConfig",
                               [](AsyncWebServerRequest *request){
 
