@@ -222,6 +222,7 @@ class GwBoatData{
     GWBOATDATA(double,HDOP,formatDop)
     GWBOATDATA(double,PDOP,formatDop)
     GWBOATDATA(double,VDOP,formatDop)
+    GWBOATDATA(double,DBK,formatDepth) //waterDepth (below keel)
     GWBOATDATA(double,DBS,formatDepth) //waterDepth (below surface)
     GWBOATDATA(double,DBT,formatDepth) //DepthTransducer
     GWBOATDATA(double,GPST,formatTime) // GPS time (seconds of day)

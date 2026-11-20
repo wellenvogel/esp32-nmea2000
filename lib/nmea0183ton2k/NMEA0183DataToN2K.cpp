@@ -617,6 +617,9 @@ private:
         if (Offset != NMEA0183DoubleNA && Offset>=0 ){
             if (! boatData->DBS->update(DepthBelowTransducer+Offset,msg.sourceId)) return;
         }
+        if (Offset != NMEA0183DoubleNA && Offset<0 ){
+            if (! boatData->DBK->update(DepthBelowTransducer+Offset,msg.sourceId)) return;
+        }
         if (Offset == NMEA0183DoubleNA) Offset=N2kDoubleNA;
         if (! boatData->DBT->update(DepthBelowTransducer,msg.sourceId)) return;
         tN2kMsg n2kMsg;
@@ -664,15 +667,18 @@ private:
                 if (! boatData->DBT->isValid()) return;
                 double dbt=boatData->DBT->getData();
                 double offset=Depth-dbt;
-                if (offset >= 0 && dt == DBK){
-                    logger->logDebug(GwLog::DEBUG, "strange DBK - more depth then transducer %s", msg.line);    
-                    return;
-                }
-                if (offset < 0 && dt == DBS){
-                    logger->logDebug(GwLog::DEBUG, "strange DBS - less depth then transducer %s", msg.line);    
-                    return;
+                if (dt == DBK){
+                    if (offset >= 0){
+                        logger->logDebug(GwLog::DEBUG, "strange DBK - more depth then transducer %s", msg.line);    
+                        return;
+                    }
+                    if (! boatData->DBK->update(Depth,msg.sourceId)) return;
                 }
                 if (dt == DBS){
+                    if (offset < 0){
+                        logger->logDebug(GwLog::DEBUG, "strange DBS - less depth then transducer %s", msg.line);    
+                        return;
+                    }
                     if (! boatData->DBS->update(Depth,msg.sourceId)) return;
                 }
                 tN2kMsg n2kMsg;

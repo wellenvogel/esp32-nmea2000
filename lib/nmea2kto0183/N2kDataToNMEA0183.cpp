@@ -284,7 +284,10 @@ private:
                 if (offsetValid)
                 {
                     double WaterDepth = DepthBelowTransducer + Offset;
-                    updateDouble(boatData->DBS, WaterDepth);
+                    if (Offset >= 0.0)
+                        updateDouble(boatData->DBS, WaterDepth);
+                    else
+                        updateDouble(boatData->DBK, WaterDepth);
                 }
                 if (NMEA0183SetDBx(NMEA0183Msg, DepthBelowTransducer, Offset, talkerId))
                 {
