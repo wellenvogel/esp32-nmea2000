@@ -125,3 +125,11 @@ If you want to use your own hardware that requires PIN definitions different fro
 You basically need to create a directory with the string "task" in its name, inside an include file with the same name like the task directory that contain your hardware definitions and a platformio.ini that defines your board.
 By having this in a separate directory you can easily fetch new versions of this repo without conflicts.
 
+User Tested Hardware
+---------------------
+There is a couple of other hardware combinations that has been tested/ used by users.
+
+ * [RS-485+CAN bus+DCDC Converter Shield for WeMos D1 Mini32](../../issues/106)
+ * [ESP32-C3 Supermini](../../issues/86) - partly only
+ * [XS-WSDS01 Modbus RS-485 wind sensor](../../issues/94)
+
