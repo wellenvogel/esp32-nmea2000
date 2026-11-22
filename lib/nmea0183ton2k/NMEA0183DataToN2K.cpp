@@ -94,6 +94,16 @@ private:
         LOG_DEBUG(GwLog::DEBUG+1,"skipped n2k message %d",msg.PGN);
         return false;
     }
+    bool sendIf(tN2kMsg &msg,String key,unsigned long minDiff,int sourceId,String otherKey, unsigned long otherMinDiff){
+        if (!otherKey.isEmpty()){
+            auto it=lastSends.find(otherKey);
+            if (it != lastSends.end() && (it->second + otherMinDiff) > millis()){
+                LOG_DEBUG(GwLog::DEBUG+1,"skipped n2k message %d due to other key %s",msg.PGN,otherKey.c_str());
+                return false;
+            }  
+        }
+        return send(msg,key,minDiff,sourceId);
+    }
     bool send(tN2kMsg &msg, int sourceId,String key=""){
         return send(msg,key,config.min2KInterval,sourceId);
     }
@@ -377,6 +387,7 @@ private:
         }
         lastRmc=millis(); //we received an RMC that is not from us
         tN2kMsg n2kMsg;
+        bool timeOk=false;
         if (
             UD(GPST) &&
             UI(GPSD)
@@ -385,11 +396,14 @@ private:
             
             SetN2kSystemTime(n2kMsg, 1, GPSD, GPST);
             send(n2kMsg,msg.sourceId);
+            timeOk=true;
         }
+        bool llok=false;
         if (UD(LAT) &&
             UD(LON)){
             SetN2kLatLonRapid(n2kMsg,LAT,LON);
             send(n2kMsg,msg.sourceId);
+            llok=true;
         }
         if (UD(COG) && UD(SOG)){
             SetN2kCOGSOGRapid(n2kMsg,1,N2khr_true,COG,SOG);
@@ -399,6 +413,19 @@ private:
             SetN2kMagneticVariation(n2kMsg,1,N2kmagvar_Calc,
                 getUint32(boatData->GPSD), VAR);
             send(n2kMsg,msg.sourceId);    
+        }
+        if (timeOk && llok && config.auto129029Interval > 0){
+            tN2kMsg n2kMsg;
+            SetN2kGNSS(n2kMsg,1, GPSD,
+                GPST, LAT, LON, N2kDoubleNA,
+                     N2kGNSSt_GPS, N2kGNSSm_GNSSfix,
+                     boatData->SatInfo->getNumSats(), 
+                     boatData->HDOP->getDataWithDefault(N2kDoubleNA), 
+                     boatData->VDOP->getDataWithDefault(N2kDoubleNA), 
+                     boatData->PDOP->getDataWithDefault(N2kDoubleNA));
+            String key=String(n2kMsg.PGN);
+            //only send if there is no 129029 being send directly
+            sendIf(n2kMsg,key+String("A"),config.min2KInterval,msg.sourceId,key,config.auto129029Interval);
         }
 
     }
@@ -992,7 +1019,7 @@ private:
         converters.registerConverter(129283UL,129284UL,129285UL,
             String(F("RMB")), &NMEA0183DataToN2KFunctions::convertRMB);
         converters.registerConverter(
-            126992UL,129025UL,129026UL,127258UL, 
+            126992UL,129025UL,129026UL,127258UL, 129029UL,
             String(F("RMC")),  &NMEA0183DataToN2KFunctions::convertRMC);
         converters.registerConverter(
             130306UL,

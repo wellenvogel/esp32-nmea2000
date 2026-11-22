@@ -237,7 +237,18 @@
         "description": "min interval in ms between 2 NMEA 2000 records with the same PGN and the same source (> 5)",
         "category": "converter"
     },
-     {
+    {
+        "name": "cnvAuto129029",
+        "label":"129029 automatic interval",
+        "type": "number",
+        "default": "5000",
+        "check": "checkMinMax",
+        "min": 0,
+        "max": 5000,
+        "description": "if no PGN 129029 has been send from GGA with this time (ms), but we receive RMC - send PGN 129029 automatically after this interval.\nThis allows data only having RMC to be used.\nSet to 0 to disable.",
+        "category": "converter"
+    },
+    {
          "name":"sendN2k",
          "label":"NMEA2000 out",
          "type":"boolean",

@@ -50,85 +50,59 @@ private:
         *  register a converter
         *  each of the converter functions must be registered in the constructor 
         **/
-    void registerConverter(unsigned long pgn, Converter converter)
+    template <typename TC>
+    void registerConverter(unsigned long pgn, TC converter)
     {
         unsigned long *lpgn=new unsigned long[1]{pgn};
         ConverterEntry e(1,lpgn, converter);
         converters[String(pgn)] = e;
         keyListFilled=false;
     }
-    void registerConverter(unsigned long pgn, LConverter converter)
-    {
-        unsigned long *lpgn=new unsigned long[1]{pgn};
-        ConverterEntry e(1,lpgn, converter);
-        converters[String(pgn)] = e;
-        keyListFilled=false;
-    }
-    void registerConverter(unsigned long pgn, String sentence, Converter converter)
+    template <typename TC>
+    void registerConverter(unsigned long pgn, String sentence, TC converter)
     {
         unsigned long *lpgn=new unsigned long[1]{pgn};
         ConverterEntry e(1,lpgn, converter);
         converters[sentence] = e;
         keyListFilled=false;
     }
-    void registerConverter(unsigned long pgn, String sentence, LConverter converter)
-    {
-        unsigned long *lpgn=new unsigned long[1]{pgn};
-        ConverterEntry e(1,lpgn, converter);
-        converters[sentence] = e;
-        keyListFilled=false;
-    }
-    void registerConverter(int num,unsigned long *lpgn, String sentence, Converter converter)
+    template <typename TC>
+    void registerConverter(int num,unsigned long *lpgn, String sentence, TC converter)
     {
         ConverterEntry e(num,lpgn, converter);
         converters[sentence] = e;
         keyListFilled=false;
     }
-    void registerConverter(int num,unsigned long *lpgn, String sentence, LConverter converter)
-    {
-        ConverterEntry e(num,lpgn, converter);
-        converters[sentence] = e;
-        keyListFilled=false;
-    }
-    void registerConverter(unsigned long pgn, unsigned long pgn2, String sentence, Converter converter)
+    template <typename TC>
+    void registerConverter(unsigned long pgn, unsigned long pgn2, String sentence, TC converter)
     {
         unsigned long *lpgn=new unsigned long[2]{pgn,pgn2};
         ConverterEntry e(2, lpgn, converter);
         converters[sentence] = e;
         keyListFilled=false;
     }
-    void registerConverter(unsigned long pgn, unsigned long pgn2, String sentence, LConverter converter)
-    {
-        unsigned long *lpgn=new unsigned long[2]{pgn,pgn2};
-        ConverterEntry e(2, lpgn, converter);
-        converters[sentence] = e;
-        keyListFilled=false;
-    }
-    void registerConverter(unsigned long pgn, unsigned long pgn2, unsigned long pgn3,String sentence, Converter converter)
+    template <typename TC>
+    void registerConverter(unsigned long pgn, unsigned long pgn2, unsigned long pgn3,String sentence, TC converter)
     {
         unsigned long *lpgn=new unsigned long[3]{pgn,pgn2,pgn3};
         ConverterEntry e(3, lpgn,converter);
         converters[sentence] = e;
         keyListFilled=false;
     }
-    void registerConverter(unsigned long pgn, unsigned long pgn2, unsigned long pgn3,String sentence, LConverter converter)
-    {
-        unsigned long *lpgn=new unsigned long[3]{pgn,pgn2,pgn3};
-        ConverterEntry e(3, lpgn,converter);
-        converters[sentence] = e;
-        keyListFilled=false;
-    }
-    void registerConverter(unsigned long pgn, unsigned long pgn2, unsigned long pgn3,unsigned long pgn4,String sentence, Converter converter)
+    template <typename TC>
+    void registerConverter(unsigned long pgn, unsigned long pgn2, unsigned long pgn3,unsigned long pgn4,String sentence, TC converter)
     {
         unsigned long *lpgn=new unsigned long[4]{pgn,pgn2,pgn3,pgn4};
         ConverterEntry e(4, lpgn,converter);
         converters[sentence] = e;
         keyListFilled=false;
     }
-    void registerConverter(unsigned long pgn, unsigned long pgn2, unsigned long pgn3,unsigned long pgn4,String sentence, LConverter converter)
+    
+    template<typename TC>
+    void registerConverter(unsigned long pgn, unsigned long pgn2, unsigned long pgn3,unsigned long pgn4,unsigned long pgn5,String sentence, TC converter)
     {
-        unsigned long *lpgn=new unsigned long[4]{pgn,pgn2,pgn3,pgn4};
-        ConverterEntry e(4, lpgn,converter);
+        unsigned long *lpgn=new unsigned long[5]{pgn,pgn2,pgn3,pgn4,pgn5};
+        ConverterEntry e(5, lpgn,converter);
         converters[sentence] = e;
         keyListFilled=false;
     }

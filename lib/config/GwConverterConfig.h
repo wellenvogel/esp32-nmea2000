@@ -76,6 +76,7 @@ class GwConverterConfig{
       std::vector<WindMapping> windMappings;
       GwPgnFilter *pgnWriteFilter=NULL;
       GwPgnFilter *pgnReadFilter=NULL;
+      int auto129029Interval=0;
       void init(GwConfigHandler *config, GwLog*logger){
         minXdrInterval=config->getInt(GwConfigDefinitions::minXdrInterval,100);
         xdrTimeout=config->getInt(GwConfigDefinitions::timoSensor);
@@ -101,6 +102,7 @@ class GwConverterConfig{
             windMappings.push_back(mapping);
           }
         }
+        auto129029Interval=config->getInt(GwConfigDefinitions::cnvAuto129029,0);
       }
       const WindMapping findWindMapping(const tN2kWindReference &n2k) const{
         for (const auto & it:windMappings){
