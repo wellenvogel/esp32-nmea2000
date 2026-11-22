@@ -89,6 +89,22 @@
         "category":"system"
     },
     {
+        "name":"n2kInFilter",
+        "label":"In PGN filter",
+        "type":"pgnfilter",
+        "default": "",
+        "description":"Filter for incoming PGNs on the NMEA2000 bus",
+        "category":"nmea2000"
+    },
+    {
+        "name":"n2kOutFilter",
+        "label":"Out PGN filter",
+        "type":"pgnfilter",
+        "default": "",
+        "description":"Filter for outgoing PGNs on the NMEA2000 bus",
+        "category":"nmea2000"
+    },
+    {
         "name": "talkerId",
         "label": "NMEA0183 ID",
         "type": "list",
@@ -183,6 +199,14 @@
         "category": "converter"
     },
     {
+        "name": "cnvInFilter",
+        "label":"In PGN filter",
+        "type": "pgnfilter",
+        "default": "",
+        "description": "Filter for incoming PGNs for the converter",
+        "category": "converter"
+    },
+    {
         "name": "minXdrInterval",
         "label":"min XDR interval",
         "type": "number",
@@ -209,6 +233,15 @@
          "default":"true",
          "description":"send out the converted data on the NMEA2000 bus\nIf set to off the converted data will still be shown at the data tab.",
          "category":"converter"
+     },
+     {
+         "name":"cnvOutFilter",
+         "label":"Out PGN filter",
+         "type":"pgnfilter",
+         "default":"",
+         "description":"Filter for outgoing PGNs on the NMEA2000 bus",
+         "category":"converter",
+         "condition":{"sendN2k":"true"}
      },
      {
         "name":"unknownXdr",
@@ -443,6 +476,15 @@
         "condition":{"usbActisense":"false"}
     },
     {
+        "name": "usbActFilter",
+        "label": "actisense read PGN Filter",
+        "type": "pgnfilter",
+        "default": "",
+        "description": "PGN filter for the USB actisense read data",
+        "category": "usb port",
+        "condition":{"usbActisense":"true"}
+    },
+    {
         "name": "usbActSend",
         "label": "N2K to USB actisense",
         "type": "boolean",
@@ -450,6 +492,15 @@
         "description": "send out N2k data on the USB port in actisense format",
         "category": "usb port",
         "condition":{"usbActisense":"true"}
+    },
+    {
+        "name": "usbAcsFilter",
+        "label": "actisense send PGN Filter",
+        "type": "pgnfilter",
+        "default": "",
+        "description": "PGN filter for the USB actisense send data",
+        "category": "usb port",
+        "condition":{"usbActisense":"true","usbActSend":"true"}
     },
     {
         "name": "serialDirection",
@@ -755,12 +806,31 @@
         "category": "TCP server"
     },
     {
+        "name": "tcpSmFilter",
+        "label": "Seasmart read PGN Filter",
+        "type": "pgnfilter",
+        "default": "",
+        "description": "PGN filter for the Seasmart read data",
+        "category": "TCP server"
+    },
+    {
         "name": "sendSeasmart",
         "label": "Seasmart out",
         "type": "boolean",
         "default": "false",
         "description": "send NMEA2000 as seasmart to connected TCP clients",
         "category": "TCP server"
+    },
+    {
+        "name": "tcpSmSendFilter",
+        "label": "Seasmart send PGN Filter",
+        "type": "pgnfilter",
+        "default": "",
+        "description": "PGN filter for the Seasmart send data",
+        "category": "TCP server",
+        "condition":{
+            "sendSeasmart":"true"
+        }
     },
     {
         "name": "tclEnabled",
@@ -850,6 +920,17 @@
         }
     },
     {
+        "name": "tclSmFilter",
+        "label": "Seasmart read PGN Filter",
+        "type": "pgnfilter",
+        "default": "",
+        "description": "PGN filter for the Seasmart read data",
+        "category": "TCP client",
+        "condition":{
+            "tclEnabled":"true"
+        }
+    },
+    {
         "name": "tclSeasmart",
         "label": "Seasmart out",
         "type": "boolean",
@@ -858,6 +939,18 @@
         "category": "TCP client",
         "condition":{
             "tclEnabled":"true"
+        }
+    },
+    {
+        "name": "tclSmSendFilter",
+        "label": "Seasmart send PGN Filter",
+        "type": "pgnfilter",
+        "default": "",
+        "description": "PGN filter for the Seasmart send data",
+        "category": "TCP client",
+        "condition":{
+            "tclEnabled":"true",
+            "tclSeasmart":"true"
         }
     },
     {
@@ -949,6 +1042,18 @@
         }
     },
     {
+        "name": "udpSmSendFilter",
+        "label": "Seasmart send PGN Filter",
+        "type": "pgnfilter",
+        "default": "",
+        "description": "PGN filter for the Seasmart send data",
+        "category": "UDP writer",
+        "condition":{
+            "udpwSeasmart":"true",
+            "udpwEnabled":"true"
+        }
+    },
+    {
         "name": "udprEnabled",
         "label": "enable",
         "type": "boolean",
@@ -1017,6 +1122,17 @@
         "type": "filter",
         "default": "",
         "description": "filter for NMEA0183 data when receiving\nselect aison|aisoff, set a whitelist or a blacklist with NMEA sentences like RMC,RMB",
+        "category": "UDP reader",
+        "condition":{
+            "udprEnabled":"true"
+        }
+    },
+    {
+        "name": "udprSmFilter",
+        "label": "Seasmart read PGN Filter",
+        "type": "pgnfilter",
+        "default": "",
+        "description": "PGN filter for the Seasmart read data",
         "category": "UDP reader",
         "condition":{
             "udprEnabled":"true"

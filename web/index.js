@@ -648,6 +648,9 @@
         if (configItem.type === 'filter') {
             return createFilterInput(configItem, frame, clazz);
         }
+        if (configItem.type === 'pgnfilter') {
+            return createPgnFilterInput(configItem, frame, clazz);
+        }
         if (configItem.type === 'xdr') {
             return createXdrInput(configItem, frame, clazz);
         }
@@ -962,6 +965,75 @@
         });
         data.setAttribute('name', configItem.name);
         if (configItem.readOnly) data.setAttribute('disabled', true);
+        return data;
+    }
+    checkers.checkPgn=function(value){
+        if (!value) return true;
+        let parts = value.split(":");
+        if (parts.length != 2) return false;
+        let mode = parts[0];
+        let sentences = parts[1];
+        if (mode !== "0" && mode !== "1") return false;
+        return checkPgnValues(sentences);
+    }
+    function checkPgnValues(values){
+        if (!values) return true;
+        if (!/^\s*\d+(\s*,\s*\d+)*\s*$/.test(values)) return false;
+        return true;
+    }
+    const pgnHelpText="You can enter the PGNS that you would like to pass (whitelist) or block (blacklist) separated by commas";
+    function createPgnFilterInput(configItem, frame) {
+        if (configItem.description){
+            configItem.description = configItem.description + "\n" + pgnHelpText;
+        }
+        else{
+            configItem.description = pgnHelpText;
+        }
+        let el = addEl('div', 'filter', frame);
+        let mode = createInput({
+            type: 'list',
+            name: configItem.name + "_mode",
+            list: ['whitelist', 'blacklist'],
+            readOnly: configItem.readOnly
+        }, el);
+        let sentences = createInput({
+            type: 'text',
+            name: configItem.name + "_sentences",
+            readOnly: configItem.readOnly,
+            title: pgnHelpText
+        }, el);
+        sentences.addEventListener("input", function (ev) {
+            const nv=ev.target.value;
+            if (!checkPgnValues(nv)) {
+                sentences.classList.add('error');
+            } else {
+                sentences.classList.remove('error');
+            }
+        });
+        let data = addEl('input', undefined, el);
+        data.setAttribute('type', 'hidden');
+        let changeFunction = function () {
+            let cv = data.value || "";
+            let parts = cv.split(":");
+            mode.value = (parts[0] == '0') ? "whitelist" : "blacklist";
+            sentences.value = parts[1] || "";
+        }
+        let updateFunction = function () {
+            let nv = (mode.value == 'blacklist') ? "1" : "0";
+            nv += ":";
+            nv += sentences.value;
+            data.value = nv;
+            let chev = new Event('change');
+            data.dispatchEvent(chev);
+        }
+        mode.addEventListener('change', updateFunction);
+        sentences.addEventListener("change", updateFunction);
+        data.addEventListener('change', function (ev) {
+            changeFunction();
+        });
+        data.setAttribute('name', configItem.name);
+        if (configItem.readOnly) data.setAttribute('disabled', true);
+        data.setAttribute('data-check',"checkPgn");
         return data;
     }
     let moreicons = ['icon-more', 'icon-less'];
