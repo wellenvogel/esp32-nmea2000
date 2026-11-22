@@ -474,139 +474,144 @@ private:
         }
     }
 
+    void HandleWindData(tN2kWindReference WindReference, double WindAngle, double WindSpeed)
+    {
+        tNMEA0183Msg NMEA0183Msg;
+        tNMEA0183WindReference NMEA0183Reference;
+        GwConverterConfig::WindMapping mapping = config.findWindMapping(WindReference);
+        bool shouldSend = false;
+
+        // MWV sentence contains apparent/true ANGLE and SPEED
+        // https://gpsd.gitlab.io/gpsd/NMEA.html#_mwv_wind_speed_and_angle
+        // https://docs.vaisala.com/r/M211109EN-L/en-US/GUID-7402DEF8-5E82-446F-B63E-998F49F3D743/GUID-C77934C7-2A72-466E-BC52-CE6B8CC7ACB6
+        if (mapping.valid)
+        {
+            if (mapping.nmea0183Type == GwConverterConfig::WindMapping::AWA_AWS)
+            {
+                NMEA0183Reference = NMEA0183Wind_Apparent;
+                updateDouble(boatData->AWA, WindAngle);
+                updateDouble(boatData->AWS, WindSpeed);
+                setMax(boatData->MaxAws, boatData->AWS);
+                shouldSend = true;
+            }
+            if (mapping.nmea0183Type == GwConverterConfig::WindMapping::TWA_TWS)
+            {
+                NMEA0183Reference = NMEA0183Wind_True;
+                updateDouble(boatData->TWA, WindAngle);
+                updateDouble(boatData->TWS, WindSpeed);
+                setMax(boatData->MaxTws, boatData->TWS);
+                shouldSend = true;
+                if (boatData->HDT->isValid())
+                {
+                    double twd = WindAngle + boatData->HDT->getData();
+                    if (twd > 2 * M_PI)
+                    {
+                        twd -= 2 * M_PI;
+                    }
+                    updateDouble(boatData->TWD, twd);
+                }
+            }
+            if (mapping.nmea0183Type == GwConverterConfig::WindMapping::TWD_TWS)
+            {
+                NMEA0183Reference = NMEA0183Wind_True;
+                updateDouble(boatData->TWD, WindAngle);
+                updateDouble(boatData->TWS, WindSpeed);
+                setMax(boatData->MaxTws, boatData->TWS);
+                if (boatData->HDT->isValid())
+                {
+                    shouldSend = true;
+                    double twa = WindAngle - boatData->HDT->getData();
+                    if (twa > 2 * M_PI)
+                    {
+                        twa -= 2 * M_PI;
+                    }
+                    updateDouble(boatData->TWA, twa);
+                    WindAngle = twa;
+                }
+            }
+
+            if (shouldSend && NMEA0183SetMWV(NMEA0183Msg, formatCourse(WindAngle), NMEA0183Reference, WindSpeed, talkerId))
+            {
+                SendMessage(NMEA0183Msg);
+            }
+
+            if (shouldSend && NMEA0183Reference == NMEA0183Wind_Apparent)
+            {
+                double wa = formatCourse(WindAngle);
+                if (!NMEA0183Msg.Init("VWR", talkerId))
+                    return;
+                if (!NMEA0183Msg.AddDoubleField((wa > 180) ? 360 - wa : wa))
+                    return;
+                if (!NMEA0183Msg.AddStrField((wa >= 0 && wa <= 180) ? 'R' : 'L'))
+                    return;
+                if (!NMEA0183Msg.AddDoubleField(formatKnots(WindSpeed)))
+                    return;
+                if (!NMEA0183Msg.AddStrField("N"))
+                    return;
+                if (!NMEA0183Msg.AddDoubleField(WindSpeed))
+                    return;
+                if (!NMEA0183Msg.AddStrField("M"))
+                    return;
+                if (!NMEA0183Msg.AddDoubleField(formatKmh(WindSpeed)))
+                    return;
+                if (!NMEA0183Msg.AddStrField("K"))
+                    return;
+
+                SendMessage(NMEA0183Msg);
+            }
+        }
+
+        /* if (WindReference == N2kWind_Apparent && boatData->SOG->isValid())
+        { // Lets calculate and send TWS/TWA if SOG is available
+
+            double x = WindSpeed * cos(WindAngle);
+            double y = WindSpeed * sin(WindAngle);
+
+            updateDouble(boatData->TWD, atan2(y, -boatData->SOG->getData() + x));
+            updateDouble(boatData->TWS, sqrt((y * y) + ((-boatData->SOG->getData() + x) * (-boatData->SOG->getData() + x))));
+
+            setMax(boatData->MaxTws, boatData->TWS);
+
+            NMEA0183Reference = NMEA0183Wind_True;
+            if (NMEA0183SetMWV(NMEA0183Msg,
+                               formatCourse(boatData->TWD->getData()),
+                               NMEA0183Reference,
+                               boatData->TWS->getDataWithDefault(NMEA0183DoubleNA),talkerId))
+                SendMessage(NMEA0183Msg);
+            double magnetic = boatData->TWD->getData();
+            if (boatData->VAR->isValid())
+                magnetic -= boatData->VAR->getData();
+            if (!NMEA0183Msg.Init("MWD", talkerId))
+                return;
+            if (!NMEA0183Msg.AddDoubleField(formatCourse(boatData->TWD->getData())))
+                return;
+            if (!NMEA0183Msg.AddStrField("T"))
+                return;
+            if (!NMEA0183Msg.AddDoubleField(formatCourse(magnetic)))
+                return;
+            if (!NMEA0183Msg.AddStrField("M"))
+                return;
+            if (!NMEA0183Msg.AddDoubleField(boatData->TWS->getData() / 0.514444))
+                return;
+            if (!NMEA0183Msg.AddStrField("N"))
+                return;
+            if (!NMEA0183Msg.AddDoubleField(boatData->TWS->getData()))
+                return;
+            if (!NMEA0183Msg.AddStrField("M"))
+                return;
+
+            SendMessage(NMEA0183Msg);
+        } */
+    }
+
     //*****************************************************************************
     void HandleWind(const tN2kMsg &N2kMsg)
     {
         unsigned char SID;
         tN2kWindReference WindReference;
         double WindAngle=N2kDoubleNA, WindSpeed=N2kDoubleNA;
-        tNMEA0183WindReference NMEA0183Reference;
         if (ParseN2kWindSpeed(N2kMsg, SID, WindSpeed, WindAngle, WindReference)) {
-            tNMEA0183Msg NMEA0183Msg;
-            GwConverterConfig::WindMapping mapping=config.findWindMapping(WindReference);
-            bool shouldSend = false;
-
-            // MWV sentence contains apparent/true ANGLE and SPEED
-            // https://gpsd.gitlab.io/gpsd/NMEA.html#_mwv_wind_speed_and_angle
-            // https://docs.vaisala.com/r/M211109EN-L/en-US/GUID-7402DEF8-5E82-446F-B63E-998F49F3D743/GUID-C77934C7-2A72-466E-BC52-CE6B8CC7ACB6
-            if (mapping.valid)
-            {
-                if (mapping.nmea0183Type == GwConverterConfig::WindMapping::AWA_AWS)
-                {
-                    NMEA0183Reference = NMEA0183Wind_Apparent;
-                    updateDouble(boatData->AWA, WindAngle);
-                    updateDouble(boatData->AWS, WindSpeed);
-                    setMax(boatData->MaxAws, boatData->AWS);
-                    shouldSend = true;
-                }
-                if (mapping.nmea0183Type == GwConverterConfig::WindMapping::TWA_TWS)
-                {
-                    NMEA0183Reference = NMEA0183Wind_True;
-                    updateDouble(boatData->TWA, WindAngle);
-                    updateDouble(boatData->TWS, WindSpeed);
-                    setMax(boatData->MaxTws, boatData->TWS);
-                    shouldSend = true;
-                    if (boatData->HDT->isValid())
-                    {
-                        double twd = WindAngle + boatData->HDT->getData();
-                        if (twd > 2 * M_PI)
-                        {
-                            twd -= 2 * M_PI;
-                        }
-                        updateDouble(boatData->TWD, twd);
-                    }
-                }
-                if (mapping.nmea0183Type == GwConverterConfig::WindMapping::TWD_TWS)
-                {
-                    NMEA0183Reference = NMEA0183Wind_True;
-                    updateDouble(boatData->TWD, WindAngle);
-                    updateDouble(boatData->TWS, WindSpeed);
-                    setMax(boatData->MaxTws, boatData->TWS);
-                    if (boatData->HDT->isValid())
-                    {
-                        shouldSend = true;
-                        double twa = WindAngle - boatData->HDT->getData();
-                        if (twa > 2 * M_PI)
-                        {
-                            twa -= 2 * M_PI;
-                        }
-                        updateDouble(boatData->TWA, twa);
-                        WindAngle=twa;
-                    }
-                }
-
-                if (shouldSend && NMEA0183SetMWV(NMEA0183Msg, formatCourse(WindAngle), NMEA0183Reference, WindSpeed, talkerId))
-                {
-                    SendMessage(NMEA0183Msg);
-                }
-
-                if (shouldSend && NMEA0183Reference == NMEA0183Wind_Apparent)
-                {
-                    double wa = formatCourse(WindAngle);
-                    if (!NMEA0183Msg.Init("VWR", talkerId))
-                      return;
-                    if (!NMEA0183Msg.AddDoubleField(( wa > 180 ) ? 360-wa : wa))
-                      return;
-                    if (!NMEA0183Msg.AddStrField(( wa >= 0 && wa <= 180) ? 'R' : 'L'))
-                      return;
-                    if (!NMEA0183Msg.AddDoubleField(formatKnots(WindSpeed)))
-                      return;
-                    if (!NMEA0183Msg.AddStrField("N"))
-                      return;
-                    if (!NMEA0183Msg.AddDoubleField(WindSpeed))
-                      return;
-                    if (!NMEA0183Msg.AddStrField("M"))
-                      return;
-                    if (!NMEA0183Msg.AddDoubleField(formatKmh(WindSpeed)))
-                      return;
-                    if (!NMEA0183Msg.AddStrField("K"))
-                      return;
-
-                   SendMessage(NMEA0183Msg);
-                }
-            }
-
-            /* if (WindReference == N2kWind_Apparent && boatData->SOG->isValid())
-            { // Lets calculate and send TWS/TWA if SOG is available
-
-                double x = WindSpeed * cos(WindAngle);
-                double y = WindSpeed * sin(WindAngle);
-
-                updateDouble(boatData->TWD, atan2(y, -boatData->SOG->getData() + x));
-                updateDouble(boatData->TWS, sqrt((y * y) + ((-boatData->SOG->getData() + x) * (-boatData->SOG->getData() + x))));
-
-                setMax(boatData->MaxTws, boatData->TWS);
-
-                NMEA0183Reference = NMEA0183Wind_True;
-                if (NMEA0183SetMWV(NMEA0183Msg,
-                                   formatCourse(boatData->TWD->getData()),
-                                   NMEA0183Reference,
-                                   boatData->TWS->getDataWithDefault(NMEA0183DoubleNA),talkerId))
-                    SendMessage(NMEA0183Msg);
-                double magnetic = boatData->TWD->getData();
-                if (boatData->VAR->isValid())
-                    magnetic -= boatData->VAR->getData();
-                if (!NMEA0183Msg.Init("MWD", talkerId))
-                    return;
-                if (!NMEA0183Msg.AddDoubleField(formatCourse(boatData->TWD->getData())))
-                    return;
-                if (!NMEA0183Msg.AddStrField("T"))
-                    return;
-                if (!NMEA0183Msg.AddDoubleField(formatCourse(magnetic)))
-                    return;
-                if (!NMEA0183Msg.AddStrField("M"))
-                    return;
-                if (!NMEA0183Msg.AddDoubleField(boatData->TWS->getData() / 0.514444))
-                    return;
-                if (!NMEA0183Msg.AddStrField("N"))
-                    return;
-                if (!NMEA0183Msg.AddDoubleField(boatData->TWS->getData()))
-                    return;
-                if (!NMEA0183Msg.AddStrField("M"))
-                    return;
-
-                SendMessage(NMEA0183Msg);
-            } */
+            HandleWindData(WindReference, WindAngle, WindSpeed);
         }
     }
     //*****************************************************************************
@@ -1453,6 +1458,36 @@ private:
         finalizeXdr();
     }
 
+    void Handle130323(const tN2kMsg &msg){
+        tN2kMeteorlogicalStationData MeteoData;
+        if (!ParseN2kPGN130323(msg,MeteoData)){
+           LOG_DEBUG(GwLog::DEBUG,"unable to parse PGN %d",msg.PGN);
+           return;
+        }
+        int i=0;
+        GwXDRFoundMapping mapping;
+        if (MeteoData.AtmosphericPressure != N2kDoubleNA) {
+            mapping=xdrMappings->getMapping(MeteoData.AtmosphericPressure,XDRPRESSURE,N2kps_Atmospheric,0,0);
+            if (updateDouble(&mapping,MeteoData.AtmosphericPressure)){
+                LOG_DEBUG(GwLog::DEBUG+1,"found pressure mapping %s",mapping.definition->toString().c_str());
+                addToXdr(mapping.buildXdrEntry(MeteoData.AtmosphericPressure));
+                i++;
+            }
+        }
+        if (MeteoData.OutsideAmbientAirTemperature != N2kDoubleNA) {
+            mapping=xdrMappings->getMapping(MeteoData.OutsideAmbientAirTemperature, XDRTEMP,N2kts_OutsideTemperature,0,0);
+            if (updateDouble(&mapping,MeteoData.OutsideAmbientAirTemperature)){
+                LOG_DEBUG(GwLog::DEBUG+1,"found temperature mapping %s",mapping.definition->toString().c_str());
+                addToXdr(mapping.buildXdrEntry(MeteoData.OutsideAmbientAirTemperature));
+                i++;
+            }    
+        }
+        if (i>0) finalizeXdr();
+        if (MeteoData.WindSpeed != N2kDoubleNA && MeteoData.WindDirection != N2kDoubleNA && MeteoData.WindReference != N2kWind_Unavailable) {
+            HandleWindData(MeteoData.WindReference, MeteoData.WindDirection, MeteoData.WindSpeed);         
+        }
+    }
+
     void registerConverters()
     {
       //register all converter functions
@@ -1488,6 +1523,7 @@ private:
       converters.registerConverter(127488UL, &N2kToNMEA0183Functions::Handle127488);
       converters.registerConverter(130316UL, &N2kToNMEA0183Functions::Handle130316);
       converters.registerConverter(127257UL, &N2kToNMEA0183Functions::Handle127257);
+      converters.registerConverter(130323UL, &N2kToNMEA0183Functions::Handle130323);
 #define HANDLE_AIS
 #ifdef HANDLE_AIS
       converters.registerConverter(129038UL, &N2kToNMEA0183Functions::HandleAISClassAPosReport);  // AIS Class A Position Report, Message Type 1
