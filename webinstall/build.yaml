@@ -256,6 +256,8 @@ types:
       - 12
       - 13
       - 14
+      - {label: "15: could be used for XTAL, check!", value: 15}
+      - {label: "16: could be used for XTAL, check!", value: 16}
       - 17
       - 18
       - 19
