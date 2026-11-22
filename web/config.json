@@ -1042,7 +1042,7 @@
         }
     },
     {
-        "name": "udpSmSendFilter",
+        "name": "udpwSmsFilter",
         "label": "Seasmart send PGN Filter",
         "type": "pgnfilter",
         "default": "",

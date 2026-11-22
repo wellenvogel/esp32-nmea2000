@@ -171,6 +171,8 @@ typedef struct {
     int maxId;
     size_t rxstatus;
     size_t txstatus;
+    const char *pgnReadFilter;
+    const char *pgnWriteFilter;
 } ChannelParam;
 
 static  ChannelParam channelParameters[]={
@@ -190,7 +192,9 @@ static  ChannelParam channelParameters[]={
         .name="USB",
         .maxId=-1,
         .rxstatus=offsetof(GwApi::Status,GwApi::Status::usbRx),
-        .txstatus=offsetof(GwApi::Status,GwApi::Status::usbTx)
+        .txstatus=offsetof(GwApi::Status,GwApi::Status::usbTx),
+        .pgnReadFilter=GwConfigDefinitions::usbActFilter,
+        .pgnWriteFilter=GwConfigDefinitions::usbAcsFilter
     },
     {
         .id=SERIAL1_CHANNEL_ID,
@@ -208,7 +212,9 @@ static  ChannelParam channelParameters[]={
         .name="Serial",
         .maxId=-1,
         .rxstatus=offsetof(GwApi::Status,GwApi::Status::serRx),
-        .txstatus=offsetof(GwApi::Status,GwApi::Status::serTx)
+        .txstatus=offsetof(GwApi::Status,GwApi::Status::serTx),
+        .pgnReadFilter=NULL,
+        .pgnWriteFilter=NULL
     },
     {
         .id=SERIAL2_CHANNEL_ID,
@@ -226,7 +232,9 @@ static  ChannelParam channelParameters[]={
         .name="Serial2",
         .maxId=-1,
         .rxstatus=offsetof(GwApi::Status,GwApi::Status::ser2Rx),
-        .txstatus=offsetof(GwApi::Status,GwApi::Status::ser2Tx)
+        .txstatus=offsetof(GwApi::Status,GwApi::Status::ser2Tx),
+        .pgnReadFilter=NULL,
+        .pgnWriteFilter=NULL
     },
     {
         .id=MIN_TCP_CHANNEL_ID,
@@ -244,7 +252,9 @@ static  ChannelParam channelParameters[]={
         .name="TCPServer",
         .maxId=MIN_TCP_CHANNEL_ID+10,
         .rxstatus=offsetof(GwApi::Status,GwApi::Status::tcpSerRx),
-        .txstatus=offsetof(GwApi::Status,GwApi::Status::tcpSerTx)
+        .txstatus=offsetof(GwApi::Status,GwApi::Status::tcpSerTx),
+        .pgnReadFilter=GwConfigDefinitions::tcpSmFilter,
+        .pgnWriteFilter=GwConfigDefinitions::tcpSmSendFilter
     },
     {
         .id=TCP_CLIENT_CHANNEL_ID,
@@ -262,7 +272,9 @@ static  ChannelParam channelParameters[]={
         .name="TCPClient",
         .maxId=-1,
         .rxstatus=offsetof(GwApi::Status,GwApi::Status::tcpClRx),
-        .txstatus=offsetof(GwApi::Status,GwApi::Status::tcpClTx)
+        .txstatus=offsetof(GwApi::Status,GwApi::Status::tcpClTx),
+        .pgnReadFilter=GwConfigDefinitions::tclSmFilter,
+        .pgnWriteFilter=GwConfigDefinitions::tclSmSendFilter
     },
     {
         .id=UDPW_CHANNEL_ID,
@@ -280,7 +292,9 @@ static  ChannelParam channelParameters[]={
         .name="UDPWriter",
         .maxId=-1,
         .rxstatus=0,
-        .txstatus=offsetof(GwApi::Status,GwApi::Status::udpwTx)
+        .txstatus=offsetof(GwApi::Status,GwApi::Status::udpwTx),
+        .pgnReadFilter=NULL,
+        .pgnWriteFilter=GwConfigDefinitions::udpwSmsFilter
     },
     {
         .id=UDPR_CHANNEL_ID,
@@ -298,7 +312,9 @@ static  ChannelParam channelParameters[]={
         .name="UDPReader",
         .maxId=-1,
         .rxstatus=offsetof(GwApi::Status,GwApi::Status::udprRx),
-        .txstatus=0
+        .txstatus=0,
+        .pgnReadFilter=GwConfigDefinitions::udprSmFilter,
+        .pgnWriteFilter=NULL
     }
 
 
@@ -433,7 +449,9 @@ static GwChannel * createChannel(GwLog *logger, GwConfigHandler *config, int id,
         sendSeaSmart,
         config->getBool(param->toN2K),
         readAct,
-        writeAct);
+        writeAct,
+        config->getString(param->pgnReadFilter),
+        config->getString(param->pgnWriteFilter));
     LOG_INFO("created channel %s",channel->toString().c_str());
     return channel;
 }

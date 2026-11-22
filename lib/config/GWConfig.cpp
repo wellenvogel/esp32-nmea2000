@@ -143,21 +143,25 @@ bool GwConfigHandler::reset(){
     return true;
 }
 String GwConfigHandler::getString(const String name, String defaultv) const{
+    if (name.isEmpty()) return defaultv;
     GwConfigInterface *i=getConfigItem(name,false);
     if (!i) return defaultv;
     return i->asString();
 }
 const char * GwConfigHandler::getCString(const String name, const char *defaultv) const{
+    if (name.isEmpty()) return defaultv;
     GwConfigInterface *i=getConfigItem(name,false);
     if (!i) return defaultv;
     return i->asCString();
 }
 bool GwConfigHandler::getBool(const String name, bool defaultv) const{
+    if (name.isEmpty()) return defaultv;
     GwConfigInterface *i=getConfigItem(name,false);
     if (!i) return defaultv;
     return i->asBoolean();
 }
 int GwConfigHandler::getInt(const String name,int defaultv) const{
+    if (name.isEmpty()) return defaultv;
     GwConfigInterface *i=getConfigItem(name,false);
     if (!i) return defaultv;
     return i->asInt();
@@ -307,4 +311,57 @@ String GwNmeaFilter::toString(){
         rt+=","+*it;
     }
     return rt;
+}
+
+String GwPgnFilter::toString(){
+    String rt(config);
+    rt+="bl:"+String(blacklist);
+    rt+="[";
+    for (auto it=filter.begin();it != filter.end();it++){
+        rt+=","+String(it->first);
+    }
+    rt+="]";
+    return rt;
+}
+
+bool GwPgnFilter::canPass(long pgn){
+    if (always) return true;
+    auto it = filter.find(pgn);
+    if (it != filter.end()){
+        return !blacklist;
+    }
+    return blacklist;
+}
+bool GwPgnFilter::canPass(const char *buffer){
+    if (always) return true;
+    if (buffer == nullptr) return false;
+    if (strlen(buffer) > 7 && strncmp(buffer,"$PCDIN,",7) == 0){
+        long pgn=std::strtol(buffer+7, nullptr, 16);
+        return canPass(pgn);
+    }
+    return false;
+}
+GwPgnFilter::GwPgnFilter(String config){
+    this->config=config;
+    if (config.isEmpty()) {
+        always=true;
+        return;
+    }
+    int start=config.indexOf(':');
+    if (start> 0){
+        blacklist=config.substring(0,start).toInt() != 0;
+        String list=config.substring(start+1);
+        int last=0;
+        int found=0;
+        while ((found = list.indexOf(',',last)) >= 0){
+            filter[list.substring(last,found).toInt()]=true;
+            last=found+1;
+        }
+        if (last < list.length()){
+            filter[list.substring(last).toInt()]=true;
+        }
+    }
+    else{
+        always=true;
+    }
 }

@@ -71,7 +71,9 @@ void GwChannel::begin(
     bool seaSmartOut,
     bool toN2k,
     bool readActisense,
-    bool writeActisense)
+    bool writeActisense,
+    String pgnReadFilter,
+    String pgnWriteFilter)
 {
     this->enabled = enabled;
     this->NMEAout = nmeaOut;
@@ -82,6 +84,8 @@ void GwChannel::begin(
     this->writeFilter=writeFilter.isEmpty()?
         NULL:
         new GwNmeaFilter(writeFilter);
+    this->pgnReadFilter=new GwPgnFilter(pgnReadFilter);
+    this->pgnWriteFilter=new GwPgnFilter(pgnWriteFilter);
     this->seaSmartOut=seaSmartOut;
     this->toN2k=toN2k;
     this->readActisense=readActisense;
@@ -150,7 +154,10 @@ bool GwChannel::canSendOut(const char *buffer, bool isSeasmart){
     if (! enabled || ! impl) return false;
     if (readActisense) return false;
     if (! isSeasmart && ! NMEAout) return false;
-    if (isSeasmart && ! seaSmartOut) return false;
+    if (isSeasmart){
+        if (! seaSmartOut) return false;
+        if (pgnWriteFilter && ! pgnWriteFilter->canPass(buffer)) return false;
+    }
     if (writeFilter && ! writeFilter->canPass(buffer)) return false;
     return true;
 }
@@ -158,7 +165,13 @@ bool GwChannel::canSendOut(const char *buffer, bool isSeasmart){
 bool GwChannel::canReceive(const char *buffer){
     if (! enabled) return false;
     if (! NMEAin) return false;
-    if (readFilter && ! readFilter->canPass(buffer)) return false;
+    bool isSeasmart=GwChannel::isSeasmart(buffer);
+    if (isSeasmart){
+        if (pgnReadFilter && ! pgnReadFilter->canPass(buffer)) return false;
+    }
+    else{
+        if (readFilter && ! readFilter->canPass(buffer)) return false;
+    }
     updateCounter(buffer,false);
     return true;
 }
@@ -187,6 +200,8 @@ String GwChannel::toString(){
     rt+=String(",")+ (seaSmartOut?"SM":"");
     rt+=String(",")+(readActisense?"AR":"");
     rt+=String(",")+(writeActisense?"AW":"");
+    rt+=String(",PRF=")+ (pgnReadFilter?pgnReadFilter->toString():"");
+    rt+=String(",PWF=")+ (pgnWriteFilter?pgnWriteFilter->toString():"");
     return rt;
 }
 void GwChannel::loop(bool handleRead, bool handleWrite){
@@ -213,6 +228,7 @@ void GwChannel::parseActisense(N2kHandler handler){
     tN2kMsg N2kMsg;
 
     while (actisenseReader->GetMessageFromStream(N2kMsg)) {
+      if (! this->pgnReadFilter->canPass(N2kMsg.PGN)) continue;
       if(countIn) countIn->add(String(N2kMsg.PGN));
       handler(N2kMsg,sourceId);
     }
@@ -220,6 +236,7 @@ void GwChannel::parseActisense(N2kHandler handler){
 
 void GwChannel::sendActisense(const tN2kMsg &msg, int sourceId){
     if (!enabled || ! impl || ! writeActisense || ! channelStream) return;
+    if (! this->pgnWriteFilter->canPass(msg.PGN)) return;
     //currently actisense only for channels with a single source id
     //so we can check it here
     if (maxSourceId < 0 && this->sourceId == sourceId) return;
@@ -261,4 +278,9 @@ String GwChannel::typeString(int type){
             return "TX";
     }
     return "UNKNOWN";
+}
+
+bool GwChannel::isSeasmart(const char * buffer){
+    if (buffer == nullptr) return false;
+    return (strlen(buffer) > 7 && strncmp(buffer,"$PCDIN,",7) == 0);
 }

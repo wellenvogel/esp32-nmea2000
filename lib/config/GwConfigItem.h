@@ -2,6 +2,7 @@
 #define _GWCONFIGITEM_H
 #include "WString.h"
 #include <vector>
+#include <unordered_map>
 class GwConfigHandler;
 class GwConfigInterface{
     public:
@@ -71,6 +72,20 @@ class GwNmeaFilter{
             this->config=config;
             isReady=false;
         }
+        bool canPass(const char *buffer);
+        String toString();    
+};
+
+class GwPgnFilter{
+    private:
+        String config;
+        bool blacklist=false;
+        bool always=false;
+        std::unordered_map<long,bool> filter;
+        void parseFilter();
+    public:
+        GwPgnFilter(String config);
+        bool canPass(long pgn);
         bool canPass(const char *buffer);
         String toString();    
 };

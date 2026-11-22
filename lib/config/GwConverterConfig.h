@@ -74,9 +74,13 @@ class GwConverterConfig{
       bool unmappedXdr=false;
       unsigned long xdrTimeout=60000;
       std::vector<WindMapping> windMappings;
+      GwPgnFilter *pgnWriteFilter=NULL;
+      GwPgnFilter *pgnReadFilter=NULL;
       void init(GwConfigHandler *config, GwLog*logger){
         minXdrInterval=config->getInt(GwConfigDefinitions::minXdrInterval,100);
         xdrTimeout=config->getInt(GwConfigDefinitions::timoSensor);
+        pgnWriteFilter=new GwPgnFilter(config->getString(GwConfigDefinitions::cnvOutFilter,""));
+        pgnReadFilter=new GwPgnFilter(config->getString(GwConfigDefinitions::cnvInFilter,""));
         starboardRudderInstance=config->getInt(GwConfigDefinitions::stbRudderI,0);
         portRudderInstance=config->getInt(GwConfigDefinitions::portRudderI,-1);
         min2KInterval=config->getInt(GwConfigDefinitions::min2KInterval,50);
@@ -110,7 +114,22 @@ class GwConverterConfig{
         }
         return WindMapping();
       }
-
+    
+    String toString() const{
+      String rt;
+      rt+="minXdrInterval="+String(minXdrInterval);
+      rt+=",xdrTimeout="+String(xdrTimeout);
+      rt+=",starboardRudderInstance="+String(starboardRudderInstance);
+      rt+=",portRudderInstance="+String(portRudderInstance);
+      rt+=",min2KInterval="+String(min2KInterval);
+      rt+=",rmcInterval="+String(rmcInterval);
+      rt+=",rmcCheckTime="+String(rmcCheckTime);
+      rt+=",winst312="+String(winst312);
+      rt+=",unmappedXdr="+String(unmappedXdr);
+      rt+=",pgnReadFilter="+(pgnReadFilter?pgnReadFilter->toString():"");
+      rt+=",pgnWriteFilter="+(pgnWriteFilter?pgnWriteFilter->toString():"");
+      return rt;
+    }
 
   };
 #endif

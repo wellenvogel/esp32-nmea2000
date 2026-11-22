@@ -968,13 +968,14 @@
         return data;
     }
     checkers.checkPgn=function(value){
-        if (!value) return true;
+        if (!value) return;
         let parts = value.split(":");
-        if (parts.length != 2) return false;
+        if (parts.length != 2) return "internal misconfiguration";
         let mode = parts[0];
         let sentences = parts[1];
-        if (mode !== "0" && mode !== "1") return false;
-        return checkPgnValues(sentences);
+        if (mode !== "0" && mode !== "1") return "invalid mode " + mode;
+        if (checkPgnValues(sentences)) return;
+        return "PGNS must be a comma separated list of numbers";
     }
     function checkPgnValues(values){
         if (!values) return true;

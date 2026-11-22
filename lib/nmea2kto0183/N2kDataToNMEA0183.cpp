@@ -144,6 +144,10 @@ private:
     }
     virtual void HandleMsg(const tN2kMsg &N2kMsg, int sourceId)
     {
+        if (this->config.pgnReadFilter && !this->config.pgnReadFilter->canPass(N2kMsg.PGN)){
+            LOG_DEBUG(GwLog::DEBUG+1,"PGN %ld blocked by read filter",N2kMsg.PGN);
+            return;
+        }
         this->sourceId=sourceId;
         String key=String(N2kMsg.PGN);
         bool rt=converters.handleMessage(key,N2kMsg,this);

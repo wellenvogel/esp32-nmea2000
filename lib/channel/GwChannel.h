@@ -16,6 +16,8 @@ class GwChannel{
     bool NMEAin=false;
     GwNmeaFilter* readFilter=NULL;
     GwNmeaFilter* writeFilter=NULL;
+    GwPgnFilter* pgnReadFilter=NULL;
+    GwPgnFilter* pgnWriteFilter=NULL;
     bool seaSmartOut=false;
     bool toN2k=false;
     bool readActisense=false;
@@ -46,7 +48,9 @@ class GwChannel{
         bool seaSmartOut,
         bool toN2k,
         bool readActisense=false,
-        bool writeActisense=false
+        bool writeActisense=false,
+        String pgnReadFilter="",
+        String pgnWriteFilter=""
     );
 
     void setImpl(GwChannelInterface *impl);
@@ -58,7 +62,7 @@ class GwChannel{
     bool shouldRead(){return enabled && NMEAin;}
     bool canSendOut(const char *buffer, bool isSeasmart);
     bool canReceive(const char *buffer);
-    bool sendSeaSmart(){ return seaSmartOut;}
+    bool sendSeaSmart(long pgn){ return seaSmartOut && pgnWriteFilter && pgnWriteFilter->canPass(pgn);}
     bool sendToN2K(){return toN2k;}
     int getJsonSize();
     void toJson(GwJsonDocument &doc);
@@ -80,5 +84,6 @@ class GwChannel{
     static String typeString(int type);
     String getMode(){return typeString(impl->getType());}
     int getMinId(){return sourceId;};
+    static bool isSeasmart(const char * buffer);
 };
 

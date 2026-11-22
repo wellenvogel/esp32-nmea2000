@@ -73,6 +73,10 @@ private:
         return newWp.id;
     }
     bool send(tN2kMsg &msg,String key,unsigned long minDiff,int sourceId){
+        if (this->config.pgnWriteFilter && !this->config.pgnWriteFilter->canPass(msg.PGN)){
+            LOG_DEBUG(GwLog::DEBUG+1,"PGN %ld blocked by write filter",msg.PGN);
+            return false;
+        }
         unsigned long now=millis();
         unsigned long pgn=msg.PGN;
         if (key == "") key=String(msg.PGN);
@@ -1106,6 +1110,7 @@ public:
         const GwConverterConfig &cfg)
         : NMEA0183DataToN2K(logger, boatData, callback)
     {
+        LOG_DEBUG(GwLog::LOG, "NMEA0183DataToN2KFunctions: config: %s", this->config.toString().c_str());
         this->config=cfg;
         this->xdrMappings=xdrMappings;
         aisDecoder= new MyAisDecoder(logger,this->sender);
