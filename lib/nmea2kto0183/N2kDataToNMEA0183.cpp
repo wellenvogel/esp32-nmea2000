@@ -29,6 +29,7 @@
 #include "NMEA0183AISMessages.h"
 #include "ConverterList.h"
 #include "GwJsonDocument.h"
+#include "NavigationAPB.h"
 
 
 
@@ -1040,8 +1041,15 @@ private:
             LOG_DEBUG(GwLog::DEBUG,"unable to parse PGN %d",msg.PGN);
             return; 
         }
-        if (NavigationTerminated) return;
-        if (! updateDouble(boatData->XTE,XTE)) return;
+        bool usable=msg.DataLen >= 6 && (msg.Data[1] & 0xc0) == 0 &&
+                    (msg.Data[1] & 0x0f) <= 4 && !NavigationTerminated && !N2kIsNA(XTE);
+        if (!usable){
+            if (boatData->XTE->isValid() && boatData->XTE->getLastSource() == sourceId){
+                boatData->XTE->invalidate();
+            }
+            return;
+        }
+        if (!updateDouble(boatData->XTE,XTE)) return;
         tNMEA0183Msg nmeamsg;
         if (!nmeamsg.Init("XTE",talkerId)) return;
         const char *mode="A";
@@ -1108,6 +1116,7 @@ private:
             LOG_DEBUG(GwLog::DEBUG,"invalid bearing ref  %d for %d ",(int)BearingReference, msg.PGN);
             return;
         }
+        double apbPositionBearing=BearingPositionToDestinationWaypoint;
         if (BearingReference == N2khr_magnetic){
             if (! boatData->VAR->isValid()){
                 LOG_DEBUG(GwLog::DEBUG,"missing variation to compute true heading for %d ", msg.PGN);
@@ -1151,6 +1160,28 @@ private:
         }
         if (! nmeaMsg.AddStrField(ArrivalCircleEntered?"A":"V")) return;
         SendMessage(nmeaMsg);
+
+        if (! boatData->XTE->isValid()) return;
+        if (msg.DataLen < 6 || !navigationApbReferenceUsable(msg.Data[5])) return;
+        double apbXte=boatData->XTE->getData();
+        if (N2kIsNA(apbXte) || N2kIsNA(apbPositionBearing)) return;
+        double originBearing=NMEA0183DoubleNA;
+        if (!N2kIsNA(BearingOriginToDestinationWaypoint)){
+            originBearing=formatCourse(BearingOriginToDestinationWaypoint);
+        }
+        // The arrival and perpendicular fields are two-bit NMEA 2000 statuses.
+        unsigned int arrival=(msg.Data[5] >> 4) & 0x03;
+        unsigned int perpendicular=(msg.Data[5] >> 2) & 0x03;
+        const char *reference=BearingReference == N2khr_magnetic ? "M" : "T";
+        tNMEA0183Msg apbMsg;
+        if (buildNavigationApb(apbMsg,talkerId,mtr2nm(apbXte),originBearing,
+                               formatCourse(apbPositionBearing),reference,
+                               DestinationWaypointNumber,arrival,perpendicular)){
+            SendMessage(apbMsg);
+        }
+        else{
+            LOG_DEBUG(GwLog::DEBUG,"unable to build APB for PGN %d",msg.PGN);
+        }
     }
 
     void HandleFluidLevel(const tN2kMsg &N2kMsg)
@@ -1499,43 +1530,46 @@ private:
       //and register it here
       //with this approach we easily have a list of all handled
       //pgns
+      // Non-AIS PGNs
+      converters.registerConverter(126992UL, &N2kToNMEA0183Functions::HandleSystemTime);
+      converters.registerConverter(127245UL, &N2kToNMEA0183Functions::HandleRudder);
       converters.registerConverter(127250UL, &N2kToNMEA0183Functions::HandleHeading);
+      converters.registerConverter(127251UL, &N2kToNMEA0183Functions::HandleROT);
+      converters.registerConverter(127257UL, &N2kToNMEA0183Functions::Handle127257);
       converters.registerConverter(127258UL, &N2kToNMEA0183Functions::HandleVariation);
+      converters.registerConverter(127488UL, &N2kToNMEA0183Functions::Handle127488);
+      converters.registerConverter(127489UL, &N2kToNMEA0183Functions::Handle127489);
+      converters.registerConverter(127505UL, &N2kToNMEA0183Functions::HandleFluidLevel);
+      converters.registerConverter(127508UL, &N2kToNMEA0183Functions::HandleBatteryStatus);
       converters.registerConverter(128259UL, &N2kToNMEA0183Functions::HandleBoatSpeed);
       converters.registerConverter(128267UL, &N2kToNMEA0183Functions::HandleDepth);
+      converters.registerConverter(128275UL, &N2kToNMEA0183Functions::HandleLog);
       converters.registerConverter(129025UL, &N2kToNMEA0183Functions::HandlePosition);
       converters.registerConverter(129026UL, &N2kToNMEA0183Functions::HandleCOGSOG);
       converters.registerConverter(129029UL, &N2kToNMEA0183Functions::HandleGNSS);
-      converters.registerConverter(130306UL, &N2kToNMEA0183Functions::HandleWind);
-      converters.registerConverter(128275UL, &N2kToNMEA0183Functions::HandleLog);
-      converters.registerConverter(127245UL, &N2kToNMEA0183Functions::HandleRudder);
-      converters.registerConverter(126992UL, &N2kToNMEA0183Functions::HandleSystemTime);
       converters.registerConverter(129033UL, &N2kToNMEA0183Functions::HandleTimeOffset);
-      converters.registerConverter(129539UL, &N2kToNMEA0183Functions::HandleDop);
-      converters.registerConverter(129540UL, &N2kToNMEA0183Functions::HandleSats);
-      converters.registerConverter(127251UL, &N2kToNMEA0183Functions::HandleROT);
-      converters.registerConverter(127505UL, &N2kToNMEA0183Functions::HandleFluidLevel);
-      converters.registerConverter(127508UL, &N2kToNMEA0183Functions::HandleBatteryStatus);
       converters.registerConverter(129283UL, &N2kToNMEA0183Functions::HandleXTE);
       converters.registerConverter(129284UL, &N2kToNMEA0183Functions::HandleNavigation);
+      converters.registerConverter(129539UL, &N2kToNMEA0183Functions::HandleDop);
+      converters.registerConverter(129540UL, &N2kToNMEA0183Functions::HandleSats);
+      converters.registerConverter(130306UL, &N2kToNMEA0183Functions::HandleWind);
       converters.registerConverter(130310UL, &N2kToNMEA0183Functions::Handle130310);
       converters.registerConverter(130311UL, &N2kToNMEA0183Functions::Handle130311);
       converters.registerConverter(130312UL, &N2kToNMEA0183Functions::Handle130312);
       converters.registerConverter(130313UL, &N2kToNMEA0183Functions::Handle130313);
       converters.registerConverter(130314UL, &N2kToNMEA0183Functions::Handle130314);
-      converters.registerConverter(127489UL, &N2kToNMEA0183Functions::Handle127489);
-      converters.registerConverter(127488UL, &N2kToNMEA0183Functions::Handle127488);
       converters.registerConverter(130316UL, &N2kToNMEA0183Functions::Handle130316);
-      converters.registerConverter(127257UL, &N2kToNMEA0183Functions::Handle127257);
       converters.registerConverter(130323UL, &N2kToNMEA0183Functions::Handle130323);
+
+      // AIS PGNs
 #define HANDLE_AIS
 #ifdef HANDLE_AIS
       converters.registerConverter(129038UL, &N2kToNMEA0183Functions::HandleAISClassAPosReport);  // AIS Class A Position Report, Message Type 1
       converters.registerConverter(129039UL, &N2kToNMEA0183Functions::HandleAISClassBMessage18);  // AIS Class B Position Report, Message Type 18
+      converters.registerConverter(129041UL, &N2kToNMEA0183Functions::HandleAISMessage21);        // AIS Aton
       converters.registerConverter(129794UL, &N2kToNMEA0183Functions::HandleAISClassAMessage5);   // AIS Class A Ship Static and Voyage related data, Message Type 5
       converters.registerConverter(129809UL, &N2kToNMEA0183Functions::HandleAISClassBMessage24A); // AIS Class B "CS" Static Data Report, Part A
       converters.registerConverter(129810UL, &N2kToNMEA0183Functions::HandleAISClassBMessage24B); // AIS Class B "CS" Static Data Report, Part B
-      converters.registerConverter(129041UL, &N2kToNMEA0183Functions::HandleAISMessage21);        // AIS Aton
 #endif
     }
 
