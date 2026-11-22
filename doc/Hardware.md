@@ -132,4 +132,4 @@ There is a couple of other hardware combinations that has been tested/ used by u
  * [RS-485+CAN bus+DCDC Converter Shield for WeMos D1 Mini32](../../issues/106)
  * [ESP32-C3 Supermini](../../issues/86) - partly only
  * [XS-WSDS01 Modbus RS-485 wind sensor](../../issues/94)
-
+ * **ready to buy** [Taara labs RS485+CanBus+DCDC D1 Mini32](https://taaralabs.eu/rs485-canbus-dcdc-wemos-mini/)
