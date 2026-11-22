@@ -144,6 +144,7 @@ bool sendOutN2k=true;
 
 
 int NodeAddress;  // To store last Node Address
+int lastStoredNodeAddress;
 
 Preferences preferences;             // Nonvolatile storage on ESP32 - To store LastDeviceAddress
 N2kDataToNMEA0183 *nmea0183Converter=NULL;
@@ -939,10 +940,16 @@ void setup() {
   NMEA2000.SetForwardType(tNMEA2000::fwdt_Text); // Show in clear text. Leave uncommented for default Actisense format.
 
   preferences.begin("nvs", false);                          // Open nonvolatile storage (nvs)
-  NodeAddress = preferences.getInt("LastNodeAddress", 32);  // Read stored last NodeAddress, default 32
+  lastStoredNodeAddress = preferences.getInt("LastNodeAddress", 32);  // Read stored last NodeAddress, default 32
+  NodeAddress = lastStoredNodeAddress;  // Initialize NodeAddress with the last stored value
   preferences.end();
 
-  logger.logDebug(GwLog::LOG,"NodeAddress=%d", NodeAddress);
+  logger.logDebug(GwLog::LOG,"Last NodeAddress=%d", lastStoredNodeAddress);
+  int preferredNodeId = config.getInt(config.n2kNodeId);
+  logger.logDebug(GwLog::LOG,"Preferred Node ID=%d", preferredNodeId);
+  if (preferredNodeId != -1){
+    NodeAddress = preferredNodeId;
+  }
   logger.flush();
   NMEA2000.SetMode(tNMEA2000::N2km_ListenAndNode, NodeAddress);
   NMEA2000.SetForwardOwnMessages(false);
@@ -1024,9 +1031,12 @@ void loopRun() {
   int SourceAddress = NMEA2000.GetN2kSource();
   if (SourceAddress != NodeAddress) { // Save potentially changed Source Address to NVS memory
     NodeAddress = SourceAddress;      // Set new Node Address (to save only once)
+  }
+  if (SourceAddress != lastStoredNodeAddress) {
     preferences.begin("nvs", false);
     preferences.putInt("LastNodeAddress", SourceAddress);
     preferences.end();
+    lastStoredNodeAddress = SourceAddress;
     logger.logDebug(GwLog::LOG,"Address Change: New Address=%d\n", SourceAddress);
   }
   //potentially send out an own RMC if we did not receive one

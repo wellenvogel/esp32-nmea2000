@@ -89,6 +89,17 @@
         "category":"system"
     },
     {
+        "name":"n2kNodeId",
+        "label":"N2K Node ID",
+        "type":"number",
+        "default": -1,
+        "min":-1,
+        "max":255,
+        "check": "checkMinMax",
+        "description":"Preferred N2K Node ID for this device. Leave as -1 to always use last assigned address (initially 32).\n Hint: On startup the node id is negotiated on the bus and can change",
+        "category":"nmea2000"
+    },
+    {
         "name":"n2kInFilter",
         "label":"In PGN filter",
         "type":"pgnfilter",
