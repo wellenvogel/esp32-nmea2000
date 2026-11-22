@@ -114,18 +114,32 @@ void GwChannel::setImpl(GwChannelInterface *impl){
 }
 void GwChannel::updateCounter(const char *msg, bool out)
 {
-    char key[7];
+    char key[11];
     key[0]=0;
     if (msg[0] == '$')
     {
-        for (int i=0;i<6 && msg[i] != 0;i++){
-            if (i>=3) {
-                if (isalnum(msg[i]))key[i-3]=msg[i];
-                else key[i-3]='_';
-            }
-            key[i-2]=0;
+        if (isSeasmart(msg)){
+            key[0]='S';
+            key[1]='M';
+            key[2]=':';
+            long pgn=std::strtol(msg+7,NULL,16);
+            snprintf(key+3,7,"%ld",pgn);
         }
-        key[3] = 0;
+        else
+        {
+            for (int i = 0; i < 6 && msg[i] != 0; i++)
+            {
+                if (i >= 3)
+                {
+                    if (isalnum(msg[i]))
+                        key[i - 3] = msg[i];
+                    else
+                        key[i - 3] = '_';
+                }
+                key[i - 2] = 0;
+            }
+            key[3] = 0;
+        }
     }
     else if (msg[0] == '!')
     {
