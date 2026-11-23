@@ -72,17 +72,23 @@ class GwNmeaFilter{
         bool isReady=false;
         bool ais=true;
         bool blacklist=true;
+        bool always=false;
+        std::unique_ptr<map> filter2;
         std::unique_ptr<map> filter3;
         std::unique_ptr<map> filter5;
         void addElement(const String &element);
         void handleToken(String token, int index);
         void parseFilter();
+        bool canPassImpl(const char *buffer);
     public:
         GwNmeaFilter(String config){
             this->config=config;
             isReady=false;
         }
-        bool canPass(const char *buffer);
+        bool canPass(const char *buffer){
+            if (always) return true;
+            return canPassImpl(buffer);
+        }
         String toString();    
 };
 

@@ -921,7 +921,9 @@
     const filterHelpText="Select aison|aisoff.\n"+
         "Set a whitelist or a blacklist with NMEA sentences like RMC,RMB,GPGLL.\n"+
         "Multiple sentences should be comma separated.\n"+
-        "You can either use 3 character sentences or 5 characters including the talker id and sentence.";
+        "You can either use 3 character sentences or 5 characters including the talker id and sentence.\n"+
+        "For blocking/passing one talker use the 2 character talker id.\n"+
+        "Hint: Seasmart sentences starting with $PCDIN are not handled by this filter but by the PGN filters.";
 
     function createFilterInput(configItem, frame) {
         if (configItem.description) {

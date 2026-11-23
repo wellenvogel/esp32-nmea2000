@@ -251,6 +251,10 @@ void GwNmeaFilter::addElement(const String &element){
         if (!filter5) filter5.reset(new map());
         (*filter5)[s]=true;
     }
+    else if (s.length() == 2){
+        if (!filter2) filter2.reset(new map());
+        (*filter2)[s]=true;
+    }
 }
 
 void GwNmeaFilter::handleToken(String token, int index){
@@ -280,6 +284,7 @@ void GwNmeaFilter::parseFilter(){
     if (isReady) return;
     if (config.isEmpty()){
         isReady=true;
+        always=true;
         return;
     }
     int found=0;
@@ -295,17 +300,21 @@ void GwNmeaFilter::parseFilter(){
         String tok=config.substring(last);
         handleToken(tok,index);
     }
-    isReady=true;    
+    isReady=true;
+    if (ais && ! filter3 && ! filter5 && ! filter2 && blacklist) always=true;
 }
 
-bool GwNmeaFilter::canPass(const char *buffer){
+bool GwNmeaFilter::canPassImpl(const char *buffer){
     size_t len=strlen(buffer);
     if (len < 6) return false; //invalid NMEA
     if (!isReady) parseFilter();
     if (buffer[0] == '!') return ais;
     //first match the whole talker+sentence identifier
     if (filter5 && filter5->find(String(buffer+1,5)) != filter5->end()) return !blacklist;
+    //sentences without talker id (3 characters)
     if (filter3 && filter3->find(String(buffer+3,3)) != filter3->end()) return !blacklist;
+    //talker id only (2 characters)
+    if (filter2 && filter2->find(String(buffer+1,2)) != filter2->end()) return !blacklist;
     //if we have a whitelist we return false
     //if nothing matches
     return blacklist; 
@@ -324,6 +333,13 @@ String GwNmeaFilter::toString(){
     rt+="],5[";
     if (filter5){
         for (auto it=filter5->begin(); it != filter5->end(); it++){
+            rt+=","+String(it->first);
+        }
+    }
+    rt+="]";
+    rt+="2[";
+    if (filter2){
+        for (auto it=filter2->begin(); it != filter2->end(); it++){
             rt+=","+String(it->first);
         }
     }
