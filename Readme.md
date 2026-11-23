@@ -162,7 +162,6 @@ Conversion from and to NMEA0183 XDR
 -----------------------------------
 The gateway can convert a lot of NMEA 2000 PGNs that have no direct NMEA0183 equivalent to NMEA0183 XDR records. For details refer to [XdrMappings](doc/XdrMappings.md)
 
-
 Development Environment
 -----------------------
 [PlatformIO](https://platformio.org/).

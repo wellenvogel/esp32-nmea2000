@@ -4,6 +4,7 @@
 #include "ConverterList.h"
 #include <map>
 #include <set>
+#include <math.h>
 #include <strings.h>
 #include "NMEA0183AIStoNMEA2000.h"
 #include "GwXDRMappings.h"
@@ -325,6 +326,12 @@ private:
         }
     }
 
+    double normalizeBearing(double bearing){
+        if (NMEA0183IsNA(bearing)) return bearing;
+        bearing=fmod(bearing,2*M_PI);
+        return bearing < 0 ? bearing+2*M_PI : bearing;
+    }
+
     void convertRMB(const SNMEA0183Msg &msg)
     {
         LOG_DEBUG(GwLog::DEBUG + 1, "convert RMB");
@@ -333,6 +340,7 @@ private:
             LOG_DEBUG(GwLog::DEBUG, "failed to parse RMB %s", msg.line);
             return;   
         }
+        rmb.btw=normalizeBearing(rmb.btw);
         tN2kMsg n2kMsg;
         if (updateDouble(boatData->XTE,rmb.xte,msg.sourceId)){
             tN2kXTEMode mode=N2kxtem_Autonomous;
@@ -369,6 +377,83 @@ private:
             AppendN2kRouteWPInfo(n2kMsg,destinationId,rmb.destID,rmb.latitude,rmb.longitude);
             send(n2kMsg,msg.sourceId);
             }
+    }
+    void convertAPB(const SNMEA0183Msg &msg)
+    {
+        LOG_DEBUG(GwLog::DEBUG + 1, "convert APB");
+        tAPB apb;
+        if (! NMEA0183ParseAPB_nc(msg,apb)){
+            LOG_DEBUG(GwLog::DEBUG, "failed to parse APB %s", msg.line);
+            return;
+        }
+        char modeChar=apb.mode;
+        if (apb.status != 'A' || apb.cycleLockWarning != 'A' ||
+            (modeChar != '\0' && modeChar != 'A' && modeChar != 'D' &&
+             modeChar != 'E' && modeChar != 'M' && modeChar != 'S')){
+            LOG_DEBUG(GwLog::DEBUG, "invalid APB status %s", msg.line);
+            return;
+        }
+        if (NMEA0183IsNA(apb.xte) || !isfinite(apb.xte) ||
+            fabs(apb.xte) > 21474836.0){
+            LOG_DEBUG(GwLog::DEBUG, "invalid APB cross track error %s", msg.line);
+            return;
+        }
+        tN2kMsg n2kMsg;
+        if (updateDouble(boatData->XTE,apb.xte,msg.sourceId)){
+            SetN2kXTE(n2kMsg,1,xteMode(modeChar),false,apb.xte);
+            send(n2kMsg,msg.sourceId);
+        }
+
+        if (NMEA0183IsNA(apb.btw) || !isfinite(apb.btw) ||
+            apb.btw < 0 || apb.btw > 2*M_PI ||
+            (apb.btwMode != 'T' && apb.btwMode != 'M') || !apb.destID[0]){
+            LOG_DEBUG(GwLog::DEBUG, "missing or invalid APB waypoint bearing or destination %s", msg.line);
+            return;
+        }
+        auto statusValue=[](char status){
+            if (status == 'A') return 1;
+            if (status == 'V') return 0;
+            if (status == '\0') return 3;
+            return -1;
+        };
+        int arrival=statusValue(apb.arrivalAlarm);
+        int perpendicular=statusValue(apb.perpendicularPassed);
+        if (arrival < 0 || perpendicular < 0){
+            LOG_DEBUG(GwLog::DEBUG, "invalid APB arrival status %s", msg.line);
+            return;
+        }
+        double variation=boatData->VAR->getDataWithDefault(N2kDoubleNA);
+        double positionBearing=normalizeBearing(apb.btw);
+        double trueBearing=positionBearing;
+        if (apb.btwMode == 'M'){
+            trueBearing=N2kIsNA(variation) ? N2kDoubleNA : normalizeBearing(positionBearing+variation);
+        }
+        double originBearing=N2kDoubleNA;
+        if (!NMEA0183IsNA(apb.botw)){
+            if (!isfinite(apb.botw) || apb.botw < 0 || apb.botw > 2*M_PI ||
+                (apb.botwMode != 'T' && apb.botwMode != 'M')){
+                LOG_DEBUG(GwLog::DEBUG, "invalid APB origin bearing %s", msg.line);
+                return;
+            }
+            if (apb.botwMode == apb.btwMode){
+                originBearing=normalizeBearing(apb.botw);
+            }
+            else if (!N2kIsNA(variation)){
+                double adjustment=apb.botwMode == 'M' ? variation : -variation;
+                originBearing=normalizeBearing(apb.botw+adjustment);
+            }
+        }
+        if (!N2kIsNA(trueBearing) && !updateDouble(boatData->BTW,trueBearing,msg.sourceId)) return;
+        SetN2kNavigationInfo(n2kMsg,1,boatData->DTW->getDataWithDefault(N2kDoubleNA),
+            apb.btwMode == 'M' ? N2khr_magnetic : N2khr_true,
+            perpendicular == 1,arrival == 1,N2kdct_GreatCircle,
+            N2kDoubleNA,N2kInt16NA,originBearing,positionBearing,
+            N2kUInt32NA,getWaypointId(apb.destID),
+            boatData->WPLat->getDataWithDefault(N2kDoubleNA),
+            boatData->WPLon->getDataWithDefault(N2kDoubleNA),N2kDoubleNA);
+        // The library setter takes booleans; retain unavailable APB statuses.
+        n2kMsg.Data[5]=(n2kMsg.Data[5] & ~0x3c) | (perpendicular << 2) | (arrival << 4);
+        send(n2kMsg,msg.sourceId);
     }
     void convertRMC(const SNMEA0183Msg &msg)
     {
@@ -1018,6 +1103,8 @@ private:
     {
         converters.registerConverter(129283UL,129284UL,129285UL,
             String(F("RMB")), &NMEA0183DataToN2KFunctions::convertRMB);
+        converters.registerConverter(129283UL,129284UL,
+            String(F("APB")), &NMEA0183DataToN2KFunctions::convertAPB);
         converters.registerConverter(
             126992UL,129025UL,129026UL,127258UL, 129029UL,
             String(F("RMC")),  &NMEA0183DataToN2KFunctions::convertRMC);

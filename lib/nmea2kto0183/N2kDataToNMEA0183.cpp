@@ -1117,49 +1117,75 @@ private:
             return;
         }
         double apbPositionBearing=BearingPositionToDestinationWaypoint;
+        bool canComputeRMB=true;
         if (BearingReference == N2khr_magnetic){
             if (! boatData->VAR->isValid()){
                 LOG_DEBUG(GwLog::DEBUG,"missing variation to compute true heading for %d ", msg.PGN);
-                return;   
+                canComputeRMB=false;
             }
-            BearingPositionToDestinationWaypoint-=boatData->VAR->getData();
+            else{
+                BearingPositionToDestinationWaypoint-=boatData->VAR->getData();
+            }
 
         }
         if (! updateDouble(boatData->DTW,DistanceToWaypoint)) return;
-        if (! updateDouble(boatData->BTW,BearingPositionToDestinationWaypoint)) return;
+        if (canComputeRMB){
+            if (! updateDouble(boatData->BTW,BearingPositionToDestinationWaypoint)) return;
+        }
         if (! updateDouble(boatData->WPLat,DestinationLatitude)) return;
         if (! updateDouble(boatData->WPLon,DestinationLongitude)) return;
-        tNMEA0183Msg nmeaMsg;
-        if (! nmeaMsg.Init("RMB",talkerId)) return;
-        if (! nmeaMsg.AddStrField("A")) return;
-        const char *dir="L";
-        double xte=boatData->XTE->getDataWithDefault(NMEA0183DoubleNA);
-        if (xte != NMEA0183DoubleNA){
-            if (xte < 0){
-                xte=-xte;
-                dir="R";
+        if (canComputeRMB)
+        {
+            tNMEA0183Msg nmeaMsg;
+            if (!nmeaMsg.Init("RMB", talkerId))
+                return;
+            if (!nmeaMsg.AddStrField("A"))
+                return;
+            const char *dir = "L";
+            double xte = boatData->XTE->getDataWithDefault(NMEA0183DoubleNA);
+            if (xte != NMEA0183DoubleNA)
+            {
+                if (xte < 0)
+                {
+                    xte = -xte;
+                    dir = "R";
+                }
+                xte = mtr2nm(xte);
+                if (xte > 9.99)
+                    xte = 9.99;
             }
-            xte=mtr2nm(xte);
-            if (xte > 9.99) xte=9.99;
+            if (!nmeaMsg.AddDoubleField(xte, 1.0, "%.2f", dir))
+                return;
+            // TODO: handle waypoint names
+            if (!nmeaMsg.AddUInt32Field(OriginWaypointNumber))
+                return;
+            if (!nmeaMsg.AddUInt32Field(DestinationWaypointNumber))
+                return;
+            if (!nmeaMsg.AddLatitudeField(DestinationLatitude))
+                return;
+            if (!nmeaMsg.AddLongitudeField(DestinationLongitude))
+                return;
+            double distance = mtr2nm(DistanceToWaypoint);
+            if (distance > 999.9)
+                distance = 999.9;
+            if (!nmeaMsg.AddDoubleField(distance, 1, "%.1f"))
+                return;
+            if (!nmeaMsg.AddDoubleField(formatCourse(BearingPositionToDestinationWaypoint)))
+                return;
+            if (WaypointClosingVelocity != N2kDoubleNA)
+            {
+                if (!nmeaMsg.AddDoubleField(msToKnots(WaypointClosingVelocity)))
+                    return;
+            }
+            else
+            {
+                if (!nmeaMsg.AddEmptyField())
+                    return;
+            }
+            if (!nmeaMsg.AddStrField(ArrivalCircleEntered ? "A" : "V"))
+                return;
+            SendMessage(nmeaMsg);
         }
-        if (! nmeaMsg.AddDoubleField(xte,1.0,"%.2f",dir)) return;
-        //TODO: handle waypoint names
-        if (! nmeaMsg.AddUInt32Field(OriginWaypointNumber)) return;
-        if (! nmeaMsg.AddUInt32Field(DestinationWaypointNumber)) return;
-        if (! nmeaMsg.AddLatitudeField(DestinationLatitude)) return;
-        if (! nmeaMsg.AddLongitudeField(DestinationLongitude)) return;
-        double distance=mtr2nm(DistanceToWaypoint);
-        if (distance > 999.9) distance=999.9;
-        if (! nmeaMsg.AddDoubleField(distance,1,"%.1f")) return;
-        if (! nmeaMsg.AddDoubleField(formatCourse(BearingPositionToDestinationWaypoint))) return;
-        if (WaypointClosingVelocity != N2kDoubleNA){
-            if (!nmeaMsg.AddDoubleField(msToKnots(WaypointClosingVelocity))) return;
-        }
-        else{
-            if (!nmeaMsg.AddEmptyField()) return;
-        }
-        if (! nmeaMsg.AddStrField(ArrivalCircleEntered?"A":"V")) return;
-        SendMessage(nmeaMsg);
 
         if (! boatData->XTE->isValid()) return;
         if (msg.DataLen < 6 || !navigationApbReferenceUsable(msg.Data[5])) return;
