@@ -167,15 +167,16 @@ bool checkPass(String hash){
 GwUpdate updater(&logger,&webserver,&checkPass);
 GwConfigInterface *systemName=config.getConfigItem(config.systemName,true);
 
-GwPgnFilter n2kReadFilter(config.getString(GwConfigDefinitions::n2kInFilter,""));
-GwPgnFilter n2kWriteFilter(config.getString(GwConfigDefinitions::n2kOutFilter,""));
+//n2k filters, updated in setup
+std::unique_ptr<GwPgnFilter> n2kReadFilter(new GwPgnFilter(""));
+std::unique_ptr<GwPgnFilter> n2kWriteFilter(new GwPgnFilter(""));
 
 void handleN2kMessage(const tN2kMsg &n2kMsg,int sourceId, bool isConverted=false)
 {
   logger.logDebug(GwLog::DEBUG + 1, "N2K: pgn %d, dir %d", 
     n2kMsg.PGN,sourceId);
   if (sourceId == N2K_CHANNEL_ID){
-    if (!n2kReadFilter.canPass(n2kMsg.PGN)) return;
+    if (!n2kReadFilter->canPass(n2kMsg.PGN)) return;
     countNMEA2KIn.add(n2kMsg.PGN);
   }
   char *buf=new char[MAX_NMEA2000_MESSAGE_SEASMART_SIZE+3];
@@ -207,7 +208,7 @@ void handleN2kMessage(const tN2kMsg &n2kMsg,int sourceId, bool isConverted=false
     nmea0183Converter->HandleMsg(n2kMsg,sourceId);
   }
   if (sourceId != N2K_CHANNEL_ID && sendOutN2k){
-    if (!n2kWriteFilter.canPass(n2kMsg.PGN)) return;
+    if (!n2kWriteFilter->canPass(n2kMsg.PGN)) return;
     if (NMEA2000.SendMsg(n2kMsg)){
       countNMEA2KOut.add(n2kMsg.PGN);
     }
@@ -798,6 +799,8 @@ void setup() {
   uint8_t chipid[6];
   uint32_t id = 0;
   config.loadConfig();
+  n2kReadFilter.reset(new GwPgnFilter(config.getString(GwConfigDefinitions::n2kInFilter,"")));
+  n2kWriteFilter.reset(new GwPgnFilter(config.getString(GwConfigDefinitions::n2kOutFilter,"")));
   int level=config.getInt(config.logLevel,LOGLEVEL);
   logger.setLevel(level);
   bool fallbackSerial=false;
@@ -817,6 +820,7 @@ void setup() {
   //maybe the user code changed the level
   level=config.getInt(config.logLevel,LOGLEVEL);
   logger.setLevel(level);
+  logger.logDebug(GwLog::LOG, "N2KFilter read=%s,write=%s",n2kReadFilter->toString().c_str(), n2kWriteFilter->toString().c_str() );
   sendOutN2k=config.getBool(config.sendN2k,true);
   logger.logDebug(GwLog::LOG,"send N2k=%s",(sendOutN2k?"true":"false"));
   gwWifi.setup();
@@ -889,7 +893,6 @@ void setup() {
   webserver.begin();
   xdrMappings.begin();
   logger.flush();
-  logger.logDebug(GwLog::LOG, "N2KFilter read=%s,write=%s",n2kReadFilter.toString().c_str(), n2kWriteFilter.toString().c_str() );
   GwConverterConfig converterConfig;
   converterConfig.init(&config,&logger);
   nmea0183Converter= N2kDataToNMEA0183::create(&logger, &boatData, 

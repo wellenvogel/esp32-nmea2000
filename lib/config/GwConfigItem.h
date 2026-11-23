@@ -3,6 +3,7 @@
 #include "WString.h"
 #include <vector>
 #include <unordered_map>
+#include <memory>
 class GwConfigHandler;
 class GwConfigInterface{
     public:
@@ -81,11 +82,14 @@ class GwPgnFilter{
         String config;
         bool blacklist=false;
         bool always=false;
-        std::unordered_map<long,bool> filter;
-        void parseFilter();
+        std::unique_ptr<std::unordered_map<long,bool>> filter;
+        bool canPassImpl(long pgn);
     public:
         GwPgnFilter(String config);
-        bool canPass(long pgn);
+        bool canPass(long pgn){
+            if (always) return true;
+            return canPassImpl(pgn);
+        }
         bool canPass(const char *buffer);
         String toString();    
 };

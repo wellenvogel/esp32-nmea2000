@@ -316,18 +316,19 @@ String GwNmeaFilter::toString(){
 String GwPgnFilter::toString(){
     String rt(config);
     rt+="bl:"+String(blacklist);
+    if (always) return rt;
     rt+="[";
-    for (auto it=filter.begin();it != filter.end();it++){
+    for (auto it=filter->begin();it != filter->end();it++){
         rt+=","+String(it->first);
     }
     rt+="]";
     return rt;
 }
 
-bool GwPgnFilter::canPass(long pgn){
+bool GwPgnFilter::canPassImpl(long pgn){
     if (always) return true;
-    auto it = filter.find(pgn);
-    if (it != filter.end()){
+    auto it = filter->find(pgn);
+    if (it != filter->end()){
         return !blacklist;
     }
     return blacklist;
@@ -354,12 +355,15 @@ GwPgnFilter::GwPgnFilter(String config){
         int last=0;
         int found=0;
         while ((found = list.indexOf(',',last)) >= 0){
-            filter[list.substring(last,found).toInt()]=true;
+            if (!filter.get()) filter.reset(new std::unordered_map<long,bool>());
+            filter->operator[](list.substring(last,found).toInt())=true;
             last=found+1;
         }
         if (last < list.length()){
-            filter[list.substring(last).toInt()]=true;
+            if (!filter.get()) filter.reset(new std::unordered_map<long,bool>());
+            filter->operator[](list.substring(last).toInt())=true;
         }
+        always=(filter.get()) ? filter->empty() : true;
     }
     else{
         always=true;
