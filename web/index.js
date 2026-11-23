@@ -918,8 +918,18 @@
         if (!parts[6]) return false;
         return true;
     }
+    const filterHelpText="Select aison|aisoff.\n"+
+        "Set a whitelist or a blacklist with NMEA sentences like RMC,RMB,GPGLL.\n"+
+        "Multiple sentences should be comma separated.\n"+
+        "You can either use 3 character sentences or 5 characters including the talker id and sentence.";
 
     function createFilterInput(configItem, frame) {
+        if (configItem.description) {
+            configItem.description += "\n" + filterHelpText;
+        }
+        else{
+            configItem.description = filterHelpText;
+        }
         let el = addEl('div', 'filter', frame);
         let ais = createInput({
             type: 'list',

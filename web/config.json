@@ -484,7 +484,7 @@
         "label": "USB read Filter",
         "type": "filter",
         "default": "",
-        "description": "filter for NMEA0183 data when reading from USB\nselect aison|aisoff, set a whitelist or a blacklist with NMEA sentences like RMC,RMB",
+        "description": "filter for NMEA0183 data when reading from USB",
         "category": "usb port",
         "condition":{"usbActisense":"false"}
     },
@@ -493,7 +493,7 @@
         "label": "USB write Filter",
         "type": "filter",
         "default": "",
-        "description": "filter for NMEA0183 data when writing to USB\nselect aison|aisoff, set a whitelist or a blacklist with NMEA sentences like RMC,RMB",
+        "description": "filter for NMEA0183 data when writing to USB",
         "category": "usb port",
         "condition":{"usbActisense":"false"}
     },
@@ -620,7 +620,7 @@
         "label": "serial read Filter",
         "type": "filter",
         "default": "",
-        "description": "filter for NMEA0183 data when reading from serial\nselect aison|aisoff, set a whitelist or a blacklist with NMEA sentences like RMC,RMB",
+        "description": "filter for NMEA0183 data when reading from serial",
         "capabilities": {
             "serialmode": [
                 "RX",
@@ -635,7 +635,7 @@
         "label": "serial write Filter",
         "type": "filter",
         "default": "",
-        "description": "filter for NMEA0183 data when writing to serial\nselect aison|aisoff, set a whitelist or a blacklist with NMEA sentences like RMC,RMB",
+        "description": "filter for NMEA0183 data when writing to serial",
         "capabilities": {
             "serialmode": [
                 "TX",
@@ -742,7 +742,7 @@
         "label": "serial2 read Filter",
         "type": "filter",
         "default": "",
-        "description": "filter for NMEA0183 data when reading from serial2\nselect aison|aisoff, set a whitelist or a blacklist with NMEA sentences like RMC,RMB",
+        "description": "filter for NMEA0183 data when reading from serial2",
         "capabilities": {
             "serial2mode": [
                 "RX",
@@ -757,7 +757,7 @@
         "label": "serial2 write Filter",
         "type": "filter",
         "default": "",
-        "description": "filter for NMEA0183 data when writing to serial2\nselect aison|aisoff, set a whitelist or a blacklist with NMEA sentences like RMC,RMB",
+        "description": "filter for NMEA0183 data when writing to serial2",
         "capabilities": {
             "serial2mode": [
                 "TX",
@@ -816,7 +816,7 @@
         "label": "NMEA read Filter",
         "type": "filter",
         "default": "",
-        "description": "filter for NMEA0183 data when reading from TCP\nselect aison|aisoff, set a whitelist or a blacklist with NMEA sentences like RMC,RMB",
+        "description": "filter for NMEA0183 data when reading from TCP",
         "category": "TCP server"
     },
     {
@@ -824,7 +824,7 @@
         "label": "NMEA write Filter",
         "type": "filter",
         "default": "",
-        "description": "filter for NMEA0183 data when writing to TCP\nselect aison|aisoff, set a whitelist or a blacklist with NMEA sentences like RMC,RMB",
+        "description": "filter for NMEA0183 data when writing to TCP",
         "category": "TCP server"
     },
     {
@@ -924,7 +924,7 @@
         "label": "NMEA read Filter",
         "type": "filter",
         "default": "",
-        "description": "filter for NMEA0183 data when reading from remote TCP server\nselect aison|aisoff, set a whitelist or a blacklist with NMEA sentences like RMC,RMB",
+        "description": "filter for NMEA0183 data when reading from remote TCP server",
         "category": "TCP client",
         "condition":{
             "tclEnabled":"true"
@@ -935,7 +935,7 @@
         "label": "NMEA write Filter",
         "type": "filter",
         "default": "",
-        "description": "filter for NMEA0183 data when writing to remote TCP server\nselect aison|aisoff, set a whitelist or a blacklist with NMEA sentences like RMC,RMB",
+        "description": "filter for NMEA0183 data when writing to remote TCP server",
         "category": "TCP client",
         "condition":{
             "tclEnabled":"true"
@@ -1046,7 +1046,7 @@
         "label": "NMEA write Filter",
         "type": "filter",
         "default": "",
-        "description": "filter for NMEA0183 data when writing to remote UDP server\nselect aison|aisoff, set a whitelist or a blacklist with NMEA sentences like RMC,RMB",
+        "description": "filter for NMEA0183 data when writing to remote UDP server",
         "category": "UDP writer",
         "condition":{
             "udpwEnabled":"true"
@@ -1143,7 +1143,7 @@
         "label": "NMEA read Filter",
         "type": "filter",
         "default": "",
-        "description": "filter for NMEA0183 data when receiving\nselect aison|aisoff, set a whitelist or a blacklist with NMEA sentences like RMC,RMB",
+        "description": "filter for NMEA0183 data when receiving",
         "category": "UDP reader",
         "condition":{
             "udprEnabled":"true"

@@ -59,13 +59,22 @@ class GwConfigInterface{
         friend class GwConfigHandler;
 };
 
+struct StringHash{
+    size_t operator()(const String &s) const{
+        return std::hash<std::string>()(s.c_str());
+    }
+};
+
 class GwNmeaFilter{
+    using map=std::unordered_map<String,bool,StringHash>;
     private:
         String config;
         bool isReady=false;
         bool ais=true;
         bool blacklist=true;
-        std::vector<String> filter;
+        std::unique_ptr<map> filter3;
+        std::unique_ptr<map> filter5;
+        void addElement(const String &element);
         void handleToken(String token, int index);
         void parseFilter();
     public:

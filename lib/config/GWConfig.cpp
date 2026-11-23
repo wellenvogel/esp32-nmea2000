@@ -241,6 +241,17 @@ int GwConfigHandler::numSpecial() const{
     }
     return rt;
 }
+void GwNmeaFilter::addElement(const String &element){
+    String s(element);
+    s.trim();
+    if (s.length() == 3){
+        if (!filter3) filter3.reset(new map());
+        (*filter3)[s]=true;
+    } else if (s.length() == 5){
+        if (!filter5) filter5.reset(new map());
+        (*filter5)[s]=true;
+    }
+}
 
 void GwNmeaFilter::handleToken(String token, int index){
     switch(index){
@@ -254,11 +265,11 @@ void GwNmeaFilter::handleToken(String token, int index){
             int found=0;
             int last=0;
             while ((found = token.indexOf(',',last)) >= 0){
-                filter.push_back(token.substring(last,found));   
+                addElement(token.substring(last,found));   
                 last=found+1;
             }
             if (last < token.length()){
-                filter.push_back(token.substring(last));   
+                addElement(token.substring(last));   
             }
             break;
     }    
@@ -289,15 +300,12 @@ void GwNmeaFilter::parseFilter(){
 
 bool GwNmeaFilter::canPass(const char *buffer){
     size_t len=strlen(buffer);
-    if (len < 5) return false; //invalid NMEA
+    if (len < 6) return false; //invalid NMEA
     if (!isReady) parseFilter();
     if (buffer[0] == '!') return ais;
-    char sentence[4];
-    strncpy(sentence,buffer+3,3);
-    sentence[3]=0;
-    for (auto it=filter.begin();it != filter.end();it++){
-        if (strncmp(sentence,(*it).c_str(),3) == 0) return !blacklist;
-    }
+    //first match the whole talker+sentence identifier
+    if (filter5 && filter5->find(String(buffer+1,5)) != filter5->end()) return !blacklist;
+    if (filter3 && filter3->find(String(buffer+3,3)) != filter3->end()) return !blacklist;
     //if we have a whitelist we return false
     //if nothing matches
     return blacklist; 
@@ -307,9 +315,19 @@ String GwNmeaFilter::toString(){
     String rt("NMEAFilter: ");
     rt+="ais: "+String(ais);
     rt+=", bl:"+String(blacklist);
-    for (auto it=filter.begin();it != filter.end();it++){
-        rt+=","+*it;
+    rt+="3[";
+    if (filter3){
+        for (auto it=filter3->begin(); it != filter3->end(); it++){
+            rt+=","+String(it->first);
+        }
     }
+    rt+="],5[";
+    if (filter5){
+        for (auto it=filter5->begin(); it != filter5->end(); it++){
+            rt+=","+String(it->first);
+        }
+    }
+    rt+="]";
     return rt;
 }
 
