@@ -419,7 +419,7 @@ private:
             SetN2kGNSS(n2kMsg,1, GPSD,
                 GPST, LAT, LON, N2kDoubleNA,
                      N2kGNSSt_GPS, N2kGNSSm_GNSSfix,
-                     boatData->SatInfo->getNumSats(), 
+                     boatData->SatInfo->isValid()  ? boatData->SatInfo->getNumSats() : N2kUInt8NA, 
                      boatData->HDOP->getDataWithDefault(N2kDoubleNA), 
                      boatData->VDOP->getDataWithDefault(N2kDoubleNA), 
                      boatData->PDOP->getDataWithDefault(N2kDoubleNA));
