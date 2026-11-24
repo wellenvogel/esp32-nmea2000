@@ -337,7 +337,7 @@ String GwNmeaFilter::toString(){
 String GwPgnFilter::toString(){
     String rt(config);
     rt+="bl:"+String(blacklist);
-    if (always) return rt;
+    if (always || ! filter.get()) return rt;
     rt+="[";
     for (auto it=filter->begin();it != filter->end();it++){
         rt+=","+String(it->first);
@@ -348,9 +348,13 @@ String GwPgnFilter::toString(){
 
 bool GwPgnFilter::canPassImpl(long pgn){
     if (always) return true;
-    auto it = filter->find(pgn);
-    if (it != filter->end()){
-        return !blacklist;
+    if (filter)
+    {
+        auto it = filter->find(pgn);
+        if (it != filter->end())
+        {
+            return !blacklist;
+        }
     }
     return blacklist;
 }
@@ -384,7 +388,7 @@ GwPgnFilter::GwPgnFilter(String config){
             if (!filter.get()) filter.reset(new std::unordered_map<long,bool>());
             filter->operator[](list.substring(last).toInt())=true;
         }
-        always=(filter.get()) ? filter->empty() : true;
+        always=(filter.get()) ? filter->empty() : blacklist;
     }
     else{
         always=true;
