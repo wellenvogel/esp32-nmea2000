@@ -211,6 +211,27 @@ body {
   .overlayContent {
       padding: 0.5em;
   }
+  .n2kDevices {
+      max-width: 100%;
+      overflow-x: auto;
+  }
+  .n2kDeviceTable {
+      border-collapse: collapse;
+  }
+  .n2kDeviceTable th, .n2kDeviceTable td {
+      padding: 0.35em 0.6em;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+  }
+  .n2kDeviceDetails td {
+      overflow-wrap: anywhere;
+  }
+  .n2kDeviceRow {
+      cursor: pointer;
+  }
+  .n2kDeviceRow:hover, .n2kDeviceRow:focus {
+      background-color: #eee;
+  }
   div#overlayContent.text{
     white-space: pre-line;
   }
@@ -273,6 +294,18 @@ body {
   .icon-eye.active{
     opacity: 1;
   }
+
+  .ucicon {
+    display: block;
+    margin-left: 0.4em;
+    margin-right: 0.4em;
+    font-size: 1.5em;
+    line-height: 1.5em;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+}
   
   .dash {
       width: 6.5em;

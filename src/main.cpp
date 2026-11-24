@@ -45,6 +45,7 @@ const unsigned long HEAP_REPORT_TIME=2000; //set to 0 to disable heap reporting
 #include <MD5Builder.h>
 #include "GwJsonDocument.h"
 #include "N2kDataToNMEA0183.h"
+#include "N2kDeviceList.h"
 #include <esp_image_format.h>
 
 
@@ -126,6 +127,7 @@ class Nmea2kTwaiLog : public Nmea2kTwai{
 #endif
 
 Nmea2kTwai &NMEA2000=*(new Nmea2kTwaiLog((gpio_num_t)ESP32_CAN_TX_PIN,(gpio_num_t)ESP32_CAN_RX_PIN,CAN_RECOVERY_PERIOD,&logger));
+tN2kDeviceList n2kDeviceList(&NMEA2000);
 
 #ifdef GWBUTTON_PIN
 bool fixedApPass=false;
@@ -634,6 +636,99 @@ protected:
   }
 };
 
+class N2kDeviceListRequest : public GwRequestMessage
+{
+public:
+  N2kDeviceListRequest() : GwRequestMessage(F("application/json"),F("n2kDeviceList")){};
+
+protected:
+  virtual void processRequest()
+  {
+    n2kDeviceList.ReadResetIsListUpdated();
+    size_t arraySize=0;
+    size_t capacity=0;
+    for (int i = 0; i < N2kMaxBusDevices; i++)
+    {
+      auto device=n2kDeviceList.FindDeviceBySource(i);
+      if (!device) continue;
+      arraySize=i+1;
+      const char *strings[]={
+        device->GetModelID(),device->GetSwCode(),device->GetModelVersion(),
+        device->GetModelSerialCode(),device->GetManufacturerInformation(),
+        device->GetInstallationDescription1(),device->GetInstallationDescription2()
+      };
+      size_t members=15;
+      for (const char *value : strings) if (value && *value) members++;
+      const unsigned long *pgns=device->GetTransmitPGNs();
+      size_t count=0;
+      if (pgns){
+        members++;
+        while (pgns[count]) count++;
+      }
+      capacity+=JSON_ARRAY_SIZE(count);
+      pgns=device->GetReceivePGNs();
+      count=0;
+      if (pgns){
+        members++;
+        while (pgns[count]) count++;
+      }
+      capacity+=JSON_ARRAY_SIZE(count);
+      capacity+=JSON_OBJECT_SIZE(members)+17;
+    }
+    DynamicJsonDocument jdoc(capacity+JSON_ARRAY_SIZE(arraySize));
+    jdoc.to<JsonArray>();
+    for (int i = 0; i < N2kMaxBusDevices; i++)
+    {
+      auto device=n2kDeviceList.FindDeviceBySource(i);
+      if (!device) continue;
+      JsonObject info=jdoc[i].to<JsonObject>();
+      uint64_t name=device->GetName();
+      char nameString[17];
+      snprintf(nameString,sizeof(nameString),"%08lx%08lx",
+          (unsigned long)(name >> 32),(unsigned long)(name & 0xffffffffULL));
+      info["src"]=device->GetSource();
+      info["name"]=nameString;
+      info["uid"]=device->GetUniqueNumber();
+      info["mfg"]=device->GetManufacturerCode();
+      info["inst"]=device->GetDeviceInstance();
+      info["fn"]=device->GetDeviceFunction();
+      info["cls"]=device->GetDeviceClass();
+      info["ind"]=device->GetIndustryGroup();
+      info["si"]=device->GetSystemInstance();
+      info["ct"]=device->GetCreateTime();
+      info["lt"]=n2kDeviceList.GetDeviceLastMessageTime(i);
+      info["n2k"]=device->GetN2kVersion();
+      info["pc"]=device->GetProductCode();
+      auto addString=[&info](const char *key,const char *value){
+        if (value && *value) info[key]=value;
+      };
+      addString("mid",device->GetModelID());
+      addString("sw",device->GetSwCode());
+      addString("mv",device->GetModelVersion());
+      addString("sn",device->GetModelSerialCode());
+      info["cert"]=device->GetCertificationLevel();
+      info["load"]=device->GetLoadEquivalency();
+      addString("mi",device->GetManufacturerInformation());
+      addString("id1",device->GetInstallationDescription1());
+      addString("id2",device->GetInstallationDescription2());
+      const unsigned long *pgns=device->GetTransmitPGNs();
+      if (pgns){
+        JsonArray list=info.createNestedArray("tx");
+        while (*pgns) list.add(*pgns++);
+      }
+      pgns=device->GetReceivePGNs();
+      if (pgns){
+        JsonArray list=info.createNestedArray("rx");
+        while (*pgns) list.add(*pgns++);
+      }
+    }
+    if (jdoc.overflowed() || serializeJson(jdoc,result) != measureJson(jdoc)){
+      logger.logDebug(GwLog::ERROR,"unable to serialize NMEA 2000 device list");
+      result="{\"error\":\"unable to serialize device list\"}";
+    }
+  }
+};
+
 void handleConfigRequestData(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total){
   typedef struct{
     char notFirst;
@@ -867,6 +962,8 @@ void setup() {
                                 return new TestTimeRequest(time); 
                               });
   */
+  webserver.registerMainHandler("/api/n2kDeviceList", [](AsyncWebServerRequest *request)->GwRequestMessage *
+                              { return new N2kDeviceListRequest(); });
   webserver.registerPostHandler("/api/setConfig",
                               [](AsyncWebServerRequest *request){
 
@@ -1085,4 +1182,3 @@ void loopRun() {
   monitor.setTime(11);
   //logger.logDebug(GwLog::DEBUG,"main loop end");
 }
-

@@ -28,3 +28,35 @@ The position-to-waypoint bearing is also used as heading-to-steer; PGN 129284
 does not provide a separate heading-to-steer. The destination waypoint number
 is used as the APB destination identifier. Unavailable arrival and perpendicular
 statuses are emitted as empty fields.
+
+
+# Special API requuests
+
+## NMEA 2000 device list
+
+Select the information icon next to NMEA 2000 State to view discovered
+devices. Select a row to see its available details; Back returns to the list.
+
+`/api/n2kDeviceList` returns a JSON array indexed by NMEA 2000 source address.
+Unused addresses are `null`; an empty list is `[]`. Fields use these abbreviated
+keys:
+
+| Key | Meaning |
+| --- | --- |
+| `src` | Source address |
+| `name` | 64-bit NMEA NAME as a 16-digit hexadecimal string |
+| `uid`, `mfg` | Unique number and manufacturer code |
+| `inst` | Device instance |
+| `fn`, `cls`, `ind`, `si` | Device function, class, industry group and system instance |
+| `ct`, `lt` | Device creation and last message times in milliseconds since startup |
+| `n2k`, `pc` | NMEA 2000 version and product code |
+| `mid`, `sw`, `mv`, `sn` | Model ID, software code, model version and serial code |
+| `cert`, `load` | Certification level and load equivalency (in units of 50 mA) |
+| `mi`, `id1`, `id2` | Manufacturer information and installation descriptions |
+| `tx`, `rx` | Supported transmit and receive PGNs, when available |
+
+Product and configuration information may not yet be available. The library's
+unavailable product numeric values are reported as-is; empty or unavailable
+strings are omitted. Missing PGN lists are omitted, while known empty lists are `[]`.
+If the response cannot be serialized, the endpoint returns a JSON object with
+an `error` field instead of a partial list.

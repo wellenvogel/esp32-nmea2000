@@ -420,6 +420,7 @@
         let el = document.getElementById('overlayContent');
         if (text instanceof Object) {
             el.textContent = '';
+            el.classList.remove("text");
             el.appendChild(text);
         }
         else {
@@ -1910,6 +1911,83 @@
             });
         }
     }
+
+    function showN2kDevices() {
+        let labels = {
+            src: "Source", name: "NAME", uid: "Unique number", mfg: "Manufacturer code",
+            inst: "Instance", fn: "Device function", cls: "Device class",
+            ind: "Industry group", si: "System instance", ct: "Created (ms)",
+            lt: "Last message (ms)", n2k: "NMEA 2000 version", pc: "Product code",
+            mid: "Model ID", sw: "Software version", mv: "Model version",
+            sn: "Serial number", cert: "Certification level", load: "Load equivalency",
+            mi: "Manufacturer information", id1: "Installation description 1",
+            id2: "Installation description 2", tx: "Transmit PGNs", rx: "Receive PGNs"
+        };
+        function showList(devices) {
+            let content = addEl('div', 'n2kDevices');
+            addEl('h3', '', content, 'NMEA 2000 devices');
+            if (!devices.length) {
+                addEl('p', '', content, 'No NMEA 2000 devices found.');
+            }
+            else {
+                let table = addEl('table', 'n2kDeviceTable', content);
+                let header = addEl('tr', '', addEl('thead', '', table));
+                ['src', 'name', 'mid'].forEach(function (label) {
+                    addEl('th', '', header, labels[label] || label);
+                });
+                let body = addEl('tbody', '', table);
+                devices.forEach(function (device) {
+                    let row = addEl('tr', 'n2kDeviceRow', body);
+                    row.tabIndex = 0;
+                    row.setAttribute('role', 'button');
+                    row.setAttribute('aria-label', 'Show details for source ' + device.src);
+                    ['src', 'name', 'mid'].forEach(function (key) {
+                        let value = device[key];
+                        addEl('td', '', row, value === undefined || value === null ? '' : String(value));
+                    });
+                    row.addEventListener('click', function () { showDetails(device, devices); });
+                    row.addEventListener('keydown', function (ev) {
+                        if (ev.key === 'Enter' || ev.key === ' ') {
+                            ev.preventDefault();
+                            showDetails(device, devices);
+                        }
+                    });
+                });
+            }
+            showOverlay(content);
+        }
+        function showDetails(device, devices) {
+            let content = addEl('div', 'n2kDevices');
+            addEl('h3', '', content, 'NMEA 2000 device ' + device.src);
+            let table = addEl('table', 'n2kDeviceTable n2kDeviceDetails', content);
+            let body = addEl('tbody', '', table);
+            Object.keys(device).forEach(function (key) {
+                let value = device[key];
+                if (value === undefined || value === null) return;
+                let row = addEl('tr', '', body);
+                addEl('th', '', row, labels[key] || key);
+                addEl('td', '', row, Array.isArray(value) ? value.join(', ') : String(value));
+            });
+            showOverlay(content, false, [{ label: 'Back', click: function () { showList(devices); } }]);
+        }
+        fetch('/api/n2kDeviceList')
+            .then(function (response) {
+                if (!response.ok) throw new Error('HTTP ' + response.status);
+                return response.json();
+            })
+            .then(function (devices) {
+                if (!Array.isArray(devices)) {
+                    throw new Error(devices && devices.error ? devices.error : 'Invalid device list');
+                }
+                showList(devices.filter(function (device) {
+                    return device && typeof device === 'object' && !Array.isArray(device);
+                }));
+            })
+            .catch(function (error) {
+                showOverlay('Unable to load NMEA 2000 devices: ' + error.message);
+            });
+    }
+    buttonHandlers.n2kinfo=showN2kDevices;
     buttonHandlers.uploadBin=function(ev) {
         let el = document.getElementById("uploadFile");
         let progressEl = document.getElementById("uploadDone");
@@ -2249,4 +2327,3 @@
         })
     });
 }());
-
