@@ -165,6 +165,18 @@ For details refer to the [example description](lib/exampletask/Readme.md).
 
 Changelog
 ---------
+[20261124](../../releases/tag/20261124)
+* [#119](../../issues/119) Add PGN 130323 (Meteorological Station)
+* [#128](../../issues/128) N2k Depth PGN 128267 conversion doesn't distinguish between DBS and DBK
+* [#130](../../issues/130) B&G and Pypilot mode nav
+* [#136](../../issues/136) Unable to flash because of pin assignment
+* [#137](../../issues/137) JS issues on B&G plotter
+* [#138](../../issues/138) GPIO15 and GPIO16 should be available for the S3 default in online build service
+* [#139](../../issues/139) Add PGN filter options
+* [#141](../../issues/141) Add automatic sending of 129029
+* [#142](../../issues/142) Extend the NMEA filter options
+* [#143](../../issues/143) Show NMEA2000 device list
+
 [20260819](../../releases/tag/20260819)
 * [#135](../../issues/135) improve Wifi stability
 * [#134](../../issues/134) better handling for AIS ship dimensions
