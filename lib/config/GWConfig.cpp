@@ -244,16 +244,11 @@ int GwConfigHandler::numSpecial() const{
 void GwNmeaFilter::addElement(const String &element){
     String s(element);
     s.trim();
-    if (s.length() == 3){
-        if (!filter3) filter3.reset(new map());
-        (*filter3)[s]=true;
-    } else if (s.length() == 5){
-        if (!filter5) filter5.reset(new map());
-        (*filter5)[s]=true;
-    }
-    else if (s.length() == 2){
-        if (!filter2) filter2.reset(new map());
-        (*filter2)[s]=true;
+    s.toUpperCase();
+    int l=s.length();
+    if (l == 3 || l == 5 || l == 2){
+        if (!filter) filter.reset(new map());
+        (*filter)[s]=true;
     }
 }
 
@@ -301,20 +296,25 @@ void GwNmeaFilter::parseFilter(){
         handleToken(tok,index);
     }
     isReady=true;
-    if (ais && ! filter3 && ! filter5 && ! filter2 && blacklist) always=true;
+    if (ais && !filter && blacklist) always=true;
 }
 
+
 bool GwNmeaFilter::canPassImpl(const char *buffer){
+    // lookup table for start index and length of NMEA sentence parts to check
+    static const int lookup[3][2] = {{1,5},{1,2},{3,3}};
     size_t len=strlen(buffer);
     if (len < 6) return false; //invalid NMEA
     if (!isReady) parseFilter();
     if (buffer[0] == '!') return ais;
-    //first match the whole talker+sentence identifier
-    if (filter5 && filter5->find(String(buffer+1,5)) != filter5->end()) return !blacklist;
-    //sentences without talker id (3 characters)
-    if (filter3 && filter3->find(String(buffer+3,3)) != filter3->end()) return !blacklist;
-    //talker id only (2 characters)
-    if (filter2 && filter2->find(String(buffer+1,2)) != filter2->end()) return !blacklist;
+    for (int i=0;i<3;i++){
+        int start=lookup[i][0];
+        int length=lookup[i][1];
+        if (len >= start+length){
+            String key(buffer+start,length);
+            if (filter && filter->find(key) != filter->end()) return !blacklist;
+        }
+    }
     //if we have a whitelist we return false
     //if nothing matches
     return blacklist; 
@@ -324,22 +324,9 @@ String GwNmeaFilter::toString(){
     String rt("NMEAFilter: ");
     rt+="ais: "+String(ais);
     rt+=", bl:"+String(blacklist);
-    rt+="3[";
-    if (filter3){
-        for (auto it=filter3->begin(); it != filter3->end(); it++){
-            rt+=","+String(it->first);
-        }
-    }
-    rt+="],5[";
-    if (filter5){
-        for (auto it=filter5->begin(); it != filter5->end(); it++){
-            rt+=","+String(it->first);
-        }
-    }
-    rt+="]";
-    rt+="2[";
-    if (filter2){
-        for (auto it=filter2->begin(); it != filter2->end(); it++){
+    rt+="[";
+    if (filter){
+        for (auto it=filter->begin(); it != filter->end(); it++){
             rt+=","+String(it->first);
         }
     }

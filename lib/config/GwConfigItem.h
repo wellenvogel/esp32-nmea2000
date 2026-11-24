@@ -73,9 +73,7 @@ class GwNmeaFilter{
         bool ais=true;
         bool blacklist=true;
         bool always=false;
-        std::unique_ptr<map> filter2;
-        std::unique_ptr<map> filter3;
-        std::unique_ptr<map> filter5;
+        std::unique_ptr<map> filter;
         void addElement(const String &element);
         void handleToken(String token, int index);
         void parseFilter();

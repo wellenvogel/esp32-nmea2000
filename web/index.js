@@ -919,11 +919,24 @@
         if (!parts[6]) return false;
         return true;
     }
+    checkers.checkFilter=function(value){
+        if (!value) return;
+        let parts = value.split(':');
+        if (parts.length != 3) return "internal error, invalid filter format"
+        if (parts[0] != "0" && parts[0] != "1") return "internal error, invalid part 0";
+        if (parts[1] != "0" && parts[1] != "1") return "internal error, invalid part 1";
+        if (!parts[2]) return;
+        const regex = /^\s*(?:[a-zA-Z]{2}|[a-zA-Z]{3}|[a-zA-Z]{5})(?:\s*,\s*(?:[a-zA-Z]{2}|[a-zA-Z]{3}|[a-zA-Z]{5}))*\s*$/;
+        if (!regex.test(parts[2])) return "either 2, 3 or 5 character values expected, separated by ,";
+        return;
+    }
     const filterHelpText="Select aison|aisoff.\n"+
         "Set a whitelist or a blacklist with NMEA sentences like RMC,RMB,GPGLL.\n"+
         "Multiple sentences should be comma separated.\n"+
         "You can either use 3 character sentences or 5 characters including the talker id and sentence.\n"+
         "For blocking/passing one talker use the 2 character talker id.\n"+
+        "The priority is 5 character talker+sentence | 2 character talker | 3 character sentences.\n"+
+        "All characters are internally translated to upper case.\n"+
         "Hint: Seasmart sentences starting with $PCDIN are not handled by this filter but by the PGN filters.";
 
     function createFilterInput(configItem, frame) {
@@ -978,8 +991,10 @@
         });
         data.setAttribute('name', configItem.name);
         if (configItem.readOnly) data.setAttribute('disabled', true);
+        data.setAttribute('data-check',"checkFilter");
         return data;
     }
+
     checkers.checkPgn=function(value){
         if (!value) return;
         let parts = value.split(":");
