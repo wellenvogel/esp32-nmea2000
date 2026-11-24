@@ -129,16 +129,16 @@ void GwChannel::updateCounter(const char *msg, bool out)
         {
             for (int i = 0; i < 6 && msg[i] != 0; i++)
             {
-                if (i >= 3)
+                if (i >= 1)
                 {
                     if (isalnum(msg[i]))
-                        key[i - 3] = msg[i];
+                        key[i - 1] = msg[i];
                     else
-                        key[i - 3] = '_';
+                        key[i - 1] = '_';
                 }
-                key[i - 2] = 0;
+                key[i ] = 0;
             }
-            key[3] = 0;
+            key[5] = 0;
         }
     }
     else if (msg[0] == '!')
