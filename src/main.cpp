@@ -645,13 +645,39 @@ protected:
   virtual void processRequest()
   {
     n2kDeviceList.ReadResetIsListUpdated();
-    size_t arraySize=0;
-    size_t capacity=0;
+    const uint8_t ownSource=NMEA2000.GetN2kSource();
+    const auto ownDevice=NMEA2000.GetDeviceInformation();
+    char ownModel[Max_N2kModelID_len+1];
+    char ownSoftware[Max_N2kSwCode_len+1];
+    char ownVersion[Max_N2kModelVersion_len+1];
+    char ownSerial[Max_N2kModelSerialCode_len+1];
+    char ownManufacturer[Max_N2kConfigurationInfoField_len];
+    char ownDescription1[Max_N2kConfigurationInfoField_len];
+    char ownDescription2[Max_N2kConfigurationInfoField_len];
+    NMEA2000.GetModelID(ownModel,sizeof(ownModel));
+    NMEA2000.GetSwCode(ownSoftware,sizeof(ownSoftware));
+    NMEA2000.GetModelVersion(ownVersion,sizeof(ownVersion));
+    NMEA2000.GetModelSerialCode(ownSerial,sizeof(ownSerial));
+    NMEA2000.GetManufacturerInformation(ownManufacturer,sizeof(ownManufacturer));
+    NMEA2000.GetInstallationDescription1(ownDescription1,sizeof(ownDescription1));
+    NMEA2000.GetInstallationDescription2(ownDescription2,sizeof(ownDescription2));
+    const char *ownStrings[]={ownModel,ownSoftware,ownVersion,ownSerial,
+      ownManufacturer,ownDescription1,ownDescription2};
+    size_t ownMembers=13;
+    size_t capacity=17;
+    for (const char *value : ownStrings){
+      if (*value){
+        ownMembers++;
+        capacity+=strlen(value)+1;
+      }
+    }
+    capacity+=JSON_OBJECT_SIZE(ownMembers);
+    size_t arraySize=1;
     for (int i = 0; i < N2kMaxBusDevices; i++)
     {
       auto device=n2kDeviceList.FindDeviceBySource(i);
-      if (!device) continue;
-      arraySize=i+1;
+      if (!device || i == ownSource) continue;
+      arraySize=i+2;
       const char *strings[]={
         device->GetModelID(),device->GetSwCode(),device->GetModelVersion(),
         device->GetModelSerialCode(),device->GetManufacturerInformation(),
@@ -677,11 +703,35 @@ protected:
     }
     DynamicJsonDocument jdoc(capacity+JSON_ARRAY_SIZE(arraySize));
     jdoc.to<JsonArray>();
+    JsonObject ownInfo=jdoc[0].to<JsonObject>();
+    char ownName[17];
+    uint64_t name=ownDevice.GetName();
+    snprintf(ownName,sizeof(ownName),"%08lx%08lx",
+        (unsigned long)(name >> 32),(unsigned long)(name & 0xffffffffULL));
+    ownInfo["src"]=ownSource;
+    ownInfo["name"]=ownName;
+    ownInfo["uid"]=ownDevice.GetUniqueNumber();
+    ownInfo["mfg"]=ownDevice.GetManufacturerCode();
+    ownInfo["inst"]=ownDevice.GetDeviceInstance();
+    ownInfo["fn"]=ownDevice.GetDeviceFunction();
+    ownInfo["cls"]=ownDevice.GetDeviceClass();
+    ownInfo["ind"]=ownDevice.GetIndustryGroup();
+    ownInfo["si"]=ownDevice.GetSystemInstance();
+    ownInfo["n2k"]=NMEA2000.GetN2kVersion();
+    ownInfo["pc"]=NMEA2000.GetProductCode();
+    ownInfo["cert"]=NMEA2000.GetCertificationLevel();
+    ownInfo["load"]=NMEA2000.GetLoadEquivalency();
+    const char *ownKeys[]={"mid","sw","mv","sn","mi","id1","id2"};
+    for (size_t i=0; i<sizeof(ownKeys)/sizeof(ownKeys[0]); i++){
+      if (*ownStrings[i]) ownInfo[ownKeys[i]]=String(ownStrings[i]);
+    }
+    auto now = millis();
+    auto tdiff=[now](unsigned long t){ return (t>0)? now - t : 0; };
     for (int i = 0; i < N2kMaxBusDevices; i++)
     {
       auto device=n2kDeviceList.FindDeviceBySource(i);
-      if (!device) continue;
-      JsonObject info=jdoc[i].to<JsonObject>();
+      if (!device || i == ownSource) continue;
+      JsonObject info=jdoc[i+1].to<JsonObject>();
       uint64_t name=device->GetName();
       char nameString[17];
       snprintf(nameString,sizeof(nameString),"%08lx%08lx",
@@ -695,8 +745,8 @@ protected:
       info["cls"]=device->GetDeviceClass();
       info["ind"]=device->GetIndustryGroup();
       info["si"]=device->GetSystemInstance();
-      info["ct"]=device->GetCreateTime();
-      info["lt"]=n2kDeviceList.GetDeviceLastMessageTime(i);
+      info["ct"]=tdiff(device->GetCreateTime());
+      info["lt"]=tdiff(n2kDeviceList.GetDeviceLastMessageTime(i));
       info["n2k"]=device->GetN2kVersion();
       info["pc"]=device->GetProductCode();
       auto addString=[&info](const char *key,const char *value){

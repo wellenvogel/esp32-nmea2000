@@ -37,9 +37,10 @@ statuses are emitted as empty fields.
 Select the information icon next to NMEA 2000 State to view discovered
 devices. Select a row to see its available details; Back returns to the list.
 
-`/api/n2kDeviceList` returns a JSON array indexed by NMEA 2000 source address.
-Unused addresses are `null`; an empty list is `[]`. Fields use these abbreviated
-keys:
+`/api/n2kDeviceList` returns a JSON array with the gateway's own device at
+index 0. Other devices are at their NMEA 2000 source address plus one; unused
+addresses are `null`. The gateway is not repeated in the rest of the array.
+Fields use these abbreviated keys:
 
 | Key | Meaning |
 | --- | --- |
@@ -48,7 +49,7 @@ keys:
 | `uid`, `mfg` | Unique number and manufacturer code |
 | `inst` | Device instance |
 | `fn`, `cls`, `ind`, `si` | Device function, class, industry group and system instance |
-| `ct`, `lt` | Device creation and last message times in milliseconds since startup |
+| `ct`, `lt` | Elapsed milliseconds since device creation and last message (remote devices) |
 | `n2k`, `pc` | NMEA 2000 version and product code |
 | `mid`, `sw`, `mv`, `sn` | Model ID, software code, model version and serial code |
 | `cert`, `load` | Certification level and load equivalency (in units of 50 mA) |
@@ -58,5 +59,7 @@ keys:
 Product and configuration information may not yet be available. The library's
 unavailable product numeric values are reported as-is; empty or unavailable
 strings are omitted. Missing PGN lists are omitted, while known empty lists are `[]`.
+The gateway entry omits `ct`, `lt`, `tx` and `rx`, which are not provided by
+the local device information API.
 If the response cannot be serialized, the endpoint returns a JSON object with
 an `error` field instead of a partial list.

@@ -1951,6 +1951,7 @@
                     addEl('th', '', header, labels[label] || label);
                 });
                 let body = addEl('tbody', '', table);
+                let first = true;
                 devices.forEach(function (device) {
                     let row = addEl('tr', 'n2kDeviceRow', body);
                     row.tabIndex = 0;
@@ -1958,6 +1959,10 @@
                     row.setAttribute('aria-label', 'Show details for source ' + device.src);
                     ['src', 'name', 'mid'].forEach(function (key) {
                         let value = device[key];
+                        if (first && key == 'src') {
+                            first = false;
+                            value=value?value+'[own]':'[own]';
+                        }
                         addEl('td', '', row, value === undefined || value === null ? '' : String(value));
                     });
                     row.addEventListener('click', function () { showDetails(device, devices); });
