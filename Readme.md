@@ -35,7 +35,7 @@ What is included
 * a NMEA0183 RS485 to NMEA2000 gateway
 * a Wifi (NMEA0183) to NMEA2000 gateway
 * an USB (NMEA0183) to NMEA2000 gateway
-* a WEB UI to configure the gateway and to show the data that has been received
+* a [WEB UI](doc/WebUi.md) to configure the gateway and to show the data that has been received
 * a USB Actisense to NMEA2000 gateway
 * a NMEA2000 to USB Actisense gateway
 * starting with 201311xx some [I2C Sensors](doc/Sensors.md)
@@ -66,8 +66,7 @@ They are devided into binaries for an initial flash (xxx-all.bin) and binaries f
 
 For other Hardware refer to the [online build service](doc/BuildService.md).
 
-Initial Flash
-*************
+### Initial Flash
 
 __Browser__
 
@@ -128,8 +127,7 @@ Some Anti Virus Software may (accidently) tag this as infected. In this case you
 *  Afterwards download [flashtool.pyz](../../raw/master/tools/flashtool.pyz) and run it with a double click.
 <span id="update"/>
 
-Update
-******
+### Update
 To update a device you can use the Web-UI (Update tab). In principle you could also update a device using the initial flash command (and an xxx-all.bin) firmware but this would erase all your configuration.
 So for normal operation just download a xxx-update.bin from the [release](../../releases) page and use the UI to install it.
 
@@ -143,14 +141,7 @@ Starting
 ---------
 After flushing a wifi access point is created. Connect to it (name: ESP32NMEA2K, password: esp32nmea2k).
 Afterwards use a Bonjour Browser, the address ESP32NMEA2k.local or the ip address 192.168.15.1 to connect with your browser.
-You will get a small UI to watch the status and make settings.
-If you want to connect to another wifi network, just enter the credentials in the wifi client tab and enable the wifi client.
-For all the potential inputs and outputs (NMEA2000, USB, TCP, RS485) you can set the configuration including NMEA0183 filtering.
-To store your changes you will be asked for an admin password. The initial one is esp32admin. You can change this password at the config/system tab (and even completely disable it).
-Be careful to notice the password - you can only recover from a lost password with a factory reset of the device (long press the led button until it goes blue->red->green).
-On the data page you will have a small dashboard for the currently received data.
-On the status page you can check the number of messages flowing in and out.
-To help you recover lost passwords the Wifi access point passowrd and the admin password will be output at the USB port when the device starts up. So by connecting a terminal program you can retrieve those passwords.
+You will get a [Web UI](doc/WebUi.md) to watch the status and make settings.
 
 Security Hints
 --------------
